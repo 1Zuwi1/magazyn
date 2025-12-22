@@ -43,7 +43,9 @@ export const createApiSchema = <const C extends ApiSchemaConfig>(
       )
     }
 
-    if (!definition) continue
+    if (!definition) {
+      continue
+    }
 
     const methodShape: ApiMethodSchema["shape"] = {
       output: definition.output,

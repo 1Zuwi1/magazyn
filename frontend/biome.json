@@ -23,8 +23,21 @@
       "!**/convex/_generated"
     ]
   },
-  "extends": [
-    "ultracite/core",
-    "ultracite/next"
-  ]
+  "javascript": {
+    "formatter": {
+      "semicolons": "asNeeded"
+    }
+  },
+  "linter": {
+    "rules": {
+      "a11y": "off",
+      "performance": {
+        "noNamespaceImport": "off"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "off"
+      }
+    }
+  },
+  "extends": ["ultracite/core", "ultracite/next"]
 }
