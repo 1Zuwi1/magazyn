@@ -42,7 +42,8 @@ jobs:
       - name: Build and push WEB image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./frontend
+          file: ./frontend/Dockerfile
           push: true
           tags: ${{ steps.meta_web.outputs.tags }}
           labels: ${{ steps.meta_web.outputs.labels }}
