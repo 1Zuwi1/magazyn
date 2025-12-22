@@ -10,7 +10,9 @@
 	</parent>
 	<groupId>com.github.dawid_stolarczyk</groupId>
 	<artifactId>magazyn</artifactId>
+
 	<version>0.0.1</version>
+
 	<name>magazyn</name>
 	<description>Magazyn backend</description>
 	<url/>
