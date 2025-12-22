@@ -47,6 +47,9 @@ jobs:
           push: true
           tags: ${{ steps.meta_web.outputs.tags }}
           labels: ${{ steps.meta_web.outputs.labels }}
+          build-args: |
+            APP_SCOPE=web
+            APP_PATH=apps/web
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
