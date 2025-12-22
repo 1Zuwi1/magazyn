@@ -83,7 +83,7 @@ jobs:
 
             COMPOSE_DIR="${{ secrets.COMPOSE_PROJECT_DIR }}"
             if [ -z "${COMPOSE_DIR}" ]; then
-              COMPOSE_DIR="$HOME/ordermaster"
+              COMPOSE_DIR="$HOME/magazyn"
             fi
 
             cd "$COMPOSE_DIR"
