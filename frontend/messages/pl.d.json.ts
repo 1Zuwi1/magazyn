@@ -2,11 +2,11 @@
 // See: https://next-intl.dev/docs/workflows/typescript#messages-arguments
 
 declare const messages: {
-  breadcrumbs: {
-    dashboard: "Panel"
-    settings: "Ustawienia"
-    profile: "Profil"
-    notifications: "Powiadomienia"
+  "breadcrumbs": {
+    "dashboard": "Panel",
+    "settings": "Ustawienia",
+    "profile": "Profil",
+    "notifications": "Powiadomienia"
   }
-}
-export default messages
+};
+export default messages;
