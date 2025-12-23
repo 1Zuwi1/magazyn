@@ -1,8 +1,8 @@
 "use client"
 
-import { type AnyFieldApi, useForm } from "@tanstack/react-form"
+import { useForm } from "@tanstack/react-form"
 import { motion, useReducedMotion } from "framer-motion"
-import z, { type ZodError } from "zod"
+import z from "zod"
 import { Button } from "@/components/ui/button"
 import {
   InputOTP,
@@ -24,12 +24,12 @@ const LoginSchema = createApiSchema({
   },
 })
 
-function FieldState({ field }: { field: AnyFieldApi }) {
-  const error = field.getMeta().errors[0] as ZodError | null
-  return error ? (
-    <p className="mt-1 text-wrap text-red-600 text-xs">{error.message}</p>
-  ) : null
-}
+// function FieldState({ field }: { field: AnyFieldApi }) {
+//   const error = field.getMeta().errors[0] as ZodError | null
+//   return error ? (
+//     <p className="mt-1 text-wrap text-red-600 text-xs">{error.message}</p>
+//   ) : null
+// }
 
 export default function LoginPage() {
   const shouldReduceMotion = useReducedMotion()
