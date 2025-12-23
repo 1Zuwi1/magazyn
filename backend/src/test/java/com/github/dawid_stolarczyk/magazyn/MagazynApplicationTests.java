@@ -1,13 +1,26 @@
 package com.github.dawid_stolarczyk.magazyn;
 
+import com.github.dawid_stolarczyk.magazyn.Controller.DTOs.ResponseTemplate;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 class MagazynApplicationTests {
 
 	@Test
-	void contextLoads() {
+	void responseTemplateStoresPayloadAndSuccessFlag() {
+		ResponseTemplate response = new ResponseTemplate(true, "ok");
+
+		assertTrue(response.isSuccess());
+		assertEquals("ok", response.getData());
+
+		response.setSuccess(false);
+		response.setData(42);
+
+		assertFalse(response.isSuccess());
+		assertEquals(42, response.getData());
 	}
 
 }
