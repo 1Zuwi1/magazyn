@@ -158,64 +158,11 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
   )
 
   try {
-    // Normalize and validate method
-    const rawMethod = (init?.method ?? "GET").toString().toUpperCase()
-    assertMethod(rawMethod)
-    const method: ApiMethod = rawMethod
-
-    // Enforce payload rules at runtime too, in case someone type-asserts past the overloads.
-    const hasBody = Object.hasOwn(init ?? {}, "body")
-    const hasFormData = Object.hasOwn(init ?? {}, "formData")
-
-    if (method === "GET") {
-      if (hasBody) {
-        throw new FetchError("GET cannot include body")
-      }
-      if (hasFormData) {
-        throw new FetchError("GET cannot include formData")
-      }
-    } else if (method === "DELETE") {
-      // optional body: allowed with or without body; if formData is present, body must exist
-      if (hasFormData && !hasBody) {
-        throw new FetchError("DELETE with formData requires body")
-      }
-    } else if (!hasBody) {
-      // required body
-      throw new FetchError(`${method} requires body`)
-    }
-
-    // Build body
-    let bodyToSend: BodyInit | undefined
-    if (
-      hasFormData &&
-      typeof (init as { formData?: unknown }).formData === "function"
-    ) {
-      // formData path
-      const fd = new FormData()
-      const original = hasBody ? (init as { body: unknown }).body : undefined
-      ;(init as { formData: FormDataHandler<unknown> }).formData(fd, original)
-      bodyToSend = fd
-    } else if (hasBody) {
-      // json path: serialize unless it's already a string/Blob/etc.
-      const candidate = (init as { body: unknown }).body
-      if (isBodyInit(candidate)) {
-        bodyToSend = candidate
-      } else if (typeof candidate === "string") {
-        bodyToSend = candidate
-      } else {
-        bodyToSend = JSON.stringify(candidate)
-      }
-    }
-
-    // Clean RequestInit: strip our extensions so they don't leak into fetch
-    const {
-      formData: _fdHandler,
-      body: _ignored,
-      ...restInit
-    } = (init ?? {}) as RequestInit & {
-      formData?: unknown
-      body?: unknown
-    }
+    const method = normalizeMethod(init)
+    const payloadFlags = getPayloadFlags(init)
+    validatePayloadRules(method, payloadFlags)
+    const bodyToSend = buildRequestBody(init, payloadFlags)
+    const restInit = stripExtendedInit(init)
 
     const headers: HeadersInit = mergeHeaders(
       restInit.headers,
@@ -234,24 +181,7 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
 
     // Network/HTTP error handling
     if (!res.ok) {
-      // Try to read structured error; if it fails, fall back to status text.
-      const [parseErr, errJson] = await tryCatch(res.clone().json())
-      if (
-        !parseErr &&
-        errJson &&
-        typeof errJson === "object" &&
-        "message" in errJson
-      ) {
-        const msg = String(
-          (errJson as { message?: unknown }).message ??
-            `Request failed with ${res.status}`
-        )
-        throw new FetchError(msg, res.status)
-      }
-      throw new FetchError(
-        res.statusText || `Request failed with ${res.status}`,
-        res.status
-      )
+      await throwFetchErrorFromResponse(res)
     }
 
     // Parse JSON
@@ -264,12 +194,7 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
     }
 
     // Resolve schema for the chosen method
-    const methodSchema = dataSchema.shape[method]
-    if (!methodSchema) {
-      throw new FetchError(`No schema defined for HTTP method: ${method}`, 500)
-    }
-
-    const outputSchema = methodSchema.shape.output
+    const outputSchema = resolveOutputSchema(dataSchema, method)
     const parsed = getCachedSchema(outputSchema).parse(json)
 
     if (parsed.success) {
@@ -303,6 +228,124 @@ function assertMethod(m: string): asserts m is ApiMethod {
   ) {
     throw new FetchError(`Unsupported HTTP method: ${m}`)
   }
+}
+
+type ExtendedInit = Omit<RequestInit, "body"> & {
+  method?: string | undefined
+  body?: unknown
+  formData?: unknown
+}
+
+function normalizeMethod(init?: ExtendedInit): ApiMethod {
+  const rawMethod = (init?.method ?? "GET").toString().toUpperCase()
+  assertMethod(rawMethod)
+  return rawMethod
+}
+
+function getPayloadFlags(init?: ExtendedInit): {
+  hasBody: boolean
+  hasFormData: boolean
+} {
+  return {
+    hasBody: Object.hasOwn(init ?? {}, "body"),
+    hasFormData: Object.hasOwn(init ?? {}, "formData"),
+  }
+}
+
+function validatePayloadRules(
+  method: ApiMethod,
+  flags: { hasBody: boolean; hasFormData: boolean }
+): void {
+  if (method === "GET") {
+    if (flags.hasBody) {
+      throw new FetchError("GET cannot include body")
+    }
+    if (flags.hasFormData) {
+      throw new FetchError("GET cannot include formData")
+    }
+    return
+  }
+
+  if (method === "DELETE") {
+    if (flags.hasFormData && !flags.hasBody) {
+      throw new FetchError("DELETE with formData requires body")
+    }
+    return
+  }
+
+  if (!flags.hasBody) {
+    throw new FetchError(`${method} requires body`)
+  }
+}
+
+function buildRequestBody(
+  init: ExtendedInit | undefined,
+  flags: { hasBody: boolean; hasFormData: boolean }
+): BodyInit | undefined {
+  if (
+    flags.hasFormData &&
+    typeof (init as { formData?: unknown }).formData === "function"
+  ) {
+    const fd = new FormData()
+    const original = flags.hasBody
+      ? (init as { body: unknown }).body
+      : undefined
+    ;(init as { formData: FormDataHandler<unknown> }).formData(fd, original)
+    return fd
+  }
+
+  if (!flags.hasBody) {
+    return undefined
+  }
+
+  const candidate = (init as { body: unknown }).body
+  if (isBodyInit(candidate)) {
+    return candidate
+  }
+  if (typeof candidate === "string") {
+    return candidate
+  }
+  return JSON.stringify(candidate)
+}
+
+function stripExtendedInit(init?: ExtendedInit): RequestInit {
+  const {
+    formData: _fdHandler,
+    body: _ignored,
+    ...restInit
+  } = (init ?? {}) as RequestInit & { formData?: unknown; body?: unknown }
+  return restInit
+}
+
+async function throwFetchErrorFromResponse(res: Response): Promise<never> {
+  const [parseErr, errJson] = await tryCatch(res.clone().json())
+  if (
+    !parseErr &&
+    errJson &&
+    typeof errJson === "object" &&
+    "message" in errJson
+  ) {
+    const msg = String(
+      (errJson as { message?: unknown }).message ??
+        `Request failed with ${res.status}`
+    )
+    throw new FetchError(msg, res.status)
+  }
+  throw new FetchError(
+    res.statusText || `Request failed with ${res.status}`,
+    res.status
+  )
+}
+
+function resolveOutputSchema<S extends ApiSchema>(
+  dataSchema: S,
+  method: ApiMethod
+): z.ZodTypeAny {
+  const methodSchema = dataSchema.shape[method]
+  if (!methodSchema) {
+    throw new FetchError(`No schema defined for HTTP method: ${method}`, 500)
+  }
+  return methodSchema.shape.output
 }
 
 function isBodyInit(v: unknown): v is BodyInit {
