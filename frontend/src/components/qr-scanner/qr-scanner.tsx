@@ -1,7 +1,7 @@
 "use client"
 
 import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser"
-import { NotFoundException } from "@zxing/library"
+import { NotFoundException, type Result } from "@zxing/library"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -37,6 +37,60 @@ export function QrScanner({
   const [running, setRunning] = useState(false)
   const [starting, setStarting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  const stopAfterScan = useCallback(() => {
+    controlsRef.current?.stop()
+    controlsRef.current = null
+    setRunning(false)
+  }, [])
+
+  const shouldIgnoreScan = useCallback(
+    (text: string, now: number) => {
+      const tooSoon = now - lastAtRef.current < scanDelayMs
+      const sameText = text === lastTextRef.current
+      return sameText && tooSoon
+    },
+    [scanDelayMs]
+  )
+
+  const recordScan = useCallback((text: string, now: number) => {
+    lastTextRef.current = text
+    lastAtRef.current = now
+  }, [])
+
+  const handleDecodedText = useCallback(
+    (text: string) => {
+      const now = Date.now()
+      if (shouldIgnoreScan(text, now)) {
+        return
+      }
+
+      recordScan(text, now)
+      onScan(text)
+
+      if (stopOnScan) {
+        // stop immediately after first successful scan
+        stopAfterScan()
+      }
+    },
+    [onScan, recordScan, shouldIgnoreScan, stopAfterScan, stopOnScan]
+  )
+
+  const handleScanResult = useCallback(
+    (result: Result | undefined, err: unknown) => {
+      if (result) {
+        handleDecodedText(result.getText())
+        return
+      }
+
+      // ZXing throws NotFoundException constantly when no QR is visible.
+      // That’s not an "error", it’s just "keep looking".
+      if (err && !(err instanceof NotFoundException)) {
+        onError?.(err)
+      }
+    },
+    [handleDecodedText, onError]
+  )
 
   const stop = useCallback(() => {
     controlsRef.current?.stop()
@@ -80,37 +134,7 @@ export function QrScanner({
       const controls = await reader.decodeFromConstraints(
         mediaConstraints,
         videoRef.current,
-        (result, err) => {
-          if (result) {
-            const text = result.getText()
-            const now = Date.now()
-
-            const tooSoon = now - lastAtRef.current < scanDelayMs
-            const sameText = text === lastTextRef.current
-            if (sameText && tooSoon) {
-              return
-            }
-
-            lastTextRef.current = text
-            lastAtRef.current = now
-
-            onScan(text)
-
-            if (stopOnScan) {
-              // stop immediately after first successful scan
-              controlsRef.current?.stop()
-              controlsRef.current = null
-              setRunning(false)
-            }
-            return
-          }
-
-          // ZXing throws NotFoundException constantly when no QR is visible.
-          // That’s not an "error", it’s just "keep looking".
-          if (err && !(err instanceof NotFoundException)) {
-            onError?.(err)
-          }
-        }
+        handleScanResult
       )
 
       controlsRef.current = controls
@@ -124,7 +148,7 @@ export function QrScanner({
     } finally {
       setStarting(false)
     }
-  }, [constraints, onError, onScan, scanDelayMs, stopOnScan, stop])
+  }, [constraints, handleScanResult, onError, stop])
 
   useEffect(() => {
     return () => stop() // cleanup on unmount
