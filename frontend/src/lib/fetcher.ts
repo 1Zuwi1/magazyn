@@ -176,6 +176,7 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
       method,
       signal: abortController.signal,
       headers,
+      credentials: restInit.credentials ?? "include",
       body: bodyToSend,
     })
 

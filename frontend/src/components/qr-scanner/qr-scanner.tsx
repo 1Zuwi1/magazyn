@@ -85,7 +85,6 @@ export function QrScanner({
             const text = result.getText()
             const now = Date.now()
 
-            // Dedupe/throttle: same QR tends to fire repeatedly
             const tooSoon = now - lastAtRef.current < scanDelayMs
             const sameText = text === lastTextRef.current
             if (sameText && tooSoon) {

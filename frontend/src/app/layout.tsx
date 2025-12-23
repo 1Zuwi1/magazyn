@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google"
 import "./globals.css"
 import { NextIntlClientProvider } from "next-intl"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -37,7 +38,10 @@ export default function RootLayout({
           disableTransitionOnChange
           enableSystem
         >
-          <NextIntlClientProvider>{children}</NextIntlClientProvider>
+          <NextIntlClientProvider>
+            <Toaster richColors />
+            {children}
+          </NextIntlClientProvider>
         </ThemeProvider>
       </body>
     </html>
