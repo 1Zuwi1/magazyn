@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono, Inter } from "next/font/google"
 import "./globals.css"
+import { NextIntlClientProvider } from "next-intl"
 import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
@@ -36,7 +37,7 @@ export default function RootLayout({
           disableTransitionOnChange
           enableSystem
         >
-          {children}
+          <NextIntlClientProvider>{children}</NextIntlClientProvider>
         </ThemeProvider>
       </body>
     </html>
