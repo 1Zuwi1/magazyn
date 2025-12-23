@@ -1,5 +1,7 @@
-"use client"
-
-export default function DashboardPage() {
-  return <main className="mx-auto max-w-xl p-6">Test</main>
+export default function Page() {
+  return (
+    <div>
+      <h1>Dashboard Page</h1>
+    </div>
+  )
 }
