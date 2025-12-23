@@ -1,5 +1,5 @@
-import { z } from "zod";
-import type { ApiMethod, ApiMethodSchema, ApiSchema } from "./fetcher";
+import { z } from "zod"
+import type { ApiMethod, ApiMethodSchema, ApiSchema } from "./fetcher"
 
 // Example:
 // const schema = createApiSchema({

@@ -3,7 +3,6 @@
   "files": {
     "ignoreUnknown": false,
     "includes": [
-      "**",
       "!**/.next",
       "!**/dist",
       "!**/.turbo",
@@ -30,7 +29,9 @@
   },
   "linter": {
     "rules": {
-      "a11y": "off",
+      "a11y": {
+        "noSvgWithoutTitle": "off"
+      },
       "performance": {
         "noNamespaceImport": "off"
       },
@@ -39,5 +40,5 @@
       }
     }
   },
-  "extends": ["ultracite/core", "ultracite/next"]
+  "extends": ["ultracite/core", "ultracite/next", "ultracite/react"]
 }
