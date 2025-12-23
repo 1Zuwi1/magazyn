@@ -1,59 +1,54 @@
-# syntax=docker.io/docker/dockerfile:1
+# -----------------------------------------------------------------------------
+# This Dockerfile.bun is specifically configured for projects using Bun
+# For npm/pnpm or yarn, refer to the Dockerfile instead
+# -----------------------------------------------------------------------------
 
-FROM node:current-alpine AS base
-RUN apk add --no-cache libc6-compat
+# Use Bun's official image
+FROM oven/bun:1 AS base
+
 WORKDIR /app
+
+# Install dependencies with bun
+FROM base AS deps
+COPY package.json bun.lock* ./
+RUN bun install --no-save --frozen-lockfile
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Next.js collects completely anonymous telemetry data about general usage.
+# Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line in case you want to disable telemetry during the build.
+# ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN bun run build
+
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
+
+# Uncomment the following line in case you want to disable telemetry during runtime.
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# --- 1) Prune monorepo to only the target app + its deps
-FROM base AS pruner
-ARG APP_SCOPE=web
+ENV NODE_ENV=production \
+  PORT=3001 \
+  HOSTNAME="0.0.0.0"
 
-# Install turbo (prefer the version declared in the repo)
-COPY package.json package-lock.json* ./
-RUN set -eu; \
-  TURBO_MAJOR="$(node -e "const p=require('./package.json'); const v=(p.devDependencies&&p.devDependencies.turbo)||(p.dependencies&&p.dependencies.turbo)||''; const m=String(v).match(/(\\d+)/); process.stdout.write(m?m[1]:'');")"; \
-  if [ -n "$TURBO_MAJOR" ]; then npm i -g "turbo@^${TURBO_MAJOR}"; else npm i -g turbo; fi
+RUN addgroup --system --gid 1001 nodejs && \
+  adduser --system --uid 1001 nextjs
 
-# turbo prune needs the full repo to compute the dependency graph
-COPY . .
-RUN turbo prune "${APP_SCOPE}" --docker
+COPY --from=builder /app/public ./public
 
-# --- 2) Install deps + build inside the pruned output
-FROM base AS builder
-ARG APP_SCOPE=web
-
-# Copy pruned manifests first for caching
-COPY --from=pruner /app/out/json/ ./
-COPY --from=pruner /app/out/package-lock.json ./package-lock.json
-
-# Don't set NODE_ENV=production here or npm will skip dev deps needed for build
-RUN npm ci
-
-# Copy the actual (pruned) source and build
-COPY --from=pruner /app/out/full/ ./
-RUN npx turbo build --filter="${APP_SCOPE}"
-
-# --- 3) Runtime image (Next standalone)
-FROM base AS runner
-ARG APP_PATH=apps/web
-
-ENV NODE_ENV=production
-ENV PORT=3001
-ENV HOSTNAME="0.0.0.0"
-
-RUN addgroup --system --gid 1001 nodejs \
-  && adduser  --system --uid 1001 nextjs
-
-# Your app-specific writable dirs (keep if your app writes to them at runtime)
-
-# Public + standalone output + static assets
-COPY --from=builder --chown=nextjs:nodejs /app/${APP_PATH}/public ./${APP_PATH}/public
-COPY --from=builder --chown=nextjs:nodejs /app/${APP_PATH}/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/${APP_PATH}/.next/static ./${APP_PATH}/.next/static
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
+
 EXPOSE 3001
 
-# In monorepos, server.js usually lives under the app path in standalone output
-CMD ["node", "apps/web/server.js"]
+CMD ["bun", "./server.js"]
