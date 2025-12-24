@@ -1,3 +1,5 @@
-export default function LandingPage() {
-  return <div>Landing</div>
+import { ComponentExample } from "@/components/component-example"
+
+export default function Page() {
+  return <ComponentExample />
 }
