@@ -1,127 +1,240 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
-import { motion, useReducedMotion } from "framer-motion"
-import z from "zod"
+import { REGEXP_ONLY_DIGITS } from "input-otp"
+import { useMemo, useState } from "react"
+import { toast } from "sonner"
+import { z } from "zod"
 import { Button } from "@/components/ui/button"
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
+import { Spinner } from "@/components/ui/spinner"
 import { createApiSchema } from "@/lib/create-api-schema"
 import { apiFetch } from "@/lib/fetcher"
+import tryCatch from "@/lib/try-catch"
 
-const LoginSchema = createApiSchema({
+type TwoFactorMethod = "authenticator" | "sms" | "email"
+
+// Zakładam endpointy jak wcześniej.
+// Jeśli masz inne, podmień tu, a reszta zostaje.
+const Verify2FASchema = createApiSchema({
   POST: {
     input: z.object({
-      email: z.email("Nieprawidłowy adres email"),
-      password: z.string().min(6, "Hasło musi mieć co najmniej 6 znaków"),
-      rememberMe: z.boolean("Pole zapamiętaj mnie musi być wartością logiczną"),
+      method: z.enum(["authenticator", "sms", "email"]),
+      code: z.string().length(6, "Kod musi mieć dokładnie 6 cyfr"),
     }),
     output: z.null(),
   },
 })
 
-// function FieldState({ field }: { field: AnyFieldApi }) {
-//   const error = field.getMeta().errors[0] as ZodError | null
-//   return error ? (
-//     <p className="mt-1 text-wrap text-red-600 text-xs">{error.message}</p>
-//   ) : null
-// }
+const Resend2FASchema = createApiSchema({
+  POST: {
+    input: z.object({
+      method: z.enum(["sms", "email"]),
+    }),
+    output: z.null(),
+  },
+})
 
-export default function LoginPage() {
-  const shouldReduceMotion = useReducedMotion()
+function methodTitle(method: TwoFactorMethod) {
+  switch (method) {
+    case "authenticator":
+      return "Wpisz kod z aplikacji uwierzytelniającej"
+    case "sms":
+      return "Wpisz kod wysłany SMS-em"
+    case "email":
+      return "Wpisz kod wysłany na e-mail"
+    default:
+      return "Nieznana metoda"
+  }
+}
+
+function methodSwitchLabel(method: TwoFactorMethod) {
+  switch (method) {
+    case "authenticator":
+      return "Użyj aplikacji uwierzytelniającej"
+    case "sms":
+      return "Wyślij kod SMS-em"
+    case "email":
+      return "Wyślij kod e-mailem"
+    default:
+      return "Nieznana metoda"
+  }
+}
+
+const linkedMethods: TwoFactorMethod[] = ["authenticator", "sms", "email"]
+export default function TwoFactorPage() {
+  const defaultMethod = useMemo<TwoFactorMethod>(
+    () => linkedMethods[0] ?? "email",
+    []
+  )
+
+  const [method, setMethod] = useState<TwoFactorMethod>(defaultMethod)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+
+  const alternatives = linkedMethods.filter((m) => m !== method)
+  const canResend = method === "sms" || method === "email"
 
   const form = useForm({
-    defaultValues: {
-      email: "",
-      password: "",
-      rememberMe: false,
-    },
-    onSubmit: async (values) => {
-      console.log(values)
-      await apiFetch("/api/auth/login", LoginSchema, {
-        method: "POST",
-        body: { ...values.value },
-      })
-    },
-    validators: {
-      onSubmitAsync: LoginSchema.shape.POST.shape.input,
+    defaultValues: { code: "" },
+    onSubmit: async ({ value }) => {
+      if (value.code.length !== 6) {
+        toast.error("Wpisz 6-cyfrowy kod.")
+        return
+      }
+
+      setIsSubmitting(true)
+      const [err] = await tryCatch(
+        apiFetch("/api/auth/login/2fa", Verify2FASchema, {
+          method: "POST",
+          body: { method, code: value.code },
+        })
+      )
+      setIsSubmitting(false)
+
+      if (err) {
+        toast.error("Nieprawidłowy kod lub błąd weryfikacji. Spróbuj ponownie.")
+        return
+      }
+
+      toast.success("Zweryfikowano!")
     },
   })
 
-  return (
-    <motion.div
-      animate={{ opacity: 1, y: 0 }}
-      aria-labelledby="glass-sign-in-title"
-      className="group relative w-full max-w-lg overflow-hidden rounded-3xl border border-border/60 bg-card/85 p-8 backdrop-blur-xl sm:p-10"
-      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
-      role="form"
-      transition={{
-        duration: 0.45,
-        ease: shouldReduceMotion ? "linear" : [0.16, 1, 0.3, 1],
-      }}
-    >
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-gradient-to-br from-foreground/[0.04] via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-      />
-      <div className="mb-8 space-y-2 text-center">
-        <h1
-          className="mt-3 font-semibold text-2xl text-foreground sm:text-3xl"
-          id="glass-verification-title"
-        >
-          Wpisz kod weryfikacyjny
-        </h1>
-        <p className="mt-2 text-muted-foreground text-sm">
-          Wysłaliśmy 6-cyfrowy kod na twój adres email. Wpisz go poniżej, aby
-          kontynuować.
-        </p>
-      </div>
+  async function resendCode(m: "sms" | "email") {
+    setIsResending(true)
+    const [err] = await tryCatch(
+      apiFetch("/api/auth/login/2fa/resend", Resend2FASchema, {
+        method: "POST",
+        body: { method: m },
+      })
+    )
+    setIsResending(false)
 
+    if (err) {
+      toast.error("Nie udało się wysłać kodu ponownie. Spróbuj za chwilę.")
+      return false
+    }
+
+    toast.success(
+      m === "sms" ? "Wysłano nowy kod SMS." : "Wysłano nowy kod e-mailem."
+    )
+    return true
+  }
+
+  async function switchMethod(next: TwoFactorMethod) {
+    setMethod(next)
+    form.resetField("code")
+
+    if (next === "sms" || next === "email") {
+      await resendCode(next)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
       <form
-        className="space-y-6"
         onSubmit={(e) => {
           e.preventDefault()
           e.stopPropagation()
           form.handleSubmit(e)
         }}
       >
-        <div className="flex w-full items-center justify-center">
-          <form.Field name="email">
+        <FieldGroup>
+          <div className="flex flex-col items-center gap-2 text-center">
+            <h1 className="font-bold text-xl">Wpisz kod weryfikacyjny</h1>
+            <FieldDescription>{methodTitle(method)}</FieldDescription>
+          </div>
+
+          <form.Field name="code">
             {(field) => (
-              <InputOTP
-                className="**:data-[slot='input-otp-slot']:size-16!"
-                id={field.name}
-                maxLength={6}
-                onChange={(value) => field.handleChange(value)}
-              >
-                <InputOTPGroup className="**:data-[slot='input-otp-slot']:size-16!">
-                  <InputOTPSlot className="text-xl" index={0} />
-                  <InputOTPSlot className="text-xl" index={1} />
-                  <InputOTPSlot className="text-xl" index={2} />
-                </InputOTPGroup>
-                <InputOTPSeparator className="[&_svg:not([class*='size-'])]:size-8" />
-                <InputOTPGroup className="**:data-[slot='input-otp-slot']:size-16!">
-                  <InputOTPSlot className="text-xl" index={3} />
-                  <InputOTPSlot className="text-xl" index={4} />
-                  <InputOTPSlot className="text-xl" index={5} />
-                </InputOTPGroup>
-              </InputOTP>
+              <Field>
+                <FieldLabel className="sr-only" htmlFor={field.name}>
+                  Kod weryfikacyjny
+                </FieldLabel>
+
+                <InputOTP
+                  containerClassName="gap-4 items-center justify-center"
+                  id={field.name}
+                  maxLength={6}
+                  onChange={(code) => field.handleChange(code)}
+                  pattern={REGEXP_ONLY_DIGITS}
+                  required
+                  value={field.state.value}
+                >
+                  <InputOTPGroup className="gap-2.5 *:data-[slot=input-otp-slot]:h-16 *:data-[slot=input-otp-slot]:w-12 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-xl">
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                  </InputOTPGroup>
+
+                  <InputOTPSeparator />
+
+                  <InputOTPGroup className="gap-2.5 *:data-[slot=input-otp-slot]:h-16 *:data-[slot=input-otp-slot]:w-12 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-xl">
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+
+                {canResend ? (
+                  <FieldDescription className="text-center">
+                    Nie dotarło?{" "}
+                    <Button
+                      className="h-auto p-0 align-baseline"
+                      disabled={isResending}
+                      onClick={() => resendCode(method)}
+                      type="button"
+                      variant="link"
+                    >
+                      Wyślij ponownie {isResending && <Spinner />}
+                    </Button>
+                  </FieldDescription>
+                ) : null}
+
+                {alternatives.length ? (
+                  <div className="mt-3">
+                    <p className="text-center text-muted-foreground text-sm">
+                      Użyj innej metody
+                    </p>
+                    <div className="mt-2 flex flex-col gap-1">
+                      {alternatives.map((m) => (
+                        <Button
+                          className="h-9 justify-start px-2"
+                          disabled={isResending || isSubmitting}
+                          key={m}
+                          onClick={() => switchMethod(m)}
+                          size="sm"
+                          type="button"
+                          variant="link"
+                        >
+                          {methodSwitchLabel(m)}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </Field>
             )}
           </form.Field>
-        </div>
-
-        <Button
-          className="w-full bg-primary text-primary-foreground shadow-[0_20px_60px_-30px_rgba(79,70,229,0.75)] transition-transform duration-300"
-          size={"lg"}
-          type="submit"
-        >
-          Zweryfikuj i zaloguj się
-        </Button>
+          <Field>
+            <Button className="w-full" disabled={isSubmitting} type="submit">
+              Zweryfikuj {isSubmitting && <Spinner />}
+            </Button>
+          </Field>
+        </FieldGroup>
       </form>
-    </motion.div>
+    </div>
   )
 }
