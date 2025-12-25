@@ -1,3 +1,48 @@
+import Link from "next/link"
+import Logo from "@/components/Logo"
+import { Button } from "@/components/ui/button"
+
 export default function LandingPage() {
-  return <div>Landing Page</div>
+  return (
+    <div className="flex min-h-screen flex-col">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+        <div className="container mx-auto flex h-16 items-center justify-between">
+          <Logo href="/" />
+          <div className="flex items-center gap-3">
+            <Link href="/login">
+              <Button size="sm">Zaloguj się</Button>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex flex-1 items-center justify-center">
+        <section className="container mx-auto px-4 py-24 md:py-32">
+          <div className="flex flex-col items-center text-center">
+            <h1 className="mt-6 max-w-3xl font-bold text-4xl tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+              Zarządzanie magazynem <br className="hidden sm:block" />
+              <span className="text-primary">dla firmy</span>
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
+              Zaloguj się, aby uzyskać dostęp do systemu zarządzania magazynem.
+            </p>
+            <div className="mt-8">
+              <Link href="/login">
+                <Button size="lg">Przejdź do logowania</Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t bg-muted/30">
+        <div className="container mx-auto px-4 py-8 md:py-12">
+          <div className="flex flex-col items-center gap-4 text-center text-muted-foreground text-sm">
+            <Logo />
+            <p>© 2025 GdzieToLeży. System wewnętrzny.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
 }

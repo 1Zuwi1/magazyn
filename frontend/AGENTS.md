@@ -4,8 +4,8 @@ This project uses **Ultracite**, a zero-config Biome preset that enforces strict
 
 ## Quick Reference
 
-- **Format code**: `bun x ultracite fix`
-- **Check for issues**: `bun x ultracite check`
+- **Format code**: `bun run format`
+- **Check for issues**: `bun run lint`
 - **Diagnose setup**: `bun x ultracite doctor`
 
 Biome (the underlying engine) provides extremely fast Rust-based linting and formatting. Most issues are automatically fixable.
@@ -54,6 +54,7 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
   - Add labels for form inputs
   - Include keyboard event handlers alongside mouse events
   - Use semantic elements (`<button>`, `<nav>`, etc.) instead of divs with roles
+- When using icons from Hugeicons, use the `@hugeicons/react` package and the `HugeiconsIcon` component for better performance and compatibility.
 
 ### Error Handling & Debugging
 
@@ -120,4 +121,4 @@ Biome's linter will catch most issues automatically. Focus your attention on:
 
 ---
 
-Most formatting and common issues are automatically fixed by Biome. Run `bun x ultracite fix` before committing to ensure compliance.
+Most formatting and common issues are automatically fixed by Biome. Run `bun run format` before committing to ensure compliance.

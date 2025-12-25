@@ -1,8 +1,10 @@
 "use client"
 
 import { type AnyFieldApi, useForm } from "@tanstack/react-form"
+import Link from "next/link"
 import { toast } from "sonner"
 import { type ZodError, z } from "zod"
+import Logo from "@/components/Logo"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -77,8 +79,11 @@ export default function LoginPage() {
             }}
           >
             <FieldGroup>
+              <Link className="underline" href="/">
+                Cofnij się do strony głównej
+              </Link>
               <div className="flex flex-col items-center gap-2 text-center">
-                <h1 className="font-bold text-xl">Zaloguj się</h1>
+                <Logo />
                 <FieldDescription>
                   Wprowadź swój email i hasło, aby uzyskać dostęp do konta.
                 </FieldDescription>

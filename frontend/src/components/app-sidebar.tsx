@@ -1,23 +1,5 @@
 "use client"
 
-// import {
-//   IconCamera,
-//   IconChartBar,
-//   IconDashboard,
-//   IconDatabase,
-//   IconFileAi,
-//   IconFileDescription,
-//   IconFileWord,
-//   IconFolder,
-//   IconHelp,
-//   IconInnerShadowTop,
-//   IconListDetails,
-//   IconReport,
-//   IconSearch,
-//   IconSettings,
-//   IconUsers,
-// } from "@tabler/icons-react"
-import Link from "next/link"
 import type * as React from "react"
 // import { NavDocuments } from "@/components/nav-documents"
 // import { NavMain } from "@/components/nav-main"
@@ -32,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import Logo from "./Logo"
 
 // const data = {
 //   user: {
@@ -160,10 +143,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               // asChild
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
-              <Link href="#">
-                {/* <IconInnerShadowTop className="!size-5" /> */}
-                <span className="font-semibold text-base">Magazyn</span>
-              </Link>
+              <Logo />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
