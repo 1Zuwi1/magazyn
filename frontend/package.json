@@ -6,7 +6,7 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "biome check",
+    "lint": "next typegen && ultracite check && tsc --noEmit",
     "format": "ultracite fix",
     "test": "vitest run"
   },
@@ -59,7 +59,7 @@
   ],
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,jsonc,css,scss,md,mdx}": [
-      "bun x ultracite fix"
+      "bun run format"
     ]
   }
 }

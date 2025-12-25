@@ -1,20 +1,19 @@
 "use client"
 
 import { type AnyFieldApi, useForm } from "@tanstack/react-form"
+import Link from "next/link"
 import { toast } from "sonner"
 import { type ZodError, z } from "zod"
+import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Spinner } from "@/components/ui/spinner"
 import { createApiSchema } from "@/lib/create-api-schema"
 import { apiFetch } from "@/lib/fetcher"
@@ -42,7 +41,6 @@ function FieldState({ field }: { field: AnyFieldApi }) {
 }
 
 export default function LoginPage() {
-  // --- 3. Inicjalizacja formularza ---
   const form = useForm({
     defaultValues: {
       email: "",
@@ -70,98 +68,110 @@ export default function LoginPage() {
   })
 
   return (
-    <div className="flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Zaloguj się</CardTitle>
-          <CardDescription>
-            Wprowadź swój email i hasło, aby uzyskać dostęp do konta.
-          </CardDescription>
-        </CardHeader>
+    <div className="flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <div className="flex flex-col gap-6">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              form.handleSubmit()
+            }}
+          >
+            <FieldGroup>
+              <Link className="underline" href="/">
+                Cofnij się do strony głównej
+              </Link>
+              <div className="flex flex-col items-center gap-2 text-center">
+                <Logo />
+                <FieldDescription>
+                  Wprowadź swój email i hasło, aby uzyskać dostęp do konta.
+                </FieldDescription>
+              </div>
+              <form.Field name="email">
+                {(field) => (
+                  <Field>
+                    <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                    <Input
+                      className={
+                        field.state.meta.errors.length ? "border-red-500" : ""
+                      }
+                      id={field.name}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="jan@kowalski.pl"
+                      type="email"
+                      value={field.state.value}
+                    />
+                    <FieldState field={field} />
+                  </Field>
+                )}
+              </form.Field>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            form.handleSubmit()
-          }}
-        >
-          <CardContent className="space-y-4">
-            <form.Field name="email">
-              {(field) => (
-                <div className="space-y-2">
-                  <Label htmlFor={field.name}>Email</Label>
-                  <Input
-                    className={
-                      field.state.meta.errors.length ? "border-red-500" : ""
-                    }
-                    id={field.name}
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="jan@kowalski.pl"
-                    type="email"
-                    value={field.state.value}
-                  />
-                  <FieldState field={field} />
-                </div>
-              )}
-            </form.Field>
+              <form.Field name="password">
+                {(field) => (
+                  <Field>
+                    <FieldLabel htmlFor={field.name}>Hasło</FieldLabel>
+                    <Input
+                      className={
+                        field.state.meta.errors.length ? "border-red-500" : ""
+                      }
+                      id={field.name}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="••••••••"
+                      type="password"
+                      value={field.state.value}
+                    />
+                    <FieldState field={field} />
+                  </Field>
+                )}
+              </form.Field>
 
-            <form.Field name="password">
-              {(field) => (
-                <div className="space-y-2">
-                  <Label htmlFor={field.name}>Hasło</Label>
-                  <Input
-                    className={
-                      field.state.meta.errors.length ? "border-red-500" : ""
-                    }
-                    id={field.name}
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="••••••••"
-                    type="password"
-                    value={field.state.value}
-                  />
-                  <FieldState field={field} />
-                </div>
-              )}
-            </form.Field>
+              <form.Field name="rememberMe">
+                {(field) => (
+                  <Field>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={field.state.value}
+                        id={field.name}
+                        onCheckedChange={(checked) =>
+                          field.handleChange(!!checked)
+                        }
+                      />
+                      <FieldLabel
+                        className="font-medium text-sm leading-none"
+                        htmlFor={field.name}
+                      >
+                        Zapamiętaj mnie
+                      </FieldLabel>
+                    </div>
+                    <FieldState field={field} />
+                  </Field>
+                )}
+              </form.Field>
 
-            <form.Field name="rememberMe">
-              {(field) => (
-                <div className="flex items-center space-x-2 pt-2">
-                  <Checkbox
-                    checked={field.state.value}
-                    id={field.name}
-                    onCheckedChange={(checked) => field.handleChange(!!checked)}
-                  />
-                  <Label
-                    className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    htmlFor={field.name}
-                  >
-                    Zapamiętaj mnie
-                  </Label>
-                  <FieldState field={field} />
-                </div>
-              )}
-            </form.Field>
-          </CardContent>
-
-          <CardFooter className="pt-4">
-            <form.Subscribe
-              selector={(state) => [state.canSubmit, state.isSubmitting]}
-            >
-              {([canSubmit, isSubmitting]) => (
-                <Button className="w-full" disabled={!canSubmit} type="submit">
-                  Zaloguj się {isSubmitting && <Spinner />}
-                </Button>
-              )}
-            </form.Subscribe>
-          </CardFooter>
-        </form>
-      </Card>
+              <Field>
+                <form.Subscribe
+                  selector={(state) => [state.canSubmit, state.isSubmitting]}
+                >
+                  {([canSubmit, isSubmitting]) => (
+                    <Button
+                      className="w-full"
+                      disabled={!canSubmit || isSubmitting}
+                      type="submit"
+                    >
+                      Zaloguj się {isSubmitting && <Spinner />}
+                    </Button>
+                  )}
+                </form.Subscribe>
+              </Field>
+            </FieldGroup>
+          </form>
+        </div>
+      </div>
     </div>
   )
 }
