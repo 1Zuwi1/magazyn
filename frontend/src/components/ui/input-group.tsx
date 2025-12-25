@@ -7,16 +7,14 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
-function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
+function InputGroup({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
-    // biome-ignore lint/a11y/useSemanticElements: Grouping related input elements
-    <div
+    <fieldset
       className={cn(
         "group/input-group relative flex h-9 w-full min-w-0 items-center rounded-md border border-input shadow-xs outline-none transition-[color,box-shadow] in-data-[slot=combobox-content]:focus-within:border-inherit in-data-[slot=combobox-content]:focus-within:ring-0 has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-start]]:h-auto has-[>textarea]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-start]]:flex-col has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot=input-group-control]:focus-visible]:ring-[3px] has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50 has-[[data-slot][aria-invalid=true]]:ring-[3px] has-[[data-slot][aria-invalid=true]]:ring-destructive/20 dark:bg-input/30 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40 has-[>[data-align=block-end]]:[&>input]:pt-3 has-[>[data-align=inline-end]]:[&>input]:pr-1.5 has-[>[data-align=block-start]]:[&>input]:pb-3 has-[>[data-align=inline-start]]:[&>input]:pl-1.5",
         className
       )}
       data-slot="input-group"
-      role="group"
       {...props}
     />
   )
@@ -47,21 +45,31 @@ function InputGroupAddon({
   className,
   align = "inline-start",
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
+}: React.ComponentProps<"button"> &
+  VariantProps<typeof inputGroupAddonVariants>) {
+  const handleActivate = (
+    e:
+      | React.MouseEvent<HTMLButtonElement>
+      | React.KeyboardEvent<HTMLButtonElement>
+  ) => {
+    if ((e.target as HTMLElement).closest("button")) {
+      return
+    }
+    e.currentTarget.parentElement?.querySelector("input")?.focus()
+  }
   return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents: Mouse-only interaction to focus input
-    // biome-ignore lint/a11y/noStaticElementInteractions: Mouse-only interaction to focus input
-    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: Mouse-only interaction to focus input
-    <div
+    <button
       className={cn(inputGroupAddonVariants({ align }), className)}
       data-align={align}
       data-slot="input-group-addon"
-      onClick={(e) => {
-        if ((e.target as HTMLElement).closest("button")) {
-          return
+      onClick={handleActivate}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          handleActivate(e)
         }
-        e.currentTarget.parentElement?.querySelector("input")?.focus()
       }}
+      tabIndex={0}
       {...props}
     />
   )

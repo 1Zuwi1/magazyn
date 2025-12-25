@@ -6,7 +6,7 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "biome check",
+    "lint": "next typegen && ultracite check && tsc --noEmit",
     "format": "ultracite fix",
     "test": "vitest run"
   },
