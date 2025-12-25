@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import Logo from "./Logo"
+import Logo from "./logo"
 
 // const data = {
 //   user: {
