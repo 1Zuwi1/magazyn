@@ -26,6 +26,6 @@ jobs:
       - name: Run opencode
         uses: sst/opencode/github@latest
         env:
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
         with:
-          model: opencode/glm-4.7-free
+          model: zai-coding-plan/glm-4.7
