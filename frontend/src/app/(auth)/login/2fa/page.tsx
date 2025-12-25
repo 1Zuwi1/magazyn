@@ -2,9 +2,11 @@
 
 import { useForm } from "@tanstack/react-form"
 import { REGEXP_ONLY_DIGITS } from "input-otp"
-import { useMemo, useState } from "react"
+import Link from "next/link"
+import { useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { z } from "zod"
+import Logo from "@/components/Logo"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -24,9 +26,8 @@ import { apiFetch } from "@/lib/fetcher"
 import tryCatch from "@/lib/try-catch"
 
 type TwoFactorMethod = "authenticator" | "sms" | "email"
+type ResendType = Exclude<TwoFactorMethod, "authenticator">
 
-// Zakładam endpointy jak wcześniej.
-// Jeśli masz inne, podmień tu, a reszta zostaje.
 const Verify2FASchema = createApiSchema({
   POST: {
     input: z.object({
@@ -46,62 +47,42 @@ const Resend2FASchema = createApiSchema({
   },
 })
 
-function methodTitle(method: TwoFactorMethod) {
-  switch (method) {
-    case "authenticator":
-      return "Wpisz kod z aplikacji uwierzytelniającej"
-    case "sms":
-      return "Wpisz kod wysłany SMS-em"
-    case "email":
-      return "Wpisz kod wysłany na e-mail"
-    default:
-      return "Nieznana metoda"
-  }
+const OTP_LEN = 6
+const LINKED_METHODS: TwoFactorMethod[] = ["authenticator", "sms", "email"]
+const RESEND_METHODS: ResendType[] = ["sms", "email"]
+
+const METHOD_TITLES: Record<TwoFactorMethod, string> = {
+  authenticator: "Wpisz kod z aplikacji uwierzytelniającej",
+  sms: "Wpisz kod wysłany SMS-em",
+  email: "Wpisz kod wysłany na e-mail",
 }
 
-function methodSwitchLabel(method: TwoFactorMethod) {
-  switch (method) {
-    case "authenticator":
-      return "Użyj aplikacji uwierzytelniającej"
-    case "sms":
-      return "Wyślij kod SMS-em"
-    case "email":
-      return "Wyślij kod e-mailem"
-    default:
-      return "Nieznana metoda"
-  }
+const METHOD_SWITCH_LABELS: Record<TwoFactorMethod, string> = {
+  authenticator: "Użyj aplikacji uwierzytelniającej",
+  sms: "Wyślij kod SMS-em",
+  email: "Wyślij kod e-mailem",
 }
 
-const linkedMethods: TwoFactorMethod[] = ["authenticator", "sms", "email"]
 export default function TwoFactorPage() {
-  const defaultMethod = useMemo<TwoFactorMethod>(
-    () => linkedMethods[0] ?? "email",
-    []
-  )
-
+  const defaultMethod = LINKED_METHODS[0] ?? "email"
   const [method, setMethod] = useState<TwoFactorMethod>(defaultMethod)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isResending, setIsResending] = useState(false)
-
-  const alternatives = linkedMethods.filter((m) => m !== method)
-  const canResend = method === "sms" || method === "email"
+  const autoSubmittedRef = useRef(false)
 
   const form = useForm({
     defaultValues: { code: "" },
     onSubmit: async ({ value }) => {
-      if (value.code.length !== 6) {
-        toast.error("Wpisz 6-cyfrowy kod.")
+      if (value.code.length !== OTP_LEN) {
+        toast.error(`Wpisz ${OTP_LEN}-cyfrowy kod.`)
         return
       }
 
-      setIsSubmitting(true)
       const [err] = await tryCatch(
         apiFetch("/api/auth/login/2fa", Verify2FASchema, {
           method: "POST",
           body: { method, code: value.code },
         })
       )
-      setIsSubmitting(false)
 
       if (err) {
         toast.error("Nieprawidłowy kod lub błąd weryfikacji. Spróbuj ponownie.")
@@ -112,7 +93,17 @@ export default function TwoFactorPage() {
     },
   })
 
-  async function resendCode(m: "sms" | "email") {
+  const alternatives = useMemo(
+    () => LINKED_METHODS.filter((m) => m !== method),
+    [method]
+  )
+
+  const canResend = RESEND_METHODS.includes(method as ResendType)
+
+  async function resendCode(m: ResendType) {
+    if (RESEND_METHODS.includes(m) === false) {
+      throw new Error("Nieobsługiwana metoda ponownego wysyłania kodu.")
+    }
     setIsResending(true)
     const [err] = await tryCatch(
       apiFetch("/api/auth/login/2fa/resend", Resend2FASchema, {
@@ -133,12 +124,14 @@ export default function TwoFactorPage() {
     return true
   }
 
-  async function switchMethod(next: TwoFactorMethod) {
+  async function handleSwitchMethod(next: TwoFactorMethod) {
     setMethod(next)
     form.resetField("code")
 
-    if (next === "sms" || next === "email") {
-      await resendCode(next)
+    autoSubmittedRef.current = false
+
+    if (RESEND_METHODS.includes(next as ResendType)) {
+      await resendCode(next as ResendType)
     }
   }
 
@@ -147,19 +140,21 @@ export default function TwoFactorPage() {
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          e.stopPropagation()
-          form.handleSubmit(e)
+          form.handleSubmit()
         }}
       >
         <FieldGroup>
+          <Link className="underline" href="/">
+            Cofnij się do strony głównej
+          </Link>
           <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="font-bold text-xl">Wpisz kod weryfikacyjny</h1>
-            <FieldDescription>{methodTitle(method)}</FieldDescription>
+            <Logo />
+            <FieldDescription>{METHOD_TITLES[method]}</FieldDescription>
           </div>
 
           <form.Field name="code">
             {(field) => (
-              <Field>
+              <Field disabled={form.state.isSubmitting || isResending}>
                 <FieldLabel className="sr-only" htmlFor={field.name}>
                   Kod weryfikacyjny
                 </FieldLabel>
@@ -167,8 +162,27 @@ export default function TwoFactorPage() {
                 <InputOTP
                   containerClassName="gap-4 items-center justify-center"
                   id={field.name}
-                  maxLength={6}
-                  onChange={(code) => field.handleChange(code)}
+                  maxLength={OTP_LEN}
+                  onChange={(raw) => {
+                    const code = raw.replace(/\D/g, "").slice(0, OTP_LEN)
+                    field.handleChange(code)
+
+                    if (code.length < OTP_LEN) {
+                      autoSubmittedRef.current = false
+                      return
+                    }
+
+                    if (
+                      code.length === OTP_LEN &&
+                      !autoSubmittedRef.current &&
+                      !form.state.isSubmitting
+                    ) {
+                      autoSubmittedRef.current = true
+                      queueMicrotask(() => {
+                        form.handleSubmit()
+                      })
+                    }
+                  }}
                   pattern={REGEXP_ONLY_DIGITS}
                   required
                   value={field.state.value}
@@ -194,7 +208,7 @@ export default function TwoFactorPage() {
                     <Button
                       className="h-auto p-0 align-baseline"
                       disabled={isResending}
-                      onClick={() => resendCode(method)}
+                      onClick={() => resendCode(method as ResendType)}
                       type="button"
                       variant="link"
                     >
@@ -212,14 +226,14 @@ export default function TwoFactorPage() {
                       {alternatives.map((m) => (
                         <Button
                           className="h-9 justify-start px-2"
-                          disabled={isResending || isSubmitting}
+                          disabled={isResending || form.state.isSubmitting}
                           key={m}
-                          onClick={() => switchMethod(m)}
+                          onClick={() => handleSwitchMethod(m)}
                           size="sm"
                           type="button"
                           variant="link"
                         >
-                          {methodSwitchLabel(m)}
+                          {METHOD_SWITCH_LABELS[m]}
                         </Button>
                       ))}
                     </div>
@@ -229,8 +243,12 @@ export default function TwoFactorPage() {
             )}
           </form.Field>
           <Field>
-            <Button className="w-full" disabled={isSubmitting} type="submit">
-              Zweryfikuj {isSubmitting && <Spinner />}
+            <Button
+              className="w-full"
+              disabled={form.state.isSubmitting}
+              type="submit"
+            >
+              Zweryfikuj {form.state.isSubmitting && <Spinner />}
             </Button>
           </Field>
         </FieldGroup>
