@@ -4,7 +4,7 @@ import { type AnyFieldApi, useForm } from "@tanstack/react-form"
 import Link from "next/link"
 import { toast } from "sonner"
 import { type ZodError, z } from "zod"
-import Logo from "@/components/Logo"
+import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {

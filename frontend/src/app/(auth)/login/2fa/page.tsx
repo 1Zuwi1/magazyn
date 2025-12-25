@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { z } from "zod"
-import Logo from "@/components/Logo"
+import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import {
   Field,
