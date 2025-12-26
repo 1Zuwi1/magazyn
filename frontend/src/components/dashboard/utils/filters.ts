@@ -4,6 +4,9 @@ export function filterWarehouses(
   warehouses: Omit<Warehouse, "used" | "capacity">[],
   filters: FilterState
 ) {
+  if (!warehouses) {
+    return []
+  }
   return warehouses
     .map((warehouse) => {
       const capacity = warehouse.racks.reduce(
@@ -23,14 +26,19 @@ export function filterWarehouses(
     })
     .filter((warehouse) => {
       // Search by warehouse name, rack name, or item ID
+      if (!filters.showEmpty && warehouse.used === 0) {
+        return false
+      }
       const matchesQuery =
         filters.query === "" ||
         warehouse.name.toLowerCase().includes(filters.query.toLowerCase()) ||
         warehouse.racks.some(
           (rack) =>
             rack.name.toLowerCase().includes(filters.query.toLowerCase()) ||
-            rack.items.some((item) =>
-              item.id.toLowerCase().includes(filters.query.toLowerCase())
+            rack.items.some(
+              (item) =>
+                item.id.toLowerCase().includes(filters.query.toLowerCase()) ||
+                item.name.toLowerCase().includes(filters.query.toLowerCase())
             )
         )
       if (!matchesQuery) {

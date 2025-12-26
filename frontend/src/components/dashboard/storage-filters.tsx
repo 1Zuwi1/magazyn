@@ -89,7 +89,7 @@ export function WarehouseFilters({
           </div>
 
           <div className="flex items-center justify-between">
-            <Label htmlFor="showEmpty">Pokaż puste regały</Label>
+            <Label htmlFor="showEmpty">Pokaż puste magazyny</Label>
             <Switch
               checked={filters.showEmpty}
               id="showEmpty"
