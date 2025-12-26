@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/card"
 import type { Warehouse } from "./types"
 
+const FULL_WAREHOUSE_THRESHOLD = 90
+
 interface WarehouseGridProps {
   warehouses: Warehouse[]
 }
@@ -29,26 +31,28 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
           Brak magazynów do wyświetlenia.
         </p>
       )}
-      {warehouses.map((storage) => {
+      {warehouses.map((warehouse) => {
         const occupancyPercentage = getOccupancyPercentage(
-          storage.used,
-          storage.capacity
+          warehouse.used,
+          warehouse.capacity
         )
 
         return (
           <Card
             className="cursor-pointer transition-shadow hover:shadow-lg"
-            key={storage.id}
+            key={warehouse.id}
           >
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
-                  <CardTitle className="text-xl">{storage.name}</CardTitle>
+                  <CardTitle className="text-xl">{warehouse.name}</CardTitle>
                   <CardDescription className="mt-1 flex items-center" />
                 </div>
                 <Badge
                   variant={
-                    occupancyPercentage > 90 ? "destructive" : "secondary"
+                    occupancyPercentage > FULL_WAREHOUSE_THRESHOLD
+                      ? "destructive"
+                      : "secondary"
                   }
                 >
                   {Math.round(occupancyPercentage)}% Pełny
@@ -61,12 +65,12 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Zapełnienie</span>
                     <span className="font-medium">
-                      {storage.used} / {storage.capacity} miejsc
+                      {warehouse.used} / {warehouse.capacity} miejsc
                     </span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-secondary">
                     <div
-                      className={`h-full rounded-full ${occupancyPercentage > 90 ? "bg-destructive" : "bg-primary"}`}
+                      className={`h-full rounded-full ${occupancyPercentage > FULL_WAREHOUSE_THRESHOLD ? "bg-destructive" : "bg-primary"}`}
                       style={{ width: `${occupancyPercentage}%` }}
                     />
                   </div>
@@ -75,7 +79,7 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center text-muted-foreground">
                     <HugeiconsIcon className="mr-2 h-4 w-4" icon={Package} />
-                    {storage.racks.length} Regałów
+                    {warehouse.racks.length} Regałów
                   </div>
                 </div>
               </div>
@@ -86,7 +90,7 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                   variant: "outline",
                   className: "w-full",
                 })}
-                href={`/dashboard/racks/id/${storage.id}/${storage.name}`}
+                href={`/dashboard/racks/id/${warehouse.id}/${warehouse.name}`}
               >
                 Zobacz Regały
               </Link>
