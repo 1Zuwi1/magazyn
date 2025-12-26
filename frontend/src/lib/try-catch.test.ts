@@ -43,10 +43,10 @@ describe("tryCatch", () => {
   })
 
   it("handles throwing async functions", async () => {
-    const asyncFn = async () => {
+    const asyncFn = () => {
       throw new Error("async error")
     }
-    const result = await tryCatch(asyncFn())
+    const result = await tryCatch(asyncFn)
 
     expect(result[0]).toBeInstanceOf(Error)
     expect(result[0]?.message).toBe("async error")
@@ -55,17 +55,16 @@ describe("tryCatch", () => {
 
   it("preserves error type", async () => {
     class CustomError extends Error {
-      constructor(
-        message: string,
-        public code: number
-      ) {
+      code: number
+      constructor(message: string, code: number) {
         super(message)
         this.name = "CustomError"
+        this.code = code
       }
     }
 
     const error = new CustomError("Custom error", 404)
-    const result = await tryCatch(Promise.reject(error))
+    const result = await tryCatch<undefined, CustomError>(Promise.reject(error))
 
     expect(result[0]).toBeInstanceOf(CustomError)
     expect(result[0]?.code).toBe(404)
