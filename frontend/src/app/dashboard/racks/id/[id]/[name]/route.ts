@@ -1,6 +1,6 @@
 import { cookies } from "next/headers"
 import { type NextRequest, NextResponse } from "next/server"
-import getUrl from "@/lib/get-url"
+import { getUrl } from "@/lib/get-url"
 
 interface PageProps {
   params: Promise<{ id: string; name: string }>

@@ -17,6 +17,10 @@ interface WarehouseGridProps {
   warehouses: Warehouse[]
 }
 
+const getOccupancyPercentage = (used: number, capacity: number): number => {
+  return capacity > 0 ? (used / capacity) * 100 : 0
+}
+
 export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -25,68 +29,71 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
           Brak magazynów do wyświetlenia.
         </p>
       )}
-      {warehouses.map((storage) => (
-        <Card
-          className="cursor-pointer transition-shadow hover:shadow-lg"
-          key={storage.id}
-        >
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-xl">{storage.name}</CardTitle>
-                <CardDescription className="mt-1 flex items-center" />
-              </div>
-              <Badge
-                variant={
-                  storage.used / storage.capacity > 0.9
-                    ? "destructive"
-                    : "secondary"
-                }
-              >
-                {Math.round((storage.used / storage.capacity) * 100)}% Pełny
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Zapełnienie</span>
-                  <span className="font-medium">
-                    {storage.used} / {storage.capacity} miejsc
-                  </span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                  <div
-                    className={`h-full rounded-full ${storage.used / storage.capacity > 0.9 ? "bg-destructive" : "bg-primary"}`}
-                    style={{
-                      width: `${(storage.used / storage.capacity) * 100}%`,
-                    }}
-                  />
-                </div>
-              </div>
+      {warehouses.map((storage) => {
+        const occupancyPercentage = getOccupancyPercentage(
+          storage.used,
+          storage.capacity
+        )
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex items-center text-muted-foreground">
-                  <HugeiconsIcon className="mr-2 h-4 w-4" icon={Package} />
-                  {storage.racks.length} Regałów
+        return (
+          <Card
+            className="cursor-pointer transition-shadow hover:shadow-lg"
+            key={storage.id}
+          >
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="text-xl">{storage.name}</CardTitle>
+                  <CardDescription className="mt-1 flex items-center" />
+                </div>
+                <Badge
+                  variant={
+                    occupancyPercentage > 90 ? "destructive" : "secondary"
+                  }
+                >
+                  {Math.round(occupancyPercentage)}% Pełny
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Zapełnienie</span>
+                    <span className="font-medium">
+                      {storage.used} / {storage.capacity} miejsc
+                    </span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-secondary">
+                    <div
+                      className={`h-full rounded-full ${occupancyPercentage > 90 ? "bg-destructive" : "bg-primary"}`}
+                      style={{ width: `${occupancyPercentage}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center text-muted-foreground">
+                    <HugeiconsIcon className="mr-2 h-4 w-4" icon={Package} />
+                    {storage.racks.length} Regałów
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Link
-              className={buttonVariants({
-                variant: "outline",
-                className: "w-full",
-              })}
-              href={`/dashboard/racks/id/${storage.id}/${storage.name}`}
-            >
-              Zobacz Regały
-            </Link>
-          </CardFooter>
-        </Card>
-      ))}
+            </CardContent>
+            <CardFooter>
+              <Link
+                className={buttonVariants({
+                  variant: "outline",
+                  className: "w-full",
+                })}
+                href={`/dashboard/racks/id/${storage.id}/${storage.name}`}
+              >
+                Zobacz Regały
+              </Link>
+            </CardFooter>
+          </Card>
+        )
+      })}
     </div>
   )
 }
