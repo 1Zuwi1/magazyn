@@ -36,9 +36,10 @@ export default function SiteHeader() {
               const splittedPath = path.split("-")
               const isDynamic = splittedPath.length > 1
               let displayName: string
-              try {
-                displayName = paths(path as Parameters<typeof paths>[0])
-              } catch {
+              const key = path as Parameters<typeof paths>[0]
+              if (paths.has(key)) {
+                displayName = paths(key)
+              } else {
                 displayName = isDynamic ? splittedPath[0] : decodeURI(path)
               }
               return (
