@@ -23,18 +23,17 @@ export async function GET(req: NextRequest, props: PageProps) {
   }
 
   const cookieStore = await cookies()
+  const url = await getUrl(req)
+  const safeName = encodeURIComponent(name)
   cookieStore.set({
     name: "rackId",
     value: id,
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    path: "/dashboard/racks",
+    path: `/dashboard/racks/${safeName}`,
     maxAge: COOKIE_MAX_AGE,
   })
-
-  const url = await getUrl(req)
-  const safeName = encodeURIComponent(name)
 
   return NextResponse.redirect(new URL(`/dashboard/racks/${safeName}`, url))
 }
