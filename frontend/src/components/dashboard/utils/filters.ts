@@ -44,16 +44,11 @@ export function filterWarehouses(
       }
 
       const hasMatchingRacks = warehouse.racks.some((rack) => {
-        // Skip empty racks if showEmpty is false
-        if (!filters.showEmpty && rack.occupancy === 0) {
-          return false
-        }
-
-        const tempMatch =
+        const isWithinTempRange =
           rack.minTemp >= filters.tempRange[0] &&
           rack.maxTemp <= filters.tempRange[1]
 
-        return tempMatch
+        return isWithinTempRange
       })
 
       return hasMatchingRacks
