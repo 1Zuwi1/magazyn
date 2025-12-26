@@ -1,6 +1,8 @@
-import { Package } from "lucide-react"
+import { Package } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -13,17 +15,20 @@ import type { Warehouse } from "./types"
 
 interface WarehouseGridProps {
   warehouses: Warehouse[]
-  onSelect: (warehouse: Warehouse) => void
 }
 
-export function WarehouseGrid({ warehouses, onSelect }: WarehouseGridProps) {
+export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {warehouses.length === 0 && (
+        <p className="col-span-full text-center text-muted-foreground">
+          Brak magazynów do wyświetlenia.
+        </p>
+      )}
       {warehouses.map((storage) => (
         <Card
           className="cursor-pointer transition-shadow hover:shadow-lg"
           key={storage.id}
-          onClick={() => onSelect(storage)}
         >
           <CardHeader>
             <div className="flex items-start justify-between">
@@ -63,16 +68,22 @@ export function WarehouseGrid({ warehouses, onSelect }: WarehouseGridProps) {
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center text-muted-foreground">
-                  <Package className="mr-2 h-4 w-4" />
+                  <HugeiconsIcon className="mr-2 h-4 w-4" icon={Package} />
                   {storage.racks.length} Regałów
                 </div>
               </div>
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" variant="outline">
+            <Link
+              className={buttonVariants({
+                variant: "outline",
+                className: "w-full",
+              })}
+              href={`/dashboard/racks/id/${storage.id}/${storage.name}`}
+            >
               Zobacz Regały
-            </Button>
+            </Link>
           </CardFooter>
         </Card>
       ))}

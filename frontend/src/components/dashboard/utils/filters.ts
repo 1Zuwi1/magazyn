@@ -17,7 +17,7 @@ export function filterWarehouses(
       return false
     }
 
-    const masMatchingRacks = warehouse.racks.some((rack) => {
+    const hasMatchingRacks = warehouse.racks.some((rack) => {
       const tempMatch =
         rack.minTemp >= filters.tempRange[0] &&
         rack.maxTemp <= filters.tempRange[1]
@@ -27,10 +27,10 @@ export function filterWarehouses(
       return tempMatch && occupancyMatch
     })
 
-    if (filters.tempRange && !masMatchingRacks) {
+    if (filters.tempRange && !hasMatchingRacks) {
       return false
     }
-    return masMatchingRacks
+    return hasMatchingRacks
   })
   return result
 }
