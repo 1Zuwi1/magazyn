@@ -3,6 +3,9 @@
     "dashboard": "Panel",
     "settings": "Ustawienia",
     "profile": "Profil",
-    "notifications": "Powiadomienia"
+    "notifications": "Powiadomienia",
+    "racks": "Regały",
+    "warehouse": "Magazyn",
+    "item": "Przedmiot"
   }
 }
