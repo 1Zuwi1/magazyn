@@ -5,12 +5,13 @@ export const LoginSchema = createApiSchema({
   POST: {
     input: z.object({
       email: z.email("Nieprawidłowy adres email"),
+      // TODO: Add more password rules
       password: z.string().min(6, "Hasło musi mieć co najmniej 6 znaków"),
-      rememberMe: z.boolean().refine((val) => typeof val === "boolean", {
-        message: "Pole zapamiętaj mnie musi być wartością logiczną",
-      }),
+      rememberMe: z.boolean("Pole zapamiętaj mnie musi być wartością logiczną"),
     }),
-    output: z.null(),
+    output: z.object({
+      requiresTwoFactor: z.boolean(),
+    }),
   },
 })
 

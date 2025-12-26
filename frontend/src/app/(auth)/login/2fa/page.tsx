@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation"
 import { getSession } from "@/lib/session"
-import TwoFactorForm from "./two-factor-form"
-
-export type TwoFactorMethod = "authenticator" | "sms" | "email"
-export type ResendType = Exclude<TwoFactorMethod, "authenticator">
+import TwoFactorForm, {
+  type ResendType,
+  type TwoFactorMethod,
+} from "./two-factor-form"
 
 const METHOD_TITLES: Record<TwoFactorMethod, string> = {
   authenticator: "Wpisz kod z aplikacji uwierzytelniającej",

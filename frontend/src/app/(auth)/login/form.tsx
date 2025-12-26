@@ -36,20 +36,21 @@ export default function LoginForm() {
       rememberMe: false,
     },
     onSubmit: async ({ value }) => {
-      const [err, _] = await tryCatch(
+      const [err, res] = await tryCatch(
         apiFetch("/api/auth/login", LoginSchema, {
           method: "POST",
-          body: { ...value },
+          body: value,
         })
       )
 
       if (err) {
+        // TODO: Handle specific errors (e.g., 2FA required)
         toast.error("Wystąpił błąd podczas logowania. Spróbuj ponownie.")
         return
       }
 
       toast.success("Zalogowano pomyślnie!")
-      router.push("/dashboard")
+      router.push(res.requiresTwoFactor ? "/login/2fa" : "/dashboard")
     },
     validators: {
       onSubmitAsync: LoginSchema.shape.POST.shape.input,
