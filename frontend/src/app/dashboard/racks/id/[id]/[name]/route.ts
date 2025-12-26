@@ -7,7 +7,7 @@ interface PageProps {
 }
 
 const COOKIE_MAX_AGE = 60 * 60 // 1 hour
-const RACK_ID_REGEX = /^[a-zA-Z0-9-]+$/
+const RACK_ID_REGEX = /^(?=.*[a-zA-Z0-9])[a-zA-Z0-9-]+$/
 
 export async function GET(req: NextRequest, props: PageProps) {
   const params = await props.params

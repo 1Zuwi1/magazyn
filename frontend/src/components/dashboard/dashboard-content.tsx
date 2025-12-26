@@ -19,7 +19,7 @@ const MOCK_RACKS: Rack[] = [
     maxTemp: 25,
     maxWeight: 1000,
     currentWeight: 450,
-    occupancy: 45,
+    occupancy: 0,
     items: [
       {
         id: "Item1",
@@ -39,7 +39,7 @@ const MOCK_RACKS: Rack[] = [
     maxTemp: 25,
     maxWeight: 1000,
     currentWeight: 620,
-    occupancy: 62,
+    occupancy: 0,
     items: [],
   },
   {
@@ -51,7 +51,7 @@ const MOCK_RACKS: Rack[] = [
     maxTemp: 25,
     maxWeight: 1000,
     currentWeight: 280,
-    occupancy: 28,
+    occupancy: 0,
     items: [],
   },
   {
@@ -63,7 +63,7 @@ const MOCK_RACKS: Rack[] = [
     maxTemp: 25,
     maxWeight: 1000,
     currentWeight: 890,
-    occupancy: 89,
+    occupancy: 0,
     items: [],
   },
   {
@@ -75,7 +75,7 @@ const MOCK_RACKS: Rack[] = [
     maxTemp: 25,
     maxWeight: 1000,
     currentWeight: 340,
-    occupancy: 34,
+    occupancy: 0,
     items: [],
   },
   {
@@ -87,7 +87,7 @@ const MOCK_RACKS: Rack[] = [
     maxTemp: 25,
     maxWeight: 1000,
     currentWeight: 710,
-    occupancy: 71,
+    occupancy: 0,
     items: [],
   },
   {
@@ -99,7 +99,7 @@ const MOCK_RACKS: Rack[] = [
     maxTemp: 25,
     maxWeight: 1000,
     currentWeight: 190,
-    occupancy: 19,
+    occupancy: 0,
     items: [],
   },
   {
@@ -111,7 +111,7 @@ const MOCK_RACKS: Rack[] = [
     maxTemp: 25,
     maxWeight: 1000,
     currentWeight: 530,
-    occupancy: 53,
+    occupancy: 0,
     items: [],
   },
 ]
