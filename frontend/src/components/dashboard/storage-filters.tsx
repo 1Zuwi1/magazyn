@@ -1,4 +1,5 @@
-import { Filter } from "lucide-react"
+import { Filter } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
@@ -35,7 +36,7 @@ export function WarehouseFilters({
           "cursor-pointer"
         )}
       >
-        <Filter className="h-4 w-4" />
+        <HugeiconsIcon className="h-4 w-4" icon={Filter} />
       </PopoverTrigger>
       <PopoverContent className="w-80">
         <div className="grid gap-4">
