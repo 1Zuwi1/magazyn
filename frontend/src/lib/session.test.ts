@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-
 import { getSession } from "./session"
 
 describe("getSession", () => {
@@ -111,7 +110,7 @@ describe("getSession", () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       status: 200,
-      json: async () => {
+      json: () => {
         throw new Error("Invalid JSON")
       },
     })

@@ -84,7 +84,7 @@ export default function TwoFactorForm({
   const canResend = resendMethods.includes(method as ResendType)
 
   async function resendCode(m: ResendType) {
-    if (resendMethods.includes(m) === false) {
+    if (!resendMethods.includes(m)) {
       toast.error("Nieobsługiwana metoda ponownego wysyłania kodu.")
       return false
     }
