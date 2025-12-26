@@ -36,8 +36,6 @@ interface TwoFactorFormProps {
   otpLength: number
 }
 
-const OTP_INPUT_LENGTH = 6
-
 export default function TwoFactorForm({
   linkedMethods,
   resendMethods,
@@ -87,7 +85,8 @@ export default function TwoFactorForm({
 
   async function resendCode(m: ResendType) {
     if (resendMethods.includes(m) === false) {
-      throw new Error("Nieobsługiwana metoda ponownego wysyłania kodu.")
+      toast.error("Nieobsługiwana metoda ponownego wysyłania kodu.")
+      return false
     }
     setIsResending(true)
     const [err] = await tryCatch(
@@ -148,16 +147,16 @@ export default function TwoFactorForm({
                 id={field.name}
                 maxLength={otpLength}
                 onChange={(raw) => {
-                  const code = raw.replace(/\D/g, "").slice(0, OTP_INPUT_LENGTH)
+                  const code = raw.replace(/\D/g, "").slice(0, otpLength)
                   field.handleChange(code)
 
-                  if (code.length < OTP_INPUT_LENGTH) {
+                  if (code.length < otpLength) {
                     autoSubmittedRef.current = false
                     return
                   }
 
                   if (
-                    code.length === OTP_INPUT_LENGTH &&
+                    code.length === otpLength &&
                     !autoSubmittedRef.current &&
                     !form.state.isSubmitting
                   ) {
