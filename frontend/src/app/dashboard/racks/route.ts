@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { getUrl } from "@/lib/get-url"
 
-export function GET(req: NextRequest) {
-  return NextResponse.redirect(new URL("/dashboard/", req.url), 301)
+export async function GET(req: NextRequest) {
+  const url = await getUrl(req)
+  return NextResponse.redirect(new URL("/dashboard/", url), 301)
 }

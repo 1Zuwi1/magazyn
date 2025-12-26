@@ -14,16 +14,16 @@ export async function GET(req: NextRequest, props: PageProps) {
   const { id, name } = params
 
   const isValidRackId = id && RACK_ID_REGEX.test(id)
+  const url = await getUrl(req)
   if (!isValidRackId) {
-    return NextResponse.redirect(new URL("/dashboard/", req.url))
+    return NextResponse.redirect(new URL("/dashboard/", url))
   }
 
   if (!name) {
-    return NextResponse.redirect(new URL("/dashboard/", req.url))
+    return NextResponse.redirect(new URL("/dashboard/", url))
   }
 
   const cookieStore = await cookies()
-  const url = await getUrl(req)
   const safeName = encodeURIComponent(name)
   cookieStore.set({
     name: "rackId",
