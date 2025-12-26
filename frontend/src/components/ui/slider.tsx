@@ -5,6 +5,14 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+interface SliderProps extends SliderPrimitive.Root.Props {
+  className?: string
+  defaultValue?: number[] | number | undefined
+  value?: number[] | number | undefined
+  min?: number | undefined
+  max?: number | undefined
+}
+
 function Slider({
   className,
   defaultValue,
@@ -12,7 +20,7 @@ function Slider({
   min = 0,
   max = 100,
   ...props
-}: SliderPrimitive.Root.Props) {
+}: SliderProps) {
   const _values = React.useMemo(() => {
     if (Array.isArray(value)) {
       return value
@@ -20,8 +28,8 @@ function Slider({
     if (Array.isArray(defaultValue)) {
       return defaultValue
     }
-    return [min, max]
-  }, [value, defaultValue, min, max])
+    return []
+  }, [value, defaultValue])
 
   return (
     <SliderPrimitive.Root

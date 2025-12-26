@@ -6,21 +6,35 @@ interface PageProps {
   params: Promise<{ id: string; name: string }>
 }
 
+const COOKIE_MAX_AGE = 60 * 60 // 1 hour
+const RACK_ID_REGEX = /^[a-zA-Z0-9-]+$/
+
 export async function GET(req: NextRequest, props: PageProps) {
   const params = await props.params
   const { id, name } = params
 
-  const base = req.nextUrl.pathname.split("/").slice(0, -3).join("/")
-  const safePath = encodeURI(`${base}/${name}`)
-  const cookie = await cookies()
-  cookie.set({
+  const isValidRackId = id && RACK_ID_REGEX.test(id)
+  if (!isValidRackId) {
+    return NextResponse.redirect(new URL("/dashboard/", req.url))
+  }
+
+  if (!name) {
+    return NextResponse.redirect(new URL("/dashboard/", req.url))
+  }
+
+  const cookieStore = await cookies()
+  cookieStore.set({
     name: "rackId",
     value: id,
     httpOnly: true,
-    path: safePath,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/dashboard/racks",
+    maxAge: COOKIE_MAX_AGE,
   })
 
   const url = await getUrl(req)
+  const safeName = encodeURIComponent(name)
 
-  return NextResponse.redirect(new URL(`/dashboard/racks/${name}`, url))
+  return NextResponse.redirect(new URL(`/dashboard/racks/${safeName}`, url))
 }
