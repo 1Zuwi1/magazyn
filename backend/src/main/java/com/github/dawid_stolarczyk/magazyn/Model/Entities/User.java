@@ -18,9 +18,11 @@ public class User {
     private Long id;
     @Column(name = "public_id", unique = true, nullable = false, updatable = false)
     private String publicId;
+    @Column(unique = true, nullable = false)
     @NotBlank
     @Size(min=3, max=50)
     private String username;
+    @Column(nullable = false)
     @NotBlank
     private String password;
     @NotNull
