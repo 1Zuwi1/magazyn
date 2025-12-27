@@ -1,10 +1,13 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.DTOs;
 
-public class ResponseTemplate {
-    private boolean success;
-    private Object data;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-    public ResponseTemplate(boolean success, Object data) {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ResponseTemplate<T> {
+    private boolean success;
+    private T data;
+
+    public ResponseTemplate(boolean success, T data) {
         this.success = success;
         this.data = data;
     }
@@ -21,7 +24,7 @@ public class ResponseTemplate {
         return data;
     }
 
-    public void setData(Object data) {
+    public void setData(T data) {
         this.data = data;
     }
 }
