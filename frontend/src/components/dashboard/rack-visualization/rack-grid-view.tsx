@@ -1,18 +1,13 @@
 "use client"
 
-import {
-  ArrowLeft01Icon,
-  ArrowRight01Icon,
-  CubeIcon,
-} from "@hugeicons/core-free-icons"
+import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 import { buttonVariants } from "@/components/ui/button"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
 import type { Item } from "../types"
+import RackElement from "./rack-element"
 
 interface RackGridViewProps {
   rows: number
@@ -161,7 +156,7 @@ export function RackGridView({
                         const coordinate = getSlotCoordinate(index, cols)
 
                         return (
-                          <Element
+                          <RackElement
                             className="absolute origin-center"
                             coordinate={coordinate}
                             isEmpty={isEmpty}
@@ -176,30 +171,6 @@ export function RackGridView({
                             }}
                           />
                         )
-
-                        // return (
-                        //   <div
-                        //     className="group absolute aspect-square overflow-hidden rounded-lg transition-all hover:shadow-md [&:hover>div]:scale-115"
-                        //     key={virtualColumn.key}
-                        //     style={{
-                        //       top: 0,
-                        //       left: 0,
-                        //       width: `${virtualColumn.size - CELL_GAP}px`,
-                        //       height: `${virtualRow.size - CELL_GAP}px`,
-                        //       transform: `translateX(${virtualColumn.start}px)`,
-                        //     }}
-                        //   >
-                        //     <Element
-                        //       coordinate={coordinate}
-                        //       isEmpty={isEmpty}
-                        //       item={item}
-                        //     />
-                        //     {/* Slot coordinate overlay for all slots */}
-                        //     <div className="absolute bottom-0.5 left-0.5 flex size-4 items-center justify-center rounded bg-black/50 font-semibold text-[8px] text-white sm:size-5 sm:text-[10px]">
-                        //       {coordinate}
-                        //     </div>
-                        //   </div>
-                        // )
                       })}
                   </div>
                 ))}
@@ -228,7 +199,7 @@ export function RackGridView({
                   const coordinate = getSlotCoordinate(index, cols)
 
                   return (
-                    <Element
+                    <RackElement
                       coordinate={coordinate}
                       isEmpty={isEmpty}
                       item={item}
@@ -268,73 +239,6 @@ export function RackGridView({
           </span>
         </div>
       )}
-    </div>
-  )
-}
-
-interface ElementProps extends React.HTMLAttributes<HTMLDivElement> {
-  isEmpty: boolean
-  item: Item | null
-  coordinate: string
-}
-
-function Element({
-  isEmpty,
-  item,
-  coordinate,
-  className,
-  ...props
-}: ElementProps) {
-  return (
-    <div
-      className={cn(
-        "group relative aspect-square overflow-hidden rounded-lg transition-all hover:scale-105 hover:shadow-md",
-        {
-          "outline-2 outline-red-500": item?.isDangerous,
-        },
-        className
-      )}
-      {...props}
-    >
-      {!item || isEmpty ? (
-        // Empty slot
-        <div className="flex h-full flex-col items-center justify-center bg-muted/30 text-muted-foreground">
-          <span className="font-semibold text-xs sm:text-sm md:text-lg">
-            {coordinate}
-          </span>
-        </div>
-      ) : (
-        // Occupied slot
-        <div className="relative flex h-full items-center justify-center bg-secondary">
-          {item.imageUrl ? (
-            <Image
-              alt={item.name}
-              className="object-cover"
-              fill
-              sizes="(max-width: 768px) 60px, 80px"
-              src={item.imageUrl}
-            />
-          ) : (
-            // Fallback icon when no image
-            <div className="flex h-full w-full items-center justify-center bg-muted">
-              <HugeiconsIcon
-                className="size-8 text-muted-foreground"
-                icon={CubeIcon}
-              />
-            </div>
-          )}
-          {/* Danger indicator */}
-          {item.isDangerous && (
-            <div className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-destructive">
-              <div className="size-2 rounded-full bg-white" />
-            </div>
-          )}
-        </div>
-      )}
-      {/* Slot coordinate overlay for all slots */}
-      <div className="absolute bottom-0.5 left-0.5 flex h-fit w-fit items-center justify-center rounded bg-black/50 p-0.5 font-semibold text-[8px] text-white sm:text-[10px]">
-        {coordinate}
-      </div>
     </div>
   )
 }
