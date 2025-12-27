@@ -84,10 +84,20 @@ public class User {
         return password;
     }
 
+    /**
+     * Sets the password assuming the given value is already hashed.
+     * Use {@link #setRawPassword(String)} when providing a plaintext password.
+     */
     public void setPassword(String password) {
-        this.password = BCrypt.hashpw(password, BCrypt.gensalt());
+        this.password = password;
     }
 
+    /**
+     * Hashes the provided raw (plaintext) password and stores the hash.
+     */
+    public void setRawPassword(String rawPassword) {
+        this.password = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
+    }
     public UserRole getRole() {
         return role;
     }
