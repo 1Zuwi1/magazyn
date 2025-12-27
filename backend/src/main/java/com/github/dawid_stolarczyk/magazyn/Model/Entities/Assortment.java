@@ -21,7 +21,7 @@ public class Assortment {
     private Timestamp created_at;
 
     @PrePersist
-    public void setCreatedAt() {
+    public void initializeCreatedAt() {
         if (created_at == null) {
             created_at = new Timestamp(System.currentTimeMillis());
         }
