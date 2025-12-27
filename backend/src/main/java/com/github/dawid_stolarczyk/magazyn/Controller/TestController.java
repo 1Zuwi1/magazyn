@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.github.dawid_stolarczyk.magazyn.Controller.DTOs.ResponseTemplate;
 
 @RestController
-@RequestMapping("/api/test")
+@RequestMapping("/health")
 public class TestController {
 
     @Operation(summary = "Health check endpoint")
