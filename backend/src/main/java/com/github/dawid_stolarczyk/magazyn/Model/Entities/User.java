@@ -34,6 +34,22 @@ public class User {
             publicId = IdGenerator.generateWithBASE62(12);
         }
     }
+    public void addWarehouse(Warehouse warehouse) {
+        warehouses.add(warehouse);
+        warehouse.setUser(this);
+    }
+    public void removeWarehouse(Warehouse warehouse) {
+        warehouses.remove(warehouse);
+        warehouse.setUser(null);
+    }
+    public void addAssortment(Assortment assortment) {
+        assortments.add(assortment);
+        assortment.setUser(this);
+    }
+    public void removeAssortment(Assortment assortment) {
+        assortments.remove(assortment);
+        assortment.setUser(null);
+    }
 
     public Long getId() {
         return id;
