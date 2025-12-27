@@ -13,8 +13,11 @@ public class Assortment {
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
     @ManyToOne
-    @JoinColumn(name = "regal_id", nullable = false)
-    private Regal regal;
+    @JoinColumn(name = "rack_id", nullable = false)
+    private Rack rack;
+    @ManyToOne
+    @JoinColumn(name = "created_by", nullable = false)
+    private User user;
     private Timestamp created_at;
 
     public Long getId() {
@@ -33,12 +36,12 @@ public class Assortment {
         this.item = item;
     }
 
-    public Regal getRegal() {
-        return regal;
+    public Rack getRack() {
+        return rack;
     }
 
-    public void setRegal(Regal regal) {
-        this.regal = regal;
+    public void setRack(Rack rack) {
+        this.rack = rack;
     }
 
     public Timestamp getCreated_at() {
@@ -47,5 +50,13 @@ public class Assortment {
 
     public void setCreated_at(Timestamp created_at) {
         this.created_at = created_at;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }
