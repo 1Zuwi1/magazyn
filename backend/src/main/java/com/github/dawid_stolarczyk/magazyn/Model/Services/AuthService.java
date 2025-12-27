@@ -33,4 +33,8 @@ public class AuthService {
             throw new RuntimeException("Invalid email or password");
         }
     }
+
+    public void registerUser(LoginRegisterRequest registerRequest, HttpServletRequest request, HttpServletResponse response) {
+
+    }
 }
