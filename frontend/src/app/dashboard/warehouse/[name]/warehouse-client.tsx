@@ -56,22 +56,25 @@ export default function WarehouseClient({
   }
 
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6">
+    <div className="flex-1 space-y-4 p-4 pt-6 sm:space-y-6 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Link
-            className={cn(buttonVariants({ variant: "outline", size: "icon" }))}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "icon" }),
+              "size-8 sm:size-10"
+            )}
             href="/dashboard"
             title="Powrót do Dashboardu"
           >
             <HugeiconsIcon icon={ArrowLeft02Icon} />
           </Link>
           <div>
-            <h2 className="font-bold text-3xl tracking-tight">
+            <h2 className="font-bold text-xl tracking-tight sm:text-2xl lg:text-3xl">
               {warehouseName}
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-xs sm:text-sm">
               ID: {warehouseId} • {currentRack.name}
             </p>
           </div>
@@ -81,6 +84,7 @@ export default function WarehouseClient({
             className={buttonVariants({
               variant: "outline",
               size: "icon",
+              className: "size-8 sm:size-10",
             })}
             title="Skaner QR"
           >
@@ -97,7 +101,7 @@ export default function WarehouseClient({
       </div>
 
       {/* Main Content - Two Column Layout */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Left Column - Grid Visualization */}
         <div className="lg:col-span-2">
           <RackGridView
