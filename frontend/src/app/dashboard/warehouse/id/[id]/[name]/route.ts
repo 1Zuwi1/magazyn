@@ -7,15 +7,15 @@ interface PageProps {
 }
 
 const COOKIE_MAX_AGE = 60 * 60 // 1 hour
-const RACK_ID_REGEX = /^(?=.*[a-zA-Z0-9])[a-zA-Z0-9-]+$/
+const WAREHOUSE_ID_REGEX = /^(?=.*[a-zA-Z0-9])[a-zA-Z0-9-]+$/
 
 export async function GET(req: NextRequest, props: PageProps) {
   const params = await props.params
   const { id, name } = params
 
-  const isValidRackId = id && RACK_ID_REGEX.test(id)
+  const isValidWarehouseId = id && WAREHOUSE_ID_REGEX.test(id)
   const url = await getUrl(req)
-  if (!isValidRackId) {
+  if (!isValidWarehouseId) {
     return NextResponse.redirect(new URL("/dashboard/", url))
   }
 
@@ -26,14 +26,14 @@ export async function GET(req: NextRequest, props: PageProps) {
   const cookieStore = await cookies()
   const safeName = encodeURIComponent(name)
   cookieStore.set({
-    name: "rackId",
+    name: "warehouseId",
     value: id,
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    path: `/dashboard/racks/${safeName}`,
+    path: `/dashboard/warehouse/${safeName}`,
     maxAge: COOKIE_MAX_AGE,
   })
 
-  return NextResponse.redirect(new URL(`/dashboard/racks/${safeName}`, url))
+  return NextResponse.redirect(new URL(`/dashboard/warehouse/${safeName}`, url))
 }

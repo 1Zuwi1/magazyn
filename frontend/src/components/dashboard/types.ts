@@ -25,6 +25,7 @@ export interface Item {
   expiryDate: Date
   weight: number
   isDangerous: boolean
+  imageUrl?: string | null
 }
 
 export interface FilterState {
