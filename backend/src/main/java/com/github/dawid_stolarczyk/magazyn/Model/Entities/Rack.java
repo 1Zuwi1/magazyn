@@ -3,6 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Model.Entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -27,7 +28,7 @@ public class Rack {
     private float max_size_z;
 
     @OneToMany(mappedBy = "rack", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Assortment> assortments;
+    private List<Assortment> assortments = new ArrayList<>();
 
     public Long getId() {
         return id;

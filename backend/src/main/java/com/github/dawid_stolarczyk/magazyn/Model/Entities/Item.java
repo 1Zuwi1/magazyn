@@ -2,6 +2,7 @@ package com.github.dawid_stolarczyk.magazyn.Model.Entities;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -22,7 +23,7 @@ public class Item {
     private boolean isDangerous;
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Assortment> assortments;
+    private List<Assortment> assortments = new ArrayList<>();
 
     public Long getId() {
         return id;

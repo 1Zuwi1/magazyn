@@ -3,9 +3,13 @@ package com.github.dawid_stolarczyk.magazyn.Model.Entities;
 import com.github.dawid_stolarczyk.magazyn.Model.Utils.IdGenerator;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -19,19 +23,20 @@ public class User {
     @Size(min=3, max=50)
     private String username;
     private String password;
+    @NotNull
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Warehouse> warehouses;
+    private List<Warehouse> warehouses = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Assortment> assortments;
+    private List<Assortment> assortments = new ArrayList<>();
 
     @PrePersist
     public void generatePublicId() {
         if (publicId == null) {
-            publicId = IdGenerator.generateWithBASE62(12);
+            publicId = UUID.randomUUID().toString();
         }
     }
     public void addWarehouse(Warehouse warehouse) {
@@ -80,7 +85,7 @@ public class User {
     }
 
     public void setPassword(String password) {
-        this.password = password;
+        this.password = BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
     public UserRole getRole() {
