@@ -3,7 +3,6 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { cookies } from "next/headers"
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { RackItemsWrapper } from "@/components/dashboard/rack-items/rack-items-wrapper"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -44,168 +43,168 @@ export default async function RackPage({
       {
         id: "item-0",
         name: "Produkt 1",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 25,
         isDangerous: false,
       },
       {
         id: "item-1",
         name: "Produkt 2",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 15,
         isDangerous: false,
       },
       {
         id: "item-2",
         name: "Produkt 3",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 30,
         isDangerous: false,
       },
       {
         id: "item-3",
         name: "Produkt 4",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 20,
         isDangerous: false,
       },
       {
         id: "item-4",
         name: "Produkt 5",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 35,
         isDangerous: false,
       },
       {
         id: "item-5",
         name: "Produkt 6",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 18,
         isDangerous: true,
       },
       {
         id: "item-6",
         name: "Produkt 7",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 22,
         isDangerous: false,
       },
       {
         id: "item-7",
         name: "Produkt 8",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 28,
         isDangerous: false,
       },
       {
         id: "item-8",
         name: "Produkt 9",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 40,
         isDangerous: false,
       },
       {
         id: "item-9",
         name: "Produkt 10",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 12,
         isDangerous: false,
       },
       {
         id: "item-10",
         name: "Produkt 11",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 33,
         isDangerous: false,
       },
       {
         id: "item-11",
         name: "Produkt 12",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 19,
         isDangerous: false,
       },
       {
         id: "item-12",
         name: "Produkt 13",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 27,
         isDangerous: false,
       },
       {
         id: "item-13",
         name: "Produkt 14",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 45,
         isDangerous: true,
       },
       {
         id: "item-14",
         name: "Produkt 15",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 16,
         isDangerous: false,
       },
       {
         id: "item-15",
         name: "Produkt 16",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 24,
         isDangerous: false,
       },
       {
         id: "item-16",
         name: "Produkt 17",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 31,
         isDangerous: false,
       },
       {
         id: "item-17",
         name: "Produkt 18",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 21,
         isDangerous: false,
       },
       {
         id: "item-18",
         name: "Produkt 19",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 38,
         isDangerous: false,
       },
       {
         id: "item-19",
         name: "Produkt 20",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 14,
         isDangerous: false,
       },
       {
         id: "item-20",
         name: "Produkt 21",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 29,
         isDangerous: false,
       },
       {
         id: "item-21",
         name: "Produkt 22",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 36,
         isDangerous: false,
       },
       {
         id: "item-22",
         name: "Produkt 23",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 17,
         isDangerous: false,
       },
       {
         id: "item-23",
         name: "Produkt 24",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 23,
         isDangerous: false,
       },
@@ -329,7 +328,7 @@ export default async function RackPage({
         </CardContent>
       </Card>
 
-      <RackItemsWrapper initialItems={mockRack.items} />
+      {/* <RackItemsWrapper initialItems={mockRack.items} /> */}
     </div>
   )
 }

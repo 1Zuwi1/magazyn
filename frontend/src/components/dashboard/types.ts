@@ -22,7 +22,7 @@ export interface Warehouse {
 export interface Item {
   id: string
   name: string
-  expiryDate: string
+  expiryDate: Date
   weight: number
   isDangerous: boolean
 }

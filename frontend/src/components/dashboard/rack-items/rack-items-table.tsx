@@ -7,6 +7,7 @@ import {
   PencilEdit02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useFormatter } from "next-intl"
 import { useState } from "react"
 import type { Item } from "@/components/dashboard/types"
 import {
@@ -58,6 +59,8 @@ export function RackItemsTable({
     item: null,
   })
 
+  const formatter = useFormatter()
+
   const handleDeleteClick = (item: Item) => {
     setDeleteDialog({ open: true, item })
   }
@@ -69,24 +72,15 @@ export function RackItemsTable({
     setDeleteDialog({ open: false, item: null })
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString("pl-PL", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    })
-  }
-
-  const isExpiringSoon = (expiryDate: string) => {
+  const isExpiringSoon = (expiryDate: Date) => {
     const daysUntilExpiry = Math.floor(
-      (new Date(expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      (expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
     )
     return daysUntilExpiry <= 30 && daysUntilExpiry >= 0
   }
 
-  const isExpired = (expiryDate: string) => {
-    return new Date(expiryDate) < new Date()
+  const isExpired = (expiryDate: Date) => {
+    return expiryDate < new Date()
   }
 
   if (items.length === 0) {
@@ -163,7 +157,7 @@ export function RackItemsTable({
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span>{formatDate(item.expiryDate)}</span>
+                        <span>{formatter.dateTime(item.expiryDate)}</span>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex gap-2">

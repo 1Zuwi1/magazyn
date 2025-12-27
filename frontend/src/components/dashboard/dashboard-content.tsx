@@ -24,7 +24,7 @@ const MOCK_RACKS: Rack[] = [
       {
         id: "Item1",
         name: "Przykład",
-        expiryDate: "2025-12-31",
+        expiryDate: new Date("2025-12-31"),
         weight: 10,
         isDangerous: false,
       },

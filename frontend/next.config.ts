@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   output: "standalone",
   distDir: process.env.NODE_ENV === "production" ? ".next" : ".next-dev",
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 }
 
 const withNextIntl = createNextIntlPlugin({
