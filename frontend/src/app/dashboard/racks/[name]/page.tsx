@@ -1,6 +1,11 @@
+import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { cookies } from "next/headers"
+import Link from "next/link"
 import { redirect } from "next/navigation"
+import { RackItemsWrapper } from "@/components/dashboard/rack-items/rack-items-wrapper"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -209,11 +214,18 @@ export default async function RackPage({
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-bold text-3xl tracking-tight">{decodedName}</h2>
-          <p className="text-muted-foreground">
-            ID: {rackId} • {mockRack.rows}x{mockRack.cols} pozycji
-          </p>
+        <div className="flex items-center gap-4">
+          <Button size="icon" variant="outline">
+            <Link href="/dashboard" title="Powrót do Dashboardu">
+              <HugeiconsIcon icon={ArrowLeft02Icon} />
+            </Link>
+          </Button>
+          <div>
+            <h2 className="font-bold text-3xl tracking-tight">{decodedName}</h2>
+            <p className="text-muted-foreground">
+              ID: {rackId} • {mockRack.rows}x{mockRack.cols} pozycji
+            </p>
+          </div>
         </div>
       </div>
 
@@ -313,6 +325,8 @@ export default async function RackPage({
           </div>
         </CardContent>
       </Card>
+
+      <RackItemsWrapper initialItems={mockRack.items} />
     </div>
   )
 }
