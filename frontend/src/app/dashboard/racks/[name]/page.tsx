@@ -5,7 +5,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { RackItemsWrapper } from "@/components/dashboard/rack-items/rack-items-wrapper"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 
 export default async function RackPage({
   params,
@@ -215,11 +216,13 @@ export default async function RackPage({
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button size="icon" variant="outline">
-            <Link href="/dashboard" title="Powrót do Dashboardu">
-              <HugeiconsIcon icon={ArrowLeft02Icon} />
-            </Link>
-          </Button>
+          <Link
+            className={cn(buttonVariants({ variant: "outline", size: "icon" }))}
+            href="/dashboard"
+            title="Powrót do Dashboardu"
+          >
+            <HugeiconsIcon icon={ArrowLeft02Icon} />
+          </Link>
           <div>
             <h2 className="font-bold text-3xl tracking-tight">{decodedName}</h2>
             <p className="text-muted-foreground">
