@@ -1,6 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ public class Rack {
     private int size_x;
     private int size_y;
     private float max_temp;
+    @DecimalMin("-273.15")
     private float min_temp;
     @Min(0)
     private float max_weight;
