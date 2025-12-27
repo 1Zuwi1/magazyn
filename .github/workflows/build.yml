@@ -36,7 +36,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.bun
+            ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           # If source files changed but packages didn't, rebuild from a prior cache.
           restore-keys: |
