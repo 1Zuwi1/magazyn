@@ -19,7 +19,7 @@ export interface Warehouse {
   racks: Rack[]
 }
 
-export interface Item {
+interface BaseItem {
   id: string
   name: string
   expiryDate: Date
@@ -27,6 +27,8 @@ export interface Item {
   isDangerous: boolean
   imageUrl?: string | null
 }
+
+export type Item = BaseItem | null
 
 export interface FilterState {
   query: string

@@ -28,7 +28,7 @@ export default function WarehouseClient({
     maxWeight: number
     currentWeight: number
     occupancy: number
-    items: (Item | null)[]
+    items: Item[]
   }[]
   warehouseId: string
   warehouseName: string

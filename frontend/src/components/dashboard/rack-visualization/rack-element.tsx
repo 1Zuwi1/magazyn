@@ -6,7 +6,7 @@ import type { Item } from "../types"
 
 interface ElementProps extends React.HTMLAttributes<HTMLDivElement> {
   isEmpty: boolean
-  item: Item | null
+  item: Item
   coordinate: string
 }
 

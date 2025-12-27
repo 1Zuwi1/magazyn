@@ -2,36 +2,23 @@
 
 import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useVirtualizer } from "@tanstack/react-virtual"
 import { useEffect, useRef, useState } from "react"
 import { buttonVariants } from "@/components/ui/button"
-import { useIsMobile } from "@/hooks/use-mobile"
 import type { Item } from "../types"
-import RackElement from "./rack-element"
+import Normal from "./components/normal"
+import Virtualized from "./components/virtualized"
 
 interface RackGridViewProps {
   rows: number
   cols: number
-  items: (Item | null)[]
+  items: Item[]
   currentRackIndex?: number
   totalRacks?: number
   onPreviousRack?: () => void
   onNextRack?: () => void
 }
 
-// Helper function to convert index to coordinate (R01-P01, R02-P03, etc.)
-function getSlotCoordinate(index: number, cols: number): string {
-  const row = Math.floor(index / cols)
-  const col = index % cols
-  const rowLabel = `R${String(row + 1).padStart(2, "0")}`
-  const colLabel = `P${String(col + 1).padStart(2, "0")}`
-  return `${rowLabel}-${colLabel}`
-}
-
-const CELL_GAP = 12
 const VIRTUALIZATION_THRESHOLD = 10
-const VIRTUALIZATION_PADDING = 16
-const BASE_CELL_SIZE = 120
 export function RackGridView({
   rows,
   cols,
@@ -45,39 +32,12 @@ export function RackGridView({
 
   const shouldVirtualize =
     rows > VIRTUALIZATION_THRESHOLD || cols > VIRTUALIZATION_THRESHOLD
-  const totalSlots = rows * cols
 
   const showNavigation = totalRacks > 1 && (onPreviousRack || onNextRack)
-
-  const isMobile = useIsMobile()
-  const cellSize = isMobile ? 50 : BASE_CELL_SIZE
-
-  // Always call hooks at the top level
-  const rowVirtualizer = useVirtualizer({
-    count: rows,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => cellSize + CELL_GAP,
-    overscan: 3,
-    paddingStart: VIRTUALIZATION_PADDING,
-    paddingEnd: VIRTUALIZATION_PADDING,
-  })
-
-  const columnVirtualizer = useVirtualizer({
-    horizontal: true,
-    count: cols,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => cellSize + CELL_GAP,
-    overscan: 3,
-    paddingStart: VIRTUALIZATION_PADDING,
-    paddingEnd: VIRTUALIZATION_PADDING,
-  })
 
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
   const [containerHeight, setContainerHeight] = useState(0)
-
-  const totalWidth = cols * cellSize + (cols - 1) * CELL_GAP
-  const totalHeight = rows * cellSize + (rows - 1) * CELL_GAP
 
   useEffect(() => {
     const updateSize = () => {
@@ -118,97 +78,23 @@ export function RackGridView({
         >
           {shouldVirtualize ? (
             // Virtualized Grid for large racks
-            <div
-              ref={parentRef}
-              style={{
-                width: `${containerWidth}px`,
-                maxHeight: `${containerHeight}px`,
-                overflow: "auto",
-                position: "relative",
-              }}
-            >
-              <div
-                style={{
-                  height: `${totalHeight}px`,
-                  width: `${totalWidth}px`,
-                  position: "relative",
-                }}
-              >
-                {rowVirtualizer.getVirtualItems().map((virtualRow) => (
-                  <div
-                    key={virtualRow.key}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: `${virtualRow.size}px`,
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                  >
-                    {columnVirtualizer
-                      .getVirtualItems()
-                      .map((virtualColumn) => {
-                        const index =
-                          virtualRow.index * cols + virtualColumn.index
-                        const item = items[index]
-                        const isEmpty = !item
-                        const coordinate = getSlotCoordinate(index, cols)
-
-                        return (
-                          <RackElement
-                            className="absolute origin-center"
-                            coordinate={coordinate}
-                            isEmpty={isEmpty}
-                            item={item}
-                            key={virtualColumn.key}
-                            style={{
-                              top: 0,
-                              left: 0,
-                              width: `${virtualColumn.size - CELL_GAP}px`,
-                              height: `${virtualRow.size - CELL_GAP}px`,
-                              translate: `${virtualColumn.start}px`,
-                            }}
-                          />
-                        )
-                      })}
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Virtualized
+              cols={cols}
+              containerHeight={containerHeight}
+              containerWidth={containerWidth}
+              items={items}
+              parentRef={parentRef}
+              rows={rows}
+            />
           ) : (
             // Regular CSS Grid for small racks
-            <div
-              className="p-2 sm:p-4"
-              style={{
-                width: `${containerWidth}px`,
-                maxHeight: `${containerHeight}px`,
-                overflow: "auto",
-                position: "relative",
-              }}
-            >
-              <div
-                className="grid gap-2 sm:gap-3"
-                style={{
-                  gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-                }}
-              >
-                {Array.from({ length: totalSlots }).map((_, index) => {
-                  const item = items[index]
-                  const isEmpty = !item
-                  const coordinate = getSlotCoordinate(index, cols)
-
-                  return (
-                    <RackElement
-                      coordinate={coordinate}
-                      isEmpty={isEmpty}
-                      item={item}
-                      key={index}
-                    />
-                  )
-                })}
-              </div>
-            </div>
+            <Normal
+              cols={cols}
+              containerHeight={containerHeight}
+              containerWidth={containerWidth}
+              items={items}
+              rows={rows}
+            />
           )}
         </div>
 

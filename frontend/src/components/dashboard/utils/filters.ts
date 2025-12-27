@@ -37,8 +37,8 @@ export function filterWarehouses(
             rack.name.toLowerCase().includes(filters.query.toLowerCase()) ||
             rack.items.some(
               (item) =>
-                item.id.toLowerCase().includes(filters.query.toLowerCase()) ||
-                item.name.toLowerCase().includes(filters.query.toLowerCase())
+                item?.id.toLowerCase().includes(filters.query.toLowerCase()) ||
+                item?.name.toLowerCase().includes(filters.query.toLowerCase())
             )
         )
       if (!matchesQuery) {
