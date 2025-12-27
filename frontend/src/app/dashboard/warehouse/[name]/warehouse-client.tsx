@@ -110,6 +110,7 @@ export default function WarehouseClient({
             items={currentRack.items}
             onNextRack={handleNextRack}
             onPreviousRack={handlePreviousRack}
+            rack={currentRack}
             rows={currentRack.rows}
             totalRacks={racks.length}
           />

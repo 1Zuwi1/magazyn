@@ -3,8 +3,9 @@
 import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useEffect, useRef, useState } from "react"
-import { buttonVariants } from "@/components/ui/button"
-import type { Item } from "../types"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { RackItemsDialog } from "../items-visualization/components/rack-items-dialog"
+import type { Item, Rack } from "../types"
 import Normal from "./components/normal"
 import Virtualized from "./components/virtualized"
 
@@ -16,6 +17,7 @@ interface RackGridViewProps {
   totalRacks?: number
   onPreviousRack?: () => void
   onNextRack?: () => void
+  rack?: Rack
 }
 
 const VIRTUALIZATION_THRESHOLD = 10
@@ -27,7 +29,9 @@ export function RackGridView({
   totalRacks = 1,
   onPreviousRack,
   onNextRack,
+  rack,
 }: RackGridViewProps) {
+  const [isItemsDialogOpen, setIsItemsDialogOpen] = useState(false)
   const parentRef = useRef<HTMLDivElement>(null)
 
   const shouldVirtualize =
@@ -113,18 +117,23 @@ export function RackGridView({
           </button>
         )}
       </div>
-
       {/* Rack Indicator */}
       {totalRacks > 1 && (
         <div className="flex items-center justify-center gap-2">
-          <span className="text-muted-foreground text-xs sm:text-sm">
-            Regał:
-          </span>
+          <Button onClick={() => setIsItemsDialogOpen(true)} variant="outline">
+            <span className="hidden sm:inline">Przedmioty w regale</span>
+          </Button>
+          <p className="text-muted-foreground text-xs sm:text-sm">Regał:</p>
           <span className="font-semibold text-xs sm:text-sm">
             {currentRackIndex + 1} / {totalRacks}
           </span>
         </div>
       )}
+      <RackItemsDialog
+        onOpenChange={setIsItemsDialogOpen}
+        open={isItemsDialogOpen}
+        rack={rack || null}
+      />
     </div>
   )
 }

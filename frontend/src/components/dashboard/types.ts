@@ -18,21 +18,32 @@ export interface Warehouse {
   used: number
   racks: Rack[]
 }
-
-interface BaseItem {
-  id: string
-  name: string
-  expiryDate: Date
-  weight: number
-  isDangerous: boolean
-  imageUrl?: string | null
-}
-
-export type Item = BaseItem | null
-
 export interface FilterState {
   query: string
   minOccupancy: number
   tempRange: [number, number]
   showEmpty: boolean
 }
+
+export interface Dimensions {
+  x: number
+  y: number
+  z: number
+}
+
+// z wymagań wzięte te pola
+interface BaseItem {
+  id: string
+  name: string
+  qrCode: string
+  expiryDate: Date
+  weight: number
+  dimensions: Dimensions
+  minTemp: number
+  maxTemp: number
+  comment?: string
+  isDangerous: boolean
+  imageUrl?: string | null
+}
+
+export type Item = BaseItem | null

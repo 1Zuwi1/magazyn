@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { Warehouse } from "./types"
+import { pluralize } from "./utils/helpers"
 
 const FULL_WAREHOUSE_THRESHOLD = 90
 
@@ -65,7 +66,13 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Zapełnienie</span>
                     <span className="font-medium">
-                      {warehouse.used} / {warehouse.capacity} miejsc
+                      {warehouse.used} / {warehouse.capacity}{" "}
+                      {pluralize(
+                        warehouse.capacity,
+                        "miejsce",
+                        "miejsca",
+                        "miejsc"
+                      )}
                     </span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-secondary">
@@ -79,7 +86,13 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center text-muted-foreground">
                     <HugeiconsIcon className="mr-2 h-4 w-4" icon={Package} />
-                    {warehouse.racks.length} Regałów
+                    {warehouse.racks.length}{" "}
+                    {pluralize(
+                      warehouse.racks.length,
+                      "Regał",
+                      "Regały",
+                      "Regałów"
+                    )}
                   </div>
                 </div>
               </div>
