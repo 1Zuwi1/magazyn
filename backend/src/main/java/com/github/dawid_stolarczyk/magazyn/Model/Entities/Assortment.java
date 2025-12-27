@@ -20,6 +20,13 @@ public class Assortment {
     private User user;
     private Timestamp created_at;
 
+    @PrePersist
+    public void setCreatedAt() {
+        if (created_at == null) {
+            created_at = new Timestamp(System.currentTimeMillis());
+        }
+    }
+
     public Long getId() {
         return id;
     }
