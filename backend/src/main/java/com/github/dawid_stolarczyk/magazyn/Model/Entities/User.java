@@ -21,6 +21,7 @@ public class User {
     @NotBlank
     @Size(min=3, max=50)
     private String username;
+    @NotBlank
     private String password;
     @NotNull
     @Enumerated(EnumType.STRING)
