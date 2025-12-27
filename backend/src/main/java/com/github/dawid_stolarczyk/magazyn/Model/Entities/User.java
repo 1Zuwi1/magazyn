@@ -2,6 +2,8 @@ package com.github.dawid_stolarczyk.magazyn.Model.Entities;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Utils.IdGenerator;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
@@ -13,9 +15,12 @@ public class User {
     private Long id;
     @Column(name = "public_id", unique = true, nullable = false, updatable = false)
     private String publicId;
+    @NotBlank
+    @Size(min=3, max=50)
     private String username;
     private String password;
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Warehouse> warehouses;
@@ -62,11 +67,11 @@ public class User {
         this.password = password;
     }
 
-    public String getRole() {
+    public UserRole getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(UserRole role) {
         this.role = role;
     }
 

@@ -1,6 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ public class Rack {
     private int size_y;
     private float max_temp;
     private float min_temp;
+    @Min(0)
     private float max_weight;
     private float max_size_x;
     private float max_size_y;
