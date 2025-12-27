@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -35,6 +35,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 
 interface RackItemsTableProps {
   items: Item[]
@@ -192,9 +193,15 @@ export function RackItemsTable({
                         <div className="flex justify-end">
                           <DropdownMenu>
                             <DropdownMenuTrigger>
-                              <Button size="icon" variant="ghost">
-                                <HugeiconsIcon icon={MoreVerticalIcon} />
-                              </Button>
+                              <HugeiconsIcon
+                                className={cn(
+                                  buttonVariants({
+                                    variant: "ghost",
+                                    size: "icon",
+                                  })
+                                )}
+                                icon={MoreVerticalIcon}
+                              />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               {onViewDetails && (
