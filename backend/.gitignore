@@ -4,6 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+
 # Ignore the real Spring Boot application configuration containing secrets.
 # Commit a non-sensitive template instead (e.g. src/main/resources/application.properties.example).
 src/main/resources/application.properties
