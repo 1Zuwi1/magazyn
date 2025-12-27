@@ -4,7 +4,7 @@ spring.datasource.url=${DB_CONNECTION_URL}
 spring.datasource.username=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
 
-springdoc.swagger-ui.path=/api/docs
+springdoc.swagger-ui.path=/api/docs.html
 
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=false
