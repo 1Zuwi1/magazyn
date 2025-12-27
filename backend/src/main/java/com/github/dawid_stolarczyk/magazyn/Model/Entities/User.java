@@ -1,6 +1,5 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Entities;
 
-import com.github.dawid_stolarczyk.magazyn.Model.Utils.IdGenerator;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
