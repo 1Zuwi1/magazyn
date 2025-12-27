@@ -16,8 +16,10 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "public_id", unique = true, nullable = false, updatable = false)
-    private String publicId;
+    @Column(nullable = false, unique = true)
+    @NotBlank
+    @Size(max = 100)
+    private String email;
     @Column(unique = true, nullable = false)
     @NotBlank
     @Size(min=3, max=50)
@@ -25,6 +27,7 @@ public class User {
     @Column(nullable = false)
     @NotBlank
     private String password;
+    private AccountStatus status = AccountStatus.ACTIVE;
     @NotNull
     @Enumerated(EnumType.STRING)
     private UserRole role;
@@ -35,12 +38,6 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Assortment> assortments = new ArrayList<>();
 
-    @PrePersist
-    public void generatePublicId() {
-        if (publicId == null) {
-            publicId = UUID.randomUUID().toString();
-        }
-    }
     public void addWarehouse(Warehouse warehouse) {
         warehouses.add(warehouse);
         warehouse.setUser(this);
@@ -64,14 +61,6 @@ public class User {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getPublicId() {
-        return publicId;
-    }
-
-    public void setPublicId(String publicId) {
-        this.publicId = publicId;
     }
 
     public String getUsername() {
@@ -122,5 +111,21 @@ public class User {
 
     public void setAssortments(List<Assortment> assortments) {
         this.assortments = assortments;
+    }
+
+    public AccountStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AccountStatus status) {
+        this.status = status;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

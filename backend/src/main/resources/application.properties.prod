@@ -1,10 +1,12 @@
 spring.application.name=magazyn
 
 spring.datasource.url=${DB_CONNECTION_URL}
-spring.datasource.username=${DB_USERNAME}
+spring.datasource.email=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
 
 server.servlet.context-path=/api
 
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=false
+
+jwt.secret=${JWT_SECRET}

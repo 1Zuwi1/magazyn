@@ -20,10 +20,11 @@ public class Rack {
     private String comment;
     private int size_x;
     private int size_y;
+    @DecimalMin("-273.15")
     private float max_temp;
     @DecimalMin("-273.15")
     private float min_temp;
-    @Min(0)
+    @DecimalMin("0.0")
     private float max_weight;
     private float max_size_x;
     private float max_size_y;
