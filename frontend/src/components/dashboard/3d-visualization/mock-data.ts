@@ -9,23 +9,42 @@ const statuses: ItemStatus[] = [
   "dangerous",
 ]
 
-function getRandomItem(itemId: string): Item3D | null {
-  if (Math.random() > 0.6) {
+const EXPIRY_OFFSET_MS = 315_360_000_000
+const EXPIRY_BASE_MS = 1_700_000_000_000
+const RNG_MODULUS = 2_147_483_647
+const RNG_MULTIPLIER = 48_271
+
+type RandomFn = () => number
+
+function createRng(seed: number): RandomFn {
+  const normalizedSeed = Math.floor(seed) % RNG_MODULUS
+  let state =
+    normalizedSeed <= 0 ? normalizedSeed + (RNG_MODULUS - 1) : normalizedSeed
+  return () => {
+    state = (state * RNG_MULTIPLIER) % RNG_MODULUS
+    return (state - 1) / (RNG_MODULUS - 1)
+  }
+}
+
+function getRandomItem(
+  itemId: string,
+  random: RandomFn,
+  expiryBase: number
+): Item3D | null {
+  if (random() > 0.6) {
     return null
   }
 
-  const status = statuses[Math.floor(Math.random() * statuses.length)]
-  const sku = Math.floor(Math.random() * 9999)
+  const status = statuses[Math.floor(random() * statuses.length)]
+  const sku = Math.floor(random() * 9999)
   return {
     id: `item-${itemId}`,
     type: "box",
     status,
     label: `SKU-${sku}`,
     meta: {
-      weight: Math.floor(Math.random() * 100),
-      expiry: new Date(
-        Date.now() + Math.random() * 315_360_000_000
-      ).toISOString(),
+      weight: Math.floor(random() * 100),
+      expiry: new Date(expiryBase + random() * EXPIRY_OFFSET_MS).toISOString(),
     },
   }
 }
@@ -43,14 +62,16 @@ function generateRack(
   position: [number, number, number],
   rows: number,
   cols: number,
-  maxElementSize: MaxElementSize
+  maxElementSize: MaxElementSize,
+  random: RandomFn,
+  expiryBase: number
 ): Rack3D {
   const items: (Item3D | null)[] = []
 
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
       const index = row * cols + col
-      const item = getRandomItem(`${code}-${row}-${col}`)
+      const item = getRandomItem(`${code}-${row}-${col}`, random, expiryBase)
       items[index] = item
     }
   }
@@ -81,27 +102,34 @@ function generateRack(
 
 const rackPadding = 0.2
 
-function getRackDimensions(rack: Rack3D): { width: number; depth: number } {
+function getRackDimensions(rack: Rack3D): {
+  width: number
+  height: number
+  depth: number
+} {
   return {
     width: rack.grid.cols * (rack.cell.w + rack.spacing.x) + rackPadding,
+    height: rack.grid.rows * (rack.cell.h + rack.spacing.y) + rackPadding,
     depth: rack.cell.d + rackPadding,
   }
 }
 
-export function generateMockWarehouse(rackCount = 10): Warehouse3D {
+export function generateMockWarehouse(rackCount = 10, seed = 1): Warehouse3D {
   const racks: Rack3D[] = []
   const racksPerRow = 4
   const rackSpacing = 0.5
   const rowSpacing = 0.5
+  const random = createRng(seed)
+  const expiryBase = EXPIRY_BASE_MS
 
   for (let i = 0; i < rackCount; i++) {
-    const rows = Math.floor(Math.random() * 4) + 4
-    const cols = Math.floor(Math.random() * 6) + 6
+    const rows = Math.floor(random() * 4) + 4
+    const cols = Math.floor(random() * 6) + 6
 
     const maxElementSize = {
-      width: Math.floor(Math.random() * 40) + 30,
-      height: Math.floor(Math.random() * 30) + 20,
-      depth: Math.floor(Math.random() * 20) + 20,
+      width: Math.floor(random() * 40) + 30,
+      height: Math.floor(random() * 30) + 20,
+      depth: Math.floor(random() * 20) + 20,
     }
 
     const rack = generateRack(
@@ -111,7 +139,9 @@ export function generateMockWarehouse(rackCount = 10): Warehouse3D {
       [0, 0, 0],
       rows,
       cols,
-      maxElementSize
+      maxElementSize,
+      random,
+      expiryBase
     )
     racks.push(rack)
   }
@@ -137,12 +167,12 @@ export function generateMockWarehouse(rackCount = 10): Warehouse3D {
   for (let i = 0; i < racks.length; i++) {
     const row = Math.floor(i / racksPerRow)
     const rack = racks[i]
-    const { width } = getRackDimensions(rack)
+    const { width, height } = getRackDimensions(rack)
     const currentRowX = rowXOffsets[row] ?? 0
     const x = currentRowX + width / 2
     const z = rowCenters[row] ?? 0
 
-    rack.transform.position = [x, 0, z]
+    rack.transform.position = [x, height / 2, z]
     rack.zone = `Strefa-${Math.floor(x / 10) + 1}`
     rowXOffsets[row] = currentRowX + width + rackSpacing
   }
