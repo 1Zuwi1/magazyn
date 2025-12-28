@@ -1,5 +1,3 @@
-import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
 import WarehouseClient from "./warehouse-client"
 
 // TODO: fetch in prod
@@ -259,24 +257,27 @@ const mockRacks = [
   },
 ]
 
+const MOCK_WAREHOUSES_DATA: Record<string, typeof mockRacks> = {
+  "Magazyn A1": mockRacks.slice(0, 5),
+  "Magazyn A2": mockRacks.slice(0, 1),
+  "Magazyn A3": mockRacks.slice(0, 8),
+}
+
 export default async function WarehousePage({
   params,
 }: {
   params: Promise<{ name: string }>
 }) {
-  const cookieStore = await cookies()
-  const warehouseId = cookieStore.get("warehouseId")?.value
-  if (!warehouseId) {
-    redirect("/dashboard/")
-  }
-
   const { name } = await params
   const decodedName = decodeURIComponent(name)
 
+  const warehouseRacks =
+    MOCK_WAREHOUSES_DATA[decodedName] || mockRacks.slice(0, 1)
+
   return (
     <WarehouseClient
-      racks={mockRacks}
-      warehouseId={warehouseId}
+      racks={warehouseRacks}
+      warehouseId={decodedName}
       warehouseName={decodedName}
     />
   )

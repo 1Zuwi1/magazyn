@@ -1,0 +1,136 @@
+"use client"
+
+import {
+  type ColumnFiltersState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  type SortingState,
+  useReactTable,
+} from "@tanstack/react-table"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { itemsColumns } from "./items-columns"
+import type { ItemStats } from "./types"
+
+interface ItemsTableProps {
+  items: ItemStats[]
+}
+
+export function ItemsTable({ items }: ItemsTableProps) {
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [globalFilter, setGlobalFilter] = useState("")
+
+  const table = useReactTable({
+    data: items,
+    columns: itemsColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    state: {
+      sorting,
+      columnFilters,
+      globalFilter,
+    },
+  })
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-4">
+        <Input
+          className="max-w-sm"
+          onChange={(event) => setGlobalFilter(event.target.value)}
+          placeholder="Szukaj przedmiotów..."
+          value={globalFilter ?? ""}
+        />
+        <div className="ml-auto text-muted-foreground text-sm">
+          {items.length} {items.length === 1 ? "przedmiot" : "przedmiotów"}
+        </div>
+      </div>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  data-state={row.getIsSelected() && "selected"}
+                  key={row.id}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  className="h-24 text-center"
+                  colSpan={itemsColumns.length}
+                >
+                  Brak wyników.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <div className="flex items-center justify-end gap-2">
+        <Button
+          disabled={!table.getCanPreviousPage()}
+          onClick={() => table.previousPage()}
+          size="sm"
+          variant="outline"
+        >
+          Poprzednia
+        </Button>
+        <Button
+          disabled={!table.getCanNextPage()}
+          onClick={() => table.nextPage()}
+          size="sm"
+          variant="outline"
+        >
+          Następna
+        </Button>
+      </div>
+    </div>
+  )
+}
