@@ -171,7 +171,10 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
         : { "Content-Type": "application/json", Accept: "application/json" }
     )
 
-    const res = await fetch(path, {
+    const BASE_URL =
+      typeof window === "undefined" ? "http://localhost:8080/" : ""
+
+    const res = await fetch(new URL(path, BASE_URL), {
       ...restInit,
       method,
       signal: abortController.signal,

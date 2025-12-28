@@ -42,6 +42,24 @@ export const ApiMeSchema = createApiSchema({
       username: z.string(),
       full_name: z.string().nullable(),
       two_factor_enabled: z.boolean(),
+      role: z.enum(["user", "admin"]),
+      token_expires_at: z.date(),
     }),
+  },
+})
+
+export const RegisterSchema = createApiSchema({
+  POST: {
+    input: z
+      .object({
+        email: z.email("Nieprawidłowy adres email"),
+        password: z.string().min(6, "Hasło musi mieć co najmniej 6 znaków"),
+        confirmPassword: z.string(),
+      })
+      .refine((data) => data.password === data.confirmPassword, {
+        message: "Hasła nie są zgodne",
+        path: ["confirmPassword"],
+      }),
+    output: z.null(),
   },
 })
