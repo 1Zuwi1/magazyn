@@ -47,12 +47,18 @@ function RackInstance({ rack, onFocus }: RackInstanceProps) {
           opacity={fillOpacity}
           transparent
         />
-        <Edges color={color} opacity={outlineOpacity} scale={1.01} transparent />
+        <Edges
+          color={color}
+          opacity={outlineOpacity}
+          scale={1.01}
+          transparent
+        />
       </mesh>
       <Html
         center
         distanceFactor={10}
         position={[0, metrics.height / 2 + 0.5, 0]}
+        zIndexRange={[10, 0]}
       >
         <div className="rounded bg-black/70 px-2 py-1 text-white text-xs">
           <div className="font-bold">{rack.code}</div>
