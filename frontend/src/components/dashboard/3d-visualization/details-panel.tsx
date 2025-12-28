@@ -13,6 +13,9 @@ function getStatusText(status: Item3D["status"]): string {
   if (status === "expired") {
     return "Przeterminowany"
   }
+  if (status === "expired-dangerous") {
+    return "Przeterminowany i niebezpieczny"
+  }
   return "Niebezpieczny"
 }
 
@@ -21,7 +24,10 @@ function getStatusColor(status: Item3D["status"]): string {
     return "bg-green-500"
   }
   if (status === "expired") {
-    return "bg-orange-500"
+    return "bg-amber-500"
+  }
+  if (status === "expired-dangerous") {
+    return "bg-red-500 ring-2 ring-amber-400"
   }
   return "bg-red-500"
 }

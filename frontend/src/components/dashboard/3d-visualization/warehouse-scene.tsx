@@ -1,4 +1,4 @@
-import { ContactShadows, Grid, Html, Line } from "@react-three/drei"
+import { ContactShadows, Grid, Line } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import { useMemo } from "react"
 import { CameraController } from "./components/camera-controls"
@@ -33,12 +33,10 @@ interface RackRender {
   rack: Rack3D
   renderPosition: [number, number, number]
   aisleIndex: number
-  aisleLabel: string
 }
 
 interface AisleLayout {
   index: number
-  label: string
   minX: number
   maxX: number
   minZ: number
@@ -60,10 +58,6 @@ interface WarehouseLayout {
 
 function getAisleKey(z: number): number {
   return Math.round(z / aisleSnap) * aisleSnap
-}
-
-function getAisleLabel(index: number): string {
-  return `A${index + 1}`
 }
 
 function buildWarehouseLayout(racks: Rack3D[]): WarehouseLayout {
@@ -145,7 +139,6 @@ function buildWarehouseLayout(racks: Rack3D[]): WarehouseLayout {
       rack,
       renderPosition,
       aisleIndex,
-      aisleLabel: getAisleLabel(aisleIndex),
     })
   }
 
@@ -159,7 +152,6 @@ function buildWarehouseLayout(racks: Rack3D[]): WarehouseLayout {
 
       return {
         index,
-        label: getAisleLabel(index),
         minX,
         maxX,
         minZ,
@@ -280,20 +272,6 @@ export function WarehouseScene({
                 ]}
                 transparent
               />
-              <group
-                position={[
-                  aisle.minX + 0.6,
-                  -floorOffset + 0.02,
-                  aisle.maxZ + 0.4,
-                ]}
-                rotation={[-Math.PI / 2, 0, 0]}
-              >
-                <Html center distanceFactor={10} transform zIndexRange={[2, 0]}>
-                  <div className="pointer-events-none select-none font-semibold text-amber-300/70 text-lg tracking-[0.35em]">
-                    {aisle.label}
-                  </div>
-                </Html>
-              </group>
             </group>
           ))}
           <ContactShadows

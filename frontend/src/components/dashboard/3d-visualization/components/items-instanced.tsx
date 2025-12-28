@@ -1,15 +1,20 @@
 import { Instance, Instances } from "@react-three/drei"
 import { useMemo } from "react"
-import type { Item3D, Rack3D } from "../types"
-import { getItemColor } from "../types"
+import type { ItemStatus, Rack3D } from "../types"
+import { getItemVisuals, ITEM_STATUS_ORDER } from "../types"
 
 interface ItemsInstancedProps {
   rack: Rack3D
 }
 
 export function ItemsInstanced({ rack }: ItemsInstancedProps) {
-  const { itemInstances } = useMemo(() => {
-    const instances: { position: [number, number, number]; item: Item3D }[] = []
+  const { itemsByStatus } = useMemo(() => {
+    const grouped: Record<ItemStatus, [number, number, number][]> = {
+      normal: [],
+      expired: [],
+      dangerous: [],
+      "expired-dangerous": [],
+    }
 
     for (let row = 0; row < rack.grid.rows; row++) {
       for (let col = 0; col < rack.grid.cols; col++) {
@@ -28,11 +33,11 @@ export function ItemsInstanced({ rack }: ItemsInstancedProps) {
           (rack.grid.rows * (rack.cell.h + rack.spacing.y)) / 2
         const z = rack.cell.d / 2
 
-        instances.push({ position: [x, y, z], item })
+        grouped[item.status].push([x, y, z])
       }
     }
 
-    return { itemInstances: instances }
+    return { itemsByStatus: grouped }
   }, [rack])
 
   return (
@@ -40,17 +45,31 @@ export function ItemsInstanced({ rack }: ItemsInstancedProps) {
       position={rack.transform.position}
       rotation={[0, rack.transform.rotationY, 0]}
     >
-      <Instances limit={itemInstances.length}>
-        <boxGeometry
-          args={[rack.cell.w * 0.8, rack.cell.h * 0.8, rack.cell.d * 0.5]}
-        />
-        <meshStandardMaterial metalness={0.08} roughness={0.75} />
-        {itemInstances.map(({ position, item }, i) => {
-          const color = getItemColor(item.status)
+      {ITEM_STATUS_ORDER.map((status) => {
+        const positions = itemsByStatus[status]
+        if (!positions || positions.length === 0) {
+          return null
+        }
+        const visuals = getItemVisuals(status)
 
-          return <Instance color={color} key={i} position={position} />
-        })}
-      </Instances>
+        return (
+          <Instances key={`items-${status}`} limit={positions.length}>
+            <boxGeometry
+              args={[rack.cell.w * 0.8, rack.cell.h * 0.8, rack.cell.d * 0.5]}
+            />
+            <meshStandardMaterial
+              color={visuals.color}
+              emissive={visuals.glow}
+              emissiveIntensity={visuals.emissiveIntensity}
+              metalness={0.08}
+              roughness={0.75}
+            />
+            {positions.map((position, index) => (
+              <Instance key={`item-${status}-${index}`} position={position} />
+            ))}
+          </Instances>
+        )
+      })}
     </group>
   )
 }

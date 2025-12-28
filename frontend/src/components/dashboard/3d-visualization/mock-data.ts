@@ -7,6 +7,7 @@ const statuses: ItemStatus[] = [
   "normal",
   "expired",
   "dangerous",
+  "expired-dangerous",
 ]
 
 const EXPIRY_OFFSET_MS = 315_360_000_000

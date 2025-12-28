@@ -69,7 +69,9 @@ export function ShelvesInstanced({
   const selected =
     selectedShelf?.rackId === rack.id && selectedShelf?.index !== undefined
   const selectedInstanceId =
-    selected && selectedShelf ? indexToInstance[selectedShelf.index] ?? null : null
+    selected && selectedShelf
+      ? (indexToInstance[selectedShelf.index] ?? null)
+      : null
 
   const highlightInstances = useMemo(() => {
     const highlights: { position: [number, number, number]; color: string }[] =

@@ -8,7 +8,6 @@ interface RackRender {
   rack: Rack3D
   renderPosition: [number, number, number]
   aisleIndex: number
-  aisleLabel: string
 }
 
 const AISLE_TONES: RackTone[] = [
@@ -36,7 +35,6 @@ interface RackInstanceProps {
   rack: Rack3D
   renderPosition: [number, number, number]
   aisleIndex: number
-  aisleLabel: string
   onFocus: (rackId: string) => void
 }
 
@@ -44,7 +42,6 @@ function RackInstance({
   rack,
   renderPosition,
   aisleIndex,
-  aisleLabel,
   onFocus,
 }: RackInstanceProps) {
   const [hovered, setHovered] = useState(false)
@@ -84,9 +81,9 @@ function RackInstance({
         <boxGeometry args={[metrics.width, metrics.height, metrics.depth]} />
         <meshStandardMaterial
           color={tone.outline}
+          depthWrite={false}
           emissive={tone.glow}
           emissiveIntensity={hovered ? 0.3 : 0.18}
-          depthWrite={false}
           opacity={fillOpacity}
           transparent
         />
@@ -115,7 +112,6 @@ function RackInstance({
               Maks: {rack.maxElementSize.width}×{rack.maxElementSize.height}×
               {rack.maxElementSize.depth}cm
             </div>
-            <div className="text-slate-500">Aleja {aisleLabel}</div>
           </div>
         </Html>
       )}
@@ -132,10 +128,9 @@ export function RacksOverview({ racks }: RacksOverviewProps) {
 
   return (
     <group>
-      {racks.map(({ rack, renderPosition, aisleIndex, aisleLabel }) => (
+      {racks.map(({ rack, renderPosition, aisleIndex }) => (
         <RackInstance
           aisleIndex={aisleIndex}
-          aisleLabel={aisleLabel}
           key={rack.id}
           onFocus={focusRack}
           rack={rack}

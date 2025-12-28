@@ -2,7 +2,7 @@ import { Instance, Instances, useTexture } from "@react-three/drei"
 import { useEffect, useMemo } from "react"
 import * as THREE from "three"
 import type { Item3D, ItemStatus, Rack3D } from "../types"
-import { getItemColor } from "../types"
+import { getItemGlowColor, getItemVisuals, ITEM_STATUS_ORDER } from "../types"
 import { getRackMetrics, type RackMetrics } from "./rack-structure"
 
 const IMAGE_SCALE = 0.9
@@ -14,9 +14,10 @@ const GLOW_SETTINGS: Record<
   ItemStatus,
   { glowOpacity: number; emissiveIntensity: number }
 > = {
-  normal: { glowOpacity: 0.06, emissiveIntensity: 0.12 },
-  expired: { glowOpacity: 0.16, emissiveIntensity: 0.22 },
-  dangerous: { glowOpacity: 0.32, emissiveIntensity: 0.38 },
+  normal: { glowOpacity: 0.05, emissiveIntensity: 0.12 },
+  expired: { glowOpacity: 0.14, emissiveIntensity: 0.2 },
+  dangerous: { glowOpacity: 0.22, emissiveIntensity: 0.3 },
+  "expired-dangerous": { glowOpacity: 0.3, emissiveIntensity: 0.38 },
 }
 
 interface FocusItemImage {
@@ -71,13 +72,15 @@ function ItemsWithImages({ items, size, zOffset }: ItemsWithImagesProps) {
           return null
         }
 
-        const glowColor = getItemColor(item.status)
+        const glowColor = getItemGlowColor(item.status)
         const [x, y, z] = item.position
 
         return (
           <group key={`image-${index}`} position={[x, y, z + zOffset]}>
             <mesh position={[0, 0, GLOW_Z_OFFSET]}>
-              <planeGeometry args={[size.w * GLOW_SCALE, size.h * GLOW_SCALE]} />
+              <planeGeometry
+                args={[size.w * GLOW_SCALE, size.h * GLOW_SCALE]}
+              />
               <meshBasicMaterial
                 blending={THREE.AdditiveBlending}
                 color={glowColor}
@@ -88,7 +91,9 @@ function ItemsWithImages({ items, size, zOffset }: ItemsWithImagesProps) {
               />
             </mesh>
             <mesh position={[0, 0, IMAGE_Z_OFFSET]}>
-              <planeGeometry args={[size.w * IMAGE_SCALE, size.h * IMAGE_SCALE]} />
+              <planeGeometry
+                args={[size.w * IMAGE_SCALE, size.h * IMAGE_SCALE]}
+              />
               <meshStandardMaterial
                 emissive={glowColor}
                 emissiveIntensity={item.emissiveIntensity}
@@ -134,9 +139,14 @@ export function ItemsFocus({
     h: resolvedMetrics.slotSize.h,
   }
 
-  const { itemsWithImages, itemsSolid } = useMemo(() => {
+  const { itemsWithImages, solidByStatus } = useMemo(() => {
     const withImages: FocusItemImage[] = []
-    const solid: FocusItemSolid[] = []
+    const solid: Record<ItemStatus, FocusItemSolid[]> = {
+      normal: [],
+      expired: [],
+      dangerous: [],
+      "expired-dangerous": [],
+    }
 
     for (let row = 0; row < rack.grid.rows; row++) {
       const y =
@@ -165,12 +175,12 @@ export function ItemsFocus({
             emissiveIntensity: glowSettings.emissiveIntensity,
           })
         } else {
-          solid.push({ position, status: item.status })
+          solid[item.status].push({ position, status: item.status })
         }
       }
     }
 
-    return { itemsWithImages: withImages, itemsSolid: solid }
+    return { itemsWithImages: withImages, solidByStatus: solid }
   }, [
     rack.grid.cols,
     rack.grid.rows,
@@ -198,25 +208,35 @@ export function ItemsFocus({
           zOffset={imagePlaneZ}
         />
       )}
-      {itemsSolid.length > 0 && (
-        <Instances limit={itemsSolid.length}>
-          <boxGeometry
-            args={[
-              resolvedMetrics.slotSize.w,
-              resolvedMetrics.slotSize.h,
-              resolvedMetrics.slotSize.d,
-            ]}
-          />
-          <meshStandardMaterial metalness={0.08} roughness={0.72} />
-          {itemsSolid.map(({ position, status }, index) => (
-            <Instance
-              color={getItemColor(status)}
-              key={`solid-${index}`}
-              position={position}
+      {ITEM_STATUS_ORDER.map((status) => {
+        const solidItems = solidByStatus[status]
+        if (!solidItems || solidItems.length === 0) {
+          return null
+        }
+        const visuals = getItemVisuals(status)
+
+        return (
+          <Instances key={`solid-${status}`} limit={solidItems.length}>
+            <boxGeometry
+              args={[
+                resolvedMetrics.slotSize.w,
+                resolvedMetrics.slotSize.h,
+                resolvedMetrics.slotSize.d,
+              ]}
             />
-          ))}
-        </Instances>
-      )}
+            <meshStandardMaterial
+              color={visuals.color}
+              emissive={visuals.glow}
+              emissiveIntensity={visuals.emissiveIntensity}
+              metalness={0.08}
+              roughness={0.72}
+            />
+            {solidItems.map(({ position }, index) => (
+              <Instance key={`solid-${status}-${index}`} position={position} />
+            ))}
+          </Instances>
+        )
+      })}
     </group>
   )
 }

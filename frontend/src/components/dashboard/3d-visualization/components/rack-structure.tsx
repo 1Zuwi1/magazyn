@@ -1,7 +1,7 @@
 import { Edges, Instance, Instances } from "@react-three/drei"
 import { useMemo } from "react"
-import type { Item3D, Rack3D } from "../types"
-import { getItemColor } from "../types"
+import type { Item3D, ItemStatus, Rack3D } from "../types"
+import { getItemVisuals, ITEM_STATUS_ORDER } from "../types"
 
 export interface RackMetrics {
   width: number
@@ -82,14 +82,8 @@ export function RackFrame({
   hovered,
   tone,
 }: RackFrameProps) {
-  const {
-    width,
-    height,
-    depth,
-    frameThickness,
-    shelfThickness,
-    framePadding,
-  } = metrics
+  const { width, height, depth, frameThickness, shelfThickness, framePadding } =
+    metrics
   const halfWidth = width / 2
   const halfHeight = height / 2
   const halfDepth = depth / 2
@@ -130,9 +124,9 @@ export function RackFrame({
       {postPositions.map((position, index) => (
         <mesh
           castShadow
-          receiveShadow
           key={`post-${index}`}
           position={position}
+          receiveShadow
         >
           <boxGeometry args={[frameThickness, height, frameThickness]} />
           <meshStandardMaterial
@@ -154,9 +148,9 @@ export function RackFrame({
       {beamXPositions.map((position, index) => (
         <mesh
           castShadow
-          receiveShadow
           key={`beam-x-${index}`}
           position={position}
+          receiveShadow
         >
           <boxGeometry args={[beamLengthX, frameThickness, frameThickness]} />
           <meshStandardMaterial
@@ -178,9 +172,9 @@ export function RackFrame({
       {beamZPositions.map((position, index) => (
         <mesh
           castShadow
-          receiveShadow
           key={`beam-z-${index}`}
           position={position}
+          receiveShadow
         >
           <boxGeometry args={[frameThickness, frameThickness, beamLengthZ]} />
           <meshStandardMaterial
@@ -200,11 +194,7 @@ export function RackFrame({
         </mesh>
       ))}
       {shelfPositions.map((y, index) => (
-        <mesh
-          key={`shelf-${index}`}
-          position={[0, y, 0]}
-          receiveShadow
-        >
+        <mesh key={`shelf-${index}`} position={[0, y, 0]} receiveShadow>
           <boxGeometry args={[shelfWidth, shelfThickness, shelfDepth]} />
           <meshStandardMaterial
             color={shelfColor}
@@ -227,14 +217,56 @@ function RackItems({ metrics, items }: RackItemsProps) {
     return null
   }
 
+  const groupedByStatus = useMemo(() => {
+    const grouped: Record<ItemStatus, [number, number, number][]> = {
+      normal: [],
+      expired: [],
+      dangerous: [],
+      "expired-dangerous": [],
+    }
+
+    for (const item of items) {
+      grouped[item.status].push(item.position)
+    }
+
+    return grouped
+  }, [items])
+
   return (
-    <Instances limit={items.length}>
-      <boxGeometry args={[metrics.slotSize.w, metrics.slotSize.h, metrics.slotSize.d]} />
-      <meshStandardMaterial metalness={0.08} roughness={0.75} />
-      {items.map(({ position, status }, index) => (
-        <Instance color={getItemColor(status)} key={`occupied-${index}`} position={position} />
-      ))}
-    </Instances>
+    <>
+      {ITEM_STATUS_ORDER.map((status) => {
+        const positions = groupedByStatus[status]
+        if (!positions || positions.length === 0) {
+          return null
+        }
+        const visuals = getItemVisuals(status)
+
+        return (
+          <Instances key={`occupied-${status}`} limit={positions.length}>
+            <boxGeometry
+              args={[
+                metrics.slotSize.w,
+                metrics.slotSize.h,
+                metrics.slotSize.d,
+              ]}
+            />
+            <meshStandardMaterial
+              color={visuals.color}
+              emissive={visuals.glow}
+              emissiveIntensity={visuals.emissiveIntensity}
+              metalness={0.08}
+              roughness={0.75}
+            />
+            {positions.map((position, index) => (
+              <Instance
+                key={`occupied-${status}-${index}`}
+                position={position}
+              />
+            ))}
+          </Instances>
+        )
+      })}
+    </>
   )
 }
 
@@ -304,7 +336,9 @@ export function RackStructure({
         shelfPositions={shelfPositions}
         tone={resolvedTone}
       />
-      {showItems && <RackItems items={occupiedSlots} metrics={resolvedMetrics} />}
+      {showItems && (
+        <RackItems items={occupiedSlots} metrics={resolvedMetrics} />
+      )}
     </>
   )
 }
