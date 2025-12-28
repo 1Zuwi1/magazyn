@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import type { FilterState, ShelfPosition, ViewMode } from "./types"
+import { fromIndex } from "./types"
 
 interface WarehouseStore {
   mode: ViewMode
@@ -9,7 +10,7 @@ interface WarehouseStore {
   filters: FilterState
   setMode: (mode: ViewMode) => void
   focusRack: (rackId: string) => void
-  selectShelf: (rackId: string, index: number) => void
+  selectShelf: (rackId: string, index: number, cols: number) => void
   hoverShelf: (shelf: ShelfPosition | null) => void
   clearSelection: () => void
   setFilters: (filters: Partial<FilterState>) => void
@@ -25,15 +26,18 @@ export const useWarehouseStore = create<WarehouseStore>((set) => ({
     query: "",
   },
   setMode: (mode) => set({ mode }),
-  focusRack: (rackId) => set({ mode: "focus", selectedRackId: rackId }),
-  selectShelf: (rackId, index) => {
-    const cols = 10
+  focusRack: (rackId) => {
+    set({ mode: "focus", selectedRackId: rackId })
+    set({ selectedShelf: null })
+  },
+  selectShelf: (rackId, index, cols) => {
+    const { row, col } = fromIndex(index, cols)
     set({
       selectedShelf: {
         rackId,
         index,
-        row: Math.floor(index / cols),
-        col: index % cols,
+        row,
+        col,
       },
     })
   },

@@ -24,7 +24,7 @@ export function ItemsInstanced({ rack }: ItemsInstancedProps) {
           col * (rack.cell.w + rack.spacing.x) -
           (rack.grid.cols * (rack.cell.w + rack.spacing.x)) / 2
         const y =
-          row * (rack.cell.h + rack.spacing.y) -
+          (rack.grid.rows - 1 - row) * (rack.cell.h + rack.spacing.y) -
           (rack.grid.rows * (rack.cell.h + rack.spacing.y)) / 2
         const z = rack.cell.d / 2
 

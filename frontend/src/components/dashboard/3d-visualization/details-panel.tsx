@@ -136,7 +136,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
         <div className="flex-1">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-bold text-lg">
-              Półka {selectedShelf.row + 1}-{selectedShelf.col + 1}
+              Rząd {selectedShelf.row + 1} półka {selectedShelf.col + 1}
             </h3>
             <Button onClick={clearSelection} size="sm" variant="ghost">
               Wyczyść
@@ -193,7 +193,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
             <div className="rounded-lg border p-4 text-center text-muted-foreground">
               <div className="mb-2 font-bold">Pusta półka</div>
               <div className="text-sm">
-                Brak elementu na pozycji {selectedShelf.row + 1}-
+                Brak elementu na pozycji Rząd {selectedShelf.row + 1} półka{" "}
                 {selectedShelf.col + 1}
               </div>
             </div>

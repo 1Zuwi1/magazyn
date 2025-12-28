@@ -46,7 +46,7 @@ export function ShelvesInstanced({ rack }: ShelvesInstancedProps) {
           col * (rack.cell.w + rack.spacing.x) -
           (rack.grid.cols * (rack.cell.w + rack.spacing.x)) / 2
         const y =
-          row * (rack.cell.h + rack.spacing.y) -
+          (rack.grid.rows - 1 - row) * (rack.cell.h + rack.spacing.y) -
           (rack.grid.rows * (rack.cell.h + rack.spacing.y)) / 2
         const z = 0
 
@@ -106,7 +106,7 @@ export function ShelvesInstanced({ rack }: ShelvesInstancedProps) {
             onClick={(e) => {
               e.stopPropagation()
               const shelfIndex = instanceToIndex[i]
-              selectShelf(rack.id, shelfIndex)
+              selectShelf(rack.id, shelfIndex, rack.grid.cols)
             }}
             onPointerOut={(e) => {
               e.stopPropagation()
