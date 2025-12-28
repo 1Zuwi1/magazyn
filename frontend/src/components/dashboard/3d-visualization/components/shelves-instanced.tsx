@@ -1,108 +1,115 @@
 import { Instance, Instances, useCursor } from "@react-three/drei"
-import { useFrame } from "@react-three/fiber"
-import { useMemo, useRef, useState } from "react"
-import * as THREE from "three"
+import { useMemo, useState } from "react"
 import { useWarehouseStore } from "../store"
-import type { Item3D, Rack3D } from "../types"
+import type { Rack3D } from "../types"
 import { fromIndex } from "../types"
+import { getRackMetrics, type RackMetrics } from "./rack-structure"
 
-function getShelfColor(
-  item: Item3D | null | undefined,
-  isHovered: boolean,
-  isSelected: boolean
-): string {
-  if (isSelected) {
-    return "#3b82f6"
-  }
-  if (isHovered) {
-    return "#60a5fa"
-  }
-  if (item) {
-    return "#f1f5f9"
-  }
-  return "#e2e8f0"
-}
+const HOVER_COLOR = "#60a5fa"
+const SELECTED_COLOR = "#3b82f6"
+const HIGHLIGHT_OPACITY = 0.35
 
 interface ShelvesInstancedProps {
   rack: Rack3D
+  metrics?: RackMetrics
+  applyTransform?: boolean
 }
 
-export function ShelvesInstanced({ rack }: ShelvesInstancedProps) {
+export function ShelvesInstanced({
+  rack,
+  metrics,
+  applyTransform = true,
+}: ShelvesInstancedProps) {
   const { selectedShelf, hoverShelf, selectShelf } = useWarehouseStore()
   const [hoveredInstanceId, setHoveredInstanceId] = useState<number | null>(
     null
   )
+  const resolvedMetrics = metrics ?? getRackMetrics(rack)
 
-  const meshRef = useRef<THREE.InstancedMesh>(null)
+  const { instancePositions, instanceToIndex, indexToInstance, totalCount } =
+    useMemo(() => {
+      const positions: [number, number, number][] = []
+      const instanceMap: Record<number, number> = {}
+      const indexMap: Record<number, number> = {}
+      let idx = 0
 
-  const { instancePositions, instanceToIndex, totalCount } = useMemo(() => {
-    const positions: [number, number, number][] = []
-    const indexMap: Record<number, number> = {}
-    let idx = 0
-
-    for (let row = 0; row < rack.grid.rows; row++) {
-      for (let col = 0; col < rack.grid.cols; col++) {
-        const x =
-          col * (rack.cell.w + rack.spacing.x) -
-          (rack.grid.cols * (rack.cell.w + rack.spacing.x)) / 2
+      for (let row = 0; row < rack.grid.rows; row++) {
         const y =
-          (rack.grid.rows - 1 - row) * (rack.cell.h + rack.spacing.y) -
-          (rack.grid.rows * (rack.cell.h + rack.spacing.y)) / 2
-        const z = 0
+          (rack.grid.rows - 1 - row) * resolvedMetrics.unitY -
+          resolvedMetrics.gridHeight / 2
 
-        positions.push([x, y, z])
-        indexMap[idx] = row * rack.grid.cols + col
-        idx++
+        for (let col = 0; col < rack.grid.cols; col++) {
+          const x = col * resolvedMetrics.unitX - resolvedMetrics.gridWidth / 2
+          const shelfIndex = row * rack.grid.cols + col
+
+          positions.push([x, y, 0])
+          instanceMap[idx] = shelfIndex
+          indexMap[shelfIndex] = idx
+          idx++
+        }
       }
-    }
 
-    return {
-      instancePositions: positions,
-      instanceToIndex: indexMap,
-      totalCount: idx,
-    }
-  }, [rack])
+      return {
+        instancePositions: positions,
+        instanceToIndex: instanceMap,
+        indexToInstance: indexMap,
+        totalCount: idx,
+      }
+    }, [
+      rack.grid.cols,
+      rack.grid.rows,
+      resolvedMetrics.gridHeight,
+      resolvedMetrics.gridWidth,
+      resolvedMetrics.unitX,
+      resolvedMetrics.unitY,
+    ])
 
   useCursor(hoveredInstanceId !== null)
 
   const selected =
     selectedShelf?.rackId === rack.id && selectedShelf?.index !== undefined
+  const selectedInstanceId =
+    selected && selectedShelf ? indexToInstance[selectedShelf.index] ?? null : null
 
-  useFrame(() => {
-    if (!meshRef.current) {
-      return
+  const highlightInstances = useMemo(() => {
+    const highlights: { position: [number, number, number]; color: string }[] =
+      []
+
+    if (selectedInstanceId !== null) {
+      const position = instancePositions[selectedInstanceId]
+      if (position) {
+        highlights.push({ position, color: SELECTED_COLOR })
+      }
     }
 
-    const color = new THREE.Color()
-    for (let i = 0; i < totalCount; i++) {
-      const shelfIndex = instanceToIndex[i]
-      const isHovered = hoveredInstanceId === i
-      const isSelected = selected && selectedShelf?.index === shelfIndex
-      const item = rack.items[shelfIndex]
-
-      const colorHex = getShelfColor(item, isHovered, isSelected)
-      color.set(colorHex)
-
-      meshRef.current.setColorAt(i, color)
+    if (
+      hoveredInstanceId !== null &&
+      hoveredInstanceId !== selectedInstanceId
+    ) {
+      const position = instancePositions[hoveredInstanceId]
+      if (position) {
+        highlights.push({ position, color: HOVER_COLOR })
+      }
     }
 
-    if (meshRef.current.instanceColor) {
-      meshRef.current.instanceColor.needsUpdate = true
-    }
-  })
+    return highlights
+  }, [hoveredInstanceId, selectedInstanceId, instancePositions])
+
+  const groupProps = applyTransform
+    ? {
+        position: rack.transform.position,
+        rotation: [0, rack.transform.rotationY, 0] as [number, number, number],
+      }
+    : {}
 
   return (
-    <group
-      position={rack.transform.position}
-      rotation={[0, rack.transform.rotationY, 0]}
-    >
-      <Instances limit={totalCount} ref={meshRef}>
+    <group {...groupProps}>
+      <Instances limit={totalCount}>
         <boxGeometry args={[rack.cell.w, rack.cell.h, rack.cell.d]} />
-        <meshStandardMaterial />
+        <meshStandardMaterial depthWrite={false} opacity={0} transparent />
         {instancePositions.map((position, i) => (
           <Instance
-            color="#e2e8f0"
-            key={i}
+            key={`slot-${i}`}
             onClick={(e) => {
               e.stopPropagation()
               const shelfIndex = instanceToIndex[i]
@@ -124,6 +131,23 @@ export function ShelvesInstanced({ rack }: ShelvesInstancedProps) {
           />
         ))}
       </Instances>
+      {highlightInstances.length > 0 && (
+        <Instances limit={highlightInstances.length} raycast={() => null}>
+          <boxGeometry args={[rack.cell.w, rack.cell.h, rack.cell.d]} />
+          <meshStandardMaterial
+            depthWrite={false}
+            opacity={HIGHLIGHT_OPACITY}
+            transparent
+          />
+          {highlightInstances.map(({ position, color }, index) => (
+            <Instance
+              color={color}
+              key={`highlight-${index}`}
+              position={position}
+            />
+          ))}
+        </Instances>
+      )}
     </group>
   )
 }

@@ -107,9 +107,14 @@ function getRackDimensions(rack: Rack3D): {
   height: number
   depth: number
 } {
+  const unitY = rack.cell.h + rack.spacing.y
+  const gridHeight = Math.max(0, rack.grid.rows - 1) * unitY
+  const framePadding = rack.frame?.padding ?? 0.05
+  const slotHeight = rack.cell.h * 0.75
+
   return {
     width: rack.grid.cols * (rack.cell.w + rack.spacing.x) + rackPadding,
-    height: rack.grid.rows * (rack.cell.h + rack.spacing.y) + rackPadding,
+    height: gridHeight + slotHeight + framePadding * 2,
     depth: rack.cell.d + rackPadding,
   }
 }

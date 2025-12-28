@@ -3,6 +3,7 @@ import { useState } from "react"
 import { useWarehouseStore } from "../store"
 import type { Rack3D } from "../types"
 import { getOccupancyColor } from "../types"
+import { RackStructure, getRackMetrics } from "./rack-structure"
 
 interface RackInstanceProps {
   rack: Rack3D
@@ -14,12 +15,14 @@ function RackInstance({ rack, onFocus }: RackInstanceProps) {
   const occupiedCount = rack.items.filter((item) => item !== null).length
   const occupancy = (occupiedCount / (rack.grid.rows * rack.grid.cols)) * 100
   const color = getOccupancyColor(occupancy)
+  const metrics = getRackMetrics(rack)
 
   return (
     <group
       position={rack.transform.position}
       rotation={[0, rack.transform.rotationY, 0]}
     >
+      <RackStructure hovered={hovered} metrics={metrics} rack={rack} />
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Three.js mesh */}
       <mesh
         onClick={() => {
@@ -33,13 +36,7 @@ function RackInstance({ rack, onFocus }: RackInstanceProps) {
           setHovered(true)
         }}
       >
-        <boxGeometry
-          args={[
-            rack.grid.cols * (rack.cell.w + rack.spacing.x) + 0.2,
-            rack.grid.rows * (rack.cell.h + rack.spacing.y) + 0.2,
-            rack.cell.d + 0.2,
-          ]}
-        />
+        <boxGeometry args={[metrics.width, metrics.height, metrics.depth]} />
         <meshStandardMaterial
           color={color}
           opacity={hovered ? 0.9 : 0.7}
@@ -49,11 +46,7 @@ function RackInstance({ rack, onFocus }: RackInstanceProps) {
       <Html
         center
         distanceFactor={10}
-        position={[
-          0,
-          (rack.grid.rows * (rack.cell.h + rack.spacing.y)) / 2 + 0.5,
-          0,
-        ]}
+        position={[0, metrics.height / 2 + 0.5, 0]}
       >
         <div className="rounded bg-black/70 px-2 py-1 text-white text-xs">
           <div className="font-bold">{rack.code}</div>

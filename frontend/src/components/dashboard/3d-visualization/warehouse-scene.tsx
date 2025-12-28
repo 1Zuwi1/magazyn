@@ -1,7 +1,7 @@
 import { Canvas } from "@react-three/fiber"
 import { useMemo } from "react"
 import { CameraController } from "./components/camera-controls"
-import { ItemsInstanced } from "./components/items-instanced"
+import { RackStructure, getRackMetrics } from "./components/rack-structure"
 import { RacksOverview } from "./components/racks-overview"
 import { ShelvesInstanced } from "./components/shelves-instanced"
 import type { Rack3D, ViewMode, Warehouse3D } from "./types"
@@ -94,10 +94,19 @@ export function WarehouseScene({
                 position: [0, 0, 0] as [number, number, number],
               },
             }
+            const metrics = getRackMetrics(rackAtOrigin)
             return (
-              <group key={rack.id}>
-                <ShelvesInstanced rack={rackAtOrigin} />
-                <ItemsInstanced rack={rackAtOrigin} />
+              <group
+                key={rack.id}
+                position={rackAtOrigin.transform.position}
+                rotation={[0, rackAtOrigin.transform.rotationY, 0]}
+              >
+                <RackStructure metrics={metrics} rack={rackAtOrigin} />
+                <ShelvesInstanced
+                  applyTransform={false}
+                  metrics={metrics}
+                  rack={rackAtOrigin}
+                />
               </group>
             )
           })}
