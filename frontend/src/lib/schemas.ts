@@ -43,7 +43,6 @@ export const ApiMeSchema = createApiSchema({
       full_name: z.string().nullable(),
       two_factor_enabled: z.boolean(),
       role: z.enum(["user", "admin"]),
-      token_expires_at: z.date(),
     }),
   },
 })

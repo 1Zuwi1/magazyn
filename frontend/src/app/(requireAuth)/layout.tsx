@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import type { ReactNode } from "react"
 import { getSession } from "@/lib/session"
-import LayoutQueryClientWrapper from "./LayoutQueryClientWrapper"
+import LayoutQueryClientWrapper from "./layout-query-client-wrapper"
 
 export default async function Layout({ children }: { children: ReactNode }) {
   const session = await getSession()

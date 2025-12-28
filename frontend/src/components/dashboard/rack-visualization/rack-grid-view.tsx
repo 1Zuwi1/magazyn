@@ -18,7 +18,8 @@ interface RackGridViewProps {
   onNextRack?: () => void
 }
 
-const VIRTUALIZATION_THRESHOLD = 10
+const VIRTUALIZATION_THRESHOLD_COLS = 7
+const VIRTUALIZATION_THRESHOLD_ROWS = 4
 export function RackGridView({
   rows,
   cols,
@@ -31,7 +32,7 @@ export function RackGridView({
   const parentRef = useRef<HTMLDivElement>(null)
 
   const shouldVirtualize =
-    rows > VIRTUALIZATION_THRESHOLD || cols > VIRTUALIZATION_THRESHOLD
+    rows > VIRTUALIZATION_THRESHOLD_ROWS || cols > VIRTUALIZATION_THRESHOLD_COLS
 
   const showNavigation = totalRacks > 1 && (onPreviousRack || onNextRack)
 

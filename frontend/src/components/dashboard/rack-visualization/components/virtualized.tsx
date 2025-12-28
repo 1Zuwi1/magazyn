@@ -2,7 +2,7 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 import { useIsMobile } from "@/hooks/use-mobile"
 import type { Item } from "../../types"
 import { getSlotCoordinate } from "../../utils/helpers"
-import RackElement from "../rack-element"
+import RackElement from "./rack-element"
 
 const CELL_GAP = 12
 const VIRTUALIZATION_PADDING = 16

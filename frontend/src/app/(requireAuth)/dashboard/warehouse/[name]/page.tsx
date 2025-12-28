@@ -147,7 +147,7 @@ const mockRacks = [
   {
     id: "rack-2",
     name: "Regał C",
-    rows: 4,
+    rows: 7,
     cols: 5,
     minTemp: 5,
     maxTemp: 15,

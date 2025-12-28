@@ -2,7 +2,7 @@ import { CubeIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
-import type { Item } from "../types"
+import type { Item } from "../../types"
 
 interface ElementProps extends React.HTMLAttributes<HTMLDivElement> {
   isEmpty: boolean

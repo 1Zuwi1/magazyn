@@ -1,6 +1,6 @@
 import type { Item } from "../../types"
 import { getSlotCoordinate } from "../../utils/helpers"
-import RackElement from "../rack-element"
+import RackElement from "./rack-element"
 
 export default function Normal({
   cols,
