@@ -4,6 +4,14 @@ spring.datasource.url=${DB_CONNECTION_URL}
 spring.datasource.email=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
 
+spring.mail.host=${MAIL_HOST}
+spring.mail.port=${MAIL_PORT}
+spring.mail.username=${MAIL_USERNAME}
+spring.mail.password=${MAIL_PASSWORD}
+
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
 server.servlet.context-path=/api
 
 spring.jpa.hibernate.ddl-auto=update

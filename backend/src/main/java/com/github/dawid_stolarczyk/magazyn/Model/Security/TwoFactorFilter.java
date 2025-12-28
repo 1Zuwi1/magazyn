@@ -26,7 +26,9 @@ public class TwoFactorFilter extends OncePerRequestFilter {
             boolean verified2FA = auth.getAuthorities().stream()
                     .anyMatch(a -> Objects.equals(a.getAuthority(), "STATUS_2FA_VERIFIED"));
 
-            if (!verified2FA && !request.getRequestURI().startsWith("/api/2fa") && !request.getRequestURI().startsWith("/api/users/me")) {
+            if (!verified2FA
+                    && !request.getRequestURI().startsWith("/api/2fa")
+                    && !request.getRequestURI().startsWith("/api/auth")) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.getWriter().write("2FA not verified");
                 return;

@@ -21,6 +21,8 @@ public class AuthService {
     private UserRepository userRepository;
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private EmailService emailService;
 
     public void logoutUser(HttpServletResponse response, HttpServletRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -38,6 +40,7 @@ public class AuthService {
         }
         String jwt = jwtUtil.generateToken(user.getId(), Status2FA.PRE_2FA, 3600_000);
         CookiesUtils.setCookie(response, "jwt_token", jwt, 3600);
+        emailService.sendTwoFactorCode(user.getEmail(), "012456");
     }
 
     public void registerUser(LoginRegisterRequest registerRequest, HttpServletRequest request, HttpServletResponse response) {
