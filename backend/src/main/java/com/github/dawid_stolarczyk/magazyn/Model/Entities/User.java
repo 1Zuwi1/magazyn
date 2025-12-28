@@ -39,6 +39,9 @@ public class User {
     @Column(name = "status", nullable = false, length = 50, columnDefinition = "VARCHAR(50) DEFAULT 'ACTIVE'")
     private AccountStatus status = AccountStatus.ACTIVE;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TwoFactorMethod> twoFactorMethods = new ArrayList<>();
+
     @Column(name = "two_factor_enabled", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
     private boolean twoFactorEnabled = true;
 
@@ -153,5 +156,13 @@ public class User {
 
     public void setTwoFactorEnabled(boolean twoFactorEnabled) {
         this.twoFactorEnabled = twoFactorEnabled;
+    }
+
+    public List<TwoFactorMethod> getTwoFactorMethods() {
+        return twoFactorMethods;
+    }
+
+    public void setTwoFactorMethods(List<TwoFactorMethod> twoFactorMethods) {
+        this.twoFactorMethods = twoFactorMethods;
     }
 }

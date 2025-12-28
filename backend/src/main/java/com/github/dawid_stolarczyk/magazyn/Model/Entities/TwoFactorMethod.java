@@ -1,0 +1,62 @@
+package com.github.dawid_stolarczyk.magazyn.Model.Entities;
+
+import jakarta.persistence.*;
+
+import java.sql.Timestamp;
+
+@Entity
+@Table(name = "two_factor_methods")
+public class TwoFactorMethod {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Enumerated(EnumType.STRING)
+    private TwoFactor methodName;
+    private int emailCode;
+    private Timestamp codeGeneratedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public TwoFactor getMethodName() {
+        return methodName;
+    }
+
+    public void setMethodName(TwoFactor methodName) {
+        this.methodName = methodName;
+    }
+
+    public int getEmailCode() {
+        return emailCode;
+    }
+
+    public void setEmailCode(int emailCode) {
+        this.emailCode = emailCode;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Timestamp getCodeGeneratedAt() {
+        return codeGeneratedAt;
+    }
+
+    public void setCodeGeneratedAt(Timestamp codeGeneratedAt) {
+        this.codeGeneratedAt = codeGeneratedAt;
+    }
+}
