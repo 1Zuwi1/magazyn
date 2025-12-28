@@ -1,20 +1,30 @@
 import { Instance, Instances, useTexture } from "@react-three/drei"
 import { useEffect, useMemo } from "react"
 import * as THREE from "three"
-import type { Item3D, Rack3D } from "../types"
+import type { Item3D, ItemStatus, Rack3D } from "../types"
 import { getItemColor } from "../types"
 import { getRackMetrics, type RackMetrics } from "./rack-structure"
 
 const IMAGE_SCALE = 0.9
 const GLOW_SCALE = 1.12
-const GLOW_OPACITY = 0.35
 const IMAGE_Z_OFFSET = 0.01
 const GLOW_Z_OFFSET = 0.008
+
+const GLOW_SETTINGS: Record<
+  ItemStatus,
+  { glowOpacity: number; emissiveIntensity: number }
+> = {
+  normal: { glowOpacity: 0.06, emissiveIntensity: 0.12 },
+  expired: { glowOpacity: 0.16, emissiveIntensity: 0.22 },
+  dangerous: { glowOpacity: 0.32, emissiveIntensity: 0.38 },
+}
 
 interface FocusItemImage {
   position: [number, number, number]
   status: Item3D["status"]
   imageUrl: string
+  glowOpacity: number
+  emissiveIntensity: number
 }
 
 interface FocusItemSolid {
@@ -72,7 +82,7 @@ function ItemsWithImages({ items, size, zOffset }: ItemsWithImagesProps) {
                 blending={THREE.AdditiveBlending}
                 color={glowColor}
                 depthWrite={false}
-                opacity={GLOW_OPACITY}
+                opacity={item.glowOpacity}
                 side={THREE.DoubleSide}
                 transparent
               />
@@ -81,7 +91,7 @@ function ItemsWithImages({ items, size, zOffset }: ItemsWithImagesProps) {
               <planeGeometry args={[size.w * IMAGE_SCALE, size.h * IMAGE_SCALE]} />
               <meshStandardMaterial
                 emissive={glowColor}
-                emissiveIntensity={0.35}
+                emissiveIntensity={item.emissiveIntensity}
                 map={texture}
                 side={THREE.DoubleSide}
                 transparent
@@ -144,9 +154,16 @@ export function ItemsFocus({
 
         const position: [number, number, number] = [x, y, 0]
         const imageUrl = getItemImageUrl(item)
+        const glowSettings = GLOW_SETTINGS[item.status] ?? GLOW_SETTINGS.normal
 
         if (imageUrl) {
-          withImages.push({ position, status: item.status, imageUrl })
+          withImages.push({
+            position,
+            status: item.status,
+            imageUrl,
+            glowOpacity: glowSettings.glowOpacity,
+            emissiveIntensity: glowSettings.emissiveIntensity,
+          })
         } else {
           solid.push({ position, status: item.status })
         }
@@ -190,7 +207,7 @@ export function ItemsFocus({
               resolvedMetrics.slotSize.d,
             ]}
           />
-          <meshStandardMaterial metalness={0.15} roughness={0.6} />
+          <meshStandardMaterial metalness={0.08} roughness={0.72} />
           {itemsSolid.map(({ position, status }, index) => (
             <Instance
               color={getItemColor(status)}

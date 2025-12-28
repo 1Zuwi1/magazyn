@@ -44,7 +44,7 @@ export function ItemsInstanced({ rack }: ItemsInstancedProps) {
         <boxGeometry
           args={[rack.cell.w * 0.8, rack.cell.h * 0.8, rack.cell.d * 0.5]}
         />
-        <meshStandardMaterial />
+        <meshStandardMaterial metalness={0.08} roughness={0.75} />
         {itemInstances.map(({ position, item }, i) => {
           const color = getItemColor(item.status)
 

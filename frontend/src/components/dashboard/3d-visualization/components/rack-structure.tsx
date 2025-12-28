@@ -1,4 +1,4 @@
-import { Instance, Instances } from "@react-three/drei"
+import { Edges, Instance, Instances } from "@react-three/drei"
 import { useMemo } from "react"
 import type { Item3D, Rack3D } from "../types"
 import { getItemColor } from "../types"
@@ -17,13 +17,33 @@ export interface RackMetrics {
   slotSize: { w: number; h: number; d: number }
 }
 
+export interface RackTone {
+  frame: string
+  frameHover: string
+  shelf: string
+  shelfHover: string
+  outline: string
+  outlineHover: string
+  glow: string
+}
+
+const DEFAULT_RACK_TONE: RackTone = {
+  frame: "#9aa3af",
+  frameHover: "#b6c0cd",
+  shelf: "#d6dbe2",
+  shelfHover: "#e6ebf1",
+  outline: "#6b7280",
+  outlineHover: "#94a3b8",
+  glow: "#7c8798",
+}
+
 export const getRackMetrics = (rack: Rack3D): RackMetrics => {
   const unitX = rack.cell.w + rack.spacing.x
   const unitY = rack.cell.h + rack.spacing.y
   const gridWidth = rack.grid.cols * unitX
   const gridHeight = Math.max(0, rack.grid.rows - 1) * unitY
   const framePadding = rack.frame?.padding ?? 0.05
-  const frameThickness = rack.frame?.thickness ?? 0.03
+  const frameThickness = Math.max(rack.frame?.thickness ?? 0.03, 0.04)
   const slotSize = {
     w: rack.cell.w * 0.8,
     h: rack.cell.h * 0.75,
@@ -32,7 +52,7 @@ export const getRackMetrics = (rack: Rack3D): RackMetrics => {
   const width = gridWidth + slotSize.w + framePadding * 2
   const height = gridHeight + slotSize.h + framePadding * 2
   const depth = rack.cell.d + framePadding * 2
-  const shelfThickness = Math.max(frameThickness * 0.6, 0.01)
+  const shelfThickness = Math.max(frameThickness * 0.45, 0.012)
 
   return {
     width,
@@ -53,9 +73,15 @@ interface RackFrameProps {
   metrics: RackMetrics
   shelfPositions: number[]
   hovered: boolean
+  tone: RackTone
 }
 
-export function RackFrame({ metrics, shelfPositions, hovered }: RackFrameProps) {
+export function RackFrame({
+  metrics,
+  shelfPositions,
+  hovered,
+  tone,
+}: RackFrameProps) {
   const {
     width,
     height,
@@ -71,8 +97,10 @@ export function RackFrame({ metrics, shelfPositions, hovered }: RackFrameProps) 
   const postOffsetZ = halfDepth - frameThickness / 2
   const beamLengthX = width - frameThickness * 2
   const beamLengthZ = depth - frameThickness * 2
-  const frameColor = hovered ? "#94a3b8" : "#a1a1aa"
-  const shelfColor = hovered ? "#e2e8f0" : "#f1f5f9"
+  const frameColor = hovered ? tone.frameHover : tone.frame
+  const shelfColor = hovered ? tone.shelfHover : tone.shelf
+  const outlineColor = hovered ? tone.outlineHover : tone.outline
+  const emissiveIntensity = hovered ? 0.18 : 0.1
   const shelfWidth = beamLengthX - framePadding
   const shelfDepth = beamLengthZ - framePadding
 
@@ -100,27 +128,89 @@ export function RackFrame({ metrics, shelfPositions, hovered }: RackFrameProps) 
   return (
     <group>
       {postPositions.map((position, index) => (
-        <mesh key={`post-${index}`} position={position}>
+        <mesh
+          castShadow
+          receiveShadow
+          key={`post-${index}`}
+          position={position}
+        >
           <boxGeometry args={[frameThickness, height, frameThickness]} />
-          <meshStandardMaterial color={frameColor} metalness={0.2} roughness={0.6} />
+          <meshStandardMaterial
+            color={frameColor}
+            emissive={tone.glow}
+            emissiveIntensity={emissiveIntensity}
+            metalness={0.25}
+            roughness={0.5}
+          />
+          <Edges
+            color={outlineColor}
+            lineWidth={1.1}
+            opacity={0.7}
+            scale={1.01}
+            transparent
+          />
         </mesh>
       ))}
       {beamXPositions.map((position, index) => (
-        <mesh key={`beam-x-${index}`} position={position}>
+        <mesh
+          castShadow
+          receiveShadow
+          key={`beam-x-${index}`}
+          position={position}
+        >
           <boxGeometry args={[beamLengthX, frameThickness, frameThickness]} />
-          <meshStandardMaterial color={frameColor} metalness={0.2} roughness={0.6} />
+          <meshStandardMaterial
+            color={frameColor}
+            emissive={tone.glow}
+            emissiveIntensity={emissiveIntensity}
+            metalness={0.25}
+            roughness={0.5}
+          />
+          <Edges
+            color={outlineColor}
+            lineWidth={1.1}
+            opacity={0.7}
+            scale={1.01}
+            transparent
+          />
         </mesh>
       ))}
       {beamZPositions.map((position, index) => (
-        <mesh key={`beam-z-${index}`} position={position}>
+        <mesh
+          castShadow
+          receiveShadow
+          key={`beam-z-${index}`}
+          position={position}
+        >
           <boxGeometry args={[frameThickness, frameThickness, beamLengthZ]} />
-          <meshStandardMaterial color={frameColor} metalness={0.2} roughness={0.6} />
+          <meshStandardMaterial
+            color={frameColor}
+            emissive={tone.glow}
+            emissiveIntensity={emissiveIntensity}
+            metalness={0.25}
+            roughness={0.5}
+          />
+          <Edges
+            color={outlineColor}
+            lineWidth={1.1}
+            opacity={0.7}
+            scale={1.01}
+            transparent
+          />
         </mesh>
       ))}
       {shelfPositions.map((y, index) => (
-        <mesh key={`shelf-${index}`} position={[0, y, 0]}>
+        <mesh
+          key={`shelf-${index}`}
+          position={[0, y, 0]}
+          receiveShadow
+        >
           <boxGeometry args={[shelfWidth, shelfThickness, shelfDepth]} />
-          <meshStandardMaterial color={shelfColor} metalness={0.1} roughness={0.8} />
+          <meshStandardMaterial
+            color={shelfColor}
+            metalness={0.05}
+            roughness={0.85}
+          />
         </mesh>
       ))}
     </group>
@@ -140,7 +230,7 @@ function RackItems({ metrics, items }: RackItemsProps) {
   return (
     <Instances limit={items.length}>
       <boxGeometry args={[metrics.slotSize.w, metrics.slotSize.h, metrics.slotSize.d]} />
-      <meshStandardMaterial metalness={0.15} roughness={0.6} />
+      <meshStandardMaterial metalness={0.08} roughness={0.75} />
       {items.map(({ position, status }, index) => (
         <Instance color={getItemColor(status)} key={`occupied-${index}`} position={position} />
       ))}
@@ -153,6 +243,7 @@ interface RackStructureProps {
   metrics?: RackMetrics
   hovered?: boolean
   showItems?: boolean
+  tone?: RackTone
 }
 
 export function RackStructure({
@@ -160,8 +251,10 @@ export function RackStructure({
   metrics,
   hovered = false,
   showItems = true,
+  tone,
 }: RackStructureProps) {
   const resolvedMetrics = metrics ?? getRackMetrics(rack)
+  const resolvedTone = tone ?? DEFAULT_RACK_TONE
 
   const { occupiedSlots, shelfPositions } = useMemo(() => {
     const occupied: {
@@ -205,7 +298,12 @@ export function RackStructure({
 
   return (
     <>
-      <RackFrame hovered={hovered} metrics={resolvedMetrics} shelfPositions={shelfPositions} />
+      <RackFrame
+        hovered={hovered}
+        metrics={resolvedMetrics}
+        shelfPositions={shelfPositions}
+        tone={resolvedTone}
+      />
       {showItems && <RackItems items={occupiedSlots} metrics={resolvedMetrics} />}
     </>
   )

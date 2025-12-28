@@ -61,13 +61,13 @@ export function fromIndex(
 
 export function getItemColor(status: ItemStatus): string {
   if (status === "normal") {
-    return "#22c55e"
+    return "#2f855a"
   }
   if (status === "expired") {
-    return "#f97316"
+    return "#c05621"
   }
   if (status === "dangerous") {
-    return "#ef4444"
+    return "#c53030"
   }
   return "#94a3b8"
 }

@@ -2,31 +2,72 @@ import { Edges, Html, useCursor } from "@react-three/drei"
 import { useState } from "react"
 import { useWarehouseStore } from "../store"
 import type { Rack3D } from "../types"
-import { getOccupancyColor } from "../types"
-import { getRackMetrics, RackStructure } from "./rack-structure"
+import { getRackMetrics, RackStructure, type RackTone } from "./rack-structure"
+
+interface RackRender {
+  rack: Rack3D
+  renderPosition: [number, number, number]
+  aisleIndex: number
+  aisleLabel: string
+}
+
+const AISLE_TONES: RackTone[] = [
+  {
+    frame: "#8b96a6",
+    frameHover: "#a9b4c5",
+    shelf: "#cfd6df",
+    shelfHover: "#e0e7ef",
+    outline: "#6aa2c7",
+    outlineHover: "#8cc5ea",
+    glow: "#6aa2c7",
+  },
+  {
+    frame: "#988a7a",
+    frameHover: "#b5a493",
+    shelf: "#d7d0c6",
+    shelfHover: "#e7e0d6",
+    outline: "#caa46a",
+    outlineHover: "#e0bf86",
+    glow: "#caa46a",
+  },
+]
 
 interface RackInstanceProps {
   rack: Rack3D
+  renderPosition: [number, number, number]
+  aisleIndex: number
+  aisleLabel: string
   onFocus: (rackId: string) => void
 }
 
-function RackInstance({ rack, onFocus }: RackInstanceProps) {
+function RackInstance({
+  rack,
+  renderPosition,
+  aisleIndex,
+  aisleLabel,
+  onFocus,
+}: RackInstanceProps) {
   const [hovered, setHovered] = useState(false)
   const occupiedCount = rack.items.filter((item) => item !== null).length
   const occupancy = (occupiedCount / (rack.grid.rows * rack.grid.cols)) * 100
-  const color = getOccupancyColor(occupancy)
   const metrics = getRackMetrics(rack)
+  const tone = AISLE_TONES[aisleIndex % AISLE_TONES.length]
   const outlineOpacity = hovered ? 0.9 : 0.55
-  const fillOpacity = hovered ? 0.12 : 0
+  const fillOpacity = hovered ? 0.18 : 0.06
 
   useCursor(hovered)
 
   return (
     <group
-      position={rack.transform.position}
+      position={renderPosition}
       rotation={[0, rack.transform.rotationY, 0]}
     >
-      <RackStructure hovered={hovered} metrics={metrics} rack={rack} />
+      <RackStructure
+        hovered={hovered}
+        metrics={metrics}
+        rack={rack}
+        tone={tone}
+      />
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Three.js mesh */}
       <mesh
         onClick={() => {
@@ -42,41 +83,48 @@ function RackInstance({ rack, onFocus }: RackInstanceProps) {
       >
         <boxGeometry args={[metrics.width, metrics.height, metrics.depth]} />
         <meshStandardMaterial
-          color={color}
+          color={tone.outline}
+          emissive={tone.glow}
+          emissiveIntensity={hovered ? 0.3 : 0.18}
           depthWrite={false}
           opacity={fillOpacity}
           transparent
         />
         <Edges
-          color={color}
+          color={hovered ? tone.outlineHover : tone.outline}
+          lineWidth={1.2}
           opacity={outlineOpacity}
           scale={1.01}
           transparent
         />
       </mesh>
-      <Html
-        center
-        distanceFactor={10}
-        position={[0, metrics.height / 2 + 0.5, 0]}
-        zIndexRange={[10, 0]}
-      >
-        <div className="rounded bg-black/70 px-2 py-1 text-white text-xs">
-          <div className="font-bold">{rack.code}</div>
-          <div>
-            {Math.round(occupancy)}% zajęte • {rack.grid.cols}×{rack.grid.rows}
+      {hovered && (
+        <Html
+          center
+          distanceFactor={10}
+          position={[0, metrics.height / 2 + 0.5, 0]}
+          zIndexRange={[10, 0]}
+        >
+          <div className="rounded border border-white/10 bg-slate-950/80 px-2 py-1 text-slate-100 text-xs">
+            <div className="font-bold">{rack.code}</div>
+            <div>
+              {Math.round(occupancy)}% zajęte • {rack.grid.cols}×
+              {rack.grid.rows}
+            </div>
+            <div className="text-slate-400">
+              Maks: {rack.maxElementSize.width}×{rack.maxElementSize.height}×
+              {rack.maxElementSize.depth}cm
+            </div>
+            <div className="text-slate-500">Aleja {aisleLabel}</div>
           </div>
-          <div className="text-slate-300">
-            Maks: {rack.maxElementSize.width}×{rack.maxElementSize.height}×
-            {rack.maxElementSize.depth}cm
-          </div>
-        </div>
-      </Html>
+        </Html>
+      )}
     </group>
   )
 }
 
 interface RacksOverviewProps {
-  racks: Rack3D[]
+  racks: RackRender[]
 }
 
 export function RacksOverview({ racks }: RacksOverviewProps) {
@@ -84,8 +132,15 @@ export function RacksOverview({ racks }: RacksOverviewProps) {
 
   return (
     <group>
-      {racks.map((rack) => (
-        <RackInstance key={rack.id} onFocus={focusRack} rack={rack} />
+      {racks.map(({ rack, renderPosition, aisleIndex, aisleLabel }) => (
+        <RackInstance
+          aisleIndex={aisleIndex}
+          aisleLabel={aisleLabel}
+          key={rack.id}
+          onFocus={focusRack}
+          rack={rack}
+          renderPosition={renderPosition}
+        />
       ))}
     </group>
   )
