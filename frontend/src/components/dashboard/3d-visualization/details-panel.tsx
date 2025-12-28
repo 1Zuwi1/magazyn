@@ -182,9 +182,6 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
 
               <div className="mt-4 space-y-2">
                 <Button className="w-full" size="sm" variant="outline">
-                  Oznacz jako zarezerwowany
-                </Button>
-                <Button className="w-full" size="sm" variant="outline">
                   Edytuj etykietę
                 </Button>
               </div>

@@ -84,15 +84,22 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                 </div>
               </div>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="grid grid-cols-2 gap-2">
               <Link
                 className={buttonVariants({
                   variant: "outline",
-                  className: "w-full",
                 })}
                 href={`/dashboard/warehouse/id/${warehouse.id}/${warehouse.name}`}
               >
                 Zobacz Regały
+              </Link>
+              <Link
+                className={buttonVariants({
+                  variant: "outline",
+                })}
+                href={`/dashboard/warehouse/id/${warehouse.id}/${warehouse.name}/3d-visualization`}
+              >
+                Zobacz wizualizację 3D
               </Link>
             </CardFooter>
           </Card>
