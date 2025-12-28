@@ -1,4 +1,4 @@
-import type { Rack } from "../../types"
+import type { Rack } from "../types"
 
 interface RackItemsStatsProps {
   rack: Rack

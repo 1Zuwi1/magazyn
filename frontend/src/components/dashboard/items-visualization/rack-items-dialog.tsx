@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import type { Item, Rack } from "../../types"
+import type { Item, Rack } from "../types"
 import { RackItemsStats } from "./rack-items-stats"
 import { RackItemsTable } from "./rack-items-table"
 
