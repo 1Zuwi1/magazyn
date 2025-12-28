@@ -1,7 +1,8 @@
 import { Canvas } from "@react-three/fiber"
 import { useMemo } from "react"
 import { CameraController } from "./components/camera-controls"
-import { RackStructure, getRackMetrics } from "./components/rack-structure"
+import { ItemsFocus } from "./components/items-focus"
+import { getRackMetrics, RackStructure } from "./components/rack-structure"
 import { RacksOverview } from "./components/racks-overview"
 import { ShelvesInstanced } from "./components/shelves-instanced"
 import type { Rack3D, ViewMode, Warehouse3D } from "./types"
@@ -15,6 +16,7 @@ interface WarehouseSceneProps {
 const rackOutlinePadding = 0.2
 const floorPadding = 0.6
 const floorOffset = 0.01
+const focusFloorPadding = 0.6
 
 function getWarehouseBounds(racks: Rack3D[]): {
   centerX: number
@@ -68,7 +70,7 @@ export function WarehouseScene({
   )
 
   return (
-    <Canvas camera={{ position: [10, 10, 10], fov: 50 }}>
+    <Canvas className="h-full w-full" camera={{ position: [10, 10, 10], fov: 50 }}>
       <ambientLight intensity={0.6} />
       <directionalLight intensity={0.8} position={[10, 10, 5]} />
       <CameraController mode={mode} warehouseCenter={warehouse.center} />
@@ -101,7 +103,28 @@ export function WarehouseScene({
                 position={rackAtOrigin.transform.position}
                 rotation={[0, rackAtOrigin.transform.rotationY, 0]}
               >
-                <RackStructure metrics={metrics} rack={rackAtOrigin} />
+                <mesh
+                  position={[0, -metrics.height / 2 - floorOffset, 0]}
+                  rotation={[-Math.PI / 2, 0, 0]}
+                >
+                  <planeGeometry
+                    args={[
+                      metrics.width + focusFloorPadding * 2,
+                      metrics.depth + focusFloorPadding * 2,
+                    ]}
+                  />
+                  <meshStandardMaterial color="#e5e7eb" />
+                </mesh>
+                <RackStructure
+                  metrics={metrics}
+                  rack={rackAtOrigin}
+                  showItems={false}
+                />
+                <ItemsFocus
+                  applyTransform={false}
+                  metrics={metrics}
+                  rack={rackAtOrigin}
+                />
                 <ShelvesInstanced
                   applyTransform={false}
                   metrics={metrics}

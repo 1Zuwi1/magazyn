@@ -123,7 +123,7 @@ export function generateMockWarehouse(rackCount = 10, seed = 1): Warehouse3D {
   const racks: Rack3D[] = []
   const racksPerRow = 4
   const rackSpacing = 0.5
-  const rowSpacing = 0.5
+  const rowSpacing = 2
   const random = createRng(seed)
   const expiryBase = EXPIRY_BASE_MS
 

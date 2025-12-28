@@ -152,12 +152,14 @@ interface RackStructureProps {
   rack: Rack3D
   metrics?: RackMetrics
   hovered?: boolean
+  showItems?: boolean
 }
 
 export function RackStructure({
   rack,
   metrics,
   hovered = false,
+  showItems = true,
 }: RackStructureProps) {
   const resolvedMetrics = metrics ?? getRackMetrics(rack)
 
@@ -204,7 +206,7 @@ export function RackStructure({
   return (
     <>
       <RackFrame hovered={hovered} metrics={resolvedMetrics} shelfPositions={shelfPositions} />
-      <RackItems items={occupiedSlots} metrics={resolvedMetrics} />
+      {showItems && <RackItems items={occupiedSlots} metrics={resolvedMetrics} />}
     </>
   )
 }

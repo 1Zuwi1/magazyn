@@ -1,9 +1,9 @@
-import { Html } from "@react-three/drei"
+import { Edges, Html, useCursor } from "@react-three/drei"
 import { useState } from "react"
 import { useWarehouseStore } from "../store"
 import type { Rack3D } from "../types"
 import { getOccupancyColor } from "../types"
-import { RackStructure, getRackMetrics } from "./rack-structure"
+import { getRackMetrics, RackStructure } from "./rack-structure"
 
 interface RackInstanceProps {
   rack: Rack3D
@@ -16,6 +16,10 @@ function RackInstance({ rack, onFocus }: RackInstanceProps) {
   const occupancy = (occupiedCount / (rack.grid.rows * rack.grid.cols)) * 100
   const color = getOccupancyColor(occupancy)
   const metrics = getRackMetrics(rack)
+  const outlineOpacity = hovered ? 0.9 : 0.55
+  const fillOpacity = hovered ? 0.12 : 0
+
+  useCursor(hovered)
 
   return (
     <group
@@ -39,9 +43,11 @@ function RackInstance({ rack, onFocus }: RackInstanceProps) {
         <boxGeometry args={[metrics.width, metrics.height, metrics.depth]} />
         <meshStandardMaterial
           color={color}
-          opacity={hovered ? 0.9 : 0.7}
+          depthWrite={false}
+          opacity={fillOpacity}
           transparent
         />
+        <Edges color={color} opacity={outlineOpacity} scale={1.01} transparent />
       </mesh>
       <Html
         center

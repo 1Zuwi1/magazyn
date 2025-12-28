@@ -23,12 +23,12 @@ export default function ThreeDVisualizationPage() {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         <div className="w-72 shrink-0">
           <SidebarPanel racks={warehouse.racks} />
         </div>
 
-        <div className="flex-1">
+        <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
           <WarehouseScene
             mode={mode}
             selectedRackId={selectedRackId}

@@ -7,6 +7,7 @@ export interface Item3D {
   type: string
   status: ItemStatus
   label: string
+  imageUrl?: string
   meta?: Record<string, unknown>
 }
 
