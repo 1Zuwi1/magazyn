@@ -52,10 +52,13 @@ public class JwtUtil {
         try {
             Claims claims = extractAllClaims(token);
             if (claims == null) return null;
-            if (!(claims.get("id") instanceof Integer || claims.get("id") instanceof Long)) {
-                return null;
+            if (claims.get("id") instanceof Integer integerValue) {
+                return Long.valueOf(integerValue);
             }
-            return (Long) claims.get("id");
+            if (claims.get("id") instanceof Long longValue) {
+                return longValue;
+            }
+            return null;
         } catch (JwtException e) {
             return null;
         }
@@ -76,7 +79,7 @@ public class JwtUtil {
     }
 
 
-    public static String getCurrentIdByAuthentication() {
+    public static Long getCurrentIdByAuthentication() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
@@ -85,10 +88,8 @@ public class JwtUtil {
 
         Object principal = auth.getPrincipal();
 
-        if (principal instanceof String) {
-            return (String) principal;
-        } else if (principal instanceof UserDetails) {
-            return ((UserDetails) principal).getUsername();
+        if (principal instanceof Long) {
+            return (Long) principal;
         }
 
         throw new RuntimeException("Unsupported principal type: " + principal.getClass());

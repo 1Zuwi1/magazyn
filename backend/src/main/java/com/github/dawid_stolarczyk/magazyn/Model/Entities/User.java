@@ -1,6 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -8,7 +9,6 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -20,6 +20,10 @@ public class User {
     @NotBlank
     @Size(max = 100)
     private String email;
+    @Column(nullable = false)
+    @NotBlank
+    @Size(min=3, max=100)
+    private String fullName;
     @Column(unique = true, nullable = false)
     @NotBlank
     @Size(min=3, max=50)
@@ -27,10 +31,16 @@ public class User {
     @Column(nullable = false)
     @NotBlank
     private String password;
-    private AccountStatus status = AccountStatus.ACTIVE;
-    @NotNull
     @Enumerated(EnumType.STRING)
-    private UserRole role;
+    @Column(name = "role", nullable = false, length = 50, columnDefinition = "VARCHAR(50) DEFAULT 'USER'")
+    private UserRole role = UserRole.USER;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 50, columnDefinition = "VARCHAR(50) DEFAULT 'ACTIVE'")
+    private AccountStatus status = AccountStatus.ACTIVE;
+
+    @Column(name = "two_factor_enabled", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean twoFactorEnabled = true;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Warehouse> warehouses = new ArrayList<>();
@@ -127,5 +137,21 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public boolean isTwoFactorEnabled() {
+        return twoFactorEnabled;
+    }
+
+    public void setTwoFactorEnabled(boolean twoFactorEnabled) {
+        this.twoFactorEnabled = twoFactorEnabled;
     }
 }

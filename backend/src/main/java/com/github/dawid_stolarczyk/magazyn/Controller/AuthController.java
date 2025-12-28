@@ -3,6 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Controller;
 import com.github.dawid_stolarczyk.magazyn.Controller.DTOs.LoginRegisterRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.DTOs.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Model.Services.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,6 +23,7 @@ public class AuthController {
     @Autowired
     private HttpServletRequest request;
 
+    @Operation(summary = "Logout the current user by invalidating their session.")
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
         try {
@@ -31,8 +34,9 @@ public class AuthController {
         }
     }
 
+    @Operation(summary = "Login a user with provided credentials.")
     @PostMapping("/login")
-    public ResponseEntity<?> login(LoginRegisterRequest loginRequest, HttpServletResponse response) {
+    public ResponseEntity<?> login(@RequestBody LoginRegisterRequest loginRequest, HttpServletResponse response) {
         try {
             authService.loginUser(loginRequest, response);
             return ResponseEntity.ok(new ResponseTemplate<>(true, "Logged in successfully"));
@@ -40,8 +44,9 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
         }
     }
+    @Operation(summary = "Register a new user with provided credentials.")
     @PostMapping("/register")
-    public ResponseEntity<?> register(LoginRegisterRequest registerRequest, HttpServletResponse response) {
+    public ResponseEntity<?> register(@RequestBody LoginRegisterRequest registerRequest, HttpServletResponse response) {
         try {
             authService.registerUser(registerRequest, request, response);
             return ResponseEntity.ok(new ResponseTemplate<>(true, "Registered successfully"));
