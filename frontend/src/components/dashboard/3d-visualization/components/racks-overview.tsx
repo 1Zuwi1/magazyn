@@ -2,6 +2,8 @@ import { Edges, Html, useCursor } from "@react-three/drei"
 import { useState } from "react"
 import { useWarehouseStore } from "../store"
 import type { Rack3D } from "../types"
+import { RACK_ZONE_SIZE } from "../types"
+import { BlocksInstanced, getBlockLayout } from "./blocks-instanced"
 import { getRackMetrics, RackStructure, type RackTone } from "./rack-structure"
 
 interface RackRender {
@@ -51,6 +53,14 @@ function RackInstance({
   const tone = AISLE_TONES[aisleIndex % AISLE_TONES.length]
   const outlineOpacity = hovered ? 0.9 : 0.55
   const fillOpacity = hovered ? 0.18 : 0.06
+  const isLargeGrid =
+    rack.grid.rows > RACK_ZONE_SIZE || rack.grid.cols > RACK_ZONE_SIZE
+  const blockLayout = isLargeGrid
+    ? getBlockLayout(rack, metrics, RACK_ZONE_SIZE)
+    : null
+  const outlineWidth = blockLayout?.totalWidth ?? metrics.width
+  const outlineHeight = blockLayout?.totalHeight ?? metrics.height
+  const outlineDepth = blockLayout?.totalDepth ?? metrics.depth
 
   useCursor(hovered)
 
@@ -59,12 +69,26 @@ function RackInstance({
       position={renderPosition}
       rotation={[0, rack.transform.rotationY, 0]}
     >
-      <RackStructure
-        hovered={hovered}
-        metrics={metrics}
-        rack={rack}
-        tone={tone}
-      />
+      {!isLargeGrid && (
+        <RackStructure
+          hovered={hovered}
+          metrics={metrics}
+          rack={rack}
+          showItems
+          showShelves
+          tone={tone}
+        />
+      )}
+      {isLargeGrid && (
+        <BlocksInstanced
+          applyTransform={false}
+          blockSize={RACK_ZONE_SIZE}
+          clickable={false}
+          hoverable
+          metrics={metrics}
+          rack={rack}
+        />
+      )}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Three.js mesh */}
       <mesh
         onClick={() => {
@@ -78,7 +102,7 @@ function RackInstance({
           setHovered(true)
         }}
       >
-        <boxGeometry args={[metrics.width, metrics.height, metrics.depth]} />
+        <boxGeometry args={[outlineWidth, outlineHeight, outlineDepth]} />
         <meshStandardMaterial
           color={tone.outline}
           depthWrite={false}
@@ -99,7 +123,7 @@ function RackInstance({
         <Html
           center
           distanceFactor={10}
-          position={[0, metrics.height / 2 + 0.5, 0]}
+          position={[0, outlineHeight / 2 + 0.5, 0]}
           zIndexRange={[10, 0]}
         >
           <div className="rounded border border-white/10 bg-slate-950/80 px-2 py-1 text-slate-100 text-xs">
@@ -110,7 +134,7 @@ function RackInstance({
             </div>
             <div className="text-slate-400">
               Maks: {rack.maxElementSize.width}×{rack.maxElementSize.height}×
-              {rack.maxElementSize.depth}cm
+              {rack.maxElementSize.depth} mm
             </div>
           </div>
         </Html>

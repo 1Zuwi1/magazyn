@@ -1,8 +1,7 @@
 import { Instance, Instances, useCursor } from "@react-three/drei"
 import { useMemo, useState } from "react"
 import { useWarehouseStore } from "../store"
-import type { Rack3D } from "../types"
-import { fromIndex } from "../types"
+import type { FocusWindow, Rack3D } from "../types"
 import { getRackMetrics, type RackMetrics } from "./rack-structure"
 
 const HOVER_COLOR = "#60a5fa"
@@ -13,37 +12,47 @@ interface ShelvesInstancedProps {
   rack: Rack3D
   metrics?: RackMetrics
   applyTransform?: boolean
+  window?: FocusWindow | null
 }
 
 export function ShelvesInstanced({
   rack,
   metrics,
   applyTransform = true,
+  window,
 }: ShelvesInstancedProps) {
   const { selectedShelf, hoverShelf, selectShelf } = useWarehouseStore()
   const [hoveredInstanceId, setHoveredInstanceId] = useState<number | null>(
     null
   )
   const resolvedMetrics = metrics ?? getRackMetrics(rack)
+  const activeWindow = window?.rackId === rack.id ? window : null
 
-  const { instancePositions, instanceToIndex, indexToInstance, totalCount } =
+  const { instancePositions, instanceMeta, indexToInstance, totalCount } =
     useMemo(() => {
       const positions: [number, number, number][] = []
-      const instanceMap: Record<number, number> = {}
+      const meta: { index: number; row: number; col: number }[] = []
       const indexMap: Record<number, number> = {}
+      const startRow = activeWindow?.startRow ?? 0
+      const startCol = activeWindow?.startCol ?? 0
+      const rows = activeWindow?.rows ?? rack.grid.rows
+      const cols = activeWindow?.cols ?? rack.grid.cols
+      const windowGridWidth = cols * resolvedMetrics.unitX
+      const windowGridHeight = Math.max(0, rows - 1) * resolvedMetrics.unitY
       let idx = 0
 
-      for (let row = 0; row < rack.grid.rows; row++) {
+      for (let row = 0; row < rows; row++) {
+        const globalRow = startRow + row
         const y =
-          (rack.grid.rows - 1 - row) * resolvedMetrics.unitY -
-          resolvedMetrics.gridHeight / 2
+          (rows - 1 - row) * resolvedMetrics.unitY - windowGridHeight / 2
 
-        for (let col = 0; col < rack.grid.cols; col++) {
-          const x = col * resolvedMetrics.unitX - resolvedMetrics.gridWidth / 2
-          const shelfIndex = row * rack.grid.cols + col
+        for (let col = 0; col < cols; col++) {
+          const globalCol = startCol + col
+          const x = col * resolvedMetrics.unitX - windowGridWidth / 2
+          const shelfIndex = globalRow * rack.grid.cols + globalCol
 
           positions.push([x, y, 0])
-          instanceMap[idx] = shelfIndex
+          meta.push({ index: shelfIndex, row: globalRow, col: globalCol })
           indexMap[shelfIndex] = idx
           idx++
         }
@@ -51,15 +60,17 @@ export function ShelvesInstanced({
 
       return {
         instancePositions: positions,
-        instanceToIndex: instanceMap,
+        instanceMeta: meta,
         indexToInstance: indexMap,
         totalCount: idx,
       }
     }, [
+      activeWindow?.cols,
+      activeWindow?.rows,
+      activeWindow?.startCol,
+      activeWindow?.startRow,
       rack.grid.cols,
       rack.grid.rows,
-      resolvedMetrics.gridHeight,
-      resolvedMetrics.gridWidth,
       resolvedMetrics.unitX,
       resolvedMetrics.unitY,
     ])
@@ -114,8 +125,11 @@ export function ShelvesInstanced({
             key={`slot-${i}`}
             onClick={(e) => {
               e.stopPropagation()
-              const shelfIndex = instanceToIndex[i]
-              selectShelf(rack.id, shelfIndex, rack.grid.cols)
+              const meta = instanceMeta[i]
+              if (!meta) {
+                return
+              }
+              selectShelf(rack.id, meta.index, meta.row, meta.col)
             }}
             onPointerOut={(e) => {
               e.stopPropagation()
@@ -125,9 +139,16 @@ export function ShelvesInstanced({
             onPointerOver={(e) => {
               e.stopPropagation()
               setHoveredInstanceId(i)
-              const shelfIndex = instanceToIndex[i]
-              const { row, col } = fromIndex(shelfIndex, rack.grid.cols)
-              hoverShelf({ rackId: rack.id, index: shelfIndex, row, col })
+              const meta = instanceMeta[i]
+              if (!meta) {
+                return
+              }
+              hoverShelf({
+                rackId: rack.id,
+                index: meta.index,
+                row: meta.row,
+                col: meta.col,
+              })
             }}
             position={position}
           />

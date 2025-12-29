@@ -1,12 +1,15 @@
-import { ContactShadows, Grid, Line } from "@react-three/drei"
+import { ContactShadows, Edges, Grid, Line } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import { useMemo } from "react"
+import { BlocksInstanced, getBlockLayout } from "./components/blocks-instanced"
 import { CameraController } from "./components/camera-controls"
 import { ItemsFocus } from "./components/items-focus"
 import { getRackMetrics, RackStructure } from "./components/rack-structure"
 import { RacksOverview } from "./components/racks-overview"
 import { ShelvesInstanced } from "./components/shelves-instanced"
+import { useWarehouseStore } from "./store"
 import type { Rack3D, ViewMode, Warehouse3D } from "./types"
+import { RACK_ZONE_SIZE } from "./types"
 
 interface WarehouseSceneProps {
   warehouse: Warehouse3D
@@ -178,6 +181,7 @@ export function WarehouseScene({
   mode,
   selectedRackId,
 }: WarehouseSceneProps) {
+  const focusWindow = useWarehouseStore((state) => state.focusWindow)
   const layout = useMemo(
     () => buildWarehouseLayout(warehouse.racks),
     [warehouse.racks]
@@ -304,6 +308,36 @@ export function WarehouseScene({
               },
             }
             const metrics = getRackMetrics(rackAtOrigin)
+            const isLargeGrid =
+              rackAtOrigin.grid.rows > RACK_ZONE_SIZE ||
+              rackAtOrigin.grid.cols > RACK_ZONE_SIZE
+            const activeWindow =
+              focusWindow && focusWindow.rackId === rackAtOrigin.id
+                ? focusWindow
+                : null
+            const blockLayout = isLargeGrid
+              ? getBlockLayout(rackAtOrigin, metrics, RACK_ZONE_SIZE)
+              : null
+            const windowMetrics = activeWindow
+              ? getRackMetrics({
+                  ...rackAtOrigin,
+                  grid: {
+                    rows: activeWindow.rows,
+                    cols: activeWindow.cols,
+                  },
+                })
+              : null
+            const showBlockGrid = isLargeGrid && !activeWindow
+            const focusWidth = activeWindow
+              ? windowMetrics?.width ?? metrics.width
+              : blockLayout?.totalWidth ?? metrics.width
+            const focusHeight = activeWindow
+              ? windowMetrics?.height ?? metrics.height
+              : blockLayout?.totalHeight ?? metrics.height
+            const focusDepth = activeWindow
+              ? windowMetrics?.depth ?? metrics.depth
+              : blockLayout?.totalDepth ?? metrics.depth
+            const focusFloorY = -focusHeight / 2 - floorOffset
             return (
               <group
                 key={rack.id}
@@ -311,14 +345,14 @@ export function WarehouseScene({
                 rotation={[0, rackAtOrigin.transform.rotationY, 0]}
               >
                 <mesh
-                  position={[0, -metrics.height / 2 - floorOffset, 0]}
+                  position={[0, focusFloorY, 0]}
                   receiveShadow
                   rotation={[-Math.PI / 2, 0, 0]}
                 >
                   <planeGeometry
                     args={[
-                      metrics.width + focusFloorPadding * 2,
-                      metrics.depth + focusFloorPadding * 2,
+                      focusWidth + focusFloorPadding * 2,
+                      focusDepth + focusFloorPadding * 2,
                     ]}
                   />
                   <meshStandardMaterial
@@ -329,13 +363,13 @@ export function WarehouseScene({
                 </mesh>
                 <Grid
                   args={[
-                    metrics.width + focusFloorPadding * 2,
-                    metrics.depth + focusFloorPadding * 2,
+                    focusWidth + focusFloorPadding * 2,
+                    focusDepth + focusFloorPadding * 2,
                   ]}
                   cellColor={gridCellColor}
                   cellSize={0.3}
                   cellThickness={0.6}
-                  position={[0, -metrics.height / 2 - floorOffset + 0.002, 0]}
+                  position={[0, focusFloorY + 0.002, 0]}
                   rotation={[-Math.PI / 2, 0, 0]}
                   sectionColor={gridSectionColor}
                   sectionSize={1.5}
@@ -345,27 +379,65 @@ export function WarehouseScene({
                   blur={1.8}
                   color="#0b1220"
                   frames={1}
-                  height={metrics.depth + focusFloorPadding * 2}
+                  height={focusDepth + focusFloorPadding * 2}
                   opacity={0.28}
-                  position={[0, -metrics.height / 2 - floorOffset + 0.005, 0]}
+                  position={[0, focusFloorY + 0.005, 0]}
                   resolution={512}
-                  width={metrics.width + focusFloorPadding * 2}
+                  width={focusWidth + focusFloorPadding * 2}
                 />
-                <RackStructure
-                  metrics={metrics}
-                  rack={rackAtOrigin}
-                  showItems={false}
-                />
-                <ItemsFocus
-                  applyTransform={false}
-                  metrics={metrics}
-                  rack={rackAtOrigin}
-                />
-                <ShelvesInstanced
-                  applyTransform={false}
-                  metrics={metrics}
-                  rack={rackAtOrigin}
-                />
+                {!showBlockGrid && !activeWindow && (
+                  <RackStructure
+                    metrics={metrics}
+                    rack={rackAtOrigin}
+                    showItems={false}
+                    showShelves
+                  />
+                )}
+                {(showBlockGrid || activeWindow) && (
+                  <mesh position={[0, 0, 0]}>
+                    <boxGeometry args={[focusWidth, focusHeight, focusDepth]} />
+                    <meshStandardMaterial
+                      color="#94a3b8"
+                      depthWrite={false}
+                      emissive="#64748b"
+                      emissiveIntensity={0.08}
+                      opacity={0.08}
+                      transparent
+                    />
+                    <Edges
+                      color="#94a3b8"
+                      lineWidth={1.1}
+                      opacity={0.7}
+                      scale={1.01}
+                      transparent
+                    />
+                  </mesh>
+                )}
+                {showBlockGrid ? (
+                  <BlocksInstanced
+                    applyTransform={false}
+                    blockSize={RACK_ZONE_SIZE}
+                    clickable
+                    hoverable
+                    metrics={metrics}
+                    rack={rackAtOrigin}
+                  />
+                ) : (
+                  <>
+                    <ItemsFocus
+                      applyTransform={false}
+                      metrics={metrics}
+                      rack={rackAtOrigin}
+                      window={activeWindow}
+                    />
+                    <ShelvesInstanced
+                      applyTransform={false}
+                      metrics={metrics}
+                      rack={rackAtOrigin}
+                      window={activeWindow}
+                    />
+                  </>
+                )}
               </group>
             )
           })}

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { useWarehouseStore } from "./store"
 import type { Item3D, Rack3D, Warehouse3D } from "./types"
+import { RACK_ZONE_SIZE } from "./types"
 
 interface DetailsPanelProps {
   warehouse: Warehouse3D
@@ -33,8 +34,15 @@ function getStatusColor(status: Item3D["status"]): string {
 }
 
 export function DetailsPanel({ warehouse }: DetailsPanelProps) {
-  const { mode, selectedRackId, selectedShelf, goToOverview, clearSelection } =
-    useWarehouseStore()
+  const {
+    mode,
+    selectedRackId,
+    selectedShelf,
+    goToOverview,
+    clearSelection,
+    focusWindow,
+    setFocusWindow,
+  } = useWarehouseStore()
 
   const selectedRack = warehouse.racks.find(
     (rack: Rack3D) => rack.id === selectedRackId
@@ -44,6 +52,11 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
     selectedShelf && selectedRack
       ? selectedRack.items[selectedShelf.index]
       : null
+  const isLargeGrid = selectedRack
+    ? selectedRack.grid.rows > RACK_ZONE_SIZE ||
+      selectedRack.grid.cols > RACK_ZONE_SIZE
+    : false
+  const showBlockHint = isLargeGrid && !focusWindow
 
   if (mode === "overview") {
     const totalSlots = warehouse.racks.reduce(
@@ -105,11 +118,24 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
 
   return (
     <div className="flex h-full flex-col border-l bg-background p-4">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-bold text-lg">Szczegóły Regału</h2>
-        <Button onClick={goToOverview} size="sm" variant="outline">
-          Powrót do przeglądu
-        </Button>
+        <div className="flex items-center gap-2">
+          {focusWindow && (
+            <Button
+              onClick={() => {
+                setFocusWindow(null)
+              }}
+              size="sm"
+              variant="ghost"
+            >
+              Powrót do bloków
+            </Button>
+          )}
+          <Button onClick={goToOverview} size="sm" variant="outline">
+            Powrót do przeglądu
+          </Button>
+        </div>
       </div>
 
       {selectedRack && (
@@ -131,7 +157,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
             <div>
               Maks. rozmiar elementu: {selectedRack.maxElementSize.width}×
               {selectedRack.maxElementSize.height}×
-              {selectedRack.maxElementSize.depth} cm
+              {selectedRack.maxElementSize.depth} mm
             </div>
             {selectedRack.zone && <div>Strefa: {selectedRack.zone}</div>}
           </div>
@@ -206,7 +232,9 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
 
       {!selectedShelf && (
         <div className="flex-1 text-center text-muted-foreground">
-          Kliknij na półkę, aby zobaczyć szczegóły
+          {showBlockHint
+            ? `Kliknij blok ${RACK_ZONE_SIZE}×${RACK_ZONE_SIZE}, aby zobaczyć szczegóły.`
+            : "Kliknij na półkę, aby zobaczyć szczegóły"}
         </div>
       )}
     </div>

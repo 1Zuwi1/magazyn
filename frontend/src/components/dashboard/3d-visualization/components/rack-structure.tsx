@@ -1,7 +1,12 @@
 import { Edges, Instance, Instances } from "@react-three/drei"
 import { useMemo } from "react"
 import type { Item3D, ItemStatus, Rack3D } from "../types"
-import { getItemVisuals, ITEM_STATUS_ORDER } from "../types"
+import {
+  getItemVisuals,
+  getWorstStatus,
+  ITEM_STATUS_ORDER,
+  RACK_ZONE_SIZE,
+} from "../types"
 
 export interface RackMetrics {
   width: number
@@ -208,11 +213,11 @@ export function RackFrame({
 }
 
 interface RackItemsProps {
-  metrics: RackMetrics
+  slotSize: { w: number; h: number; d: number }
   items: { position: [number, number, number]; status: Item3D["status"] }[]
 }
 
-function RackItems({ metrics, items }: RackItemsProps) {
+function RackItems({ slotSize, items }: RackItemsProps) {
   if (items.length === 0) {
     return null
   }
@@ -220,8 +225,8 @@ function RackItems({ metrics, items }: RackItemsProps) {
   const groupedByStatus = useMemo(() => {
     const grouped: Record<ItemStatus, [number, number, number][]> = {
       normal: [],
-      expired: [],
       dangerous: [],
+      expired: [],
       "expired-dangerous": [],
     }
 
@@ -243,13 +248,7 @@ function RackItems({ metrics, items }: RackItemsProps) {
 
         return (
           <Instances key={`occupied-${status}`} limit={positions.length}>
-            <boxGeometry
-              args={[
-                metrics.slotSize.w,
-                metrics.slotSize.h,
-                metrics.slotSize.d,
-              ]}
-            />
+            <boxGeometry args={[slotSize.w, slotSize.h, slotSize.d]} />
             <meshStandardMaterial
               color={visuals.color}
               emissive={visuals.glow}
@@ -275,6 +274,7 @@ interface RackStructureProps {
   metrics?: RackMetrics
   hovered?: boolean
   showItems?: boolean
+  showShelves?: boolean
   tone?: RackTone
 }
 
@@ -283,40 +283,126 @@ export function RackStructure({
   metrics,
   hovered = false,
   showItems = true,
+  showShelves = true,
   tone,
 }: RackStructureProps) {
   const resolvedMetrics = metrics ?? getRackMetrics(rack)
   const resolvedTone = tone ?? DEFAULT_RACK_TONE
 
-  const { occupiedSlots, shelfPositions } = useMemo(() => {
+  const { occupiedSlots, shelfPositions, slotSize } = useMemo(() => {
     const occupied: {
       position: [number, number, number]
       status: Item3D["status"]
     }[] = []
     const shelves: number[] = []
-
-    for (let row = 0; row < rack.grid.rows; row++) {
-      const y =
-        (rack.grid.rows - 1 - row) * resolvedMetrics.unitY -
-        resolvedMetrics.gridHeight / 2
-      const shelfY = y - rack.cell.h / 2 + resolvedMetrics.shelfThickness / 2
-      shelves.push(shelfY)
-
-      for (let col = 0; col < rack.grid.cols; col++) {
-        const x = col * resolvedMetrics.unitX - resolvedMetrics.gridWidth / 2
-        const index = row * rack.grid.cols + col
-        const item = rack.items[index]
-
-        if (!item) {
-          continue
+    const displayRows = Math.min(rack.grid.rows, RACK_ZONE_SIZE)
+    const displayCols = Math.min(rack.grid.cols, RACK_ZONE_SIZE)
+    const downsample =
+      displayRows !== rack.grid.rows || displayCols !== rack.grid.cols
+    const displayUnitX = resolvedMetrics.gridWidth / Math.max(1, displayCols)
+    const displayUnitY =
+      displayRows > 1 ? resolvedMetrics.gridHeight / (displayRows - 1) : 0
+    const displaySlotSize = downsample
+      ? {
+          w: Math.max(resolvedMetrics.slotSize.w, displayUnitX * 0.7),
+          h: Math.max(
+            resolvedMetrics.slotSize.h,
+            displayUnitY > 0 ? displayUnitY * 0.7 : resolvedMetrics.slotSize.h
+          ),
+          d: resolvedMetrics.slotSize.d,
         }
+      : resolvedMetrics.slotSize
 
-        occupied.push({ position: [x, y, 0], status: item.status })
+    if (showShelves) {
+      for (let row = 0; row < displayRows; row++) {
+        const y =
+          (displayRows - 1 - row) * displayUnitY -
+          resolvedMetrics.gridHeight / 2
+        const shelfY = y - rack.cell.h / 2 + resolvedMetrics.shelfThickness / 2
+        shelves.push(shelfY)
       }
     }
 
-    return { occupiedSlots: occupied, shelfPositions: shelves }
+    if (!showItems) {
+      return {
+        occupiedSlots: occupied,
+        shelfPositions: shelves,
+        slotSize: displaySlotSize,
+      }
+    }
+
+    if (downsample) {
+      const rowStep = rack.grid.rows / displayRows
+      const colStep = rack.grid.cols / displayCols
+
+      for (let row = 0; row < displayRows; row++) {
+        const startRow = Math.floor(row * rowStep)
+        const endRow = Math.min(rack.grid.rows, Math.floor((row + 1) * rowStep))
+        const y =
+          (displayRows - 1 - row) * displayUnitY -
+          resolvedMetrics.gridHeight / 2
+
+        for (let col = 0; col < displayCols; col++) {
+          const startCol = Math.floor(col * colStep)
+          const endCol = Math.min(
+            rack.grid.cols,
+            Math.floor((col + 1) * colStep)
+          )
+          let worstStatus: ItemStatus | null = null
+
+          for (let r = startRow; r < endRow; r++) {
+            const rowOffset = r * rack.grid.cols
+            for (let c = startCol; c < endCol; c++) {
+              const item = rack.items[rowOffset + c]
+              if (!item) {
+                continue
+              }
+              worstStatus = getWorstStatus(worstStatus, item.status)
+              if (worstStatus === "expired-dangerous") {
+                break
+              }
+            }
+            if (worstStatus === "expired-dangerous") {
+              break
+            }
+          }
+
+          if (!worstStatus) {
+            continue
+          }
+
+          const x = col * displayUnitX - resolvedMetrics.gridWidth / 2
+          occupied.push({ position: [x, y, 0], status: worstStatus })
+        }
+      }
+    } else {
+      for (let row = 0; row < rack.grid.rows; row++) {
+        const y =
+          (rack.grid.rows - 1 - row) * resolvedMetrics.unitY -
+          resolvedMetrics.gridHeight / 2
+
+        for (let col = 0; col < rack.grid.cols; col++) {
+          const x = col * resolvedMetrics.unitX - resolvedMetrics.gridWidth / 2
+          const index = row * rack.grid.cols + col
+          const item = rack.items[index]
+
+          if (!item) {
+            continue
+          }
+
+          occupied.push({ position: [x, y, 0], status: item.status })
+        }
+      }
+    }
+
+    return {
+      occupiedSlots: occupied,
+      shelfPositions: shelves,
+      slotSize: displaySlotSize,
+    }
   }, [
+    showItems,
+    showShelves,
     rack.cell.h,
     rack.grid.cols,
     rack.grid.rows,
@@ -324,6 +410,9 @@ export function RackStructure({
     resolvedMetrics.gridHeight,
     resolvedMetrics.gridWidth,
     resolvedMetrics.shelfThickness,
+    resolvedMetrics.slotSize.d,
+    resolvedMetrics.slotSize.h,
+    resolvedMetrics.slotSize.w,
     resolvedMetrics.unitX,
     resolvedMetrics.unitY,
   ])
@@ -336,9 +425,7 @@ export function RackStructure({
         shelfPositions={shelfPositions}
         tone={resolvedTone}
       />
-      {showItems && (
-        <RackItems items={occupiedSlots} metrics={resolvedMetrics} />
-      )}
+      {showItems && <RackItems items={occupiedSlots} slotSize={slotSize} />}
     </>
   )
 }

@@ -2,8 +2,8 @@ export type ViewMode = "overview" | "focus"
 
 export type ItemStatus =
   | "normal"
-  | "expired"
   | "dangerous"
+  | "expired"
   | "expired-dangerous"
 
 export interface Item3D {
@@ -29,6 +29,14 @@ export interface Rack3D {
   zone?: string
 }
 
+export interface FocusWindow {
+  rackId: string
+  startRow: number
+  startCol: number
+  rows: number
+  cols: number
+}
+
 export interface Warehouse3D {
   id: string
   name: string
@@ -49,6 +57,8 @@ export interface FilterState {
   query: string
 }
 
+export const RACK_ZONE_SIZE = 10
+
 export interface ItemVisual {
   color: string
   glow: string
@@ -57,10 +67,17 @@ export interface ItemVisual {
 
 export const ITEM_STATUS_ORDER: ItemStatus[] = [
   "normal",
-  "expired",
   "dangerous",
+  "expired",
   "expired-dangerous",
 ]
+
+export const ITEM_STATUS_SEVERITY: Record<ItemStatus, number> = {
+  normal: 0,
+  dangerous: 1,
+  expired: 2,
+  "expired-dangerous": 3,
+}
 
 const ITEM_VISUALS: Record<ItemStatus, ItemVisual> = {
   normal: {
@@ -79,14 +96,26 @@ const ITEM_VISUALS: Record<ItemStatus, ItemVisual> = {
     emissiveIntensity: 0.18,
   },
   "expired-dangerous": {
-    color: "#c43a15",
-    glow: "#da6413",
-    emissiveIntensity: 0.2,
+    color: "#b91c1c",
+    glow: "#f59e0b",
+    emissiveIntensity: 0.22,
   },
 }
 
 export function getItemVisuals(status: ItemStatus): ItemVisual {
   return ITEM_VISUALS[status]
+}
+
+export function getWorstStatus(
+  current: ItemStatus | null,
+  next: ItemStatus
+): ItemStatus {
+  if (!current) {
+    return next
+  }
+  return ITEM_STATUS_SEVERITY[next] > ITEM_STATUS_SEVERITY[current]
+    ? next
+    : current
 }
 
 export function toIndex(row: number, col: number, cols: number): number {

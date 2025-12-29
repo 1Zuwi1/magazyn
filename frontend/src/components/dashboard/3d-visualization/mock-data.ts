@@ -77,7 +77,7 @@ function generateRack(
     }
   }
 
-  const cellScale = 0.01
+  const cellScale = 0.001
 
   return {
     id,
@@ -133,9 +133,9 @@ export function generateMockWarehouse(rackCount = 10, seed = 1): Warehouse3D {
     const cols = Math.floor(random() * 6) + 6
 
     const maxElementSize = {
-      width: Math.floor(random() * 40) + 30,
-      height: Math.floor(random() * 30) + 20,
-      depth: Math.floor(random() * 20) + 20,
+      width: Math.floor(random() * 400) + 300,
+      height: Math.floor(random() * 300) + 200,
+      depth: Math.floor(random() * 300) + 200,
     }
 
     const rack = generateRack(
@@ -151,6 +151,21 @@ export function generateMockWarehouse(rackCount = 10, seed = 1): Warehouse3D {
     )
     racks.push(rack)
   }
+
+  racks.push({
+    id: "rack-special-1",
+    code: "R-SPECIAL-1",
+    name: "Regał Specjalny 1",
+    grid: { rows: 100, cols: 100 },
+    cell: { w: 0.35, h: 0.25, d: 0.25 },
+    maxElementSize: { width: 350, height: 250, depth: 250 },
+    spacing: { x: 0.1, y: 0.05, z: 0 },
+    transform: {
+      position: [0, 0, 0],
+      rotationY: 0,
+    },
+    items: [],
+  })
 
   const rowDepths: number[] = []
 

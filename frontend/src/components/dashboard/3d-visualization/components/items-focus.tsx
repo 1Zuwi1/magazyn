@@ -1,7 +1,7 @@
 import { Instance, Instances, useTexture } from "@react-three/drei"
 import { useEffect, useMemo } from "react"
 import * as THREE from "three"
-import type { Item3D, ItemStatus, Rack3D } from "../types"
+import type { FocusWindow, Item3D, ItemStatus, Rack3D } from "../types"
 import { getItemGlowColor, getItemVisuals, ITEM_STATUS_ORDER } from "../types"
 import { getRackMetrics, type RackMetrics } from "./rack-structure"
 
@@ -15,8 +15,8 @@ const GLOW_SETTINGS: Record<
   { glowOpacity: number; emissiveIntensity: number }
 > = {
   normal: { glowOpacity: 0.05, emissiveIntensity: 0.12 },
-  expired: { glowOpacity: 0.14, emissiveIntensity: 0.2 },
   dangerous: { glowOpacity: 0.22, emissiveIntensity: 0.3 },
+  expired: { glowOpacity: 0.14, emissiveIntensity: 0.2 },
   "expired-dangerous": { glowOpacity: 0.3, emissiveIntensity: 0.38 },
 }
 
@@ -126,36 +126,46 @@ interface ItemsFocusProps {
   rack: Rack3D
   metrics?: RackMetrics
   applyTransform?: boolean
+  window?: FocusWindow | null
 }
 
 export function ItemsFocus({
   rack,
   metrics,
   applyTransform = true,
+  window,
 }: ItemsFocusProps) {
   const resolvedMetrics = metrics ?? getRackMetrics(rack)
   const imagePlaneSize = {
     w: resolvedMetrics.slotSize.w,
     h: resolvedMetrics.slotSize.h,
   }
+  const activeWindow = window?.rackId === rack.id ? window : null
 
   const { itemsWithImages, solidByStatus } = useMemo(() => {
     const withImages: FocusItemImage[] = []
     const solid: Record<ItemStatus, FocusItemSolid[]> = {
       normal: [],
-      expired: [],
       dangerous: [],
+      expired: [],
       "expired-dangerous": [],
     }
+    const startRow = activeWindow?.startRow ?? 0
+    const startCol = activeWindow?.startCol ?? 0
+    const rows = activeWindow?.rows ?? rack.grid.rows
+    const cols = activeWindow?.cols ?? rack.grid.cols
+    const windowGridWidth = cols * resolvedMetrics.unitX
+    const windowGridHeight = Math.max(0, rows - 1) * resolvedMetrics.unitY
 
-    for (let row = 0; row < rack.grid.rows; row++) {
+    for (let row = 0; row < rows; row++) {
+      const globalRow = startRow + row
       const y =
-        (rack.grid.rows - 1 - row) * resolvedMetrics.unitY -
-        resolvedMetrics.gridHeight / 2
+        (rows - 1 - row) * resolvedMetrics.unitY - windowGridHeight / 2
 
-      for (let col = 0; col < rack.grid.cols; col++) {
-        const x = col * resolvedMetrics.unitX - resolvedMetrics.gridWidth / 2
-        const index = row * rack.grid.cols + col
+      for (let col = 0; col < cols; col++) {
+        const globalCol = startCol + col
+        const x = col * resolvedMetrics.unitX - windowGridWidth / 2
+        const index = globalRow * rack.grid.cols + globalCol
         const item = rack.items[index]
 
         if (!item) {
@@ -182,11 +192,13 @@ export function ItemsFocus({
 
     return { itemsWithImages: withImages, solidByStatus: solid }
   }, [
+    activeWindow?.cols,
+    activeWindow?.rows,
+    activeWindow?.startCol,
+    activeWindow?.startRow,
     rack.grid.cols,
     rack.grid.rows,
     rack.items,
-    resolvedMetrics.gridHeight,
-    resolvedMetrics.gridWidth,
     resolvedMetrics.unitX,
     resolvedMetrics.unitY,
   ])

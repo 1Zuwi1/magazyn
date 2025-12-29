@@ -11,8 +11,8 @@ export function ItemsInstanced({ rack }: ItemsInstancedProps) {
   const { itemsByStatus } = useMemo(() => {
     const grouped: Record<ItemStatus, [number, number, number][]> = {
       normal: [],
-      expired: [],
       dangerous: [],
+      expired: [],
       "expired-dangerous": [],
     }
 
