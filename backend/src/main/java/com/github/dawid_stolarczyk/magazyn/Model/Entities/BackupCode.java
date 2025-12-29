@@ -12,7 +12,7 @@ public class BackupCode {
     private String code;
     private boolean used = false;
 
-    @OneToMany
+    @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
