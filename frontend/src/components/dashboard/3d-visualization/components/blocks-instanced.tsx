@@ -1,13 +1,13 @@
 import { Html, Instance, Instances, useCursor } from "@react-three/drei"
 import { useMemo, useState } from "react"
 import { useWarehouseStore } from "../store"
-import type { ItemStatus, Rack3D } from "../types"
+import type { ItemStatus, ItemVisual, Rack3D } from "../types"
 import { getItemVisuals, getWorstStatus, RACK_ZONE_SIZE } from "../types"
 import { getRackMetrics, type RackMetrics } from "./rack-structure"
 
-const BLOCK_EMPTY_VISUAL = {
+const BLOCK_EMPTY_VISUAL: ItemVisual = {
   color: "#1f2937",
-  emissive: "#0f172a",
+  glow: "#0f172a",
   emissiveIntensity: 0.05,
 }
 const BLOCK_OPACITY = 0.32
@@ -97,6 +97,89 @@ interface BlocksInstancedProps {
   clickable?: boolean
 }
 
+const getVisuals = (
+  startRow: number,
+  endRow: number,
+  startCol: number,
+  endCol: number,
+  rack: Rack3D
+) => {
+  let occupiedCount = 0
+  let worstStatus: ItemStatus | null = null
+  for (let r = startRow; r < endRow; r++) {
+    const rowOffset = r * rack.grid.cols
+    for (let c = startCol; c < endCol; c++) {
+      const item = rack.items[rowOffset + c]
+      if (!item) {
+        continue
+      }
+      occupiedCount += 1
+      worstStatus = getWorstStatus(worstStatus, item.status)
+      if (worstStatus === "expired-dangerous") {
+        break
+      }
+    }
+    if (worstStatus === "expired-dangerous") {
+      break
+    }
+  }
+
+  return {
+    occupiedCount,
+    worstStatus,
+  }
+}
+
+const orderBlocks = (
+  blockRows: number,
+  blockCols: number,
+  blockSize: number,
+  rack: Rack3D,
+  unitX: number,
+  unitY: number,
+  gridWidth: number,
+  gridHeight: number,
+  blockLookupMap: Record<string, BlockInfo>,
+  blocksByStatusMap: Record<BlockStatusKey, BlockInfo[]>
+) => {
+  for (let row = 0; row < blockRows; row++) {
+    const startRow = row * blockSize
+    const endRow = Math.min(rack.grid.rows, startRow + blockSize)
+    const y = (blockRows - 1 - row) * unitY - gridHeight / 2
+
+    for (let col = 0; col < blockCols; col++) {
+      const startCol = col * blockSize
+      const endCol = Math.min(rack.grid.cols, startCol + blockSize)
+      const x = col * unitX - gridWidth / 2
+      const { occupiedCount, worstStatus } = getVisuals(
+        startRow,
+        endRow,
+        startCol,
+        endCol,
+        rack
+      )
+
+      const statusKey: BlockStatusKey = worstStatus ?? "empty"
+      const blockKey = `${row}-${col}`
+      const slotCount = (endRow - startRow) * (endCol - startCol)
+      const blockInfo: BlockInfo = {
+        key: blockKey,
+        position: [x, y, 0],
+        startRow,
+        startCol,
+        rows: endRow - startRow,
+        cols: endCol - startCol,
+        occupiedCount,
+        slotCount,
+        status: statusKey,
+      }
+
+      blockLookupMap[blockKey] = blockInfo
+      blocksByStatusMap[statusKey].push(blockInfo)
+    }
+  }
+}
+
 export function BlocksInstanced({
   rack,
   metrics,
@@ -112,17 +195,10 @@ export function BlocksInstanced({
   const disabledRaycast = isInteractive ? undefined : () => null
   const layout = useMemo(
     () => getBlockLayout(rack, resolvedMetrics, blockSize),
-    [
-      blockSize,
-      rack.grid.cols,
-      rack.grid.rows,
-      resolvedMetrics.depth,
-      resolvedMetrics.slotSize.d,
-      resolvedMetrics.slotSize.h,
-      resolvedMetrics.slotSize.w,
-    ]
+    [blockSize, rack, resolvedMetrics]
   )
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: rack is not stable, but we want to recalc when its properties change
   const { blocksByStatus, blockLookup } = useMemo(() => {
     const blocksByStatusMap: Record<BlockStatusKey, BlockInfo[]> = {
       normal: [],
@@ -133,62 +209,31 @@ export function BlocksInstanced({
     }
     const blockLookupMap: Record<string, BlockInfo> = {}
     const { blockRows, blockCols, unitX, unitY, gridWidth, gridHeight } = layout
-
-    for (let row = 0; row < blockRows; row++) {
-      const startRow = row * blockSize
-      const endRow = Math.min(rack.grid.rows, startRow + blockSize)
-      const y = (blockRows - 1 - row) * unitY - gridHeight / 2
-
-      for (let col = 0; col < blockCols; col++) {
-        const startCol = col * blockSize
-        const endCol = Math.min(rack.grid.cols, startCol + blockSize)
-        const x = col * unitX - gridWidth / 2
-        let worstStatus: ItemStatus | null = null
-        let occupiedCount = 0
-
-        for (let r = startRow; r < endRow; r++) {
-          const rowOffset = r * rack.grid.cols
-          for (let c = startCol; c < endCol; c++) {
-            const item = rack.items[rowOffset + c]
-            if (!item) {
-              continue
-            }
-            occupiedCount += 1
-            worstStatus = getWorstStatus(worstStatus, item.status)
-            if (worstStatus === "expired-dangerous") {
-              break
-            }
-          }
-          if (worstStatus === "expired-dangerous") {
-            break
-          }
-        }
-
-        const statusKey: BlockStatusKey = worstStatus ?? "empty"
-        const blockKey = `${row}-${col}`
-        const slotCount = (endRow - startRow) * (endCol - startCol)
-        const blockInfo: BlockInfo = {
-          key: blockKey,
-          position: [x, y, 0],
-          startRow,
-          startCol,
-          rows: endRow - startRow,
-          cols: endCol - startCol,
-          occupiedCount,
-          slotCount,
-          status: statusKey,
-        }
-
-        blockLookupMap[blockKey] = blockInfo
-        blocksByStatusMap[statusKey].push(blockInfo)
-      }
-    }
+    orderBlocks(
+      blockRows,
+      blockCols,
+      blockSize,
+      rack,
+      unitX,
+      unitY,
+      gridWidth,
+      gridHeight,
+      blockLookupMap,
+      blocksByStatusMap
+    )
 
     return {
       blocksByStatus: blocksByStatusMap,
       blockLookup: blockLookupMap,
     }
-  }, [blockSize, rack.grid.cols, rack.grid.rows, rack.items, layout])
+  }, [
+    blockSize,
+    rack.grid.cols,
+    rack.grid.rows,
+    rack.items,
+    layout,
+    orderBlocks,
+  ])
 
   const hoveredBlock =
     hoveredBlockKey !== null ? blockLookup[hoveredBlockKey] : null
@@ -209,8 +254,7 @@ export function BlocksInstanced({
     }
     const visuals =
       statusKey === "empty" ? BLOCK_EMPTY_VISUAL : getItemVisuals(statusKey)
-    const emissive =
-      statusKey === "empty" ? BLOCK_EMPTY_VISUAL.emissive : visuals.glow
+    const glow = statusKey === "empty" ? BLOCK_EMPTY_VISUAL.glow : visuals.glow
     const emissiveIntensity =
       statusKey === "empty"
         ? BLOCK_EMPTY_VISUAL.emissiveIntensity
@@ -229,7 +273,7 @@ export function BlocksInstanced({
         <meshStandardMaterial
           color={visuals.color}
           depthWrite={false}
-          emissive={emissive}
+          emissive={glow}
           emissiveIntensity={emissiveIntensity}
           metalness={0.05}
           opacity={BLOCK_OPACITY}

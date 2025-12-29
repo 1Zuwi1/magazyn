@@ -11,6 +11,45 @@ interface CameraControllerProps {
   warehouseCenter: { x: number; y: number; z: number }
 }
 
+const handleControl = (controls: CameraControls, key: string) => {
+  switch (key) {
+    case "arrowup":
+    case "w":
+      controls.forward(KEYBOARD_STEP, false)
+      break
+    case "arrowdown":
+    case "s":
+      controls.forward(-KEYBOARD_STEP, false)
+      break
+    case "arrowleft":
+    case "a":
+      controls.truck(-KEYBOARD_STEP, 0, false)
+      break
+    case "arrowright":
+    case "d":
+      controls.truck(KEYBOARD_STEP, 0, false)
+      break
+    default:
+      return false
+  }
+  return true
+}
+
+const validTarget = (target: EventTarget | null): boolean => {
+  if (target instanceof HTMLElement) {
+    const tagName = target.tagName.toLowerCase()
+    const isEditable =
+      target.isContentEditable ||
+      tagName === "input" ||
+      tagName === "textarea" ||
+      tagName === "select"
+    if (isEditable) {
+      return false
+    }
+  }
+  return true
+}
+
 export function CameraController({
   mode,
   warehouseCenter,
@@ -53,17 +92,9 @@ export function CameraController({
         return
       }
 
-      const target = event.target
-      if (target instanceof HTMLElement) {
-        const tagName = target.tagName.toLowerCase()
-        const isEditable =
-          target.isContentEditable ||
-          tagName === "input" ||
-          tagName === "textarea" ||
-          tagName === "select"
-        if (isEditable) {
-          return
-        }
+      const isValidTarget = validTarget(event.target)
+      if (!isValidTarget) {
+        return
       }
 
       const controls = controlsRef.current
@@ -72,28 +103,8 @@ export function CameraController({
       }
 
       const key = event.key.toLowerCase()
-      let handled = true
 
-      switch (key) {
-        case "arrowup":
-        case "w":
-          void controls.forward(KEYBOARD_STEP, false)
-          break
-        case "arrowdown":
-        case "s":
-          void controls.forward(-KEYBOARD_STEP, false)
-          break
-        case "arrowleft":
-        case "a":
-          void controls.truck(-KEYBOARD_STEP, 0, false)
-          break
-        case "arrowright":
-        case "d":
-          void controls.truck(KEYBOARD_STEP, 0, false)
-          break
-        default:
-          handled = false
-      }
+      const handled = handleControl(controls, key)
 
       if (handled) {
         event.preventDefault()
