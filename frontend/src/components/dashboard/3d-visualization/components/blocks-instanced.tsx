@@ -16,7 +16,7 @@ const HIGHLIGHT_OPACITY = 0.4
 const BLOCK_VISUAL_SCALE = 2
 type BlockStatusKey = ItemStatus | "empty"
 const BLOCK_GAP_RATIO = 0.18
-const TOOLTIP_OFFSET = 0.25
+const TOOLTIP_OFFSET = 0.45
 
 const STATUS_LABELS: Record<BlockStatusKey, string> = {
   normal: "Normalny",
@@ -124,78 +124,71 @@ export function BlocksInstanced({
   )
 
   const { blocksByStatus, blockLookup } = useMemo(() => {
-      const blocksByStatusMap: Record<BlockStatusKey, BlockInfo[]> = {
-        normal: [],
-        dangerous: [],
-        expired: [],
-        "expired-dangerous": [],
-        empty: [],
-      }
-      const blockLookupMap: Record<string, BlockInfo> = {}
-      const { blockRows, blockCols, unitX, unitY, gridWidth, gridHeight } =
-        layout
+    const blocksByStatusMap: Record<BlockStatusKey, BlockInfo[]> = {
+      normal: [],
+      dangerous: [],
+      expired: [],
+      "expired-dangerous": [],
+      empty: [],
+    }
+    const blockLookupMap: Record<string, BlockInfo> = {}
+    const { blockRows, blockCols, unitX, unitY, gridWidth, gridHeight } = layout
 
-      for (let row = 0; row < blockRows; row++) {
-        const startRow = row * blockSize
-        const endRow = Math.min(rack.grid.rows, startRow + blockSize)
-        const y = (blockRows - 1 - row) * unitY - gridHeight / 2
+    for (let row = 0; row < blockRows; row++) {
+      const startRow = row * blockSize
+      const endRow = Math.min(rack.grid.rows, startRow + blockSize)
+      const y = (blockRows - 1 - row) * unitY - gridHeight / 2
 
-        for (let col = 0; col < blockCols; col++) {
-          const startCol = col * blockSize
-          const endCol = Math.min(rack.grid.cols, startCol + blockSize)
-          const x = col * unitX - gridWidth / 2
-          let worstStatus: ItemStatus | null = null
-          let occupiedCount = 0
+      for (let col = 0; col < blockCols; col++) {
+        const startCol = col * blockSize
+        const endCol = Math.min(rack.grid.cols, startCol + blockSize)
+        const x = col * unitX - gridWidth / 2
+        let worstStatus: ItemStatus | null = null
+        let occupiedCount = 0
 
-          for (let r = startRow; r < endRow; r++) {
-            const rowOffset = r * rack.grid.cols
-            for (let c = startCol; c < endCol; c++) {
-              const item = rack.items[rowOffset + c]
-              if (!item) {
-                continue
-              }
-              occupiedCount += 1
-              worstStatus = getWorstStatus(worstStatus, item.status)
-              if (worstStatus === "expired-dangerous") {
-                break
-              }
+        for (let r = startRow; r < endRow; r++) {
+          const rowOffset = r * rack.grid.cols
+          for (let c = startCol; c < endCol; c++) {
+            const item = rack.items[rowOffset + c]
+            if (!item) {
+              continue
             }
+            occupiedCount += 1
+            worstStatus = getWorstStatus(worstStatus, item.status)
             if (worstStatus === "expired-dangerous") {
               break
             }
           }
-
-          const statusKey: BlockStatusKey = worstStatus ?? "empty"
-          const blockKey = `${row}-${col}`
-          const slotCount = (endRow - startRow) * (endCol - startCol)
-          const blockInfo: BlockInfo = {
-            key: blockKey,
-            position: [x, y, 0],
-            startRow,
-            startCol,
-            rows: endRow - startRow,
-            cols: endCol - startCol,
-            occupiedCount,
-            slotCount,
-            status: statusKey,
+          if (worstStatus === "expired-dangerous") {
+            break
           }
-
-          blockLookupMap[blockKey] = blockInfo
-          blocksByStatusMap[statusKey].push(blockInfo)
         }
-      }
 
-      return {
-        blocksByStatus: blocksByStatusMap,
-        blockLookup: blockLookupMap,
+        const statusKey: BlockStatusKey = worstStatus ?? "empty"
+        const blockKey = `${row}-${col}`
+        const slotCount = (endRow - startRow) * (endCol - startCol)
+        const blockInfo: BlockInfo = {
+          key: blockKey,
+          position: [x, y, 0],
+          startRow,
+          startCol,
+          rows: endRow - startRow,
+          cols: endCol - startCol,
+          occupiedCount,
+          slotCount,
+          status: statusKey,
+        }
+
+        blockLookupMap[blockKey] = blockInfo
+        blocksByStatusMap[statusKey].push(blockInfo)
       }
-    }, [
-      blockSize,
-      rack.grid.cols,
-      rack.grid.rows,
-      rack.items,
-      layout,
-    ])
+    }
+
+    return {
+      blocksByStatus: blocksByStatusMap,
+      blockLookup: blockLookupMap,
+    }
+  }, [blockSize, rack.grid.cols, rack.grid.rows, rack.items, layout])
 
   const hoveredBlock =
     hoveredBlockKey !== null ? blockLookup[hoveredBlockKey] : null
@@ -316,9 +309,10 @@ export function BlocksInstanced({
             hoveredBlock.position[1] + layout.blockSizeY / 2 + TOOLTIP_OFFSET,
             hoveredBlock.position[2],
           ]}
+          style={{ pointerEvents: "none" }}
           zIndexRange={[15, 0]}
         >
-          <div className="rounded border border-white/10 bg-slate-950/80 px-2 py-1 text-slate-100 text-xs">
+          <div className="pointer-events-none min-w-[220px] rounded border border-white/10 bg-slate-950/80 px-3 py-2 text-center text-slate-100 text-xs">
             <div className="font-bold">
               Strefa {hoveredBlock.startRow + 1}–{hoveredBlock.startRow +
                 hoveredBlock.rows}

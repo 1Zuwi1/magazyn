@@ -18,6 +18,7 @@ interface WarehouseSceneProps {
 }
 
 const rackOutlinePadding = 0.2
+const rackLayoutGap = 0.4
 const floorPadding = 0.6
 const floorOffset = 0.01
 const focusFloorPadding = 0.6
@@ -107,42 +108,70 @@ function buildWarehouseLayout(racks: Rack3D[]): WarehouseLayout {
   let minZ = Number.POSITIVE_INFINITY
   let maxZ = Number.NEGATIVE_INFINITY
 
-  for (const rack of racks) {
-    const metrics = getRackMetrics(rack)
-    const key = getAisleKey(rack.transform.position[2])
+  for (const key of sortedKeys) {
     const aisleIndex = aisleIndexByKey.get(key) ?? 0
     const offsetZ = aisleIndex * aisleExplodeOffset
-    const [x, y, z] = rack.transform.position
-    const renderPosition: [number, number, number] = [x, y, z + offsetZ]
-    const width = metrics.width + rackOutlinePadding
-    const depth = metrics.depth + rackOutlinePadding
-    const rackMinX = renderPosition[0] - width / 2
-    const rackMaxX = renderPosition[0] + width / 2
-    const rackMinZ = renderPosition[2] - depth / 2
-    const rackMaxZ = renderPosition[2] + depth / 2
+    const aisleRacks = racksByKey.get(key) ?? []
+    const sortedRacks = [...aisleRacks].sort(
+      (a, b) => a.transform.position[0] - b.transform.position[0]
+    )
+    const rackLayouts = sortedRacks.map((rack) => {
+      const metrics = getRackMetrics(rack)
+      const isLarge =
+        rack.grid.rows > RACK_ZONE_SIZE || rack.grid.cols > RACK_ZONE_SIZE
+      const blockLayout = isLarge
+        ? getBlockLayout(rack, metrics, RACK_ZONE_SIZE)
+        : null
 
-    minX = Math.min(minX, rackMinX)
-    maxX = Math.max(maxX, rackMaxX)
-    minZ = Math.min(minZ, rackMinZ)
-    maxZ = Math.max(maxZ, rackMaxZ)
-
-    const current = aisleBounds.get(aisleIndex) ?? {
-      minX: Number.POSITIVE_INFINITY,
-      maxX: Number.NEGATIVE_INFINITY,
-      minZ: Number.POSITIVE_INFINITY,
-      maxZ: Number.NEGATIVE_INFINITY,
-    }
-    current.minX = Math.min(current.minX, rackMinX)
-    current.maxX = Math.max(current.maxX, rackMaxX)
-    current.minZ = Math.min(current.minZ, rackMinZ)
-    current.maxZ = Math.max(current.maxZ, rackMaxZ)
-    aisleBounds.set(aisleIndex, current)
-
-    renderRacks.push({
-      rack,
-      renderPosition,
-      aisleIndex,
+      return {
+        rack,
+        width: blockLayout?.totalWidth ?? metrics.width,
+        height: blockLayout?.totalHeight ?? metrics.height,
+        depth: blockLayout?.totalDepth ?? metrics.depth,
+      }
     })
+    const totalWidth =
+      rackLayouts.reduce((sum, layout) => sum + layout.width, 0) +
+      rackLayoutGap * Math.max(0, rackLayouts.length - 1)
+    let currentX = -totalWidth / 2
+
+    for (const layout of rackLayouts) {
+      const renderPosition: [number, number, number] = [
+        currentX + layout.width / 2,
+        layout.height / 2,
+        key + offsetZ,
+      ]
+      const width = layout.width + rackOutlinePadding
+      const depth = layout.depth + rackOutlinePadding
+      const rackMinX = renderPosition[0] - width / 2
+      const rackMaxX = renderPosition[0] + width / 2
+      const rackMinZ = renderPosition[2] - depth / 2
+      const rackMaxZ = renderPosition[2] + depth / 2
+
+      minX = Math.min(minX, rackMinX)
+      maxX = Math.max(maxX, rackMaxX)
+      minZ = Math.min(minZ, rackMinZ)
+      maxZ = Math.max(maxZ, rackMaxZ)
+
+      const current = aisleBounds.get(aisleIndex) ?? {
+        minX: Number.POSITIVE_INFINITY,
+        maxX: Number.NEGATIVE_INFINITY,
+        minZ: Number.POSITIVE_INFINITY,
+        maxZ: Number.NEGATIVE_INFINITY,
+      }
+      current.minX = Math.min(current.minX, rackMinX)
+      current.maxX = Math.max(current.maxX, rackMaxX)
+      current.minZ = Math.min(current.minZ, rackMinZ)
+      current.maxZ = Math.max(current.maxZ, rackMaxZ)
+      aisleBounds.set(aisleIndex, current)
+
+      renderRacks.push({
+        rack: layout.rack,
+        renderPosition,
+        aisleIndex,
+      })
+      currentX += layout.width + rackLayoutGap
+    }
   }
 
   const aisles = Array.from(aisleBounds.entries())
