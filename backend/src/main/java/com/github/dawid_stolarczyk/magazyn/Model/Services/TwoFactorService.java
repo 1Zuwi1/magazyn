@@ -116,6 +116,7 @@ public class TwoFactorService {
             String code = CodeGenerator.generateWithBase62(8);
             backupCode.setCode(BCrypt.hashpw(code, BCrypt.gensalt()));
             backupCodes.add(backupCode);
+            backupCode.setUser(user);
         }
 
         user.addTwoFactorMethod(new TwoFactorMethod(TwoFactor.BACKUP_CODES));
@@ -123,6 +124,13 @@ public class TwoFactorService {
         userRepository.save(user);
     }
 
+    // TODO: 1. Email codes stored in plaintext (TwoFactorMethod.java:51)
+    //Email 2FA codes should be hashed like backup codes, not stored plaintext.
+    //
+    //2. Missing rate limiting
+    //No rate limiting on 2FA code attempts or login attempts - vulnerable to brute force.
+//    4. Missing input validation
+//    LoginRegisterRequest.java lacks @Email, @NotBlank, @Pattern annotations.
     @PreAuthorize("hasAuthority('STATUS_2FA_PRE_2FA')")
     public void useBackupCode(String code, HttpServletResponse response) {
         User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication()).orElseThrow(() -> new RuntimeException("User not found"));

@@ -3,3 +3,4 @@ spring.datasource.driverClassName=org.h2.Driver
 spring.datasource.email=sa
 spring.datasource.password=password
 spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+jwt.secret=9f8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3

@@ -17,8 +17,6 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class AuthService {
     @Autowired
