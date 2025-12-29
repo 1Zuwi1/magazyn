@@ -4,3 +4,5 @@ spring.datasource.email=sa
 spring.datasource.password=password
 spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
 jwt.secret=9f8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3
+auth.token.expiration-seconds=3600
+auth.cookie.domain=localhost
