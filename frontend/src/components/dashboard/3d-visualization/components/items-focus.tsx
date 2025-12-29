@@ -159,8 +159,7 @@ export function ItemsFocus({
 
     for (let row = 0; row < rows; row++) {
       const globalRow = startRow + row
-      const y =
-        (rows - 1 - row) * resolvedMetrics.unitY - windowGridHeight / 2
+      const y = (rows - 1 - row) * resolvedMetrics.unitY - windowGridHeight / 2
 
       for (let col = 0; col < cols; col++) {
         const globalCol = startCol + col
@@ -228,7 +227,11 @@ export function ItemsFocus({
         const visuals = getItemVisuals(status)
 
         return (
-          <Instances key={`solid-${status}`} limit={solidItems.length}>
+          <Instances
+            frustumCulled={false}
+            key={`solid-${status}`}
+            limit={solidItems.length}
+          >
             <boxGeometry
               args={[
                 resolvedMetrics.slotSize.w,

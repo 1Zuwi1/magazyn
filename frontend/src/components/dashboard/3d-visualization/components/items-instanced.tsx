@@ -53,7 +53,11 @@ export function ItemsInstanced({ rack }: ItemsInstancedProps) {
         const visuals = getItemVisuals(status)
 
         return (
-          <Instances key={`items-${status}`} limit={positions.length}>
+          <Instances
+            frustumCulled={false}
+            key={`items-${status}`}
+            limit={positions.length}
+          >
             <boxGeometry
               args={[rack.cell.w * 0.8, rack.cell.h * 0.8, rack.cell.d * 0.5]}
             />

@@ -218,6 +218,7 @@ export function BlocksInstanced({
 
     return (
       <Instances
+        frustumCulled={false}
         key={`blocks-${statusKey}`}
         limit={blocks.length}
         raycast={disabledRaycast}
@@ -283,7 +284,7 @@ export function BlocksInstanced({
       {renderBlocks("expired")}
       {renderBlocks("expired-dangerous")}
       {hoverable && hoveredBlock && (
-        <Instances limit={1} raycast={() => null}>
+        <Instances frustumCulled={false} limit={1} raycast={() => null}>
           <boxGeometry
             args={[
               layout.blockSizeX * 1.02,
@@ -314,10 +315,10 @@ export function BlocksInstanced({
         >
           <div className="pointer-events-none min-w-[220px] rounded border border-white/10 bg-slate-950/80 px-3 py-2 text-center text-slate-100 text-xs">
             <div className="font-bold">
-              Strefa {hoveredBlock.startRow + 1}–{hoveredBlock.startRow +
-                hoveredBlock.rows}
-              , {hoveredBlock.startCol + 1}–{hoveredBlock.startCol +
-                hoveredBlock.cols}
+              Strefa {hoveredBlock.startRow + 1}–
+              {hoveredBlock.startRow + hoveredBlock.rows},{" "}
+              {hoveredBlock.startCol + 1}–
+              {hoveredBlock.startCol + hoveredBlock.cols}
             </div>
             <div>
               Zajęte: {hoveredBlock.occupiedCount}/{hoveredBlock.slotCount} (

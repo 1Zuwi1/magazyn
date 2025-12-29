@@ -117,7 +117,7 @@ export function ShelvesInstanced({
 
   return (
     <group {...groupProps}>
-      <Instances limit={totalCount}>
+      <Instances frustumCulled={false} limit={totalCount}>
         <boxGeometry args={[rack.cell.w, rack.cell.h, rack.cell.d]} />
         <meshStandardMaterial depthWrite={false} opacity={0} transparent />
         {instancePositions.map((position, i) => (
@@ -155,7 +155,11 @@ export function ShelvesInstanced({
         ))}
       </Instances>
       {highlightInstances.length > 0 && (
-        <Instances limit={highlightInstances.length} raycast={() => null}>
+        <Instances
+          frustumCulled={false}
+          limit={highlightInstances.length}
+          raycast={() => null}
+        >
           <boxGeometry args={[rack.cell.w, rack.cell.h, rack.cell.d]} />
           <meshStandardMaterial
             depthWrite={false}

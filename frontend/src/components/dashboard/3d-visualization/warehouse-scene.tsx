@@ -363,14 +363,14 @@ export function WarehouseScene({
               : null
             const showBlockGrid = isLargeGrid && !activeWindow
             const focusWidth = activeWindow
-              ? windowMetrics?.width ?? metrics.width
-              : blockLayout?.totalWidth ?? metrics.width
+              ? (windowMetrics?.width ?? metrics.width)
+              : (blockLayout?.totalWidth ?? metrics.width)
             const focusHeight = activeWindow
-              ? windowMetrics?.height ?? metrics.height
-              : blockLayout?.totalHeight ?? metrics.height
+              ? (windowMetrics?.height ?? metrics.height)
+              : (blockLayout?.totalHeight ?? metrics.height)
             const focusDepth = activeWindow
-              ? windowMetrics?.depth ?? metrics.depth
-              : blockLayout?.totalDepth ?? metrics.depth
+              ? (windowMetrics?.depth ?? metrics.depth)
+              : (blockLayout?.totalDepth ?? metrics.depth)
             const focusFloorY = -focusHeight / 2 - floorOffset
             const blockShelfPositions =
               showBlockGrid && blockLayout
@@ -439,7 +439,7 @@ export function WarehouseScene({
                   resolution={512}
                   width={focusWidth + focusFloorPadding * 2}
                 />
-                {!showBlockGrid && !activeWindow && (
+                {!(showBlockGrid || activeWindow) && (
                   <RackStructure
                     metrics={metrics}
                     rack={rackAtOrigin}

@@ -308,7 +308,11 @@ function RackItems({ slotSize, items }: RackItemsProps) {
         const visuals = getItemVisuals(status)
 
         return (
-          <Instances key={`occupied-${status}`} limit={positions.length}>
+          <Instances
+            frustumCulled={false}
+            key={`occupied-${status}`}
+            limit={positions.length}
+          >
             <boxGeometry args={[slotSize.w, slotSize.h, slotSize.d]} />
             <meshStandardMaterial
               color={visuals.color}
