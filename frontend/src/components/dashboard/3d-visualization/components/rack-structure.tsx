@@ -106,7 +106,7 @@ export function RackShelves({
 export const getRackMetrics = (rack: Rack3D): RackMetrics => {
   const unitX = rack.cell.w + rack.spacing.x
   const unitY = rack.cell.h + rack.spacing.y
-  const gridWidth = rack.grid.cols * unitX
+  const gridWidth = Math.max(0, rack.grid.cols - 1) * unitX
   const gridHeight = Math.max(0, rack.grid.rows - 1) * unitY
   const framePadding = rack.frame?.padding ?? 0.05
   const frameThickness = Math.max(rack.frame?.thickness ?? 0.03, 0.04)
@@ -360,7 +360,8 @@ function getDisplaySize(
   const displayCols = Math.min(rack.grid.cols, RACK_ZONE_SIZE)
   const downsample =
     displayRows !== rack.grid.rows || displayCols !== rack.grid.cols
-  const displayUnitX = resolvedMetrics.gridWidth / Math.max(1, displayCols)
+  const displayUnitX =
+    displayCols > 1 ? resolvedMetrics.gridWidth / (displayCols - 1) : 0
   const displayUnitY =
     displayRows > 1 ? resolvedMetrics.gridHeight / (displayRows - 1) : 0
   const displaySlotSize = downsample

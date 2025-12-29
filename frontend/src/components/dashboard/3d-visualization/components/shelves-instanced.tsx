@@ -37,7 +37,7 @@ export function ShelvesInstanced({
       const startCol = activeWindow?.startCol ?? 0
       const rows = activeWindow?.rows ?? rack.grid.rows
       const cols = activeWindow?.cols ?? rack.grid.cols
-      const windowGridWidth = cols * resolvedMetrics.unitX
+      const windowGridWidth = Math.max(0, cols - 1) * resolvedMetrics.unitX
       const windowGridHeight = Math.max(0, rows - 1) * resolvedMetrics.unitY
       let idx = 0
 

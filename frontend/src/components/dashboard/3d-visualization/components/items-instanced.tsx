@@ -15,6 +15,10 @@ export function ItemsInstanced({ rack }: ItemsInstancedProps) {
       expired: [],
       "expired-dangerous": [],
     }
+    const unitX = rack.cell.w + rack.spacing.x
+    const unitY = rack.cell.h + rack.spacing.y
+    const gridWidth = Math.max(0, rack.grid.cols - 1) * unitX
+    const gridHeight = Math.max(0, rack.grid.rows - 1) * unitY
 
     for (let row = 0; row < rack.grid.rows; row++) {
       for (let col = 0; col < rack.grid.cols; col++) {
@@ -25,12 +29,8 @@ export function ItemsInstanced({ rack }: ItemsInstancedProps) {
           continue
         }
 
-        const x =
-          col * (rack.cell.w + rack.spacing.x) -
-          (rack.grid.cols * (rack.cell.w + rack.spacing.x)) / 2
-        const y =
-          (rack.grid.rows - 1 - row) * (rack.cell.h + rack.spacing.y) -
-          (rack.grid.rows * (rack.cell.h + rack.spacing.y)) / 2
+        const x = col * unitX - gridWidth / 2
+        const y = (rack.grid.rows - 1 - row) * unitY - gridHeight / 2
         const z = rack.cell.d / 2
 
         grouped[item.status].push([x, y, z])
