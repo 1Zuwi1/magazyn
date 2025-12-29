@@ -57,7 +57,7 @@ export interface FilterState {
   query: string
 }
 
-export const RACK_ZONE_SIZE = 5
+export const RACK_ZONE_SIZE = 10
 
 export interface ItemVisual {
   color: string
