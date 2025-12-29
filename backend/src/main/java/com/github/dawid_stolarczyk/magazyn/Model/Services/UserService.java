@@ -21,8 +21,7 @@ public class UserService {
                 user.getUsername(),
                 user.getEmail(),
                 user.getRole().name(),
-                user.getStatus().name(),
-                user.isTwoFactorEnabled());
+                user.getStatus().name());
     }
 
 }

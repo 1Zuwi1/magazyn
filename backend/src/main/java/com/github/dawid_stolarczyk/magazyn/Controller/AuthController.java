@@ -48,7 +48,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody LoginRegisterRequest registerRequest, HttpServletResponse response) {
         try {
-            authService.registerUser(registerRequest, request, response);
+            authService.registerUser(registerRequest);
             return ResponseEntity.ok(new ResponseTemplate<>(true, "Registered successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));

@@ -57,8 +57,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 System.out.println("JWT remaining time (min): " + remainingMillis / 60000);
                 if (remainingMillis <= 40 * 60 * 1000) {
                     System.out.println("Refreshing JWT token for userId: " + userId);
-                    String newToken = jwtUtil.generateToken(userId, status, 3600_000);
-                    CookiesUtils.setCookie(response, "jwt_token", newToken, 3600);
+                    String newToken = jwtUtil.generateToken(userId, status);
+                    CookiesUtils.setCookie(response, "token", newToken, null);
                 }
             }
         }

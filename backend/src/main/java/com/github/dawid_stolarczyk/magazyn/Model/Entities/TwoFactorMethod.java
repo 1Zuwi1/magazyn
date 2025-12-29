@@ -13,12 +13,22 @@ public class TwoFactorMethod {
 
     @Enumerated(EnumType.STRING)
     private TwoFactor methodName;
-    private int emailCode;
+    @Column(length = 6, nullable = true)
+    private String emailCode;
+    @Column(nullable = true)
+    private String authenticatorSecret;
     private Timestamp codeGeneratedAt;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    public TwoFactorMethod() {
+    }
+
+    public TwoFactorMethod(TwoFactor methodName) {
+        this.methodName = methodName;
+    }
 
     public Long getId() {
         return id;
@@ -36,11 +46,11 @@ public class TwoFactorMethod {
         this.methodName = methodName;
     }
 
-    public int getEmailCode() {
+    public String getEmailCode() {
         return emailCode;
     }
 
-    public void setEmailCode(int emailCode) {
+    public void setEmailCode(String emailCode) {
         this.emailCode = emailCode;
     }
 
@@ -58,5 +68,13 @@ public class TwoFactorMethod {
 
     public void setCodeGeneratedAt(Timestamp codeGeneratedAt) {
         this.codeGeneratedAt = codeGeneratedAt;
+    }
+
+    public String getAuthenticatorSecret() {
+        return authenticatorSecret;
+    }
+
+    public void setAuthenticatorSecret(String authenticatorSecret) {
+        this.authenticatorSecret = authenticatorSecret;
     }
 }

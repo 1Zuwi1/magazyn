@@ -20,18 +20,20 @@ import java.util.Map;
 public class JwtUtil {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
+    @Value("${auth.token.expiration-seconds}")
+    private long TOKEN_EXPIRATION_SECONDS;
 
     public SecretKey getSecretKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
-    public String generateToken(Long id, Status2FA status2FA, long expirationTimeMillis) {
+    public String generateToken(Long id, Status2FA status2FA) {
         SecretKey key = getSecretKey();
         Map<String, Object> claims = Map.of("id", id, "status_2fa", status2FA.name());
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTimeMillis))
+                .setExpiration(new Date(System.currentTimeMillis() + TOKEN_EXPIRATION_SECONDS * 1000))
                 .signWith(key)
                 .compact();
     }

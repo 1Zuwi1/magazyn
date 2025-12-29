@@ -12,19 +12,17 @@ public class UserInfoResponse {
     private String email;
     private String role;
     private String account_status;
-    private boolean two_factor_enabled;
 
     public UserInfoResponse() {
     }
 
-    public UserInfoResponse(int id, String full_name, String username, String email, String role, String account_status, boolean two_factor_enabled) {
+    public UserInfoResponse(int id, String full_name, String username, String email, String role, String account_status) {
         this.id = id;
         this.full_name = full_name;
         this.username = username;
         this.email = email;
         this.role = role;
         this.account_status = account_status;
-        this.two_factor_enabled = two_factor_enabled;
     }
 
     public int getId() {
@@ -73,13 +71,5 @@ public class UserInfoResponse {
 
     public void setAccount_status(String account_status) {
         this.account_status = account_status;
-    }
-
-    public boolean isTwo_factor_enabled() {
-        return two_factor_enabled;
-    }
-
-    public void setTwo_factor_enabled(boolean two_factor_enabled) {
-        this.two_factor_enabled = two_factor_enabled;
     }
 }

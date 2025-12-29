@@ -42,14 +42,14 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TwoFactorMethod> twoFactorMethods = new ArrayList<>();
 
-    @Column(name = "two_factor_enabled", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
-    private boolean twoFactorEnabled = true;
-
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Warehouse> warehouses = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Assortment> assortments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BackupCode> backupCodes = new ArrayList<>();
 
     public void addWarehouse(Warehouse warehouse) {
         warehouses.add(warehouse);
@@ -66,6 +66,14 @@ public class User {
     public void removeAssortment(Assortment assortment) {
         assortments.remove(assortment);
         assortment.setUser(null);
+    }
+    public void addTwoFactorMethod(TwoFactorMethod method) {
+        twoFactorMethods.add(method);
+        method.setUser(this);
+    }
+    public void removeTwoFactorMethod(TwoFactorMethod method) {
+        twoFactorMethods.remove(method);
+        method.setUser(null);
     }
 
     public Long getId() {
@@ -150,13 +158,6 @@ public class User {
         this.fullName = fullName;
     }
 
-    public boolean isTwoFactorEnabled() {
-        return twoFactorEnabled;
-    }
-
-    public void setTwoFactorEnabled(boolean twoFactorEnabled) {
-        this.twoFactorEnabled = twoFactorEnabled;
-    }
 
     public List<TwoFactorMethod> getTwoFactorMethods() {
         return twoFactorMethods;
@@ -164,5 +165,13 @@ public class User {
 
     public void setTwoFactorMethods(List<TwoFactorMethod> twoFactorMethods) {
         this.twoFactorMethods = twoFactorMethods;
+    }
+
+    public List<BackupCode> getBackupCodes() {
+        return backupCodes;
+    }
+
+    public void setBackupCodes(List<BackupCode> backupCodes) {
+        this.backupCodes = backupCodes;
     }
 }
