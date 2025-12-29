@@ -4,7 +4,12 @@ import { useMemo } from "react"
 import { BlocksInstanced, getBlockLayout } from "./components/blocks-instanced"
 import { CameraController } from "./components/camera-controls"
 import { ItemsFocus } from "./components/items-focus"
-import { getRackMetrics, RackStructure } from "./components/rack-structure"
+import {
+  getRackMetrics,
+  getShelfPositionsForGrid,
+  RackShelves,
+  RackStructure,
+} from "./components/rack-structure"
 import { RacksOverview } from "./components/racks-overview"
 import { ShelvesInstanced } from "./components/shelves-instanced"
 import { useWarehouseStore } from "./store"
@@ -367,6 +372,26 @@ export function WarehouseScene({
               ? windowMetrics?.depth ?? metrics.depth
               : blockLayout?.totalDepth ?? metrics.depth
             const focusFloorY = -focusHeight / 2 - floorOffset
+            const blockShelfPositions =
+              showBlockGrid && blockLayout
+                ? getShelfPositionsForGrid({
+                    rows: blockLayout.blockRows,
+                    unitY: blockLayout.unitY,
+                    gridHeight: blockLayout.gridHeight,
+                    cellHeight: blockLayout.blockSizeY,
+                    shelfThickness: metrics.shelfThickness,
+                  })
+                : null
+            const windowShelfPositions =
+              activeWindow && windowMetrics
+                ? getShelfPositionsForGrid({
+                    rows: activeWindow.rows,
+                    unitY: windowMetrics.unitY,
+                    gridHeight: windowMetrics.gridHeight,
+                    cellHeight: rackAtOrigin.cell.h,
+                    shelfThickness: windowMetrics.shelfThickness,
+                  })
+                : null
             return (
               <group
                 key={rack.id}
@@ -442,6 +467,14 @@ export function WarehouseScene({
                     />
                   </mesh>
                 )}
+                {showBlockGrid && blockLayout && blockShelfPositions && (
+                  <RackShelves
+                    depth={blockLayout.totalDepth}
+                    shelfPositions={blockShelfPositions}
+                    thickness={metrics.shelfThickness}
+                    width={blockLayout.totalWidth}
+                  />
+                )}
                 {showBlockGrid ? (
                   <BlocksInstanced
                     applyTransform={false}
@@ -453,6 +486,14 @@ export function WarehouseScene({
                   />
                 ) : (
                   <>
+                    {windowShelfPositions && windowMetrics && (
+                      <RackShelves
+                        depth={windowMetrics.depth}
+                        shelfPositions={windowShelfPositions}
+                        thickness={windowMetrics.shelfThickness}
+                        width={windowMetrics.width}
+                      />
+                    )}
                     <ItemsFocus
                       applyTransform={false}
                       metrics={metrics}

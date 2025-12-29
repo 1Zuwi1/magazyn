@@ -4,7 +4,13 @@ import { useWarehouseStore } from "../store"
 import type { Rack3D } from "../types"
 import { RACK_ZONE_SIZE } from "../types"
 import { BlocksInstanced, getBlockLayout } from "./blocks-instanced"
-import { getRackMetrics, RackStructure, type RackTone } from "./rack-structure"
+import {
+  getRackMetrics,
+  getShelfPositionsForGrid,
+  RackShelves,
+  RackStructure,
+  type RackTone,
+} from "./rack-structure"
 
 interface RackRender {
   rack: Rack3D
@@ -58,6 +64,15 @@ function RackInstance({
   const blockLayout = isLargeGrid
     ? getBlockLayout(rack, metrics, RACK_ZONE_SIZE)
     : null
+  const blockShelfPositions = blockLayout
+    ? getShelfPositionsForGrid({
+        rows: blockLayout.blockRows,
+        unitY: blockLayout.unitY,
+        gridHeight: blockLayout.gridHeight,
+        cellHeight: blockLayout.blockSizeY,
+        shelfThickness: metrics.shelfThickness,
+      })
+    : null
   const outlineWidth = blockLayout?.totalWidth ?? metrics.width
   const outlineHeight = blockLayout?.totalHeight ?? metrics.height
   const outlineDepth = blockLayout?.totalDepth ?? metrics.depth
@@ -80,14 +95,24 @@ function RackInstance({
         />
       )}
       {isLargeGrid && (
-        <BlocksInstanced
-          applyTransform={false}
-          blockSize={RACK_ZONE_SIZE}
-          clickable={false}
-          hoverable
-          metrics={metrics}
-          rack={rack}
-        />
+        <>
+          {blockLayout && blockShelfPositions && (
+            <RackShelves
+              depth={blockLayout.totalDepth}
+              shelfPositions={blockShelfPositions}
+              thickness={metrics.shelfThickness}
+              width={blockLayout.totalWidth}
+            />
+          )}
+          <BlocksInstanced
+            applyTransform={false}
+            blockSize={RACK_ZONE_SIZE}
+            clickable={false}
+            hoverable={false}
+            metrics={metrics}
+            rack={rack}
+          />
+        </>
       )}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Three.js mesh */}
       <mesh

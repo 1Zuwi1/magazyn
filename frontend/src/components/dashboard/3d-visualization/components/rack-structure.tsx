@@ -32,7 +32,7 @@ export interface RackTone {
   glow: string
 }
 
-const DEFAULT_RACK_TONE: RackTone = {
+export const DEFAULT_RACK_TONE: RackTone = {
   frame: "#9aa3af",
   frameHover: "#b6c0cd",
   shelf: "#d6dbe2",
@@ -40,6 +40,67 @@ const DEFAULT_RACK_TONE: RackTone = {
   outline: "#6b7280",
   outlineHover: "#94a3b8",
   glow: "#7c8798",
+}
+
+interface ShelfGridConfig {
+  rows: number
+  unitY: number
+  gridHeight: number
+  cellHeight: number
+  shelfThickness: number
+}
+
+export function getShelfPositionsForGrid({
+  rows,
+  unitY,
+  gridHeight,
+  cellHeight,
+  shelfThickness,
+}: ShelfGridConfig): number[] {
+  const positions: number[] = []
+
+  for (let row = 0; row < rows; row++) {
+    const y = (rows - 1 - row) * unitY - gridHeight / 2
+    const shelfY = y - cellHeight / 2 + shelfThickness / 2
+    positions.push(shelfY)
+  }
+
+  return positions
+}
+
+interface RackShelvesProps {
+  shelfPositions: number[]
+  width: number
+  depth: number
+  thickness: number
+  color?: string
+}
+
+export function RackShelves({
+  shelfPositions,
+  width,
+  depth,
+  thickness,
+  color = DEFAULT_RACK_TONE.shelf,
+}: RackShelvesProps) {
+  if (shelfPositions.length === 0) {
+    return null
+  }
+
+  return (
+    <group>
+      {shelfPositions.map((y, index) => (
+        <mesh key={`shelf-${index}`} position={[0, y, 0]} raycast={() => null}>
+          <boxGeometry args={[width, thickness, depth]} />
+          <meshStandardMaterial
+            color={color}
+            metalness={0.05}
+            roughness={0.85}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
 }
 
 export const getRackMetrics = (rack: Rack3D): RackMetrics => {
@@ -314,13 +375,15 @@ export function RackStructure({
       : resolvedMetrics.slotSize
 
     if (showShelves) {
-      for (let row = 0; row < displayRows; row++) {
-        const y =
-          (displayRows - 1 - row) * displayUnitY -
-          resolvedMetrics.gridHeight / 2
-        const shelfY = y - rack.cell.h / 2 + resolvedMetrics.shelfThickness / 2
-        shelves.push(shelfY)
-      }
+      shelves.push(
+        ...getShelfPositionsForGrid({
+          rows: displayRows,
+          unitY: displayUnitY,
+          gridHeight: resolvedMetrics.gridHeight,
+          cellHeight: rack.cell.h,
+          shelfThickness: resolvedMetrics.shelfThickness,
+        })
+      )
     }
 
     if (!showItems) {
