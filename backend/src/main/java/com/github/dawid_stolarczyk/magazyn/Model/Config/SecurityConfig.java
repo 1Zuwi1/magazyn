@@ -1,7 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Config;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Security.JwtAuthenticationFilter;
-//import com.github.dawid_stolarczyk.magazyn.Model.Security.TwoFactorFilter;
 import com.github.dawid_stolarczyk.magazyn.Model.Security.TwoFactorFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

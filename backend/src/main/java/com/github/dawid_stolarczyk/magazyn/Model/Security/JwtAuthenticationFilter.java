@@ -33,13 +33,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
         logger.info("Filtering request: {}", path);
-        String jwt = CookiesUtils.getCookie(request, "jwt_token");
-        System.out.println("JWT from cookie: " + jwt);
+        String jwt = CookiesUtils.getCookie(request, "token");
+        logger.info("JWT from cookie: {}", jwt);
 
         if (jwt != null) {
 
             Long userId = jwtUtil.extractUserId(jwt);
-            System.out.println("Extracted userId from JWT: " + userId);
+            logger.info("Extracted userId from JWT: {}", userId);
             User user = userRepository.findById(userId).orElse(null);
             if (user != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 String status2FA = jwtUtil.extract2FaStatus(jwt);
@@ -54,9 +54,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
 
                 long remainingMillis = jwtUtil.extractExpiration(jwt).getTime() - System.currentTimeMillis();
-                System.out.println("JWT remaining time (min): " + remainingMillis / 60000);
+                logger.info("JWT remaining time (min): {}", remainingMillis / 60000);
                 if (remainingMillis <= 40 * 60 * 1000) {
-                    System.out.println("Refreshing JWT token for userId: " + userId);
+                    logger.info("Refreshing JWT token for userId: {}", userId);
                     String newToken = jwtUtil.generateToken(userId, status);
                     CookiesUtils.setCookie(response, "token", newToken, null);
                 }

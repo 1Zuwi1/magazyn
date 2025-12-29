@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
 
@@ -24,7 +25,15 @@ public class JwtUtil {
     private long TOKEN_EXPIRATION_SECONDS;
 
     public SecretKey getSecretKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        if (SECRET_KEY == null || SECRET_KEY.trim().isEmpty()) {
+            throw new IllegalStateException("JWT secret key is not configured or is empty");
+        }
+        byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
+        // Ensure key length is at least 32 bytes (256 bits) for HMAC-SHA algorithms
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException("JWT secret key must be at least 32 bytes (256 bits) when UTF-8 encoded");
+        }
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateToken(Long id, Status2FA status2FA) {
@@ -69,7 +78,7 @@ public class JwtUtil {
         Claims claims = extractAllClaims(token);
         if (claims == null) return null;
         try {
-            return UserRole.valueOf(claims.get("status_2fa").toString()).name();
+            return Status2FA.valueOf(claims.get("status_2fa").toString()).name();
         } catch (Exception e) {
             return null;
         }
@@ -77,6 +86,13 @@ public class JwtUtil {
     public Date extractExpiration(String token) {
         Claims claims = extractAllClaims(token);
         if (claims == null) return null;
+        try {
+            if (claims.getExpiration() == null) {
+                throw new JwtException("Token does not have an expiration date");
+            }
+        } catch (Exception e) {
+            return null;
+        }
         return claims.getExpiration();
     }
 
