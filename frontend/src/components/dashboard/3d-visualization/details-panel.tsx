@@ -33,6 +33,60 @@ function getStatusColor(status: Item3D["status"]): string {
   return "bg-red-500"
 }
 
+function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
+  const totalSlots = warehouse.racks.reduce(
+    (sum: number, rack: Rack3D) => sum + rack.grid.rows * rack.grid.cols,
+    0
+  )
+  const totalItems = warehouse.racks.reduce(
+    (sum: number, rack: Rack3D) =>
+      sum + rack.items.filter((item) => item !== null).length,
+    0
+  )
+  const occupiedSlots = totalItems
+  const freeSlots = totalSlots - occupiedSlots
+
+  return (
+    <div className="flex h-full flex-col border-l bg-background p-4">
+      <h2 className="mb-4 font-bold text-lg">Przegląd Magazynu</h2>
+
+      <div className="space-y-4">
+        <div className="rounded-lg border p-4">
+          <div className="text-muted-foreground text-sm">Liczba regałów</div>
+          <div className="font-bold text-2xl">{warehouse.racks.length}</div>
+        </div>
+
+        <div className="rounded-lg border p-4">
+          <div className="text-muted-foreground text-sm">Wszystkie miejsca</div>
+          <div className="font-bold text-2xl">{totalSlots}</div>
+        </div>
+
+        <div className="rounded-lg border p-4">
+          <div className="text-muted-foreground text-sm">Zajęte miejsca</div>
+          <div className="font-bold text-2xl text-green-600">
+            {occupiedSlots}
+          </div>
+        </div>
+
+        <div className="rounded-lg border p-4">
+          <div className="text-muted-foreground text-sm">Wolne miejsca</div>
+          <div className="font-bold text-2xl text-blue-600">{freeSlots}</div>
+        </div>
+
+        <div className="rounded-lg border p-4">
+          <div className="text-muted-foreground text-sm">Stopień zajętości</div>
+          <div className="font-bold text-2xl">
+            {totalSlots > 0
+              ? Math.round((occupiedSlots / totalSlots) * 100)
+              : 0}
+            %
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function DetailsPanel({ warehouse }: DetailsPanelProps) {
   const {
     mode,
@@ -59,61 +113,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
   const showBlockHint = isLargeGrid && !focusWindow
 
   if (mode === "overview") {
-    const totalSlots = warehouse.racks.reduce(
-      (sum: number, rack: Rack3D) => sum + rack.grid.rows * rack.grid.cols,
-      0
-    )
-    const totalItems = warehouse.racks.reduce(
-      (sum: number, rack: Rack3D) =>
-        sum + rack.items.filter((item) => item !== null).length,
-      0
-    )
-    const occupiedSlots = totalItems
-    const freeSlots = totalSlots - occupiedSlots
-
-    return (
-      <div className="flex h-full flex-col border-l bg-background p-4">
-        <h2 className="mb-4 font-bold text-lg">Przegląd Magazynu</h2>
-
-        <div className="space-y-4">
-          <div className="rounded-lg border p-4">
-            <div className="text-muted-foreground text-sm">Liczba regałów</div>
-            <div className="font-bold text-2xl">{warehouse.racks.length}</div>
-          </div>
-
-          <div className="rounded-lg border p-4">
-            <div className="text-muted-foreground text-sm">
-              Wszystkie miejsca
-            </div>
-            <div className="font-bold text-2xl">{totalSlots}</div>
-          </div>
-
-          <div className="rounded-lg border p-4">
-            <div className="text-muted-foreground text-sm">Zajęte miejsca</div>
-            <div className="font-bold text-2xl text-green-600">
-              {occupiedSlots}
-            </div>
-          </div>
-
-          <div className="rounded-lg border p-4">
-            <div className="text-muted-foreground text-sm">Wolne miejsca</div>
-            <div className="font-bold text-2xl text-blue-600">{freeSlots}</div>
-          </div>
-
-          <div className="rounded-lg border p-4">
-            <div className="text-muted-foreground text-sm">
-              Stopień zajętości
-            </div>
-            <div className="font-bold text-2xl">
-              {totalSlots > 0
-                ? Math.round((occupiedSlots / totalSlots) * 100)
-                : 0}
-              %
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+    return <OverviewContent warehouse={warehouse} />
   }
 
   return (

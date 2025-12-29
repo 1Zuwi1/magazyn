@@ -129,6 +129,58 @@ interface ItemsFocusProps {
   window?: FocusWindow | null
 }
 
+const processRackItems = (
+  rows: number,
+  cols: number,
+  startRow: number,
+  startCol: number,
+  resolvedMetrics: Pick<RackMetrics, "unitX" | "unitY">,
+  windowGridWidth: number,
+  windowGridHeight: number,
+  rack: Rack3D
+) => {
+  const withImages: FocusItemImage[] = []
+  const solid: Record<ItemStatus, FocusItemSolid[]> = {
+    normal: [],
+    dangerous: [],
+    expired: [],
+    "expired-dangerous": [],
+  }
+
+  for (let row = 0; row < rows; row++) {
+    const globalRow = startRow + row
+    const y = (rows - 1 - row) * resolvedMetrics.unitY - windowGridHeight / 2
+
+    for (let col = 0; col < cols; col++) {
+      const globalCol = startCol + col
+      const x = col * resolvedMetrics.unitX - windowGridWidth / 2
+      const index = globalRow * rack.grid.cols + globalCol
+      const item = rack.items[index]
+
+      if (!item) {
+        continue
+      }
+
+      const position: [number, number, number] = [x, y, 0]
+      const imageUrl = getItemImageUrl(item)
+      const glowSettings = GLOW_SETTINGS[item.status] ?? GLOW_SETTINGS.normal
+
+      if (imageUrl) {
+        withImages.push({
+          position,
+          status: item.status,
+          imageUrl,
+          glowOpacity: glowSettings.glowOpacity,
+          emissiveIntensity: glowSettings.emissiveIntensity,
+        })
+      } else {
+        solid[item.status].push({ position, status: item.status })
+      }
+    }
+  }
+  return { withImages, solid }
+}
+
 export function ItemsFocus({
   rack,
   metrics,
@@ -143,13 +195,6 @@ export function ItemsFocus({
   const activeWindow = window?.rackId === rack.id ? window : null
 
   const { itemsWithImages, solidByStatus } = useMemo(() => {
-    const withImages: FocusItemImage[] = []
-    const solid: Record<ItemStatus, FocusItemSolid[]> = {
-      normal: [],
-      dangerous: [],
-      expired: [],
-      "expired-dangerous": [],
-    }
     const startRow = activeWindow?.startRow ?? 0
     const startCol = activeWindow?.startCol ?? 0
     const rows = activeWindow?.rows ?? rack.grid.rows
@@ -157,37 +202,19 @@ export function ItemsFocus({
     const windowGridWidth = cols * resolvedMetrics.unitX
     const windowGridHeight = Math.max(0, rows - 1) * resolvedMetrics.unitY
 
-    for (let row = 0; row < rows; row++) {
-      const globalRow = startRow + row
-      const y = (rows - 1 - row) * resolvedMetrics.unitY - windowGridHeight / 2
-
-      for (let col = 0; col < cols; col++) {
-        const globalCol = startCol + col
-        const x = col * resolvedMetrics.unitX - windowGridWidth / 2
-        const index = globalRow * rack.grid.cols + globalCol
-        const item = rack.items[index]
-
-        if (!item) {
-          continue
-        }
-
-        const position: [number, number, number] = [x, y, 0]
-        const imageUrl = getItemImageUrl(item)
-        const glowSettings = GLOW_SETTINGS[item.status] ?? GLOW_SETTINGS.normal
-
-        if (imageUrl) {
-          withImages.push({
-            position,
-            status: item.status,
-            imageUrl,
-            glowOpacity: glowSettings.glowOpacity,
-            emissiveIntensity: glowSettings.emissiveIntensity,
-          })
-        } else {
-          solid[item.status].push({ position, status: item.status })
-        }
-      }
-    }
+    const { withImages, solid } = processRackItems(
+      rows,
+      cols,
+      startRow,
+      startCol,
+      {
+        unitX: resolvedMetrics.unitX,
+        unitY: resolvedMetrics.unitY,
+      },
+      windowGridWidth,
+      windowGridHeight,
+      rack
+    )
 
     return { itemsWithImages: withImages, solidByStatus: solid }
   }, [
@@ -198,6 +225,7 @@ export function ItemsFocus({
     rack.grid.cols,
     rack.grid.rows,
     rack.items,
+    rack,
     resolvedMetrics.unitX,
     resolvedMetrics.unitY,
   ])

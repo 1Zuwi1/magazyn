@@ -279,10 +279,6 @@ interface RackItemsProps {
 }
 
 function RackItems({ slotSize, items }: RackItemsProps) {
-  if (items.length === 0) {
-    return null
-  }
-
   const groupedByStatus = useMemo(() => {
     const grouped: Record<ItemStatus, [number, number, number][]> = {
       normal: [],
@@ -297,6 +293,10 @@ function RackItems({ slotSize, items }: RackItemsProps) {
 
     return grouped
   }, [items])
+
+  if (items.length === 0) {
+    return null
+  }
 
   return (
     <>
@@ -343,6 +343,151 @@ interface RackStructureProps {
   tone?: RackTone
 }
 
+interface DisplaySizeConfig {
+  displayRows: number
+  displayCols: number
+  downsample: boolean
+  displayUnitX: number
+  displayUnitY: number
+  displaySlotSize: { w: number; h: number; d: number }
+}
+
+function getDisplaySize(
+  rack: Rack3D,
+  resolvedMetrics: RackMetrics
+): DisplaySizeConfig {
+  const displayRows = Math.min(rack.grid.rows, RACK_ZONE_SIZE)
+  const displayCols = Math.min(rack.grid.cols, RACK_ZONE_SIZE)
+  const downsample =
+    displayRows !== rack.grid.rows || displayCols !== rack.grid.cols
+  const displayUnitX = resolvedMetrics.gridWidth / Math.max(1, displayCols)
+  const displayUnitY =
+    displayRows > 1 ? resolvedMetrics.gridHeight / (displayRows - 1) : 0
+  const displaySlotSize = downsample
+    ? {
+        w: Math.max(resolvedMetrics.slotSize.w, displayUnitX * 0.7),
+        h: Math.max(
+          resolvedMetrics.slotSize.h,
+          displayUnitY > 0 ? displayUnitY * 0.7 : resolvedMetrics.slotSize.h
+        ),
+        d: resolvedMetrics.slotSize.d,
+      }
+    : resolvedMetrics.slotSize
+
+  return {
+    displayRows,
+    displayCols,
+    downsample,
+    displayUnitX,
+    displayUnitY,
+    displaySlotSize,
+  }
+}
+
+function getWorstStatusInGridCell(
+  rack: Rack3D,
+  startRow: number,
+  endRow: number,
+  startCol: number,
+  endCol: number
+): ItemStatus | null {
+  let worstStatus: ItemStatus | null = null
+
+  for (let r = startRow; r < endRow; r++) {
+    const rowOffset = r * rack.grid.cols
+    for (let c = startCol; c < endCol; c++) {
+      const item = rack.items[rowOffset + c]
+      if (!item) {
+        continue
+      }
+      worstStatus = getWorstStatus(worstStatus, item.status)
+      if (worstStatus === "expired-dangerous") {
+        return worstStatus
+      }
+    }
+  }
+
+  return worstStatus
+}
+
+function processDownsampledSlots(
+  rack: Rack3D,
+  resolvedMetrics: RackMetrics,
+  displaySize: DisplaySizeConfig
+): {
+  position: [number, number, number]
+  status: Item3D["status"]
+}[] {
+  const { displayRows, displayCols, displayUnitX, displayUnitY } = displaySize
+  const occupied: {
+    position: [number, number, number]
+    status: Item3D["status"]
+  }[] = []
+  const rowStep = rack.grid.rows / displayRows
+  const colStep = rack.grid.cols / displayCols
+
+  for (let row = 0; row < displayRows; row++) {
+    const startRow = Math.floor(row * rowStep)
+    const endRow = Math.min(rack.grid.rows, Math.floor((row + 1) * rowStep))
+    const y =
+      (displayRows - 1 - row) * displayUnitY - resolvedMetrics.gridHeight / 2
+
+    for (let col = 0; col < displayCols; col++) {
+      const startCol = Math.floor(col * colStep)
+      const endCol = Math.min(rack.grid.cols, Math.floor((col + 1) * colStep))
+      const worstStatus = getWorstStatusInGridCell(
+        rack,
+        startRow,
+        endRow,
+        startCol,
+        endCol
+      )
+
+      if (!worstStatus) {
+        continue
+      }
+
+      const x = col * displayUnitX - resolvedMetrics.gridWidth / 2
+      occupied.push({ position: [x, y, 0], status: worstStatus })
+    }
+  }
+
+  return occupied
+}
+
+function processFullSlots(
+  rack: Rack3D,
+  resolvedMetrics: RackMetrics
+): {
+  position: [number, number, number]
+  status: Item3D["status"]
+}[] {
+  const occupied: {
+    position: [number, number, number]
+    status: Item3D["status"]
+  }[] = []
+
+  for (let row = 0; row < rack.grid.rows; row++) {
+    const y =
+      (rack.grid.rows - 1 - row) * resolvedMetrics.unitY -
+      resolvedMetrics.gridHeight / 2
+
+    for (let col = 0; col < rack.grid.cols; col++) {
+      const x = col * resolvedMetrics.unitX - resolvedMetrics.gridWidth / 2
+      const index = row * rack.grid.cols + col
+      const item = rack.items[index]
+
+      if (!item) {
+        continue
+      }
+
+      occupied.push({ position: [x, y, 0], status: item.status })
+    }
+  }
+
+  return occupied
+}
+
 export function RackStructure({
   rack,
   metrics,
@@ -355,34 +500,14 @@ export function RackStructure({
   const resolvedTone = tone ?? DEFAULT_RACK_TONE
 
   const { occupiedSlots, shelfPositions, slotSize } = useMemo(() => {
-    const occupied: {
-      position: [number, number, number]
-      status: Item3D["status"]
-    }[] = []
     const shelves: number[] = []
-    const displayRows = Math.min(rack.grid.rows, RACK_ZONE_SIZE)
-    const displayCols = Math.min(rack.grid.cols, RACK_ZONE_SIZE)
-    const downsample =
-      displayRows !== rack.grid.rows || displayCols !== rack.grid.cols
-    const displayUnitX = resolvedMetrics.gridWidth / Math.max(1, displayCols)
-    const displayUnitY =
-      displayRows > 1 ? resolvedMetrics.gridHeight / (displayRows - 1) : 0
-    const displaySlotSize = downsample
-      ? {
-          w: Math.max(resolvedMetrics.slotSize.w, displayUnitX * 0.7),
-          h: Math.max(
-            resolvedMetrics.slotSize.h,
-            displayUnitY > 0 ? displayUnitY * 0.7 : resolvedMetrics.slotSize.h
-          ),
-          d: resolvedMetrics.slotSize.d,
-        }
-      : resolvedMetrics.slotSize
+    const displaySize = getDisplaySize(rack, resolvedMetrics)
 
     if (showShelves) {
       shelves.push(
         ...getShelfPositionsForGrid({
-          rows: displayRows,
-          unitY: displayUnitY,
+          rows: displaySize.displayRows,
+          unitY: displaySize.displayUnitY,
           gridHeight: resolvedMetrics.gridHeight,
           cellHeight: rack.cell.h,
           shelfThickness: resolvedMetrics.shelfThickness,
@@ -392,97 +517,22 @@ export function RackStructure({
 
     if (!showItems) {
       return {
-        occupiedSlots: occupied,
+        occupiedSlots: [],
         shelfPositions: shelves,
-        slotSize: displaySlotSize,
+        slotSize: displaySize.displaySlotSize,
       }
     }
 
-    if (downsample) {
-      const rowStep = rack.grid.rows / displayRows
-      const colStep = rack.grid.cols / displayCols
-
-      for (let row = 0; row < displayRows; row++) {
-        const startRow = Math.floor(row * rowStep)
-        const endRow = Math.min(rack.grid.rows, Math.floor((row + 1) * rowStep))
-        const y =
-          (displayRows - 1 - row) * displayUnitY -
-          resolvedMetrics.gridHeight / 2
-
-        for (let col = 0; col < displayCols; col++) {
-          const startCol = Math.floor(col * colStep)
-          const endCol = Math.min(
-            rack.grid.cols,
-            Math.floor((col + 1) * colStep)
-          )
-          let worstStatus: ItemStatus | null = null
-
-          for (let r = startRow; r < endRow; r++) {
-            const rowOffset = r * rack.grid.cols
-            for (let c = startCol; c < endCol; c++) {
-              const item = rack.items[rowOffset + c]
-              if (!item) {
-                continue
-              }
-              worstStatus = getWorstStatus(worstStatus, item.status)
-              if (worstStatus === "expired-dangerous") {
-                break
-              }
-            }
-            if (worstStatus === "expired-dangerous") {
-              break
-            }
-          }
-
-          if (!worstStatus) {
-            continue
-          }
-
-          const x = col * displayUnitX - resolvedMetrics.gridWidth / 2
-          occupied.push({ position: [x, y, 0], status: worstStatus })
-        }
-      }
-    } else {
-      for (let row = 0; row < rack.grid.rows; row++) {
-        const y =
-          (rack.grid.rows - 1 - row) * resolvedMetrics.unitY -
-          resolvedMetrics.gridHeight / 2
-
-        for (let col = 0; col < rack.grid.cols; col++) {
-          const x = col * resolvedMetrics.unitX - resolvedMetrics.gridWidth / 2
-          const index = row * rack.grid.cols + col
-          const item = rack.items[index]
-
-          if (!item) {
-            continue
-          }
-
-          occupied.push({ position: [x, y, 0], status: item.status })
-        }
-      }
-    }
+    const occupied = displaySize.downsample
+      ? processDownsampledSlots(rack, resolvedMetrics, displaySize)
+      : processFullSlots(rack, resolvedMetrics)
 
     return {
       occupiedSlots: occupied,
       shelfPositions: shelves,
-      slotSize: displaySlotSize,
+      slotSize: displaySize.displaySlotSize,
     }
-  }, [
-    showItems,
-    showShelves,
-    rack.cell.h,
-    rack.grid.cols,
-    rack.grid.rows,
-    rack.items,
-    resolvedMetrics.gridHeight,
-    resolvedMetrics.gridWidth,
-    resolvedMetrics.shelfThickness,
-    resolvedMetrics.slotSize.d,
-    resolvedMetrics.slotSize.h,
-    resolvedMetrics.slotSize.w,
-    resolvedMetrics.unitX,
-    resolvedMetrics.unitY,
-  ])
+  }, [showItems, showShelves, rack, resolvedMetrics])
 
   return (
     <>
