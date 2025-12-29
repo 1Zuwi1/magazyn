@@ -56,7 +56,7 @@ export default function WarehouseClient({
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 pt-6 sm:space-y-6 sm:p-6 lg:p-8">
+    <div className="flex-1">
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 sm:gap-4">

@@ -1,12 +1,13 @@
 "use client"
 
-import type { ColumnDef } from "@tanstack/react-table"
 import {
   EyeIcon,
   MoreHorizontalIcon,
   PencilIcon,
-  TrashIcon,
-} from "lucide-react"
+  Trash,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import type { ColumnDef } from "@tanstack/react-table"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -117,28 +118,29 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
       return (
         <DropdownMenu>
           <DropdownMenuTrigger>
-            <MoreHorizontalIcon
+            <HugeiconsIcon
               className={cn(buttonVariants({ variant: "ghost" }))}
+              icon={MoreHorizontalIcon}
             />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               onClick={() => console.log("View", item.definitionId)}
             >
-              <EyeIcon className="mr-2 h-4 w-4" />
+              <HugeiconsIcon className="mr-2 h-4 w-4" icon={EyeIcon} />
               Szczegóły
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => console.log("Edit", item.definitionId)}
             >
-              <PencilIcon className="mr-2 h-4 w-4" />
+              <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
               Edytuj
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
               onClick={() => console.log("Delete", item.definitionId)}
             >
-              <TrashIcon className="mr-2 h-4 w-4" />
+              <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
               Usuń
             </DropdownMenuItem>
           </DropdownMenuContent>

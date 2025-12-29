@@ -4,7 +4,7 @@ import { Search } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
-import { MOCK_WAREHOUSES } from "./mock_data"
+import { MOCK_WAREHOUSES } from "./mock-data"
 import { DEFAULT_FILTERS, WarehouseFilters } from "./storage-filters"
 import { WarehouseGrid } from "./storage-grid"
 import type { FilterState } from "./types"
@@ -15,7 +15,7 @@ export const DashboardContent = () => {
   const filteredWarehouses = filterWarehouses(MOCK_WAREHOUSES, filters)
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
+    <div className="flex-1 space-y-4">
       <div className="my-4 flex items-center space-x-2">
         <div className="relative max-w-sm flex-1">
           <HugeiconsIcon

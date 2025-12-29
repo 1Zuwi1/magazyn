@@ -1,5 +1,5 @@
 import { ItemsTable } from "@/components/dashboard/items/items-table"
-import { MOCK_ITEM_STATS } from "@/components/dashboard/mock_data"
+import { MOCK_ITEM_STATS } from "@/components/dashboard/mock-data"
 
 export default function ItemsPage() {
   const items = MOCK_ITEM_STATS

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import { AssortmentTable } from "@/components/dashboard/items/assortment-table"
-import { MOCK_ITEMS, MOCK_WAREHOUSES } from "@/components/dashboard/mock_data"
+import { MOCK_ITEMS, MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
 
 interface AssortmentPageProps {
   params: {
@@ -19,7 +19,7 @@ export default async function AssortmentPage({ params }: AssortmentPageProps) {
   const items = MOCK_ITEMS.filter((item) => item.warehouseId === id)
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto">
       <div className="mb-6">
         <h1 className="font-bold text-3xl">
           Asortyment magazynu {warehouse.id}

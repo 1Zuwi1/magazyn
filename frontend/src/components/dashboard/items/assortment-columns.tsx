@@ -1,13 +1,14 @@
 "use client"
 
-import type { ColumnDef } from "@tanstack/react-table"
 import {
   EyeIcon,
   MoreHorizontalIcon,
   PencilIcon,
   QrCodeIcon,
-  TrashIcon,
-} from "lucide-react"
+  Trash,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import type { ColumnDef } from "@tanstack/react-table"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -119,7 +120,10 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
     header: "QR Code",
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
-        <QrCodeIcon className="h-4 w-4 text-muted-foreground" />
+        <HugeiconsIcon
+          className="h-4 w-4 text-muted-foreground"
+          icon={QrCodeIcon}
+        />
         <span className="font-mono text-sm">{row.original.qrCode}</span>
       </div>
     ),
@@ -152,30 +156,31 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
       return (
         <DropdownMenu>
           <DropdownMenuTrigger>
-            <MoreHorizontalIcon
+            <HugeiconsIcon
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+              icon={MoreHorizontalIcon}
             />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => console.log("View", item.id)}>
-              <EyeIcon className="mr-2 h-4 w-4" />
+              <HugeiconsIcon className="mr-2 h-4 w-4" icon={EyeIcon} />
               Szczegóły
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => console.log("Edit", item.id)}>
-              <PencilIcon className="mr-2 h-4 w-4" />
+              <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
               Edytuj
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => console.log("Show QR", item.qrCode)}
             >
-              <QrCodeIcon className="mr-2 h-4 w-4" />
+              <HugeiconsIcon className="mr-2 h-4 w-4" icon={QrCodeIcon} />
               Pokaż QR
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
               onClick={() => console.log("Delete", item.id)}
             >
-              <TrashIcon className="mr-2 h-4 w-4" />
+              <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
               Usuń
             </DropdownMenuItem>
           </DropdownMenuContent>
