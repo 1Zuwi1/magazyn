@@ -18,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Component
@@ -53,7 +54,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(userId, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                long remainingMillis = jwtUtil.extractExpiration(jwt).getTime() - System.currentTimeMillis();
+                Date expirationTime = jwtUtil.extractExpiration(jwt);
+                assert expirationTime != null;
+                long remainingMillis = expirationTime.getTime() - System.currentTimeMillis();
+
                 logger.info("JWT remaining time (min): {}", remainingMillis / 60000);
                 if (remainingMillis <= 40 * 60 * 1000) {
                     logger.info("Refreshing JWT token for userId: {}", userId);

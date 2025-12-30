@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -106,6 +107,7 @@ public class TwoFactorService {
 
         successfulTwoFactorAuthentication(response, user);
     }
+    @Transactional
     public void generateBackupCodes() {
         User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication()).orElseThrow(() -> new RuntimeException("User not found"));
         List<BackupCode> backupCodes = new ArrayList<>();

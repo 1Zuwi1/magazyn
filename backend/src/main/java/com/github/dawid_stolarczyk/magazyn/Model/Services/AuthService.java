@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
@@ -42,6 +43,7 @@ public class AuthService {
         CookiesUtils.setCookie(response, "token", jwt, null);
     }
 
+    @Transactional
     public void registerUser(LoginRegisterRequest registerRequest) {
         if (userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
             throw new RuntimeException("EMAIL IN USE");
