@@ -23,6 +23,7 @@ import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private static final long REFRESH_THRESHOLD_MILLIS = 40 * 60 * 1000; // 40 minutes
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     @Autowired
     private JwtUtil jwtUtil;
@@ -64,7 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 long remainingMillis = expirationTime.getTime() - System.currentTimeMillis();
 
                 logger.info("JWT remaining time (min): {}", remainingMillis / 60000);
-                if (remainingMillis <= 40 * 60 * 1000) {
+                if (remainingMillis <= REFRESH_THRESHOLD_MILLIS) {
                     logger.info("Refreshing JWT token for userId: {}", userId);
                     String newToken = jwtUtil.generateToken(userId, status);
                     CookiesUtils.setCookie(response, "token", newToken, null);

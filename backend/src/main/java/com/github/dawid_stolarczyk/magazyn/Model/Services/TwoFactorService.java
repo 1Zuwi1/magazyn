@@ -13,6 +13,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Utils.CodeGenerator;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
@@ -27,12 +28,19 @@ import java.util.List;
 
 @Service
 public class TwoFactorService {
+    private static final int BACKUP_CODES_COUNT = 8;
+    private static final int BACKUP_CODE_LENGTH = 12;
+    private static final int EMAIL_CODE_LENGTH = 6;
+    private static final int TWO_FACTOR_EMAIL_CODE_EXPIRATION_MINUTES = 15;
     @Autowired
     private UserRepository userRepository;
     @Autowired
     private EmailService emailService;
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Value("${app.name}")
+    private String appName;
 
     private final GoogleAuthenticator gAuth = new GoogleAuthenticator();
 
@@ -49,7 +57,7 @@ public class TwoFactorService {
                 .filter(m -> m.getMethodName() == TwoFactor.EMAIL)
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Email 2FA method not enabled"));
-        String code = CodeGenerator.generateWithNumbers(6);
+        String code = CodeGenerator.generateWithNumbers(EMAIL_CODE_LENGTH);
         method.setEmailCode(code);
         method.setCodeGeneratedAt(Timestamp.from(Instant.now()));
         userRepository.save(user);
@@ -68,7 +76,8 @@ public class TwoFactorService {
             throw new RuntimeException("Invalid 2FA code");
         }
         if (method.getCodeGeneratedAt() == null
-                || method.getCodeGeneratedAt().toInstant().plus(15, ChronoUnit.MINUTES).isBefore(Instant.now())) {
+                || method.getCodeGeneratedAt().toInstant()
+                        .plus(TWO_FACTOR_EMAIL_CODE_EXPIRATION_MINUTES, ChronoUnit.MINUTES).isBefore(Instant.now())) {
             throw new RuntimeException("2FA code expired");
         }
 
@@ -96,7 +105,7 @@ public class TwoFactorService {
         method.setAuthenticatorSecret(secret);
         userRepository.save(user);
 
-        return new TwoFactorAuthenticatorResponse(secret, user.getEmail(), "GdzieToLezy");
+        return new TwoFactorAuthenticatorResponse(secret, user.getEmail(), appName);
     }
 
     public void checkTwoFactorGoogleCode(int code, HttpServletResponse response) {
@@ -125,9 +134,9 @@ public class TwoFactorService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         List<BackupCode> backupCodes = new ArrayList<>();
 
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < BACKUP_CODES_COUNT; i++) {
             BackupCode backupCode = new BackupCode();
-            String code = CodeGenerator.generateWithBase62(12);
+            String code = CodeGenerator.generateWithBase62(BACKUP_CODE_LENGTH);
             backupCode.setCode(BCrypt.hashpw(code, BCrypt.gensalt()));
             backupCodes.add(backupCode);
             backupCode.setUser(user);

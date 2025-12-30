@@ -20,13 +20,16 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String mailFrom;
 
+    @Value("${app.name}")
+    private String appName;
+
     public void sendSimpleEmail(String to, String subject, String html) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED, "UTF-8");
+            MimeMessageHelper helper = new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
+                    "UTF-8");
 
-            helper.setFrom("Powiadomienia GdzieToLeży.pl <%s>".formatted(mailFrom));
+            helper.setFrom("Powiadomienia %s <%s>".formatted(appName, mailFrom));
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(html, true);
@@ -36,6 +39,7 @@ public class EmailService {
             throw new RuntimeException("Błąd wysyłki maila", e);
         }
     }
+
     public void sendTwoFactorCode(String to, String code) {
         Context context = new Context();
         context.setVariable("code", code);
