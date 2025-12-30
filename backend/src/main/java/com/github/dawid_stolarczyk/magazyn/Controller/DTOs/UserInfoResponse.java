@@ -1,8 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.DTOs;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.github.dawid_stolarczyk.magazyn.Model.Entities.AccountStatus;
-import com.github.dawid_stolarczyk.magazyn.Model.Entities.UserRole;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserInfoResponse {

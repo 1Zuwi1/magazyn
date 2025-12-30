@@ -2,7 +2,6 @@ package com.github.dawid_stolarczyk.magazyn.Model.Entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -12,7 +12,6 @@ import com.github.dawid_stolarczyk.magazyn.Model.Utils.CookiesUtils;
 import com.github.dawid_stolarczyk.magazyn.Model.Utils.CodeGenerator;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCrypt;
