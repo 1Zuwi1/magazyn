@@ -23,14 +23,16 @@ import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     @Autowired
     private JwtUtil jwtUtil;
+
     @Autowired
     private UserRepository userRepository;
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
         String path = request.getRequestURI();
         logger.info("Filtering request: {}", path);
@@ -50,12 +52,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
                 authorities.add(new SimpleGrantedAuthority("STATUS_2FA_" + status.name()));
 
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userId, null,
+                        authorities);
                 SecurityContextHolder.getContext().setAuthentication(authToken);
 
                 Date expirationTime = jwtUtil.extractExpiration(jwt);
-                assert expirationTime != null;
+                if (expirationTime == null) {
+                    logger.warn("Expiration time is null for JWT of userId: {}", userId);
+                    return;
+                }
                 long remainingMillis = expirationTime.getTime() - System.currentTimeMillis();
 
                 logger.info("JWT remaining time (min): {}", remainingMillis / 60000);

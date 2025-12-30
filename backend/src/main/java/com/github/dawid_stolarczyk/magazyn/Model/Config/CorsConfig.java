@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -10,12 +11,15 @@ import java.util.List;
 
 @Configuration
 public class CorsConfig {
+
+    @Value("${domain}")
+    private String allowedOrigin;
+
     @Bean
-    public static CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                "https://magazyn.ordermaster.pl"
-        ));
+                allowedOrigin));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

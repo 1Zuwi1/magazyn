@@ -39,6 +39,7 @@ public class AuthService {
         if (!BCrypt.checkpw(loginRequest.getPassword(), user.getPassword())) {
             throw new RuntimeException("INVALID EMAIL OR PASSWORD");
         }
+
         String jwt = jwtUtil.generateToken(user.getId(), Status2FA.PRE_2FA);
         CookiesUtils.setCookie(response, "token", jwt, null);
     }
@@ -65,13 +66,18 @@ public class AuthService {
     }
 
     private boolean checkPasswordStrength(String password) {
-        if (password.length() < 8) return false;
+        if (password.length() < 8)
+            return false;
         boolean hasUpper = false, hasLower = false, hasDigit = false, hasSpecial = false;
         for (char c : password.toCharArray()) {
-            if (Character.isUpperCase(c)) hasUpper = true;
-            else if (Character.isLowerCase(c)) hasLower = true;
-            else if (Character.isDigit(c)) hasDigit = true;
-            else hasSpecial = true;
+            if (Character.isUpperCase(c))
+                hasUpper = true;
+            else if (Character.isLowerCase(c))
+                hasLower = true;
+            else if (Character.isDigit(c))
+                hasDigit = true;
+            else
+                hasSpecial = true;
         }
         return hasUpper && hasLower && hasDigit && hasSpecial;
     }

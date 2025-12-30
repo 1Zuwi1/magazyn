@@ -37,12 +37,14 @@ public class TwoFactorService {
     private final GoogleAuthenticator gAuth = new GoogleAuthenticator();
 
     public List<String> usersTwoFactorMethod() {
-        User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication()).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication())
+                .orElseThrow(() -> new RuntimeException("User not found"));
         return user.getTwoFactorMethods().stream().map(method -> method.getMethodName().name()).toList();
     }
 
     public void sendTwoFactorCodeViaEmail() {
-        User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication()).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication())
+                .orElseThrow(() -> new RuntimeException("User not found"));
         TwoFactorMethod method = user.getTwoFactorMethods().stream()
                 .filter(m -> m.getMethodName() == TwoFactor.EMAIL)
                 .findFirst()
@@ -56,7 +58,8 @@ public class TwoFactorService {
     }
 
     public void checkTwoFactorEmailCode(String code, HttpServletResponse response) {
-        User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication()).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication())
+                .orElseThrow(() -> new RuntimeException("User not found"));
         TwoFactorMethod method = user.getTwoFactorMethods().stream()
                 .filter(m -> m.getMethodName() == TwoFactor.EMAIL)
                 .findFirst()
@@ -69,12 +72,18 @@ public class TwoFactorService {
             throw new RuntimeException("2FA code expired");
         }
 
+        method.setEmailCode(null);
+        method.setCodeGeneratedAt(null);
+        userRepository.save(user);
+
         successfulTwoFactorAuthentication(response, user);
     }
 
     public TwoFactorAuthenticatorResponse generateTwoFactorGoogleSecret() throws IOException {
-        User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication()).orElseThrow(() -> new RuntimeException("User not found"));
-        TwoFactorMethod method = user.getTwoFactorMethods().stream().filter(m -> m.getMethodName() == TwoFactor.AUTHENTICATOR)
+        User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        TwoFactorMethod method = user.getTwoFactorMethods().stream()
+                .filter(m -> m.getMethodName() == TwoFactor.AUTHENTICATOR)
                 .findFirst()
                 .orElseGet(() -> {
                     TwoFactorMethod newMethod = new TwoFactorMethod();
@@ -89,8 +98,10 @@ public class TwoFactorService {
 
         return new TwoFactorAuthenticatorResponse(secret, user.getEmail(), "GdzieToLezy");
     }
+
     public void checkTwoFactorGoogleCode(int code, HttpServletResponse response) {
-        User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication()).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication())
+                .orElseThrow(() -> new RuntimeException("User not found"));
         TwoFactorMethod method = user.getTwoFactorMethods().stream()
                 .filter(m -> m.getMethodName() == TwoFactor.AUTHENTICATOR)
                 .findFirst()
@@ -107,14 +118,16 @@ public class TwoFactorService {
 
         successfulTwoFactorAuthentication(response, user);
     }
+
     @Transactional
-    public void generateBackupCodes() {
-        User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication()).orElseThrow(() -> new RuntimeException("User not found"));
+    public List<String> generateBackupCodes() {
+        User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication())
+                .orElseThrow(() -> new RuntimeException("User not found"));
         List<BackupCode> backupCodes = new ArrayList<>();
 
         for (int i = 0; i < 8; i++) {
             BackupCode backupCode = new BackupCode();
-            String code = CodeGenerator.generateWithBase62(8);
+            String code = CodeGenerator.generateWithBase62(12);
             backupCode.setCode(BCrypt.hashpw(code, BCrypt.gensalt()));
             backupCodes.add(backupCode);
             backupCode.setUser(user);
@@ -123,18 +136,22 @@ public class TwoFactorService {
         user.addTwoFactorMethod(new TwoFactorMethod(TwoFactor.BACKUP_CODES));
         user.setBackupCodes(backupCodes);
         userRepository.save(user);
+
+        return new ArrayList<>(List.of("test"));
     }
 
     // TODO: 1. Email codes stored in plaintext (TwoFactorMethod.java:51)
-    //Email 2FA codes should be hashed like backup codes, not stored plaintext.
+    // Email 2FA codes should be hashed like backup codes, not stored plaintext.
     //
-    //2. Missing rate limiting
-    //No rate limiting on 2FA code attempts or login attempts - vulnerable to brute force.
-//    4. Missing input validation
-//    LoginRegisterRequest.java lacks @Email, @NotBlank, @Pattern annotations.
+    // 2. Missing rate limiting
+    // No rate limiting on 2FA code attempts or login attempts - vulnerable to brute
+    // force.
+    // 4. Missing input validation
+    // LoginRegisterRequest.java lacks @Email, @NotBlank, @Pattern annotations.
     @PreAuthorize("hasAuthority('STATUS_2FA_PRE_2FA')")
     public void useBackupCode(String code, HttpServletResponse response) {
-        User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication()).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication())
+                .orElseThrow(() -> new RuntimeException("User not found"));
         user.getTwoFactorMethods().stream()
                 .filter(m -> TwoFactor.BACKUP_CODES.equals(m.getMethodName()))
                 .findFirst()
@@ -154,6 +171,7 @@ public class TwoFactorService {
         userRepository.save(user);
         successfulTwoFactorAuthentication(response, user);
     }
+
     private void successfulTwoFactorAuthentication(HttpServletResponse response, User user) {
         String jwt = jwtUtil.generateToken(user.getId(), Status2FA.VERIFIED);
         CookiesUtils.setCookie(response, "token", jwt, null);
