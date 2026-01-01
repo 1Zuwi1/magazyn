@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { getSession } from "@/lib/session"
-import AuthForm from "./form"
+import AuthForm from "../components/form"
 
 export default async function LoginPage() {
   const session = await getSession()

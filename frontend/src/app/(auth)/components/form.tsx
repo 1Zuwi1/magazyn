@@ -7,7 +7,6 @@ import { toast } from "sonner"
 import type { ZodError } from "zod"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   Field,
   FieldDescription,
@@ -34,29 +33,31 @@ function FieldState({ field }: { field: AnyFieldApi }) {
   ) : null
 }
 
+const values = {
+  login: {
+    username: "",
+    password: "",
+  },
+  register: {
+    username: "",
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  },
+}
+
+type ValueTypes = typeof values
+
 export default function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter()
   const isLogin = mode === "login"
 
   const form = useForm({
-    defaultValues: isLogin
-      ? {
-          email: "",
-          password: "",
-          rememberMe: false,
-        }
-      : {
-          email: "",
-          password: "",
-          confirmPassword: "",
-        },
+    defaultValues: values[mode],
     onSubmit: async ({ value }) => {
       if (isLogin) {
-        const loginValue = value as {
-          email: string
-          password: string
-          rememberMe: boolean
-        }
+        const loginValue = value as ValueTypes["login"]
         const [err, res] = await tryCatch(
           apiFetch("/api/auth/login", LoginSchema, {
             method: "POST",
@@ -72,11 +73,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         toast.success("Zalogowano pomyślnie!")
         router.push(res.requiresTwoFactor ? "/login/2fa" : "/dashboard")
       } else {
-        const registerValue = value as {
-          email: string
-          password: string
-          confirmPassword: string
-        }
+        const registerValue = value as ValueTypes["register"]
         const [err] = await tryCatch(
           apiFetch("/api/auth/register", RegisterSchema, {
             method: "POST",
@@ -118,10 +115,58 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 : "Utwórz konto, aby korzystać z aplikacji."}
             </FieldDescription>
           </div>
-          <form.Field name="email">
+          {!isLogin && (
+            <>
+              <form.Field name="email">
+                {(field) => (
+                  <Field>
+                    <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                    <Input
+                      className={
+                        field.state.meta.errors.length ? "border-red-500" : ""
+                      }
+                      id={field.name}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="jan@kowalski.pl"
+                      type="email"
+                      value={field.state.value}
+                    />
+                    <FieldState field={field} />
+                  </Field>
+                )}
+              </form.Field>
+
+              <form.Field name="fullName">
+                {(field) => (
+                  <Field>
+                    <FieldLabel htmlFor={field.name}>
+                      Pełne imię i nazwisko
+                    </FieldLabel>
+                    <Input
+                      className={
+                        field.state.meta.errors.length ? "border-red-500" : ""
+                      }
+                      id={field.name}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="Jan Kowalski"
+                      type="text"
+                      value={field.state.value}
+                    />
+                    <FieldState field={field} />
+                  </Field>
+                )}
+              </form.Field>
+            </>
+          )}
+
+          <form.Field name="username">
             {(field) => (
               <Field>
-                <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                <FieldLabel htmlFor={field.name}>Nazwa użytkownika</FieldLabel>
                 <Input
                   className={
                     field.state.meta.errors.length ? "border-red-500" : ""
@@ -130,8 +175,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   name={field.name}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="jan@kowalski.pl"
-                  type="email"
+                  placeholder="janKowalski"
+                  type="text"
                   value={field.state.value}
                 />
                 <FieldState field={field} />
@@ -177,31 +222,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     type="password"
                     value={field.state.value}
                   />
-                  <FieldState field={field} />
-                </Field>
-              )}
-            </form.Field>
-          )}
-
-          {isLogin && (
-            <form.Field name="rememberMe">
-              {(field) => (
-                <Field>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      checked={field.state.value}
-                      id={field.name}
-                      onCheckedChange={(checked) =>
-                        field.handleChange(!!checked)
-                      }
-                    />
-                    <FieldLabel
-                      className="font-medium text-sm leading-none"
-                      htmlFor={field.name}
-                    >
-                      Zapamiętaj mnie
-                    </FieldLabel>
-                  </div>
                   <FieldState field={field} />
                 </Field>
               )}

@@ -54,7 +54,7 @@ export default function TwoFactorForm({
     onSubmit: async ({ value }) => {
       try {
         const [err] = await tryCatch(
-          apiFetch("/api/auth/login/2fa", Verify2FASchema, {
+          apiFetch("/api/2fa/email/check", Verify2FASchema, {
             method: "POST",
             body: { method, code: value.code },
           })

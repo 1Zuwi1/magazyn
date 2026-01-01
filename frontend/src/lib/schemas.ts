@@ -1,17 +1,55 @@
 import z from "zod"
 import { createApiSchema } from "./create-api-schema"
 
+const userNameSchema = z
+  .string()
+  .min(3, "Nazwa użytkownika musi mieć co najmniej 3 znaki")
+  .max(20, "Nazwa użytkownika może mieć maksymalnie 20 znaków")
+  .regex(
+    /^[a-zA-Z0-9_]+$/,
+    "Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślenia"
+  )
+
+const passwordSchema = z
+  .string()
+  .min(6, "Hasło musi mieć co najmniej 6 znaków")
+  .refine((value) => {
+    const bytes = new TextEncoder().encode(value).length
+    console.log(bytes)
+    if (bytes > 72) {
+      return false
+    }
+    return true
+  }, "Hasło nie może przekraczać 72 bajtów w kodowaniu UTF-8.")
+
 export const LoginSchema = createApiSchema({
   POST: {
     input: z.object({
-      email: z.email("Nieprawidłowy adres email"),
-      // TODO: Add more password rules
-      password: z.string().min(6, "Hasło musi mieć co najmniej 6 znaków"),
-      rememberMe: z.boolean("Pole zapamiętaj mnie musi być wartością logiczną"),
+      userName: userNameSchema,
+      password: passwordSchema,
     }),
     output: z.object({
       requiresTwoFactor: z.boolean(),
     }),
+  },
+})
+export const RegisterSchema = createApiSchema({
+  POST: {
+    input: z
+      .object({
+        fullName: z
+          .string()
+          .min(2, "Imię i nazwisko musi mieć co najmniej 2 znaki"),
+        userName: userNameSchema,
+        email: z.email("Nieprawidłowy adres email"),
+        password: passwordSchema,
+        confirmPassword: z.string(),
+      })
+      .refine((data) => data.password === data.confirmPassword, {
+        message: "Hasła nie są zgodne",
+        path: ["confirmPassword"],
+      }),
+    output: z.null(),
   },
 })
 
@@ -44,21 +82,5 @@ export const ApiMeSchema = createApiSchema({
       two_factor_enabled: z.boolean(),
       role: z.enum(["user", "admin"]),
     }),
-  },
-})
-
-export const RegisterSchema = createApiSchema({
-  POST: {
-    input: z
-      .object({
-        email: z.email("Nieprawidłowy adres email"),
-        password: z.string().min(6, "Hasło musi mieć co najmniej 6 znaków"),
-        confirmPassword: z.string(),
-      })
-      .refine((data) => data.password === data.confirmPassword, {
-        message: "Hasła nie są zgodne",
-        path: ["confirmPassword"],
-      }),
-    output: z.null(),
   },
 })
