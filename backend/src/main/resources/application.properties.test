@@ -14,3 +14,4 @@ auth.token.expiration-seconds=3600
 auth.cookie.domain=localhost
 app.domain=localhost
 app.name=GdzieToLezy
+app.secretPlaintext=46ea52b363112c1cd437693683927c4880c35bae6a5b018b25a04c484e670260
