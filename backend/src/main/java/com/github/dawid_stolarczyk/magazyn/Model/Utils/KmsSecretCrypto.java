@@ -25,7 +25,7 @@ public class KmsSecretCrypto implements AutoCloseable {
   public record EncryptedSecret(String encryptedDekB64, String ciphertextB64) {
   }
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(KmsSecretCrypto.class);
+  private static final Logger logger = LoggerFactory.getLogger(KmsSecretCrypto.class);
 
   private static final SecureRandom RNG = new SecureRandom();
   private static final int IV_LEN = 12;
@@ -96,7 +96,7 @@ public class KmsSecretCrypto implements AutoCloseable {
 
       return new EncryptedSecret(encryptedDekB64, ciphertextB64);
     } catch (Exception e) {
-      LOGGER.error("encryptSecret failed (cause={})", e.getClass().getSimpleName());
+      logger.error("encryptSecret failed (cause={})", e.getClass().getSimpleName());
       throw new EncryptionError("encryptSecret failed: KMS envelope encryption error", e);
     } finally {
       zero(dek);
@@ -129,7 +129,7 @@ public class KmsSecretCrypto implements AutoCloseable {
       byte[] pt = aesGcmDecrypt(dek, iv, ctPlusTag);
       return new String(pt, StandardCharsets.UTF_8);
     } catch (Exception e) {
-      LOGGER.error("decryptSecret failed (cause={})", e.getClass().getSimpleName());
+      logger.error("decryptSecret failed (cause={})", e.getClass().getSimpleName());
       throw new EncryptionError("decryptSecret failed: KMS envelope decryption error", e);
     } finally {
       zero(dek);

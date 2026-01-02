@@ -115,19 +115,19 @@ public class EncryptionService {
         throw new EncryptionError("Bad magic");
     }
 
-    int o = 4;
-    byte[] wrapSalt = slice(buf, o, WRAP_SALT_LEN);
-    o += WRAP_SALT_LEN;
-    byte[] dekWrapIv = slice(buf, o, IV_LEN);
-    o += IV_LEN;
-    byte[] dekWrapTag = slice(buf, o, TAG_LEN);
-    o += TAG_LEN;
-    byte[] dekWrapCt = slice(buf, o, DEK_LEN);
-    o += DEK_LEN;
-    byte[] dataIv = slice(buf, o, IV_LEN);
-    o += IV_LEN;
+    int offset = 4;
+    byte[] wrapSalt = slice(buf, offset, WRAP_SALT_LEN);
+    offset += WRAP_SALT_LEN;
+    byte[] dekWrapIv = slice(buf, offset, IV_LEN);
+    offset += IV_LEN;
+    byte[] dekWrapTag = slice(buf, offset, TAG_LEN);
+    offset += TAG_LEN;
+    byte[] dekWrapCt = slice(buf, offset, DEK_LEN);
+    offset += DEK_LEN;
+    byte[] dataIv = slice(buf, offset, IV_LEN);
+    offset += IV_LEN;
 
-    return new ParsedHeader(wrapSalt, dekWrapIv, dekWrapTag, dekWrapCt, dataIv, o);
+    return new ParsedHeader(wrapSalt, dekWrapIv, dekWrapTag, dekWrapCt, dataIv, offset);
   }
 
   // ===== Internals =====
