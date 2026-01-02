@@ -86,7 +86,7 @@ public class KmsSecretCrypto implements AutoCloseable {
 
       return new EncryptedSecret(encryptedDekB64, ciphertextB64);
     } catch (Exception e) {
-      System.out.println("Encrypt secret error:" + e.getMessage());
+      System.out.println("Encrypt secret error");
       throw new EncryptionError("encryptSecret failed");
     } finally {
       zero(dek);

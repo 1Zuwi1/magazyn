@@ -39,16 +39,25 @@ public class SecretsService {
       return existing;
 
     if (secretPlaintext == null || secretPlaintext.isBlank()) {
-      throw new EncryptionError("Secret is missing");
+      throw new EncryptionError("Secret is missing: configuration property 'app.secretPlaintext' is not set or is blank");
     }
-    if (secretPlaintextMinLength > 0) {
-      int byteLen = secretPlaintext.getBytes(StandardCharsets.UTF_8).length;
-      if (byteLen < secretPlaintextMinLength) {
-        throw new EncryptionError("Secret is too short");
+    if (existing != null) {
+      return existing;
+    }
+
+    synchronized (this) {
+      existing = cached.get();
+      if (existing != null) {
+        return existing;
       }
+
+      if (secretPlaintext == null || secretPlaintext.isBlank()) {
+        throw new EncryptionError("Secret is missing");
+      }
+
+      cached.set(secretPlaintext);
+      return secretPlaintext;
     }
-    cached.compareAndSet(null, secretPlaintext);
-    return cached.get();
 
     // The code below is for KMS decryption, currently not in use.
 
