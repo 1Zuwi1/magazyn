@@ -41,21 +41,25 @@ class KmsSecretCryptoTest {
         .build());
 
     KmsSecretCrypto crypto = new KmsSecretCrypto(kms, "alias/test");
-    String plaintext = "hello-kms";
-    KmsSecretCrypto.EncryptedSecret encrypted = crypto.encryptSecret(plaintext);
+    try {
+      String plaintext = "hello-kms";
+      KmsSecretCrypto.EncryptedSecret encrypted = crypto.encryptSecret(plaintext);
 
-    assertNotNull(encrypted);
-    assertNotNull(encrypted.encryptedDekB64());
-    assertNotNull(encrypted.ciphertextB64());
-    assertNotNull(dekRef.get());
+      assertNotNull(encrypted);
+      assertNotNull(encrypted.encryptedDekB64());
+      assertNotNull(encrypted.ciphertextB64());
+      assertNotNull(dekRef.get());
 
-    String decrypted = crypto.decryptSecret(encrypted.encryptedDekB64(), encrypted.ciphertextB64());
-    assertEquals(plaintext, decrypted);
+      String decrypted = crypto.decryptSecret(encrypted.encryptedDekB64(), encrypted.ciphertextB64());
+      assertEquals(plaintext, decrypted);
 
-    ArgumentCaptor<EncryptRequest> captor = ArgumentCaptor.forClass(EncryptRequest.class);
-    verify(kms).encrypt(captor.capture());
-    assertEquals("alias/test", captor.getValue().keyId());
-    verify(kms).decrypt(any(DecryptRequest.class));
+      ArgumentCaptor<EncryptRequest> captor = ArgumentCaptor.forClass(EncryptRequest.class);
+      verify(kms).encrypt(captor.capture());
+      assertEquals("alias/test", captor.getValue().keyId());
+      verify(kms).decrypt(any(DecryptRequest.class));
+    } finally {
+      crypto.close();
+    }
   }
 
   @Test
@@ -67,14 +71,18 @@ class KmsSecretCryptoTest {
 
     KmsSecretCrypto crypto = new KmsSecretCrypto(kms, "alias/test");
 
-    String encryptedDekB64 = Base64.getEncoder().encodeToString(new byte[] { 1, 2, 3 });
-    byte[] ciphertext = new byte[32];
-    String ciphertextB64 = Base64.getEncoder().encodeToString(ciphertext);
+    try {
+      String encryptedDekB64 = Base64.getEncoder().encodeToString(new byte[] { 1, 2, 3 });
+      byte[] ciphertext = new byte[32];
+      String ciphertextB64 = Base64.getEncoder().encodeToString(ciphertext);
 
-    EncryptionError ex = assertThrows(EncryptionError.class,
-        () -> crypto.decryptSecret(encryptedDekB64, ciphertextB64));
-    assertTrue(ex.getMessage().contains("decryptSecret failed"));
-    assertNotNull(ex.getCause());
-    assertEquals("KMS returned empty plaintext for DEK", ex.getCause().getMessage());
+      EncryptionError ex = assertThrows(EncryptionError.class,
+          () -> crypto.decryptSecret(encryptedDekB64, ciphertextB64));
+      assertTrue(ex.getMessage().contains("decryptSecret failed"));
+      assertNotNull(ex.getCause());
+      assertEquals("KMS returned empty plaintext for DEK", ex.getCause().getMessage());
+    } finally {
+      crypto.close();
+    }
   }
 }
