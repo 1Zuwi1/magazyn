@@ -35,7 +35,7 @@ class EncryptionServiceTest {
   }
 
   private static EncryptionService newService(Path rootDir, long maxFileBytes) {
-    return new EncryptionService(new FixedSecretsService("test-secret-32-bytes-long-value!!"),
+    return new EncryptionService(new FixedSecretsService("test-secret-32-bytes-long-value!"),
         rootDir.toString(),
         maxFileBytes);
   }

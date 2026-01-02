@@ -1,9 +1,12 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entities.EncryptionError;
+import com.github.dawid_stolarczyk.magazyn.Model.Security.JwtAuthenticationFilter;
 import com.github.dawid_stolarczyk.magazyn.Model.Utils.Hkdf;
 
 import javax.crypto.Cipher;
@@ -20,7 +23,6 @@ import java.util.Base64;
 
 @Service
 public class EncryptionService {
-
   private record WrappedDek(byte[] wrapSalt, byte[] dekWrapIv, byte[] dekWrapTag,
       byte[] dekWrapCt, byte[] dek) {
   }
@@ -52,6 +54,8 @@ public class EncryptionService {
       }
     }
   }
+
+  private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
   private static final SecureRandom RNG = new SecureRandom();
   private static final String TRANSFORM = "AES/GCM/NoPadding";
@@ -380,7 +384,7 @@ public class EncryptionService {
         }
       }
       zero(dek);
-      System.out.println(e);
+      logger.error("decryptFile failed", e);
       throw new EncryptionError("decryptFile failed", e);
     }
   }

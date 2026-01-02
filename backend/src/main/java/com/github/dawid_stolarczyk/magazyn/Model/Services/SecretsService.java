@@ -51,19 +51,11 @@ public class SecretsService {
       }
     }
 
-    synchronized (this) {
-      existing = cached.get();
-      if (existing != null) {
-        return existing;
-      }
-
-      if (secretPlaintext == null || secretPlaintext.isBlank()) {
-        throw new EncryptionError("Secret is missing");
-      }
-
-      cached.set(secretPlaintext);
-      return secretPlaintext;
+    String secret = secretPlaintext;
+    if (cached.compareAndSet(null, secret)) {
+      return secret;
     }
+    return cached.get();
 
     // The code below is for KMS decryption, currently not in use.
 
