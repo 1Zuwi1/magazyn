@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Base64;
 
 @Service
@@ -132,6 +133,36 @@ public class EncryptionService {
     return out;
   }
 
+  private static void zero(byte[] buf) {
+    if (buf != null) {
+      Arrays.fill(buf, (byte) 0);
+    }
+  }
+
+  private static final class KeyClearingInputStream extends FilterInputStream {
+    private byte[] keyToClear;
+    private boolean closed;
+
+    private KeyClearingInputStream(InputStream in, byte[] keyToClear) {
+      super(in);
+      this.keyToClear = keyToClear;
+    }
+
+    @Override
+    public void close() throws IOException {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      try {
+        super.close();
+      } finally {
+        zero(keyToClear);
+        keyToClear = null;
+      }
+    }
+  }
+
   private final SecretsService secrets;
 
   public EncryptionService(SecretsService secrets) {
@@ -140,8 +171,9 @@ public class EncryptionService {
 
   // === encrypt(plaintext): base64 container ===
   public String encrypt(String plaintext) {
+    WrappedDek wd = null;
     try {
-      WrappedDek wd = generateWrappedDEK();
+      wd = generateWrappedDEK();
       byte[] dataIv = randomBytes(IV_LEN);
 
       byte[] ctPlusTag = aesGcmEncrypt(wd.dek, dataIv, plaintext.getBytes(StandardCharsets.UTF_8));
@@ -152,11 +184,16 @@ public class EncryptionService {
       return Base64.getEncoder().encodeToString(container);
     } catch (Exception e) {
       throw new EncryptionError("encrypt failed", e);
+    } finally {
+      if (wd != null) {
+        zero(wd.dek);
+      }
     }
   }
 
   // === decrypt(containerB64): plaintext ===
   public String decrypt(String containerB64) {
+    byte[] dek = null;
     try {
       byte[] buf = Base64.getDecoder().decode(containerB64);
       ParsedHeader ph = parseHeader(buf);
@@ -167,12 +204,14 @@ public class EncryptionService {
       byte[] ctPlusTag = new byte[buf.length - ph.headerBytes];
       System.arraycopy(buf, ph.headerBytes, ctPlusTag, 0, ctPlusTag.length);
 
-      byte[] dek = unwrapDEK(ph.wrapSalt, ph.dekWrapIv, ph.dekWrapTag, ph.dekWrapCt);
+      dek = unwrapDEK(ph.wrapSalt, ph.dekWrapIv, ph.dekWrapTag, ph.dekWrapCt);
       byte[] pt = aesGcmDecrypt(dek, ph.dataIv, ctPlusTag);
 
       return new String(pt, StandardCharsets.UTF_8);
     } catch (Exception e) {
       throw new EncryptionError("decrypt failed", e);
+    } finally {
+      zero(dek);
     }
   }
 
@@ -182,13 +221,14 @@ public class EncryptionService {
     Path src = Path.of(filePath);
     Path tmp = Path.of(filePath + ".enc." + ProcessHandle.current().pid() + "." + System.currentTimeMillis() + ".part");
     Path out = Path.of(filePath + ".enc");
+    WrappedDek wd = null;
 
     try {
       if (!Files.isRegularFile(src)) {
         throw new EncryptionError("Source is not a file");
       }
 
-      WrappedDek wd = generateWrappedDEK();
+      wd = generateWrappedDEK();
       byte[] dataIv = randomBytes(IV_LEN);
 
       // Best-effort permissions (POSIX only). If unsupported, we just keep going.
@@ -243,6 +283,10 @@ public class EncryptionService {
       } catch (Exception ignored) {
       }
       throw new EncryptionError("encryptFile failed", e);
+    } finally {
+      if (wd != null) {
+        zero(wd.dek);
+      }
     }
   }
 
@@ -254,71 +298,80 @@ public class EncryptionService {
    */
   public InputStream decryptFile(String encryptedPath) {
     Path enc = Path.of(encryptedPath + ".enc");
+    InputStream in = null;
+    byte[] dek = null;
     try {
       if (!Files.isRegularFile(enc))
         throw new EncryptionError("Encrypted file not found: " + enc);
 
+      in = new BufferedInputStream(Files.newInputStream(enc, StandardOpenOption.READ));
+
       // Read header
-      byte[] header = Files.newInputStream(enc, StandardOpenOption.READ).readNBytes(HEADER_LEN);
+      byte[] header = in.readNBytes(HEADER_LEN);
       if (header.length != HEADER_LEN)
         throw new EncryptionError("Truncated file");
 
       ParsedHeader ph = parseHeader(header);
-      byte[] dek = unwrapDEK(ph.wrapSalt, ph.dekWrapIv, ph.dekWrapTag, ph.dekWrapCt);
+      dek = unwrapDEK(ph.wrapSalt, ph.dekWrapIv, ph.dekWrapTag, ph.dekWrapCt);
 
       Cipher decipher = Cipher.getInstance(TRANSFORM);
       decipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(dek, "AES"), new GCMParameterSpec(128, ph.dataIv));
 
-      FileInputStream fis = new FileInputStream(enc.toFile());
-      long skipped = fis.skip(HEADER_LEN);
-      if (skipped != HEADER_LEN) {
-        fis.close();
-        throw new EncryptionError("Failed to skip header");
-      }
-
-      CipherInputStream cis = new CipherInputStream(fis, decipher);
-
-      // Ensure underlying stream closes if caller closes
-      return new FilterInputStream(cis) {
-        @Override
-        public void close() throws IOException {
-          super.close();
-        }
-      };
+      return new KeyClearingInputStream(new CipherInputStream(in, decipher), dek);
     } catch (Exception e) {
+      if (in != null) {
+        try {
+          in.close();
+        } catch (IOException ignored) {
+        }
+      }
+      zero(dek);
       throw new EncryptionError("decryptFile failed", e);
     }
   }
 
   private WrappedDek generateWrappedDEK() throws Exception {
     byte[] root = secrets.loadSecret().getBytes(StandardCharsets.UTF_8);
+    byte[] kek = null;
 
-    byte[] wrapSalt = randomBytes(WRAP_SALT_LEN);
-    byte[] kek = deriveKEK(root, wrapSalt);
+    try {
+      byte[] wrapSalt = randomBytes(WRAP_SALT_LEN);
+      kek = deriveKEK(root, wrapSalt);
 
-    byte[] dek = randomBytes(DEK_LEN);
-    byte[] dekWrapIv = randomBytes(IV_LEN);
+      byte[] dek = randomBytes(DEK_LEN);
+      byte[] dekWrapIv = randomBytes(IV_LEN);
 
-    byte[] wrapCtPlusTag = aesGcmEncrypt(kek, dekWrapIv, dek);
-    if (wrapCtPlusTag.length != DEK_LEN + TAG_LEN)
-      throw new EncryptionError("Wrapped DEK length mismatch");
+      byte[] wrapCtPlusTag = aesGcmEncrypt(kek, dekWrapIv, dek);
+      if (wrapCtPlusTag.length != DEK_LEN + TAG_LEN)
+        throw new EncryptionError("Wrapped DEK length mismatch");
 
-    byte[] dekWrapCt = new byte[DEK_LEN];
-    byte[] dekWrapTag = new byte[TAG_LEN];
-    System.arraycopy(wrapCtPlusTag, 0, dekWrapCt, 0, DEK_LEN);
-    System.arraycopy(wrapCtPlusTag, DEK_LEN, dekWrapTag, 0, TAG_LEN);
+      byte[] dekWrapCt = new byte[DEK_LEN];
+      byte[] dekWrapTag = new byte[TAG_LEN];
+      System.arraycopy(wrapCtPlusTag, 0, dekWrapCt, 0, DEK_LEN);
+      System.arraycopy(wrapCtPlusTag, DEK_LEN, dekWrapTag, 0, TAG_LEN);
 
-    return new WrappedDek(wrapSalt, dekWrapIv, dekWrapTag, dekWrapCt, dek);
+      return new WrappedDek(wrapSalt, dekWrapIv, dekWrapTag, dekWrapCt, dek);
+    } finally {
+      zero(root);
+      zero(kek);
+    }
   }
 
   private byte[] unwrapDEK(byte[] wrapSalt, byte[] dekWrapIv, byte[] dekWrapTag, byte[] dekWrapCt) throws Exception {
     byte[] root = secrets.loadSecret().getBytes(StandardCharsets.UTF_8);
-    byte[] kek = deriveKEK(root, wrapSalt);
+    byte[] kek = null;
 
-    byte[] wrapCtPlusTag = concat(dekWrapCt, dekWrapTag);
-    byte[] dek = aesGcmDecrypt(kek, dekWrapIv, wrapCtPlusTag);
-    if (dek.length != DEK_LEN)
-      throw new EncryptionError("Unwrapped DEK length mismatch");
-    return dek;
+    try {
+      kek = deriveKEK(root, wrapSalt);
+
+      byte[] wrapCtPlusTag = concat(dekWrapCt, dekWrapTag);
+      byte[] dek = aesGcmDecrypt(kek, dekWrapIv, wrapCtPlusTag);
+      if (dek.length != DEK_LEN)
+        throw new EncryptionError("Unwrapped DEK length mismatch");
+      return dek;
+    } finally {
+      zero(root);
+      zero(kek);
+    }
   }
 }

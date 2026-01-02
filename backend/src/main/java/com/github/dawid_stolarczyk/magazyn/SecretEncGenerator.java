@@ -25,8 +25,10 @@ public class SecretEncGenerator implements CommandLineRunner {
     String region = System.getenv().getOrDefault("AWS_REGION", "eu-north-1");
     String keyId = System.getenv().getOrDefault("KMS_KEY_ID", "alias/Test");
 
-    KmsSecretCrypto crypto = new KmsSecretCrypto(region, keyId);
-    KmsSecretCrypto.EncryptedSecret out = crypto.encryptSecret(secret);
+    KmsSecretCrypto.EncryptedSecret out;
+    try (KmsSecretCrypto crypto = new KmsSecretCrypto(region, keyId)) {
+      out = crypto.encryptSecret(secret);
+    }
 
     var json = Map.of(
         "encryptedDek", out.encryptedDekB64(),

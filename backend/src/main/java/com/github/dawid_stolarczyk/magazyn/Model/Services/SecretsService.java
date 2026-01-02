@@ -35,7 +35,7 @@ public class SecretsService {
       return existing;
 
     if (secretPlaintext == null || secretPlaintext.isBlank()) {
-      throw new EncryptionError("SECRET_PLAINTEXT missing");
+      throw new EncryptionError("Secret is missing");
     }
     cached.compareAndSet(null, secretPlaintext);
     return cached.get();

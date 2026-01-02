@@ -14,9 +14,10 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entities.EncryptionError;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Base64;
 
-public class KmsSecretCrypto {
+public class KmsSecretCrypto implements AutoCloseable {
 
   public record EncryptedSecret(String encryptedDekB64, String ciphertextB64) {
   }
@@ -25,6 +26,12 @@ public class KmsSecretCrypto {
   private static final int IV_LEN = 12;
 
   private static final int TAG_LEN = 16; // bytes (128-bit)
+
+  private static void zero(byte[] buf) {
+    if (buf != null) {
+      Arrays.fill(buf, (byte) 0);
+    }
+  }
 
   private static byte[] aesGcmEncrypt(byte[] key32, byte[] iv12, byte[] plaintext) throws Exception {
     Cipher c = Cipher.getInstance("AES/GCM/NoPadding");
@@ -47,9 +54,15 @@ public class KmsSecretCrypto {
     this.kmsKeyId = kmsKeyId;
   }
 
+  @Override
+  public void close() {
+    kms.close();
+  }
+
   public EncryptedSecret encryptSecret(String plaintext) {
+    byte[] dek = null;
     try {
-      byte[] dek = new byte[32];
+      dek = new byte[32];
       RNG.nextBytes(dek);
 
       byte[] iv = new byte[IV_LEN];
@@ -73,11 +86,15 @@ public class KmsSecretCrypto {
 
       return new EncryptedSecret(encryptedDekB64, ciphertextB64);
     } catch (Exception e) {
-      throw new EncryptionError("encryptSecret failed", e);
+      System.out.println("Encrypt secret error:" + e.getMessage());
+      throw new EncryptionError("encryptSecret failed");
+    } finally {
+      zero(dek);
     }
   }
 
   public String decryptSecret(String encryptedDekB64, String ciphertextB64) {
+    byte[] dek = null;
     try {
       byte[] encryptedDek = Base64.getDecoder().decode(encryptedDekB64);
 
@@ -85,7 +102,7 @@ public class KmsSecretCrypto {
           .ciphertextBlob(SdkBytes.fromByteArray(encryptedDek))
           .build());
 
-      byte[] dek = decResp.plaintext().asByteArray();
+      dek = decResp.plaintext().asByteArray();
       if (dek == null || dek.length == 0)
         throw new EncryptionError("KMS returned empty plaintext for DEK");
 
@@ -102,7 +119,9 @@ public class KmsSecretCrypto {
       byte[] pt = aesGcmDecrypt(dek, iv, ctPlusTag);
       return new String(pt, StandardCharsets.UTF_8);
     } catch (Exception e) {
-      throw new EncryptionError("decryptSecret failed", e);
+      throw new EncryptionError("decryptSecret failed");
+    } finally {
+      zero(dek);
     }
   }
 }
