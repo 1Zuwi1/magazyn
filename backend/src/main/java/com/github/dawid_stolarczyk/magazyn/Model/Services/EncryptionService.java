@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Services;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entities.EncryptionError;
@@ -28,10 +29,35 @@ public class EncryptionService {
       int headerBytes) {
   }
 
+  private static final class KeyClearingInputStream extends FilterInputStream {
+    private byte[] keyToClear;
+    private boolean closed;
+
+    private KeyClearingInputStream(InputStream in, byte[] keyToClear) {
+      super(in);
+      this.keyToClear = keyToClear;
+    }
+
+    @Override
+    public void close() throws IOException {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      try {
+        super.close();
+      } finally {
+        zero(keyToClear);
+        keyToClear = null;
+      }
+    }
+  }
+
   private static final SecureRandom RNG = new SecureRandom();
   private static final String TRANSFORM = "AES/GCM/NoPadding";
   private static final int IV_LEN = 12;
   private static final int TAG_LEN = 16; // bytes
+
   private static final int DEK_LEN = 32; // bytes
 
   private static final int WRAP_SALT_LEN = 16; // bytes
@@ -100,13 +126,13 @@ public class EncryptionService {
     return new ParsedHeader(wrapSalt, dekWrapIv, dekWrapTag, dekWrapCt, dataIv, o);
   }
 
+  // ===== Internals =====
+
   private static byte[] aesGcmEncrypt(byte[] key32, byte[] iv12, byte[] plaintext) throws Exception {
     Cipher c = Cipher.getInstance(TRANSFORM);
     c.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key32, "AES"), new GCMParameterSpec(128, iv12));
     return c.doFinal(plaintext); // ct||tag
   }
-
-  // ===== Internals =====
 
   private static byte[] aesGcmDecrypt(byte[] key32, byte[] iv12, byte[] ctPlusTag) throws Exception {
     Cipher c = Cipher.getInstance(TRANSFORM);
@@ -139,38 +165,39 @@ public class EncryptionService {
     }
   }
 
-  private static final class KeyClearingInputStream extends FilterInputStream {
-    private byte[] keyToClear;
-    private boolean closed;
-
-    private KeyClearingInputStream(InputStream in, byte[] keyToClear) {
-      super(in);
-      this.keyToClear = keyToClear;
+  private static Path resolveBaseDir(String rootDir) {
+    Path base = (rootDir == null || rootDir.isBlank())
+        ? Path.of(System.getProperty("user.dir"))
+        : Path.of(rootDir.trim());
+    if (!base.isAbsolute()) {
+      base = Path.of(System.getProperty("user.dir")).resolve(base);
     }
+    return base.normalize().toAbsolutePath();
+  }
 
-    @Override
-    public void close() throws IOException {
-      if (closed) {
-        return;
-      }
-      closed = true;
-      try {
-        super.close();
-      } finally {
-        zero(keyToClear);
-        keyToClear = null;
-      }
+  private static void requireNonEmpty(String value, String label) {
+    if (value == null || value.isEmpty()) {
+      throw new EncryptionError(label + " is empty");
     }
   }
 
   private final SecretsService secrets;
 
-  public EncryptionService(SecretsService secrets) {
+  private final Path baseDir;
+
+  private final long maxFileBytes;
+
+  public EncryptionService(SecretsService secrets,
+      @Value("${app.encryption.rootDir:}") String rootDir,
+      @Value("${app.encryption.maxFileBytes:104857600}") long maxFileBytes) {
     this.secrets = secrets;
+    this.baseDir = resolveBaseDir(rootDir);
+    this.maxFileBytes = maxFileBytes;
   }
 
   // === encrypt(plaintext): base64 container ===
   public String encrypt(String plaintext) {
+    requireNonEmpty(plaintext, "Plaintext");
     WrappedDek wd = null;
     try {
       wd = generateWrappedDEK();
@@ -193,6 +220,7 @@ public class EncryptionService {
 
   // === decrypt(containerB64): plaintext ===
   public String decrypt(String containerB64) {
+    requireNonEmpty(containerB64, "Container");
     byte[] dek = null;
     try {
       byte[] buf = Base64.getDecoder().decode(containerB64);
@@ -217,16 +245,18 @@ public class EncryptionService {
 
   // === encryptFile(filePath): writes <filePath>.enc atomically; deletes source
   // ===
-  public String encryptFile(String filePath) {
-    Path src = Path.of(filePath);
-    Path tmp = Path.of(filePath + ".enc." + ProcessHandle.current().pid() + "." + System.currentTimeMillis() + ".part");
-    Path out = Path.of(filePath + ".enc");
+  public Path encryptFile(String filePath) {
+    Path src = resolveExistingFile(filePath, "Source");
+    Path tmp = Path
+        .of(src.toString() + ".enc." + ProcessHandle.current().pid() + "." + System.currentTimeMillis() + ".part");
+    Path out = Path.of(src.toString() + ".enc");
     WrappedDek wd = null;
 
     try {
       if (!Files.isRegularFile(src)) {
         throw new EncryptionError("Source is not a file");
       }
+      enforceFileSize(src, maxFileBytes, "Source");
 
       wd = generateWrappedDEK();
       byte[] dataIv = randomBytes(IV_LEN);
@@ -275,7 +305,7 @@ public class EncryptionService {
       Files.move(tmp, out, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
       Files.delete(src);
 
-      return out.toString();
+      return out;
     } catch (Exception e) {
       // Don't leak temp files on failure
       try {
@@ -297,12 +327,21 @@ public class EncryptionService {
    * CipherInputStream.
    */
   public InputStream decryptFile(String encryptedPath) {
-    Path enc = Path.of(encryptedPath + ".enc");
+    if (encryptedPath == null || encryptedPath.isBlank()) {
+      throw new EncryptionError("Encrypted path is empty");
+    }
+
+    Path enc = resolveExistingFile(encryptedPath + ".enc", "Encrypted");
     InputStream in = null;
+    InputStream wrapped = null;
     byte[] dek = null;
     try {
       if (!Files.isRegularFile(enc))
         throw new EncryptionError("Encrypted file not found: " + enc);
+
+      if (maxFileBytes > 0) {
+        enforceFileSize(enc, maxFileBytes + HEADER_LEN + TAG_LEN, "Encrypted");
+      }
 
       in = new BufferedInputStream(Files.newInputStream(enc, StandardOpenOption.READ));
 
@@ -317,9 +356,15 @@ public class EncryptionService {
       Cipher decipher = Cipher.getInstance(TRANSFORM);
       decipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(dek, "AES"), new GCMParameterSpec(128, ph.dataIv));
 
-      return new KeyClearingInputStream(new CipherInputStream(in, decipher), dek);
+      wrapped = new CipherInputStream(in, decipher);
+      return new KeyClearingInputStream(wrapped, dek);
     } catch (Exception e) {
-      if (in != null) {
+      if (wrapped != null) {
+        try {
+          wrapped.close();
+        } catch (IOException ignored) {
+        }
+      } else if (in != null) {
         try {
           in.close();
         } catch (IOException ignored) {
@@ -327,6 +372,59 @@ public class EncryptionService {
       }
       zero(dek);
       throw new EncryptionError("decryptFile failed", e);
+    }
+  }
+
+  private Path resolveWithinBase(String rawPath, String label) {
+    if (rawPath == null || rawPath.isBlank()) {
+      throw new EncryptionError(label + " path is empty");
+    }
+
+    Path candidate;
+    try {
+      candidate = Path.of(rawPath);
+    } catch (InvalidPathException e) {
+      throw new EncryptionError("Invalid " + label + " path", e);
+    }
+
+    if (!candidate.isAbsolute()) {
+      candidate = baseDir.resolve(candidate);
+    }
+
+    Path normalized = candidate.normalize().toAbsolutePath();
+    if (!normalized.startsWith(baseDir)) {
+      throw new EncryptionError(label + " path escapes root");
+    }
+    return normalized;
+  }
+
+  private Path resolveExistingFile(String rawPath, String label) {
+    Path normalized = resolveWithinBase(rawPath, label);
+    try {
+      Path baseReal = baseDir.toRealPath();
+      Path real = normalized.toRealPath();
+      if (!real.startsWith(baseReal)) {
+        throw new EncryptionError(label + " path escapes root");
+      }
+      return real;
+    } catch (NoSuchFileException e) {
+      return normalized;
+    } catch (IOException e) {
+      throw new EncryptionError("Unable to resolve " + label + " path", e);
+    }
+  }
+
+  private void enforceFileSize(Path path, long limitBytes, String label) {
+    if (limitBytes <= 0) {
+      return;
+    }
+    try {
+      long size = Files.size(path);
+      if (size > limitBytes) {
+        throw new EncryptionError(label + " file too large");
+      }
+    } catch (IOException e) {
+      throw new EncryptionError("Failed to read " + label + " file size", e);
     }
   }
 

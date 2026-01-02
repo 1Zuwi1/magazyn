@@ -5,6 +5,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entities.EncryptionError;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
@@ -21,6 +22,9 @@ public class SecretsService {
   @Value("${app.secretPlaintext:}")
   private String secretPlaintext;
 
+  @Value("${app.secretPlaintextMinLength:32}")
+  private int secretPlaintextMinLength;
+
   @Value("${app.awsRegion:eu-north-1}")
   private String awsRegion;
 
@@ -36,6 +40,12 @@ public class SecretsService {
 
     if (secretPlaintext == null || secretPlaintext.isBlank()) {
       throw new EncryptionError("Secret is missing");
+    }
+    if (secretPlaintextMinLength > 0) {
+      int byteLen = secretPlaintext.getBytes(StandardCharsets.UTF_8).length;
+      if (byteLen < secretPlaintextMinLength) {
+        throw new EncryptionError("Secret is too short");
+      }
     }
     cached.compareAndSet(null, secretPlaintext);
     return cached.get();
