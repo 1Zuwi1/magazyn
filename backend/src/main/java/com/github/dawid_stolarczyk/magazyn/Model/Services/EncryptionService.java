@@ -199,48 +199,55 @@ public class EncryptionService {
   // ===
   public String encryptFile(String filePath) {
     Path src = Path.of(filePath);
+    Path tmp = Path.of(filePath + ".enc." + ProcessHandle.current().pid() + "." + System.currentTimeMillis() + ".part");
+    Path out = Path.of(filePath + ".enc");
+
     try {
-      if (!Files.isRegularFile(src))
+      if (!Files.isRegularFile(src)) {
         throw new EncryptionError("Source is not a file");
+      }
 
       WrappedDek wd = generateWrappedDEK();
       byte[] dataIv = randomBytes(IV_LEN);
 
-      Path tmp = Path
-          .of(filePath + ".enc." + ProcessHandle.current().pid() + "." + System.currentTimeMillis() + ".part");
-      Path out = Path.of(filePath + ".enc");
-
-      // Best-effort POSIX perms (ignored on non-POSIX FS)
+      // Best-effort permissions (POSIX only). If unsupported, we just keep going.
       try {
         Files.createFile(tmp);
         Files.setPosixFilePermissions(tmp, PosixFilePermissions.fromString("rw-------"));
       } catch (UnsupportedOperationException ignored) {
-        // Windows etc.
+        // non-POSIX FS
       } catch (FileAlreadyExistsException ignored) {
         // extremely unlikely
       }
 
-      try (OutputStream os = Files.newOutputStream(tmp, StandardOpenOption.CREATE,
-          StandardOpenOption.TRUNCATE_EXISTING)) {
-        os.write(buildHeader(wd.wrapSalt, wd.dekWrapIv, wd.dekWrapTag, wd.dekWrapCt, dataIv));
+      Cipher cipher = Cipher.getInstance(TRANSFORM);
+      cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(wd.dek, "AES"), new GCMParameterSpec(128, dataIv));
 
-        Cipher cipher = Cipher.getInstance(TRANSFORM);
-        cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(wd.dek, "AES"), new GCMParameterSpec(128, dataIv));
+      byte[] inBuf = new byte[1024 * 1024]; // 1 MiB
+      byte[] outBuf = new byte[inBuf.length + 32]; // extra room for cipher output (GCM final adds tag)
 
-        try (InputStream is = Files.newInputStream(src, StandardOpenOption.READ)) {
-          byte[] inBuf = new byte[64 * 1024];
-          int n;
-          while ((n = is.read(inBuf)) != -1) {
-            byte[] outChunk = cipher.update(inBuf, 0, n);
-            if (outChunk != null && outChunk.length > 0)
-              os.write(outChunk);
+      try (InputStream fis = new BufferedInputStream(Files.newInputStream(src, StandardOpenOption.READ), inBuf.length);
+          OutputStream fos = new BufferedOutputStream(
+              Files.newOutputStream(tmp, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING),
+              inBuf.length)) {
+
+        // Header first
+        fos.write(buildHeader(wd.wrapSalt, wd.dekWrapIv, wd.dekWrapTag, wd.dekWrapCt, dataIv));
+
+        int n;
+        while ((n = fis.read(inBuf)) != -1) {
+          int produced = cipher.update(inBuf, 0, n, outBuf, 0);
+          if (produced > 0) {
+            fos.write(outBuf, 0, produced);
           }
         }
 
-        // doFinal returns remaining ciphertext + tag appended
-        byte[] finalBytes = cipher.doFinal();
-        if (finalBytes != null && finalBytes.length > 0)
-          os.write(finalBytes);
+        int finalProduced = cipher.doFinal(outBuf, 0);
+        if (finalProduced > 0) {
+          fos.write(outBuf, 0, finalProduced);
+        }
+
+        fos.flush();
       }
 
       // Atomic promote & remove source
@@ -249,6 +256,11 @@ public class EncryptionService {
 
       return out.toString();
     } catch (Exception e) {
+      // Don't leak temp files on failure
+      try {
+        Files.deleteIfExists(tmp);
+      } catch (Exception ignored) {
+      }
       throw new EncryptionError("encryptFile failed", e);
     }
   }
