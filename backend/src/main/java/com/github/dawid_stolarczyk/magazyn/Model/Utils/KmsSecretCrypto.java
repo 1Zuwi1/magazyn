@@ -12,6 +12,9 @@ import javax.crypto.spec.SecretKeySpec;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entities.EncryptionError;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -21,6 +24,8 @@ public class KmsSecretCrypto implements AutoCloseable {
 
   public record EncryptedSecret(String encryptedDekB64, String ciphertextB64) {
   }
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(KmsSecretCrypto.class);
 
   private static final SecureRandom RNG = new SecureRandom();
   private static final int IV_LEN = 12;
@@ -51,6 +56,11 @@ public class KmsSecretCrypto implements AutoCloseable {
 
   public KmsSecretCrypto(String awsRegion, String kmsKeyId) {
     this.kms = KmsClient.builder().region(Region.of(awsRegion)).build();
+    this.kmsKeyId = kmsKeyId;
+  }
+
+  KmsSecretCrypto(KmsClient kms, String kmsKeyId) {
+    this.kms = kms;
     this.kmsKeyId = kmsKeyId;
   }
 
@@ -86,8 +96,8 @@ public class KmsSecretCrypto implements AutoCloseable {
 
       return new EncryptedSecret(encryptedDekB64, ciphertextB64);
     } catch (Exception e) {
-      System.out.println("Encrypt secret error");
-      throw new EncryptionError("encryptSecret failed");
+      LOGGER.error("encryptSecret failed (cause={})", e.getClass().getSimpleName());
+      throw new EncryptionError("encryptSecret failed: KMS envelope encryption error", e);
     } finally {
       zero(dek);
     }
@@ -119,7 +129,8 @@ public class KmsSecretCrypto implements AutoCloseable {
       byte[] pt = aesGcmDecrypt(dek, iv, ctPlusTag);
       return new String(pt, StandardCharsets.UTF_8);
     } catch (Exception e) {
-      throw new EncryptionError("decryptSecret failed");
+      LOGGER.error("decryptSecret failed (cause={})", e.getClass().getSimpleName());
+      throw new EncryptionError("decryptSecret failed: KMS envelope decryption error", e);
     } finally {
       zero(dek);
     }

@@ -176,8 +176,8 @@ public class EncryptionService {
   }
 
   private static void requireNonEmpty(String value, String label) {
-    if (value == null || value.isEmpty()) {
-      throw new EncryptionError(label + " is empty");
+    if (value == null || value.isBlank()) {
+      throw new EncryptionError(label + " is blank");
     }
   }
 
@@ -198,19 +198,21 @@ public class EncryptionService {
   // === encrypt(plaintext): base64 container ===
   public String encrypt(String plaintext) {
     requireNonEmpty(plaintext, "Plaintext");
+    byte[] plaintextBytes = plaintext.getBytes(StandardCharsets.UTF_8);
+    int plaintextBytesLen = plaintextBytes.length;
     WrappedDek wd = null;
     try {
       wd = generateWrappedDEK();
       byte[] dataIv = randomBytes(IV_LEN);
 
-      byte[] ctPlusTag = aesGcmEncrypt(wd.dek, dataIv, plaintext.getBytes(StandardCharsets.UTF_8));
+      byte[] ctPlusTag = aesGcmEncrypt(wd.dek, dataIv, plaintextBytes);
 
       byte[] header = buildHeader(wd.wrapSalt, wd.dekWrapIv, wd.dekWrapTag, wd.dekWrapCt, dataIv);
 
       byte[] container = concat(header, ctPlusTag);
       return Base64.getEncoder().encodeToString(container);
     } catch (Exception e) {
-      throw new EncryptionError("encrypt failed", e);
+      throw new EncryptionError("encrypt failed (plaintext bytes=" + plaintextBytesLen + ")", e);
     } finally {
       if (wd != null) {
         zero(wd.dek);
@@ -221,9 +223,12 @@ public class EncryptionService {
   // === decrypt(containerB64): plaintext ===
   public String decrypt(String containerB64) {
     requireNonEmpty(containerB64, "Container");
+    int containerCharsLen = containerB64.length();
+    int decodedBytesLen = -1;
     byte[] dek = null;
     try {
       byte[] buf = Base64.getDecoder().decode(containerB64);
+      decodedBytesLen = buf.length;
       ParsedHeader ph = parseHeader(buf);
 
       if (buf.length < ph.headerBytes + TAG_LEN)
@@ -237,7 +242,11 @@ public class EncryptionService {
 
       return new String(pt, StandardCharsets.UTF_8);
     } catch (Exception e) {
-      throw new EncryptionError("decrypt failed", e);
+      String detail = "container chars=" + containerCharsLen;
+      if (decodedBytesLen >= 0) {
+        detail += ", decoded bytes=" + decodedBytesLen;
+      }
+      throw new EncryptionError("decrypt failed (" + detail + ")", e);
     } finally {
       zero(dek);
     }
@@ -371,6 +380,7 @@ public class EncryptionService {
         }
       }
       zero(dek);
+      System.out.println(e);
       throw new EncryptionError("decryptFile failed", e);
     }
   }

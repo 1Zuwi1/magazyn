@@ -65,11 +65,70 @@ class EncryptionServiceTest {
   }
 
   @Test
+  void encryptRejectsNullOrBlank() {
+    EncryptionService service = newService(Path.of(System.getProperty("user.dir")), 0);
+
+    assertThrows(EncryptionError.class, () -> service.encrypt(null));
+    assertThrows(EncryptionError.class, () -> service.encrypt(""));
+    assertThrows(EncryptionError.class, () -> service.encrypt("   "));
+  }
+
+  @Test
+  void decryptRejectsNullOrBlank() {
+    EncryptionService service = newService(Path.of(System.getProperty("user.dir")), 0);
+
+    assertThrows(EncryptionError.class, () -> service.decrypt(null));
+    assertThrows(EncryptionError.class, () -> service.decrypt(""));
+    assertThrows(EncryptionError.class, () -> service.decrypt("   "));
+  }
+
+  @Test
   void rejectsPathTraversal(@TempDir Path rootDir) {
     EncryptionService service = newService(rootDir, 1024 * 1024);
 
     assertThrows(EncryptionError.class, () -> service.encryptFile("../outside.txt"));
     assertThrows(EncryptionError.class, () -> service.decryptFile("../outside"));
+  }
+
+  @Test
+  void decryptFileRejectsCorruptedHeader(@TempDir Path rootDir) throws Exception {
+    EncryptionService service = newService(rootDir, 0);
+    String container = service.encrypt("hello");
+
+    byte[] buf = Base64.getDecoder().decode(container);
+    buf[0] ^= 0x01;
+    Path enc = rootDir.resolve("bad.enc");
+    Files.write(enc, buf);
+
+    EncryptionError ex = assertThrows(EncryptionError.class,
+        () -> service.decryptFile(rootDir.resolve("bad").toString()));
+    assertNotNull(ex.getCause());
+    assertEquals("Bad magic", ex.getCause().getMessage());
+  }
+
+  @Test
+  void encryptFileRejectsOversizedFile(@TempDir Path rootDir) throws Exception {
+    EncryptionService service = newService(rootDir, 5);
+    Path src = rootDir.resolve("too-big.txt");
+    Files.write(src, new byte[16]);
+
+    EncryptionError ex = assertThrows(EncryptionError.class, () -> service.encryptFile(src.toString()));
+    assertEquals("encryptFile failed", ex.getMessage());
+    assertNotNull(ex.getCause());
+    assertEquals("Source file too large", ex.getCause().getMessage());
+  }
+
+  @Test
+  void decryptFileRejectsOversizedFile(@TempDir Path rootDir) throws Exception {
+    EncryptionService service = newService(rootDir, 1);
+    Path enc = rootDir.resolve("too-big.enc");
+    Files.write(enc, new byte[1024 * 1024]);
+
+    EncryptionError ex = assertThrows(EncryptionError.class,
+        () -> service.decryptFile(rootDir.resolve("too-big").toString()));
+    assertEquals("decryptFile failed", ex.getMessage());
+    assertNotNull(ex.getCause());
+    assertEquals("Encrypted file too large", ex.getCause().getMessage());
   }
 
   @Test

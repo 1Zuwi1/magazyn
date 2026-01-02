@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dawid_stolarczyk.magazyn.Model.Utils.KmsSecretCrypto;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
@@ -17,6 +18,8 @@ public class SecretEncGenerator implements CommandLineRunner {
   // SECRET_TO_ENCRYPT=...
   // AWS_REGION=...
   // KMS_KEY_ID=...
+  @Override
+  @Profile("!prod")
   public void run(String... args) throws Exception {
     String secret = System.getenv("SECRET_TO_ENCRYPT");
     if (secret == null || secret.isBlank())
