@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entities.EncryptionError;
-import com.github.dawid_stolarczyk.magazyn.Model.Security.JwtAuthenticationFilter;
 import com.github.dawid_stolarczyk.magazyn.Model.Utils.Hkdf;
 
 import javax.crypto.Cipher;
@@ -291,7 +290,8 @@ public class EncryptionService {
       byte[] outBuf = new byte[inBuf.length + 32]; // extra room for cipher output (GCM final adds tag)
 
       try {
-        try (InputStream fis = new BufferedInputStream(Files.newInputStream(src, StandardOpenOption.READ), inBuf.length);
+        try (
+            InputStream fis = new BufferedInputStream(Files.newInputStream(src, StandardOpenOption.READ), inBuf.length);
             OutputStream fos = new BufferedOutputStream(
                 Files.newOutputStream(tmp, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING),
                 inBuf.length)) {
