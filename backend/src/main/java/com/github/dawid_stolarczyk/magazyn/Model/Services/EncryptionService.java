@@ -19,31 +19,12 @@ import java.util.Base64;
 @Service
 public class EncryptionService {
 
-  private static class WrappedDek {
-    final byte[] wrapSalt, dekWrapIv, dekWrapTag, dekWrapCt, dek;
-
-    WrappedDek(byte[] wrapSalt, byte[] dekWrapIv, byte[] dekWrapTag, byte[] dekWrapCt, byte[] dek) {
-      this.wrapSalt = wrapSalt;
-      this.dekWrapIv = dekWrapIv;
-      this.dekWrapTag = dekWrapTag;
-      this.dekWrapCt = dekWrapCt;
-      this.dek = dek;
-    }
+  private record WrappedDek(byte[] wrapSalt, byte[] dekWrapIv, byte[] dekWrapTag,
+      byte[] dekWrapCt, byte[] dek) {
   }
 
-  private static class ParsedHeader {
-    final byte[] wrapSalt, dekWrapIv, dekWrapTag, dekWrapCt, dataIv;
-    final int headerBytes;
-
-    ParsedHeader(byte[] wrapSalt, byte[] dekWrapIv, byte[] dekWrapTag, byte[] dekWrapCt, byte[] dataIv,
-        int headerBytes) {
-      this.wrapSalt = wrapSalt;
-      this.dekWrapIv = dekWrapIv;
-      this.dekWrapTag = dekWrapTag;
-      this.dekWrapCt = dekWrapCt;
-      this.dataIv = dataIv;
-      this.headerBytes = headerBytes;
-    }
+  private record ParsedHeader(byte[] wrapSalt, byte[] dekWrapIv, byte[] dekWrapTag, byte[] dekWrapCt, byte[] dataIv,
+      int headerBytes) {
   }
 
   private static final SecureRandom RNG = new SecureRandom();

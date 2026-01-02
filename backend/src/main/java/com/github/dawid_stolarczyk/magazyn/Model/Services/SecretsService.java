@@ -1,14 +1,10 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dawid_stolarczyk.magazyn.Model.Entities.EncryptionError;
-import com.github.dawid_stolarczyk.magazyn.Model.Utils.KmsSecretCrypto;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
@@ -31,7 +27,7 @@ public class SecretsService {
   @Value("${app.kmsKeyId:alias/Test}")
   private String kmsKeyId;
 
-  private final ObjectMapper om = new ObjectMapper();
+  // private final ObjectMapper om = new ObjectMapper();
 
   public String loadSecret() {
     String existing = cached.get();

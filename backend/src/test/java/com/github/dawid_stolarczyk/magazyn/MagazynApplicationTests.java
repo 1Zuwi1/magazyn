@@ -11,16 +11,16 @@ class MagazynApplicationTests {
 
 	@Test
 	void responseTemplateStoresPayloadAndSuccessFlag() {
-		ResponseTemplate response = new ResponseTemplate(true, "ok");
+		ResponseTemplate<String> response = new ResponseTemplate<>(true, "ok");
 
 		assertTrue(response.isSuccess());
 		assertEquals("ok", response.getData());
 
 		response.setSuccess(false);
-		response.setData(42);
+		response.setData("42");
 
 		assertFalse(response.isSuccess());
-		assertEquals(42, response.getData());
+		assertEquals("42", response.getData());
 	}
 
 }
