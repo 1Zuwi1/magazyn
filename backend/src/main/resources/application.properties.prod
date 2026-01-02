@@ -24,3 +24,5 @@ auth.cookie.domain=${DOMAIN}
 
 app.domain=${DOMAIN}
 app.name=${APP_NAME}
+
+app.secretPlaintext=${SECRET_PLAINTEXT}
