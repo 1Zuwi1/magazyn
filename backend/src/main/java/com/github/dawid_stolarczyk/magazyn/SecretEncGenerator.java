@@ -18,8 +18,8 @@ public class SecretEncGenerator implements CommandLineRunner {
   // SECRET_TO_ENCRYPT=...
   // AWS_REGION=...
   // KMS_KEY_ID=...
-  @Override
   @Profile("!prod")
+  @Override
   public void run(String... args) throws Exception {
     String secret = System.getenv("SECRET_TO_ENCRYPT");
     if (secret == null || secret.isBlank())

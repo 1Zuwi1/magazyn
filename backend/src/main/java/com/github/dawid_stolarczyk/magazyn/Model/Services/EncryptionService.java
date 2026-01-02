@@ -55,7 +55,7 @@ public class EncryptionService {
     }
   }
 
-  private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+  private static final Logger logger = LoggerFactory.getLogger(EncryptionService.class);
 
   private static final SecureRandom RNG = new SecureRandom();
   private static final String TRANSFORM = "AES/GCM/NoPadding";
@@ -290,28 +290,33 @@ public class EncryptionService {
       byte[] inBuf = new byte[1024 * 1024]; // 1 MiB
       byte[] outBuf = new byte[inBuf.length + 32]; // extra room for cipher output (GCM final adds tag)
 
-      try (InputStream fis = new BufferedInputStream(Files.newInputStream(src, StandardOpenOption.READ), inBuf.length);
-          OutputStream fos = new BufferedOutputStream(
-              Files.newOutputStream(tmp, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING),
-              inBuf.length)) {
+      try {
+        try (InputStream fis = new BufferedInputStream(Files.newInputStream(src, StandardOpenOption.READ), inBuf.length);
+            OutputStream fos = new BufferedOutputStream(
+                Files.newOutputStream(tmp, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING),
+                inBuf.length)) {
 
-        // Header first
-        fos.write(buildHeader(wd.wrapSalt, wd.dekWrapIv, wd.dekWrapTag, wd.dekWrapCt, dataIv));
+          // Header first
+          fos.write(buildHeader(wd.wrapSalt, wd.dekWrapIv, wd.dekWrapTag, wd.dekWrapCt, dataIv));
 
-        int n;
-        while ((n = fis.read(inBuf)) != -1) {
-          int produced = cipher.update(inBuf, 0, n, outBuf, 0);
-          if (produced > 0) {
-            fos.write(outBuf, 0, produced);
+          int n;
+          while ((n = fis.read(inBuf)) != -1) {
+            int produced = cipher.update(inBuf, 0, n, outBuf, 0);
+            if (produced > 0) {
+              fos.write(outBuf, 0, produced);
+            }
           }
-        }
 
-        int finalProduced = cipher.doFinal(outBuf, 0);
-        if (finalProduced > 0) {
-          fos.write(outBuf, 0, finalProduced);
-        }
+          int finalProduced = cipher.doFinal(outBuf, 0);
+          if (finalProduced > 0) {
+            fos.write(outBuf, 0, finalProduced);
+          }
 
-        fos.flush();
+          fos.flush();
+        }
+      } finally {
+        zero(inBuf);
+        zero(outBuf);
       }
 
       // Atomic promote & remove source
