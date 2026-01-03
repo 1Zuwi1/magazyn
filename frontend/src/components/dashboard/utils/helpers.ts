@@ -9,20 +9,15 @@ export function getSlotCoordinate(index: number, cols: number): string {
 
 export function pluralize(
   count: number,
-  single: string,
-  multiple: string,
-  normal: string
-) {
+  singular: string,
+  few: string,
+  many: string
+): string {
   if (count === 1) {
-    return single
+    return singular
   }
-  const lastDigit = count % 10
-  const lastTwoDigits = count % 100
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
-    return normal
+  if (count >= 2 && count <= 4) {
+    return few
   }
-  if (lastDigit >= 2 && lastDigit <= 4) {
-    return multiple
-  }
-  return normal
+  return many
 }

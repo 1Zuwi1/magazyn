@@ -31,7 +31,6 @@ export interface Dimensions {
   z: number
 }
 
-// z wymagań wzięte te pola
 interface BaseItem {
   id: string
   name: string

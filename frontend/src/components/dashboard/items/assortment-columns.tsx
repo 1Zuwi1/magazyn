@@ -76,6 +76,15 @@ function getExpiryBadge(expiryDate: Date) {
 
 export const assortmentColumns: ColumnDef<ItemInstance>[] = [
   {
+    id: "category",
+    accessorKey: "definition.category",
+    header: "Kategoria",
+    enableHiding: true,
+    cell: ({ row }) => (
+      <Badge variant="secondary">{row.original.definition.category}</Badge>
+    ),
+  },
+  {
     accessorKey: "definition.name",
     header: "Nazwa przedmiotu",
     cell: ({ row }) => {

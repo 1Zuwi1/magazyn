@@ -6,7 +6,7 @@ export interface ItemDefinition {
   defaultMinTemp?: number
   defaultMaxTemp?: number
   defaultWeight?: number
-  shelfLife?: number // dni do przeterminowania
+  shelfLife?: number
   isDangerous: boolean
   imageUrl?: string | null
   createdAt: Date

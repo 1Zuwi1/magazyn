@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { pluralize } from "../utils/helpers"
 import { assortmentColumns } from "./assortment-columns"
 import type { ItemInstance } from "./types"
 
@@ -70,6 +71,12 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const searchValue = filterValue.toLowerCase()
+      const name = row.original.definition.name.toLowerCase()
+      const category = row.original.definition.category.toLowerCase()
+      return name.includes(searchValue) || category.includes(searchValue)
+    },
     state: {
       sorting,
       columnFilters,
@@ -83,30 +90,19 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
         <Input
           className="max-w-sm"
           onChange={(event) => setGlobalFilter(event.target.value)}
-          placeholder="Szukaj przedmiotów..."
+          placeholder="Szukaj po nazwie lub kategorii..."
           value={globalFilter ?? ""}
         />
 
-        {/* <Select
-          onValueChange={(value) => setExpiryFilter(value ?? "all")}
-          value={expiryFilter}
-        >
-          <SelectTrigger className="w-50">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="wszystkie">Wszystkie</SelectItem>
-            <SelectItem value="expired">Przeterminowane</SelectItem>
-            <SelectItem value="3days">Do 3 dni</SelectItem>
-            <SelectItem value="7days">Do 7 dni</SelectItem>
-            <SelectItem value="14days">Do 14 dni</SelectItem>
-          </SelectContent>
-        </Select>
-
         <div className="ml-auto text-muted-foreground text-sm">
-          {filteredItems.length}{" "}
-          {filteredItems.length === 1 ? "przedmiot" : "przedmiotów"}
-        </div> */}
+          {table.getFilteredRowModel().rows.length}{" "}
+          {pluralize(
+            table.getFilteredRowModel().rows.length,
+            "przedmiot",
+            "przedmioty",
+            "przedmiotów"
+          )}
+        </div>
       </div>
 
       <div className="rounded-md border">

@@ -119,14 +119,17 @@ export function RackGridView({
       </div>
       {/* Rack Indicator */}
       {totalRacks > 1 && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex flex-col items-center justify-center gap-2">
           <Button onClick={() => setIsItemsDialogOpen(true)} variant="outline">
             <span className="hidden sm:inline">Przedmioty w regale</span>
           </Button>
-          <p className="text-muted-foreground text-xs sm:text-sm">Regał:</p>
-          <span className="font-semibold text-xs sm:text-sm">
-            {currentRackIndex + 1} / {totalRacks}
-          </span>
+          <p className="text-muted-foreground text-xs sm:text-sm">
+            Regał:
+            <span className="font-semibold text-xs sm:text-sm">
+              {" "}
+              {currentRackIndex + 1} / {totalRacks}
+            </span>
+          </p>
         </div>
       )}
       <RackItemsDialog

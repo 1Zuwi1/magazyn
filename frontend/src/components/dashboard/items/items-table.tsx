@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { pluralize } from "../utils/helpers"
 import { itemsColumns } from "./items-columns"
 import type { ItemStats } from "./types"
 
@@ -43,6 +44,12 @@ export function ItemsTable({ items }: ItemsTableProps) {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const searchValue = filterValue.toLowerCase()
+      const name = row.original.definition.name.toLowerCase()
+      const category = row.original.definition.category.toLowerCase()
+      return name.includes(searchValue) || category.includes(searchValue)
+    },
     state: {
       sorting,
       columnFilters,
@@ -56,11 +63,17 @@ export function ItemsTable({ items }: ItemsTableProps) {
         <Input
           className="max-w-sm"
           onChange={(event) => setGlobalFilter(event.target.value)}
-          placeholder="Szukaj przedmiotów..."
+          placeholder="Szukaj po nazwie lub kategorii..."
           value={globalFilter ?? ""}
         />
         <div className="ml-auto text-muted-foreground text-sm">
-          {items.length} {items.length === 1 ? "przedmiot" : "przedmiotów"}
+          {table.getFilteredRowModel().rows.length}{" "}
+          {pluralize(
+            table.getFilteredRowModel().rows.length,
+            "przedmiot",
+            "przedmioty",
+            "przedmiotów"
+          )}
         </div>
       </div>
 
