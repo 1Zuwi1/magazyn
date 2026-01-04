@@ -27,6 +27,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO: add rate limiting
 @Service
 public class TwoFactorService {
     private static final int BACKUP_CODES_COUNT = 8;
@@ -165,14 +166,7 @@ public class TwoFactorService {
         return new ArrayList<>(List.of("test"));
     }
 
-    // TODO: 1. Email codes stored in plaintext (TwoFactorMethod.java:51)
-    // Email 2FA codes should be hashed like backup codes, not stored plaintext.
-    //
-    // 2. Missing rate limiting
-    // No rate limiting on 2FA code attempts or login attempts - vulnerable to brute
-    // force.
-    // 4. Missing input validation
-    // RegisterRequest.java lacks @Email, @NotBlank, @Pattern annotations.
+
     @PreAuthorize("hasAuthority('STATUS_2FA_PRE_2FA')")
     public void useBackupCode(String code, HttpServletResponse response) {
         User user = userRepository.findById(JwtUtil.getCurrentIdByAuthentication())
