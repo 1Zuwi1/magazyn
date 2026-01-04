@@ -512,8 +512,8 @@ export function WarehouseScene({
     [floorBounds.centerX, floorBounds.centerZ]
   )
   const shadowBounds = Math.max(floorBounds.width, floorBounds.depth)
-  const fogNear = Math.max(6, floorBounds.depth * 0.35)
-  const fogFar = Math.max(16, floorBounds.depth * 0.95)
+  const fogNear = Math.max(8, floorBounds.depth * 0.35)
+  const fogFar = Math.max(22, floorBounds.depth * 0.95)
 
   return (
     <Canvas
