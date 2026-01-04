@@ -73,7 +73,7 @@ export function RackGridView({
 
         {/* Grid */}
         <div
-          className="h-full max-h-150 w-full flex-1 rounded-lg border"
+          className="h-full max-h-150 min-h-72 w-full flex-1 rounded-lg border sm:min-h-96"
           ref={containerRef}
         >
           {shouldVirtualize ? (
