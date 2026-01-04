@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { useWarehouseStore } from "./store"
 import type { Rack3D } from "./types"
@@ -54,11 +53,6 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
             >
               <div className="mb-2 flex items-center justify-between">
                 <span className="font-semibold">{rack.name}</span>
-                {rack.zone && (
-                  <Badge className="text-xs" variant="outline">
-                    {rack.zone}
-                  </Badge>
-                )}
               </div>
               <div className="mb-1 text-muted-foreground text-sm">
                 Siatka: {rack.grid.rows}×{rack.grid.cols}

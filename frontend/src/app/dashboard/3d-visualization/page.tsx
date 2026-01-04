@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils"
 
 export default function ThreeDVisualizationPage() {
-  const warehouse = useMemo(() => generateMockWarehouse(10), [])
+  const warehouse = useMemo(() => generateMockWarehouse(20), [])
   const { mode, selectedRackId } = useWarehouseStore()
 
   return (

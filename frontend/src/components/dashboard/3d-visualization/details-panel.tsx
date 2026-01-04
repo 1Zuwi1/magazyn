@@ -120,19 +120,18 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
     <div className="flex h-full flex-col border-l bg-background p-4">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-bold text-lg">Szczegóły Regału</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-col gap-2 *:w-full">
           {focusWindow && (
             <Button
               onClick={() => {
                 setFocusWindow(null)
               }}
-              size="sm"
-              variant="ghost"
+              variant="outline"
             >
               Powrót do bloków
             </Button>
           )}
-          <Button onClick={goToOverview} size="sm" variant="outline">
+          <Button onClick={goToOverview} variant="outline">
             Powrót do przeglądu
           </Button>
         </div>
@@ -159,7 +158,6 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
               {selectedRack.maxElementSize.height}×
               {selectedRack.maxElementSize.depth} mm
             </div>
-            {selectedRack.zone && <div>Strefa: {selectedRack.zone}</div>}
           </div>
         </div>
       )}

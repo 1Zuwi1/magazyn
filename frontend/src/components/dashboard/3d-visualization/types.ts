@@ -26,7 +26,6 @@ export interface Rack3D {
   transform: { position: [number, number, number]; rotationY: number }
   frame?: { thickness: number; padding: number }
   items: (Item3D | null)[]
-  zone?: string
 }
 
 export interface FocusWindow {
@@ -53,7 +52,6 @@ export interface ShelfPosition {
 
 export interface FilterState {
   itemStatus?: ItemStatus
-  zone?: string
   query: string
 }
 

@@ -97,7 +97,6 @@ function generateRack(
     },
     frame: { thickness: 0.02, padding: 0.05 },
     items,
-    zone: `Strefa-${Math.floor(position[0] / 10) + 1}`,
   }
 }
 
@@ -122,7 +121,7 @@ function getRackDimensions(rack: Rack3D): {
   }
 }
 
-export function generateMockWarehouse(rackCount = 10, seed = 1): Warehouse3D {
+export function generateMockWarehouse(rackCount = 20, seed = 1): Warehouse3D {
   const racks: Rack3D[] = []
   const racksPerRow = 4
   const rackSpacing = 0.5
@@ -154,11 +153,24 @@ export function generateMockWarehouse(rackCount = 10, seed = 1): Warehouse3D {
     racks.push(rack)
   }
 
+  const rows = 50
+  const cols = 50
+  const code = "R-SPECIAL-ITEMS"
+  const items: (Item3D | null)[] = []
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const index = row * cols + col
+      const item = getRandomItem(`${code}-${row}-${col}`, random, expiryBase)
+      items[index] = item
+    }
+  }
+
   racks.push({
     id: "rack-special-1",
     code: "R-SPECIAL-1",
     name: "Regał Specjalny 1",
-    grid: { rows: 100, cols: 100 },
+    grid: { rows, cols },
     cell: { w: 0.35, h: 0.25, d: 0.25 },
     maxElementSize: { width: 350, height: 250, depth: 250 },
     spacing: { x: 0.1, y: 0.05, z: 0 },
@@ -166,7 +178,7 @@ export function generateMockWarehouse(rackCount = 10, seed = 1): Warehouse3D {
       position: [0, 0, 0],
       rotationY: 0,
     },
-    items: [],
+    items,
   })
 
   const rowDepths: number[] = []
@@ -196,7 +208,6 @@ export function generateMockWarehouse(rackCount = 10, seed = 1): Warehouse3D {
     const z = rowCenters[row] ?? 0
 
     rack.transform.position = [x, height / 2, z]
-    rack.zone = `Strefa-${Math.floor(x / 10) + 1}`
     rowXOffsets[row] = currentRowX + width + rackSpacing
   }
 
