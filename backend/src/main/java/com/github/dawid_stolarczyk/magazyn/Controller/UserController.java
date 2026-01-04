@@ -1,8 +1,8 @@
 package com.github.dawid_stolarczyk.magazyn.Controller;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.DTOs.ResponseTemplate;
-import com.github.dawid_stolarczyk.magazyn.Controller.DTOs.UserInfoResponse;
-import com.github.dawid_stolarczyk.magazyn.Model.Services.UserService;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserInfoResponse;
+import com.github.dawid_stolarczyk.magazyn.Services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -35,7 +35,8 @@ public class UserController {
         try {
             return ResponseEntity.ok(new ResponseTemplate<>(true, userService.getBasicInformation()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseTemplate<>(false, "Could not retrieve user information."));
         }
     }
 }

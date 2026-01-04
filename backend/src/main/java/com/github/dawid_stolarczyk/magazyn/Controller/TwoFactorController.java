@@ -1,8 +1,9 @@
 package com.github.dawid_stolarczyk.magazyn.Controller;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.DTOs.CodeRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.DTOs.ResponseTemplate;
-import com.github.dawid_stolarczyk.magazyn.Model.Services.TwoFactorService;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.CodeRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
+import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
+import com.github.dawid_stolarczyk.magazyn.Services.TwoFactorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,17 +54,6 @@ public class TwoFactorController {
         }
     }
 
-    @Operation(summary = "Check the provided email code for two-factor authentication.")
-    @PostMapping("/email/check")
-    public ResponseEntity<?> checkEmailCode(@RequestBody CodeRequest codeRequest, HttpServletResponse response) {
-        try {
-            twoFactorService.checkTwoFactorEmailCode(codeRequest.getCode(), response);
-            return ResponseEntity.ok(new ResponseTemplate<>(true, "2FA email code verified"));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
-        }
-    }
-
     @Operation(summary = "Generate a new Google Authenticator secret for the current user.")
     @PostMapping("/authenticator/start")
     public ResponseEntity<?> generateAuthenticatorSecret() {
@@ -73,16 +64,16 @@ public class TwoFactorController {
         }
     }
 
-    @Operation(summary = "Check the provided Google Authenticator code for two-factor authentication.")
-    @PostMapping("/authenticator/check")
-    public ResponseEntity<?> checkAuthenticatorCode(@RequestBody CodeRequest codeRequest, HttpServletResponse response) {
+    @Operation(summary = "Check the provided two-factor authentication code for the current user.")
+    @PostMapping("/check")
+    public ResponseEntity<?> checkCode(@Valid @RequestBody CodeRequest codeRequest, HttpServletResponse response) {
         try {
-            twoFactorService.checkTwoFactorGoogleCode(Integer.parseInt(codeRequest.getCode()), response);
-            return ResponseEntity.ok(new ResponseTemplate<>(true, "2FA Google Authenticator code verified"));
+
+            return ResponseEntity.ok(new ResponseTemplate<>(true, "2FA code verified"));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
         }
     }
-
-    
 }

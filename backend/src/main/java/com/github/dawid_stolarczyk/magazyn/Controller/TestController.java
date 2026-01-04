@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.DTOs.ResponseTemplate;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 
 @RestController
 @RequestMapping("/health")

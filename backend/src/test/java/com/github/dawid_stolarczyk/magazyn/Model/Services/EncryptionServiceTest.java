@@ -1,6 +1,8 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Services;
 
-import com.github.dawid_stolarczyk.magazyn.Model.Entities.EncryptionError;
+import com.github.dawid_stolarczyk.magazyn.Exception.EncryptionError;
+import com.github.dawid_stolarczyk.magazyn.Services.EncryptionService;
+import com.github.dawid_stolarczyk.magazyn.Services.SecretsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

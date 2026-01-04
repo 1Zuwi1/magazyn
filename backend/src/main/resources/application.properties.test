@@ -15,3 +15,4 @@ auth.cookie.domain=localhost
 app.domain=localhost
 app.name=GdzieToLezy
 app.secretPlaintext=${SECRET_PLAINTEXT:test-secret-placeholder-at-least-32-chars}
+auth.password.min-length=8

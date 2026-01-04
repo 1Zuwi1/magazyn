@@ -1,6 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Utils;
 
-import com.github.dawid_stolarczyk.magazyn.Model.Entities.EncryptionError;
+import com.github.dawid_stolarczyk.magazyn.Exception.EncryptionError;
+import com.github.dawid_stolarczyk.magazyn.Utils.KmsSecretCrypto;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import software.amazon.awssdk.core.SdkBytes;

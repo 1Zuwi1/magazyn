@@ -1,6 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.DTOs.ResponseTemplate;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

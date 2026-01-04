@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Utils;
 
+import com.github.dawid_stolarczyk.magazyn.Utils.Hkdf;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
