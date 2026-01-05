@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import type { Item } from "../../types"
+import { formatDate } from "../../utils/helpers"
 
 interface TableRowContentProps {
   item: NonNullable<Item>
@@ -32,14 +33,6 @@ interface TableRowContentProps {
   onView: (id: string) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
-}
-
-function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat("pl-PL", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date)
 }
 
 function formatDimensions(dimensions: {
@@ -120,7 +113,7 @@ export function TableRowContent({
       </TableCell>
       <TableCell className="text-right">
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger aria-label="Otwórz menu">
             <HugeiconsIcon
               className={cn(
                 buttonVariants({

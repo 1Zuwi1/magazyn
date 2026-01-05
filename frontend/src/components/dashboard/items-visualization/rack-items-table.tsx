@@ -4,6 +4,7 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 import { useRef } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody } from "@/components/ui/table"
+import { VIRTUALIZATION_THRESHOLDS } from "@/config/constants"
 import type { Item } from "../types"
 import { NormalRow } from "./components/normal-row"
 import { RackItemsTableHeader } from "./components/table-header"
@@ -17,7 +18,7 @@ function isExpired(date: Date): boolean {
   return date < new Date()
 }
 
-const VIRTUALIZATION_THRESHOLD = 50
+const VIRTUALIZATION_THRESHOLD = VIRTUALIZATION_THRESHOLDS.TABLE
 const ROW_HEIGHT = 64
 
 export function RackItemsTable({ items }: RackItemsTableProps) {

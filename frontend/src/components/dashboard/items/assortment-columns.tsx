@@ -19,15 +19,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { formatDate } from "../utils/helpers"
 import type { ItemInstance } from "./types"
-
-function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat("pl-PL", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date)
-}
 
 function getDaysUntilExpiry(expiryDate: Date): number {
   const today = new Date()
@@ -155,7 +148,7 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
 
       return (
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger aria-label="Otwórz menu">
             <HugeiconsIcon
               className={cn(
                 buttonVariants({ variant: "ghost", size: "icon-xs" })

@@ -88,6 +88,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <Input
+          aria-label="Filtruj przedmioty po nazwie lub kategorii"
           className="max-w-sm"
           onChange={(event) => setGlobalFilter(event.target.value)}
           placeholder="Szukaj po nazwie lub kategorii..."

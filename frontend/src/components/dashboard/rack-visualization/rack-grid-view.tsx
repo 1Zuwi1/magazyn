@@ -4,6 +4,7 @@ import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useEffect, useRef, useState } from "react"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { VIRTUALIZATION_THRESHOLDS } from "@/config/constants"
 import { RackItemsDialog } from "../items-visualization/rack-items-dialog"
 import type { Item, Rack } from "../types"
 import Normal from "./components/normal"
@@ -20,7 +21,7 @@ interface RackGridViewProps {
   rack?: Rack
 }
 
-const VIRTUALIZATION_THRESHOLD = 10
+const VIRTUALIZATION_THRESHOLD = VIRTUALIZATION_THRESHOLDS.GRID
 export function RackGridView({
   rows,
   cols,

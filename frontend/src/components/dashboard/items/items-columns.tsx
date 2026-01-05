@@ -95,7 +95,7 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
     cell: ({ row }) => {
       return (
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger aria-label="Otwórz menu">
             <HugeiconsIcon
               className={cn(
                 buttonVariants({ variant: "ghost", size: "icon-xs" })

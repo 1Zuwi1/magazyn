@@ -7,6 +7,14 @@ export function getSlotCoordinate(index: number, cols: number): string {
   return `${rowLabel}-${colLabel}`
 }
 
+export function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat("pl-PL", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date)
+}
+
 export function pluralize(
   count: number,
   singular: string,
