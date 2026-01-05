@@ -1,4 +1,3 @@
-import { headers } from "next/headers"
 import type { output } from "zod"
 import { z } from "zod"
 import tryCatch from "./try-catch"
@@ -165,7 +164,7 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
     const bodyToSend = buildRequestBody(init, payloadFlags)
     const restInit = stripExtendedInit(init)
 
-    const header: HeadersInit = mergeHeaders(
+    const headersInit: HeadersInit = mergeHeaders(
       restInit.headers,
       bodyToSend instanceof FormData
         ? undefined
@@ -183,7 +182,13 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
       ...restInit,
       method,
       signal: abortController.signal,
-      headers: typeof window === "undefined" ? await headers() : header,
+      headers:
+        typeof window === "undefined"
+          ? mergeHeaders(
+              await (await import("next/headers")).headers(),
+              headersInit
+            )
+          : headersInit,
       credentials: restInit.credentials ?? "include",
       body: bodyToSend,
     })
@@ -375,7 +380,7 @@ function isReadableStream(v: unknown): v is ReadableStream {
 
 function mergeHeaders(
   base: HeadersInit | undefined,
-  extra: Record<string, string> | undefined
+  extra: HeadersInit | Record<string, string> | undefined
 ): HeadersInit {
   if (!extra) {
     return base ?? {}
