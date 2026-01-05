@@ -72,6 +72,9 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, _columnId, filterValue) => {
+      if (!(filterValue && row.original?.definition)) {
+        return false
+      }
       const searchValue = filterValue.toLowerCase()
       const name = row.original.definition.name.toLowerCase()
       const category = row.original.definition.category.toLowerCase()

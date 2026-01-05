@@ -122,7 +122,7 @@ export function RackGridView({
       {totalRacks > 1 && (
         <div className="flex flex-col items-center justify-center gap-2">
           <Button onClick={() => setIsItemsDialogOpen(true)} variant="outline">
-            <span className="hidden sm:inline">Przedmioty w regale</span>
+            <span>Przedmioty w regale</span>
           </Button>
           <p className="text-muted-foreground text-xs sm:text-sm">
             Regał:

@@ -32,14 +32,16 @@ export function RackItemsDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="w-full max-w-[95vw] sm:max-w-[85vw] lg:max-w-5xl xl:max-w-6xl">
+      <DialogContent className="flex h-[90vh] max-h-[90vh] w-full max-w-[95vw] flex-col overflow-hidden sm:h-auto sm:max-w-[85vw] lg:max-w-5xl xl:max-w-6xl">
         <DialogHeader>
           <DialogTitle className="text-2xl">{rack.name}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           <RackItemsStats occupiedSlots={occupiedSlots} rack={rack} />
-          <RackItemsTable items={items} />
+          <div className="min-h-0 flex-1">
+            <RackItemsTable items={items} />
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -47,3 +47,5 @@ export const VirtualizedRow = memo(
     )
   }
 )
+
+VirtualizedRow.displayName = "VirtualizedRow"

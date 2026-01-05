@@ -22,6 +22,20 @@ const VIRTUALIZATION_THRESHOLD = VIRTUALIZATION_THRESHOLDS.TABLE
 const ROW_HEIGHT = 64
 
 export function RackItemsTable({ items }: RackItemsTableProps) {
+  items = [
+    ...items,
+    ...items,
+    ...items,
+    ...items,
+    ...items,
+    ...items,
+    ...items,
+    ...items,
+    ...items,
+    ...items,
+    ...items,
+    ...items,
+  ]
   const parentRef = useRef<HTMLDivElement>(null)
   const shouldVirtualize = items.length > VIRTUALIZATION_THRESHOLD
 
@@ -55,38 +69,42 @@ export function RackItemsTable({ items }: RackItemsTableProps) {
 
   if (!shouldVirtualize) {
     return (
-      <ScrollArea className="h-100 rounded-md border">
+      <div className="rounded-md border">
         <Table>
           <RackItemsTableHeader />
-          <TableBody>
-            {items.map((item) => {
-              const expired = isExpired(item.expiryDate)
-              return (
-                <NormalRow
-                  expired={expired}
-                  item={item}
-                  key={item.id}
-                  onDelete={handleDelete}
-                  onEdit={handleEdit}
-                  onView={handleView}
-                />
-              )
-            })}
-          </TableBody>
         </Table>
-      </ScrollArea>
+        <ScrollArea className="h-[50vh]">
+          <Table>
+            <TableBody>
+              {items.map((item, index) => {
+                const expired = isExpired(item.expiryDate)
+                return (
+                  <NormalRow
+                    expired={expired}
+                    item={item}
+                    key={`${item.id}-${index}`}
+                    onDelete={handleDelete}
+                    onEdit={handleEdit}
+                    onView={handleView}
+                  />
+                )
+              })}
+            </TableBody>
+          </Table>
+        </ScrollArea>
+      </div>
     )
   }
 
   const virtualItems = rowVirtualizer.getVirtualItems()
   return (
-    <div className="rounded-md border">
-      <div className="overflow-x-auto">
+    <div className="flex h-full flex-col rounded-md border">
+      <div className="shrink-0 overflow-x-auto">
         <Table>
           <RackItemsTableHeader />
         </Table>
       </div>
-      <div className="h-100 overflow-auto" ref={parentRef}>
+      <div className="min-h-0 flex-1 overflow-auto" ref={parentRef}>
         <div
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,
@@ -96,14 +114,14 @@ export function RackItemsTable({ items }: RackItemsTableProps) {
         >
           <Table>
             <TableBody>
-              {virtualItems.map((virtualRow) => {
+              {virtualItems.map((virtualRow, index) => {
                 const item = items[virtualRow.index]
                 const expired = isExpired(item.expiryDate)
                 return (
                   <VirtualizedRow
                     expired={expired}
                     item={item}
-                    key={item.id}
+                    key={`${item.id}-${index}`}
                     onDelete={handleDelete}
                     onEdit={handleEdit}
                     onView={handleView}
