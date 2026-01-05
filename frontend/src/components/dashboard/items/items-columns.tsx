@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  EyeIcon,
   MoreHorizontalIcon,
   PencilIcon,
   Trash,
@@ -78,29 +77,22 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
   },
   {
     accessorKey: "daysUntilExpiry",
-    header: "Najbliższy termin",
+    header: "Okres przydatności",
     cell: ({ row }) => getDaysUntilExpiryBadge(row.original.daysUntilExpiry),
   },
   {
     accessorKey: "definition.isDangerous",
-    header: "Niebezpieczny",
+    header: "Niebezpieczeństwo",
     cell: ({ row }) =>
       row.original.definition.isDangerous ? (
-        <Badge variant="destructive">Tak</Badge>
+        <Badge variant="destructive">Niebezpieczny</Badge>
       ) : (
-        <Badge variant="outline">Nie</Badge>
+        <Badge variant="outline">Bezpieczny</Badge>
       ),
-  },
-  {
-    accessorKey: "weight",
-    header: "Waga",
-    cell: ({ row }) => `${row.original.weight} kg`,
   },
   {
     id: "actions",
     cell: ({ row }) => {
-      const item = row.original
-
       return (
         <DropdownMenu>
           <DropdownMenuTrigger>
@@ -113,20 +105,18 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
-              onClick={() => console.log("View", item.definitionId)}
-            >
-              <HugeiconsIcon className="mr-2 h-4 w-4" icon={EyeIcon} />
-              Szczegóły
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => console.log("Edit", item.definitionId)}
+              onClick={() => {
+                console.log("Edit definition", row.original.definitionId)
+              }}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
               Edytuj
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
-              onClick={() => console.log("Delete", item.definitionId)}
+              onClick={() => {
+                console.log("Delete definition", row.original.definitionId)
+              }}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
               Usuń
