@@ -28,7 +28,7 @@ import type { Item } from "../../types"
 import { formatDate } from "../../utils/helpers"
 
 interface TableRowContentProps {
-  item: NonNullable<Item>
+  item: Item
   expired: boolean
   onView: (id: string) => void
   onEdit: (id: string) => void

@@ -1,7 +1,7 @@
 "use client"
 
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { memo, useRef } from "react"
+import { memo, useMemo, useRef } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import type { Item } from "../../types"
@@ -12,7 +12,7 @@ const OVERSCAN = 10
 const COLUMN_COUNT = 9
 
 interface VirtualizedProps {
-  items: NonNullable<Item>[]
+  items: Item[]
   rowHeight: number
   containerWidth: number
   containerHeight: number
@@ -43,7 +43,7 @@ const Virtualized = ({
   const paddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0
   const paddingBottom =
     virtualItems.length > 0 ? totalSize - (virtualItems.at(-1)?.end || 0) : 0
-  const referenceDate = new Date()
+  const referenceDate = useMemo(() => new Date(), [])
   const containerStyle = {
     width: `${containerWidth}px`,
     maxHeight: `${containerHeight}px`,

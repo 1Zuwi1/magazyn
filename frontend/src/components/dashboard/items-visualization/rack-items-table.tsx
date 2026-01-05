@@ -7,7 +7,7 @@ import Normal from "./components/normal"
 import Virtualized from "./components/virtualized"
 
 interface RackItemsTableProps {
-  items: NonNullable<Item>[]
+  items: Item[]
 }
 
 const VIRTUALIZATION_THRESHOLD = VIRTUALIZATION_THRESHOLDS.TABLE

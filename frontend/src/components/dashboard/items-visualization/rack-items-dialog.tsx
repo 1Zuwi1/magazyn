@@ -25,9 +25,7 @@ export function RackItemsDialog({
     return null
   }
 
-  const items = rack.items.filter(
-    (item): item is NonNullable<Item> => item !== null
-  )
+  const items = rack.items.filter((item): item is Item => item !== null)
   const occupiedSlots = items.length
 
   return (

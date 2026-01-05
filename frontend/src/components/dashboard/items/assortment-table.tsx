@@ -72,13 +72,21 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, _columnId, filterValue) => {
-      if (!(filterValue && row.original?.definition)) {
+      const searchValue = filterValue?.toString().trim()
+      if (!searchValue) {
+        return true
+      }
+      const definition = row.original?.definition
+      if (!definition) {
         return false
       }
-      const searchValue = filterValue.toLowerCase()
-      const name = row.original.definition.name.toLowerCase()
-      const category = row.original.definition.category.toLowerCase()
-      return name.includes(searchValue) || category.includes(searchValue)
+      const normalizedSearchValue = searchValue.toLowerCase()
+      const name = definition.name.toLowerCase()
+      const category = definition.category.toLowerCase()
+      return (
+        name.includes(normalizedSearchValue) ||
+        category.includes(normalizedSearchValue)
+      )
     },
     state: {
       sorting,

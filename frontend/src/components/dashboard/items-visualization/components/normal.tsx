@@ -1,6 +1,6 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useMemo } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody } from "@/components/ui/table"
 import type { Item } from "../../types"
@@ -8,7 +8,7 @@ import { NormalRow } from "./normal-row"
 import { RackItemsTableHeader } from "./table-header"
 
 interface NormalProps {
-  items: NonNullable<Item>[]
+  items: Item[]
   rowHeight: number
   containerWidth: number
   containerHeight: number
@@ -26,7 +26,7 @@ const Normal = ({
   onEdit,
   onDelete,
 }: NormalProps) => {
-  const referenceDate = new Date()
+  const referenceDate = useMemo(() => new Date(), [])
   const containerStyle = {
     width: `${containerWidth}px`,
     maxHeight: `${containerHeight}px`,

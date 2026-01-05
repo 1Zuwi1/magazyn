@@ -8,7 +8,7 @@ export interface Rack {
   maxWeight: number
   currentWeight: number
   occupancy: number // 0-100
-  items: Item[]
+  items: ItemSlot[]
 }
 
 export interface Warehouse {
@@ -31,7 +31,7 @@ export interface Dimensions {
   z: number
 }
 
-interface BaseItem {
+export interface Item {
   id: string
   name: string
   qrCode: string
@@ -45,4 +45,4 @@ interface BaseItem {
   imageUrl?: string | null
 }
 
-export type Item = BaseItem | null
+export type ItemSlot = Item | null

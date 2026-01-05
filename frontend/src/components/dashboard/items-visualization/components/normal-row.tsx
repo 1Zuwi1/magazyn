@@ -6,7 +6,7 @@ import type { Item } from "../../types"
 import { TableRowContent } from "./table-row-content"
 
 interface NormalRowProps {
-  item: NonNullable<Item>
+  item: Item
   expired: boolean
   onView: (id: string) => void
   onEdit: (id: string) => void

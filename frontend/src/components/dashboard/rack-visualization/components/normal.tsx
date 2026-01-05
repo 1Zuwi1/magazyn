@@ -1,5 +1,5 @@
 import { memo } from "react"
-import type { Item } from "../../types"
+import type { ItemSlot } from "../../types"
 import { getSlotCoordinate } from "../../utils/helpers"
 import RackElement from "../rack-element"
 
@@ -14,7 +14,7 @@ const Normal = ({
   rows: number
   containerWidth: number
   containerHeight: number
-  items: Item[]
+  items: ItemSlot[]
 }) => {
   const totalSlots = rows * cols
 

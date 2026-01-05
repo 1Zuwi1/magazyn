@@ -7,7 +7,7 @@ import { useState } from "react"
 import { RackGridView } from "@/components/dashboard/rack-visualization/rack-grid-view"
 import { RackParametersCard } from "@/components/dashboard/rack-visualization/rack-parameters-card"
 import { RackStatusCard } from "@/components/dashboard/rack-visualization/rack-status-card"
-import type { Item } from "@/components/dashboard/types"
+import type { ItemSlot } from "@/components/dashboard/types"
 import { QrScanner } from "@/components/qr-scanner/qr-scanner"
 import { buttonVariants } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
@@ -28,7 +28,7 @@ export default function WarehouseClient({
     maxWeight: number
     currentWeight: number
     occupancy: number
-    items: Item[]
+    items: ItemSlot[]
   }[]
   warehouseId: string
   warehouseName: string

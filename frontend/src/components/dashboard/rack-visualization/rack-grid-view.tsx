@@ -6,14 +6,14 @@ import { useEffect, useRef, useState } from "react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { VIRTUALIZATION_THRESHOLDS } from "@/config/constants"
 import { RackItemsDialog } from "../items-visualization/rack-items-dialog"
-import type { Item, Rack } from "../types"
+import type { ItemSlot, Rack } from "../types"
 import Normal from "./components/normal"
 import Virtualized from "./components/virtualized"
 
 interface RackGridViewProps {
   rows: number
   cols: number
-  items: Item[]
+  items: ItemSlot[]
   currentRackIndex?: number
   totalRacks?: number
   onPreviousRack?: () => void
