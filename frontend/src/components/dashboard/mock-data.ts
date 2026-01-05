@@ -452,7 +452,6 @@ const MOCK_ITEMS: ItemInstance[] = [
   },
   {
     id: "item-12",
-
     definitionId: "def-13",
     definition: {
       id: "def-13",

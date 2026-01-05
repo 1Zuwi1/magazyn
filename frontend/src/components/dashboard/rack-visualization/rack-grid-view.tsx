@@ -119,7 +119,7 @@ export function RackGridView({
         )}
       </div>
       {/* Rack Indicator */}
-      {totalRacks > 1 && (
+      {totalRacks > 0 && (
         <div className="flex flex-col items-center justify-center gap-2">
           <Button onClick={() => setIsItemsDialogOpen(true)} variant="outline">
             <span>Przedmioty w regale</span>

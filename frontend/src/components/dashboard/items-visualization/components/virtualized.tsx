@@ -46,60 +46,62 @@ const Virtualized = ({
   const referenceDate = useMemo(() => new Date(), [])
   const containerStyle = {
     width: `${containerWidth}px`,
-    maxHeight: `${containerHeight}px`,
+    height: `${containerHeight}px`,
     overflow: "auto",
     position: "relative",
   } as const
 
   return (
-    <div className="min-h-0 flex-1" ref={parentRef} style={containerStyle}>
-      <ScrollArea className="w-full" style={{ height: containerHeight }}>
-        <Table>
-          <RackItemsTableHeader />
-          <TableBody>
-            {paddingTop > 0 && (
-              <TableRow
-                aria-hidden="true"
-                className="border-0 hover:bg-transparent"
-              >
-                <TableCell
-                  className="p-0"
-                  colSpan={COLUMN_COUNT}
-                  style={{ height: paddingTop }}
-                />
-              </TableRow>
-            )}
-            {virtualItems.map((virtualRow) => {
-              const item = items[virtualRow.index]
-              const expired = item.expiryDate < referenceDate
-              return (
-                <NormalRow
-                  expired={expired}
-                  item={item}
-                  key={item.id}
-                  onDelete={onDelete}
-                  onEdit={onEdit}
-                  onView={onView}
-                  rowHeight={rowHeight}
-                />
-              )
-            })}
-            {paddingBottom > 0 && (
-              <TableRow
-                aria-hidden="true"
-                className="border-0 hover:bg-transparent"
-              >
-                <TableCell
-                  className="p-0"
-                  colSpan={COLUMN_COUNT}
-                  style={{ height: paddingBottom }}
-                />
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </ScrollArea>
-    </div>
+    <ScrollArea
+      className="min-h-0 w-full flex-1 pr-2"
+      ref={parentRef}
+      style={containerStyle}
+    >
+      <Table>
+        <RackItemsTableHeader />
+        <TableBody>
+          {paddingTop > 0 && (
+            <TableRow
+              aria-hidden="true"
+              className="border-0 hover:bg-transparent"
+            >
+              <TableCell
+                className="p-0"
+                colSpan={COLUMN_COUNT}
+                style={{ height: paddingTop }}
+              />
+            </TableRow>
+          )}
+          {virtualItems.map((virtualRow, index) => {
+            const item = items[virtualRow.index]
+            const expired = item.expiryDate < referenceDate
+            return (
+              <NormalRow
+                expired={expired}
+                item={item}
+                key={`${item.id}-${index}`}
+                onDelete={onDelete}
+                onEdit={onEdit}
+                onView={onView}
+                rowHeight={rowHeight}
+              />
+            )
+          })}
+          {paddingBottom > 0 && (
+            <TableRow
+              aria-hidden="true"
+              className="border-0 hover:bg-transparent"
+            >
+              <TableCell
+                className="p-0"
+                colSpan={COLUMN_COUNT}
+                style={{ height: paddingBottom }}
+              />
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </ScrollArea>
   )
 }
 
