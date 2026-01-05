@@ -1,3 +1,4 @@
+import { headers } from "next/headers"
 import type { output } from "zod"
 import { z } from "zod"
 import tryCatch from "./try-catch"
@@ -164,13 +165,15 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
     const bodyToSend = buildRequestBody(init, payloadFlags)
     const restInit = stripExtendedInit(init)
 
-    const headers: HeadersInit = mergeHeaders(
+    const header: HeadersInit = mergeHeaders(
       restInit.headers,
       bodyToSend instanceof FormData
         ? undefined
         : { "Content-Type": "application/json", Accept: "application/json" }
     )
 
+    // Use INTERNAL_API_URL on server to avoid extra hop through proxy
+    // That will speed up server-side requests
     const url =
       typeof window === "undefined"
         ? `${process.env.INTERNAL_API_URL || ""}`
@@ -180,7 +183,7 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
       ...restInit,
       method,
       signal: abortController.signal,
-      headers,
+      headers: typeof window === "undefined" ? await headers() : header,
       credentials: restInit.credentials ?? "include",
       body: bodyToSend,
     })

@@ -5,6 +5,7 @@ const DEFAULT_PORT = "3001"
 
 function parsePort(port: string | undefined): string {
   const parsed = Number.parseInt(port ?? "", 10)
+  // Port 0 is rejected to avoid using a random port
   if (Number.isNaN(parsed) || parsed < 1 || parsed > 65_535) {
     return DEFAULT_PORT
   }
