@@ -47,7 +47,6 @@ const Virtualized = ({
   const containerStyle = {
     width: `${containerWidth}px`,
     height: `${containerHeight}px`,
-    overflow: "auto",
     position: "relative",
   } as const
 
