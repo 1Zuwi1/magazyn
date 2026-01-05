@@ -1,14 +1,14 @@
 import { headers } from "next/headers"
 import type { NextRequest } from "next/server"
 
-const DEFAULT_PORT = 3001
+const DEFAULT_PORT = "3001"
 
-function parsePort(port: string | undefined): number {
+function parsePort(port: string | undefined): string {
   const parsed = Number.parseInt(port ?? "", 10)
   if (Number.isNaN(parsed) || parsed < 1 || parsed > 65_535) {
     return DEFAULT_PORT
   }
-  return parsed
+  return parsed.toString()
 }
 
 function parseHost(host: string | null): string {
@@ -23,9 +23,10 @@ const PORT = parsePort(process.env.PORT)
 export async function getUrl(data: NextRequest | Headers): Promise<URL> {
   const h: Headers = data instanceof Headers ? data : await headers()
 
-  const proto = h.get("x-forwarded-proto") ?? "http"
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost"
-  const port = h.get("x-forwarded-port") ?? PORT.toString()
+  // x-forwarded headers are set by proxy (nginx)
+  const proto = h.get("x-forwarded-proto") || "http"
+  const host = h.get("x-forwarded-host") || h.get("host") || "localhost"
+  const port = h.get("x-forwarded-port") || PORT
 
   try {
     const url = new URL(
@@ -33,9 +34,10 @@ export async function getUrl(data: NextRequest | Headers): Promise<URL> {
     )
     url.protocol = proto
     url.host = parseHost(host)
-    url.port = port
+    url.port = parsePort(port)
     return url
   } catch (error) {
-    throw new Error(`Invalid URL construction: ${error}`)
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`Invalid URL construction: ${message}`)
   }
 }

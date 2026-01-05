@@ -171,7 +171,12 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
         : { "Content-Type": "application/json", Accept: "application/json" }
     )
 
-    const res = await fetch(path, {
+    const url =
+      typeof window === "undefined"
+        ? `${process.env.INTERNAL_API_URL || ""}`
+        : ""
+
+    const res = await fetch(`${url}${path}`, {
       ...restInit,
       method,
       signal: abortController.signal,
