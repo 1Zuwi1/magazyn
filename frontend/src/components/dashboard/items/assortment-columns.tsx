@@ -10,6 +10,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { ColumnDef } from "@tanstack/react-table"
 import Image from "next/image"
+import { useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -133,12 +134,17 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
   {
     accessorKey: "expiryDate",
     header: "Przeterminowanie",
-    cell: ({ row }) => (
-      <div className="space-y-1">
-        <div className="text-sm">{formatDate(row.original.expiryDate)}</div>
-        {getExpiryBadge(row.original.expiryDate)}
-      </div>
-    ),
+    cell: ({ row }) => {
+      const expiryBadge = useMemo(() => {
+        return getExpiryBadge(row.original.expiryDate)
+      }, [row.original.expiryDate])
+      return (
+        <div className="space-y-1">
+          <div className="text-sm">{formatDate(row.original.expiryDate)}</div>
+          {expiryBadge}
+        </div>
+      )
+    },
   },
 
   {

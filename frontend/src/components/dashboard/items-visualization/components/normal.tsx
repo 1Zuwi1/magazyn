@@ -29,35 +29,33 @@ const Normal = ({
   const referenceDate = useMemo(() => new Date(), [])
   const containerStyle = {
     width: `${containerWidth}px`,
-    maxHeight: `${containerHeight}px`,
+    height: `${containerHeight}px`,
     overflow: "auto",
     position: "relative",
   } as const
 
   return (
-    <div className="min-h-0 flex-1" style={containerStyle}>
-      <ScrollArea className="w-full" style={{ height: containerHeight }}>
-        <Table>
-          <RackItemsTableHeader />
-          <TableBody>
-            {items.map((item) => {
-              const expired = item.expiryDate < referenceDate
-              return (
-                <NormalRow
-                  expired={expired}
-                  item={item}
-                  key={item.id}
-                  onDelete={onDelete}
-                  onEdit={onEdit}
-                  onView={onView}
-                  rowHeight={rowHeight}
-                />
-              )
-            })}
-          </TableBody>
-        </Table>
-      </ScrollArea>
-    </div>
+    <ScrollArea className="min-h-0 w-full flex-1 pr-2" style={containerStyle}>
+      <Table>
+        <RackItemsTableHeader />
+        <TableBody>
+          {items.map((item) => {
+            const expired = item.expiryDate < referenceDate
+            return (
+              <NormalRow
+                expired={expired}
+                item={item}
+                key={item.id}
+                onDelete={onDelete}
+                onEdit={onEdit}
+                onView={onView}
+                rowHeight={rowHeight}
+              />
+            )
+          })}
+        </TableBody>
+      </Table>
+    </ScrollArea>
   )
 }
 
