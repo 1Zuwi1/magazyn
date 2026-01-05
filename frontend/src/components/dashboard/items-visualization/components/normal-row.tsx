@@ -11,12 +11,15 @@ interface NormalRowProps {
   onView: (id: string) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
+  rowHeight?: number
 }
 
 export const NormalRow = memo(
-  ({ item, expired, onView, onEdit, onDelete }: NormalRowProps) => {
+  ({ item, expired, onView, onEdit, onDelete, rowHeight }: NormalRowProps) => {
+    const rowStyle = rowHeight ? { height: rowHeight } : undefined
+
     return (
-      <TableRow key={item.id}>
+      <TableRow key={item.id} style={rowStyle}>
         <TableRowContent
           expired={expired}
           item={item}

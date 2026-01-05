@@ -1,63 +1,48 @@
 "use client"
 
-import { useVirtualizer } from "@tanstack/react-virtual"
-import { useRef } from "react"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Table, TableBody } from "@/components/ui/table"
+import { useEffect, useRef, useState } from "react"
 import { VIRTUALIZATION_THRESHOLDS } from "@/config/constants"
 import type { Item } from "../types"
-import { NormalRow } from "./components/normal-row"
-import { RackItemsTableHeader } from "./components/table-header"
-import { VirtualizedRow } from "./components/virtualized-row"
+import Normal from "./components/normal"
+import Virtualized from "./components/virtualized"
 
 interface RackItemsTableProps {
   items: NonNullable<Item>[]
-}
-
-function isExpired(date: Date): boolean {
-  return date < new Date()
 }
 
 const VIRTUALIZATION_THRESHOLD = VIRTUALIZATION_THRESHOLDS.TABLE
 const ROW_HEIGHT = 64
 
 export function RackItemsTable({ items }: RackItemsTableProps) {
-  items = [
-    ...items,
-    ...items,
-    ...items,
-    ...items,
-    ...items,
-    ...items,
-    ...items,
-    ...items,
-    ...items,
-    ...items,
-    ...items,
-    ...items,
-  ]
-  const parentRef = useRef<HTMLDivElement>(null)
   const shouldVirtualize = items.length > VIRTUALIZATION_THRESHOLD
-
-  const rowVirtualizer = useVirtualizer({
-    count: items.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => ROW_HEIGHT,
-    overscan: 10,
-    enabled: shouldVirtualize,
-  })
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerWidth, setContainerWidth] = useState(0)
+  const [containerHeight, setContainerHeight] = useState(0)
 
   const handleView = (itemId: string) => {
-    console.log("View item:", itemId)
+    console.log("handleView", itemId)
   }
 
   const handleEdit = (itemId: string) => {
-    console.log("Edit item:", itemId)
+    console.log("handleEdit", itemId)
   }
 
   const handleDelete = (itemId: string) => {
-    console.log("Delete item:", itemId)
+    console.log("handleDelete", itemId)
   }
+
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth)
+        setContainerHeight(containerRef.current.offsetHeight)
+      }
+    }
+
+    updateSize()
+    window.addEventListener("resize", updateSize)
+    return () => window.removeEventListener("resize", updateSize)
+  }, [])
 
   if (items.length === 0) {
     return (
@@ -67,72 +52,32 @@ export function RackItemsTable({ items }: RackItemsTableProps) {
     )
   }
 
-  if (!shouldVirtualize) {
-    return (
-      <div className="rounded-md border">
-        <Table>
-          <RackItemsTableHeader />
-        </Table>
-        <ScrollArea className="h-[50vh]">
-          <Table>
-            <TableBody>
-              {items.map((item, index) => {
-                const expired = isExpired(item.expiryDate)
-                return (
-                  <NormalRow
-                    expired={expired}
-                    item={item}
-                    key={`${item.id}-${index}`}
-                    onDelete={handleDelete}
-                    onEdit={handleEdit}
-                    onView={handleView}
-                  />
-                )
-              })}
-            </TableBody>
-          </Table>
-        </ScrollArea>
-      </div>
-    )
-  }
-
-  const virtualItems = rowVirtualizer.getVirtualItems()
   return (
-    <div className="flex h-full flex-col rounded-md border">
-      <div className="shrink-0 overflow-x-auto">
-        <Table>
-          <RackItemsTableHeader />
-        </Table>
-      </div>
-      <div className="min-h-0 flex-1 overflow-auto" ref={parentRef}>
-        <div
-          style={{
-            height: `${rowVirtualizer.getTotalSize()}px`,
-            width: "100%",
-            position: "relative",
-          }}
-        >
-          <Table>
-            <TableBody>
-              {virtualItems.map((virtualRow, index) => {
-                const item = items[virtualRow.index]
-                const expired = isExpired(item.expiryDate)
-                return (
-                  <VirtualizedRow
-                    expired={expired}
-                    item={item}
-                    key={`${item.id}-${index}`}
-                    onDelete={handleDelete}
-                    onEdit={handleEdit}
-                    onView={handleView}
-                    virtualRow={virtualRow}
-                  />
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+    <div
+      className="h-[90vw] max-h-150 w-full flex-1 rounded-lg border"
+      ref={containerRef}
+    >
+      {shouldVirtualize ? (
+        <Virtualized
+          containerHeight={containerHeight}
+          containerWidth={containerWidth}
+          items={items}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+          onView={handleView}
+          rowHeight={ROW_HEIGHT}
+        />
+      ) : (
+        <Normal
+          containerHeight={containerHeight}
+          containerWidth={containerWidth}
+          items={items}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+          onView={handleView}
+          rowHeight={ROW_HEIGHT}
+        />
+      )}
     </div>
   )
 }
