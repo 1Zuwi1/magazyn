@@ -102,11 +102,6 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
           )}
           <div>
             <div className="font-medium">{definition.name}</div>
-            {definition.category && (
-              <div className="text-muted-foreground text-sm">
-                {definition.category}
-              </div>
-            )}
           </div>
         </div>
       )
@@ -152,11 +147,7 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
       </div>
     ),
   },
-  {
-    accessorKey: "weight",
-    header: "Waga",
-    cell: ({ row }) => `${row.original.weight} kg`,
-  },
+
   {
     id: "actions",
     cell: ({ row }) => {
@@ -166,7 +157,9 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
         <DropdownMenu>
           <DropdownMenuTrigger>
             <HugeiconsIcon
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon-xs" })
+              )}
               icon={MoreHorizontalIcon}
             />
           </DropdownMenuTrigger>

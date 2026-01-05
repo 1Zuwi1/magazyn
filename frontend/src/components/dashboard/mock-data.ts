@@ -706,6 +706,7 @@ const MOCK_ITEM_STATS: ItemStats[] = [
     warehouseQuantities: { A1: 1 },
     nearestExpiryDate: new Date("2025-12-31"),
     daysUntilExpiry: 368,
+    weight: 2.5,
   },
   {
     definitionId: "def-2",
@@ -727,6 +728,7 @@ const MOCK_ITEM_STATS: ItemStats[] = [
     warehouseQuantities: { A1: 1 },
     nearestExpiryDate: new Date("2026-06-30"),
     daysUntilExpiry: 549,
+    weight: 5.0,
   },
   {
     definitionId: "def-3",
@@ -748,6 +750,7 @@ const MOCK_ITEM_STATS: ItemStats[] = [
     warehouseQuantities: { A1: 1 },
     nearestExpiryDate: new Date("2030-12-31"),
     daysUntilExpiry: 1829,
+    weight: 4.5,
   },
   {
     definitionId: "def-5",
@@ -769,6 +772,7 @@ const MOCK_ITEM_STATS: ItemStats[] = [
     warehouseQuantities: { A1: 1 },
     nearestExpiryDate: new Date("2025-06-30"),
     daysUntilExpiry: 184,
+    weight: 30.0,
   },
   {
     definitionId: "def-6",
@@ -790,6 +794,7 @@ const MOCK_ITEM_STATS: ItemStats[] = [
     warehouseQuantities: { A1: 1 },
     nearestExpiryDate: new Date("2025-12-31"),
     daysUntilExpiry: 368,
+    weight: 18,
   },
   {
     definitionId: "def-10",
@@ -811,6 +816,7 @@ const MOCK_ITEM_STATS: ItemStats[] = [
     warehouseQuantities: { A1: 1 },
     nearestExpiryDate: new Date("2025-12-31"),
     daysUntilExpiry: 368,
+    weight: 12,
   },
   {
     definitionId: "def-13",
@@ -832,6 +838,7 @@ const MOCK_ITEM_STATS: ItemStats[] = [
     warehouseQuantities: { A1: 1 },
     nearestExpiryDate: new Date("2025-12-31"),
     daysUntilExpiry: 368,
+    weight: 27,
   },
   {
     definitionId: "def-14",
@@ -853,6 +860,7 @@ const MOCK_ITEM_STATS: ItemStats[] = [
     warehouseQuantities: { A1: 1 },
     nearestExpiryDate: new Date("2025-12-31"),
     daysUntilExpiry: 368,
+    weight: 45,
   },
   {
     definitionId: "def-16",
@@ -874,6 +882,7 @@ const MOCK_ITEM_STATS: ItemStats[] = [
     warehouseQuantities: { A1: 1 },
     nearestExpiryDate: new Date("2025-12-31"),
     daysUntilExpiry: 368,
+    weight: 24,
   },
 ]
 

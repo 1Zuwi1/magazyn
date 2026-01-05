@@ -40,4 +40,5 @@ export interface ItemStats {
   warehouseQuantities: Record<string, number>
   nearestExpiryDate?: Date
   daysUntilExpiry?: number
+  weight: number
 }
