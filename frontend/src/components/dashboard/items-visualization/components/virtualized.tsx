@@ -78,7 +78,7 @@ const Virtualized = ({
               <NormalRow
                 expired={expired}
                 item={item}
-                key={`${item.id}-${index}`}
+                key={item.id}
                 onDelete={onDelete}
                 onEdit={onEdit}
                 onView={onView}
