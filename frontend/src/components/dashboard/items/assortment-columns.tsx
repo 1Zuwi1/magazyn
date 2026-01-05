@@ -23,15 +23,15 @@ import { cn } from "@/lib/utils"
 import { formatDate } from "../utils/helpers"
 import type { ItemInstance } from "./types"
 
-function getDaysUntilExpiry(expiryDate: Date): number {
-  const today = new Date()
+function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
   const expiry = new Date(expiryDate)
   const diffTime = expiry.getTime() - today.getTime()
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }
 
 function getExpiryBadge(expiryDate: Date) {
-  const days = getDaysUntilExpiry(expiryDate)
+  const referenceDate = useMemo(() => new Date(), [])
+  const days = getDaysUntilExpiry(referenceDate, expiryDate)
 
   if (days < 0) {
     return (

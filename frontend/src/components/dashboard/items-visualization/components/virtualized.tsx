@@ -71,7 +71,7 @@ const Virtualized = ({
               />
             </TableRow>
           )}
-          {virtualItems.map((virtualRow, index) => {
+          {virtualItems.map((virtualRow) => {
             const item = items[virtualRow.index]
             const expired = item.expiryDate < referenceDate
             return (
