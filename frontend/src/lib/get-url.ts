@@ -11,6 +11,13 @@ function parsePort(port: string | undefined): number {
   return parsed
 }
 
+function parseHost(host: string | null): string {
+  if (!host) {
+    return "localhost"
+  }
+  return host.includes(":") ? host.split(":")[0] : host
+}
+
 const PORT = parsePort(process.env.PORT)
 
 export async function getUrl(data: NextRequest | Headers): Promise<URL> {
@@ -18,14 +25,14 @@ export async function getUrl(data: NextRequest | Headers): Promise<URL> {
 
   const proto = h.get("x-forwarded-proto") ?? "http"
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost"
-  const port = h.get("x-forwarded-port") ?? h.get("port") ?? PORT.toString()
+  const port = h.get("x-forwarded-port") ?? PORT.toString()
 
   try {
     const url = new URL(
       data instanceof Headers ? `http://localhost:${PORT}` : data.url
     )
     url.protocol = proto
-    url.host = host
+    url.host = parseHost(host)
     url.port = port
     return url
   } catch (error) {
