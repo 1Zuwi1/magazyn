@@ -103,7 +103,7 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                   variant: "outline",
                   className: "w-full",
                 })}
-                href={`/dashboard/warehouse/${warehouse.name}`}
+                href={`/dashboard/warehouse/id/${warehouse.id}/${warehouse.name}`}
               >
                 Zobacz Regały
               </Link>
