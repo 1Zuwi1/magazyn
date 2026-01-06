@@ -7,8 +7,9 @@ import { cn } from "@/lib/utils"
 function ScrollArea({
   className,
   children,
+  ref,
   ...props
-}: ScrollAreaPrimitive.Root.Props) {
+}: ScrollAreaPrimitive.Root.Props & { ref?: React.Ref<HTMLDivElement> }) {
   return (
     <ScrollAreaPrimitive.Root
       className={cn("relative", className)}
@@ -18,6 +19,7 @@ function ScrollArea({
       <ScrollAreaPrimitive.Viewport
         className="size-full rounded-[inherit] outline-none transition-[color,box-shadow] focus-visible:outline-1 focus-visible:ring-[3px] focus-visible:ring-ring/50"
         data-slot="scroll-area-viewport"
+        ref={ref}
       >
         {children}
       </ScrollAreaPrimitive.Viewport>

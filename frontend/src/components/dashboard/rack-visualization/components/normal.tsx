@@ -1,8 +1,9 @@
-import type { Item } from "../../types"
+import { memo } from "react"
+import type { ItemSlot } from "../../types"
 import { getSlotCoordinate } from "../../utils/helpers"
 import RackElement from "../rack-element"
 
-export default function Normal({
+const Normal = ({
   cols,
   rows,
   containerWidth,
@@ -13,8 +14,8 @@ export default function Normal({
   rows: number
   containerWidth: number
   containerHeight: number
-  items: Item[]
-}) {
+  items: ItemSlot[]
+}) => {
   const totalSlots = rows * cols
 
   return (
@@ -51,3 +52,6 @@ export default function Normal({
     </div>
   )
 }
+Normal.displayName = "Normal"
+
+export default memo(Normal)

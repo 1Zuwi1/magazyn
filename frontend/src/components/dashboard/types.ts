@@ -8,7 +8,7 @@ export interface Rack {
   maxWeight: number
   currentWeight: number
   occupancy: number // 0-100
-  items: Item[]
+  items: ItemSlot[]
 }
 
 export interface Warehouse {
@@ -18,21 +18,31 @@ export interface Warehouse {
   used: number
   racks: Rack[]
 }
-
-interface BaseItem {
-  id: string
-  name: string
-  expiryDate: Date
-  weight: number
-  isDangerous: boolean
-  imageUrl?: string | null
-}
-
-export type Item = BaseItem | null
-
 export interface FilterState {
   query: string
   minOccupancy: number
   tempRange: [number, number]
   showEmpty: boolean
 }
+
+export interface Dimensions {
+  x: number
+  y: number
+  z: number
+}
+
+export interface Item {
+  id: string
+  name: string
+  qrCode: string
+  expiryDate: Date
+  weight: number
+  dimensions: Dimensions
+  minTemp: number
+  maxTemp: number
+  comment?: string
+  isDangerous: boolean
+  imageUrl?: string | null
+}
+
+export type ItemSlot = Item | null
