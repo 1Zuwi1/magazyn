@@ -196,12 +196,7 @@ export function RackFrame({
   return (
     <group>
       {postPositions.map((position, index) => (
-        <mesh
-          castShadow
-          key={`post-${index}`}
-          position={position}
-          receiveShadow
-        >
+        <mesh key={`post-${index}`} position={position}>
           <boxGeometry args={[frameThickness, height, frameThickness]} />
           <meshStandardMaterial
             color={frameColor}
@@ -220,12 +215,7 @@ export function RackFrame({
         </mesh>
       ))}
       {beamXPositions.map((position, index) => (
-        <mesh
-          castShadow
-          key={`beam-x-${index}`}
-          position={position}
-          receiveShadow
-        >
+        <mesh key={`beam-x-${index}`} position={position}>
           <boxGeometry args={[beamLengthX, frameThickness, frameThickness]} />
           <meshStandardMaterial
             color={frameColor}
@@ -244,12 +234,7 @@ export function RackFrame({
         </mesh>
       ))}
       {beamZPositions.map((position, index) => (
-        <mesh
-          castShadow
-          key={`beam-z-${index}`}
-          position={position}
-          receiveShadow
-        >
+        <mesh key={`beam-z-${index}`} position={position}>
           <boxGeometry args={[frameThickness, frameThickness, beamLengthZ]} />
           <meshStandardMaterial
             color={frameColor}
@@ -268,7 +253,7 @@ export function RackFrame({
         </mesh>
       ))}
       {shelfPositions.map((y, index) => (
-        <mesh key={`shelf-${index}`} position={[0, y, 0]} receiveShadow>
+        <mesh key={`shelf-${index}`} position={[0, y, 0]}>
           <boxGeometry args={[shelfWidth, shelfThickness, shelfDepth]} />
           <meshStandardMaterial
             color={shelfColor}

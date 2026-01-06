@@ -1,4 +1,4 @@
-import { ContactShadows, Edges, Grid, Line } from "@react-three/drei"
+import { Edges, Grid, Line } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import { useMemo } from "react"
 import { BlocksInstanced, getBlockLayout } from "./components/blocks-instanced"
@@ -243,7 +243,6 @@ function RackFocusView({
     >
       <mesh
         position={[0, actualFocusFloorY, 0]}
-        receiveShadow
         rotation={[-Math.PI / 2, 0, 0]}
       >
         <planeGeometry
@@ -265,16 +264,6 @@ function RackFocusView({
         sectionColor={gridSectionColor}
         sectionSize={1.5}
         sectionThickness={1}
-      />
-      <ContactShadows
-        blur={1.8}
-        color="#0b1220"
-        frames={1}
-        height={focusDepth + floorPadding * 2}
-        opacity={0.28}
-        position={[0, actualFocusFloorY + 0.005, 0]}
-        resolution={512}
-        width={focusWidth + floorPadding * 2}
       />
       {!(showBlockGrid || activeWindow) && (
         <RackStructure
@@ -523,7 +512,6 @@ export function WarehouseScene({
     }),
     [floorBounds.centerX, floorBounds.centerZ]
   )
-  const shadowBounds = Math.max(floorBounds.width, floorBounds.depth)
   const fogNear = Math.max(8, floorBounds.depth * 0.35)
   const fogFar = Math.max(22, floorBounds.depth * 0.95)
 
@@ -532,33 +520,18 @@ export function WarehouseScene({
       camera={{ position: [10, 10, 10], fov: 50 }}
       className="h-full w-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950"
       gl={{ alpha: true, antialias: true }}
-      shadows
     >
       {mode === "overview" && (
         <fog args={[fogColor, fogNear, fogFar]} attach="fog" />
       )}
       <ambientLight intensity={0.35} />
       <hemisphereLight color="#64748b" groundColor="#0f172a" intensity={0.45} />
-      <directionalLight
-        castShadow
-        intensity={1}
-        position={[12, 12, 6]}
-        shadow-bias={-0.0006}
-        shadow-camera-bottom={-shadowBounds}
-        shadow-camera-far={40}
-        shadow-camera-left={-shadowBounds}
-        shadow-camera-near={1}
-        shadow-camera-right={shadowBounds}
-        shadow-camera-top={shadowBounds}
-        shadow-mapSize-height={1024}
-        shadow-mapSize-width={1024}
-      />
+      <directionalLight intensity={1} position={[12, 12, 6]} />
       <CameraController mode={mode} warehouseCenter={sceneCenter} />
       {mode === "overview" && (
         <group>
           <mesh
             position={[floorBounds.centerX, -floorOffset, floorBounds.centerZ]}
-            receiveShadow
             rotation={[-Math.PI / 2, 0, 0]}
           >
             <planeGeometry args={[floorBounds.width, floorBounds.depth]} />
@@ -602,20 +575,6 @@ export function WarehouseScene({
               />
             </group>
           ))}
-          <ContactShadows
-            blur={2.2}
-            color="#0b1220"
-            frames={1}
-            height={floorBounds.depth}
-            opacity={0.25}
-            position={[
-              floorBounds.centerX,
-              -floorOffset + 0.005,
-              floorBounds.centerZ,
-            ]}
-            resolution={1024}
-            width={floorBounds.width}
-          />
         </group>
       )}
       {mode === "overview" && <RacksOverview racks={layout.renderRacks} />}
