@@ -44,7 +44,7 @@ function ItemsWithImages({ items, size, zOffset }: ItemsWithImagesProps) {
     () => Array.from(new Set(items.map((item) => item.imageUrl))),
     [items]
   )
-  const textures = useTexture(uniqueUrls) as THREE.Texture[]
+  const textures = useTexture(uniqueUrls)
 
   useEffect(() => {
     for (const texture of textures) {

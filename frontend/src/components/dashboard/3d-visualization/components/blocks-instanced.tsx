@@ -109,6 +109,9 @@ const getVisuals = (
   for (let r = startRow; r < endRow; r++) {
     const rowOffset = r * rack.grid.cols
     for (let c = startCol; c < endCol; c++) {
+      if (rowOffset + c >= rack.items.length) {
+        continue
+      }
       const item = rack.items[rowOffset + c]
       if (!item) {
         continue
@@ -198,7 +201,6 @@ export function BlocksInstanced({
     [blockSize, rack, resolvedMetrics]
   )
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: rack is not stable, but we want to recalc when its properties change
   const { blocksByStatus, blockLookup } = useMemo(() => {
     const blocksByStatusMap: Record<BlockStatusKey, BlockInfo[]> = {
       normal: [],
@@ -226,14 +228,7 @@ export function BlocksInstanced({
       blocksByStatus: blocksByStatusMap,
       blockLookup: blockLookupMap,
     }
-  }, [
-    blockSize,
-    rack.grid.cols,
-    rack.grid.rows,
-    rack.items,
-    layout,
-    orderBlocks,
-  ])
+  }, [blockSize, rack, layout])
 
   const hoveredBlock =
     hoveredBlockKey !== null ? blockLookup[hoveredBlockKey] : null

@@ -35,7 +35,7 @@ const handleControl = (controls: CameraControls, key: string) => {
   return true
 }
 
-const validTarget = (target: EventTarget | null): boolean => {
+const isValidTarget = (target: EventTarget | null): boolean => {
   if (target instanceof HTMLElement) {
     const tagName = target.tagName.toLowerCase()
     const isEditable =
@@ -92,8 +92,7 @@ export function CameraController({
         return
       }
 
-      const isValidTarget = validTarget(event.target)
-      if (!isValidTarget) {
+      if (!isValidTarget(event.target)) {
         return
       }
 
@@ -111,9 +110,13 @@ export function CameraController({
       }
     }
 
-    window.addEventListener("keydown", handleKeyDown, { passive: false })
+    const abortController = new AbortController()
+    window.addEventListener("keydown", handleKeyDown, {
+      passive: false,
+      signal: abortController.signal,
+    })
     return () => {
-      window.removeEventListener("keydown", handleKeyDown)
+      abortController.abort()
     }
   }, [])
 
