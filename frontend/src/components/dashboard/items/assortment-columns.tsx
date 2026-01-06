@@ -24,14 +24,16 @@ import { formatDate } from "../utils/helpers"
 import type { ItemInstance } from "./types"
 
 function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
+  today.setHours(0, 0, 0, 0)
   const expiry = new Date(expiryDate)
+  expiry.setHours(0, 0, 0, 0)
   const diffTime = expiry.getTime() - today.getTime()
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }
 
 function getExpiryBadge(expiryDate: Date) {
-  const referenceDate = useMemo(() => new Date(), [])
-  const days = getDaysUntilExpiry(referenceDate, expiryDate)
+  // const referenceDate = useMemo(() => new Date(), [])
+  const days = getDaysUntilExpiry(new Date(), expiryDate)
 
   if (days < 0) {
     return (

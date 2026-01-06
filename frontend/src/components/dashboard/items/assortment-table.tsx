@@ -10,9 +10,16 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -25,6 +32,48 @@ import { pluralize } from "../utils/helpers"
 import { assortmentColumns } from "./assortment-columns"
 import type { ItemInstance } from "./types"
 
+type expiryFilters = "14_DAYS" | "7_DAYS" | "3_DAYS" | "EXPIRED" | "ALL"
+
+const EXPIRY_FILTER_OPTIONS: { value: expiryFilters; label: string }[] = [
+  { value: "ALL", label: "Wszystkie" },
+  { value: "EXPIRED", label: "Przeterminowane" },
+  { value: "3_DAYS", label: "3 dni" },
+  { value: "7_DAYS", label: "7 dni" },
+  { value: "14_DAYS", label: "14 dni" },
+]
+
+function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
+  today.setHours(0, 0, 0, 0)
+  const expiry = new Date(expiryDate)
+  expiry.setHours(0, 0, 0, 0)
+  const diffTime = expiry.getTime() - today.getTime()
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+}
+
+function matchesExpiryFilter(
+  item: ItemInstance,
+  filterValue: expiryFilters
+): boolean {
+  if (filterValue === "ALL") {
+    return true
+  }
+
+  const daysUntilExpiry = getDaysUntilExpiry(new Date(), item.expiryDate)
+
+  switch (filterValue) {
+    case "EXPIRED":
+      return daysUntilExpiry < 0
+    case "3_DAYS":
+      return daysUntilExpiry >= 0 && daysUntilExpiry <= 3
+    case "7_DAYS":
+      return daysUntilExpiry >= 0 && daysUntilExpiry <= 7
+    case "14_DAYS":
+      return daysUntilExpiry >= 0 && daysUntilExpiry <= 14
+    default:
+      return true
+  }
+}
+
 interface AssortmentTableProps {
   items: ItemInstance[]
 }
@@ -33,36 +82,15 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
-  // const [expiryFilter, setExpiryFilter] = useState<string>("all")
+  const [expiryFilter, setExpiryFilter] = useState<expiryFilters>("ALL")
 
-  // const filteredItems = items.filter((item) => {
-  //   if (expiryFilter === "all") {
-  //     return true
-  //   }
-
-  //   const today = new Date()
-  //   const expiry = new Date(item.expiryDate)
-  //   const diffTime = expiry.getTime() - today.getTime()
-  //   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
-  //   if (expiryFilter === "expired") {
-  //     return diffDays < 0
-  //   }
-  //   if (expiryFilter === "3days") {
-  //     return diffDays >= 0 && diffDays <= 3
-  //   }
-  //   if (expiryFilter === "7days") {
-  //     return diffDays >= 0 && diffDays <= 7
-  //   }
-  //   if (expiryFilter === "14days") {
-  //     return diffDays >= 0 && diffDays <= 14
-  //   }
-
-  //   return true
-  // })
+  const filteredItems = useMemo(
+    () => items.filter((item) => matchesExpiryFilter(item, expiryFilter)),
+    [items, expiryFilter]
+  )
 
   const table = useReactTable({
-    data: items,
+    data: filteredItems,
     columns: assortmentColumns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -105,6 +133,25 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
           placeholder="Szukaj po nazwie lub kategorii..."
           value={globalFilter ?? ""}
         />
+
+        <Select
+          onValueChange={(value) => setExpiryFilter(value as expiryFilters)}
+          value={expiryFilter}
+        >
+          <SelectTrigger
+            aria-label="Filtruj według daty ważności"
+            className="w-44"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {EXPIRY_FILTER_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <div className="ml-auto text-muted-foreground text-sm">
           {table.getFilteredRowModel().rows.length}{" "}

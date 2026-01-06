@@ -2,6 +2,7 @@
 
 import {
   type ColumnFiltersState,
+  type FilterFn,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -29,6 +30,21 @@ interface ItemsTableProps {
   items: ItemStats[]
 }
 
+const globalFilterFn: FilterFn<ItemStats> = (row, _columnId, filterValue) => {
+  const searchValue = filterValue?.toString().trim().toLowerCase()
+  if (!searchValue) {
+    return true
+  }
+  const definition = row.original?.definition
+  if (!definition) {
+    return false
+  }
+  return (
+    definition.name.toLowerCase().includes(searchValue) ||
+    definition.category.toLowerCase().includes(searchValue)
+  )
+}
+
 export function ItemsTable({ items }: ItemsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -44,23 +60,7 @@ export function ItemsTable({ items }: ItemsTableProps) {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const searchValue = filterValue?.toString().trim()
-      if (!searchValue) {
-        return true
-      }
-      const definition = row.original?.definition
-      if (!definition) {
-        return false
-      }
-      const normalizedSearchValue = searchValue.toLowerCase()
-      const name = definition.name.toLowerCase()
-      const category = definition.category.toLowerCase()
-      return (
-        name.includes(normalizedSearchValue) ||
-        category.includes(normalizedSearchValue)
-      )
-    },
+    globalFilterFn,
     state: {
       sorting,
       columnFilters,
