@@ -44,8 +44,6 @@ export function pluralize(
   ) {
     return few
   }
-  if (count >= 2 && count <= 4) {
-    return few
-  }
+
   return many
 }

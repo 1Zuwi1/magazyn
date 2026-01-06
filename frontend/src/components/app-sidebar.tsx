@@ -56,14 +56,18 @@ const items = [
 ]
 
 function NavMain() {
-  return items.map((item) => (
-    <SidebarMenuItem key={item.href}>
-      <SidebarMenuButton>
-        <Link className="flex items-center gap-2" href={item.href}>
-          <HugeiconsIcon className="mr-2 size-5" icon={item.icon} />
-          {item.title}
-        </Link>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  ))
+  return (
+    <SidebarMenu>
+      {items.map((item) => (
+        <SidebarMenuItem key={item.href}>
+          <SidebarMenuButton>
+            <Link className="flex items-center gap-2" href={item.href}>
+              <HugeiconsIcon className="mr-2 size-5" icon={item.icon} />
+              {item.title}
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
+  )
 }
