@@ -73,6 +73,11 @@ const Virtualized = ({
           )}
           {virtualItems.map((virtualRow) => {
             const item = items[virtualRow.index]
+
+            // Even though it's unlikely to not exist, but better to be safe
+            if (!item) {
+              return null
+            }
             const expired = item.expiryDate < referenceDate
             return (
               <NormalRow

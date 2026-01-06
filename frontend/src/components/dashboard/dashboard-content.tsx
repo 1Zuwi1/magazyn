@@ -30,12 +30,6 @@ export const DashboardContent = () => {
           />
         </div>
         <WarehouseFilters filters={filters} onFilterChange={setFilters} />
-        {/* <Link
-          className={cn(buttonVariants({ variant: "ghost" }))}
-          href="/dashboard/assortment"
-        >
-          Przeglądaj Asortyment
-        </Link> */}
       </div>
 
       <div className="space-y-4">

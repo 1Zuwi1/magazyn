@@ -20,7 +20,6 @@ export interface ItemInstance {
   qrCode: string
   addedDate: Date
   expiryDate: Date
-  // daysUntilExpiry?: number
   weight: number
   warehouseId: string
   warehouseName: string

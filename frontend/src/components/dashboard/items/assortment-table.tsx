@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { pluralize } from "../utils/helpers"
+import { getDaysUntilExpiry, pluralize } from "../utils/helpers"
 import { assortmentColumns } from "./assortment-columns"
 import type { ItemInstance } from "./types"
 
@@ -41,14 +41,6 @@ const EXPIRY_FILTER_OPTIONS: { value: ExpiryFilters; label: string }[] = [
   { value: "7_DAYS", label: "7 dni" },
   { value: "14_DAYS", label: "14 dni" },
 ]
-
-function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
-  today.setHours(0, 0, 0, 0)
-  const expiry = new Date(expiryDate)
-  expiry.setHours(0, 0, 0, 0)
-  const diffTime = expiry.getTime() - today.getTime()
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-}
 
 function matchesExpiryFilter(
   item: ItemInstance,
