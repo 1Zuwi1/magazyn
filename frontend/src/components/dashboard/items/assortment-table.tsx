@@ -32,9 +32,9 @@ import { pluralize } from "../utils/helpers"
 import { assortmentColumns } from "./assortment-columns"
 import type { ItemInstance } from "./types"
 
-type expiryFilters = "14_DAYS" | "7_DAYS" | "3_DAYS" | "EXPIRED" | "ALL"
+type ExpiryFilters = "14_DAYS" | "7_DAYS" | "3_DAYS" | "EXPIRED" | "ALL"
 
-const EXPIRY_FILTER_OPTIONS: { value: expiryFilters; label: string }[] = [
+const EXPIRY_FILTER_OPTIONS: { value: ExpiryFilters; label: string }[] = [
   { value: "ALL", label: "Wszystkie" },
   { value: "EXPIRED", label: "Przeterminowane" },
   { value: "3_DAYS", label: "3 dni" },
@@ -52,7 +52,7 @@ function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
 
 function matchesExpiryFilter(
   item: ItemInstance,
-  filterValue: expiryFilters
+  filterValue: ExpiryFilters
 ): boolean {
   if (filterValue === "ALL") {
     return true
@@ -82,7 +82,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
-  const [expiryFilter, setExpiryFilter] = useState<expiryFilters>("ALL")
+  const [expiryFilter, setExpiryFilter] = useState<ExpiryFilters>("ALL")
 
   const filteredItems = useMemo(
     () => items.filter((item) => matchesExpiryFilter(item, expiryFilter)),
@@ -135,7 +135,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
         />
 
         <Select
-          onValueChange={(value) => setExpiryFilter(value as expiryFilters)}
+          onValueChange={(value) => setExpiryFilter(value as ExpiryFilters)}
           value={expiryFilter}
         >
           <SelectTrigger
