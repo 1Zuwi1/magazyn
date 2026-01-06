@@ -2,7 +2,7 @@ import { Instance, Instances, useCursor } from "@react-three/drei"
 import { useMemo, useState } from "react"
 import { useWarehouseStore } from "../store"
 import type { FocusWindow, Rack3D } from "../types"
-import { getRackMetrics, type RackMetrics } from "./rack-structure"
+import { getGridSpan, getRackMetrics, type RackMetrics } from "./rack-structure"
 
 const HOVER_COLOR = "#60a5fa"
 const SELECTED_COLOR = "#3b82f6"
@@ -37,8 +37,8 @@ export function ShelvesInstanced({
       const startCol = activeWindow?.startCol ?? 0
       const rows = activeWindow?.rows ?? rack.grid.rows
       const cols = activeWindow?.cols ?? rack.grid.cols
-      const windowGridWidth = Math.max(0, cols - 1) * resolvedMetrics.unitX
-      const windowGridHeight = Math.max(0, rows - 1) * resolvedMetrics.unitY
+      const windowGridWidth = getGridSpan(cols, resolvedMetrics.unitX)
+      const windowGridHeight = getGridSpan(rows, resolvedMetrics.unitY)
       let idx = 0
 
       for (let row = 0; row < rows; row++) {

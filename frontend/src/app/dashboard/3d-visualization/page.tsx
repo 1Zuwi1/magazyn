@@ -7,6 +7,7 @@ import { SidebarPanel } from "@/components/dashboard/3d-visualization/sidebar-pa
 import { useWarehouseStore } from "@/components/dashboard/3d-visualization/store"
 import { WarehouseScene } from "@/components/dashboard/3d-visualization/warehouse-scene"
 import { buttonVariants } from "@/components/ui/button"
+import { ErrorBoundary } from "@/components/ui/error-boundary"
 import {
   Sheet,
   SheetContent,
@@ -15,6 +16,28 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
+
+const renderVisualizationFallback = (_error: Error, reset: () => void) => (
+  <div
+    className="flex h-full w-full flex-col items-center justify-center gap-4 bg-slate-950/40 p-6 text-center"
+    role="alert"
+  >
+    <div>
+      <h2 className="font-semibold text-lg">Wizualizacja 3D niedostępna</h2>
+      <p className="mt-2 text-muted-foreground text-sm">
+        Wystąpił problem podczas renderowania sceny. Spróbuj ponownie lub wróć
+        do trybu przeglądu.
+      </p>
+    </div>
+    <button
+      className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+      onClick={reset}
+      type="button"
+    >
+      Spróbuj ponownie
+    </button>
+  </div>
+)
 
 export default function ThreeDVisualizationPage() {
   const warehouse = useMemo(() => generateMockWarehouse(20), [])
@@ -78,11 +101,16 @@ export default function ThreeDVisualizationPage() {
         </div>
 
         <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-          <WarehouseScene
-            mode={mode}
-            selectedRackId={selectedRackId}
-            warehouse={warehouse}
-          />
+          <ErrorBoundary
+            fallback={renderVisualizationFallback}
+            resetKeys={[mode, selectedRackId]}
+          >
+            <WarehouseScene
+              mode={mode}
+              selectedRackId={selectedRackId}
+              warehouse={warehouse}
+            />
+          </ErrorBoundary>
         </div>
 
         <div className="hidden w-80 shrink-0 xl:block">

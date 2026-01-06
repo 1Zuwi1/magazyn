@@ -42,6 +42,9 @@ export const DEFAULT_RACK_TONE: RackTone = {
   glow: "#7c8798",
 }
 
+export const getGridSpan = (count: number, unit: number): number =>
+  Math.max(0, count - 1) * unit
+
 interface ShelfGridConfig {
   rows: number
   unitY: number
@@ -106,8 +109,8 @@ export function RackShelves({
 export const getRackMetrics = (rack: Rack3D): RackMetrics => {
   const unitX = rack.cell.w + rack.spacing.x
   const unitY = rack.cell.h + rack.spacing.y
-  const gridWidth = Math.max(0, rack.grid.cols - 1) * unitX
-  const gridHeight = Math.max(0, rack.grid.rows - 1) * unitY
+  const gridWidth = getGridSpan(rack.grid.cols, unitX)
+  const gridHeight = getGridSpan(rack.grid.rows, unitY)
   const framePadding = rack.frame?.padding ?? 0.05
   const frameThickness = Math.max(rack.frame?.thickness ?? 0.03, 0.04)
   const slotSize = {

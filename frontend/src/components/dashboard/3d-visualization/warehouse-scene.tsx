@@ -65,6 +65,8 @@ interface WarehouseLayout {
   }
 }
 
+type RackMetricsById = Map<string, ReturnType<typeof getRackMetrics>>
+
 interface RackFocusViewProps {
   rack: Rack3D
   focusWindow: FocusWindow | null
@@ -351,7 +353,10 @@ function getAisleKey(z: number): number {
   return Math.round(z / aisleSnap) * aisleSnap
 }
 
-function buildWarehouseLayout(racks: Rack3D[]): WarehouseLayout {
+function buildWarehouseLayout(
+  racks: Rack3D[],
+  rackMetricsById: RackMetricsById
+): WarehouseLayout {
   if (racks.length === 0) {
     return {
       renderRacks: [],
@@ -403,7 +408,7 @@ function buildWarehouseLayout(racks: Rack3D[]): WarehouseLayout {
       (a, b) => a.transform.position[0] - b.transform.position[0]
     )
     const rackLayouts = sortedRacks.map((rack) => {
-      const metrics = getRackMetrics(rack)
+      const metrics = rackMetricsById.get(rack.id) ?? getRackMetrics(rack)
       const isLarge =
         rack.grid.rows > RACK_ZONE_SIZE || rack.grid.cols > RACK_ZONE_SIZE
       const blockLayout = isLarge
@@ -498,9 +503,16 @@ export function WarehouseScene({
   selectedRackId,
 }: WarehouseSceneProps) {
   const focusWindow = useWarehouseStore((state) => state.focusWindow)
+  const rackMetricsById = useMemo(() => {
+    const metricsById: RackMetricsById = new Map()
+    for (const rack of warehouse.racks) {
+      metricsById.set(rack.id, getRackMetrics(rack))
+    }
+    return metricsById
+  }, [warehouse.racks])
   const layout = useMemo(
-    () => buildWarehouseLayout(warehouse.racks),
-    [warehouse.racks]
+    () => buildWarehouseLayout(warehouse.racks, rackMetricsById),
+    [warehouse.racks, rackMetricsById]
   )
   const floorBounds = layout.bounds
   const sceneCenter = useMemo(

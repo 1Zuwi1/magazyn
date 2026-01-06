@@ -1,9 +1,9 @@
 import { Instance, Instances, useTexture } from "@react-three/drei"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import * as THREE from "three"
 import type { FocusWindow, Item3D, ItemStatus, Rack3D } from "../types"
 import { getItemGlowColor, getItemVisuals, ITEM_STATUS_ORDER } from "../types"
-import { getRackMetrics, type RackMetrics } from "./rack-structure"
+import { getGridSpan, getRackMetrics, type RackMetrics } from "./rack-structure"
 
 const IMAGE_SCALE = 0.9
 const GLOW_SCALE = 1.12
@@ -45,15 +45,37 @@ function ItemsWithImages({ items, size, zOffset }: ItemsWithImagesProps) {
     [items]
   )
   const textures = useTexture(uniqueUrls)
+  const [texturesLoaded, setTexturesLoaded] = useState(false)
 
   useEffect(() => {
+    if (uniqueUrls.length === 0) {
+      setTexturesLoaded(true)
+      return
+    }
+
+    if (textures.length !== uniqueUrls.length) {
+      setTexturesLoaded(false)
+      return
+    }
+
+    let allLoaded = true
     for (const texture of textures) {
+      if (!texture.image) {
+        allLoaded = false
+        continue
+      }
       texture.colorSpace = THREE.SRGBColorSpace
       texture.needsUpdate = true
     }
-  }, [textures])
+
+    setTexturesLoaded(allLoaded)
+  }, [textures, uniqueUrls])
 
   const textureMap = useMemo(() => {
+    if (!texturesLoaded) {
+      return new Map<string, THREE.Texture>()
+    }
+
     const map = new Map<string, THREE.Texture>()
     for (const [index, url] of uniqueUrls.entries()) {
       const texture = textures[index]
@@ -62,7 +84,11 @@ function ItemsWithImages({ items, size, zOffset }: ItemsWithImagesProps) {
       }
     }
     return map
-  }, [textures, uniqueUrls])
+  }, [textures, texturesLoaded, uniqueUrls])
+
+  if (!texturesLoaded || textureMap.size === 0) {
+    return null
+  }
 
   return (
     <>
@@ -199,8 +225,8 @@ export function ItemsFocus({
     const startCol = activeWindow?.startCol ?? 0
     const rows = activeWindow?.rows ?? rack.grid.rows
     const cols = activeWindow?.cols ?? rack.grid.cols
-    const windowGridWidth = Math.max(0, cols - 1) * resolvedMetrics.unitX
-    const windowGridHeight = Math.max(0, rows - 1) * resolvedMetrics.unitY
+    const windowGridWidth = getGridSpan(cols, resolvedMetrics.unitX)
+    const windowGridHeight = getGridSpan(rows, resolvedMetrics.unitY)
 
     const { withImages, solid } = processRackItems(
       rows,
