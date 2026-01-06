@@ -164,18 +164,31 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
     const bodyToSend = buildRequestBody(init, payloadFlags)
     const restInit = stripExtendedInit(init)
 
-    const headers: HeadersInit = mergeHeaders(
+    const headersInit: HeadersInit = mergeHeaders(
       restInit.headers,
       bodyToSend instanceof FormData
         ? undefined
         : { "Content-Type": "application/json", Accept: "application/json" }
     )
 
-    const res = await fetch(path, {
+    // Use INTERNAL_API_URL on server to avoid extra hop through proxy
+    // That will speed up server-side requests
+    const url =
+      typeof window === "undefined"
+        ? `${process.env.INTERNAL_API_URL || ""}`
+        : ""
+
+    const res = await fetch(`${url}${path}`, {
       ...restInit,
       method,
       signal: abortController.signal,
-      headers,
+      headers:
+        typeof window === "undefined"
+          ? mergeHeaders(
+              await (await import("next/headers")).headers(),
+              headersInit
+            )
+          : headersInit,
       credentials: restInit.credentials ?? "include",
       body: bodyToSend,
     })
@@ -367,7 +380,7 @@ function isReadableStream(v: unknown): v is ReadableStream {
 
 function mergeHeaders(
   base: HeadersInit | undefined,
-  extra: Record<string, string> | undefined
+  extra: HeadersInit | Record<string, string> | undefined
 ): HeadersInit {
   if (!extra) {
     return base ?? {}
