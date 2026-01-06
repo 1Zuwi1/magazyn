@@ -84,7 +84,11 @@ export function ItemsInstanced({ rack }: ItemsInstancedProps) {
                 renderOrder={1}
               >
                 <boxGeometry
-                  args={[rack.cell.w * 0.8, rack.cell.h * 0.8, rack.cell.d * 0.5]}
+                  args={[
+                    rack.cell.w * 0.8,
+                    rack.cell.h * 0.8,
+                    rack.cell.d * 0.5,
+                  ]}
                 />
                 <meshStandardMaterial
                   {...STRIPE_MATERIAL_DEFAULTS}

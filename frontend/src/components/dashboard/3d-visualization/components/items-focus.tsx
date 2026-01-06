@@ -330,7 +330,10 @@ export function ItemsFocus({
                 roughness={0.72}
               />
               {solidItems.map(({ position }, index) => (
-                <Instance key={`solid-${status}-${index}`} position={position} />
+                <Instance
+                  key={`solid-${status}-${index}`}
+                  position={position}
+                />
               ))}
             </Instances>
             {stripeColor && stripeTexture && (

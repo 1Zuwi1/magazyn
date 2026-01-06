@@ -541,23 +541,6 @@ export function WarehouseScene({
               roughness={0.9}
             />
           </mesh>
-          <Grid
-            args={[floorBounds.width, floorBounds.depth]}
-            cellColor={gridCellColor}
-            cellSize={0.5}
-            cellThickness={0.6}
-            fadeDistance={Math.max(floorBounds.width, floorBounds.depth)}
-            fadeStrength={1}
-            position={[
-              floorBounds.centerX,
-              -floorOffset + 0.002,
-              floorBounds.centerZ,
-            ]}
-            rotation={[-Math.PI / 2, 0, 0]}
-            sectionColor={gridSectionColor}
-            sectionSize={2}
-            sectionThickness={1}
-          />
           {layout.aisles.map((aisle) => (
             <group key={`aisle-${aisle.index}`}>
               <Line
