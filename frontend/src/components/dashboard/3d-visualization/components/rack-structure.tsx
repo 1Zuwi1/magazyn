@@ -7,6 +7,11 @@ import {
   ITEM_STATUS_ORDER,
   RACK_ZONE_SIZE,
 } from "../types"
+import {
+  STRIPE_EMISSIVE_INTENSITY,
+  STRIPE_MATERIAL_DEFAULTS,
+  useStripeTexture,
+} from "./stripe-texture"
 
 export interface RackMetrics {
   width: number
@@ -282,6 +287,7 @@ interface RackItemsProps {
 }
 
 function RackItems({ slotSize, items }: RackItemsProps) {
+  const stripeTexture = useStripeTexture()
   const groupedByStatus = useMemo(() => {
     const grouped: Record<ItemStatus, [number, number, number][]> = {
       normal: [],
@@ -309,28 +315,49 @@ function RackItems({ slotSize, items }: RackItemsProps) {
           return null
         }
         const visuals = getItemVisuals(status)
+        const stripeColor = visuals.stripeColor
 
         return (
-          <Instances
-            frustumCulled={false}
-            key={`occupied-${status}`}
-            limit={positions.length}
-          >
-            <boxGeometry args={[slotSize.w, slotSize.h, slotSize.d]} />
-            <meshStandardMaterial
-              color={visuals.color}
-              emissive={visuals.glow}
-              emissiveIntensity={visuals.emissiveIntensity}
-              metalness={0.08}
-              roughness={0.75}
-            />
-            {positions.map((position, index) => (
-              <Instance
-                key={`occupied-${status}-${index}`}
-                position={position}
+          <group key={`occupied-${status}`}>
+            <Instances frustumCulled={false} limit={positions.length}>
+              <boxGeometry args={[slotSize.w, slotSize.h, slotSize.d]} />
+              <meshStandardMaterial
+                color={visuals.color}
+                emissive={visuals.glow}
+                emissiveIntensity={visuals.emissiveIntensity}
+                metalness={0.08}
+                roughness={0.75}
               />
-            ))}
-          </Instances>
+              {positions.map((position, index) => (
+                <Instance
+                  key={`occupied-${status}-${index}`}
+                  position={position}
+                />
+              ))}
+            </Instances>
+            {stripeColor && stripeTexture && (
+              <Instances
+                frustumCulled={false}
+                limit={positions.length}
+                renderOrder={1}
+              >
+                <boxGeometry args={[slotSize.w, slotSize.h, slotSize.d]} />
+                <meshStandardMaterial
+                  {...STRIPE_MATERIAL_DEFAULTS}
+                  alphaMap={stripeTexture}
+                  color={stripeColor}
+                  emissive={stripeColor}
+                  emissiveIntensity={STRIPE_EMISSIVE_INTENSITY}
+                />
+                {positions.map((position, index) => (
+                  <Instance
+                    key={`occupied-${status}-stripe-${index}`}
+                    position={position}
+                  />
+                ))}
+              </Instances>
+            )}
+          </group>
         )
       })}
     </>

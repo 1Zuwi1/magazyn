@@ -61,6 +61,7 @@ export interface ItemVisual {
   color: string
   glow: string
   emissiveIntensity: number
+  stripeColor?: string
 }
 
 export const ITEM_STATUS_ORDER: ItemStatus[] = [
@@ -95,8 +96,9 @@ const ITEM_VISUALS: Record<ItemStatus, ItemVisual> = {
   },
   "expired-dangerous": {
     color: "#b91c1c",
-    glow: "#f59e0b",
+    glow: "#ef4444",
     emissiveIntensity: 0.22,
+    stripeColor: "#f59e0b",
   },
 }
 

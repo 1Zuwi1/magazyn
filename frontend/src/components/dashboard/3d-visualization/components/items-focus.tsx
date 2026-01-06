@@ -2,13 +2,19 @@ import { Instance, Instances, useTexture } from "@react-three/drei"
 import { useEffect, useMemo, useState } from "react"
 import * as THREE from "three"
 import type { FocusWindow, Item3D, ItemStatus, Rack3D } from "../types"
-import { getItemGlowColor, getItemVisuals, ITEM_STATUS_ORDER } from "../types"
+import { getItemVisuals, ITEM_STATUS_ORDER } from "../types"
 import { getGridSpan, getRackMetrics, type RackMetrics } from "./rack-structure"
+import {
+  STRIPE_EMISSIVE_INTENSITY,
+  STRIPE_MATERIAL_DEFAULTS,
+  useStripeTexture,
+} from "./stripe-texture"
 
 const IMAGE_SCALE = 0.9
 const GLOW_SCALE = 1.12
 const IMAGE_Z_OFFSET = 0.01
 const GLOW_Z_OFFSET = 0.008
+const STRIPE_Z_OFFSET = 0.014
 
 const GLOW_SETTINGS: Record<
   ItemStatus,
@@ -37,9 +43,15 @@ interface ItemsWithImagesProps {
   items: FocusItemImage[]
   size: { w: number; h: number }
   zOffset: number
+  stripeTexture: THREE.Texture | null
 }
 
-function ItemsWithImages({ items, size, zOffset }: ItemsWithImagesProps) {
+function ItemsWithImages({
+  items,
+  size,
+  zOffset,
+  stripeTexture,
+}: ItemsWithImagesProps) {
   const uniqueUrls = useMemo(
     () => Array.from(new Set(items.map((item) => item.imageUrl))),
     [items]
@@ -98,7 +110,9 @@ function ItemsWithImages({ items, size, zOffset }: ItemsWithImagesProps) {
           return null
         }
 
-        const glowColor = getItemGlowColor(item.status)
+        const visuals = getItemVisuals(item.status)
+        const glowColor = visuals.glow
+        const stripeColor = visuals.stripeColor
         const [x, y, z] = item.position
 
         return (
@@ -128,6 +142,21 @@ function ItemsWithImages({ items, size, zOffset }: ItemsWithImagesProps) {
                 transparent
               />
             </mesh>
+            {stripeColor && stripeTexture && (
+              <mesh position={[0, 0, STRIPE_Z_OFFSET]}>
+                <planeGeometry
+                  args={[size.w * IMAGE_SCALE, size.h * IMAGE_SCALE]}
+                />
+                <meshStandardMaterial
+                  {...STRIPE_MATERIAL_DEFAULTS}
+                  alphaMap={stripeTexture}
+                  color={stripeColor}
+                  emissive={stripeColor}
+                  emissiveIntensity={STRIPE_EMISSIVE_INTENSITY}
+                  side={THREE.DoubleSide}
+                />
+              </mesh>
+            )}
           </group>
         )
       })}
@@ -213,6 +242,7 @@ export function ItemsFocus({
   applyTransform = true,
   window,
 }: ItemsFocusProps) {
+  const stripeTexture = useStripeTexture()
   const resolvedMetrics = metrics ?? getRackMetrics(rack)
   const imagePlaneSize = {
     w: resolvedMetrics.slotSize.w,
@@ -270,6 +300,7 @@ export function ItemsFocus({
         <ItemsWithImages
           items={itemsWithImages}
           size={imagePlaneSize}
+          stripeTexture={stripeTexture}
           zOffset={imagePlaneZ}
         />
       )}
@@ -279,31 +310,58 @@ export function ItemsFocus({
           return null
         }
         const visuals = getItemVisuals(status)
+        const stripeColor = visuals.stripeColor
 
         return (
-          <Instances
-            frustumCulled={false}
-            key={`solid-${status}`}
-            limit={solidItems.length}
-          >
-            <boxGeometry
-              args={[
-                resolvedMetrics.slotSize.w,
-                resolvedMetrics.slotSize.h,
-                resolvedMetrics.slotSize.d,
-              ]}
-            />
-            <meshStandardMaterial
-              color={visuals.color}
-              emissive={visuals.glow}
-              emissiveIntensity={visuals.emissiveIntensity}
-              metalness={0.08}
-              roughness={0.72}
-            />
-            {solidItems.map(({ position }, index) => (
-              <Instance key={`solid-${status}-${index}`} position={position} />
-            ))}
-          </Instances>
+          <group key={`solid-${status}`}>
+            <Instances frustumCulled={false} limit={solidItems.length}>
+              <boxGeometry
+                args={[
+                  resolvedMetrics.slotSize.w,
+                  resolvedMetrics.slotSize.h,
+                  resolvedMetrics.slotSize.d,
+                ]}
+              />
+              <meshStandardMaterial
+                color={visuals.color}
+                emissive={visuals.glow}
+                emissiveIntensity={visuals.emissiveIntensity}
+                metalness={0.08}
+                roughness={0.72}
+              />
+              {solidItems.map(({ position }, index) => (
+                <Instance key={`solid-${status}-${index}`} position={position} />
+              ))}
+            </Instances>
+            {stripeColor && stripeTexture && (
+              <Instances
+                frustumCulled={false}
+                limit={solidItems.length}
+                renderOrder={1}
+              >
+                <boxGeometry
+                  args={[
+                    resolvedMetrics.slotSize.w,
+                    resolvedMetrics.slotSize.h,
+                    resolvedMetrics.slotSize.d,
+                  ]}
+                />
+                <meshStandardMaterial
+                  {...STRIPE_MATERIAL_DEFAULTS}
+                  alphaMap={stripeTexture}
+                  color={stripeColor}
+                  emissive={stripeColor}
+                  emissiveIntensity={STRIPE_EMISSIVE_INTENSITY}
+                />
+                {solidItems.map(({ position }, index) => (
+                  <Instance
+                    key={`solid-${status}-stripe-${index}`}
+                    position={position}
+                  />
+                ))}
+              </Instances>
+            )}
+          </group>
         )
       })}
     </group>

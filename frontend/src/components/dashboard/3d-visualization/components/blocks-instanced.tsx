@@ -4,6 +4,11 @@ import { useWarehouseStore } from "../store"
 import type { ItemStatus, ItemVisual, Rack3D } from "../types"
 import { getItemVisuals, getWorstStatus, RACK_ZONE_SIZE } from "../types"
 import { getRackMetrics, type RackMetrics } from "./rack-structure"
+import {
+  STRIPE_EMISSIVE_INTENSITY,
+  STRIPE_MATERIAL_DEFAULTS,
+  useStripeTexture,
+} from "./stripe-texture"
 
 const BLOCK_EMPTY_VISUAL: ItemVisual = {
   color: "#1f2937",
@@ -194,6 +199,7 @@ export function BlocksInstanced({
   const { setFocusWindow } = useWarehouseStore()
   const [hoveredBlockKey, setHoveredBlockKey] = useState<string | null>(null)
   const resolvedMetrics = metrics ?? getRackMetrics(rack)
+  const stripeTexture = useStripeTexture()
   const isInteractive = hoverable || clickable
   const disabledRaycast = isInteractive ? undefined : () => null
   const layout = useMemo(
@@ -255,63 +261,88 @@ export function BlocksInstanced({
         ? BLOCK_EMPTY_VISUAL.emissiveIntensity
         : visuals.emissiveIntensity
 
+    const stripeColor = visuals.stripeColor
+
     return (
-      <Instances
-        frustumCulled={false}
-        key={`blocks-${statusKey}`}
-        limit={blocks.length}
-        raycast={disabledRaycast}
-      >
-        <boxGeometry
-          args={[layout.blockSizeX, layout.blockSizeY, layout.blockSizeZ]}
-        />
-        <meshStandardMaterial
-          color={visuals.color}
-          depthWrite={false}
-          emissive={glow}
-          emissiveIntensity={emissiveIntensity}
-          metalness={0.05}
-          opacity={BLOCK_OPACITY}
-          roughness={0.7}
-          transparent
-        />
-        {blocks.map((block) => (
-          <Instance
-            key={block.key}
-            onClick={
-              clickable
-                ? (event) => {
-                    event.stopPropagation()
-                    setFocusWindow({
-                      rackId: rack.id,
-                      startRow: block.startRow,
-                      startCol: block.startCol,
-                      rows: block.rows,
-                      cols: block.cols,
-                    })
-                  }
-                : undefined
-            }
-            onPointerOut={
-              hoverable
-                ? (event) => {
-                    event.stopPropagation()
-                    setHoveredBlockKey(null)
-                  }
-                : undefined
-            }
-            onPointerOver={
-              hoverable
-                ? (event) => {
-                    event.stopPropagation()
-                    setHoveredBlockKey(block.key)
-                  }
-                : undefined
-            }
-            position={block.position}
+      <group>
+        <Instances
+          frustumCulled={false}
+          limit={blocks.length}
+          raycast={disabledRaycast}
+        >
+          <boxGeometry
+            args={[layout.blockSizeX, layout.blockSizeY, layout.blockSizeZ]}
           />
-        ))}
-      </Instances>
+          <meshStandardMaterial
+            color={visuals.color}
+            depthWrite={false}
+            emissive={glow}
+            emissiveIntensity={emissiveIntensity}
+            metalness={0.05}
+            opacity={BLOCK_OPACITY}
+            roughness={0.7}
+            transparent
+          />
+          {blocks.map((block) => (
+            <Instance
+              key={block.key}
+              onClick={
+                clickable
+                  ? (event) => {
+                      event.stopPropagation()
+                      setFocusWindow({
+                        rackId: rack.id,
+                        startRow: block.startRow,
+                        startCol: block.startCol,
+                        rows: block.rows,
+                        cols: block.cols,
+                      })
+                    }
+                  : undefined
+              }
+              onPointerOut={
+                hoverable
+                  ? (event) => {
+                      event.stopPropagation()
+                      setHoveredBlockKey(null)
+                    }
+                  : undefined
+              }
+              onPointerOver={
+                hoverable
+                  ? (event) => {
+                      event.stopPropagation()
+                      setHoveredBlockKey(block.key)
+                    }
+                  : undefined
+              }
+              position={block.position}
+            />
+          ))}
+        </Instances>
+        {stripeColor && stripeTexture && (
+          <Instances
+            frustumCulled={false}
+            limit={blocks.length}
+            raycast={disabledRaycast}
+            renderOrder={1}
+          >
+            <boxGeometry
+              args={[layout.blockSizeX, layout.blockSizeY, layout.blockSizeZ]}
+            />
+            <meshStandardMaterial
+              {...STRIPE_MATERIAL_DEFAULTS}
+              alphaMap={stripeTexture}
+              color={stripeColor}
+              emissive={stripeColor}
+              emissiveIntensity={STRIPE_EMISSIVE_INTENSITY}
+            />
+            {blocks.map((block) => (
+              <Instance key={`${block.key}-stripe`} position={block.position} />
+            ))}
+          </Instances>
+        )}
+      </group>
     )
   }
 
