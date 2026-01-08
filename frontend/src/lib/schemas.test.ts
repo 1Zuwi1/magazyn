@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   ApiMeSchema,
   LoginSchema,
+  RegisterSchema,
   Resend2FASchema,
   Verify2FASchema,
 } from "./schemas"
@@ -51,6 +52,81 @@ describe("LoginSchema", () => {
     const result = LoginSchema.shape.POST?.shape.output.safeParse(invalidOutput)
 
     expect(result.success).toBe(false)
+  })
+})
+
+describe("RegisterSchema", () => {
+  it("accepts valid registration input", () => {
+    const validInput = {
+      fullName: "Test User",
+      username: "test_user",
+      email: "user@example.com",
+      password: "password123",
+      confirmPassword: "password123",
+    }
+
+    const result = RegisterSchema.shape.POST?.shape.input.safeParse(validInput)
+
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects mismatched confirmPassword", () => {
+    const invalidInput = {
+      fullName: "Test User",
+      username: "test_user",
+      email: "user@example.com",
+      password: "password123",
+      confirmPassword: "different123",
+    }
+
+    const result =
+      RegisterSchema.shape.POST?.shape.input.safeParse(invalidInput)
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe("Hasła nie są zgodne")
+    }
+  })
+
+  it("rejects invalid email format", () => {
+    const invalidInput = {
+      fullName: "Test User",
+      username: "test_user",
+      email: "not-an-email",
+      password: "password123",
+      confirmPassword: "password123",
+    }
+
+    const result =
+      RegisterSchema.shape.POST?.shape.input.safeParse(invalidInput)
+
+    expect(result.success).toBe(false)
+  })
+
+  it("rejects short fullName", () => {
+    const invalidInput = {
+      fullName: "A",
+      username: "test_user",
+      email: "user@example.com",
+      password: "password123",
+      confirmPassword: "password123",
+    }
+
+    const result =
+      RegisterSchema.shape.POST?.shape.input.safeParse(invalidInput)
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Imię i nazwisko musi mieć co najmniej 2 znaki"
+      )
+    }
+  })
+
+  it("has null output schema", () => {
+    const result = RegisterSchema.shape.POST?.shape.output.safeParse(null)
+
+    expect(result.success).toBe(true)
   })
 })
 
