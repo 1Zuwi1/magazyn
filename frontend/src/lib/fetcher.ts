@@ -172,7 +172,7 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
     )
 
     const BASE_URL =
-      typeof window === "undefined" ? "http://localhost:8080/" : ""
+      typeof window === "undefined" ? (process.env.INTERNAL_API_URL ?? "") : ""
 
     const res = await fetch(new URL(path, BASE_URL), {
       ...restInit,

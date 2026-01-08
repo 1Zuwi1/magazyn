@@ -18,11 +18,13 @@ export default async function ProtectedPage({
   needAdminPrivileges,
   redirectTo = "/login",
 }: Props) {
-  // Will redirect if the user is not signed in
   const session = await getSession(redirectTo)
+  if (!session) {
+    return null
+  }
 
   // If the user is not an admin and admin privileges are required, return Unauthorized
-  if (!session || (needAdminPrivileges && session.role !== "admin")) {
+  if (needAdminPrivileges && session.role !== "admin") {
     return <UnauthorizedComponent />
   }
 

@@ -10,48 +10,19 @@ import {
 describe("LoginSchema", () => {
   it("accepts valid login input", () => {
     const validInput = {
-      email: "user@example.com",
+      username: "testuser",
       password: "password123",
-      rememberMe: true,
     }
 
     const result = LoginSchema.shape.POST?.shape.input.safeParse(validInput)
 
     expect(result.success).toBe(true)
-  })
-
-  it("accepts login input with rememberMe false", () => {
-    const validInput = {
-      email: "user@example.com",
-      password: "password123",
-      rememberMe: false,
-    }
-
-    const result = LoginSchema.shape.POST?.shape.input.safeParse(validInput)
-
-    expect(result.success).toBe(true)
-  })
-
-  it("rejects invalid email format", () => {
-    const invalidInput = {
-      email: "not-an-email",
-      password: "password123",
-      rememberMe: true,
-    }
-
-    const result = LoginSchema.shape.POST?.shape.input.safeParse(invalidInput)
-
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues[0].message).toBe("Nieprawidłowy adres email")
-    }
   })
 
   it("rejects password shorter than 6 characters", () => {
     const invalidInput = {
-      email: "user@example.com",
+      username: "testuser",
       password: "12345",
-      rememberMe: true,
     }
 
     const result = LoginSchema.shape.POST?.shape.input.safeParse(invalidInput)
@@ -62,18 +33,6 @@ describe("LoginSchema", () => {
         "Hasło musi mieć co najmniej 6 znaków"
       )
     }
-  })
-
-  it("rejects non-boolean rememberMe value", () => {
-    const invalidInput = {
-      email: "user@example.com",
-      password: "password123",
-      rememberMe: "true",
-    }
-
-    const result = LoginSchema.shape.POST?.shape.input.safeParse(invalidInput)
-
-    expect(result.success).toBe(false)
   })
 
   it("has correct output schema with requiresTwoFactor boolean", () => {

@@ -26,10 +26,12 @@ interface AuthFormProps {
 }
 
 function FieldState({ field }: { field: AnyFieldApi }) {
-  const error = field.state.meta.errors[0] as ZodError
+  const error = field.state.meta.errors[0] as ZodError | string | undefined
 
   return error ? (
-    <p className="mt-1 text-wrap text-red-600 text-xs">{error.message}</p>
+    <p className="mt-1 text-wrap text-red-600 text-xs">
+      {typeof error === "string" ? error : error.message}
+    </p>
   ) : null
 }
 
@@ -111,7 +113,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             <Logo />
             <FieldDescription>
               {isLogin
-                ? "Wprowadź swój email i hasło, aby uzyskać dostęp do konta."
+                ? "Wprowadź swoją nazwę użytkownika i hasło, aby uzyskać dostęp do konta."
                 : "Utwórz konto, aby korzystać z aplikacji."}
             </FieldDescription>
           </div>

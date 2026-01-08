@@ -1,7 +1,7 @@
 import z from "zod"
 import { createApiSchema } from "./create-api-schema"
 
-const userNameSchema = z
+const usernameSchema = z
   .string()
   .min(3, "Nazwa użytkownika musi mieć co najmniej 3 znaki")
   .max(20, "Nazwa użytkownika może mieć maksymalnie 20 znaków")
@@ -15,7 +15,6 @@ const passwordSchema = z
   .min(6, "Hasło musi mieć co najmniej 6 znaków")
   .refine((value) => {
     const bytes = new TextEncoder().encode(value).length
-    console.log(bytes)
     if (bytes > 72) {
       return false
     }
@@ -25,7 +24,7 @@ const passwordSchema = z
 export const LoginSchema = createApiSchema({
   POST: {
     input: z.object({
-      userName: userNameSchema,
+      username: usernameSchema,
       password: passwordSchema,
     }),
     output: z.object({
@@ -40,7 +39,7 @@ export const RegisterSchema = createApiSchema({
         fullName: z
           .string()
           .min(2, "Imię i nazwisko musi mieć co najmniej 2 znaki"),
-        userName: userNameSchema,
+        username: usernameSchema,
         email: z.email("Nieprawidłowy adres email"),
         password: passwordSchema,
         confirmPassword: z.string(),
