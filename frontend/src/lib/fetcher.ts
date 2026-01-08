@@ -171,10 +171,10 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
         : { "Content-Type": "application/json", Accept: "application/json" }
     )
 
-    const BASE_URL =
-      typeof window === "undefined" ? (process.env.INTERNAL_API_URL ?? "") : ""
+    const baseUrl =
+      typeof window === "undefined" ? process.env.INTERNAL_API_URL : undefined
 
-    const res = await fetch(new URL(path, BASE_URL), {
+    const res = await fetch(resolveRequestUrl(path, baseUrl), {
       ...restInit,
       method,
       signal: abortController.signal,
@@ -383,4 +383,11 @@ function mergeHeaders(
     }
   }
   return h
+}
+
+function resolveRequestUrl(path: string, baseUrl?: string): string | URL {
+  if (baseUrl) {
+    return new URL(path, baseUrl)
+  }
+  return path
 }

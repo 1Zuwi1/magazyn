@@ -194,6 +194,7 @@ describe("ApiMeSchema", () => {
       username: "testuser",
       full_name: "Test User",
       two_factor_enabled: true,
+      role: "user",
     }
 
     const result = ApiMeSchema.shape.GET?.shape.output.safeParse(validOutput)
@@ -208,6 +209,7 @@ describe("ApiMeSchema", () => {
       username: "testuser",
       full_name: null,
       two_factor_enabled: false,
+      role: "admin",
     }
 
     const result = ApiMeSchema.shape.GET?.shape.output.safeParse(validOutput)
@@ -222,6 +224,7 @@ describe("ApiMeSchema", () => {
       username: "testuser",
       full_name: null,
       two_factor_enabled: false,
+      role: "user",
     }
 
     const result = ApiMeSchema.shape.GET?.shape.output.safeParse(invalidOutput)
@@ -236,6 +239,7 @@ describe("ApiMeSchema", () => {
       username: "testuser",
       full_name: null,
       two_factor_enabled: false,
+      role: "user",
     }
 
     const result = ApiMeSchema.shape.GET?.shape.output.safeParse(invalidOutput)
@@ -249,6 +253,7 @@ describe("ApiMeSchema", () => {
       username: "testuser",
       full_name: null,
       two_factor_enabled: "true",
+      role: "user",
     }
 
     const result = ApiMeSchema.shape.GET?.shape.output.safeParse(invalidOutput)
