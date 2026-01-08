@@ -68,6 +68,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         )
 
         if (err) {
+          // TODO: Add more specific error handling from server response
           toast.error("Wystąpił błąd podczas logowania. Spróbuj ponownie.")
           return
         }
@@ -84,6 +85,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         )
 
         if (err) {
+          // TODO: Add more specific error handling from server response
           toast.error("Wystąpił błąd podczas rejestracji. Spróbuj ponownie.")
           return
         }
@@ -104,7 +106,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          e.stopPropagation()
           form.handleSubmit()
         }}
       >
