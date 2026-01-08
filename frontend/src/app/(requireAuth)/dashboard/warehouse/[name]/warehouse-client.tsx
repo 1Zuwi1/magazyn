@@ -7,7 +7,7 @@ import { useState } from "react"
 import { RackGridView } from "@/components/dashboard/rack-visualization/rack-grid-view"
 import { RackParametersCard } from "@/components/dashboard/rack-visualization/rack-parameters-card"
 import { RackStatusCard } from "@/components/dashboard/rack-visualization/rack-status-card"
-import type { Item } from "@/components/dashboard/types"
+import type { ItemSlot } from "@/components/dashboard/types"
 import { QrScanner } from "@/components/qr-scanner/qr-scanner"
 import { buttonVariants } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
@@ -28,7 +28,7 @@ export default function WarehouseClient({
     maxWeight: number
     currentWeight: number
     occupancy: number
-    items: Item[]
+    items: ItemSlot[]
   }[]
   warehouseId: string
   warehouseName: string
@@ -56,7 +56,7 @@ export default function WarehouseClient({
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 pt-6 sm:space-y-6 sm:p-6 lg:p-8">
+    <div className="flex-1">
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 sm:gap-4">
@@ -110,6 +110,7 @@ export default function WarehouseClient({
             items={currentRack.items}
             onNextRack={handleNextRack}
             onPreviousRack={handlePreviousRack}
+            rack={currentRack}
             rows={currentRack.rows}
             totalRacks={racks.length}
           />

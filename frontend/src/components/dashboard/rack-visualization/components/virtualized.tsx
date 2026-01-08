@@ -1,7 +1,7 @@
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { useEffect } from "react"
+import { memo, useEffect } from "react"
 import { useIsMobile } from "@/hooks/use-mobile"
-import type { Item } from "../../types"
+import type { ItemSlot } from "../../types"
 import { getSlotCoordinate } from "../../utils/helpers"
 import RackElement from "./rack-element"
 
@@ -10,7 +10,7 @@ const VIRTUALIZATION_PADDING = 16
 const BASE_CELL_SIZE = 120
 const MOBILE_CELL_SIZE = 50
 
-export default function Virtualized({
+const Virtualized = ({
   rows,
   cols,
   parentRef,
@@ -23,8 +23,8 @@ export default function Virtualized({
   parentRef: React.RefObject<HTMLDivElement | null>
   containerWidth: number
   containerHeight: number
-  items: Item[]
-}) {
+  items: ItemSlot[]
+}) => {
   const isMobile = useIsMobile()
   const minCellSize = isMobile ? MOBILE_CELL_SIZE : BASE_CELL_SIZE
   const availableWidth = Math.max(
@@ -121,3 +121,6 @@ export default function Virtualized({
     </div>
   )
 }
+
+Virtualized.displayName = "Virtualized"
+export default memo(Virtualized)

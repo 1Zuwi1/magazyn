@@ -164,7 +164,7 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
     const bodyToSend = buildRequestBody(init, payloadFlags)
     const restInit = stripExtendedInit(init)
 
-    const headers: HeadersInit = mergeHeaders(
+    const headersInit: HeadersInit = mergeHeaders(
       restInit.headers,
       bodyToSend instanceof FormData
         ? undefined
@@ -178,7 +178,13 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
       ...restInit,
       method,
       signal: abortController.signal,
-      headers,
+      headers:
+        typeof window === "undefined"
+          ? mergeHeaders(
+              await (await import("next/headers")).headers(),
+              headersInit
+            )
+          : headersInit,
       credentials: restInit.credentials ?? "include",
       body: bodyToSend,
     })
@@ -370,7 +376,7 @@ function isReadableStream(v: unknown): v is ReadableStream {
 
 function mergeHeaders(
   base: HeadersInit | undefined,
-  extra: Record<string, string> | undefined
+  extra: HeadersInit | Record<string, string> | undefined
 ): HeadersInit {
   if (!extra) {
     return base ?? {}
