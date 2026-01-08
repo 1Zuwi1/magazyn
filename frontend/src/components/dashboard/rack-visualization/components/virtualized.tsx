@@ -58,11 +58,10 @@ const Virtualized = ({
     paddingEnd: VIRTUALIZATION_PADDING,
   })
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: rowVirtualizer and columnVirtualizer are not stable so we use rows, cols and cellSize as dependencies
   useEffect(() => {
     rowVirtualizer.measure()
     columnVirtualizer.measure()
-  }, [rows, cols, cellSize])
+  }, [rowVirtualizer, columnVirtualizer])
 
   return (
     <div
