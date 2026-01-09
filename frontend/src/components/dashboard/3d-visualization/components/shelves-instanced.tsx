@@ -1,12 +1,18 @@
 import { Instance, Instances, useCursor } from "@react-three/drei"
 import { useMemo, useState } from "react"
+import { VISUALIZATION_CONSTANTS } from "../constants"
 import { useWarehouseStore } from "../store"
 import type { FocusWindow, Rack3D } from "../types"
-import { getGridSpan, getRackMetrics, type RackMetrics } from "./rack-structure"
+import {
+  getGridDimensions,
+  getRackMetrics,
+  type RackMetrics,
+} from "./rack-structure"
 
-const HOVER_COLOR = "#60a5fa"
-const SELECTED_COLOR = "#3b82f6"
-const HIGHLIGHT_OPACITY = 0.35
+const {
+  COLORS: { hover: HOVER_COLOR, selected: SELECTED_COLOR },
+  OPACITY: { shelfHighlight: HIGHLIGHT_OPACITY },
+} = VISUALIZATION_CONSTANTS
 
 interface ShelvesInstancedProps {
   rack: Rack3D
@@ -37,8 +43,13 @@ export function ShelvesInstanced({
       const startCol = activeWindow?.startCol ?? 0
       const rows = activeWindow?.rows ?? rack.grid.rows
       const cols = activeWindow?.cols ?? rack.grid.cols
-      const windowGridWidth = getGridSpan(cols, resolvedMetrics.unitX)
-      const windowGridHeight = getGridSpan(rows, resolvedMetrics.unitY)
+      const { width: windowGridWidth, height: windowGridHeight } =
+        getGridDimensions(
+          cols,
+          rows,
+          resolvedMetrics.unitX,
+          resolvedMetrics.unitY
+        )
       let idx = 0
 
       for (let row = 0; row < rows; row++) {

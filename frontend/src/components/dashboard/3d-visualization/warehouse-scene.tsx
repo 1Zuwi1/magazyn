@@ -12,6 +12,7 @@ import {
 } from "./components/rack-structure"
 import { RacksOverview } from "./components/racks-overview"
 import { ShelvesInstanced } from "./components/shelves-instanced"
+import { VISUALIZATION_CONSTANTS } from "./constants"
 import { useWarehouseStore } from "./store"
 import type { FocusWindow, Rack3D, ViewMode, Warehouse3D } from "./types"
 import { RACK_ZONE_SIZE } from "./types"
@@ -22,21 +23,26 @@ interface WarehouseSceneProps {
   selectedRackId: string | null
 }
 
-const rackOutlinePadding = 0.2
-const rackLayoutGap = 0.4
-const floorPadding = 0.6
-const floorOffset = 0.01
-const focusFloorPadding = 0.6
-const aisleExplodeOffset = 0.45
-const aisleSnap = 0.2
-const aislePadding = 0.5
-
-const floorColor = "#111827"
-const gridCellColor = "#1f2937"
-const gridSectionColor = "#334155"
-const aisleLineColor = "#fbbf24"
-const aisleLineOpacity = 0.45
-const fogColor = "#0f172a"
+const {
+  LAYOUT: {
+    rackOutlinePadding,
+    rackLayoutGap,
+    floorPadding,
+    floorOffset,
+    focusFloorPadding,
+    aisleExplodeOffset,
+    aisleSnap,
+    aislePadding,
+  },
+  COLORS: {
+    floor: floorColor,
+    gridCell: gridCellColor,
+    gridSection: gridSectionColor,
+    aisleLine: aisleLineColor,
+    fog: fogColor,
+  },
+  OPACITY: { aisleLine: aisleLineOpacity },
+} = VISUALIZATION_CONSTANTS
 
 interface RackRender {
   rack: Rack3D
@@ -525,7 +531,11 @@ export function WarehouseScene({
         <fog args={[fogColor, fogNear, fogFar]} attach="fog" />
       )}
       <ambientLight intensity={0.35} />
-      <hemisphereLight color="#64748b" groundColor="#0f172a" intensity={0.45} />
+      <hemisphereLight
+        color="#64748b"
+        groundColor={fogColor}
+        intensity={0.45}
+      />
       <directionalLight intensity={1} position={[12, 12, 6]} />
       <CameraController mode={mode} warehouseCenter={sceneCenter} />
       {mode === "overview" && (

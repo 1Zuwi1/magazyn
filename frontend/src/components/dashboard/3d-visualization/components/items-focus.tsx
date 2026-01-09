@@ -1,20 +1,28 @@
 import { Instance, Instances, useTexture } from "@react-three/drei"
 import { useEffect, useMemo, useState } from "react"
 import * as THREE from "three"
+import { VISUALIZATION_CONSTANTS } from "../constants"
 import type { FocusWindow, Item3D, ItemStatus, Rack3D } from "../types"
 import { getItemVisuals, ITEM_STATUS_ORDER } from "../types"
-import { getGridSpan, getRackMetrics, type RackMetrics } from "./rack-structure"
+import {
+  getGridDimensions,
+  getRackMetrics,
+  type RackMetrics,
+} from "./rack-structure"
 import {
   STRIPE_EMISSIVE_INTENSITY,
   STRIPE_MATERIAL_DEFAULTS,
   useStripeTexture,
 } from "./stripe-texture"
 
-const IMAGE_SCALE = 0.9
-const GLOW_SCALE = 1.12
-const IMAGE_Z_OFFSET = 0.01
-const GLOW_Z_OFFSET = 0.008
-const STRIPE_Z_OFFSET = 0.014
+const {
+  SCALES: { image: IMAGE_SCALE, glow: GLOW_SCALE },
+  OFFSETS: {
+    imageZ: IMAGE_Z_OFFSET,
+    glowZ: GLOW_Z_OFFSET,
+    stripeZ: STRIPE_Z_OFFSET,
+  },
+} = VISUALIZATION_CONSTANTS
 
 const GLOW_SETTINGS: Record<
   ItemStatus,
@@ -24,6 +32,20 @@ const GLOW_SETTINGS: Record<
   dangerous: { glowOpacity: 0.22, emissiveIntensity: 0.3 },
   expired: { glowOpacity: 0.14, emissiveIntensity: 0.2 },
   "expired-dangerous": { glowOpacity: 0.3, emissiveIntensity: 0.38 },
+}
+
+const areSetsEqual = (left: Set<string>, right: Set<string>): boolean => {
+  if (left.size !== right.size) {
+    return false
+  }
+
+  for (const value of left) {
+    if (!right.has(value)) {
+      return false
+    }
+  }
+
+  return true
 }
 
 interface FocusItemImage {
@@ -56,49 +78,57 @@ function ItemsWithImages({
     () => Array.from(new Set(items.map((item) => item.imageUrl))),
     [items]
   )
-  const textures = useTexture(uniqueUrls)
-  const [texturesLoaded, setTexturesLoaded] = useState(false)
+  const textures: THREE.Texture[] = useTexture(uniqueUrls)
+  const [texturesReady, setTexturesReady] = useState(false)
+  const [loadErrors, setLoadErrors] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (uniqueUrls.length === 0) {
-      setTexturesLoaded(true)
+      setTexturesReady(true)
+      setLoadErrors(new Set())
       return
     }
 
     if (textures.length !== uniqueUrls.length) {
-      setTexturesLoaded(false)
+      setTexturesReady(false)
       return
     }
 
-    let allLoaded = true
-    for (const texture of textures) {
-      if (!texture.image) {
-        allLoaded = false
+    const nextErrors = new Set<string>()
+    for (const [index, texture] of textures.entries()) {
+      const url = uniqueUrls[index]
+      if (!texture?.image) {
+        if (url) {
+          nextErrors.add(url)
+        }
         continue
       }
       texture.colorSpace = THREE.SRGBColorSpace
       texture.needsUpdate = true
     }
 
-    setTexturesLoaded(allLoaded)
+    setTexturesReady(true)
+    setLoadErrors((prev) =>
+      areSetsEqual(prev, nextErrors) ? prev : nextErrors
+    )
   }, [textures, uniqueUrls])
 
   const textureMap = useMemo(() => {
-    if (!texturesLoaded) {
+    if (!texturesReady) {
       return new Map<string, THREE.Texture>()
     }
 
     const map = new Map<string, THREE.Texture>()
     for (const [index, url] of uniqueUrls.entries()) {
       const texture = textures[index]
-      if (texture) {
+      if (texture?.image) {
         map.set(url, texture)
       }
     }
     return map
-  }, [textures, texturesLoaded, uniqueUrls])
+  }, [textures, texturesReady, uniqueUrls])
 
-  if (!texturesLoaded || textureMap.size === 0) {
+  if (!texturesReady || (textureMap.size === 0 && loadErrors.size === 0)) {
     return null
   }
 
@@ -106,7 +136,8 @@ function ItemsWithImages({
     <>
       {items.map((item, index) => {
         const texture = textureMap.get(item.imageUrl)
-        if (!texture) {
+        const hasError = loadErrors.has(item.imageUrl)
+        if (!(texture || hasError)) {
           return null
         }
 
@@ -134,13 +165,23 @@ function ItemsWithImages({
               <planeGeometry
                 args={[size.w * IMAGE_SCALE, size.h * IMAGE_SCALE]}
               />
-              <meshStandardMaterial
-                emissive={glowColor}
-                emissiveIntensity={item.emissiveIntensity}
-                map={texture}
-                side={THREE.DoubleSide}
-                transparent
-              />
+              {texture ? (
+                <meshStandardMaterial
+                  emissive={glowColor}
+                  emissiveIntensity={item.emissiveIntensity}
+                  map={texture}
+                  side={THREE.DoubleSide}
+                  transparent
+                />
+              ) : (
+                <meshStandardMaterial
+                  color={visuals.color}
+                  emissive={visuals.glow}
+                  emissiveIntensity={item.emissiveIntensity}
+                  side={THREE.DoubleSide}
+                  transparent
+                />
+              )}
             </mesh>
             {stripeColor && stripeTexture && (
               <mesh position={[0, 0, STRIPE_Z_OFFSET]}>
@@ -255,8 +296,13 @@ export function ItemsFocus({
     const startCol = activeWindow?.startCol ?? 0
     const rows = activeWindow?.rows ?? rack.grid.rows
     const cols = activeWindow?.cols ?? rack.grid.cols
-    const windowGridWidth = getGridSpan(cols, resolvedMetrics.unitX)
-    const windowGridHeight = getGridSpan(rows, resolvedMetrics.unitY)
+    const { width: windowGridWidth, height: windowGridHeight } =
+      getGridDimensions(
+        cols,
+        rows,
+        resolvedMetrics.unitX,
+        resolvedMetrics.unitY
+      )
 
     const { withImages, solid } = processRackItems(
       rows,

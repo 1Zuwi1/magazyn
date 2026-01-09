@@ -50,6 +50,21 @@ export const DEFAULT_RACK_TONE: RackTone = {
 export const getGridSpan = (count: number, unit: number): number =>
   Math.max(0, count - 1) * unit
 
+interface GridDimensions {
+  width: number
+  height: number
+}
+
+export const getGridDimensions = (
+  cols: number,
+  rows: number,
+  unitX: number,
+  unitY: number
+): GridDimensions => ({
+  width: getGridSpan(cols, unitX),
+  height: getGridSpan(rows, unitY),
+})
+
 interface ShelfGridConfig {
   rows: number
   unitY: number
