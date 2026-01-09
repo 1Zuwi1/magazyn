@@ -20,7 +20,7 @@ export default function RackElement({
   return (
     <div
       className={cn(
-        "group relative aspect-square overflow-hidden rounded-lg transition-shadow hover:shadow-md",
+        "relative aspect-square overflow-hidden rounded-lg transition-shadow hover:shadow-md",
         {
           "outline-2 outline-red-500": item?.isDangerous,
         },
@@ -28,7 +28,7 @@ export default function RackElement({
       )}
       {...props}
     >
-      <div className="h-full w-full transition-transform duration-200 group-hover:scale-105">
+      <div className="h-full w-full transition-transform duration-200">
         {!item || isEmpty ? (
           // Empty slot
           <div className="flex h-full flex-col items-center justify-center bg-muted/30 text-muted-foreground">

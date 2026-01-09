@@ -6,7 +6,7 @@ const usernameSchema = z
   .min(3, "Nazwa użytkownika musi mieć co najmniej 3 znaki")
   .max(20, "Nazwa użytkownika może mieć maksymalnie 20 znaków")
   .regex(
-    /^[a-zA-Z0-9_]+$/,
+    /^[a-zA-Z0-9_ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+$/,
     "Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślenia"
   )
 
@@ -15,10 +15,7 @@ const passwordSchema = z
   .min(6, "Hasło musi mieć co najmniej 6 znaków")
   .refine((value) => {
     const bytes = new TextEncoder().encode(value).length
-    if (bytes > 72) {
-      return false
-    }
-    return true
+    return bytes <= 72
   }, "Hasło nie może przekraczać 72 bajtów w kodowaniu UTF-8.")
 
 export const LoginSchema = createApiSchema({

@@ -26,7 +26,9 @@ export const getSession = cache(async (redirectTo?: string) => {
       })
     }
 
-    redirectTo && redirect(redirectTo)
+    if (redirectTo) {
+      redirect(redirectTo)
+    }
     // Not logged in
     return null
   }

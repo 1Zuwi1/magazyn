@@ -1,6 +1,6 @@
+import "server-only"
 import type { ReactNode } from "react"
 import { getSession } from "@/lib/session"
-import "server-only"
 import UnauthorizedComponent from "./components/unauthorized"
 
 type Children =

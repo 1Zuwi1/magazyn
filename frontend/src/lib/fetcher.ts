@@ -391,9 +391,9 @@ function mergeHeaders(
   return h
 }
 
-function resolveRequestUrl(path: string, baseUrl?: string): string | URL {
+function resolveRequestUrl(path: string, baseUrl?: string): string {
   if (baseUrl) {
-    return new URL(path, baseUrl)
+    return new URL(path, baseUrl).toString()
   }
   return path
 }
