@@ -1,5 +1,10 @@
 import { DashboardContent } from "@/components/dashboard/dashboard-content"
+import ProtectedPage from "../protected-page"
 
 export default function Page() {
-  return <DashboardContent />
+  return (
+    <ProtectedPage>
+      <DashboardContent />
+    </ProtectedPage>
+  )
 }

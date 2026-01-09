@@ -1,5 +1,6 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import ProtectedPage from "@/app/(requireAuth)/protected-page"
 import { MOCK_RACKS } from "@/components/dashboard/mock-data"
 import WarehouseClient from "./warehouse-client"
 
@@ -15,20 +16,26 @@ export default async function WarehousePage({
 }: {
   params: Promise<{ name: string }>
 }) {
-  const { name } = await params
-  const warehouseId = (await cookies()).get("warehouseId")?.value
-
-  if (!warehouseId) {
-    redirect("/dashboard")
-  }
-
-  const warehouseRacks = MOCK_WAREHOUSES_DATA[name] || MOCK_RACKS.slice(0, 1)
-
   return (
-    <WarehouseClient
-      racks={warehouseRacks}
-      warehouseId={warehouseId}
-      warehouseName={name}
-    />
+    <ProtectedPage>
+      {async () => {
+        const { name } = await params
+        const warehouseId = (await cookies()).get("warehouseId")?.value
+
+        if (!warehouseId) {
+          redirect("/dashboard")
+        }
+
+        const warehouseRacks =
+          MOCK_WAREHOUSES_DATA[name] || MOCK_RACKS.slice(0, 1)
+        return (
+          <WarehouseClient
+            racks={warehouseRacks}
+            warehouseId={warehouseId}
+            warehouseName={name}
+          />
+        )
+      }}
+    </ProtectedPage>
   )
 }

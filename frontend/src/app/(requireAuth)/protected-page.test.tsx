@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react"
+import { redirect } from "next/navigation"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { getSession } from "@/lib/session"
 import ProtectedPage from "./protected-page"
@@ -11,6 +12,11 @@ vi.mock("server-only", () => {
 // Mock getSession
 vi.mock("@/lib/session", () => ({
   getSession: vi.fn(),
+}))
+
+// Mock redirect to make it testable
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn(),
 }))
 
 // Mock UnauthorizedComponent to simplify assertions
@@ -105,5 +111,23 @@ describe("ProtectedPage", () => {
     })
 
     expect(mockGetSession).toHaveBeenCalledWith("/custom-login")
+  })
+
+  it("redirects unverified users to pending verification", async () => {
+    const mockRedirect = redirect as unknown as ReturnType<typeof vi.fn>
+    mockRedirect.mockImplementation(() => {
+      throw new Error("NEXT_REDIRECT")
+    })
+
+    const mockSession = { user: { id: 1 }, role: "user", status: "unverified" }
+    mockGetSession.mockResolvedValue(mockSession)
+
+    await expect(
+      ProtectedPage({
+        children: <div>Protected Content</div>,
+      })
+    ).rejects.toThrow("NEXT_REDIRECT")
+
+    expect(mockRedirect).toHaveBeenCalledWith("/pending-verification")
   })
 })
