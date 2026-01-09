@@ -6,7 +6,7 @@ const usernameSchema = z
   .min(3, "Nazwa użytkownika musi mieć co najmniej 3 znaki")
   .max(20, "Nazwa użytkownika może mieć maksymalnie 20 znaków")
   .regex(
-    /^[a-zA-Z0-9_ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+$/,
+    /^[a-zA-Z0-9_]+$/,
     "Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślenia"
   )
 

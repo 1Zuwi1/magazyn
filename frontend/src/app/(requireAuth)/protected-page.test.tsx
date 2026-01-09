@@ -24,6 +24,16 @@ vi.mock("./components/unauthorized", () => ({
   default: () => <div data-testid="unauthorized">Unauthorized Access</div>,
 }))
 
+const MOCK_SESSION = {
+  id: 1,
+  email: "user@example.com",
+  username: "testuser",
+  full_name: "Test User",
+  two_factor_enabled: false,
+  status: "verified",
+  role: "user",
+}
+
 describe("ProtectedPage", () => {
   const mockGetSession = getSession as unknown as ReturnType<typeof vi.fn>
 
@@ -43,7 +53,7 @@ describe("ProtectedPage", () => {
   })
 
   it("renders children when session exists and no admin privileges required", async () => {
-    const mockSession = { user: { id: 1 }, role: "user" }
+    const mockSession = { ...MOCK_SESSION }
     mockGetSession.mockResolvedValue(mockSession)
 
     const jsx = await ProtectedPage({
@@ -57,7 +67,8 @@ describe("ProtectedPage", () => {
   })
 
   it("renders children when session exists (admin) and admin privileges required", async () => {
-    const mockSession = { user: { id: 1 }, role: "admin" }
+    const mockSession = { ...MOCK_SESSION }
+    mockSession.role = "admin"
     mockGetSession.mockResolvedValue(mockSession)
 
     const jsx = await ProtectedPage({
@@ -72,7 +83,7 @@ describe("ProtectedPage", () => {
   })
 
   it("renders UnauthorizedComponent when user is not admin but admin privileges required", async () => {
-    const mockSession = { user: { id: 1 }, role: "user" }
+    const mockSession = { ...MOCK_SESSION }
     mockGetSession.mockResolvedValue(mockSession)
 
     const jsx = await ProtectedPage({
@@ -87,7 +98,7 @@ describe("ProtectedPage", () => {
   })
 
   it("calls children as function with session", async () => {
-    const mockSession = { user: { id: 1 }, role: "user" }
+    const mockSession = { ...MOCK_SESSION }
     mockGetSession.mockResolvedValue(mockSession)
 
     const childrenFn = vi.fn().mockReturnValue(<div>Function Content</div>)
@@ -119,7 +130,8 @@ describe("ProtectedPage", () => {
       throw new Error("NEXT_REDIRECT")
     })
 
-    const mockSession = { user: { id: 1 }, role: "user", status: "unverified" }
+    const mockSession = { ...MOCK_SESSION }
+    mockSession.status = "unverified"
     mockGetSession.mockResolvedValue(mockSession)
 
     await expect(

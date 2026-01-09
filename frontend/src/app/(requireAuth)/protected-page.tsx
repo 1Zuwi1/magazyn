@@ -35,7 +35,7 @@ export default async function ProtectedPage({
 
   // If the child is a function, inject the session so the page can use it
   if (typeof children === "function") {
-    return <>{children(session)}</>
+    return <>{await children(session)}</>
   }
 
   // No need for the session inside the page → just render

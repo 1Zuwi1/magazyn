@@ -10,5 +10,9 @@ export default async function Layout({ children }: { children: ReactNode }) {
     return redirect("/login")
   }
 
+  if (session.status === "unverified") {
+    return redirect("/pending-verification")
+  }
+
   return <LayoutQueryClientWrapper>{children}</LayoutQueryClientWrapper>
 }
