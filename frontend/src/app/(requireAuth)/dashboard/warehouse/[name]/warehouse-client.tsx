@@ -52,7 +52,7 @@ export default function WarehouseClient({
   // Extend rack data with maxElementSize
   const rackWithMaxSize = {
     ...currentRack,
-    maxElementSize: { width: 50, height: 40, depth: 30 },
+    maxElementSize: { width: 500, height: 400, depth: 300 },
   }
 
   return (
@@ -72,7 +72,7 @@ export default function WarehouseClient({
           </Link>
           <div>
             <h2 className="font-bold text-xl tracking-tight sm:text-2xl lg:text-3xl">
-              {warehouseName}
+              {decodeURIComponent(warehouseName)}
             </h2>
             <p className="text-muted-foreground text-xs sm:text-sm">
               ID: {warehouseId} • {currentRack.name}
@@ -92,8 +92,9 @@ export default function WarehouseClient({
           </DialogTrigger>
           <DialogContent>
             <QrScanner
-              onScan={(text) => {
-                console.log(text)
+              onScan={(_text) => {
+                // TODO: Handle scanned QR code
+                // console.log(text)
               }}
             />
           </DialogContent>

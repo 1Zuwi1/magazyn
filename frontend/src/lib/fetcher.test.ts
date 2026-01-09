@@ -60,6 +60,8 @@ describe("apiFetch", () => {
 
       await expect(
         apiFetch("/api/test", schema, {
+          // biome-ignore lint/suspicious/noTsIgnore: testing
+          // @ts-ignore - Testing invalid method with body parameter
           method: "GET",
           // biome-ignore lint/suspicious/noTsIgnore: testing
           // @ts-ignore - Testing invalid body with GET

@@ -36,7 +36,7 @@ export function RackGridView({
   const parentRef = useRef<HTMLDivElement>(null)
 
   const shouldVirtualize =
-    rows > VIRTUALIZATION_THRESHOLD || cols > VIRTUALIZATION_THRESHOLD
+    rows > VIRTUALIZATION_THRESHOLD.ROWS || cols > VIRTUALIZATION_THRESHOLD.COLS
 
   const showNavigation = totalRacks > 1 && (onPreviousRack || onNextRack)
 
@@ -45,16 +45,35 @@ export function RackGridView({
   const [containerHeight, setContainerHeight] = useState(0)
 
   useEffect(() => {
-    const updateSize = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth)
-        setContainerHeight(containerRef.current.offsetHeight)
-      }
+    const element = containerRef.current
+    if (!element) {
+      return
     }
 
-    updateSize()
-    window.addEventListener("resize", updateSize)
-    return () => window.removeEventListener("resize", updateSize)
+    const updateSize = (width: number, height: number) => {
+      setContainerWidth(width)
+      setContainerHeight(height)
+    }
+
+    updateSize(element.clientWidth, element.clientHeight)
+
+    if (typeof ResizeObserver === "undefined") {
+      const handleResize = () => {
+        updateSize(element.clientWidth, element.clientHeight)
+      }
+
+      window.addEventListener("resize", handleResize)
+      return () => window.removeEventListener("resize", handleResize)
+    }
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        updateSize(entry.contentRect.width, entry.contentRect.height)
+      }
+    })
+
+    resizeObserver.observe(element)
+    return () => resizeObserver.disconnect()
   }, [])
 
   return (
@@ -78,7 +97,7 @@ export function RackGridView({
 
         {/* Grid */}
         <div
-          className="h-full max-h-150 w-full flex-1 rounded-lg border"
+          className="h-full max-h-150 w-full min-w-0 flex-1 rounded-lg border"
           ref={containerRef}
         >
           {shouldVirtualize ? (

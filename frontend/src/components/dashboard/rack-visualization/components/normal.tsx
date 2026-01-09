@@ -1,7 +1,7 @@
 import { memo } from "react"
 import type { ItemSlot } from "../../types"
 import { getSlotCoordinate } from "../../utils/helpers"
-import RackElement from "../rack-element"
+import RackElement from "./rack-element"
 
 const Normal = ({
   cols,

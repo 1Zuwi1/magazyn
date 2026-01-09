@@ -1,13 +1,14 @@
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { memo } from "react"
+import { memo, useEffect } from "react"
 import { useIsMobile } from "@/hooks/use-mobile"
 import type { ItemSlot } from "../../types"
 import { getSlotCoordinate } from "../../utils/helpers"
-import RackElement from "../rack-element"
+import RackElement from "./rack-element"
 
 const CELL_GAP = 12
 const VIRTUALIZATION_PADDING = 16
 const BASE_CELL_SIZE = 120
+const MOBILE_CELL_SIZE = 50
 
 const Virtualized = ({
   rows,
@@ -25,7 +26,16 @@ const Virtualized = ({
   items: ItemSlot[]
 }) => {
   const isMobile = useIsMobile()
-  const cellSize = isMobile ? 50 : BASE_CELL_SIZE
+  const minCellSize = isMobile ? MOBILE_CELL_SIZE : BASE_CELL_SIZE
+  const availableWidth = Math.max(
+    containerWidth - VIRTUALIZATION_PADDING * 2,
+    0
+  )
+  const fittedCellSize =
+    cols > 0
+      ? Math.max((availableWidth - (cols - 1) * CELL_GAP) / cols, 0)
+      : minCellSize
+  const cellSize = Math.max(minCellSize, fittedCellSize)
   const totalWidth = cols * cellSize + (cols - 1) * CELL_GAP
   const totalHeight = rows * cellSize + (rows - 1) * CELL_GAP
 
@@ -47,6 +57,13 @@ const Virtualized = ({
     paddingStart: VIRTUALIZATION_PADDING,
     paddingEnd: VIRTUALIZATION_PADDING,
   })
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: cellSize is intentionally included since it affects measurements and should trigger re-measurement when it changes
+  useEffect(() => {
+    rowVirtualizer.measure()
+    columnVirtualizer.measure()
+  }, [cellSize, columnVirtualizer, rowVirtualizer])
+
   return (
     <div
       ref={parentRef}

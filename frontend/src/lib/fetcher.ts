@@ -171,14 +171,10 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
         : { "Content-Type": "application/json", Accept: "application/json" }
     )
 
-    // Use INTERNAL_API_URL on server to avoid extra hop through proxy
-    // That will speed up server-side requests
-    const url =
-      typeof window === "undefined"
-        ? `${process.env.INTERNAL_API_URL || ""}`
-        : ""
+    const baseUrl =
+      typeof window === "undefined" ? process.env.INTERNAL_API_URL : undefined
 
-    const res = await fetch(`${url}${path}`, {
+    const res = await fetch(resolveRequestUrl(path, baseUrl), {
       ...restInit,
       method,
       signal: abortController.signal,
@@ -393,4 +389,11 @@ function mergeHeaders(
     }
   }
   return h
+}
+
+function resolveRequestUrl(path: string, baseUrl?: string): string {
+  if (baseUrl) {
+    return new URL(path, baseUrl).toString()
+  }
+  return path
 }

@@ -1,3 +1,6 @@
+import { toast } from "sonner"
+import { FetchError } from "@/lib/fetcher"
+
 // Helper function to convert index to coordinate (R01-P01, R02-P03, etc.)
 export function getSlotCoordinate(index: number, cols: number): string {
   const row = Math.floor(index / cols)
@@ -46,4 +49,12 @@ export function pluralize(
   }
 
   return many
+}
+
+export const handleApiError = (err: unknown, fallback?: string) => {
+  toast.error(
+    err instanceof FetchError
+      ? err.message
+      : (fallback ?? "Wystąpił nieoczekiwany błąd.")
+  )
 }

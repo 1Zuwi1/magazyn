@@ -61,7 +61,10 @@ function NavMain() {
       {items.map((item) => (
         <SidebarMenuItem key={item.href}>
           <SidebarMenuButton>
-            <Link className="flex items-center gap-2" href={item.href}>
+            <Link
+              className="flex h-full w-full items-center gap-2"
+              href={item.href}
+            >
               <HugeiconsIcon className="mr-2 size-5" icon={item.icon} />
               {item.title}
             </Link>
