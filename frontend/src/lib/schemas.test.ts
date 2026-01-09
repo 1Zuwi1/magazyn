@@ -36,6 +36,65 @@ describe("LoginSchema", () => {
     }
   })
 
+  it("rejects username shorter than 3 characters", () => {
+    const invalidInput = {
+      username: "ab",
+      password: "password123",
+    }
+
+    const result = LoginSchema.shape.POST?.shape.input.safeParse(invalidInput)
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Nazwa użytkownika musi mieć co najmniej 3 znaki"
+      )
+    }
+  })
+
+  it("rejects username longer than 20 characters", () => {
+    const invalidInput = {
+      username: "a".repeat(21),
+      password: "password123",
+    }
+
+    const result = LoginSchema.shape.POST?.shape.input.safeParse(invalidInput)
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Nazwa użytkownika może mieć maksymalnie 20 znaków"
+      )
+    }
+  })
+
+  it("rejects invalid characters in username", () => {
+    const invalidInput = {
+      username: "invalid@user",
+      password: "password123",
+    }
+
+    const result = LoginSchema.shape.POST?.shape.input.safeParse(invalidInput)
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślenia"
+      )
+    }
+  })
+
+  it("accepts valid username with underscores and numbers", () => {
+    const validInput = {
+      username: "valid_user_123",
+      password: "password123",
+    }
+
+    const result = LoginSchema.shape.POST?.shape.input.safeParse(validInput)
+
+    expect(result.success).toBe(true)
+  })
+
   it("has correct output schema with requiresTwoFactor boolean", () => {
     const validOutput = {
       requiresTwoFactor: true,
