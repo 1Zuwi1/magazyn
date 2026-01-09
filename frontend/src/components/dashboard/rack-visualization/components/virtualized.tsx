@@ -59,6 +59,8 @@ const Virtualized = ({
   })
 
   useEffect(() => {
+    console.log(rowVirtualizer)
+    console.log(columnVirtualizer)
     rowVirtualizer.measure()
     columnVirtualizer.measure()
   }, [rowVirtualizer, columnVirtualizer])
