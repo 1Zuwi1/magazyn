@@ -96,8 +96,8 @@ const ITEM_VISUALS: Record<ItemStatus, ItemVisual> = {
   },
   "expired-dangerous": {
     color: "#b91c1c",
-    glow: "#ef4444",
-    emissiveIntensity: 0.22,
+    glow: "#b91c1c",
+    emissiveIntensity: 0.12,
     stripeColor: "#f59e0b",
   },
 }

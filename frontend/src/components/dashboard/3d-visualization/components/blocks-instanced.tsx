@@ -3,7 +3,7 @@ import { useMemo, useState } from "react"
 import { useWarehouseStore } from "../store"
 import type { ItemStatus, ItemVisual, Rack3D } from "../types"
 import { getItemVisuals, getWorstStatus, RACK_ZONE_SIZE } from "../types"
-import { getRackMetrics, type RackMetrics } from "./rack-structure"
+import { getRackMetrics, type RackMetrics } from "./rack-metrics"
 import {
   STRIPE_EMISSIVE_INTENSITY,
   STRIPE_MATERIAL_DEFAULTS,

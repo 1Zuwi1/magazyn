@@ -7,7 +7,7 @@ import {
   getGridDimensions,
   getRackMetrics,
   type RackMetrics,
-} from "./rack-structure"
+} from "./rack-metrics"
 
 const {
   COLORS: { hover: HOVER_COLOR, selected: SELECTED_COLOR },

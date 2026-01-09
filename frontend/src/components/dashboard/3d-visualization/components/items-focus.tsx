@@ -8,7 +8,7 @@ import {
   getGridDimensions,
   getRackMetrics,
   type RackMetrics,
-} from "./rack-structure"
+} from "./rack-metrics"
 import {
   STRIPE_EMISSIVE_INTENSITY,
   STRIPE_MATERIAL_DEFAULTS,

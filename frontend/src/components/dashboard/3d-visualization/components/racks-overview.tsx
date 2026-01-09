@@ -3,20 +3,12 @@ import { useState } from "react"
 import { useWarehouseStore } from "../store"
 import type { Rack3D } from "../types"
 import { RACK_ZONE_SIZE } from "../types"
+import type { RackRender } from "../warehouse-layout"
 import { BlocksInstanced, getBlockLayout } from "./blocks-instanced"
-import {
-  getRackMetrics,
-  getShelfPositionsForGrid,
-  RackShelves,
-  RackStructure,
-  type RackTone,
-} from "./rack-structure"
-
-interface RackRender {
-  rack: Rack3D
-  renderPosition: [number, number, number]
-  aisleIndex: number
-}
+import { getRackMetrics } from "./rack-metrics"
+import { getShelfPositionsForGrid, RackShelves } from "./rack-shelves"
+import { RackStructure } from "./rack-structure"
+import type { RackTone } from "./rack-tone"
 
 const AISLE_TONES: RackTone[] = [
   {

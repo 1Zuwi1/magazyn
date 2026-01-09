@@ -1,162 +1,10 @@
-import { Edges, Instance, Instances } from "@react-three/drei"
+import { Edges } from "@react-three/drei"
 import { useMemo } from "react"
-import type { Item3D, ItemStatus, Rack3D } from "../types"
-import {
-  getItemVisuals,
-  getWorstStatus,
-  ITEM_STATUS_ORDER,
-  RACK_ZONE_SIZE,
-} from "../types"
-import {
-  STRIPE_EMISSIVE_INTENSITY,
-  STRIPE_MATERIAL_DEFAULTS,
-  useStripeTexture,
-} from "./stripe-texture"
-
-export interface RackMetrics {
-  width: number
-  height: number
-  depth: number
-  unitX: number
-  unitY: number
-  gridWidth: number
-  gridHeight: number
-  frameThickness: number
-  framePadding: number
-  shelfThickness: number
-  slotSize: { w: number; h: number; d: number }
-}
-
-export interface RackTone {
-  frame: string
-  frameHover: string
-  shelf: string
-  shelfHover: string
-  outline: string
-  outlineHover: string
-  glow: string
-}
-
-export const DEFAULT_RACK_TONE: RackTone = {
-  frame: "#9aa3af",
-  frameHover: "#b6c0cd",
-  shelf: "#d6dbe2",
-  shelfHover: "#e6ebf1",
-  outline: "#6b7280",
-  outlineHover: "#94a3b8",
-  glow: "#7c8798",
-}
-
-export const getGridSpan = (count: number, unit: number): number =>
-  Math.max(0, count - 1) * unit
-
-interface GridDimensions {
-  width: number
-  height: number
-}
-
-export const getGridDimensions = (
-  cols: number,
-  rows: number,
-  unitX: number,
-  unitY: number
-): GridDimensions => ({
-  width: getGridSpan(cols, unitX),
-  height: getGridSpan(rows, unitY),
-})
-
-interface ShelfGridConfig {
-  rows: number
-  unitY: number
-  gridHeight: number
-  cellHeight: number
-  shelfThickness: number
-}
-
-export function getShelfPositionsForGrid({
-  rows,
-  unitY,
-  gridHeight,
-  cellHeight,
-  shelfThickness,
-}: ShelfGridConfig): number[] {
-  const positions: number[] = []
-
-  for (let row = 0; row < rows; row++) {
-    const y = (rows - 1 - row) * unitY - gridHeight / 2
-    const shelfY = y - cellHeight / 2 + shelfThickness / 2
-    positions.push(shelfY)
-  }
-
-  return positions
-}
-
-interface RackShelvesProps {
-  shelfPositions: number[]
-  width: number
-  depth: number
-  thickness: number
-  color?: string
-}
-
-export function RackShelves({
-  shelfPositions,
-  width,
-  depth,
-  thickness,
-  color = DEFAULT_RACK_TONE.shelf,
-}: RackShelvesProps) {
-  if (shelfPositions.length === 0) {
-    return null
-  }
-
-  return (
-    <group>
-      {shelfPositions.map((y, index) => (
-        <mesh key={`shelf-${index}`} position={[0, y, 0]} raycast={() => null}>
-          <boxGeometry args={[width, thickness, depth]} />
-          <meshStandardMaterial
-            color={color}
-            metalness={0.05}
-            roughness={0.85}
-          />
-        </mesh>
-      ))}
-    </group>
-  )
-}
-
-export const getRackMetrics = (rack: Rack3D): RackMetrics => {
-  const unitX = rack.cell.w + rack.spacing.x
-  const unitY = rack.cell.h + rack.spacing.y
-  const gridWidth = getGridSpan(rack.grid.cols, unitX)
-  const gridHeight = getGridSpan(rack.grid.rows, unitY)
-  const framePadding = rack.frame?.padding ?? 0.05
-  const frameThickness = Math.max(rack.frame?.thickness ?? 0.03, 0.04)
-  const slotSize = {
-    w: rack.cell.w * 0.8,
-    h: rack.cell.h * 0.75,
-    d: rack.cell.d * 0.7,
-  }
-  const width = gridWidth + slotSize.w + framePadding * 2
-  const height = gridHeight + slotSize.h + framePadding * 2
-  const depth = rack.cell.d + framePadding * 2
-  const shelfThickness = Math.max(frameThickness * 0.45, 0.012)
-
-  return {
-    width,
-    height,
-    depth,
-    unitX,
-    unitY,
-    gridWidth,
-    gridHeight,
-    frameThickness,
-    framePadding,
-    shelfThickness,
-    slotSize,
-  }
-}
+import type { Rack3D } from "../types"
+import { getDisplaySize, getOccupiedSlots, RackItems } from "./rack-items"
+import { getRackMetrics, type RackMetrics } from "./rack-metrics"
+import { getShelfPositionsForGrid } from "./rack-shelves"
+import { DEFAULT_RACK_TONE, type RackTone } from "./rack-tone"
 
 interface RackFrameProps {
   metrics: RackMetrics
@@ -165,12 +13,7 @@ interface RackFrameProps {
   tone: RackTone
 }
 
-export function RackFrame({
-  metrics,
-  shelfPositions,
-  hovered,
-  tone,
-}: RackFrameProps) {
+function RackFrame({ metrics, shelfPositions, hovered, tone }: RackFrameProps) {
   const { width, height, depth, frameThickness, shelfThickness, framePadding } =
     metrics
   const halfWidth = width / 2
@@ -281,89 +124,6 @@ export function RackFrame({
   )
 }
 
-interface RackItemsProps {
-  slotSize: { w: number; h: number; d: number }
-  items: { position: [number, number, number]; status: Item3D["status"] }[]
-}
-
-function RackItems({ slotSize, items }: RackItemsProps) {
-  const stripeTexture = useStripeTexture()
-  const groupedByStatus = useMemo(() => {
-    const grouped: Record<ItemStatus, [number, number, number][]> = {
-      normal: [],
-      dangerous: [],
-      expired: [],
-      "expired-dangerous": [],
-    }
-
-    for (const item of items) {
-      grouped[item.status].push(item.position)
-    }
-
-    return grouped
-  }, [items])
-
-  if (items.length === 0) {
-    return null
-  }
-
-  return (
-    <>
-      {ITEM_STATUS_ORDER.map((status) => {
-        const positions = groupedByStatus[status]
-        if (!positions || positions.length === 0) {
-          return null
-        }
-        const visuals = getItemVisuals(status)
-        const stripeColor = visuals.stripeColor
-
-        return (
-          <group key={`occupied-${status}`}>
-            <Instances frustumCulled={false} limit={positions.length}>
-              <boxGeometry args={[slotSize.w, slotSize.h, slotSize.d]} />
-              <meshStandardMaterial
-                color={visuals.color}
-                emissive={visuals.glow}
-                emissiveIntensity={visuals.emissiveIntensity}
-                metalness={0.08}
-                roughness={0.75}
-              />
-              {positions.map((position, index) => (
-                <Instance
-                  key={`occupied-${status}-${index}`}
-                  position={position}
-                />
-              ))}
-            </Instances>
-            {stripeColor && stripeTexture && (
-              <Instances
-                frustumCulled={false}
-                limit={positions.length}
-                renderOrder={1}
-              >
-                <boxGeometry args={[slotSize.w, slotSize.h, slotSize.d]} />
-                <meshStandardMaterial
-                  {...STRIPE_MATERIAL_DEFAULTS}
-                  alphaMap={stripeTexture}
-                  color={stripeColor}
-                  emissive={stripeColor}
-                  emissiveIntensity={STRIPE_EMISSIVE_INTENSITY}
-                />
-                {positions.map((position, index) => (
-                  <Instance
-                    key={`occupied-${status}-stripe-${index}`}
-                    position={position}
-                  />
-                ))}
-              </Instances>
-            )}
-          </group>
-        )
-      })}
-    </>
-  )
-}
-
 interface RackStructureProps {
   rack: Rack3D
   metrics?: RackMetrics
@@ -371,152 +131,6 @@ interface RackStructureProps {
   showItems?: boolean
   showShelves?: boolean
   tone?: RackTone
-}
-
-interface DisplaySizeConfig {
-  displayRows: number
-  displayCols: number
-  downsample: boolean
-  displayUnitX: number
-  displayUnitY: number
-  displaySlotSize: { w: number; h: number; d: number }
-}
-
-function getDisplaySize(
-  rack: Rack3D,
-  resolvedMetrics: RackMetrics
-): DisplaySizeConfig {
-  const displayRows = Math.min(rack.grid.rows, RACK_ZONE_SIZE)
-  const displayCols = Math.min(rack.grid.cols, RACK_ZONE_SIZE)
-  const downsample =
-    displayRows !== rack.grid.rows || displayCols !== rack.grid.cols
-  const displayUnitX =
-    displayCols > 1 ? resolvedMetrics.gridWidth / (displayCols - 1) : 0
-  const displayUnitY =
-    displayRows > 1 ? resolvedMetrics.gridHeight / (displayRows - 1) : 0
-  const displaySlotSize = downsample
-    ? {
-        w: Math.max(resolvedMetrics.slotSize.w, displayUnitX * 0.7),
-        h: Math.max(
-          resolvedMetrics.slotSize.h,
-          displayUnitY > 0 ? displayUnitY * 0.7 : resolvedMetrics.slotSize.h
-        ),
-        d: resolvedMetrics.slotSize.d,
-      }
-    : resolvedMetrics.slotSize
-
-  return {
-    displayRows,
-    displayCols,
-    downsample,
-    displayUnitX,
-    displayUnitY,
-    displaySlotSize,
-  }
-}
-
-function getWorstStatusInGridCell(
-  rack: Rack3D,
-  startRow: number,
-  endRow: number,
-  startCol: number,
-  endCol: number
-): ItemStatus | null {
-  let worstStatus: ItemStatus | null = null
-
-  for (let r = startRow; r < endRow; r++) {
-    const rowOffset = r * rack.grid.cols
-    for (let c = startCol; c < endCol; c++) {
-      const item = rack.items[rowOffset + c]
-      if (!item) {
-        continue
-      }
-      worstStatus = getWorstStatus(worstStatus, item.status)
-      if (worstStatus === "expired-dangerous") {
-        return worstStatus
-      }
-    }
-  }
-
-  return worstStatus
-}
-
-function processDownsampledSlots(
-  rack: Rack3D,
-  resolvedMetrics: RackMetrics,
-  displaySize: DisplaySizeConfig
-): {
-  position: [number, number, number]
-  status: Item3D["status"]
-}[] {
-  const { displayRows, displayCols, displayUnitX, displayUnitY } = displaySize
-  const occupied: {
-    position: [number, number, number]
-    status: Item3D["status"]
-  }[] = []
-  const rowStep = rack.grid.rows / displayRows
-  const colStep = rack.grid.cols / displayCols
-
-  for (let row = 0; row < displayRows; row++) {
-    const startRow = Math.floor(row * rowStep)
-    const endRow = Math.min(rack.grid.rows, Math.floor((row + 1) * rowStep))
-    const y =
-      (displayRows - 1 - row) * displayUnitY - resolvedMetrics.gridHeight / 2
-
-    for (let col = 0; col < displayCols; col++) {
-      const startCol = Math.floor(col * colStep)
-      const endCol = Math.min(rack.grid.cols, Math.floor((col + 1) * colStep))
-      const worstStatus = getWorstStatusInGridCell(
-        rack,
-        startRow,
-        endRow,
-        startCol,
-        endCol
-      )
-
-      if (!worstStatus) {
-        continue
-      }
-
-      const x = col * displayUnitX - resolvedMetrics.gridWidth / 2
-      occupied.push({ position: [x, y, 0], status: worstStatus })
-    }
-  }
-
-  return occupied
-}
-
-function processFullSlots(
-  rack: Rack3D,
-  resolvedMetrics: RackMetrics
-): {
-  position: [number, number, number]
-  status: Item3D["status"]
-}[] {
-  const occupied: {
-    position: [number, number, number]
-    status: Item3D["status"]
-  }[] = []
-
-  for (let row = 0; row < rack.grid.rows; row++) {
-    const y =
-      (rack.grid.rows - 1 - row) * resolvedMetrics.unitY -
-      resolvedMetrics.gridHeight / 2
-
-    for (let col = 0; col < rack.grid.cols; col++) {
-      const x = col * resolvedMetrics.unitX - resolvedMetrics.gridWidth / 2
-      const index = row * rack.grid.cols + col
-      const item = rack.items[index]
-
-      if (!item) {
-        continue
-      }
-
-      occupied.push({ position: [x, y, 0], status: item.status })
-    }
-  }
-
-  return occupied
 }
 
 export function RackStructure({
@@ -531,20 +145,16 @@ export function RackStructure({
   const resolvedTone = tone ?? DEFAULT_RACK_TONE
 
   const { occupiedSlots, shelfPositions, slotSize } = useMemo(() => {
-    const shelves: number[] = []
     const displaySize = getDisplaySize(rack, resolvedMetrics)
-
-    if (showShelves) {
-      shelves.push(
-        ...getShelfPositionsForGrid({
+    const shelves = showShelves
+      ? getShelfPositionsForGrid({
           rows: displaySize.displayRows,
           unitY: displaySize.displayUnitY,
           gridHeight: resolvedMetrics.gridHeight,
           cellHeight: rack.cell.h,
           shelfThickness: resolvedMetrics.shelfThickness,
         })
-      )
-    }
+      : []
 
     if (!showItems) {
       return {
@@ -554,12 +164,8 @@ export function RackStructure({
       }
     }
 
-    const occupied = displaySize.downsample
-      ? processDownsampledSlots(rack, resolvedMetrics, displaySize)
-      : processFullSlots(rack, resolvedMetrics)
-
     return {
-      occupiedSlots: occupied,
+      occupiedSlots: getOccupiedSlots(rack, resolvedMetrics, displaySize),
       shelfPositions: shelves,
       slotSize: displaySize.displaySlotSize,
     }
