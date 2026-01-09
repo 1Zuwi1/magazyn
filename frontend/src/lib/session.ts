@@ -23,6 +23,7 @@ export const getSession = cache(async (redirectTo?: string) => {
         full_name: "User Example",
         two_factor_enabled: false,
         role: "user",
+        status: "verified",
       })
     }
 

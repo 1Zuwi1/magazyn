@@ -76,6 +76,7 @@ export const ApiMeSchema = createApiSchema({
       username: z.string(),
       full_name: z.string().nullable(),
       two_factor_enabled: z.boolean(),
+      status: z.enum(["verified", "unverified", "banned"]),
       role: z.enum(["user", "admin"]),
     }),
   },

@@ -1,4 +1,5 @@
 import "server-only"
+import { redirect } from "next/navigation"
 import type { ReactNode } from "react"
 import { getSession } from "@/lib/session"
 import UnauthorizedComponent from "./components/unauthorized"
@@ -21,6 +22,10 @@ export default async function ProtectedPage({
   const session = await getSession(redirectTo)
   if (!session) {
     return null
+  }
+
+  if (session.status === "unverified") {
+    redirect("/pending-verification")
   }
 
   // If the user is not an admin and admin privileges are required, return Unauthorized
