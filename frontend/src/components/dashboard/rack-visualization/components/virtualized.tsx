@@ -58,10 +58,11 @@ const Virtualized = ({
     paddingEnd: VIRTUALIZATION_PADDING,
   })
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: cellSize is intentionally included since it affects measurements and should trigger re-measurement when it changes
   useEffect(() => {
     rowVirtualizer.measure()
     columnVirtualizer.measure()
-  }, [rowVirtualizer, columnVirtualizer])
+  }, [cellSize, columnVirtualizer, rowVirtualizer])
 
   return (
     <div
