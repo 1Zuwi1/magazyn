@@ -377,6 +377,7 @@ describe("ApiMeSchema", () => {
       username: "testuser",
       full_name: null,
       two_factor_enabled: false,
+      status: "verified",
       role: "user",
     }
 
@@ -391,6 +392,7 @@ describe("ApiMeSchema", () => {
       username: "testuser",
       full_name: null,
       two_factor_enabled: "true",
+      status: "verified",
       role: "user",
     }
 
