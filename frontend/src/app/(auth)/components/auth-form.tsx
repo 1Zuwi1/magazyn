@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import type { ZodError } from "zod"
+import { handleApiError } from "@/components/dashboard/utils/helpers"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import {
@@ -68,8 +69,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
         )
 
         if (err) {
-          // TODO: Add more specific error handling from server response
-          toast.error("Wystąpił błąd podczas logowania. Spróbuj ponownie.")
+          handleApiError(
+            err,
+            "Wystąpił błąd podczas logowania. Spróbuj ponownie."
+          )
           return
         }
 
@@ -85,8 +88,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
         )
 
         if (err) {
-          // TODO: Add more specific error handling from server response
-          toast.error("Wystąpił błąd podczas rejestracji. Spróbuj ponownie.")
+          handleApiError(
+            err,
+            "Wystąpił błąd podczas rejestracji. Spróbuj ponownie."
+          )
           return
         }
 
