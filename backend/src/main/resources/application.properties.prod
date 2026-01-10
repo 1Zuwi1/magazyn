@@ -20,7 +20,6 @@ spring.jpa.show-sql=false
 jwt.secret=${JWT_SECRET}
 
 auth.token.expiration-seconds=3600
-auth.cookie.domain=${DOMAIN}
 
 app.domain=${DOMAIN}
 app.name=${APP_NAME}

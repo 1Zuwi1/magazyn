@@ -37,7 +37,7 @@ public class TwoFactorController {
     @GetMapping
     public ResponseEntity<?> twoFactorMethods() {
         try {
-            return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.usersTwoFactorMethod()));
+            return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.getUsersTwoFactorMethods()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
         }
@@ -66,14 +66,17 @@ public class TwoFactorController {
 
     @Operation(summary = "Check the provided two-factor authentication code for the current user.")
     @PostMapping("/check")
-    public ResponseEntity<?> checkCode(@Valid @RequestBody CodeRequest codeRequest, HttpServletResponse response) {
+    public ResponseEntity<?> checkCode(@Valid @RequestBody CodeRequest codeRequest,
+                                       HttpServletResponse response,
+                                       @CookieValue(name = "refresh-token") String refreshToken) {
         try {
-
+            twoFactorService.checkCode(codeRequest, response, refreshToken);
             return ResponseEntity.ok(new ResponseTemplate<>(true, "2FA code verified"));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
+            throw new RuntimeException(e);
         }
     }
 }

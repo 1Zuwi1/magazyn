@@ -1,6 +1,10 @@
 package com.github.dawid_stolarczyk.magazyn.Security;
 
+import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
+import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
+import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationNotFoundException;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -20,8 +24,6 @@ import java.util.Map;
 public class JwtUtil {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
-    @Value("${auth.token.expiration-seconds}")
-    private long TOKEN_EXPIRATION_SECONDS;
 
     public SecretKey getSecretKey() {
         if (SECRET_KEY == null || SECRET_KEY.trim().isEmpty()) {
@@ -35,13 +37,18 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(Long id, Status2FA status2FA) {
+    public String generateToken(Long id, Status2FA status2FA, long expirationSeconds) {
         SecretKey key = getSecretKey();
-        Map<String, Object> claims = Map.of("id", id, "status_2fa", status2FA.name());
+        Map<String, Object> claims;
+        if (status2FA == null) {
+            claims = Map.of("id", id);
+        } else {
+            claims = Map.of("id", id, "status_2fa", status2FA.name());
+        }
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + TOKEN_EXPIRATION_SECONDS * 1000))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationSeconds * 1000))
                 .signWith(key)
                 .compact();
     }
@@ -58,6 +65,7 @@ public class JwtUtil {
             return null;
         }
     }
+
     public Long extractUserId(String token) {
         try {
             Claims claims = extractAllClaims(token);
@@ -73,6 +81,7 @@ public class JwtUtil {
             return null;
         }
     }
+
     public String extract2FaStatus(String token) {
         Claims claims = extractAllClaims(token);
         if (claims == null) return null;
@@ -82,6 +91,7 @@ public class JwtUtil {
             return null;
         }
     }
+
     public Date extractExpiration(String token) {
         Claims claims = extractAllClaims(token);
         if (claims == null) return null;
@@ -94,21 +104,41 @@ public class JwtUtil {
         }
         return claims.getExpiration();
     }
+    public boolean isTokenValid(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            if (claims == null) return false;
+            Date expiration = claims.getExpiration();
+            return expiration != null && expiration.after(new Date());
+        } catch (JwtException e) {
+            return false;
+        }
+    }
 
 
-    public static Long getCurrentIdByAuthentication() {
+    public static AuthPrincipal getCurrentAuthPrincipal() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            throw new RuntimeException("No authenticated user found");
+            throw new AuthenticationNotFoundException();
         }
 
         Object principal = auth.getPrincipal();
 
-        if (principal instanceof Long) {
-            return (Long) principal;
+        if (principal instanceof AuthPrincipal) {
+            return (AuthPrincipal) principal;
         }
 
-        throw new RuntimeException("Unsupported principal type: " + principal.getClass());
+        throw new AuthenticationException(AuthError.NOT_AUTHENTICATED.name());
+    }
+    public static AuthPrincipal getCurrentAuthPrincipal(Authentication authentication) {
+        assert authentication != null;
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof AuthPrincipal) {
+            return (AuthPrincipal) principal;
+        }
+
+        return null;
     }
 }

@@ -12,10 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -27,9 +24,9 @@ public class AuthController {
 
     @Operation(summary = "Logout the current user by invalidating their session.")
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
+    public ResponseEntity<?> logout(HttpServletResponse response, @CookieValue(name = "refresh-token", required = false) String refreshToken) {
         try {
-            authService.logoutUser(response, request);
+            authService.logoutUser(response, request, refreshToken);
             return ResponseEntity.ok(new ResponseTemplate<>(true, "Logged out successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
@@ -48,12 +45,39 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
         }
     }
+
     @Operation(summary = "Register a new user with provided credentials.")
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest, HttpServletResponse response) {
         try {
             authService.registerUser(registerRequest, request);
             return ResponseEntity.ok(new ResponseTemplate<>(true, "Registered successfully"));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Refresh the authentication token using a valid refresh token.")
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(HttpServletResponse response, @CookieValue(name = "refresh-token") String refreshToken) {
+        try {
+            authService.refreshAuthToken(response, request, refreshToken);
+            return ResponseEntity.ok(new ResponseTemplate<>(true, "Token refreshed successfully"));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Verify user's email using a verification token.")
+    @GetMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
+        try {
+            authService.verifyEmailCheck(token);
+            return ResponseEntity.ok(new ResponseTemplate<>(true, "Email verified successfully"));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getMessage()));
         } catch (Exception e) {

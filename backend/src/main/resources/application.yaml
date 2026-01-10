@@ -1,0 +1,23 @@
+auth:
+  limits:
+    AUTH_LOGIN:
+      capacity: 5
+      refill: 5
+      duration: PT1M
+    AUTH_REGISTER:
+      capacity: 3
+      refill: 3
+      duration: PT5M
+    AUTH_LOGOUT:
+      capacity: 20
+      refill: 20
+      duration: PT1M
+    AUTH_REFRESH_TOKEN:
+        capacity: 10
+        refill: 10
+        duration: PT1M
+security:
+  jwt:
+    access-token-ttl: 10m
+    refresh-token-ttl: 14d
+    twofa-code-ttl: 5m

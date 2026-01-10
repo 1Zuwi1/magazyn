@@ -1,8 +1,12 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
+@Setter
 public class ResponseTemplate<T> {
     private boolean success;
     private T data;
@@ -12,19 +16,4 @@ public class ResponseTemplate<T> {
         this.data = data;
     }
 
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-
-    public T getData() {
-        return data;
-    }
-
-    public void setData(T data) {
-        this.data = data;
-    }
 }

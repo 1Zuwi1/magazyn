@@ -25,9 +25,9 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved user information",
                     content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = UserInfoResponse.class)
-            )),
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = UserInfoResponse.class)
+                    )),
             @ApiResponse(responseCode = "400", description = "Bad request, could not retrieve user information")
     })
     @GetMapping("/me")

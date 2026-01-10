@@ -12,24 +12,17 @@ import org.springframework.stereotype.Component;
 public class CookiesUtils {
 
     private static String cookieDomainStatic;
-    private static Integer authTokenExpirationSecondsStatic;
 
-    @Value("${auth.cookie.domain}")
+    @Value("${app.domain}")
     private String cookieDomain;
 
-    @Value("${auth.token.expiration-seconds}")
-    private Integer authTokenExpirationSeconds;
 
     @PostConstruct
     public void init() {
         cookieDomainStatic = cookieDomain;
-        authTokenExpirationSecondsStatic = authTokenExpirationSeconds;
     }
 
-    public static void setCookie(HttpServletResponse response, String name, String value, Integer maxAge) {
-        if (maxAge == null) {
-            maxAge = authTokenExpirationSecondsStatic;
-        }
+    public static void setCookie(HttpServletResponse response, String name, String value, Long maxAge) {
         ResponseCookie cookie = ResponseCookie.from(name, value)
                 .httpOnly(true)
                 .secure(true)
@@ -41,6 +34,7 @@ public class CookiesUtils {
 
         response.addHeader("Set-Cookie", cookie.toString());
     }
+
     public static String getCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {

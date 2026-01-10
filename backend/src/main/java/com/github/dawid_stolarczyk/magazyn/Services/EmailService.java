@@ -47,4 +47,12 @@ public class EmailService {
         String subject = "Twój kod uwierzytelniania dwuskładnikowego";
         sendSimpleEmail(to, subject, htmlContent);
     }
+
+    public void sendVerificationEmail(String to, String verificationLink) {
+        Context context = new Context();
+        context.setVariable("verificationLink", verificationLink);
+        String htmlContent = templateEngine.process("mail/verification-email", context);
+        String subject = "Weryfikacja adresu e-mail";
+        sendSimpleEmail(to, subject, htmlContent);
+    }
 }
