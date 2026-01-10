@@ -20,46 +20,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { formatDate, getDaysUntilExpiry } from "../utils/helpers"
+import { formatDate } from "../utils/helpers"
+import { ExpiryBadge } from "./components/expiry-badge"
 import type { ItemInstance } from "./types"
-
-function getExpiryBadge(expiryDate: Date) {
-  const days = getDaysUntilExpiry(new Date(), expiryDate)
-
-  if (days < 0) {
-    return (
-      <Badge variant="destructive">
-        Przeterminowany ({Math.abs(days)} dni temu)
-      </Badge>
-    )
-  }
-
-  if (days === 0) {
-    return <Badge variant="destructive">Dzisiaj</Badge>
-  }
-
-  if (days <= 3) {
-    return <Badge variant="destructive">{days} dni</Badge>
-  }
-
-  if (days <= 7) {
-    return (
-      <Badge className="bg-orange-500" variant="default">
-        {days} dni
-      </Badge>
-    )
-  }
-
-  if (days <= 14) {
-    return (
-      <Badge className="bg-yellow-500" variant="default">
-        {days} dni
-      </Badge>
-    )
-  }
-
-  return <Badge variant="outline">{days} dni</Badge>
-}
 
 export const assortmentColumns: ColumnDef<ItemInstance>[] = [
   {
@@ -129,7 +92,7 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
     header: "Przeterminowanie",
     cell: ({ row }) => {
       const expiryBadge = useMemo(() => {
-        return getExpiryBadge(row.original.expiryDate)
+        return <ExpiryBadge expiryDate={row.original.expiryDate} />
       }, [row.original.expiryDate])
       return (
         <div className="space-y-1">
