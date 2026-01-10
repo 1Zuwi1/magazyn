@@ -20,7 +20,7 @@ describe("createApiSchema", () => {
 
   it("creates schema with POST input and output", () => {
     const inputSchema = z.object({
-      email: z.string().email(),
+      email: z.email(),
       password: z.string(),
     })
     const outputSchema = z.object({
