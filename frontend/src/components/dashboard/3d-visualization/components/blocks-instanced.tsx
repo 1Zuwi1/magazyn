@@ -1,7 +1,18 @@
 import { Html, Instance, Instances, useCursor } from "@react-three/drei"
 import { useMemo, useState } from "react"
+import {
+  BLOCK_EMPTY_VISUAL,
+  BLOCK_GAP_RATIO,
+  BLOCK_OPACITY,
+  BLOCK_VISUAL_SCALE,
+  HIGHLIGHT_OPACITY,
+  HOVER_COLOR,
+  STATUS_LABELS,
+  TOOLTIP_OFFSET,
+  type BlockStatusKey,
+} from "../constants"
 import { useWarehouseStore } from "../store"
-import type { ItemStatus, ItemVisual, Rack3D } from "../types"
+import type { ItemStatus, Rack3D } from "../types"
 import { getItemVisuals, getWorstStatus, RACK_ZONE_SIZE } from "../types"
 import { getRackMetrics, type RackMetrics } from "./rack-metrics"
 import {
@@ -9,27 +20,6 @@ import {
   STRIPE_MATERIAL_DEFAULTS,
   useStripeTexture,
 } from "./stripe-texture"
-
-const BLOCK_EMPTY_VISUAL: ItemVisual = {
-  color: "#1f2937",
-  glow: "#0f172a",
-  emissiveIntensity: 0.05,
-}
-const BLOCK_OPACITY = 0.32
-const HOVER_COLOR = "#60a5fa"
-const HIGHLIGHT_OPACITY = 0.4
-const BLOCK_VISUAL_SCALE = 2
-type BlockStatusKey = ItemStatus | "empty"
-const BLOCK_GAP_RATIO = 0.18
-const TOOLTIP_OFFSET = 0.45
-
-const STATUS_LABELS: Record<BlockStatusKey, string> = {
-  normal: "Normalny",
-  dangerous: "Niebezpieczny",
-  expired: "Przeterminowany",
-  "expired-dangerous": "Przeterminowany i niebezpieczny",
-  empty: "Pusta strefa",
-}
 
 interface BlockInfo {
   key: string

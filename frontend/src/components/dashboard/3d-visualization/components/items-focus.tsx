@@ -1,7 +1,7 @@
 import { Instance, Instances, useTexture } from "@react-three/drei"
 import { useEffect, useMemo, useState } from "react"
 import * as THREE from "three"
-import { VISUALIZATION_CONSTANTS } from "../constants"
+import { GLOW_SETTINGS, VISUALIZATION_CONSTANTS } from "../constants"
 import type { FocusWindow, Item3D, ItemStatus, Rack3D } from "../types"
 import { getItemVisuals, ITEM_STATUS_ORDER } from "../types"
 import {
@@ -23,16 +23,6 @@ const {
     stripeZ: STRIPE_Z_OFFSET,
   },
 } = VISUALIZATION_CONSTANTS
-
-const GLOW_SETTINGS: Record<
-  ItemStatus,
-  { glowOpacity: number; emissiveIntensity: number }
-> = {
-  normal: { glowOpacity: 0.05, emissiveIntensity: 0.12 },
-  dangerous: { glowOpacity: 0.22, emissiveIntensity: 0.3 },
-  expired: { glowOpacity: 0.14, emissiveIntensity: 0.2 },
-  "expired-dangerous": { glowOpacity: 0.3, emissiveIntensity: 0.38 },
-}
 
 const areSetsEqual = (left: Set<string>, right: Set<string>): boolean => {
   if (left.size !== right.size) {
