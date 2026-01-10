@@ -17,20 +17,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { ExpiryBadge } from "./components/expiry-badge"
 import type { ItemStats } from "./types"
-
-function getDaysUntilExpiryBadge(days: number | undefined) {
-  if (days === undefined) {
-    return <Badge variant="outline">Brak danych</Badge>
-  }
-  if (days < 0) {
-    return <Badge variant="destructive">Przeterminowane!</Badge>
-  }
-  if (days < 14) {
-    return <Badge variant="warning">za {days} dni</Badge>
-  }
-  return <Badge variant="outline">{days} dni</Badge>
-}
 
 export const itemsColumns: ColumnDef<ItemStats>[] = [
   {
@@ -78,7 +66,14 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
   {
     accessorKey: "daysUntilExpiry",
     header: "Okres przydatności",
-    cell: ({ row }) => getDaysUntilExpiryBadge(row.original.daysUntilExpiry),
+    cell: ({ row }) => {
+      const date = row.original.nearestExpiryDate
+      return date ? (
+        <ExpiryBadge expiryDate={date} />
+      ) : (
+        <Badge variant="outline">Brak daty</Badge>
+      )
+    },
   },
   {
     accessorKey: "definition.isDangerous",
