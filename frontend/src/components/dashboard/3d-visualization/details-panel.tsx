@@ -92,7 +92,6 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
     mode,
     selectedRackId,
     selectedShelf,
-    goToOverview,
     clearSelection,
     focusWindow,
     setFocusWindow,
@@ -131,9 +130,6 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
               Powrót do bloków
             </Button>
           )}
-          <Button onClick={goToOverview} variant="outline">
-            Powrót do przeglądu
-          </Button>
         </div>
       </div>
 
