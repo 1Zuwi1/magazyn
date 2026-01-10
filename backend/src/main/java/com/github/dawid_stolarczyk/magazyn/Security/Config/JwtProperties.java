@@ -7,7 +7,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.time.Duration;
 
 @ConfigurationProperties(prefix = "security.jwt")
-@Getter @Setter
+@Getter
+@Setter
 public class JwtProperties {
     private Duration accessTokenTtl;
     private Duration refreshTokenTtl;

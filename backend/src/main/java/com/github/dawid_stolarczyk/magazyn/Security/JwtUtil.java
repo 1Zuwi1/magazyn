@@ -104,6 +104,7 @@ public class JwtUtil {
         }
         return claims.getExpiration();
     }
+
     public boolean isTokenValid(String token) {
         try {
             Claims claims = extractAllClaims(token);
@@ -131,6 +132,7 @@ public class JwtUtil {
 
         throw new AuthenticationException(AuthError.NOT_AUTHENTICATED.name());
     }
+
     public static AuthPrincipal getCurrentAuthPrincipal(Authentication authentication) {
         assert authentication != null;
         Object principal = authentication.getPrincipal();

@@ -188,6 +188,7 @@ public class AuthService {
         }
         return hasUpper && hasLower && hasDigit && hasSpecial;
     }
+
     private void saveRefreshTokenInDb(User user, String rt) {
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setToken(Hasher.hashSHA256(rt));

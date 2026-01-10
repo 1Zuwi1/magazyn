@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+// Dodac obsluge 403 Forbidden
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -20,7 +21,7 @@ public class GlobalExceptionHandler {
         FieldError fieldError = ex.getBindingResult()
                 .getFieldErrors()
                 .get(0);
-        String message = "%s: %s".formatted(fieldError.getField(), fieldError.getDefaultMessage()) ;
+        String message = "%s: %s".formatted(fieldError.getField(), fieldError.getDefaultMessage());
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)

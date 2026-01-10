@@ -3,7 +3,6 @@ package com.github.dawid_stolarczyk.magazyn.Model.Entity;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.TwoFactor;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -100,6 +99,7 @@ public class User {
         refreshTokens.add(refreshToken);
         refreshToken.setUser(this);
     }
+
     public void setEmailVerifications(EmailVerification emailVerification) {
         emailVerification.setUser(this);
         this.emailVerifications = emailVerification;
@@ -111,8 +111,6 @@ public class User {
             emailVerifications = null;
         }
     }
-
-
 
 
     public void setRawPassword(String rawPassword) {

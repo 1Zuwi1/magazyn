@@ -23,6 +23,7 @@ public class AuthUtil {
 
         throw new AuthenticationException(AuthError.NOT_AUTHENTICATED.name());
     }
+
     public static AuthPrincipal getCurrentAuthPrincipal(Authentication authentication) {
         assert authentication != null;
         Object principal = authentication.getPrincipal();

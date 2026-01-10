@@ -13,9 +13,9 @@ auth:
       refill: 20
       duration: PT1M
     AUTH_REFRESH_TOKEN:
-        capacity: 10
-        refill: 10
-        duration: PT1M
+      capacity: 10
+      refill: 10
+      duration: PT1M
 security:
   jwt:
     access-token-ttl: 10m
