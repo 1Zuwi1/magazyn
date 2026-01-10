@@ -1,10 +1,15 @@
 import { CameraControls } from "@react-three/drei"
 import { useEffect, useRef } from "react"
 import * as THREE from "three"
+import {
+  CAMERA_KEYBOARD_STEP,
+  FOCUS_CAMERA_DISTANCE,
+  FOCUS_CAMERA_HEIGHT,
+  OVERVIEW_CAMERA_DISTANCE,
+  OVERVIEW_CAMERA_HEIGHT,
+} from "../constants"
 import { useWarehouseStore } from "../store"
 import type { ViewMode } from "../types"
-
-const KEYBOARD_STEP = 0.6
 
 interface CameraControllerProps {
   mode: ViewMode
@@ -15,19 +20,19 @@ const handleControl = (controls: CameraControls, key: string) => {
   switch (key) {
     case "arrowup":
     case "w":
-      controls.forward(KEYBOARD_STEP, false)
+      controls.forward(CAMERA_KEYBOARD_STEP, false)
       break
     case "arrowdown":
     case "s":
-      controls.forward(-KEYBOARD_STEP, false)
+      controls.forward(-CAMERA_KEYBOARD_STEP, false)
       break
     case "arrowleft":
     case "a":
-      controls.truck(-KEYBOARD_STEP, 0, false)
+      controls.truck(-CAMERA_KEYBOARD_STEP, 0, false)
       break
     case "arrowright":
     case "d":
-      controls.truck(KEYBOARD_STEP, 0, false)
+      controls.truck(CAMERA_KEYBOARD_STEP, 0, false)
       break
     default:
       return false
@@ -60,8 +65,8 @@ export function CameraController({
 
   useEffect(() => {
     if (controlsRef.current && mode === "overview") {
-      const distance = 15
-      const height = 4
+      const distance = OVERVIEW_CAMERA_DISTANCE
+      const height = OVERVIEW_CAMERA_HEIGHT
       controlsRef.current.setLookAt(
         warehouseCenter.x,
         warehouseCenter.y + height,
@@ -77,7 +82,15 @@ export function CameraController({
   useEffect(() => {
     if (mode === "focus" && selectedRackId && controlsRef.current) {
       targetRef.current.set(0, 0, 0)
-      controlsRef.current.setLookAt(0, 3, 6, 0, 0, 0, true)
+      controlsRef.current.setLookAt(
+        0,
+        FOCUS_CAMERA_HEIGHT,
+        FOCUS_CAMERA_DISTANCE,
+        0,
+        0,
+        0,
+        true
+      )
     }
   }, [selectedRackId, mode])
 

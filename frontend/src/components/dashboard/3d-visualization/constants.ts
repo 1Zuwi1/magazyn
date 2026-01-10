@@ -54,6 +54,11 @@ export const HIGHLIGHT_OPACITY = 0.4
 export const BLOCK_VISUAL_SCALE = 2
 export const BLOCK_GAP_RATIO = 0.18
 export const TOOLTIP_OFFSET = 0.45
+export const CAMERA_KEYBOARD_STEP = 0.6
+export const OVERVIEW_CAMERA_DISTANCE = 15
+export const OVERVIEW_CAMERA_HEIGHT = 4
+export const FOCUS_CAMERA_HEIGHT = 3
+export const FOCUS_CAMERA_DISTANCE = 6
 
 export const STATUS_LABELS: Record<BlockStatusKey, string> = {
   normal: "Normalny",
