@@ -1,12 +1,17 @@
 export type ViewMode = "overview" | "focus"
 
-export type ItemStatus = "normal" | "expired" | "dangerous"
+export type ItemStatus =
+  | "normal"
+  | "dangerous"
+  | "expired"
+  | "expired-dangerous"
 
 export interface Item3D {
   id: string
   type: string
   status: ItemStatus
   label: string
+  imageUrl?: string
   meta?: Record<string, unknown>
 }
 
@@ -21,7 +26,14 @@ export interface Rack3D {
   transform: { position: [number, number, number]; rotationY: number }
   frame?: { thickness: number; padding: number }
   items: (Item3D | null)[]
-  zone?: string
+}
+
+export interface FocusWindow {
+  rackId: string
+  startRow: number
+  startCol: number
+  rows: number
+  cols: number
 }
 
 export interface Warehouse3D {
@@ -40,8 +52,70 @@ export interface ShelfPosition {
 
 export interface FilterState {
   itemStatus?: ItemStatus
-  zone?: string
   query: string
+}
+
+export const RACK_ZONE_SIZE = 10
+
+export interface ItemVisual {
+  color: string
+  glow: string
+  emissiveIntensity: number
+  stripeColor?: string
+}
+
+export const ITEM_STATUS_ORDER: ItemStatus[] = [
+  "normal",
+  "dangerous",
+  "expired",
+  "expired-dangerous",
+]
+
+export const ITEM_STATUS_SEVERITY: Record<ItemStatus, number> = {
+  normal: 0,
+  dangerous: 1,
+  expired: 2,
+  "expired-dangerous": 3,
+}
+
+const ITEM_VISUALS: Record<ItemStatus, ItemVisual> = {
+  normal: {
+    color: "#2f855a",
+    glow: "#34d399",
+    emissiveIntensity: 0.05,
+  },
+  expired: {
+    color: "#d97706",
+    glow: "#f59e0b",
+    emissiveIntensity: 0.12,
+  },
+  dangerous: {
+    color: "#b91c1c",
+    glow: "#ef4444",
+    emissiveIntensity: 0.18,
+  },
+  "expired-dangerous": {
+    color: "#b91c1c",
+    glow: "#b91c1c",
+    emissiveIntensity: 0.12,
+    stripeColor: "#f59e0b",
+  },
+}
+
+export function getItemVisuals(status: ItemStatus): ItemVisual {
+  return ITEM_VISUALS[status]
+}
+
+export function getWorstStatus(
+  current: ItemStatus | null,
+  next: ItemStatus
+): ItemStatus {
+  if (!current) {
+    return next
+  }
+  return ITEM_STATUS_SEVERITY[next] > ITEM_STATUS_SEVERITY[current]
+    ? next
+    : current
 }
 
 export function toIndex(row: number, col: number, cols: number): number {
@@ -59,16 +133,11 @@ export function fromIndex(
 }
 
 export function getItemColor(status: ItemStatus): string {
-  if (status === "normal") {
-    return "#22c55e"
-  }
-  if (status === "expired") {
-    return "#f97316"
-  }
-  if (status === "dangerous") {
-    return "#ef4444"
-  }
-  return "#94a3b8"
+  return getItemVisuals(status).color
+}
+
+export function getItemGlowColor(status: ItemStatus): string {
+  return getItemVisuals(status).glow
 }
 
 export function getOccupancyColor(percentage: number): string {

@@ -1,112 +1,146 @@
 import { Instance, Instances, useCursor } from "@react-three/drei"
-import { useFrame } from "@react-three/fiber"
-import { useMemo, useRef, useState } from "react"
-import * as THREE from "three"
+import { useMemo, useState } from "react"
+import { VISUALIZATION_CONSTANTS } from "../constants"
 import { useWarehouseStore } from "../store"
-import type { Item3D, Rack3D } from "../types"
-import { fromIndex } from "../types"
+import type { FocusWindow, Rack3D } from "../types"
+import {
+  getGridDimensions,
+  getRackMetrics,
+  type RackMetrics,
+} from "./rack-metrics"
 
-function getShelfColor(
-  item: Item3D | null | undefined,
-  isHovered: boolean,
-  isSelected: boolean
-): string {
-  if (isSelected) {
-    return "#3b82f6"
-  }
-  if (isHovered) {
-    return "#60a5fa"
-  }
-  if (item) {
-    return "#f1f5f9"
-  }
-  return "#e2e8f0"
-}
+const {
+  COLORS: { hover: HOVER_COLOR, selected: SELECTED_COLOR },
+  OPACITY: { shelfHighlight: HIGHLIGHT_OPACITY },
+} = VISUALIZATION_CONSTANTS
 
 interface ShelvesInstancedProps {
   rack: Rack3D
+  metrics?: RackMetrics
+  applyTransform?: boolean
+  window?: FocusWindow | null
 }
 
-export function ShelvesInstanced({ rack }: ShelvesInstancedProps) {
+export function ShelvesInstanced({
+  rack,
+  metrics,
+  applyTransform = true,
+  window,
+}: ShelvesInstancedProps) {
   const { selectedShelf, hoverShelf, selectShelf } = useWarehouseStore()
   const [hoveredInstanceId, setHoveredInstanceId] = useState<number | null>(
     null
   )
+  const resolvedMetrics = metrics ?? getRackMetrics(rack)
+  const activeWindow = window?.rackId === rack.id ? window : null
 
-  const meshRef = useRef<THREE.InstancedMesh>(null)
+  const { instancePositions, instanceMeta, indexToInstance, totalCount } =
+    useMemo(() => {
+      const positions: [number, number, number][] = []
+      const meta: { index: number; row: number; col: number }[] = []
+      const indexMap: Record<number, number> = {}
+      const startRow = activeWindow?.startRow ?? 0
+      const startCol = activeWindow?.startCol ?? 0
+      const rows = activeWindow?.rows ?? rack.grid.rows
+      const cols = activeWindow?.cols ?? rack.grid.cols
+      const { width: windowGridWidth, height: windowGridHeight } =
+        getGridDimensions(
+          cols,
+          rows,
+          resolvedMetrics.unitX,
+          resolvedMetrics.unitY
+        )
+      let idx = 0
 
-  const { instancePositions, instanceToIndex, totalCount } = useMemo(() => {
-    const positions: [number, number, number][] = []
-    const indexMap: Record<number, number> = {}
-    let idx = 0
-
-    for (let row = 0; row < rack.grid.rows; row++) {
-      for (let col = 0; col < rack.grid.cols; col++) {
-        const x =
-          col * (rack.cell.w + rack.spacing.x) -
-          (rack.grid.cols * (rack.cell.w + rack.spacing.x)) / 2
+      for (let row = 0; row < rows; row++) {
+        const globalRow = startRow + row
         const y =
-          (rack.grid.rows - 1 - row) * (rack.cell.h + rack.spacing.y) -
-          (rack.grid.rows * (rack.cell.h + rack.spacing.y)) / 2
-        const z = 0
+          (rows - 1 - row) * resolvedMetrics.unitY - windowGridHeight / 2
 
-        positions.push([x, y, z])
-        indexMap[idx] = row * rack.grid.cols + col
-        idx++
+        for (let col = 0; col < cols; col++) {
+          const globalCol = startCol + col
+          const x = col * resolvedMetrics.unitX - windowGridWidth / 2
+          const shelfIndex = globalRow * rack.grid.cols + globalCol
+
+          positions.push([x, y, 0])
+          meta.push({ index: shelfIndex, row: globalRow, col: globalCol })
+          indexMap[shelfIndex] = idx
+          idx++
+        }
       }
-    }
 
-    return {
-      instancePositions: positions,
-      instanceToIndex: indexMap,
-      totalCount: idx,
-    }
-  }, [rack])
+      return {
+        instancePositions: positions,
+        instanceMeta: meta,
+        indexToInstance: indexMap,
+        totalCount: idx,
+      }
+    }, [
+      activeWindow?.cols,
+      activeWindow?.rows,
+      activeWindow?.startCol,
+      activeWindow?.startRow,
+      rack.grid.cols,
+      rack.grid.rows,
+      resolvedMetrics.unitX,
+      resolvedMetrics.unitY,
+    ])
 
   useCursor(hoveredInstanceId !== null)
 
   const selected =
-    selectedShelf?.rackId === rack.id && selectedShelf?.index !== undefined
+    selectedShelf?.rackId === rack.id && selectedShelf.index !== null
+  const selectedInstanceId =
+    selected && selectedShelf
+      ? (indexToInstance[selectedShelf.index] ?? null)
+      : null
 
-  useFrame(() => {
-    if (!meshRef.current) {
-      return
+  const highlightInstances = useMemo(() => {
+    const highlights: { position: [number, number, number]; color: string }[] =
+      []
+
+    if (selectedInstanceId !== null) {
+      const position = instancePositions[selectedInstanceId]
+      if (position) {
+        highlights.push({ position, color: SELECTED_COLOR })
+      }
     }
 
-    const color = new THREE.Color()
-    for (let i = 0; i < totalCount; i++) {
-      const shelfIndex = instanceToIndex[i]
-      const isHovered = hoveredInstanceId === i
-      const isSelected = selected && selectedShelf?.index === shelfIndex
-      const item = rack.items[shelfIndex]
-
-      const colorHex = getShelfColor(item, isHovered, isSelected)
-      color.set(colorHex)
-
-      meshRef.current.setColorAt(i, color)
+    if (
+      hoveredInstanceId !== null &&
+      hoveredInstanceId !== selectedInstanceId
+    ) {
+      const position = instancePositions[hoveredInstanceId]
+      if (position) {
+        highlights.push({ position, color: HOVER_COLOR })
+      }
     }
 
-    if (meshRef.current.instanceColor) {
-      meshRef.current.instanceColor.needsUpdate = true
-    }
-  })
+    return highlights
+  }, [hoveredInstanceId, selectedInstanceId, instancePositions])
+
+  const groupProps = applyTransform
+    ? {
+        position: rack.transform.position,
+        rotation: [0, rack.transform.rotationY, 0] as [number, number, number],
+      }
+    : {}
 
   return (
-    <group
-      position={rack.transform.position}
-      rotation={[0, rack.transform.rotationY, 0]}
-    >
-      <Instances limit={totalCount} ref={meshRef}>
+    <group {...groupProps}>
+      <Instances frustumCulled={false} limit={totalCount}>
         <boxGeometry args={[rack.cell.w, rack.cell.h, rack.cell.d]} />
-        <meshStandardMaterial />
+        <meshStandardMaterial depthWrite={false} opacity={0} transparent />
         {instancePositions.map((position, i) => (
           <Instance
-            color="#e2e8f0"
-            key={i}
+            key={`slot-${i}`}
             onClick={(e) => {
               e.stopPropagation()
-              const shelfIndex = instanceToIndex[i]
-              selectShelf(rack.id, shelfIndex, rack.grid.cols)
+              const meta = instanceMeta[i]
+              if (!meta) {
+                return
+              }
+              selectShelf(rack.id, meta.index, meta.row, meta.col)
             }}
             onPointerOut={(e) => {
               e.stopPropagation()
@@ -116,14 +150,42 @@ export function ShelvesInstanced({ rack }: ShelvesInstancedProps) {
             onPointerOver={(e) => {
               e.stopPropagation()
               setHoveredInstanceId(i)
-              const shelfIndex = instanceToIndex[i]
-              const { row, col } = fromIndex(shelfIndex, rack.grid.cols)
-              hoverShelf({ rackId: rack.id, index: shelfIndex, row, col })
+              const meta = instanceMeta[i]
+              if (!meta) {
+                return
+              }
+              hoverShelf({
+                rackId: rack.id,
+                index: meta.index,
+                row: meta.row,
+                col: meta.col,
+              })
             }}
             position={position}
           />
         ))}
       </Instances>
+      {highlightInstances.length > 0 && (
+        <Instances
+          frustumCulled={false}
+          limit={highlightInstances.length}
+          raycast={() => null}
+        >
+          <boxGeometry args={[rack.cell.w, rack.cell.h, rack.cell.d]} />
+          <meshStandardMaterial
+            depthWrite={false}
+            opacity={HIGHLIGHT_OPACITY}
+            transparent
+          />
+          {highlightInstances.map(({ position, color }, index) => (
+            <Instance
+              color={color}
+              key={`highlight-${index}`}
+              position={position}
+            />
+          ))}
+        </Instances>
+      )}
     </group>
   )
 }

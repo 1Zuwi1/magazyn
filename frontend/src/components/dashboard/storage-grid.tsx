@@ -84,7 +84,7 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="grid grid-cols-2 gap-2">
+            <CardFooter className="grid gap-2 lg:grid-cols-2">
               <Link
                 className={buttonVariants({
                   variant: "outline",

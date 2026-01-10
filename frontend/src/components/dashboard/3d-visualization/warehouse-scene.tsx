@@ -1,10 +1,14 @@
+import { Line } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import { useMemo } from "react"
 import { CameraController } from "./components/camera-controls"
-import { ItemsInstanced } from "./components/items-instanced"
+import { RackFocusView } from "./components/rack-focus-view"
+import { getRackMetrics } from "./components/rack-metrics"
 import { RacksOverview } from "./components/racks-overview"
-import { ShelvesInstanced } from "./components/shelves-instanced"
+import { VISUALIZATION_CONSTANTS } from "./constants"
+import { useWarehouseStore } from "./store"
 import type { Rack3D, ViewMode, Warehouse3D } from "./types"
+import { buildWarehouseLayout } from "./warehouse-layout"
 
 interface WarehouseSceneProps {
   warehouse: Warehouse3D
@@ -12,95 +16,104 @@ interface WarehouseSceneProps {
   selectedRackId: string | null
 }
 
-const rackOutlinePadding = 0.2
-const floorPadding = 0.6
-const floorOffset = 0.01
-
-function getWarehouseBounds(racks: Rack3D[]): {
-  centerX: number
-  centerZ: number
-  width: number
-  depth: number
-} {
-  if (racks.length === 0) {
-    return {
-      centerX: 0,
-      centerZ: 0,
-      width: 10,
-      depth: 10,
-    }
-  }
-
-  let minX = Number.POSITIVE_INFINITY
-  let maxX = Number.NEGATIVE_INFINITY
-  let minZ = Number.POSITIVE_INFINITY
-  let maxZ = Number.NEGATIVE_INFINITY
-
-  for (const rack of racks) {
-    const width =
-      rack.grid.cols * (rack.cell.w + rack.spacing.x) + rackOutlinePadding
-    const depth = rack.cell.d + rackOutlinePadding
-    const x = rack.transform.position[0]
-    const z = rack.transform.position[2]
-
-    minX = Math.min(minX, x - width / 2)
-    maxX = Math.max(maxX, x + width / 2)
-    minZ = Math.min(minZ, z - depth / 2)
-    maxZ = Math.max(maxZ, z + depth / 2)
-  }
-
-  return {
-    centerX: (minX + maxX) / 2,
-    centerZ: (minZ + maxZ) / 2,
-    width: Math.max(1, maxX - minX + floorPadding * 2),
-    depth: Math.max(1, maxZ - minZ + floorPadding * 2),
-  }
-}
+const {
+  LAYOUT: { floorOffset, focusFloorPadding },
+  COLORS: { floor: floorColor, aisleLine: aisleLineColor, fog: fogColor },
+  OPACITY: { aisleLine: aisleLineOpacity },
+} = VISUALIZATION_CONSTANTS
 
 export function WarehouseScene({
   warehouse,
   mode,
   selectedRackId,
 }: WarehouseSceneProps) {
-  const floorBounds = useMemo(
-    () => getWarehouseBounds(warehouse.racks),
-    [warehouse.racks]
+  const focusWindow = useWarehouseStore((state) => state.focusWindow)
+  const rackMetricsById = useMemo(() => {
+    const metricsById = new Map<string, ReturnType<typeof getRackMetrics>>()
+    for (const rack of warehouse.racks) {
+      metricsById.set(rack.id, getRackMetrics(rack))
+    }
+    return metricsById
+  }, [warehouse.racks])
+  const layout = useMemo(
+    () => buildWarehouseLayout(warehouse.racks, rackMetricsById),
+    [warehouse.racks, rackMetricsById]
   )
+  const floorBounds = layout.bounds
+  const sceneCenter = useMemo(
+    () => ({
+      x: floorBounds.centerX,
+      y: 0,
+      z: floorBounds.centerZ,
+    }),
+    [floorBounds.centerX, floorBounds.centerZ]
+  )
+  const fogNear = Math.max(8, floorBounds.depth * 0.35)
+  const fogFar = Math.max(22, floorBounds.depth * 0.95)
 
   return (
-    <Canvas camera={{ position: [10, 10, 10], fov: 50 }}>
-      <ambientLight intensity={0.6} />
-      <directionalLight intensity={0.8} position={[10, 10, 5]} />
-      <CameraController mode={mode} warehouseCenter={warehouse.center} />
+    <Canvas
+      camera={{ position: [10, 10, 10], fov: 50 }}
+      className="h-full w-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950"
+      gl={{ alpha: true, antialias: true }}
+    >
       {mode === "overview" && (
-        <mesh
-          position={[floorBounds.centerX, -floorOffset, floorBounds.centerZ]}
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          <planeGeometry args={[floorBounds.width, floorBounds.depth]} />
-          <meshStandardMaterial color="#e5e7eb" />
-        </mesh>
+        <fog args={[fogColor, fogNear, fogFar]} attach="fog" />
       )}
-      {mode === "overview" && <RacksOverview racks={warehouse.racks} />}
+      <ambientLight intensity={0.35} />
+      <hemisphereLight
+        color="#64748b"
+        groundColor={fogColor}
+        intensity={0.45}
+      />
+      <directionalLight intensity={1} position={[12, 12, 6]} />
+      <CameraController mode={mode} warehouseCenter={sceneCenter} />
+      {mode === "overview" && (
+        <group>
+          <mesh
+            position={[floorBounds.centerX, -floorOffset, floorBounds.centerZ]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <planeGeometry args={[floorBounds.width, floorBounds.depth]} />
+            <meshStandardMaterial
+              color={floorColor}
+              metalness={0.05}
+              roughness={0.9}
+            />
+          </mesh>
+          {layout.aisles.map((aisle) => (
+            <group key={`aisle-${aisle.index}`}>
+              <Line
+                color={aisleLineColor}
+                lineWidth={1}
+                opacity={aisleLineOpacity}
+                points={[
+                  [aisle.minX, -floorOffset + 0.004, aisle.minZ],
+                  [aisle.maxX, -floorOffset + 0.004, aisle.minZ],
+                  [aisle.maxX, -floorOffset + 0.004, aisle.maxZ],
+                  [aisle.minX, -floorOffset + 0.004, aisle.maxZ],
+                  [aisle.minX, -floorOffset + 0.004, aisle.minZ],
+                ]}
+                transparent
+              />
+            </group>
+          ))}
+        </group>
+      )}
+      {mode === "overview" && <RacksOverview racks={layout.renderRacks} />}
       {mode === "focus" &&
         selectedRackId &&
         warehouse.racks
           .filter((rack: Rack3D) => rack.id === selectedRackId)
-          .map((rack: Rack3D) => {
-            const rackAtOrigin = {
-              ...rack,
-              transform: {
-                ...rack.transform,
-                position: [0, 0, 0] as [number, number, number],
-              },
-            }
-            return (
-              <group key={rack.id}>
-                <ShelvesInstanced rack={rackAtOrigin} />
-                <ItemsInstanced rack={rackAtOrigin} />
-              </group>
-            )
-          })}
+          .map((rack: Rack3D) => (
+            <RackFocusView
+              floorOffset={floorOffset}
+              floorPadding={focusFloorPadding}
+              focusWindow={focusWindow}
+              key={rack.id}
+              rack={rack}
+            />
+          ))}
     </Canvas>
   )
 }

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { useWarehouseStore } from "./store"
 import type { Item3D, Rack3D, Warehouse3D } from "./types"
+import { RACK_ZONE_SIZE } from "./types"
 
 interface DetailsPanelProps {
   warehouse: Warehouse3D
@@ -13,6 +14,9 @@ function getStatusText(status: Item3D["status"]): string {
   if (status === "expired") {
     return "Przeterminowany"
   }
+  if (status === "expired-dangerous") {
+    return "Przeterminowany i niebezpieczny"
+  }
   return "Niebezpieczny"
 }
 
@@ -21,14 +25,78 @@ function getStatusColor(status: Item3D["status"]): string {
     return "bg-green-500"
   }
   if (status === "expired") {
-    return "bg-orange-500"
+    return "bg-amber-500"
+  }
+  if (status === "expired-dangerous") {
+    return "bg-red-500 ring-2 ring-amber-400"
   }
   return "bg-red-500"
 }
 
+function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
+  const totalSlots = warehouse.racks.reduce(
+    (sum: number, rack: Rack3D) => sum + rack.grid.rows * rack.grid.cols,
+    0
+  )
+  const totalItems = warehouse.racks.reduce(
+    (sum: number, rack: Rack3D) =>
+      sum + rack.items.filter((item) => item !== null).length,
+    0
+  )
+  const occupiedSlots = totalItems
+  const freeSlots = totalSlots - occupiedSlots
+
+  return (
+    <div className="flex h-full flex-col border-l bg-background p-4">
+      <h2 className="mb-4 font-bold text-lg">Przegląd Magazynu</h2>
+
+      <div className="space-y-4">
+        <div className="rounded-lg border p-4">
+          <div className="text-muted-foreground text-sm">Liczba regałów</div>
+          <div className="font-bold text-2xl">{warehouse.racks.length}</div>
+        </div>
+
+        <div className="rounded-lg border p-4">
+          <div className="text-muted-foreground text-sm">Wszystkie miejsca</div>
+          <div className="font-bold text-2xl">{totalSlots}</div>
+        </div>
+
+        <div className="rounded-lg border p-4">
+          <div className="text-muted-foreground text-sm">Zajęte miejsca</div>
+          <div className="font-bold text-2xl text-green-600">
+            {occupiedSlots}
+          </div>
+        </div>
+
+        <div className="rounded-lg border p-4">
+          <div className="text-muted-foreground text-sm">Wolne miejsca</div>
+          <div className="font-bold text-2xl text-blue-600">{freeSlots}</div>
+        </div>
+
+        <div className="rounded-lg border p-4">
+          <div className="text-muted-foreground text-sm">Stopień zajętości</div>
+          <div className="font-bold text-2xl">
+            {totalSlots > 0
+              ? Math.round((occupiedSlots / totalSlots) * 100)
+              : 0}
+            %
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function DetailsPanel({ warehouse }: DetailsPanelProps) {
-  const { mode, selectedRackId, selectedShelf, goToOverview, clearSelection } =
-    useWarehouseStore()
+  const {
+    mode,
+    selectedRackId,
+    selectedShelf,
+    goToOverview,
+    clearSelection,
+    focusWindow,
+    setFocusWindow,
+  } = useWarehouseStore()
 
   const selectedRack = warehouse.racks.find(
     (rack: Rack3D) => rack.id === selectedRackId
@@ -38,72 +106,35 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
     selectedShelf && selectedRack
       ? selectedRack.items[selectedShelf.index]
       : null
+  const isLargeGrid = selectedRack
+    ? selectedRack.grid.rows > RACK_ZONE_SIZE ||
+      selectedRack.grid.cols > RACK_ZONE_SIZE
+    : false
+  const showBlockHint = isLargeGrid && !focusWindow
 
   if (mode === "overview") {
-    const totalSlots = warehouse.racks.reduce(
-      (sum: number, rack: Rack3D) => sum + rack.grid.rows * rack.grid.cols,
-      0
-    )
-    const totalItems = warehouse.racks.reduce(
-      (sum: number, rack: Rack3D) =>
-        sum + rack.items.filter((item) => item !== null).length,
-      0
-    )
-    const occupiedSlots = totalItems
-    const freeSlots = totalSlots - occupiedSlots
-
-    return (
-      <div className="flex h-full flex-col border-l bg-background p-4">
-        <h2 className="mb-4 font-bold text-lg">Przegląd Magazynu</h2>
-
-        <div className="space-y-4">
-          <div className="rounded-lg border p-4">
-            <div className="text-muted-foreground text-sm">Liczba regałów</div>
-            <div className="font-bold text-2xl">{warehouse.racks.length}</div>
-          </div>
-
-          <div className="rounded-lg border p-4">
-            <div className="text-muted-foreground text-sm">
-              Wszystkie miejsca
-            </div>
-            <div className="font-bold text-2xl">{totalSlots}</div>
-          </div>
-
-          <div className="rounded-lg border p-4">
-            <div className="text-muted-foreground text-sm">Zajęte miejsca</div>
-            <div className="font-bold text-2xl text-green-600">
-              {occupiedSlots}
-            </div>
-          </div>
-
-          <div className="rounded-lg border p-4">
-            <div className="text-muted-foreground text-sm">Wolne miejsca</div>
-            <div className="font-bold text-2xl text-blue-600">{freeSlots}</div>
-          </div>
-
-          <div className="rounded-lg border p-4">
-            <div className="text-muted-foreground text-sm">
-              Stopień zajętości
-            </div>
-            <div className="font-bold text-2xl">
-              {totalSlots > 0
-                ? Math.round((occupiedSlots / totalSlots) * 100)
-                : 0}
-              %
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+    return <OverviewContent warehouse={warehouse} />
   }
 
   return (
     <div className="flex h-full flex-col border-l bg-background p-4">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-bold text-lg">Szczegóły Regału</h2>
-        <Button onClick={goToOverview} size="sm" variant="outline">
-          Powrót do przeglądu
-        </Button>
+        <div className="flex w-full flex-col gap-2 *:w-full">
+          {focusWindow && (
+            <Button
+              onClick={() => {
+                setFocusWindow(null)
+              }}
+              variant="outline"
+            >
+              Powrót do bloków
+            </Button>
+          )}
+          <Button onClick={goToOverview} variant="outline">
+            Powrót do przeglądu
+          </Button>
+        </div>
       </div>
 
       {selectedRack && (
@@ -125,9 +156,8 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
             <div>
               Maks. rozmiar elementu: {selectedRack.maxElementSize.width}×
               {selectedRack.maxElementSize.height}×
-              {selectedRack.maxElementSize.depth} cm
+              {selectedRack.maxElementSize.depth} mm
             </div>
-            {selectedRack.zone && <div>Strefa: {selectedRack.zone}</div>}
           </div>
         </div>
       )}
@@ -200,7 +230,9 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
 
       {!selectedShelf && (
         <div className="flex-1 text-center text-muted-foreground">
-          Kliknij na półkę, aby zobaczyć szczegóły
+          {showBlockHint
+            ? `Kliknij blok ${RACK_ZONE_SIZE}×${RACK_ZONE_SIZE}, aby zobaczyć szczegóły.`
+            : "Kliknij na półkę, aby zobaczyć szczegóły"}
         </div>
       )}
     </div>

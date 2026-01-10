@@ -32,7 +32,7 @@ export function RackParametersCard({
             </p>
             <p className="font-medium text-sm">
               {maxElementSize.width} × {maxElementSize.height} ×{" "}
-              {maxElementSize.depth} cm
+              {maxElementSize.depth} mm
             </p>
           </div>
         </div>

@@ -1,15 +1,30 @@
 import { Instance, Instances } from "@react-three/drei"
 import { useMemo } from "react"
-import type { Item3D, Rack3D } from "../types"
-import { getItemColor } from "../types"
+import type { ItemStatus, Rack3D } from "../types"
+import { getItemVisuals, ITEM_STATUS_ORDER } from "../types"
+import {
+  STRIPE_EMISSIVE_INTENSITY,
+  STRIPE_MATERIAL_DEFAULTS,
+  useStripeTexture,
+} from "./stripe-texture"
 
 interface ItemsInstancedProps {
   rack: Rack3D
 }
 
 export function ItemsInstanced({ rack }: ItemsInstancedProps) {
-  const { itemInstances } = useMemo(() => {
-    const instances: { position: [number, number, number]; item: Item3D }[] = []
+  const stripeTexture = useStripeTexture()
+  const { itemsByStatus } = useMemo(() => {
+    const grouped: Record<ItemStatus, [number, number, number][]> = {
+      normal: [],
+      dangerous: [],
+      expired: [],
+      "expired-dangerous": [],
+    }
+    const unitX = rack.cell.w + rack.spacing.x
+    const unitY = rack.cell.h + rack.spacing.y
+    const gridWidth = Math.max(0, rack.grid.cols - 1) * unitX
+    const gridHeight = Math.max(0, rack.grid.rows - 1) * unitY
 
     for (let row = 0; row < rack.grid.rows; row++) {
       for (let col = 0; col < rack.grid.cols; col++) {
@@ -20,19 +35,15 @@ export function ItemsInstanced({ rack }: ItemsInstancedProps) {
           continue
         }
 
-        const x =
-          col * (rack.cell.w + rack.spacing.x) -
-          (rack.grid.cols * (rack.cell.w + rack.spacing.x)) / 2
-        const y =
-          (rack.grid.rows - 1 - row) * (rack.cell.h + rack.spacing.y) -
-          (rack.grid.rows * (rack.cell.h + rack.spacing.y)) / 2
+        const x = col * unitX - gridWidth / 2
+        const y = (rack.grid.rows - 1 - row) * unitY - gridHeight / 2
         const z = rack.cell.d / 2
 
-        instances.push({ position: [x, y, z], item })
+        grouped[item.status].push([x, y, z])
       }
     }
 
-    return { itemInstances: instances }
+    return { itemsByStatus: grouped }
   }, [rack])
 
   return (
@@ -40,17 +51,63 @@ export function ItemsInstanced({ rack }: ItemsInstancedProps) {
       position={rack.transform.position}
       rotation={[0, rack.transform.rotationY, 0]}
     >
-      <Instances limit={itemInstances.length}>
-        <boxGeometry
-          args={[rack.cell.w * 0.8, rack.cell.h * 0.8, rack.cell.d * 0.5]}
-        />
-        <meshStandardMaterial />
-        {itemInstances.map(({ position, item }, i) => {
-          const color = getItemColor(item.status)
+      {ITEM_STATUS_ORDER.map((status) => {
+        const positions = itemsByStatus[status]
+        if (!positions || positions.length === 0) {
+          return null
+        }
+        const visuals = getItemVisuals(status)
 
-          return <Instance color={color} key={i} position={position} />
-        })}
-      </Instances>
+        const stripeColor = visuals.stripeColor
+
+        return (
+          <group key={`items-${status}`}>
+            <Instances frustumCulled={false} limit={positions.length}>
+              <boxGeometry
+                args={[rack.cell.w * 0.8, rack.cell.h * 0.8, rack.cell.d * 0.5]}
+              />
+              <meshStandardMaterial
+                color={visuals.color}
+                emissive={visuals.glow}
+                emissiveIntensity={visuals.emissiveIntensity}
+                metalness={0.08}
+                roughness={0.75}
+              />
+              {positions.map((position, index) => (
+                <Instance key={`item-${status}-${index}`} position={position} />
+              ))}
+            </Instances>
+            {stripeColor && stripeTexture && (
+              <Instances
+                frustumCulled={false}
+                limit={positions.length}
+                renderOrder={1}
+              >
+                <boxGeometry
+                  args={[
+                    rack.cell.w * 0.8,
+                    rack.cell.h * 0.8,
+                    rack.cell.d * 0.5,
+                  ]}
+                />
+                <meshStandardMaterial
+                  {...STRIPE_MATERIAL_DEFAULTS}
+                  alphaMap={stripeTexture}
+                  color={stripeColor}
+                  emissive={stripeColor}
+                  emissiveIntensity={STRIPE_EMISSIVE_INTENSITY}
+                />
+                {positions.map((position, index) => (
+                  <Instance
+                    key={`item-${status}-stripe-${index}`}
+                    position={position}
+                  />
+                ))}
+              </Instances>
+            )}
+          </group>
+        )
+      })}
     </group>
   )
 }
