@@ -99,7 +99,7 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                 })}
                 href={`/dashboard/warehouse/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}/3d-visualization`}
               >
-                Zobacz wizualizację 3D
+                Zobacz Wizualizację 3D
               </Link>
             </CardFooter>
           </Card>
