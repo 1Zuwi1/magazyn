@@ -233,7 +233,7 @@ const processRackItems = (
   resolvedMetrics: Pick<RackMetrics, "unitX" | "unitY">,
   windowGridWidth: number,
   windowGridHeight: number,
-  rack: Rack3D
+  items: Rack3D["items"]
 ) => {
   const withImages: FocusItemImage[] = []
   const solid: Record<ItemStatus, FocusItemSolid[]> = {
@@ -250,8 +250,8 @@ const processRackItems = (
     for (let col = 0; col < cols; col++) {
       const globalCol = startCol + col
       const x = col * resolvedMetrics.unitX - windowGridWidth / 2
-      const index = globalRow * rack.grid.cols + globalCol
-      const item = rack.items[index]
+      const index = globalRow * cols + globalCol
+      const item = items[index]
 
       if (!item) {
         continue
@@ -315,7 +315,7 @@ export function ItemsFocus({
       },
       windowGridWidth,
       windowGridHeight,
-      rack
+      rack.items
     )
 
     return { itemsWithImages: withImages, solidByStatus: solid }
@@ -327,7 +327,6 @@ export function ItemsFocus({
     rack.grid.cols,
     rack.grid.rows,
     rack.items,
-    rack,
     resolvedMetrics.unitX,
     resolvedMetrics.unitY,
   ])
@@ -335,7 +334,7 @@ export function ItemsFocus({
   const groupProps = applyTransform
     ? {
         position: rack.transform.position,
-        rotation: [0, rack.transform.rotationY, 0] as [number, number, number],
+        rotation: [0, rack.transform.rotationY, 0] as const,
       }
     : {}
   const imagePlaneZ = resolvedMetrics.depth / 2 - resolvedMetrics.frameThickness

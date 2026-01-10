@@ -29,8 +29,12 @@ export const useWarehouseStore = create<WarehouseStore>((set) => ({
   },
   setMode: (mode) => set({ mode }),
   focusRack: (rackId) => {
-    set({ mode: "focus", selectedRackId: rackId, focusWindow: null })
-    set({ selectedShelf: null })
+    set({
+      mode: "focus",
+      selectedRackId: rackId,
+      focusWindow: null,
+      selectedShelf: null,
+    })
   },
   selectShelf: (rackId, index, row, col) => {
     set({

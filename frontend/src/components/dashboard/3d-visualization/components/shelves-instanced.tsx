@@ -88,8 +88,7 @@ export function ShelvesInstanced({
 
   useCursor(hoveredInstanceId !== null)
 
-  const selected =
-    selectedShelf?.rackId === rack.id && selectedShelf.index !== null
+  const selected = selectedShelf?.rackId === rack.id
   const selectedInstanceId =
     selected && selectedShelf
       ? (indexToInstance[selectedShelf.index] ?? null)
@@ -122,7 +121,7 @@ export function ShelvesInstanced({
   const groupProps = applyTransform
     ? {
         position: rack.transform.position,
-        rotation: [0, rack.transform.rotationY, 0] as [number, number, number],
+        rotation: [0, rack.transform.rotationY, 0] as const,
       }
     : {}
 

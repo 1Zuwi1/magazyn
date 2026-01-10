@@ -35,5 +35,6 @@ export async function GET(req: NextRequest, props: PageProps) {
     maxAge: COOKIE_MAX_AGE,
   })
 
+  // TODO: Redirect to `/dashboard/warehouse/${safeName}/3d-visualization` - when it will be implemented
   return NextResponse.redirect(new URL("/dashboard/3d-visualization", url))
 }
