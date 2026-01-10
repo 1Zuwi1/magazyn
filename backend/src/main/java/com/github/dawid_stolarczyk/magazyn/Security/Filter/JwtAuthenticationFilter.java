@@ -55,6 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(principal, null,
                         authorities);
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                logger.info("logownie powiodło się dla użytkownika o ID: {}", userId);
             }
         }
         filterChain.doFilter(request, response);

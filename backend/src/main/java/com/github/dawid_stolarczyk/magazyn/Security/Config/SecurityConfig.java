@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Security.Config;
 
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.RestAuthenticationEntryPoint;
 import com.github.dawid_stolarczyk.magazyn.Security.Filter.JwtAuthenticationFilter;
 import com.github.dawid_stolarczyk.magazyn.Security.Filter.TwoFactorFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +22,16 @@ public class SecurityConfig {
     private JwtAuthenticationFilter jwtAuthenticationFilter;
     @Autowired
     private TwoFactorFilter twoFactorFilter;
+    @Autowired
+    private RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(restAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/health").permitAll()
                         .requestMatchers("/public/**").permitAll()

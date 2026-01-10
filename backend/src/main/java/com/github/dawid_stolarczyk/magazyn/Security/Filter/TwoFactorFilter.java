@@ -1,11 +1,14 @@
 package com.github.dawid_stolarczyk.magazyn.Security.Filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Security.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -18,6 +21,7 @@ import java.util.Objects;
 @Component
 public class TwoFactorFilter extends OncePerRequestFilter {
     private List<String> whitelist = List.of("/api/2fa", "/api/auth", "/api/health");
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -35,8 +39,8 @@ public class TwoFactorFilter extends OncePerRequestFilter {
                     && !isWhitelisted) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.setContentType("application/json");
-                response.getWriter().write("{\"error\":\"2FA not verified\"}");
-                return;
+
+                objectMapper.writeValue(response.getWriter(), new ResponseTemplate<>(false, "2FA_NOT_VERIFIED", null));
             }
         }
 

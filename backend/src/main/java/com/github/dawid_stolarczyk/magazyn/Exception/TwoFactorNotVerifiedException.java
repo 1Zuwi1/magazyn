@@ -1,6 +1,8 @@
 package com.github.dawid_stolarczyk.magazyn.Exception;
 
-public class TwoFactorNotVerifiedException extends RuntimeException {
+import org.springframework.security.access.AccessDeniedException;
+
+public class TwoFactorNotVerifiedException extends AccessDeniedException {
     public TwoFactorNotVerifiedException() {
         super("2FA not verified");
     }
