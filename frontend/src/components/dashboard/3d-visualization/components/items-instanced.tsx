@@ -44,7 +44,16 @@ export function ItemsInstanced({ rack }: ItemsInstancedProps) {
     }
 
     return { itemsByStatus: grouped }
-  }, [rack])
+  }, [
+    rack.cell.w,
+    rack.cell.d,
+    rack.cell.h,
+    rack.grid.cols,
+    rack.grid.rows,
+    rack.items,
+    rack.spacing.x,
+    rack.spacing.y,
+  ])
 
   return (
     <group

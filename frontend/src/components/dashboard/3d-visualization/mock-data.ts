@@ -77,7 +77,7 @@ function generateRack(
     }
   }
 
-  const cellScale = 0.001
+  const cellScale = 0.001 // converts mm to meters
 
   return {
     id,

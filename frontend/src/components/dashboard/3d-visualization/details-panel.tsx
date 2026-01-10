@@ -103,7 +103,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
 
   const selectedItem =
     selectedShelf && selectedRack
-      ? selectedRack.items[selectedShelf.index]
+      ? (selectedRack.items[selectedShelf.index] ?? null)
       : null
   const isLargeGrid = selectedRack
     ? selectedRack.grid.rows > RACK_ZONE_SIZE ||

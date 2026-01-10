@@ -6,6 +6,7 @@ import { getSession } from "./lib/session"
 const COOKIE_MAX_AGE = 60 * 60 // 1 hour
 const ID_REGEX = /^(?=.*[a-zA-Z0-9])[a-zA-Z0-9-]+$/
 
+// Only the base "id" prefixes. Extras come AFTER [name].
 const REDIRECT_PREFIXES = ["/dashboard/warehouse/id/"] as const
 
 function normalizePrefix(p: string) {
@@ -22,12 +23,20 @@ function getRedirectPrefix(pathname: string) {
   return null
 }
 
-const REGEX_EXP = /^\/dashboard\/([^/]+)\/id\/$/
-
+const ENTITY_REGEX = /^\/dashboard\/([^/]+)\/id\/$/
 function getEntityFromPrefix(prefix: string) {
-  // prefix is like: /dashboard/<entity>/id/
-  const m = prefix.match(REGEX_EXP)
+  // prefix: /dashboard/<entity>/id/
+  const m = prefix.match(ENTITY_REGEX)
   return m?.[1] ?? null
+}
+
+// If you want to normalize known typos or aliases in the tail, do it here.
+const TAIL_SEGMENT_REWRITES: Record<string, string> = {
+  "3d-visualizaiton": "3d-visualization", // typo -> canonical
+}
+
+function rewriteTailSegments(segments: string[]) {
+  return segments.map((s) => TAIL_SEGMENT_REWRITES[s] ?? s)
 }
 
 export async function proxy(request: NextRequest) {
@@ -44,7 +53,6 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const prefix = getRedirectPrefix(pathname)
 
-  // Not one of our redirect routes -> continue normally
   if (!prefix) {
     return NextResponse.next()
   }
@@ -54,45 +62,44 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard/", request.url))
   }
 
-  // Pull out the two path segments after the prefix: [id]/[name]
-  const rest = pathname.slice(prefix.length) // "abc123/some-name" (maybe with trailing slash)
+  // After prefix we expect: [id]/[name]/(...optional tail...)
+  const rest = pathname.slice(prefix.length)
   const parts = rest.split("/").filter(Boolean)
-  const [id, nameSegment, ...extra] = parts
 
-  // Must be exactly /<id>/<name> (no extra segments)
-  if (!(id && nameSegment) || extra.length > 0 || !ID_REGEX.test(id)) {
+  const [id, nameSegment, ...tail] = parts
+
+  if (!(id && nameSegment && ID_REGEX.test(id))) {
     const base = await getUrl(request)
     return NextResponse.redirect(new URL("/dashboard/", base))
   }
 
   // Normalize name safely (avoid double-encoding)
-  let decodedName = nameSegment
+  let decodedName: string
   try {
     decodedName = decodeURIComponent(nameSegment)
   } catch {
-    // Treat it as invalid
     const base = await getUrl(request)
     return NextResponse.redirect(new URL("/dashboard/", base))
   }
   const safeName = encodeURIComponent(decodedName)
 
-  const base = await getUrl(request)
+  const normalizedTail = rewriteTailSegments(tail)
+  const tailPath = normalizedTail.length ? `/${normalizedTail.join("/")}` : ""
 
-  // Redirect target: /dashboard/<entity>/<name>
-  const targetPath = `/dashboard/${entity}/${safeName}`
+  // Redirect target: /dashboard/<entity>/<name>/<tail...>
+  const targetPath = `/dashboard/${entity}/${safeName}${tailPath}`
+
+  const base = await getUrl(request)
   const res = NextResponse.redirect(new URL(targetPath, base))
 
-  // Cookie name: "<entity>Id" (warehouseId, somerouteId, ...)
-  // If you want camelCase like someRouteId, use an explicit mapping instead.
   const cookieName = `${entity}Id`
-
   res.cookies.set({
     name: cookieName,
     value: id,
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    // Scope cookie to the resolved page, same as your original behavior
+    // Scope cookie to the resolved page (now includes tail, which is what you're redirecting to)
     path: targetPath,
     maxAge: COOKIE_MAX_AGE,
   })

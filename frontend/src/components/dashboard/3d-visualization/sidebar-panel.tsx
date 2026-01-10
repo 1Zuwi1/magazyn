@@ -82,6 +82,10 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
             <span>Niebezpieczne</span>
           </div>
           <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded bg-[linear-gradient(45deg,transparent_35%,var(--color-orange-500)_35%,var(--color-orange-500)_65%,transparent_65%)] bg-red-500" />
+            <span>Niebezpieczne i przeterminowane</span>
+          </div>
+          <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded bg-slate-200" />
             <span>Pusta półka</span>
           </div>
