@@ -16,6 +16,7 @@ import {
 } from "./stripe-texture"
 
 const {
+  LOADING,
   SCALES: { image: IMAGE_SCALE, glow: GLOW_SCALE },
   OFFSETS: {
     imageZ: IMAGE_Z_OFFSET,
@@ -23,10 +24,6 @@ const {
     stripeZ: STRIPE_Z_OFFSET,
   },
 } = VISUALIZATION_CONSTANTS
-
-const LOADING_IMAGE_OPACITY = 0.45
-const LOADING_GLOW_OPACITY_SCALE = 0.6
-const LOADING_EMISSIVE_SCALE = 0.7
 
 interface FocusItemImage {
   position: [number, number, number]
@@ -141,10 +138,10 @@ function ItemsWithImages({
         const stripeColor = visuals.stripeColor
         const [x, y, z] = item.position
         const glowOpacity = isLoading
-          ? item.glowOpacity * LOADING_GLOW_OPACITY_SCALE
+          ? item.glowOpacity * LOADING.GLOW_OPACITY_SCALE
           : item.glowOpacity
         const emissiveIntensity = isLoading
-          ? item.emissiveIntensity * LOADING_EMISSIVE_SCALE
+          ? item.emissiveIntensity * LOADING.EMISSIVE_SCALE
           : item.emissiveIntensity
 
         return (
@@ -180,7 +177,7 @@ function ItemsWithImages({
                   depthWrite={!isLoading}
                   emissive={visuals.glow}
                   emissiveIntensity={emissiveIntensity}
-                  opacity={isLoading ? LOADING_IMAGE_OPACITY : 1}
+                  opacity={isLoading ? LOADING.IMAGE_OPACITY : 1}
                   side={THREE.DoubleSide}
                   transparent
                 />

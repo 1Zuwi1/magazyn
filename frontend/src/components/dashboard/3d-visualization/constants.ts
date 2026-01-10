@@ -1,6 +1,11 @@
 import type { ItemStatus, ItemVisual } from "./types"
 
 export const VISUALIZATION_CONSTANTS = {
+  LOADING: {
+    IMAGE_OPACITY: 0.45,
+    GLOW_OPACITY_SCALE: 0.6,
+    EMISSIVE_SCALE: 0.7,
+  },
   LAYOUT: {
     rackOutlinePadding: 0.2,
     rackLayoutGap: 0.4,
