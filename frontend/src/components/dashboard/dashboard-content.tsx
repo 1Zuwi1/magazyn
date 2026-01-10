@@ -2,7 +2,7 @@
 
 import { Search } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { MOCK_WAREHOUSES } from "./mock-data"
 import { DEFAULT_FILTERS, WarehouseFilters } from "./storage-filters"
@@ -12,7 +12,12 @@ import { filterWarehouses } from "./utils/filters"
 
 export const DashboardContent = () => {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
-  const filteredWarehouses = filterWarehouses(MOCK_WAREHOUSES, filters)
+  const filteredWarehouses = useMemo(() => {
+    return filterWarehouses(MOCK_WAREHOUSES, {
+      ...filters,
+      query: filters.query.trim(),
+    })
+  }, [filters])
 
   return (
     <div className="flex-1 space-y-4">
