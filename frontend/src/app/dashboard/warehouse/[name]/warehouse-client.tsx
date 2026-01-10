@@ -101,9 +101,9 @@ export default function WarehouseClient({
       </div>
 
       {/* Main Content - Two Column Layout */}
-      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 xl:grid-cols-3">
         {/* Left Column - Grid Visualization */}
-        <div className="lg:col-span-2">
+        <div className="xl:col-span-2">
           <RackGridView
             cols={currentRack.cols}
             currentRackIndex={currentRackIndex}

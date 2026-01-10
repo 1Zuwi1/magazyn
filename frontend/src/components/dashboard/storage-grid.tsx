@@ -89,7 +89,7 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                 className={buttonVariants({
                   variant: "outline",
                 })}
-                href={`/dashboard/warehouse/id/${warehouse.id}/${warehouse.name}`}
+                href={`/dashboard/warehouse/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}`}
               >
                 Zobacz Regały
               </Link>
@@ -97,7 +97,7 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                 className={buttonVariants({
                   variant: "outline",
                 })}
-                href={`/dashboard/warehouse/id/${warehouse.id}/${warehouse.name}/3d-visualization`}
+                href={`/dashboard/warehouse/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}/3d-visualization`}
               >
                 Zobacz wizualizację 3D
               </Link>

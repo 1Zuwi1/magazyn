@@ -1,4 +1,4 @@
-// Helper function to convert index to coordinate (R01-01, R02-03, etc.)
+// Helper function to convert index to coordinate.
 export function getSlotCoordinate(index: number, cols: number): string {
   const row = Math.floor(index / cols)
   const col = index % cols
