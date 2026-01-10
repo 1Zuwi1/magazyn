@@ -5,11 +5,11 @@ import {
   BLOCK_GAP_RATIO,
   BLOCK_OPACITY,
   BLOCK_VISUAL_SCALE,
+  type BlockStatusKey,
   HIGHLIGHT_OPACITY,
   HOVER_COLOR,
   STATUS_LABELS,
   TOOLTIP_OFFSET,
-  type BlockStatusKey,
 } from "../constants"
 import { useWarehouseStore } from "../store"
 import type { ItemStatus, Rack3D } from "../types"

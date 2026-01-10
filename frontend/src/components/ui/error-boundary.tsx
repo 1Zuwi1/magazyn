@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from "react"
+import type { ErrorInfo, ReactNode } from "react"
 import { Component } from "react"
 
 type ErrorBoundaryFallback = (error: Error, reset: () => void) => ReactNode
@@ -15,7 +15,6 @@ interface ErrorBoundaryState {
   error: Error | null
 }
 
-// biome-ignore lint/style/useReactFunctionComponents: Error boundaries have to be class components
 export class ErrorBoundary extends Component<
   ErrorBoundaryProps,
   ErrorBoundaryState
@@ -24,6 +23,10 @@ export class ErrorBoundary extends Component<
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    console.error("ErrorBoundary caught an error:", error, errorInfo)
   }
 
   componentDidUpdate(prevProps: ErrorBoundaryProps): void {

@@ -24,19 +24,9 @@ const {
   },
 } = VISUALIZATION_CONSTANTS
 
-const areSetsEqual = (left: Set<string>, right: Set<string>): boolean => {
-  if (left.size !== right.size) {
-    return false
-  }
-
-  for (const value of left) {
-    if (!right.has(value)) {
-      return false
-    }
-  }
-
-  return true
-}
+const LOADING_IMAGE_OPACITY = 0.45
+const LOADING_GLOW_OPACITY_SCALE = 0.6
+const LOADING_EMISSIVE_SCALE = 0.7
 
 interface FocusItemImage {
   position: [number, number, number]
@@ -64,77 +54,98 @@ function ItemsWithImages({
   zOffset,
   stripeTexture,
 }: ItemsWithImagesProps) {
-  const uniqueUrls = useMemo(
-    () => Array.from(new Set(items.map((item) => item.imageUrl))),
-    [items]
+  const uniqueUrls = useMemo(() => {
+    const urls = new Set<string>()
+    for (const item of items) {
+      urls.add(item.imageUrl)
+    }
+    return Array.from(urls)
+  }, [items])
+  const [textureCache, setTextureCache] = useState<Map<string, THREE.Texture>>(
+    () => new Map()
   )
-  const textures: THREE.Texture[] = useTexture(uniqueUrls)
-  const [texturesReady, setTexturesReady] = useState(false)
-  const [loadErrors, setLoadErrors] = useState<Set<string>>(new Set())
+  const [loadErrors, setLoadErrors] = useState<Set<string>>(() => new Set())
+  const pendingUrls = useMemo(() => {
+    const pending: string[] = []
+    for (const url of uniqueUrls) {
+      if (!(textureCache.has(url) || loadErrors.has(url))) {
+        pending.push(url)
+      }
+    }
+    return pending
+  }, [uniqueUrls, textureCache, loadErrors])
+  const pendingTextures = useTexture(pendingUrls)
 
   useEffect(() => {
-    if (uniqueUrls.length === 0) {
-      setTexturesReady(true)
-      setLoadErrors(new Set())
+    if (pendingUrls.length === 0) {
       return
     }
 
-    if (textures.length !== uniqueUrls.length) {
-      setTexturesReady(false)
-      return
-    }
+    const loadedTextures = new Map<string, THREE.Texture>()
+    const erroredUrls = new Set<string>()
 
-    const nextErrors = new Set<string>()
-    for (const [index, texture] of textures.entries()) {
-      const url = uniqueUrls[index]
-      if (!texture?.image) {
-        if (url) {
-          nextErrors.add(url)
-        }
+    for (const [index, texture] of pendingTextures.entries()) {
+      const url = pendingUrls[index]
+      if (!url) {
         continue
       }
+
+      if (!texture?.image) {
+        erroredUrls.add(url)
+        continue
+      }
+
       texture.colorSpace = THREE.SRGBColorSpace
       texture.needsUpdate = true
+      loadedTextures.set(url, texture)
     }
 
-    setTexturesReady(true)
-    setLoadErrors((prev) =>
-      areSetsEqual(prev, nextErrors) ? prev : nextErrors
-    )
-  }, [textures, uniqueUrls])
-
-  const textureMap = useMemo(() => {
-    if (!texturesReady) {
-      return new Map<string, THREE.Texture>()
+    if (loadedTextures.size > 0) {
+      setTextureCache((prev) => {
+        let changed = false
+        const next = new Map(prev)
+        for (const [url, texture] of loadedTextures.entries()) {
+          if (!next.has(url)) {
+            next.set(url, texture)
+            changed = true
+          }
+        }
+        return changed ? next : prev
+      })
     }
 
-    const map = new Map<string, THREE.Texture>()
-    for (const [index, url] of uniqueUrls.entries()) {
-      const texture = textures[index]
-      if (texture?.image) {
-        map.set(url, texture)
-      }
+    if (erroredUrls.size > 0) {
+      setLoadErrors((prev) => {
+        let changed = false
+        const next = new Set(prev)
+        for (const url of erroredUrls) {
+          if (!next.has(url)) {
+            next.add(url)
+            changed = true
+          }
+        }
+        return changed ? next : prev
+      })
     }
-    return map
-  }, [textures, texturesReady, uniqueUrls])
-
-  if (!texturesReady || (textureMap.size === 0 && loadErrors.size === 0)) {
-    return null
-  }
+  }, [pendingTextures, pendingUrls])
 
   return (
     <>
       {items.map((item, index) => {
-        const texture = textureMap.get(item.imageUrl)
+        const texture = textureCache.get(item.imageUrl)
         const hasError = loadErrors.has(item.imageUrl)
-        if (!(texture || hasError)) {
-          return null
-        }
+        const isLoading = !(texture || hasError)
 
         const visuals = getItemVisuals(item.status)
         const glowColor = visuals.glow
         const stripeColor = visuals.stripeColor
         const [x, y, z] = item.position
+        const glowOpacity = isLoading
+          ? item.glowOpacity * LOADING_GLOW_OPACITY_SCALE
+          : item.glowOpacity
+        const emissiveIntensity = isLoading
+          ? item.emissiveIntensity * LOADING_EMISSIVE_SCALE
+          : item.emissiveIntensity
 
         return (
           <group key={`image-${index}`} position={[x, y, z + zOffset]}>
@@ -146,7 +157,7 @@ function ItemsWithImages({
                 blending={THREE.AdditiveBlending}
                 color={glowColor}
                 depthWrite={false}
-                opacity={item.glowOpacity}
+                opacity={glowOpacity}
                 side={THREE.DoubleSide}
                 transparent
               />
@@ -158,7 +169,7 @@ function ItemsWithImages({
               {texture ? (
                 <meshStandardMaterial
                   emissive={glowColor}
-                  emissiveIntensity={item.emissiveIntensity}
+                  emissiveIntensity={emissiveIntensity}
                   map={texture}
                   side={THREE.DoubleSide}
                   transparent
@@ -166,8 +177,10 @@ function ItemsWithImages({
               ) : (
                 <meshStandardMaterial
                   color={visuals.color}
+                  depthWrite={!isLoading}
                   emissive={visuals.glow}
-                  emissiveIntensity={item.emissiveIntensity}
+                  emissiveIntensity={emissiveIntensity}
+                  opacity={isLoading ? LOADING_IMAGE_OPACITY : 1}
                   side={THREE.DoubleSide}
                   transparent
                 />
