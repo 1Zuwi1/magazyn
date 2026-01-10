@@ -5,20 +5,17 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.LoginRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RegisterRequest;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.EmailVerification;
-import com.github.dawid_stolarczyk.magazyn.Model.Entity.RefreshToken;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
-import com.github.dawid_stolarczyk.magazyn.Repositories.RefreshTokenRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
-import com.github.dawid_stolarczyk.magazyn.Security.Config.JwtProperties;
-import com.github.dawid_stolarczyk.magazyn.Security.JwtUtil;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.RememberMeData;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.SessionData;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
-import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +27,9 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
@@ -40,13 +39,9 @@ public class AuthService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private RefreshTokenRepository refreshTokenRepository;
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
     private Bucket4jRateLimiter rateLimiter;
     @Autowired
-    private JwtProperties jwtProperties;
+    private SessionService sessionService;
 
     @Value("${auth.password.min-length}")
     private int MIN_PASSWORD_LENGTH;
@@ -57,18 +52,18 @@ public class AuthService {
         if (auth != null) {
             new SecurityContextLogoutHandler().logout(request, response, auth);
         }
-        CookiesUtils.setCookie(response, "refresh-token", "", 0L);
-        CookiesUtils.setCookie(response, "access-token", "", 0L);
 
-        if (rt != null) {
-            RefreshToken refreshToken = refreshTokenRepository.findByTokenAndRevokedFalseAndExpiresAtAfter(
-                    Hasher.hashSHA256(rt), Instant.now()
-            ).orElse(null);
-            if (refreshToken != null) {
-                refreshToken.setRevoked(true);
-                refreshTokenRepository.save(refreshToken);
-            }
+        String sessionId = CookiesUtils.getCookie(request, "SESSION");
+        String rememberMeId = CookiesUtils.getCookie(request, "REMEMBER_ME");
+
+        if (sessionId != null) {
+            sessionService.deleteSession(sessionId);
         }
+        if (rememberMeId != null) {
+            sessionService.deleteRemember(rememberMeId);
+        }
+
+        sessionService.deleteSessionsCookies(response);
     }
 
     public void loginUser(LoginRequest loginRequest, HttpServletResponse response, HttpServletRequest request) {
@@ -84,9 +79,31 @@ public class AuthService {
             throw new AuthenticationException(AuthError.ACCOUNT_LOCKED.name());
         }
 
-        String jwt = jwtUtil.generateToken(user.getId(), Status2FA.PRE_2FA, jwtProperties.getRefreshTokenTtl().getSeconds());
-        saveRefreshTokenInDb(user, jwt);
-        CookiesUtils.setCookie(response, "refresh-token", jwt, jwtProperties.getRefreshTokenTtl().getSeconds());
+        String sessionId = UUID.randomUUID().toString();
+        SessionData sessionData = new SessionData(
+                sessionId,
+                user.getId(),
+                Status2FA.PRE_2FA,
+                getClientIp(request),
+                request.getHeader("User-Agent"));
+
+        CookiesUtils.setCookie(response, "SESSION", sessionService.createSession(sessionData), null);
+
+        if (loginRequest.isRememberMe()) {
+            RememberMeData rememberMeData = new RememberMeData(
+                    UUID.randomUUID().toString(),
+                    user.getId(),
+                    Status2FA.PRE_2FA,
+                    getClientIp(request),
+                    request.getHeader("User-Agent"));
+
+            CookiesUtils.setCookie(
+                    response,
+                    "REMEMBER_ME",
+                    sessionService.createRememberToken(rememberMeData),
+                    Duration.of(14, ChronoUnit.DAYS).getSeconds());
+        }
+
     }
 
     @Transactional
@@ -118,47 +135,9 @@ public class AuthService {
         userRepository.save(newUser);
     }
 
-    public void refreshAuthToken(HttpServletResponse response, HttpServletRequest request, String rt) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.AUTH_REFRESH_TOKEN);
-
-        if (rt == null || !jwtUtil.isTokenValid(rt)) {
-            throw new AuthenticationException(AuthError.TOKEN_EXPIRED.name());
-        }
-
-        RefreshToken refreshToken = refreshTokenRepository.findByTokenAndRevokedFalseAndExpiresAtAfter(
-                Hasher.hashSHA256(rt), Instant.now()
-        ).orElseThrow(() -> new AuthenticationException(AuthError.TOKEN_EXPIRED.name()));
-
-        User user = refreshToken.getUser();
-
-        String jwt = jwtUtil.generateToken(user.getId(), refreshToken.getStatus2FA(), jwtProperties.getAccessTokenTtl().getSeconds());
-        CookiesUtils.setCookie(response, "access-token", jwt, jwtProperties.getAccessTokenTtl().getSeconds());
-
-        // token rotation before 33% of refresh token lifetime passes
-        if (refreshToken.getExpiresAt().minusSeconds((long) (jwtProperties.getRefreshTokenTtl().toSeconds() * 0.33)).isBefore(Instant.now())) {
-            RefreshToken newRefreshToken = new RefreshToken();
-            newRefreshToken.setToken(Hasher.hashSHA256(jwtUtil.generateToken(
-                    user.getId(),
-                    refreshToken.getStatus2FA(),
-                    jwtProperties.getRefreshTokenTtl().getSeconds()
-            )));
-            newRefreshToken.setStatus2FA(refreshToken.getStatus2FA());
-            newRefreshToken.setExpiresAt(Instant.now().plus(jwtProperties.getRefreshTokenTtl()));
-            user.addRefreshToken(newRefreshToken);
-            refreshToken.setRevoked(true);
-            refreshTokenRepository.save(refreshToken);
-            userRepository.save(user);
-            CookiesUtils.setCookie(response, "refresh-token", jwtUtil.generateToken(
-                    user.getId(),
-                    refreshToken.getStatus2FA(),
-                    jwtProperties.getRefreshTokenTtl().getSeconds()
-            ), jwtProperties.getRefreshTokenTtl().getSeconds());
-        }
-    }
-
     public void verifyEmailCheck(String token) {
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException("User not found"));
+                .orElseThrow(() -> new AuthenticationException("", "User not found"));
         EmailVerification emailVerification = user.getEmailVerifications();
 
         if (emailVerification == null || emailVerification.getExpiresAt().isBefore(Instant.now())) {
@@ -187,14 +166,5 @@ public class AuthService {
                 hasSpecial = true;
         }
         return hasUpper && hasLower && hasDigit && hasSpecial;
-    }
-
-    private void saveRefreshTokenInDb(User user, String rt) {
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken(Hasher.hashSHA256(rt));
-        refreshToken.setStatus2FA(Status2FA.PRE_2FA);
-        refreshToken.setExpiresAt(Instant.now().plus(jwtProperties.getRefreshTokenTtl()));
-        user.addRefreshToken(refreshToken);
-        userRepository.save(user);
     }
 }

@@ -27,3 +27,6 @@ app.name=${APP_NAME}
 app.secretPlaintext=${SECRET_PLAINTEXT}
 
 auth.password.min-length=8
+
+spring.redis.host=localhost
+spring.redis.port=6379

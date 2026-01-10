@@ -40,8 +40,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private UserRole role = UserRole.USER;
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RefreshToken> refreshTokens = new ArrayList<>();
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private EmailVerification emailVerifications;
 
@@ -95,10 +93,6 @@ public class User {
         method.setUser(null);
     }
 
-    public void addRefreshToken(RefreshToken refreshToken) {
-        refreshTokens.add(refreshToken);
-        refreshToken.setUser(this);
-    }
 
     public void setEmailVerifications(EmailVerification emailVerification) {
         emailVerification.setUser(this);

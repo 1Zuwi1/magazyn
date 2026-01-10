@@ -3,12 +3,11 @@ package com.github.dawid_stolarczyk.magazyn.Security.Filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
-import com.github.dawid_stolarczyk.magazyn.Security.JwtUtil;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -20,7 +19,7 @@ import java.util.Objects;
 
 @Component
 public class TwoFactorFilter extends OncePerRequestFilter {
-    private List<String> whitelist = List.of("/api/2fa", "/api/auth", "/api/health");
+    private final List<String> whitelist = List.of("/api/2fa", "/api/auth", "/api/health");
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
@@ -31,16 +30,18 @@ public class TwoFactorFilter extends OncePerRequestFilter {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth != null && auth.isAuthenticated()) {
-            boolean verified2FA = Objects.requireNonNull(JwtUtil.getCurrentAuthPrincipal(auth)).getStatus2FA().equals(Status2FA.VERIFIED);
+            boolean verified2FA = Objects.requireNonNull(AuthUtil.getCurrentAuthPrincipal()).getStatus2FA().equals(Status2FA.VERIFIED);
 
             boolean isWhitelisted = whitelist.stream()
                     .anyMatch(path -> request.getRequestURI().startsWith(path));
             if (!verified2FA
                     && !isWhitelisted) {
+
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                response.setContentType("application/json");
+                response.setContentType("application/json;charset=UTF-8");
 
                 objectMapper.writeValue(response.getWriter(), new ResponseTemplate<>(false, "2FA_NOT_VERIFIED", null));
+                return;
             }
         }
 

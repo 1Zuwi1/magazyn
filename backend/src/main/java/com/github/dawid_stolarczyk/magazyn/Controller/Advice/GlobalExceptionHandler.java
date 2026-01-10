@@ -2,7 +2,6 @@ package com.github.dawid_stolarczyk.magazyn.Controller.Advice;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Exception.RateLimitExceededException;
-import com.github.dawid_stolarczyk.magazyn.Exception.TwoFactorNotVerifiedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -10,7 +9,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-// Dodac obsluge 403 Forbidden
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -34,15 +32,14 @@ public class GlobalExceptionHandler {
     ) {
         return ResponseEntity
                 .status(HttpStatus.TOO_MANY_REQUESTS)
-                .body(new ResponseTemplate<>(false, ex.getMessage()));
+                .body(new ResponseTemplate<>(false, "Too many requests, please try again later."));
     }
 
-    @ExceptionHandler(TwoFactorNotVerifiedException.class)
-    public ResponseEntity<ResponseTemplate<String>> handleTwoFactorNotVerified(
-            TwoFactorNotVerifiedException ex
-    ) {
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ResponseTemplate<String>> handleOtherExceptions(Exception ex) {
         return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(new ResponseTemplate<>(false, ex.getMessage()));
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ResponseTemplate<>(false, null, ex.getMessage()));
     }
+
 }

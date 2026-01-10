@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.util.EnumMap;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 @ConfigurationProperties(prefix = "auth")
 @Getter
 @Setter

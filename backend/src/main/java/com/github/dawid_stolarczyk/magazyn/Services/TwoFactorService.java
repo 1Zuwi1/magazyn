@@ -1,20 +1,21 @@
 package com.github.dawid_stolarczyk.magazyn.Services;
 
+import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.CodeRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.TwoFactorAuthenticatorResponse;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.BackupCode;
-import com.github.dawid_stolarczyk.magazyn.Model.Entity.RefreshToken;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.TwoFactorMethod;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.TwoFactor;
-import com.github.dawid_stolarczyk.magazyn.Repositories.RefreshTokenRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.CodeGenerator;
-import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
+import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +30,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
+
 @Service
 public class TwoFactorService {
     private static final int BACKUP_CODES_COUNT = 8;
@@ -38,29 +41,34 @@ public class TwoFactorService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private RefreshTokenRepository refreshTokenRepository;
-    @Autowired
     private EmailService emailService;
+    @Autowired
+    private SessionService sessionService;
 
     @Value("${app.name}")
     private String appName;
 
     private final GoogleAuthenticator gAuth = new GoogleAuthenticator();
 
+    @Autowired
+    private Bucket4jRateLimiter rateLimiter;
 
-    public List<String> getUsersTwoFactorMethods() {
+
+    public List<String> getUsersTwoFactorMethods(HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_FREE);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException("User not found"));
+                .orElseThrow(() -> new AuthenticationException("", "User not found"));
         return user.getTwoFactorMethods().stream().map(method -> method.getMethodName().name()).toList();
     }
 
-    public void sendTwoFactorCodeViaEmail() {
+    public void sendTwoFactorCodeViaEmail(HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_STRICT);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException("User not found"));
+                .orElseThrow(() -> new AuthenticationException("", "User not found"));
         TwoFactorMethod method = user.getTwoFactorMethods().stream()
                 .filter(m -> m.getMethodName() == TwoFactor.EMAIL)
                 .findFirst()
-                .orElseThrow(() -> new AuthenticationException("Email 2FA method not enabled"));
+                .orElseThrow(() -> new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name(), "Email 2FA method not enabled"));
         String code = CodeGenerator.generateWithNumbers(EMAIL_CODE_LENGTH);
         method.setEmailCode(BCrypt.hashpw(code, BCrypt.gensalt()));
         method.setCodeGeneratedAt(Timestamp.from(Instant.now()));
@@ -69,20 +77,20 @@ public class TwoFactorService {
         emailService.sendTwoFactorCode(user.getEmail(), code);
     }
 
-    public void checkTwoFactorEmailCode(String code, User user, HttpServletResponse response) {
+    public void checkTwoFactorEmailCode(String code, User user) {
         TwoFactorMethod method = user.getTwoFactorMethods().stream()
                 .filter(m -> m.getMethodName() == TwoFactor.EMAIL)
                 .findFirst()
-                .orElseThrow(() -> new AuthenticationException("Email 2FA method not enabled"));
+                .orElseThrow(() -> new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name()));
 
         if (method.getEmailCode() == null || !BCrypt.checkpw(code, method.getEmailCode())) {
-            throw new AuthenticationException("Invalid 2FA code");
+            throw new AuthenticationException(AuthError.CODE_INVALID.name());
         }
 
         if (method.getCodeGeneratedAt() == null
                 || method.getCodeGeneratedAt().toInstant()
                 .plus(TWO_FACTOR_EMAIL_CODE_EXPIRATION_MINUTES, ChronoUnit.MINUTES).isBefore(Instant.now())) {
-            throw new AuthenticationException("2FA code expired");
+            throw new AuthenticationException(AuthError.CODE_EXPIRED.name());
         }
 
         method.setEmailCode(null);
@@ -90,9 +98,10 @@ public class TwoFactorService {
         userRepository.save(user);
     }
 
-    public TwoFactorAuthenticatorResponse generateTwoFactorGoogleSecret() {
+    public TwoFactorAuthenticatorResponse generateTwoFactorGoogleSecret(HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_STRICT);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException("User not found"));
+                .orElseThrow(() -> new AuthenticationException("", "User not found"));
         TwoFactorMethod method = user.getTwoFactorMethods().stream()
                 .filter(m -> m.getMethodName() == TwoFactor.AUTHENTICATOR)
                 .findFirst()
@@ -110,45 +119,46 @@ public class TwoFactorService {
         return new TwoFactorAuthenticatorResponse(secret, user.getEmail(), appName);
     }
 
-    public void checkTwoFactorGoogleCode(int code, User user, HttpServletResponse response) {
+    public void checkTwoFactorGoogleCode(int code, User user) {
         TwoFactorMethod method = user.getTwoFactorMethods().stream()
                 .filter(m -> m.getMethodName() == TwoFactor.AUTHENTICATOR)
                 .findFirst()
-                .orElseThrow(() -> new AuthenticationException("Authenticator 2FA method not enabled"));
+                .orElseThrow(() -> new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name()));
 
         if (method.getAuthenticatorSecret() == null) {
-            throw new AuthenticationException("Authenticator secret not set");
+            throw new AuthenticationException(AuthError.CODE_INVALID.name());
         }
 
         boolean isCodeValid = gAuth.authorize(method.getAuthenticatorSecret(), code);
         if (!isCodeValid) {
-            throw new AuthenticationException("Invalid 2FA code");
+            throw new AuthenticationException(AuthError.CODE_INVALID.name());
         }
 
     }
 
-    public void checkCode(CodeRequest codeRequest, HttpServletResponse response, String refreshToken) {
+    public void checkCode(CodeRequest codeRequest, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_VERIFY);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException("User not found"));
+                .orElseThrow(() -> new AuthenticationException("", "User not found"));
 
         if (TwoFactor.valueOf(codeRequest.getMethod()).equals(TwoFactor.EMAIL)) {
-            checkTwoFactorEmailCode(codeRequest.getCode(), user, response);
+            checkTwoFactorEmailCode(codeRequest.getCode(), user);
         } else if (codeRequest.getMethod().equals(TwoFactor.AUTHENTICATOR.name())) {
             try {
-                checkTwoFactorGoogleCode(Integer.parseInt(codeRequest.getCode()), user, response);
+                checkTwoFactorGoogleCode(Integer.parseInt(codeRequest.getCode()), user);
             } catch (NumberFormatException e) {
-                throw new AuthenticationException("Invalid 2FA code format");
+                throw new AuthenticationException(AuthError.CODE_FORMAT_INVALID.name());
             }
         } else {
-            throw new AuthenticationException("Unsupported 2FA method");
+            throw new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name());
         }
-        successfulTwoFactorAuthentication(refreshToken);
+        successfulTwoFactorAuthentication(request);
     }
 
     @Transactional
     public List<String> generateBackupCodes() {
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException("User not found"));
+                .orElseThrow(() -> new AuthenticationException("", "User not found"));
         List<BackupCode> backupCodes = new ArrayList<>();
 
         for (int i = 0; i < BACKUP_CODES_COUNT; i++) {
@@ -170,7 +180,7 @@ public class TwoFactorService {
     @PreAuthorize("hasAuthority('STATUS_2FA_PRE_2FA')")
     public void useBackupCode(String code, HttpServletResponse response) {
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException("User not found"));
+                .orElseThrow(() -> new AuthenticationException("", "User not found"));
         user.getTwoFactorMethods().stream()
                 .filter(m -> TwoFactor.BACKUP_CODES.equals(m.getMethodName()))
                 .findFirst()
@@ -185,16 +195,14 @@ public class TwoFactorService {
             }
         }
         if (!correctCode) {
-            throw new AuthenticationException("Invalid backup code");
+            throw new AuthenticationException(AuthError.CODE_INVALID.name());
         }
         userRepository.save(user);
     }
 
-    private void successfulTwoFactorAuthentication(String rt) {
-        RefreshToken refreshToken = refreshTokenRepository.findByTokenAndRevokedFalseAndExpiresAtAfter(
-                Hasher.hashSHA256(rt), Instant.now()
-        ).orElseThrow(() -> new AuthenticationException("Refresh token not found"));
-        refreshToken.setStatus2FA(Status2FA.VERIFIED);
-        refreshTokenRepository.save(refreshToken);
+    private void successfulTwoFactorAuthentication(HttpServletRequest request) {
+        String sessionId = CookiesUtils.getCookie(request, "SESSION");
+        String rememberMeId = CookiesUtils.getCookie(request, "REMEMBER_ME");
+        sessionService.completeSessionTwoFactor(sessionId, rememberMeId);
     }
 }

@@ -23,15 +23,25 @@ public class CookiesUtils {
     }
 
     public static void setCookie(HttpServletResponse response, String name, String value, Long maxAge) {
-        ResponseCookie cookie = ResponseCookie.from(name, value)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(maxAge)
-                .sameSite("Lax")
-                .domain(cookieDomainStatic)
-                .build();
-
+        ResponseCookie cookie;
+        if (maxAge == null) {
+            cookie = ResponseCookie.from(name, value)
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .sameSite("Lax")
+                    .domain(cookieDomainStatic)
+                    .build();
+        } else {
+            cookie = ResponseCookie.from(name, value)
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(maxAge)
+                    .sameSite("Lax")
+                    .domain(cookieDomainStatic)
+                    .build();
+        }
         response.addHeader("Set-Cookie", cookie.toString());
     }
 
@@ -45,6 +55,18 @@ public class CookiesUtils {
             }
         }
         return null;
+    }
+
+    public static void deleteCookie(HttpServletResponse response, String name) {
+        ResponseCookie cookie = ResponseCookie.from(name, "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .domain(cookieDomainStatic)
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
     }
 
 }

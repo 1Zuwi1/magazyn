@@ -25,12 +25,8 @@ public class AuthController {
     @Operation(summary = "Logout the current user by invalidating their session.")
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response, @CookieValue(name = "refresh-token", required = false) String refreshToken) {
-        try {
-            authService.logoutUser(response, request, refreshToken);
-            return ResponseEntity.ok(new ResponseTemplate<>(true, "Logged out successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
-        }
+        authService.logoutUser(response, request, refreshToken);
+        return ResponseEntity.ok(new ResponseTemplate<>(true, "Logged out successfully"));
     }
 
     @Operation(summary = "Login a user with provided credentials.")
@@ -40,9 +36,7 @@ public class AuthController {
             authService.loginUser(loginRequest, response, request);
             return ResponseEntity.ok(new ResponseTemplate<>(true, "Logged in successfully"));
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));
         }
     }
 
@@ -53,22 +47,7 @@ public class AuthController {
             authService.registerUser(registerRequest, request);
             return ResponseEntity.ok(new ResponseTemplate<>(true, "Registered successfully"));
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
-        }
-    }
-
-    @Operation(summary = "Refresh the authentication token using a valid refresh token.")
-    @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(HttpServletResponse response, @CookieValue(name = "refresh-token") String refreshToken) {
-        try {
-            authService.refreshAuthToken(response, request, refreshToken);
-            return ResponseEntity.ok(new ResponseTemplate<>(true, "Token refreshed successfully"));
-        } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));
         }
     }
 
@@ -79,9 +58,7 @@ public class AuthController {
             authService.verifyEmailCheck(token);
             return ResponseEntity.ok(new ResponseTemplate<>(true, "Email verified successfully"));
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));
         }
     }
 

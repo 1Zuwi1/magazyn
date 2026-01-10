@@ -1,7 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Security.Config;
 
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.RestAuthenticationEntryPoint;
-import com.github.dawid_stolarczyk.magazyn.Security.Filter.JwtAuthenticationFilter;
+import com.github.dawid_stolarczyk.magazyn.Security.Filter.SessionAuthFilter;
 import com.github.dawid_stolarczyk.magazyn.Security.Filter.TwoFactorFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -19,7 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class SecurityConfig {
     @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private SessionAuthFilter sessionAuthFilter;
     @Autowired
     private TwoFactorFilter twoFactorFilter;
     @Autowired
@@ -32,6 +33,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(restAuthenticationEntryPoint))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/health").permitAll()
                         .requestMatchers("/public/**").permitAll()
@@ -44,8 +46,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(twoFactorFilter, JwtAuthenticationFilter.class);
+                .addFilterBefore(sessionAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(twoFactorFilter, SessionAuthFilter.class);
 
         return http.build();
     }

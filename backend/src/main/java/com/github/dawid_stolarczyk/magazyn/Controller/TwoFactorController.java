@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,48 +36,32 @@ public class TwoFactorController {
             @ApiResponse(responseCode = "400", description = "Bad request, could not retrieve two-factor methods")
     })
     @GetMapping
-    public ResponseEntity<?> twoFactorMethods() {
-        try {
-            return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.getUsersTwoFactorMethods()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
-        }
+    public ResponseEntity<?> twoFactorMethods(HttpServletRequest request) {
+        return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.getUsersTwoFactorMethods(request)));
     }
 
     @Operation(summary = "Send a two-factor authentication code via email to the current user.")
     @PostMapping("/email/send")
-    public ResponseEntity<?> sendEmailCode(HttpServletResponse response) {
-        try {
-            twoFactorService.sendTwoFactorCodeViaEmail();
-            return ResponseEntity.ok(new ResponseTemplate<>(true, "2FA code sent via email"));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
-        }
+    public ResponseEntity<?> sendEmailCode(HttpServletResponse response, HttpServletRequest request) {
+        twoFactorService.sendTwoFactorCodeViaEmail(request);
+        return ResponseEntity.ok(new ResponseTemplate<>(true, "2FA code sent via email"));
     }
 
     @Operation(summary = "Generate a new Google Authenticator secret for the current user.")
     @PostMapping("/authenticator/start")
-    public ResponseEntity<?> generateAuthenticatorSecret() {
-        try {
-            return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.generateTwoFactorGoogleSecret()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
-        }
+    public ResponseEntity<?> generateAuthenticatorSecret(HttpServletRequest request) {
+        return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.generateTwoFactorGoogleSecret(request)));
     }
 
     @Operation(summary = "Check the provided two-factor authentication code for the current user.")
     @PostMapping("/check")
     public ResponseEntity<?> checkCode(@Valid @RequestBody CodeRequest codeRequest,
-                                       HttpServletResponse response,
-                                       @CookieValue(name = "refresh-token") String refreshToken) {
+                                       HttpServletRequest request) {
         try {
-            twoFactorService.checkCode(codeRequest, response, refreshToken);
+            twoFactorService.checkCode(codeRequest, request);
             return ResponseEntity.ok(new ResponseTemplate<>(true, "2FA code verified"));
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getMessage()));
-        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getMessage()));
-            throw new RuntimeException(e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));
         }
     }
 }

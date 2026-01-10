@@ -8,8 +8,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,12 +31,7 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Bad request, could not retrieve user information")
     })
     @GetMapping("/me")
-    public ResponseEntity<?> getBasic() {
-        try {
-            return ResponseEntity.ok(new ResponseTemplate<>(true, userService.getBasicInformation()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseTemplate<>(false, "Could not retrieve user information."));
-        }
+    public ResponseEntity<?> getBasic(HttpServletRequest request) {
+        return ResponseEntity.ok(new ResponseTemplate<>(true, userService.getBasicInformation(request)));
     }
 }

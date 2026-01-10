@@ -2,6 +2,7 @@ package com.github.dawid_stolarczyk.magazyn.Controller.Dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,5 +15,7 @@ public class LoginRequest {
     private String username;
     @NotBlank
     private String password;
+    @NotNull
+    private boolean rememberMe;
 
 }
