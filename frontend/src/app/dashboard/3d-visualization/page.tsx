@@ -40,6 +40,7 @@ const renderVisualizationFallback = (_error: Error, reset: () => void) => (
 )
 
 export default function ThreeDVisualizationPage() {
+  // TODO: Replace mock data with real warehouse data fetched from the backend
   const warehouse = useMemo(() => generateMockWarehouse(20), [])
   const { mode, selectedRackId } = useWarehouseStore()
 

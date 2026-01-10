@@ -88,9 +88,8 @@ export function ShelvesInstanced({
 
   useCursor(hoveredInstanceId !== null)
 
-  const selected = selectedShelf?.rackId === rack.id
   const selectedInstanceId =
-    selected && selectedShelf
+    selectedShelf?.rackId === rack.id && selectedShelf
       ? (indexToInstance[selectedShelf.index] ?? null)
       : null
 
