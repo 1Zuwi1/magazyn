@@ -134,7 +134,6 @@ export function QrScanner({
       const v = videoRef.current
       v.pause()
       v.srcObject = null
-      v.remove()
     }
   }, [])
 
@@ -214,7 +213,8 @@ export function QrScanner({
       armedRef.current = true
     }
 
-    const onPopState = () => {
+    const onPopState = (e: PopStateEvent) => {
+      console.log(e.state)
       // If overlay is open, consume this Back by closing it
       if (open) {
         setOpen(false)
