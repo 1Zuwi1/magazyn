@@ -40,7 +40,7 @@ export interface Item {
   dimensions: Dimensions
   minTemp: number
   maxTemp: number
-  comment?: string
+  label?: string
   isDangerous: boolean
   imageUrl?: string | null
 }

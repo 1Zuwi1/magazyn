@@ -7,7 +7,7 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   return (
-    <ProtectedPage needAdminPrivileges>
+    <ProtectedPage>
       <div className="flex flex-col gap-4 p-4 pt-6">{children}</div>
     </ProtectedPage>
   )
