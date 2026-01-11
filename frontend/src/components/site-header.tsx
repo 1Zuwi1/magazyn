@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Fragment } from "react/jsx-runtime"
 import { cn } from "@/lib/utils"
-import { QrScanner } from "./qr-scanner/qr-scanner"
+import { Scanner } from "./scanner/scanner"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -66,7 +66,7 @@ export default function SiteHeader() {
         </Breadcrumb>
       </div>
       {pathname.includes("/dashboard/warehouse/") && (
-        <QrScanner warehouseName={splitted[2]} />
+        <Scanner warehouseName={splitted[2]} />
       )}
     </header>
   )
