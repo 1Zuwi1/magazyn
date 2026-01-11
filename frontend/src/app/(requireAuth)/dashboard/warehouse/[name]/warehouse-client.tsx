@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft02Icon, QrCodeIcon } from "@hugeicons/core-free-icons"
+import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useState } from "react"
@@ -8,9 +8,7 @@ import { RackGridView } from "@/components/dashboard/rack-visualization/rack-gri
 import { RackParametersCard } from "@/components/dashboard/rack-visualization/rack-parameters-card"
 import { RackStatusCard } from "@/components/dashboard/rack-visualization/rack-status-card"
 import type { ItemSlot } from "@/components/dashboard/types"
-import { QrScanner } from "@/components/qr-scanner/qr-scanner"
 import { buttonVariants } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 
 export default function WarehouseClient({
@@ -79,26 +77,6 @@ export default function WarehouseClient({
             </p>
           </div>
         </div>
-        <Dialog>
-          <DialogTrigger
-            className={buttonVariants({
-              variant: "outline",
-              size: "icon",
-              className: "size-8 sm:size-10",
-            })}
-            title="Skaner QR"
-          >
-            <HugeiconsIcon icon={QrCodeIcon} />
-          </DialogTrigger>
-          <DialogContent>
-            <QrScanner
-              onScan={(_text) => {
-                // TODO: Handle scanned QR code
-                // console.log(text)
-              }}
-            />
-          </DialogContent>
-        </Dialog>
       </div>
 
       {/* Main Content - Two Column Layout */}

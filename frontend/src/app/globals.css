@@ -124,3 +124,22 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes qr-scan-line {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(12.5rem);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-qr-scan-line {
+  animation: qr-scan-line 2.2s ease-in-out infinite;
+}

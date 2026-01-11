@@ -1,8 +1,12 @@
 "use client"
 
+import { QrCodeIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Fragment } from "react/jsx-runtime"
+import { cn } from "@/lib/utils"
+import { QrScanner } from "./qr-scanner/qr-scanner"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,14 +14,18 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "./ui/breadcrumb"
+import { buttonVariants } from "./ui/button"
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog"
 import { Separator } from "./ui/separator"
 import { SidebarTrigger } from "./ui/sidebar"
 
 export default function SiteHeader() {
   const pathname = usePathname()
-  const splitted = pathname.split("/")
+  console.log(pathname)
+  const splitted = pathname.split("/").filter((part) => part !== "")
   let currPath = "/"
   const paths = useTranslations("breadcrumbs")
+
   return (
     <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
@@ -29,9 +37,6 @@ export default function SiteHeader() {
         <Breadcrumb>
           <BreadcrumbList>
             {splitted.map((path, index) => {
-              if (path === "") {
-                return null
-              }
               currPath += `${path}/`
               const splittedPath = path.split("-")
               const isDynamic = splittedPath.length > 1
@@ -44,18 +49,44 @@ export default function SiteHeader() {
               }
               return (
                 <Fragment key={path + index}>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink className="capitalize" href={currPath}>
+                  <BreadcrumbItem
+                    className={cn({
+                      "hidden sm:inline": index !== 0,
+                    })}
+                  >
+                    <BreadcrumbLink
+                      className={cn("capitalize", {})}
+                      href={currPath}
+                    >
                       {displayName}
                     </BreadcrumbLink>
                   </BreadcrumbItem>
-                  {splitted.length - 1 !== index && <BreadcrumbSeparator />}
+                  {splitted.length - 1 !== index && (
+                    <BreadcrumbSeparator className="hidden sm:inline" />
+                  )}
                 </Fragment>
               )
             })}
           </BreadcrumbList>
         </Breadcrumb>
       </div>
+      {pathname.includes("/dashboard/warehouse/") && (
+        <Dialog>
+          <DialogTrigger
+            className={buttonVariants({
+              variant: "ghost",
+              size: "icon",
+              className: "mr-1 ml-auto size-8 rounded-xl sm:size-10",
+            })}
+            title="Skaner QR"
+          >
+            <HugeiconsIcon icon={QrCodeIcon} />
+          </DialogTrigger>
+          <DialogContent className="p-0">
+            <QrScanner warehouseName={splitted[2]} />
+          </DialogContent>
+        </Dialog>
+      )}
     </header>
   )
 }

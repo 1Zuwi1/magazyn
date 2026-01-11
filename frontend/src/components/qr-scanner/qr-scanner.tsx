@@ -2,29 +2,38 @@
 
 import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser"
 import { NotFoundException, type Result } from "@zxing/library"
+import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 
 interface QrScannerProps {
-  onScan: (text: string) => void
-  onError?: (err: unknown) => void
   /** Prevents spamming the same result continuously */
   scanDelayMs?: number
   /** Stop camera as soon as a QR is read */
   stopOnScan?: boolean
   /** Override camera constraints if you want */
   constraints?: MediaStreamConstraints
+  warehouseName?: string
   className?: string
 }
 
+const TAB_TRIGGERS = [
+  {
+    text: "Przyjmowanie",
+    action: "take",
+  },
+  {
+    text: "Zdejmowanie",
+    action: "remove",
+  },
+] as const
+
 export function QrScanner({
-  onScan,
-  onError,
   scanDelayMs = 1200,
   stopOnScan = false,
   constraints,
+  warehouseName,
   className,
 }: QrScannerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -33,15 +42,27 @@ export function QrScanner({
 
   const lastTextRef = useRef<string>("")
   const lastAtRef = useRef<number>(0)
+  const [mode, setMode] = useState<number>(0)
+  const modeRef = useRef<number>(mode)
 
-  const [running, setRunning] = useState(false)
-  const [starting, setStarting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  const onScan = useCallback((text: string) => {
+    console.log(
+      "Scanned QR code:",
+      text,
+      "Action:",
+      TAB_TRIGGERS[modeRef.current].action
+    )
+  }, [])
+
+  const onError = useCallback((err: unknown) => {
+    console.error("QR Scanner error:", err)
+  }, [])
 
   const stopAfterScan = useCallback(() => {
     controlsRef.current?.stop()
     controlsRef.current = null
-    setRunning(false)
   }, [])
 
   const shouldIgnoreScan = useCallback(
@@ -101,15 +122,12 @@ export function QrScanner({
       const v = videoRef.current
       v.pause()
       v.srcObject = null
+      v.remove()
     }
-
-    setRunning(false)
-    setStarting(false)
   }, [])
 
   const start = useCallback(async () => {
     setErrorMsg(null)
-    setStarting(true)
 
     try {
       if (!videoRef.current) {
@@ -138,56 +156,99 @@ export function QrScanner({
       )
 
       controlsRef.current = controls
-      setRunning(true)
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : "Could not start the camera scanner."
       setErrorMsg(msg)
       onError?.(e)
       stop()
-    } finally {
-      setStarting(false)
     }
   }, [constraints, handleScanResult, onError, stop])
 
+  const pathname = usePathname()
+
   useEffect(() => {
+    if (!pathname.includes("/dashboard/warehouse/")) {
+      setErrorMsg("Skaner QR jest dostępny tylko w widoku magazynu.")
+      return
+    }
+    start()
+
     return () => stop() // cleanup on unmount
-  }, [stop])
+  }, [stop, start, pathname])
+
+  useEffect(() => {
+    modeRef.current = mode
+  }, [mode])
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>QR Scanner</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {errorMsg ? (
-          <Alert variant="destructive">
-            <AlertTitle>Camera / Scanner error</AlertTitle>
-            <AlertDescription>{errorMsg}</AlertDescription>
-          </Alert>
-        ) : null}
-
-        <div className="relative overflow-hidden rounded-lg border">
+    <div
+      className={cn(
+        "relative h-auto max-h-120 min-h-84 w-auto max-w-lg overflow-hidden rounded-lg border",
+        className
+      )}
+    >
+      {errorMsg ? (
+        <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2">
+          <p className="m-4 text-center text-red-600">
+            Wystąpił błąd. Upewnij się że Twoja kamera jest podłączona i
+            dostępna oraz że udzieliłeś/aś pozwolenia na jej użycie.
+            <br />
+            <br />
+            Szczegóły: {errorMsg}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="absolute top-4 left-1/2 z-10 w-[70%] -translate-x-1/2">
+            <p className="h-full w-full text-center">
+              Skanujesz w magazynie: {decodeURIComponent(warehouseName ?? "")}
+            </p>
+            <Tabs
+              className="h-full w-full"
+              onValueChange={setMode}
+              value={mode}
+            >
+              <TabsList
+                className={
+                  "relative isolate flex w-full gap-2 rounded-full bg-black/50 p-1 py-4 *:rounded-full *:px-4 *:py-3"
+                }
+              >
+                {TAB_TRIGGERS.map(({ text, action }, index) => (
+                  <TabsTrigger
+                    className={cn(
+                      "z-10 w-0 flex-1 bg-transparent! text-white!",
+                      {
+                        "text-black!": mode === index,
+                      }
+                    )}
+                    key={action}
+                    value={index}
+                  >
+                    {text}
+                  </TabsTrigger>
+                ))}
+                <div
+                  className={cn(
+                    "pointer-events-none absolute left-0 h-[80%] bg-white p-4 transition-transform"
+                  )}
+                  role="presentation"
+                  style={{
+                    width: `${100 / TAB_TRIGGERS.length}%`,
+                    transform: `translateX(${mode * 100}%)`,
+                  }}
+                />
+              </TabsList>
+            </Tabs>
+          </div>
+          <div className="pointer-events-none absolute inset-0 z-9 flex items-center justify-center">
+            <div className="relative aspect-square h-1/2 w-auto overflow-hidden rounded-xl border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.7)]">
+              <div className="absolute top-2 right-3 left-3 h-0.5 animate-qr-scan-line bg-emerald-400/80 shadow-[0_0_12px_rgba(16,185,129,0.9)]" />
+            </div>
+          </div>
           <video className="h-auto w-full" muted ref={videoRef} />
-        </div>
-
-        <div className="flex gap-2">
-          {running ? (
-            <Button onClick={stop} variant="secondary">
-              Stop
-            </Button>
-          ) : (
-            <Button disabled={starting} onClick={start}>
-              {starting ? "Starting…" : "Start scanning"}
-            </Button>
-          )}
-        </div>
-
-        <p className="text-muted-foreground text-sm">
-          Works on HTTPS (or localhost). If your site is plain HTTP, browsers
-          will treat your camera request like a prank and deny it.
-        </p>
-      </CardContent>
-    </Card>
+        </>
+      )}
+    </div>
   )
 }
