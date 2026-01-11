@@ -206,19 +206,18 @@ export function ScannerCamera({
 
   return (
     <>
-      {
-        <Button
-          className={cn("absolute top-12 right-2 z-10", {
-            "top-4 right-4": !isMobile,
-          })}
-          onClick={onRequestClose}
-          size="icon-sm"
-          variant="ghost"
-        >
-          <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
-          <span className="sr-only">Close</span>
-        </Button>
-      }
+      <Button
+        className={cn("absolute top-12 right-2 z-10", {
+          "top-4 right-4": !isMobile,
+        })}
+        onClick={onRequestClose}
+        size="icon-sm"
+        variant="ghost"
+      >
+        <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
+        <span className="sr-only">Close</span>
+      </Button>
+
       {errorMsg ? (
         <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2">
           <p className="m-4 text-center text-red-600">
