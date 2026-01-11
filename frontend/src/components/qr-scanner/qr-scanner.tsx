@@ -1,10 +1,15 @@
 "use client"
 
+import { Cancel01Icon, QrCodeIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser"
 import { NotFoundException, type Result } from "@zxing/library"
 import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
+import { Button, buttonVariants } from "../ui/button"
+import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog"
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 
 interface QrScannerProps {
@@ -36,14 +41,23 @@ export function QrScanner({
   warehouseName,
   className,
 }: QrScannerProps) {
+  const isMobile = useIsMobile()
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const controlsRef = useRef<IScannerControls | null>(null)
   const readerRef = useRef<BrowserMultiFormatReader | null>(null)
+  const [isVideoReady, setIsVideoReady] = useState<boolean>(false)
+  const setVideoRef = useCallback((node: HTMLVideoElement | null) => {
+    videoRef.current = node
+    const ready = Boolean(node)
+    setIsVideoReady((prev) => (prev === ready ? prev : ready))
+  }, [])
 
   const lastTextRef = useRef<string>("")
   const lastAtRef = useRef<number>(0)
   const [mode, setMode] = useState<number>(0)
   const modeRef = useRef<number>(mode)
+  const [open, setOpen] = useState<boolean>(false)
+  const armedRef = useRef<boolean>(false)
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -104,8 +118,6 @@ export function QrScanner({
         return
       }
 
-      // ZXing throws NotFoundException constantly when no QR is visible.
-      // That’s not an "error", it’s just "keep looking".
       if (err && !(err instanceof NotFoundException)) {
         onError?.(err)
       }
@@ -131,7 +143,7 @@ export function QrScanner({
 
     try {
       if (!videoRef.current) {
-        throw new Error("Video element not ready.")
+        return
       }
 
       // iOS Safari friendliness
@@ -168,87 +180,186 @@ export function QrScanner({
   const pathname = usePathname()
 
   useEffect(() => {
+    if (!open) {
+      stop()
+      return
+    }
+
     if (!pathname.includes("/dashboard/warehouse/")) {
       setErrorMsg("Skaner QR jest dostępny tylko w widoku magazynu.")
       return
     }
+
+    if (!isVideoReady) {
+      return
+    }
+
     start()
 
     return () => stop() // cleanup on unmount
-  }, [stop, start, pathname])
+  }, [open, stop, start, pathname, isVideoReady])
 
   useEffect(() => {
     modeRef.current = mode
   }, [mode])
 
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    // Add exactly one "guard" entry per open
+    if (!armedRef.current) {
+      window.history.pushState({ __overlay: true }, "", window.location.href)
+      armedRef.current = true
+    }
+
+    const onPopState = () => {
+      // If overlay is open, consume this Back by closing it
+      if (open) {
+        setOpen(false)
+        armedRef.current = false // guard entry already popped
+      }
+    }
+
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [open])
+
+  const closeDialog = useCallback(() => {
+    if (!open) {
+      return
+    }
+
+    if (armedRef.current) {
+      // This triggers popstate, which closes the overlay
+      window.history.back()
+    } else {
+      setOpen(false)
+    }
+  }, [open])
+
   return (
-    <div
-      className={cn(
-        "relative h-auto max-h-120 min-h-84 w-auto max-w-lg overflow-hidden rounded-lg border",
-        className
-      )}
+    <Dialog
+      onOpenChange={(o) => {
+        if (o) {
+          setOpen(true)
+        } else {
+          closeDialog()
+        }
+      }}
+      open={open}
     >
-      {errorMsg ? (
-        <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2">
-          <p className="m-4 text-center text-red-600">
-            Wystąpił błąd. Upewnij się że Twoja kamera jest podłączona i
-            dostępna oraz że udzieliłeś/aś pozwolenia na jej użycie.
-            <br />
-            <br />
-            Szczegóły: {errorMsg}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="absolute top-4 left-1/2 z-10 w-[70%] -translate-x-1/2">
-            <p className="h-full w-full text-center">
-              Skanujesz w magazynie: {decodeURIComponent(warehouseName ?? "")}
-            </p>
-            <Tabs
-              className="h-full w-full"
-              onValueChange={setMode}
-              value={mode}
+      <DialogTrigger
+        className={buttonVariants({
+          variant: "ghost",
+          size: "icon",
+          className: "mr-1 ml-auto size-8 rounded-xl sm:size-10",
+        })}
+        title="Skaner QR"
+      >
+        <HugeiconsIcon icon={QrCodeIcon} />
+      </DialogTrigger>
+      <DialogContent
+        className={cn(
+          "p-0",
+          isMobile ? "h-screen w-screen max-w-none rounded-none" : ""
+        )}
+        showCloseButton={!isMobile}
+      >
+        <div
+          className={cn(
+            "relative overflow-hidden",
+            isMobile ? "h-full w-full" : "aspect-3/4 w-full rounded-lg border",
+            className
+          )}
+        >
+          {isMobile && (
+            <Button
+              className="absolute top-12 right-2"
+              onClick={() => setOpen(false)}
+              size="icon-sm"
+              variant="ghost"
             >
-              <TabsList
-                className={
-                  "relative isolate flex w-full gap-2 rounded-full bg-black/50 p-1 py-4 *:rounded-full *:px-4 *:py-3"
-                }
-              >
-                {TAB_TRIGGERS.map(({ text, action }, index) => (
-                  <TabsTrigger
-                    className={cn(
-                      "z-10 w-0 flex-1 bg-transparent! text-white!",
-                      {
-                        "text-black!": mode === index,
-                      }
-                    )}
-                    key={action}
-                    value={index}
-                  >
-                    {text}
-                  </TabsTrigger>
-                ))}
-                <div
-                  className={cn(
-                    "pointer-events-none absolute left-0 h-[80%] bg-white p-4 transition-transform"
-                  )}
-                  role="presentation"
-                  style={{
-                    width: `${100 / TAB_TRIGGERS.length}%`,
-                    transform: `translateX(${mode * 100}%)`,
-                  }}
-                />
-              </TabsList>
-            </Tabs>
-          </div>
-          <div className="pointer-events-none absolute inset-0 z-9 flex items-center justify-center">
-            <div className="relative aspect-square h-1/2 w-auto overflow-hidden rounded-xl border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.7)]">
-              <div className="absolute top-2 right-3 left-3 h-0.5 animate-qr-scan-line bg-emerald-400/80 shadow-[0_0_12px_rgba(16,185,129,0.9)]" />
+              <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
+              <span className="sr-only">Close</span>
+            </Button>
+          )}
+          {errorMsg ? (
+            <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2">
+              <p className="m-4 text-center text-red-600">
+                Wystąpił błąd. Upewnij się że Twoja kamera jest podłączona i
+                dostępna oraz że udzieliłeś/aś pozwolenia na jej użycie.
+                <br />
+                <br />
+                Szczegóły: {errorMsg}
+              </p>
             </div>
-          </div>
-          <video className="h-auto w-full" muted ref={videoRef} />
-        </>
-      )}
-    </div>
+          ) : (
+            <>
+              <div
+                className={cn(
+                  "absolute top-4 left-1/2 z-10 flex w-[70%] -translate-x-1/2 flex-col gap-2",
+                  {
+                    "top-16": isMobile,
+                  }
+                )}
+              >
+                <p className="h-full w-full text-center">
+                  Skanujesz w magazynie:{" "}
+                  {decodeURIComponent(warehouseName ?? "")}
+                </p>
+                <Tabs
+                  className="h-full w-full"
+                  onValueChange={setMode}
+                  value={mode}
+                >
+                  <TabsList
+                    className={
+                      "relative isolate flex w-full gap-2 rounded-full bg-black/50 p-1 py-4 *:rounded-full *:px-4 *:py-3"
+                    }
+                  >
+                    {TAB_TRIGGERS.map(({ text, action }, index) => (
+                      <TabsTrigger
+                        className={cn(
+                          "z-10 w-0 flex-1 bg-transparent! text-white!",
+                          {
+                            "text-black!": mode === index,
+                          }
+                        )}
+                        key={action}
+                        value={index}
+                      >
+                        {text}
+                      </TabsTrigger>
+                    ))}
+                    <div
+                      className={cn(
+                        "pointer-events-none absolute left-0 h-[80%] bg-white p-4 transition-transform"
+                      )}
+                      role="presentation"
+                      style={{
+                        width: `${100 / TAB_TRIGGERS.length}%`,
+                        transform: `translateX(${mode * 100}%)`,
+                      }}
+                    />
+                  </TabsList>
+                </Tabs>
+              </div>
+              <div className="pointer-events-none absolute inset-0 z-9 flex items-center justify-center">
+                <div className="relative aspect-square h-1/2 w-auto overflow-hidden rounded-xl border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.7)]">
+                  <div className="absolute top-2 right-3 left-3 h-0.5 animate-qr-scan-line bg-emerald-400/80 shadow-[0_0_12px_rgba(16,185,129,0.9)]" />
+                </div>
+              </div>
+              <video
+                className={cn("h-full w-full object-cover")}
+                muted
+                ref={setVideoRef}
+              />
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
