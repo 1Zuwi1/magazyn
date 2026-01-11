@@ -126,11 +126,12 @@
 }
 
 @keyframes qr-scan-line {
-  0%, 100% {
-    top: .5rem;
+  0%,
+  100% {
+    top: 0.5rem;
   }
   50% {
-    top: calc(100% - .625rem);
+    top: calc(100% - 0.625rem);
   }
 }
 

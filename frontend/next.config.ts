@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  images: {
+    remotePatterns: [new URL("https://placehold.co/**")],
+    dangerouslyAllowSVG: true,
+  },
 }
 
 const withNextIntl = createNextIntlPlugin({
