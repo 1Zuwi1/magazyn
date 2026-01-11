@@ -7,6 +7,7 @@ export interface Rack {
   maxTemp: number
   maxWeight: number
   currentWeight: number
+  comment?: string
   occupancy: number // 0-100
   items: ItemSlot[]
 }
@@ -40,7 +41,7 @@ export interface Item {
   dimensions: Dimensions
   minTemp: number
   maxTemp: number
-  label?: string
+  comment?: string
   isDangerous: boolean
   imageUrl?: string | null
 }
