@@ -149,3 +149,9 @@
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
+@custom-variant standalone {
+  @media (display-mode: standalone) {
+    @slot;
+  }
+}

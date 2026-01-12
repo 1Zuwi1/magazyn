@@ -13,19 +13,19 @@ export const getSession = cache(async (redirectTo?: string) => {
 
     return res
   } catch {
-    if (process.env.NODE_ENV === "development") {
-      // TODO: Delete when backend is ready
-      // Development stub
-      return await ApiMeSchema.shape.GET.shape.output.parseAsync({
-        id: 1,
-        email: "user@example.com",
-        username: "user123",
-        full_name: "User Example",
-        two_factor_enabled: false,
-        role: "user",
-        status: "verified",
-      })
-    }
+    // if (process.env.NODE_ENV === "development") {
+    //   // TODO: Delete when backend is ready
+    //   // Development stub
+    //   return await ApiMeSchema.shape.GET.shape.output.parseAsync({
+    //     id: 1,
+    //     email: "user@example.com",
+    //     username: "user123",
+    //     full_name: "User Example",
+    //     two_factor_enabled: false,
+    //     role: "user",
+    //     status: "verified",
+    //   })
+    // }
 
     if (redirectTo) {
       redirect(redirectTo)
