@@ -34,18 +34,18 @@ export function ScannerLocationsStep({
             {locations.map((location, index) => (
               <LocationCard
                 index={index}
-                key={`${location.rack}-${location.row}-${location.col}-${index}`}
+                key={`${location.rack}-${location.row}-${location.col}`}
                 location={location}
               />
             ))}
           </div>
           <Button
             className="w-full"
-            disabled={isSubmitting}
+            isLoading={isSubmitting}
             onClick={onConfirm}
             type="button"
           >
-            {isSubmitting ? "Przetwarzanie..." : "Przedmioty umieszczone"}
+            Przedmioty umieszczone
           </Button>
         </div>
       </div>

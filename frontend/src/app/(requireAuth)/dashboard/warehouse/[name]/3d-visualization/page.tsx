@@ -32,13 +32,9 @@ const renderVisualizationFallback = (_error: Error, reset: () => void) => (
         do trybu przeglądu.
       </p>
     </div>
-    <button
-      className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
-      onClick={reset}
-      type="button"
-    >
+    <Button onClick={reset} size="sm" variant="outline">
       Spróbuj ponownie
-    </button>
+    </Button>
   </div>
 )
 

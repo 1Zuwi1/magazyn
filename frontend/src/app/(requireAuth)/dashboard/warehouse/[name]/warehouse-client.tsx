@@ -70,7 +70,7 @@ export default function WarehouseClient({
           </Link>
           <div>
             <h2 className="font-bold text-xl tracking-tight sm:text-2xl lg:text-3xl">
-              {decodeURIComponent(warehouseName)}
+              {warehouseName}
             </h2>
             <p className="text-muted-foreground text-xs sm:text-sm">
               ID: {warehouseId} • {currentRack.name}

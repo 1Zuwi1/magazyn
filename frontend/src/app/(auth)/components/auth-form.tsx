@@ -15,7 +15,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Spinner } from "@/components/ui/spinner"
 import { apiFetch } from "@/lib/fetcher"
 import { LoginSchema, RegisterSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -243,11 +242,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
               {([canSubmit, isSubmitting]) => (
                 <Button
                   className="w-full"
-                  disabled={!canSubmit || isSubmitting}
+                  disabled={!canSubmit}
+                  isLoading={isSubmitting}
                   type="submit"
                 >
-                  {isLogin ? "Zaloguj się" : "Zarejestruj się"}{" "}
-                  {isSubmitting && <Spinner />}
+                  {isLogin ? "Zaloguj się" : "Zarejestruj się"}
                 </Button>
               )}
             </form.Subscribe>

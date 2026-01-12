@@ -108,11 +108,11 @@ export function ScannerQuantityStep({
           </div>
           <Button
             className="w-full"
-            disabled={isSubmitting}
+            isLoading={isSubmitting}
             onClick={onSubmit}
             type="button"
           >
-            {isSubmitting ? "Przetwarzanie..." : "Potwierdź"}
+            Potwierdź
           </Button>
         </div>
       </div>

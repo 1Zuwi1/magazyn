@@ -26,13 +26,14 @@ export default async function WarehousePage({
           redirect("/dashboard")
         }
 
-        const warehouseRacks =
-          MOCK_WAREHOUSES_DATA[name] || MOCK_RACKS.slice(0, 1)
+        const parsedName = decodeURIComponent(name)
+
+        const warehouseRacks = MOCK_WAREHOUSES_DATA[parsedName]
         return (
           <WarehouseClient
             racks={warehouseRacks}
             warehouseId={warehouseId}
-            warehouseName={name}
+            warehouseName={parsedName}
           />
         )
       }}
