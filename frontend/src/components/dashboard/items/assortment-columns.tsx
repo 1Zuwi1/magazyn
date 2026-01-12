@@ -101,7 +101,8 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
       <div>
         <div className="font-medium">{row.original.rackName}</div>
         <div className="text-muted-foreground text-sm">
-          Rząd {row.original.position.row}, Kol. {row.original.position.col}
+          Rząd {row.original.position.row + 1}, Kol.{" "}
+          {row.original.position.col + 1}
         </div>
       </div>
     ),
