@@ -46,13 +46,13 @@ jobs:
 
       - name: Cache
         uses: actions/cache@v4
+        if: steps.changes.outputs.frontend == 'true'
         with:
           path: |
             ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
-          # If source files changed but packages didn't, rebuild from a prior cache.
           restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-bun-
       - name: Web image metadata
         id: meta_web
         uses: docker/metadata-action@v5
@@ -102,6 +102,7 @@ jobs:
       # ---- DEPLOY on server ----
       - name: SSH deploy (pull + restart)
         uses: appleboy/ssh-action@v1.0.3
+        if: steps.changes.outputs.frontend == 'true' || steps.changes.outputs.backend == 'true'
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
