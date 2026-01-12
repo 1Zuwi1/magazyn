@@ -1,9 +1,11 @@
+set -e
+
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT/frontend"
 bun run format
 
 cd "$ROOT"
-git add -A
+git add -u
 
 cd "$ROOT/frontend"
 bun run lint
