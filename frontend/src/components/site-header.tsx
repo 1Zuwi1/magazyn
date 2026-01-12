@@ -15,6 +15,32 @@ import {
 import { Separator } from "./ui/separator"
 import { SidebarTrigger } from "./ui/sidebar"
 
+// biome-ignore lint/suspicious/noControlCharactersInRegex: This is needed to strip control characters from decoded text
+const CONTROL_CHAR_REGEX = /[\u0000-\u001f\u007f]/g
+const SCRIPT_TAG_BLOCK_REGEX = /<script[\s\S]*?>[\s\S]*?<\/script>/gi
+const STYLE_TAG_BLOCK_REGEX = /<style[\s\S]*?>[\s\S]*?<\/style>/gi
+const HTML_TAG_REGEX = /<\/?[^>]+>/g
+
+const safeDecodeURIComponent = (value: string | undefined): string => {
+  if (!value) {
+    return ""
+  }
+
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+const sanitizeVisibleText = (value: string): string => {
+  return value
+    .replace(SCRIPT_TAG_BLOCK_REGEX, "")
+    .replace(STYLE_TAG_BLOCK_REGEX, "")
+    .replace(HTML_TAG_REGEX, "")
+    .replace(CONTROL_CHAR_REGEX, "")
+}
+
 export default function SiteHeader() {
   const pathname = usePathname()
   const splitted = pathname.split("/").filter((part) => part !== "")
@@ -66,7 +92,11 @@ export default function SiteHeader() {
         </Breadcrumb>
       </div>
       {pathname.includes("/dashboard/warehouse/") && (
-        <Scanner warehouseName={splitted[2]} />
+        <Scanner
+          warehouseName={decodeURIComponent(
+            sanitizeVisibleText(safeDecodeURIComponent(splitted[2] ?? ""))
+          )}
+        />
       )}
     </header>
   )

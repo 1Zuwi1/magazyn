@@ -79,7 +79,7 @@ export function ScannerQuantityStep({
                 −
               </Button>
               <Input
-                className="h-10 w-20 text-center text-lg"
+                className="no-spinners h-10 w-20 text-center text-lg"
                 id="quantity"
                 max={SCANNER_ITEM_MAX_QUANTITY}
                 min="1"
@@ -93,6 +93,7 @@ export function ScannerQuantityStep({
                     onQuantityChange(clampedValue)
                   }
                 }}
+                type="number"
                 value={quantity}
               />
               <Button

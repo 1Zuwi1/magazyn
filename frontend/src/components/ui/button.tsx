@@ -53,26 +53,15 @@ function Button({
     isLoading?: boolean
     showSpinner?: boolean
   }) {
-  if (isLoading) {
-    return (
-      <ButtonPrimitive
-        className={cn(buttonVariants({ variant, size, className }))}
-        data-slot="button"
-        {...props}
-        disabled
-      >
-        {children}
-        {showSpinner && <Spinner className="ml-1" />}
-      </ButtonPrimitive>
-    )
-  }
   return (
     <ButtonPrimitive
       className={cn(buttonVariants({ variant, size, className }))}
       data-slot="button"
+      disabled={isLoading || props.disabled}
       {...props}
     >
       {children}
+      {isLoading && showSpinner && <Spinner className="ml-1" />}
     </ButtonPrimitive>
   )
 }
