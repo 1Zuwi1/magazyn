@@ -55,6 +55,7 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
   - Add labels for form inputs
   - Include keyboard event handlers alongside mouse events
   - Use semantic elements (`<button>`, `<nav>`, etc.) instead of divs with roles
+  - Use shadcn/ui for styling - e.g <Button>, <Input> etc.
 - When using icons from Hugeicons, use the `@hugeicons/react` package and the `HugeiconsIcon` component for better performance and compatibility.
 
 ### Error Handling & Debugging

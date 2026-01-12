@@ -1,7 +1,12 @@
 {
-  "short_name": "MDN",
-  "name": "MDN Web Docs",
+  "short_name": "GTL",
+  "name": "Gdzie To Leży",
   "icons": [
+    {
+      "src": "/favicon-48x48.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
     {
       "src": "/favicon-192x192.png",
       "sizes": "192x192",
@@ -13,7 +18,8 @@
       "type": "image/png"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "theme_color": "black",
   "background_color": "white"

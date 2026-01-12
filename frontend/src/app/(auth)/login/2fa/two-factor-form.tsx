@@ -20,7 +20,6 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { Spinner } from "@/components/ui/spinner"
 import { apiFetch } from "@/lib/fetcher"
 import { Resend2FASchema, Verify2FASchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -190,12 +189,12 @@ export default function TwoFactorForm({
                   Nie dotarło?{" "}
                   <Button
                     className="h-auto p-0 align-baseline"
-                    disabled={isResending}
+                    isLoading={isResending}
                     onClick={() => resendCode(method as ResendType)}
                     type="button"
                     variant="link"
                   >
-                    Wyślij ponownie {isResending && <Spinner />}
+                    Wyślij ponownie
                   </Button>
                 </FieldDescription>
               ) : null}
@@ -209,9 +208,10 @@ export default function TwoFactorForm({
                     {alternatives.map((m) => (
                       <Button
                         className="h-9 justify-start px-2"
-                        disabled={isResending || form.state.isSubmitting}
+                        isLoading={isResending || form.state.isSubmitting}
                         key={m}
                         onClick={() => handleSwitchMethod(m)}
+                        showSpinner={false}
                         size="sm"
                         type="button"
                         variant="link"
@@ -228,10 +228,10 @@ export default function TwoFactorForm({
         <Field>
           <Button
             className="w-full"
-            disabled={form.state.isSubmitting}
+            isLoading={form.state.isSubmitting}
             type="submit"
           >
-            Zweryfikuj {form.state.isSubmitting && <Spinner />}
+            Zweryfikuj
           </Button>
         </Field>
       </FieldGroup>

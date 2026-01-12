@@ -25,10 +25,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              // asChild
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
-            >
+            <SidebarMenuButton className="data-[slot=sidebar-menu-button]:p-1.5!">
               <Logo />
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -60,15 +57,14 @@ function NavMain() {
     <SidebarMenu>
       {items.map((item) => (
         <SidebarMenuItem key={item.href}>
-          <SidebarMenuButton>
-            <Link
-              className="flex h-full w-full items-center gap-2"
-              href={item.href}
-            >
-              <HugeiconsIcon className="mr-2 size-5" icon={item.icon} />
-              {item.title}
-            </Link>
-          </SidebarMenuButton>
+          <SidebarMenuButton
+            render={
+              <Link href={item.href}>
+                <HugeiconsIcon className="mr-2 size-5" icon={item.icon} />
+                {item.title}
+              </Link>
+            }
+          />
         </SidebarMenuItem>
       ))}
     </SidebarMenu>
