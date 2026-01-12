@@ -146,12 +146,12 @@ jobs:
 
             if [[ "${{ steps.changes.outputs.frontend }}" == "true" ]]; then
               docker compose pull web
-              docker compose up -d web
+              docker compose up -d --remove-orphans web
             fi
 
             if [[ "${{ steps.changes.outputs.backend }}" == "true" ]]; then
               docker compose pull api
-              docker compose up -d api
+              docker compose up -d --remove-orphans api
             fi
 
             docker image prune -f
