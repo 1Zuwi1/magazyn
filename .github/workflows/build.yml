@@ -27,8 +27,10 @@ jobs:
           filters: |
             frontend:
               - "frontend/**"
+              - ".github/workflows/build.yml"
             backend:
               - "backend/**"
+              - ".github/workflows/build.yml"
 
       - name: Check for changes
         id: change_status
@@ -60,7 +62,7 @@ jobs:
         with:
           path: |
             ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-magazyn-${{ hashFiles('bun.lock') }}
+          key: ${{ runner.os }}-bun-magazyn-${{ hashFiles('frontend/bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-magazyn-
       - name: Web image metadata
@@ -144,12 +146,12 @@ jobs:
 
             if [[ "${{ steps.changes.outputs.frontend }}" == "true" ]]; then
               docker compose pull web
-              docker compose up -d web --no-deps
+              docker compose up -d web
             fi
 
             if [[ "${{ steps.changes.outputs.backend }}" == "true" ]]; then
               docker compose pull api
-              docker compose up -d api --no-deps
+              docker compose up -d api
             fi
 
             docker image prune -f
