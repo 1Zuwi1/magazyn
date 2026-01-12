@@ -149,16 +149,19 @@ jobs:
             AUTH="$(printf '%s:%s' "${{ secrets.GHCR_USERNAME }}" "${{ secrets.GHCR_PAT }}" | base64 | tr -d '\n')"
             export DOCKER_AUTH_CONFIG="{\"auths\":{\"ghcr.io\":{\"auth\":\"$AUTH\"}}}"
 
+            SERVICES=()
             if [[ "${{ steps.changes.outputs.frontend }}" == "true" ]]; then
-              docker compose pull web
-              docker compose up -d --remove-orphans web
+              SERVICES+=("web")
             fi
 
             if [[ "${{ steps.changes.outputs.backend }}" == "true" ]]; then
-              docker compose pull api
-              docker compose up -d --remove-orphans api
+              SERVICES+=("api")
             fi
 
+            if [ "${#SERVICES[@]}" -gt 0 ]; then
+              docker compose pull "${SERVICES[@]}"
+              docker compose up -d --remove-orphans "${SERVICES[@]}"
+            fi
             docker image prune -f
 
             unset DOCKER_AUTH_CONFIG
