@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "../ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog"
+import { ErrorBoundary } from "../ui/error-boundary"
 import { ScannerBody } from "./scanner-body"
 import { ScannerCamera } from "./scanner-camera"
 import { ScannerErrorState } from "./scanner-error-state"
@@ -163,10 +164,18 @@ export function Scanner({
     setIsSubmitting(false)
   }, [])
 
-  const handleReset = useCallback(() => {
+  const resetScannerState = useCallback(() => {
     setScannerState({ step: "camera", locations: [] })
     setQuantity(1)
+    setIsSubmitting(false)
+    setIsLoading(false)
+    setScannedItem(null)
+    setError(null)
   }, [])
+
+  const handleReset = useCallback(() => {
+    resetScannerState()
+  }, [resetScannerState])
 
   const handleQuantityDecrease = useCallback(() => {
     setQuantity((current) => Math.max(1, current - 1))
@@ -183,6 +192,19 @@ export function Scanner({
   const handleErrorReset = useCallback(() => {
     setError(null)
   }, [])
+
+  const renderScannerFallback = useCallback(
+    (_error: Error, reset: () => void) => (
+      <ScannerErrorState
+        error="Wystąpił problem z działaniem skanera. Spróbuj ponownie."
+        onRetry={() => {
+          resetScannerState()
+          reset()
+        }}
+      />
+    ),
+    [resetScannerState]
+  )
 
   let content: ReactNode = (
     <ScannerCamera
@@ -273,7 +295,12 @@ export function Scanner({
             className
           )}
         >
-          {content}
+          <ErrorBoundary
+            fallback={renderScannerFallback}
+            resetKeys={[open, step, scannedItem?.id]}
+          >
+            {content}
+          </ErrorBoundary>
         </div>
       </DialogContent>
     </Dialog>
