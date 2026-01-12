@@ -278,6 +278,7 @@ export function Scanner({
       open={open}
     >
       <DialogTrigger
+        aria-label="Skaner kodów"
         className={buttonVariants({
           variant: "ghost",
           size: "icon",

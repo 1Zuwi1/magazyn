@@ -84,7 +84,12 @@ export function ScannerQuantityStep({
                 max={SCANNER_ITEM_MAX_QUANTITY}
                 min="1"
                 onChange={(event) => {
-                  const value = Number.parseInt(event.target.value, 10)
+                  const stringValue = event.target.value.trim()
+                  if (stringValue === "") {
+                    onQuantityChange(1)
+                    return
+                  }
+                  const value = Number.parseInt(stringValue, 10)
                   if (!Number.isNaN(value)) {
                     const clampedValue = Math.min(
                       SCANNER_ITEM_MAX_QUANTITY,
