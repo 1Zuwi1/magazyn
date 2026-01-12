@@ -35,20 +35,16 @@ jobs:
       - name: Check for changes
         id: change_status
         run: |
-          if [[ "${{ steps.changes.outputs.frontend }}" == "true" || "${{ steps.changes.outputs.backend }}" == "true" ]]; then
-            echo "any_changes=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "any_changes=false" >> "$GITHUB_OUTPUT"
-            echo "No frontend or backend changes detected."
+          if [[ "${{ steps.changes.outputs.frontend }}" == "false" && "${{ steps.changes.outputs.backend }}" == "false" ]]; then
+            echo "No changes detected. Exiting workflow."
+            exit 0
           fi
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
-        if: steps.change_status.outputs.any_changes == 'true'
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
-        if: steps.change_status.outputs.any_changes == 'true'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -123,7 +119,6 @@ jobs:
       # ---- DEPLOY on server ----
       - name: SSH deploy (pull + restart)
         uses: appleboy/ssh-action@v1.0.3
-        if: steps.change_status.outputs.any_changes == 'true'
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
