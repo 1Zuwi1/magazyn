@@ -152,6 +152,7 @@
   appearance: textfield;
 }
 
+/* TODO: Remove screen media in prod */
 @custom-variant standalone {
   @media screen and (width <= 640px), (display-mode: standalone) {
     html & {
