@@ -134,9 +134,19 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
             aria-label="Filtruj według daty ważności"
             className="w-44"
           >
-            <SelectValue />
+            <SelectValue
+              render={
+                <span>
+                  {
+                    EXPIRY_FILTER_OPTIONS.find(
+                      (option) => option.value === expiryFilter
+                    )?.label
+                  }
+                </span>
+              }
+            />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="p-2">
             {EXPIRY_FILTER_OPTIONS.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
