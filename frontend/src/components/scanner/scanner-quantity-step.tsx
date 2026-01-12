@@ -43,9 +43,9 @@ export function ScannerQuantityStep({
             <Image
               alt={scannedItem.name || "Skanowany przedmiot"}
               className="mb-4 max-h-40 w-auto rounded-md object-cover"
-              height={0}
+              height={160}
               src={scannedItem.imageUrl}
-              width={0}
+              width={160}
             />
           )}
           <div className="mb-4">
