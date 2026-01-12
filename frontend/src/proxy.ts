@@ -30,15 +30,6 @@ function getEntityFromPrefix(prefix: string) {
   return m?.[1] ?? null
 }
 
-// If you want to normalize known typos or aliases in the tail, do it here.
-const TAIL_SEGMENT_REWRITES: Record<string, string> = {
-  "3d-visualizaiton": "3d-visualization", // typo -> canonical
-}
-
-function rewriteTailSegments(segments: string[]) {
-  return segments.map((s) => TAIL_SEGMENT_REWRITES[s] ?? s)
-}
-
 export async function proxy(request: NextRequest) {
   const session = await getSession()
   if (!session) {
@@ -83,8 +74,7 @@ export async function proxy(request: NextRequest) {
   }
   const safeName = encodeURIComponent(decodedName)
 
-  const normalizedTail = rewriteTailSegments(tail)
-  const tailPath = normalizedTail.length ? `/${normalizedTail.join("/")}` : ""
+  const tailPath = tail.length ? `/${tail.join("/")}` : ""
 
   // Redirect target: /dashboard/<entity>/<name>/<tail...>
   const targetPath = `/dashboard/${entity}/${safeName}${tailPath}`
