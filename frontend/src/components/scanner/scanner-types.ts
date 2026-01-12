@@ -4,11 +4,11 @@ export interface Location {
   col: number
 }
 
-export type ScanItem = {
+export interface ScanItem {
   id?: string
   name?: string
   qrCode?: string
   expiresIn?: number
   weight?: number
   imageUrl?: string | null
-} | null
+}

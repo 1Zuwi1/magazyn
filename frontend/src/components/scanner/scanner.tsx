@@ -3,6 +3,7 @@
 import { QrCodeIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
+import { SCAN_DELAY_MS } from "@/config/constants"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "../ui/button"
@@ -42,7 +43,7 @@ const TAB_TRIGGERS = [
 type Step = "camera" | "quantity" | "locations" | "success"
 
 export function Scanner({
-  scanDelayMs = 1200,
+  scanDelayMs = SCAN_DELAY_MS,
   stopOnScan = false,
   constraints,
   warehouseName,
@@ -58,7 +59,7 @@ export function Scanner({
   const [quantity, setQuantity] = useState<number>(1)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [locations, setLocations] = useState<Location[]>([])
-  const [scannedItem, setScannedItem] = useState<ScanItem>(null)
+  const [scannedItem, setScannedItem] = useState<ScanItem | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -167,53 +168,53 @@ export function Scanner({
     setError(null)
   }, [])
 
-  let content: ReactNode = null
+  let content: ReactNode = (
+    <ScannerCamera
+      constraints={constraints}
+      isLoading={isLoading}
+      isMobile={isMobile}
+      isOpen={open}
+      mode={mode}
+      onModeChange={setMode}
+      onRequestClose={closeDialog}
+      onScan={onScan}
+      scanDelayMs={scanDelayMs}
+      stopOnScan={stopOnScan}
+      tabTriggers={TAB_TRIGGERS}
+      warehouseName={warehouseName}
+    />
+  )
 
   if (children) {
     content = <ScannerBody>{children}</ScannerBody>
   } else if (error) {
     content = <ScannerErrorState error={error} onRetry={handleErrorReset} />
-  } else if (step === "quantity") {
-    content = (
-      <ScannerQuantityStep
-        isSubmitting={isSubmitting}
-        onCancel={() => setStep("camera")}
-        onDecrease={handleQuantityDecrease}
-        onIncrease={handleQuantityIncrease}
-        onQuantityChange={handleQuantityChange}
-        onSubmit={handleSubmit}
-        quantity={quantity}
-        scannedItem={scannedItem}
-      />
-    )
-  } else if (step === "locations") {
-    content = (
-      <ScannerLocationsStep
-        isSubmitting={isSubmitting}
-        locations={locations}
-        onBack={() => setStep("quantity")}
-        onConfirm={handleConfirmPlacement}
-      />
-    )
-  } else if (step === "success") {
-    content = <ScannerSuccessStep onReset={handleReset} />
-  } else {
-    content = (
-      <ScannerCamera
-        constraints={constraints}
-        isLoading={isLoading}
-        isMobile={isMobile}
-        isOpen={open}
-        mode={mode}
-        onModeChange={setMode}
-        onRequestClose={closeDialog}
-        onScan={onScan}
-        scanDelayMs={scanDelayMs}
-        stopOnScan={stopOnScan}
-        tabTriggers={TAB_TRIGGERS}
-        warehouseName={warehouseName}
-      />
-    )
+  } else if (scannedItem) {
+    if (step === "quantity") {
+      content = (
+        <ScannerQuantityStep
+          isSubmitting={isSubmitting}
+          onCancel={() => setStep("camera")}
+          onDecrease={handleQuantityDecrease}
+          onIncrease={handleQuantityIncrease}
+          onQuantityChange={handleQuantityChange}
+          onSubmit={handleSubmit}
+          quantity={quantity}
+          scannedItem={scannedItem}
+        />
+      )
+    } else if (step === "locations") {
+      content = (
+        <ScannerLocationsStep
+          isSubmitting={isSubmitting}
+          locations={locations}
+          onBack={() => setStep("quantity")}
+          onConfirm={handleConfirmPlacement}
+        />
+      )
+    } else if (step === "success") {
+      content = <ScannerSuccessStep onReset={handleReset} />
+    }
   }
 
   return (
