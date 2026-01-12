@@ -153,7 +153,7 @@
 }
 
 @custom-variant standalone {
-  @media screen and (width <= 1000px), (display-mode: standalone) {
+  @media screen and (width <= 640px), (display-mode: standalone) {
     html & {
       @slot;
     }
