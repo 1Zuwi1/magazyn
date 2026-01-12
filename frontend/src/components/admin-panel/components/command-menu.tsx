@@ -8,8 +8,6 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useTheme } from "next-themes"
-import * as React from "react"
-
 import {
   CommandDialog,
   CommandEmpty,
@@ -27,42 +25,33 @@ export interface NavItem {
   items?: NavItem[]
 }
 
-export interface NavData {
+export interface NavGroup {
   title: string
   items: NavItem[]
 }
 
 interface CommandMenuProps {
-  navDane?: NavData[]
-  subDane?: NavItem[]
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
+  navData?: NavGroup[]
+  subData?: NavItem[]
+  open: boolean
+  setOpen: (open: boolean) => void
 }
 
 export function CommandMenu({
+  navData,
+  subData,
   open,
-  onOpenChange,
-  navDane,
-  subDane,
-  ...props
+  setOpen,
 }: CommandMenuProps) {
   const { setTheme } = useTheme()
 
-  const runCommand = React.useCallback(
-    (command: () => unknown) => {
-      onOpenChange?.(false)
-      command()
-    },
-    [onOpenChange]
-  )
-
   return (
-    <CommandDialog modal onOpenChange={onOpenChange} open={open} {...props}>
+    <CommandDialog onOpenChange={setOpen} open={open}>
       <CommandInput placeholder="Type a command or search..." />
       <CommandList>
         <ScrollArea className="h-72 pe-1">
           <CommandEmpty>No results found.</CommandEmpty>
-          {navDane?.map((group) => (
+          {navData?.map((group) => (
             <CommandGroup heading={group.title} key={group.title}>
               {group.items.map((navItem, i) => {
                 if (navItem.url) {
@@ -70,9 +59,8 @@ export function CommandMenu({
                     <CommandItem
                       key={`${navItem.url}-${i}`}
                       onSelect={() => {
-                        runCommand(() => {
-                          return 0
-                        })
+                        console.log(`Wybrano: ${navItem.title}`)
+                        setOpen(false)
                       }}
                       value={navItem.title}
                     >
@@ -87,13 +75,14 @@ export function CommandMenu({
                   )
                 }
 
-                return navItem.items?.map((subItem, j) => (
+                return navItem.items?.map((subItem) => (
                   <CommandItem
-                    key={`${navItem.title}-${subItem.url}-${j}`}
+                    key={subItem.title}
                     onSelect={() => {
-                      runCommand(() => {
-                        return 0
-                      })
+                      console.log(
+                        `Wybrano: ${navItem.title} -> ${subItem.title}`
+                      )
+                      setOpen(false)
                     }}
                     value={`${navItem.title} ${subItem.title}`}
                   >
@@ -115,17 +104,16 @@ export function CommandMenu({
             </CommandGroup>
           ))}
 
-          {subDane && subDane.length > 0 && (
+          {subData && subData.length > 0 && (
             <>
               <CommandSeparator />
-              <CommandGroup heading="Other">
-                {subDane.map((item, i) => (
+              <CommandGroup heading="Inne">
+                {subData.map((item) => (
                   <CommandItem
-                    key={`${item.url}-${i}`}
+                    key={item.title}
                     onSelect={() => {
-                      runCommand(() => {
-                        return 0
-                      })
+                      console.log(`Wybrano: ${item.title}`)
+                      setOpen(false)
                     }}
                     value={item.title}
                   >
@@ -143,15 +131,30 @@ export function CommandMenu({
           )}
 
           <CommandSeparator />
-          <CommandGroup heading="Theme">
-            <CommandItem onSelect={() => runCommand(() => setTheme("light"))}>
-              <HugeiconsIcon icon={Sun03Icon} /> <span>Light</span>
+          <CommandGroup heading="Motyw">
+            <CommandItem
+              onSelect={() => {
+                setTheme("light")
+                setOpen(false)
+              }}
+            >
+              <HugeiconsIcon icon={Sun03Icon} /> <span>Jasny</span>
             </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => setTheme("dark"))}>
+            <CommandItem
+              onSelect={() => {
+                setTheme("dark")
+                setOpen(false)
+              }}
+            >
               <HugeiconsIcon className="scale-90" icon={Moon02Icon} />
-              <span>Dark</span>
+              <span>Ciemny</span>
             </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => setTheme("system"))}>
+            <CommandItem
+              onSelect={() => {
+                setTheme("system")
+                setOpen(false)
+              }}
+            >
               <HugeiconsIcon icon={LaptopIcon} />
               <span>System</span>
             </CommandItem>

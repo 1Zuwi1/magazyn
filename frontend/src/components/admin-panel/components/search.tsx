@@ -22,7 +22,7 @@ export function Search({ className, placeholder = "Search" }: SearchProps) {
         className="border-0 shadow-none focus-visible:ring-0"
         placeholder={placeholder}
       />
-      <InputGroupButton onClick={() => setOpen(true)} title="Open command menu">
+      <InputGroupButton onClick={() => setOpen(true)} title="Rozwiń menu">
         <HugeiconsIcon icon={Search01Icon} />
       </InputGroupButton>
     </InputGroup>

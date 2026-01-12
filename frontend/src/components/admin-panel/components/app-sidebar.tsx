@@ -14,9 +14,7 @@ export function Header({ children, ...props }: HeaderProps) {
       )}
       {...props}
     >
-      <div
-        className={cn("relative flex h-full items-center gap-3 p-4 sm:gap-4")}
-      >
+      <div className={cn("flex justify-between gap-3 sm:gap-4")}>
         {children}
       </div>
     </header>

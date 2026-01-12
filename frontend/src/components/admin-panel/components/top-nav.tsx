@@ -18,11 +18,11 @@ interface TopNavProps extends React.HTMLAttributes<HTMLElement> {
   }[]
 }
 
-export function TopNav({ className, links, ...props }: TopNavProps) {
+export function TopNav({ links }: TopNavProps) {
   return (
     <>
       <div className="lg:hidden">
-        <DropdownMenu modal={false}>
+        <DropdownMenu>
           <DropdownMenuTrigger>
             <HugeiconsIcon
               className={cn(
@@ -33,13 +33,13 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
             />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="bottom">
-            {links.map(({ title, href, isActive }) => (
-              <DropdownMenuItem key={`${title}-${href}`}>
+            {links.map((link) => (
+              <DropdownMenuItem key={link.href}>
                 <Link
-                  className={isActive ? "" : "text-muted-foreground"}
-                  href={href}
+                  className={link.isActive ? "" : "text-muted-foreground"}
+                  href={link.href}
                 >
-                  {title}
+                  {link.title}
                 </Link>
               </DropdownMenuItem>
             ))}
@@ -49,22 +49,20 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
 
       <nav
         className={cn(
-          "hidden items-center space-x-4 lg:flex lg:space-x-4 xl:space-x-6",
-          className
+          "hidden items-center space-x-4 lg:flex lg:space-x-4 xl:space-x-6"
         )}
-        {...props}
       >
-        {links.map(({ title, href, isActive }) => (
+        {links.map((link) => (
           <Link
-            aria-disabled={isActive ? undefined : true}
+            aria-disabled={link.isActive ? undefined : true}
             className={cn(
               "font-medium text-sm transition-colors hover:text-slate-50",
-              isActive ? "" : "text-muted-foreground"
+              link.isActive ? "" : "text-muted-foreground"
             )}
-            href={href}
-            key={`${title}-${href}`}
+            href={link.href}
+            key={link.href}
           >
-            {title}
+            {link.title}
           </Link>
         ))}
       </nav>

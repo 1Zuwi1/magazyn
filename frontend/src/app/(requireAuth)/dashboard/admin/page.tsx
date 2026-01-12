@@ -22,10 +22,26 @@ const topNav = [
   },
 ]
 
+const navData = [
+  {
+    title: "Main",
+    items: [
+      { title: "Przegląd", url: "/dashboard/preview" },
+      { title: "Użytkownicy", url: "/dashboard/users" },
+      { title: "Magazyny", url: "/dashboard/warehouses" },
+    ],
+  },
+]
+
+const subData = [
+  { title: "Ustawienia", url: "/dashboard/settings" },
+  { title: "Pomoc", url: "/dashboard/help" },
+]
+
 export default function AdminDashboard() {
   return (
     <ProtectedPage needAdminPrivileges={false}>
-      <SearchProvider>
+      <SearchProvider navData={navData} subData={subData}>
         <Header>
           <TopNav links={topNav} />
           <Search className="" placeholder="Szukaj..." />

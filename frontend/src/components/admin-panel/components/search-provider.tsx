@@ -1,59 +1,44 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState } from "react"
-import { CommandMenu, type NavData, type NavItem } from "./command-menu"
+import { createContext, use, useState } from "react"
+import { CommandMenu, type NavGroup, type NavItem } from "./command-menu"
 
 interface SearchContextType {
-  open: boolean
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>
+  setOpen: (open: boolean) => void
 }
 
 const SearchContext = createContext<SearchContextType | null>(null)
 
+export function useSearch() {
+  const context = use(SearchContext)
+  if (!context) {
+    throw new Error("useSearch must be used within a SearchProvider")
+  }
+  return context
+}
+
 interface SearchProviderProps {
   children: React.ReactNode
-  navDane?: NavData[]
-  subDane?: NavItem[]
+  navData?: NavGroup[]
+  subData?: NavItem[]
 }
 
 export function SearchProvider({
   children,
-  navDane,
-  subDane,
+  navData,
+  subData,
 }: SearchProviderProps) {
   const [open, setOpen] = useState(false)
 
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        setOpen((open) => !open)
-      }
-    }
-    document.addEventListener("keydown", down)
-    return () => document.removeEventListener("keydown", down)
-  }, [])
-
   return (
-    <SearchContext value={{ open, setOpen }}>
+    <SearchContext value={{ setOpen }}>
       {children}
       <CommandMenu
-        navDane={navDane}
-        onOpenChange={setOpen}
+        navData={navData}
         open={open}
-        subDane={subDane}
+        setOpen={setOpen}
+        subData={subData}
       />
     </SearchContext>
   )
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const useSearch = () => {
-  const searchContext = useContext(SearchContext)
-
-  if (!searchContext) {
-    throw new Error("useSearch has to be used within SearchProvider")
-  }
-
-  return searchContext
 }
