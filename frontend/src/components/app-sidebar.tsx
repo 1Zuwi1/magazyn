@@ -1,6 +1,5 @@
 "use client"
 
-import { Analytics01Icon, GroupItemsIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import type * as React from "react"
@@ -17,6 +16,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { navigationItems } from "@/config/navigation"
 import Logo from "./logo"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -39,34 +39,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   )
 }
 
-const items = [
-  {
-    title: "Panel główny",
-    href: "/dashboard",
-    icon: Analytics01Icon,
-  },
-  {
-    title: "Asortyment",
-    href: "/dashboard/items",
-    icon: GroupItemsIcon,
-  },
-]
-
 function NavMain() {
   return (
     <SidebarMenu className="px-2">
-      {items.map((item) => (
-        <SidebarMenuItem key={item.href}>
-          <SidebarMenuButton
-            render={
-              <Link href={item.href}>
-                <HugeiconsIcon className="mr-2 size-5" icon={item.icon} />
-                {item.title}
-              </Link>
-            }
-          />
-        </SidebarMenuItem>
-      ))}
+      {navigationItems.map(
+        (item, index) =>
+          !("pwaOnly" in item) && (
+            <SidebarMenuItem key={index}>
+              <SidebarMenuButton
+                render={
+                  <Link href={item.href}>
+                    <HugeiconsIcon className="mr-2 size-5" icon={item.icon} />
+                    {item.title}
+                  </Link>
+                }
+              />
+            </SidebarMenuItem>
+          )
+      )}
     </SidebarMenu>
   )
 }

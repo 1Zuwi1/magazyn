@@ -123,6 +123,8 @@
     @apply border-border outline-ring/50;
   }
   body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
     @apply bg-background text-foreground;
   }
 }
@@ -151,7 +153,17 @@
 }
 
 @custom-variant standalone {
-  @media (display-mode: standalone) {
-    @slot;
+  @media screen and (width <= 1000px), (display-mode: standalone) {
+    html & {
+      @slot;
+    }
+  }
+}
+
+@custom-variant browser {
+  @media (display-mode: browser) {
+    html & {
+      @slot;
+    }
   }
 }

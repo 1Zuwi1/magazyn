@@ -1,4 +1,4 @@
-import { Edges, Grid } from "@react-three/drei"
+import { Edges } from "@react-three/drei"
 import { VISUALIZATION_CONSTANTS } from "../constants"
 import type { FocusWindow, Rack3D } from "../types"
 import { RACK_ZONE_SIZE } from "../types"
@@ -10,11 +10,7 @@ import { RackStructure } from "./rack-structure"
 import { ShelvesInstanced } from "./shelves-instanced"
 
 const {
-  COLORS: {
-    floor: floorColor,
-    gridCell: gridCellColor,
-    gridSection: gridSectionColor,
-  },
+  COLORS: { floor: floorColor },
 } = VISUALIZATION_CONSTANTS
 
 interface RackFocusViewProps {
@@ -204,17 +200,6 @@ export function RackFocusView({
           roughness={0.9}
         />
       </mesh>
-      <Grid
-        args={[focusWidth + floorPadding * 2, focusDepth + floorPadding * 2]}
-        cellColor={gridCellColor}
-        cellSize={0.3}
-        cellThickness={0.6}
-        position={[0, actualFocusFloorY + 0.002, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        sectionColor={gridSectionColor}
-        sectionSize={1.5}
-        sectionThickness={1}
-      />
       {!(showBlockGrid || activeWindow) && (
         <RackStructure
           metrics={metrics}
