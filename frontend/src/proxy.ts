@@ -96,7 +96,7 @@ export async function proxy(request: NextRequest) {
   res.cookies.set({
     name: cookieName,
     value: id,
-    httpOnly: false,
+    httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     // Scope cookie to the resolved page (now includes tail, which is what you're redirecting to)

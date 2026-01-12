@@ -50,7 +50,7 @@ export default function SiteHeader() {
                     })}
                   >
                     <BreadcrumbLink
-                      className={cn("capitalize", {})}
+                      className={cn("capitalize")}
                       href={currPath}
                     >
                       {displayName}
