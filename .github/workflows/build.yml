@@ -3,6 +3,10 @@ name: Deploy to production
 on:
   push:
     branches: [main]
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - ".github/workflows/build.yml"
 
 permissions:
   contents: read
@@ -35,15 +39,18 @@ jobs:
       - name: Check for changes
         id: change_status
         run: |
-          if [[ "${{ steps.changes.outputs.frontend }}" == "false" && "${{ steps.changes.outputs.backend }}" == "false" ]]; then
-            echo "No changes detected. Exiting workflow."
-            exit 0
+          if [[ "${{ steps.changes.outputs.frontend }}" == "true" || "${{ steps.changes.outputs.backend }}" == "true" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Set up Buildx
+        if: steps.change_status.outputs.changed == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GHCR
+        if: steps.change_status.outputs.changed == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -69,6 +76,7 @@ jobs:
           images: ghcr.io/1zuwi1/magazyn-web
           tags: |
             type=raw,value=latest
+            type=sha
 
       - name: Build and push WEB image
         uses: docker/build-push-action@v6
@@ -103,6 +111,7 @@ jobs:
           images: ghcr.io/1zuwi1/magazyn-api
           tags: |
             type=raw,value=latest
+            type=sha
 
       - name: Build and push API image
         uses: docker/build-push-action@v6
@@ -118,6 +127,7 @@ jobs:
 
       # ---- DEPLOY on server ----
       - name: SSH deploy (pull + restart)
+        if: steps.change_status.outputs.changed == 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
