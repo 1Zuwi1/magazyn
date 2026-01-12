@@ -20,6 +20,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Detect changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - "frontend/**"
+              - ".github/workflows/build.yml"
+            backend:
+              - "backend/**"
+              - ".github/workflows/build.yml"
+
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -44,6 +56,7 @@ jobs:
       - name: Web image metadata
         id: meta_web
         uses: docker/metadata-action@v5
+        if: steps.changes.outputs.frontend == 'true'
         with:
           images: ghcr.io/1zuwi1/magazyn-web
           tags: |
@@ -51,6 +64,7 @@ jobs:
 
       - name: Build and push WEB image
         uses: docker/build-push-action@v6
+        if: steps.changes.outputs.frontend == 'true'
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
@@ -60,13 +74,14 @@ jobs:
           build-args: |
             APP_SCOPE=web
             APP_PATH=apps/web
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
 
       # ---- API image ----
       - name: API image metadata
         id: meta_api
         uses: docker/metadata-action@v5
+        if: steps.changes.outputs.backend == 'true'
         with:
           images: ghcr.io/1zuwi1/magazyn-api
           tags: |
@@ -74,14 +89,15 @@ jobs:
 
       - name: Build and push API image
         uses: docker/build-push-action@v6
+        if: steps.changes.outputs.backend == 'true'
         with:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
           tags: ${{ steps.meta_api.outputs.tags }}
           labels: ${{ steps.meta_api.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
 
       # ---- DEPLOY on server ----
       - name: SSH deploy (pull + restart)
