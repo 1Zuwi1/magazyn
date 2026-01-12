@@ -164,7 +164,7 @@ export function Scanner({
     setIsSubmitting(false)
   }, [])
 
-  const resetScannerState = useCallback(() => {
+  const handleReset = useCallback(() => {
     setScannerState({ step: "camera", locations: [] })
     setQuantity(1)
     setIsSubmitting(false)
@@ -172,10 +172,6 @@ export function Scanner({
     setScannedItem(null)
     setError(null)
   }, [])
-
-  const handleReset = useCallback(() => {
-    resetScannerState()
-  }, [resetScannerState])
 
   const handleQuantityDecrease = useCallback(() => {
     setQuantity((current) => Math.max(1, current - 1))
@@ -198,12 +194,12 @@ export function Scanner({
       <ScannerErrorState
         error="Wystąpił problem z działaniem skanera. Spróbuj ponownie."
         onRetry={() => {
-          resetScannerState()
+          handleReset()
           reset()
         }}
       />
     ),
-    [resetScannerState]
+    [handleReset]
   )
 
   let content: ReactNode = (

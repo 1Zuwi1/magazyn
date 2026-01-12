@@ -81,11 +81,16 @@ export function ScannerQuantityStep({
               <Input
                 className="h-10 w-20 text-center text-lg"
                 id="quantity"
+                max={SCANNER_ITEM_MAX_QUANTITY}
                 min="1"
                 onChange={(event) => {
                   const value = Number.parseInt(event.target.value, 10)
                   if (!Number.isNaN(value)) {
-                    onQuantityChange(Math.max(1, value))
+                    const clampedValue = Math.min(
+                      SCANNER_ITEM_MAX_QUANTITY,
+                      Math.max(1, value)
+                    )
+                    onQuantityChange(clampedValue)
                   }
                 }}
                 value={quantity}
