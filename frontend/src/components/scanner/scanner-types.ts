@@ -10,5 +10,5 @@ export interface ScanItem {
   qrCode?: string
   expiresIn?: number
   weight?: number
-  imageUrl?: string | null
+  imageUrl?: string
 }

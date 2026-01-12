@@ -47,6 +47,7 @@ interface ScannerState {
   locations: Location[]
 }
 
+// TODO: implement data fetching from API instead of mocks when API is ready: https://github.com/1Zuwi1/magazyn/issues/23
 export function Scanner({
   scanDelayMs = SCAN_DELAY_MS,
   stopOnScan = false,

@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { CancelButton } from "./cancel-button"
@@ -90,6 +91,7 @@ export function ScannerQuantityStep({
                 value={quantity}
               />
               <Button
+                disabled={quantity >= SCANNER_ITEM_MAX_QUANTITY}
                 onClick={onIncrease}
                 size={"icon-lg"}
                 type="button"
