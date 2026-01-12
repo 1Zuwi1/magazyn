@@ -8,5 +8,4 @@ bun run format
 
 git add -u
 
-cd "$ROOT/frontend"
 bun run lint
