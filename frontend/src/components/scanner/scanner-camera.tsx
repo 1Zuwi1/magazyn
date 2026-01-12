@@ -9,7 +9,6 @@ import {
   NotFoundException,
   type Result,
 } from "@zxing/library"
-import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "../ui/button"
@@ -33,6 +32,36 @@ const CODE_FORMATS = [
 const DECODE_HINTS = new Map<DecodeHintType, unknown>([
   [DecodeHintType.POSSIBLE_FORMATS, CODE_FORMATS],
 ])
+
+const safeDecodeURIComponent = (value: string | undefined): string => {
+  if (!value) {
+    return ""
+  }
+
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+const isControlCharacter = (codePoint: number): boolean => {
+  return codePoint <= 0x1f || codePoint === 0x7f
+}
+
+const sanitizeVisibleText = (value: string): string => {
+  let sanitized = ""
+  for (const char of value) {
+    const codePoint = char.codePointAt(0)
+    if (codePoint === undefined || isControlCharacter(codePoint)) {
+      continue
+    }
+
+    sanitized += char
+  }
+
+  return sanitized
+}
 
 interface ScannerCameraProps {
   scanDelayMs: number
@@ -64,13 +93,17 @@ export function ScannerCamera({
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const controlsRef = useRef<IScannerControls | null>(null)
   const readerRef = useRef<BrowserMultiFormatReader | null>(null)
-  const [isVideoReady, setIsVideoReady] = useState<boolean>(false)
+  const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(
+    null
+  )
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const setVideoRef = useCallback((node: HTMLVideoElement | null) => {
     videoRef.current = node
-    const ready = Boolean(node)
-    setIsVideoReady((prev) => (prev === ready ? prev : ready))
+    setVideoElement(node)
   }, [])
+  const warehouseLabel = sanitizeVisibleText(
+    safeDecodeURIComponent(warehouseName)
+  )
 
   const lastAtRef = useRef<number>(0)
 
@@ -81,7 +114,7 @@ export function ScannerCamera({
 
   const shouldIgnoreScan = useCallback(
     (now: number) => {
-      return now - lastAtRef.current < scanDelayMs
+      return now - lastAtRef.current <= scanDelayMs
     },
     [scanDelayMs]
   )
@@ -139,44 +172,41 @@ export function ScannerCamera({
     }
   }, [])
 
-  const start = useCallback(async () => {
-    setErrorMsg(null)
-    try {
-      if (!videoRef.current) {
-        return
+  const start = useCallback(
+    async (currentVideo: HTMLVideoElement) => {
+      setErrorMsg(null)
+      try {
+        // iOS Safari friendliness
+        currentVideo.setAttribute("playsinline", "true")
+
+        const reader = new BrowserMultiFormatReader(DECODE_HINTS)
+        readerRef.current = reader
+
+        const mediaConstraints: MediaStreamConstraints =
+          constraints ??
+          ({
+            video: {
+              facingMode: { ideal: "environment" },
+            },
+            audio: false,
+          } satisfies MediaStreamConstraints)
+
+        const controls = await reader.decodeFromConstraints(
+          mediaConstraints,
+          currentVideo,
+          handleScanResult
+        )
+
+        controlsRef.current = controls
+      } catch (e) {
+        const msg =
+          e instanceof Error ? e.message : "Could not start the camera scanner."
+        setErrorMsg(msg)
+        stop()
       }
-
-      // iOS Safari friendliness
-      videoRef.current.setAttribute("playsinline", "true")
-
-      const reader = new BrowserMultiFormatReader(DECODE_HINTS)
-      readerRef.current = reader
-
-      const mediaConstraints: MediaStreamConstraints =
-        constraints ??
-        ({
-          video: {
-            facingMode: { ideal: "environment" },
-          },
-          audio: false,
-        } satisfies MediaStreamConstraints)
-
-      const controls = await reader.decodeFromConstraints(
-        mediaConstraints,
-        videoRef.current,
-        handleScanResult
-      )
-
-      controlsRef.current = controls
-    } catch (e) {
-      const msg =
-        e instanceof Error ? e.message : "Could not start the camera scanner."
-      setErrorMsg(msg)
-      stop()
-    }
-  }, [constraints, handleScanResult, stop])
-
-  const pathname = usePathname()
+    },
+    [constraints, handleScanResult, stop]
+  )
 
   useEffect(() => {
     if (!isOpen) {
@@ -184,19 +214,14 @@ export function ScannerCamera({
       return
     }
 
-    if (!pathname.includes("/dashboard/warehouse/")) {
-      setErrorMsg("Skaner QR jest dostępny tylko w widoku magazynu.")
+    if (!videoElement) {
       return
     }
 
-    if (!isVideoReady) {
-      return
-    }
-
-    start()
+    start(videoElement)
 
     return () => stop()
-  }, [isOpen, stop, start, pathname, isVideoReady])
+  }, [isOpen, stop, start, videoElement])
 
   return (
     <>
@@ -233,7 +258,7 @@ export function ScannerCamera({
             )}
           >
             <p className="h-full w-full text-center">
-              Skanujesz w magazynie: {decodeURIComponent(warehouseName ?? "")}
+              Skanujesz w magazynie: {warehouseLabel}
             </p>
             <Tabs
               className="h-full w-full"

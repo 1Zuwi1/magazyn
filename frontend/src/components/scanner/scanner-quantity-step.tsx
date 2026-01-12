@@ -84,7 +84,7 @@ export function ScannerQuantityStep({
                 onChange={(event) => {
                   const value = Number.parseInt(event.target.value, 10)
                   if (!Number.isNaN(value)) {
-                    onQuantityChange(value)
+                    onQuantityChange(Math.max(1, value))
                   }
                 }}
                 value={quantity}

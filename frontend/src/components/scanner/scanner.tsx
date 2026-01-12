@@ -42,6 +42,11 @@ export const TAB_TRIGGERS = [
 
 type Step = "camera" | "quantity" | "locations" | "success"
 
+interface ScannerState {
+  step: Step
+  locations: Location[]
+}
+
 export function Scanner({
   scanDelayMs = SCAN_DELAY_MS,
   stopOnScan = false,
@@ -57,12 +62,15 @@ export function Scanner({
   const [open, setOpen] = useState<boolean>(false)
   const armedRef = useRef<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [step, setStep] = useState<Step>("camera")
+  const [scannerState, setScannerState] = useState<ScannerState>({
+    step: "camera",
+    locations: [],
+  })
   const [quantity, setQuantity] = useState<number>(1)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
-  const [locations, setLocations] = useState<Location[]>([])
   const [scannedItem, setScannedItem] = useState<ScanItem | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const { step, locations } = scannerState
 
   useEffect(() => {
     if (!open) {
@@ -90,10 +98,11 @@ export function Scanner({
       return
     }
 
+    setOpen(false)
+
     if (armedRef.current) {
+      armedRef.current = false
       window.history.back()
-    } else {
-      setOpen(false)
     }
   }, [open])
 
@@ -110,7 +119,11 @@ export function Scanner({
       weight: 2.5,
       imageUrl: "https://placehold.co/600x400",
     })
-    setStep("quantity")
+    setScannerState((current) => ({
+      ...current,
+      step: "quantity",
+      locations: [],
+    }))
     setIsLoading(false)
   }, [])
 
@@ -134,22 +147,24 @@ export function Scanner({
       })
     )
 
-    setLocations(mockLocations)
-    setStep("locations")
+    setScannerState((current) => ({
+      ...current,
+      locations: mockLocations,
+      step: "locations",
+    }))
     setIsSubmitting(false)
   }, [quantity])
 
   const handleConfirmPlacement = useCallback(async () => {
     setIsSubmitting(true)
     await new Promise((resolve) => setTimeout(resolve, 500))
-    setStep("success")
+    setScannerState((current) => ({ ...current, step: "success" }))
     setIsSubmitting(false)
   }, [])
 
   const handleReset = useCallback(() => {
-    setStep("camera")
+    setScannerState({ step: "camera", locations: [] })
     setQuantity(1)
-    setLocations([])
   }, [])
 
   const handleQuantityDecrease = useCallback(() => {
@@ -161,9 +176,7 @@ export function Scanner({
   }, [])
 
   const handleQuantityChange = useCallback((value: number) => {
-    if (value > 0) {
-      setQuantity(value)
-    }
+    setQuantity(Math.max(1, value))
   }, [])
 
   const handleErrorReset = useCallback(() => {
@@ -195,7 +208,9 @@ export function Scanner({
       content = (
         <ScannerQuantityStep
           isSubmitting={isSubmitting}
-          onCancel={() => setStep("camera")}
+          onCancel={() =>
+            setScannerState((current) => ({ ...current, step: "camera" }))
+          }
           onDecrease={handleQuantityDecrease}
           onIncrease={handleQuantityIncrease}
           onQuantityChange={handleQuantityChange}
@@ -209,7 +224,9 @@ export function Scanner({
         <ScannerLocationsStep
           isSubmitting={isSubmitting}
           locations={locations}
-          onBack={() => setStep("quantity")}
+          onBack={() =>
+            setScannerState((current) => ({ ...current, step: "quantity" }))
+          }
           onConfirm={handleConfirmPlacement}
         />
       )
