@@ -54,7 +54,7 @@ const items = [
 
 function NavMain() {
   return (
-    <SidebarMenu>
+    <SidebarMenu className="px-2">
       {items.map((item) => (
         <SidebarMenuItem key={item.href}>
           <SidebarMenuButton
