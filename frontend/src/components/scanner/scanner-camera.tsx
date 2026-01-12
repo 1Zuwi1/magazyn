@@ -14,6 +14,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "../ui/button"
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
+import { TAB_TRIGGERS } from "./scanner"
 
 const CODE_FORMATS = [
   BarcodeFormat.QR_CODE,
@@ -33,11 +34,6 @@ const DECODE_HINTS = new Map<DecodeHintType, unknown>([
   [DecodeHintType.POSSIBLE_FORMATS, CODE_FORMATS],
 ])
 
-interface TabTriggerConfig {
-  text: string
-  action: string
-}
-
 interface ScannerCameraProps {
   scanDelayMs: number
   stopOnScan: boolean
@@ -45,9 +41,8 @@ interface ScannerCameraProps {
   warehouseName?: string
   isMobile: boolean
   isOpen: boolean
-  mode: number
-  onModeChange: (value: number) => void
-  tabTriggers: readonly TabTriggerConfig[]
+  mode: (typeof TAB_TRIGGERS)[number]["action"]
+  onModeChange: (value: (typeof TAB_TRIGGERS)[number]["action"]) => void
   onScan: (text: string) => void
   onRequestClose: () => void
   isLoading?: boolean
@@ -62,7 +57,6 @@ export function ScannerCamera({
   isOpen,
   mode,
   onModeChange,
-  tabTriggers,
   onRequestClose,
   onScan,
   isLoading,
@@ -251,16 +245,16 @@ export function ScannerCamera({
                   "relative isolate flex w-full gap-2 rounded-full bg-black/50 p-1 py-4 *:rounded-full *:px-4 *:py-3"
                 }
               >
-                {tabTriggers.map(({ text, action }, index) => (
+                {TAB_TRIGGERS.map(({ text, action }) => (
                   <TabsTrigger
                     className={cn(
                       "z-10 w-0 flex-1 bg-transparent! text-white!",
                       {
-                        "text-black!": mode === index,
+                        "text-black!": mode === action,
                       }
                     )}
                     key={action}
-                    value={index}
+                    value={action}
                   >
                     {text}
                   </TabsTrigger>
@@ -271,8 +265,8 @@ export function ScannerCamera({
                   )}
                   role="presentation"
                   style={{
-                    width: `${100 / tabTriggers.length}%`,
-                    transform: `translateX(${mode * 100}%)`,
+                    width: `${100 / TAB_TRIGGERS.length}%`,
+                    transform: `translateX(${TAB_TRIGGERS.findIndex((t) => t.action === mode) * 100}%)`,
                   }}
                 />
               </TabsList>

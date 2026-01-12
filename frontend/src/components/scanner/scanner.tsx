@@ -29,7 +29,7 @@ interface ScannerProps {
   children?: ReactNode
 }
 
-const TAB_TRIGGERS = [
+export const TAB_TRIGGERS = [
   {
     text: "Przyjmowanie",
     action: "take",
@@ -51,7 +51,9 @@ export function Scanner({
   children,
 }: ScannerProps) {
   const isMobile = useIsMobile()
-  const [mode, setMode] = useState<number>(0)
+  const [mode, setMode] = useState<(typeof TAB_TRIGGERS)[number]["action"]>(
+    TAB_TRIGGERS[0].action
+  )
   const [open, setOpen] = useState<boolean>(false)
   const armedRef = useRef<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -180,7 +182,6 @@ export function Scanner({
       onScan={onScan}
       scanDelayMs={scanDelayMs}
       stopOnScan={stopOnScan}
-      tabTriggers={TAB_TRIGGERS}
       warehouseName={warehouseName}
     />
   )
