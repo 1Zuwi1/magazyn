@@ -46,6 +46,8 @@ type Step = "camera" | "quantity" | "locations" | "success"
 interface ScannerState {
   step: Step
   locations: Location[]
+  isLoading: boolean
+  isSubmitting: boolean
 }
 
 // TODO: implement data fetching from API instead of mocks when API is ready: https://github.com/1Zuwi1/magazyn/issues/23
@@ -63,16 +65,16 @@ export function Scanner({
   )
   const [open, setOpen] = useState<boolean>(false)
   const armedRef = useRef<boolean>(false)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
   const [scannerState, setScannerState] = useState<ScannerState>({
     step: "camera",
     locations: [],
+    isLoading: false,
+    isSubmitting: false,
   })
   const [quantity, setQuantity] = useState<number>(1)
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [scannedItem, setScannedItem] = useState<ScanItem | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const { step, locations } = scannerState
+  const { step, locations, isLoading, isSubmitting } = scannerState
 
   useEffect(() => {
     if (!open) {
@@ -96,10 +98,13 @@ export function Scanner({
   }, [open])
 
   const handleReset = useCallback(() => {
-    setScannerState({ step: "camera", locations: [] })
+    setScannerState({
+      step: "camera",
+      locations: [],
+      isLoading: false,
+      isSubmitting: false,
+    })
     setQuantity(1)
-    setIsSubmitting(false)
-    setIsLoading(false)
     setScannedItem(null)
     setError(null)
   }, [])
@@ -119,7 +124,7 @@ export function Scanner({
   }, [open, handleReset])
 
   const onScan = useCallback(async (text: string) => {
-    setIsLoading(true)
+    setScannerState((current) => ({ ...current, isLoading: true }))
 
     await new Promise((resolve) => setTimeout(resolve, 500))
 
@@ -135,18 +140,19 @@ export function Scanner({
       ...current,
       step: "quantity",
       locations: [],
+      isSubmitting: false,
+      isLoading: false,
     }))
-    setIsLoading(false)
   }, [])
 
   const handleSubmit = useCallback(async () => {
-    setIsSubmitting(true)
+    setScannerState((current) => ({ ...current, isSubmitting: true }))
 
     await new Promise((resolve) => setTimeout(resolve, 500))
     const isError = Math.random() < 0.2
     if (isError) {
       setError("W tym magazynie brakuje miejsca na te przedmioty.")
-      setIsSubmitting(false)
+      setScannerState((current) => ({ ...current, isSubmitting: false }))
       return
     }
 
@@ -163,15 +169,18 @@ export function Scanner({
       ...current,
       locations: mockLocations,
       step: "locations",
+      isSubmitting: false,
     }))
-    setIsSubmitting(false)
   }, [quantity])
 
   const handleConfirmPlacement = useCallback(async () => {
-    setIsSubmitting(true)
+    setScannerState((current) => ({ ...current, isSubmitting: true }))
     await new Promise((resolve) => setTimeout(resolve, 500))
-    setScannerState((current) => ({ ...current, step: "success" }))
-    setIsSubmitting(false)
+    setScannerState((current) => ({
+      ...current,
+      step: "success",
+      isSubmitting: false,
+    }))
   }, [])
 
   const handleQuantityDecrease = useCallback(() => {

@@ -33,6 +33,12 @@ const DECODE_HINTS = new Map<DecodeHintType, unknown>([
   [DecodeHintType.POSSIBLE_FORMATS, CODE_FORMATS],
 ])
 
+// biome-ignore lint/suspicious/noControlCharactersInRegex: This is needed to strip control characters from decoded text
+const CONTROL_CHAR_REGEX = /[\u0000-\u001f\u007f]/g
+const SCRIPT_TAG_BLOCK_REGEX = /<script[\s\S]*?>[\s\S]*?<\/script>/gi
+const STYLE_TAG_BLOCK_REGEX = /<style[\s\S]*?>[\s\S]*?<\/style>/gi
+const HTML_TAG_REGEX = /<\/?[^>]+>/g
+
 const safeDecodeURIComponent = (value: string | undefined): string => {
   if (!value) {
     return ""
@@ -45,22 +51,12 @@ const safeDecodeURIComponent = (value: string | undefined): string => {
   }
 }
 
-const isControlCharacter = (codePoint: number): boolean => {
-  return codePoint <= 0x1f || codePoint === 0x7f
-}
-
 const sanitizeVisibleText = (value: string): string => {
-  let sanitized = ""
-  for (const char of value) {
-    const codePoint = char.codePointAt(0)
-    if (codePoint === undefined || isControlCharacter(codePoint)) {
-      continue
-    }
-
-    sanitized += char
-  }
-
-  return sanitized
+  return value
+    .replace(SCRIPT_TAG_BLOCK_REGEX, "")
+    .replace(STYLE_TAG_BLOCK_REGEX, "")
+    .replace(HTML_TAG_REGEX, "")
+    .replace(CONTROL_CHAR_REGEX, "")
 }
 
 interface ScannerCameraProps {
