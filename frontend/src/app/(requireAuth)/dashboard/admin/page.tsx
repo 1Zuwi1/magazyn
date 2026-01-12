@@ -1,4 +1,6 @@
 import { Header } from "@/components/admin-panel/components/app-sidebar"
+import { Search } from "@/components/admin-panel/components/search"
+import { SearchProvider } from "@/components/admin-panel/components/search-provider"
 import { TopNav } from "@/components/admin-panel/components/top-nav"
 import ProtectedPage from "../../protected-page"
 
@@ -7,28 +9,28 @@ const topNav = [
     title: "Preview",
     href: "dashboard/preview",
     isActive: true,
-    disabled: false,
   },
   {
     title: "Users",
     href: "dashboard/users",
     isActive: false,
-    disabled: true,
   },
   {
     title: "Warehouses",
     href: "dashboard/warehouses",
     isActive: false,
-    disabled: true,
   },
 ]
 
 export default function AdminDashboard() {
   return (
     <ProtectedPage needAdminPrivileges={false}>
-      <Header>
-        <TopNav links={topNav} />
-      </Header>
+      <SearchProvider>
+        <Header>
+          <TopNav links={topNav} />
+          <Search className="" placeholder="Szukaj..." />
+        </Header>
+      </SearchProvider>
     </ProtectedPage>
   )
 }

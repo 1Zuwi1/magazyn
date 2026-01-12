@@ -24,7 +24,6 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
       <div className="lg:hidden">
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger>
-            {/* <Button className="md:size-7" size="icon" variant="outline"> */}
             <HugeiconsIcon
               className={cn(
                 "md:size-7",
@@ -60,7 +59,7 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
             aria-disabled={isActive ? undefined : true}
             className={cn(
               "font-medium text-sm transition-colors hover:text-slate-50",
-              isActive ? "" : "cursor-text text-muted-foreground"
+              isActive ? "" : "text-muted-foreground"
             )}
             href={href}
             key={`${title}-${href}`}
