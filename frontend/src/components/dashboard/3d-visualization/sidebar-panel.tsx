@@ -54,7 +54,7 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
               onClick={() => {
                 focusRack(rack.id)
               }}
-              variant={"ghost"}
+              variant="ghost"
             >
               <div className="mb-2 flex items-center justify-between">
                 <span className="font-semibold">{rack.name}</span>

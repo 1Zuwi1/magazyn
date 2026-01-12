@@ -3,7 +3,7 @@
 import { QrCodeIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
-import { SCAN_DELAY_MS } from "@/config/constants"
+import { SCAN_DELAY_MS, SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "../ui/button"
@@ -95,6 +95,15 @@ export function Scanner({
     return () => window.removeEventListener("popstate", onPopState)
   }, [open])
 
+  const handleReset = useCallback(() => {
+    setScannerState({ step: "camera", locations: [] })
+    setQuantity(1)
+    setIsSubmitting(false)
+    setIsLoading(false)
+    setScannedItem(null)
+    setError(null)
+  }, [])
+
   const closeDialog = useCallback(() => {
     if (!open) {
       return
@@ -106,7 +115,8 @@ export function Scanner({
       armedRef.current = false
       window.history.back()
     }
-  }, [open])
+    handleReset()
+  }, [open, handleReset])
 
   const onScan = useCallback(async (text: string) => {
     setIsLoading(true)
@@ -164,25 +174,18 @@ export function Scanner({
     setIsSubmitting(false)
   }, [])
 
-  const handleReset = useCallback(() => {
-    setScannerState({ step: "camera", locations: [] })
-    setQuantity(1)
-    setIsSubmitting(false)
-    setIsLoading(false)
-    setScannedItem(null)
-    setError(null)
-  }, [])
-
   const handleQuantityDecrease = useCallback(() => {
     setQuantity((current) => Math.max(1, current - 1))
   }, [])
 
   const handleQuantityIncrease = useCallback(() => {
-    setQuantity((current) => current + 1)
+    setQuantity((current) =>
+      Math.max(1, Math.min(current + 1, SCANNER_ITEM_MAX_QUANTITY))
+    )
   }, [])
 
   const handleQuantityChange = useCallback((value: number) => {
-    setQuantity(Math.max(1, value))
+    setQuantity(Math.max(1, Math.min(value, SCANNER_ITEM_MAX_QUANTITY)))
   }, [])
 
   const handleErrorReset = useCallback(() => {

@@ -28,6 +28,9 @@ export default async function WarehousePage({
 
         const parsedName = decodeURIComponent(name)
 
+        if (MOCK_WAREHOUSES_DATA[parsedName] === undefined) {
+          redirect("/dashboard")
+        }
         const warehouseRacks = MOCK_WAREHOUSES_DATA[parsedName]
         return (
           <WarehouseClient

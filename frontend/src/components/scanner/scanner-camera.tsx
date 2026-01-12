@@ -107,6 +107,13 @@ export function ScannerCamera({
 
   const lastAtRef = useRef<number>(0)
 
+  const getTranslation = useCallback(
+    (mode: (typeof TAB_TRIGGERS)[number]["action"]) => {
+      return TAB_TRIGGERS.findIndex((t) => t.action === mode) * 100
+    },
+    []
+  )
+
   const stopAfterScan = useCallback(() => {
     controlsRef.current?.stop()
     controlsRef.current = null
@@ -291,7 +298,7 @@ export function ScannerCamera({
                   role="presentation"
                   style={{
                     width: `${100 / TAB_TRIGGERS.length}%`,
-                    transform: `translateX(${TAB_TRIGGERS.findIndex((t) => t.action === mode) * 100}%)`,
+                    transform: `translateX(${getTranslation(mode)}%)`,
                   }}
                 />
               </TabsList>

@@ -83,11 +83,11 @@ export function RackGridView({
         {/* Left Navigation Arrow */}
         {showNavigation && onPreviousRack && (
           <Button
-            className={"size-8 sm:size-10"}
+            className="size-8 sm:size-10"
             onClick={onPreviousRack}
-            size={"icon"}
+            size="icon"
             type="button"
-            variant={"outline"}
+            variant="outline"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} />
           </Button>
@@ -123,11 +123,11 @@ export function RackGridView({
         {/* Right Navigation Arrow */}
         {showNavigation && onNextRack && (
           <Button
-            className={"size-8 sm:size-10"}
+            className="size-8 sm:size-10"
             onClick={onNextRack}
-            size={"icon"}
+            size="icon"
             type="button"
-            variant={"outline"}
+            variant="outline"
           >
             <HugeiconsIcon icon={ArrowRight01Icon} />
           </Button>
