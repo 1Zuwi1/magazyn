@@ -27,16 +27,26 @@ jobs:
           filters: |
             frontend:
               - "frontend/**"
-              - ".github/workflows/build.yml"
             backend:
               - "backend/**"
-              - ".github/workflows/build.yml"
+
+      - name: Check for changes
+        id: change_status
+        run: |
+          if [[ "${{ steps.changes.outputs.frontend }}" == "true" || "${{ steps.changes.outputs.backend }}" == "true" ]]; then
+            echo "any_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "any_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No frontend or backend changes detected."
+          fi
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
+        if: steps.change_status.outputs.any_changes == 'true'
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
+        if: steps.change_status.outputs.any_changes == 'true'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -50,9 +60,9 @@ jobs:
         with:
           path: |
             ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          key: ${{ runner.os }}-bun-magazyn-${{ hashFiles('bun.lock') }}
           restore-keys: |
-            ${{ runner.os }}-bun-
+            ${{ runner.os }}-bun-magazyn-
       - name: Web image metadata
         id: meta_web
         uses: docker/metadata-action@v5
@@ -78,6 +88,15 @@ jobs:
           cache-to: type=gha,scope=web,mode=max
 
       # ---- API image ----
+      - name: Cache Maven
+        uses: actions/cache@v4
+        if: steps.changes.outputs.backend == 'true'
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-magazyn-${{ hashFiles('backend/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-magazyn-
+
       - name: API image metadata
         id: meta_api
         uses: docker/metadata-action@v5
@@ -102,7 +121,7 @@ jobs:
       # ---- DEPLOY on server ----
       - name: SSH deploy (pull + restart)
         uses: appleboy/ssh-action@v1.0.3
-        if: steps.changes.outputs.frontend == 'true' || steps.changes.outputs.backend == 'true'
+        if: steps.change_status.outputs.any_changes == 'true'
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
@@ -123,8 +142,16 @@ jobs:
             AUTH="$(printf '%s:%s' "${{ secrets.GHCR_USERNAME }}" "${{ secrets.GHCR_PAT }}" | base64 | tr -d '\n')"
             export DOCKER_AUTH_CONFIG="{\"auths\":{\"ghcr.io\":{\"auth\":\"$AUTH\"}}}"
 
-            docker compose pull
-            docker compose up -d --remove-orphans
+            if [[ "${{ steps.changes.outputs.frontend }}" == "true" ]]; then
+              docker compose pull web
+              docker compose up -d web --no-deps
+            fi
+
+            if [[ "${{ steps.changes.outputs.backend }}" == "true" ]]; then
+              docker compose pull api
+              docker compose up -d api --no-deps
+            fi
+
             docker image prune -f
 
             unset DOCKER_AUTH_CONFIG
