@@ -249,6 +249,19 @@ export function ScannerCamera({
             <br />
             Szczegóły: {errorMsg}
           </p>
+
+          <Button
+            className="mx-auto mt-4 block"
+            onClick={() => {
+              setErrorMsg(null)
+              if (videoElement) {
+                start(videoElement)
+              }
+            }}
+            type="button"
+          >
+            Spróbuj ponownie
+          </Button>
         </div>
       ) : (
         <>
