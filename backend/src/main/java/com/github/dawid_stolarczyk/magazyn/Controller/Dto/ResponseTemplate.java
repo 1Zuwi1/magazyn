@@ -16,6 +16,7 @@ public class ResponseTemplate<T> {
         this.success = success;
         this.data = data;
     }
+
     public ResponseTemplate(boolean success, String code, T data) {
         this.success = success;
         this.code = code;

@@ -8,6 +8,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.SessionData;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.TwoFactorAuth;
 import com.github.dawid_stolarczyk.magazyn.Services.SessionService;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import jakarta.servlet.FilterChain;
@@ -48,7 +49,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                 User user = userRepository.findById(session.getUserId()).orElseThrow(AuthenticationException::new);
                 if (user.getStatus().equals(AccountStatus.ACTIVE) || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
                     sessionService.refreshSession(sessionId);
-                    authenticateUser(user, session.getStatus2FA());
+                    authenticateUser(user, session.getStatus2FA(), request);
                 }
             }, () -> authorizeViaRememberMe(request, response));
         } else {
@@ -57,11 +58,21 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private void authenticateUser(User user, Status2FA status2FA) {
+    private void authenticateUser(User user, Status2FA status2FA, HttpServletRequest request) {
+        boolean sudoMode = false;
+
+        String twoFactorAuthId = CookiesUtils.getCookie(request, "2FA_AUTH");
+        if (twoFactorAuthId != null) {
+            TwoFactorAuth twoFactorAuth = sessionService.get2faAuth(twoFactorAuthId).orElseThrow(AuthenticationException::new);
+            if (twoFactorAuth.getIpAddress().equals(getClientIp(request)) && twoFactorAuth.getUserAgent().equals(request.getHeader("User-Agent"))) {
+               sudoMode = true;
+            }
+        }
+
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
 
-        AuthPrincipal principal = new AuthPrincipal(user.getId(), status2FA);
+        AuthPrincipal principal = new AuthPrincipal(user.getId(), status2FA, sudoMode);
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(principal, null,
                 authorities);
         SecurityContextHolder.getContext().setAuthentication(auth);
@@ -87,7 +98,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                             request.getHeader("User-Agent"));
 
                     sessionService.createSession(newSessionData);
-                    authenticateUser(user, rememberMeData.getStatus2FA());
+                    authenticateUser(user, rememberMeData.getStatus2FA(), request);
 
                     CookiesUtils.setCookie(response, "SESSION", newSessionData.getSessionId(), null);
                 }

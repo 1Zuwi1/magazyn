@@ -1,6 +1,6 @@
 //package com.github.dawid_stolarczyk.magazyn.Model.Utils;
 //
-//import com.github.dawid_stolarczyk.magazyn.Exception.EncryptionError;
+//import com.github.dawid_stolarczyk.magazyn.Exception.EncryptionException;
 //import com.github.dawid_stolarczyk.magazyn.Utils.KmsSecretCrypto;
 //import org.junit.jupiter.api.Test;
 //import org.mockito.ArgumentCaptor;
@@ -77,7 +77,7 @@
 //      byte[] ciphertext = new byte[32];
 //      String ciphertextB64 = Base64.getEncoder().encodeToString(ciphertext);
 //
-//      EncryptionError ex = assertThrows(EncryptionError.class,
+//      EncryptionException ex = assertThrows(EncryptionException.class,
 //          () -> crypto.decryptSecret(encryptedDekB64, ciphertextB64));
 //      assertTrue(ex.getMessage().contains("decryptSecret failed"));
 //      assertNotNull(ex.getCause());

@@ -23,6 +23,10 @@ import org.springframework.web.bind.annotation.*;
 public class TwoFactorController {
     @Autowired
     private TwoFactorService twoFactorService;
+    @Autowired
+    private HttpServletRequest request;
+    @Autowired
+    private HttpServletResponse response;
 
     @Operation(summary = "Retrieve the current user's two-factor authentication methods.")
     @ApiResponses(value = {
@@ -36,29 +40,34 @@ public class TwoFactorController {
             @ApiResponse(responseCode = "400", description = "Bad request, could not retrieve two-factor methods")
     })
     @GetMapping
-    public ResponseEntity<?> twoFactorMethods(HttpServletRequest request) {
+    public ResponseEntity<?> twoFactorMethods() {
         return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.getUsersTwoFactorMethods(request)));
     }
 
     @Operation(summary = "Send a two-factor authentication code via email to the current user.")
     @PostMapping("/email/send")
-    public ResponseEntity<?> sendEmailCode(HttpServletResponse response, HttpServletRequest request) {
+    public ResponseEntity<?> sendEmailCode() {
         twoFactorService.sendTwoFactorCodeViaEmail(request);
         return ResponseEntity.ok(new ResponseTemplate<>(true, "2FA code sent via email"));
     }
 
     @Operation(summary = "Generate a new Google Authenticator secret for the current user.")
     @PostMapping("/authenticator/start")
-    public ResponseEntity<?> generateAuthenticatorSecret(HttpServletRequest request) {
+    public ResponseEntity<?> generateAuthenticatorSecret() {
         return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.generateTwoFactorGoogleSecret(request)));
+    }
+
+    @PostMapping("/backup-codes/generate")
+    @Operation(summary = "Generate new backup codes for the current user.")
+    public ResponseEntity<?> generateBackupCodes() {
+        return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.generateBackupCodes(request)));
     }
 
     @Operation(summary = "Check the provided two-factor authentication code for the current user.")
     @PostMapping("/check")
-    public ResponseEntity<?> checkCode(@Valid @RequestBody CodeRequest codeRequest,
-                                       HttpServletRequest request) {
+    public ResponseEntity<?> checkCode(@Valid @RequestBody CodeRequest codeRequest) {
         try {
-            twoFactorService.checkCode(codeRequest, request);
+            twoFactorService.checkCode(codeRequest, request, response);
             return ResponseEntity.ok(new ResponseTemplate<>(true, "2FA code verified"));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));

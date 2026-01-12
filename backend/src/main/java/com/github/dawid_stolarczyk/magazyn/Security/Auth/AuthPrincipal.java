@@ -11,4 +11,5 @@ import lombok.Setter;
 public class AuthPrincipal {
     private final Long userId;
     private final Status2FA status2FA;
+    private final boolean sudoMode;
 }

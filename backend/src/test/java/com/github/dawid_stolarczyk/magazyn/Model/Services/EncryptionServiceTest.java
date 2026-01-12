@@ -1,6 +1,6 @@
 //package com.github.dawid_stolarczyk.magazyn.Model.Services;
 //
-//import com.github.dawid_stolarczyk.magazyn.Exception.EncryptionError;
+//import com.github.dawid_stolarczyk.magazyn.Exception.EncryptionException;
 //import com.github.dawid_stolarczyk.magazyn.Services.EncryptionService;
 //import com.github.dawid_stolarczyk.magazyn.Services.SecretsService;
 //import org.junit.jupiter.api.Test;
@@ -51,7 +51,7 @@
 //    buf[0] ^= 0x01;
 //    String corrupted = Base64.getEncoder().encodeToString(buf);
 //
-//    EncryptionError ex = assertThrows(EncryptionError.class, () -> service.decrypt(corrupted));
+//    EncryptionException ex = assertThrows(EncryptionException.class, () -> service.decrypt(corrupted));
 //    assertNotNull(ex.getCause());
 //    assertEquals("Bad magic", ex.getCause().getMessage());
 //  }
@@ -61,7 +61,7 @@
 //    EncryptionService service = newService(Path.of(System.getProperty("user.dir")), 0);
 //    String truncated = Base64.getEncoder().encodeToString(new byte[] { 1, 2, 3 });
 //
-//    EncryptionError ex = assertThrows(EncryptionError.class, () -> service.decrypt(truncated));
+//    EncryptionException ex = assertThrows(EncryptionException.class, () -> service.decrypt(truncated));
 //    assertNotNull(ex.getCause());
 //    assertEquals("Truncated header", ex.getCause().getMessage());
 //  }
@@ -70,26 +70,26 @@
 //  void encryptRejectsNullOrBlank() {
 //    EncryptionService service = newService(Path.of(System.getProperty("user.dir")), 0);
 //
-//    assertThrows(EncryptionError.class, () -> service.encrypt(null));
-//    assertThrows(EncryptionError.class, () -> service.encrypt(""));
-//    assertThrows(EncryptionError.class, () -> service.encrypt("   "));
+//    assertThrows(EncryptionException.class, () -> service.encrypt(null));
+//    assertThrows(EncryptionException.class, () -> service.encrypt(""));
+//    assertThrows(EncryptionException.class, () -> service.encrypt("   "));
 //  }
 //
 //  @Test
 //  void decryptRejectsNullOrBlank() {
 //    EncryptionService service = newService(Path.of(System.getProperty("user.dir")), 0);
 //
-//    assertThrows(EncryptionError.class, () -> service.decrypt(null));
-//    assertThrows(EncryptionError.class, () -> service.decrypt(""));
-//    assertThrows(EncryptionError.class, () -> service.decrypt("   "));
+//    assertThrows(EncryptionException.class, () -> service.decrypt(null));
+//    assertThrows(EncryptionException.class, () -> service.decrypt(""));
+//    assertThrows(EncryptionException.class, () -> service.decrypt("   "));
 //  }
 //
 //  @Test
 //  void rejectsPathTraversal(@TempDir Path rootDir) {
 //    EncryptionService service = newService(rootDir, 1024 * 1024);
 //
-//    assertThrows(EncryptionError.class, () -> service.encryptFile("../outside.txt"));
-//    assertThrows(EncryptionError.class, () -> service.decryptFile("../outside"));
+//    assertThrows(EncryptionException.class, () -> service.encryptFile("../outside.txt"));
+//    assertThrows(EncryptionException.class, () -> service.decryptFile("../outside"));
 //  }
 //
 //  @Test
@@ -102,7 +102,7 @@
 //    Path enc = rootDir.resolve("bad.enc");
 //    Files.write(enc, buf);
 //
-//    EncryptionError ex = assertThrows(EncryptionError.class,
+//    EncryptionException ex = assertThrows(EncryptionException.class,
 //        () -> service.decryptFile(rootDir.resolve("bad").toString()));
 //    assertNotNull(ex.getCause());
 //    assertEquals("Bad magic", ex.getCause().getMessage());
@@ -114,7 +114,7 @@
 //    Path src = rootDir.resolve("too-big.txt");
 //    Files.write(src, new byte[16]);
 //
-//    EncryptionError ex = assertThrows(EncryptionError.class, () -> service.encryptFile(src.toString()));
+//    EncryptionException ex = assertThrows(EncryptionException.class, () -> service.encryptFile(src.toString()));
 //    assertEquals("encryptFile failed", ex.getMessage());
 //    assertNotNull(ex.getCause());
 //    assertEquals("Source file too large", ex.getCause().getMessage());
@@ -126,7 +126,7 @@
 //    Path enc = rootDir.resolve("too-big.enc");
 //    Files.write(enc, new byte[1024 * 1024]);
 //
-//    EncryptionError ex = assertThrows(EncryptionError.class,
+//    EncryptionException ex = assertThrows(EncryptionException.class,
 //        () -> service.decryptFile(rootDir.resolve("too-big").toString()));
 //    assertEquals("decryptFile failed", ex.getMessage());
 //    assertNotNull(ex.getCause());

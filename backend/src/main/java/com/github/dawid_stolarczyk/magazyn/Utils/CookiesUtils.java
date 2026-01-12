@@ -19,7 +19,11 @@ public class CookiesUtils {
 
     @PostConstruct
     public void init() {
-        cookieDomainStatic = cookieDomain;
+        if (cookieDomain != null && !cookieDomain.isEmpty()) {
+            cookieDomainStatic = cookieDomain;
+        } else {
+            cookieDomainStatic = "localhost";
+        }
     }
 
     public static void setCookie(HttpServletResponse response, String name, String value, Long maxAge) {

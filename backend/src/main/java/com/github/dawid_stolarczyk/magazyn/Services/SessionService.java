@@ -1,10 +1,12 @@
 package com.github.dawid_stolarczyk.magazyn.Services;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
-import com.github.dawid_stolarczyk.magazyn.Repositories.RememberMeRepository;
-import com.github.dawid_stolarczyk.magazyn.Repositories.SessionRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.RememberMeRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.SessionRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.TwoFactorAuthRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.RememberMeData;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.SessionData;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.TwoFactorAuth;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +22,14 @@ import java.util.Optional;
 public class SessionService {
     private static final Duration SESSION_TTL = Duration.ofMinutes(15);
     private static final Duration REMEMBER_TTL = Duration.ofDays(14);
+    private static final Duration TWO_FACTOR_AUTH_TTL = Duration.ofMinutes(5);
 
     @Autowired
     private final SessionRepository sessionRepository;
     @Autowired
     private final RememberMeRepository rememberMeRepository;
+    @Autowired
+    private final TwoFactorAuthRepository twoFactorAuthRepository;
     @Autowired
     private final RedisTemplate<String, Object> redis;
 
@@ -66,7 +71,7 @@ public class SessionService {
 
     public String createRememberToken(RememberMeData data) {
         rememberMeRepository.save(data);
-        redis.expire("session:" + data.getId(), REMEMBER_TTL);
+        redis.expire("remember:" + data.getId(), REMEMBER_TTL);
         return data.getId();
     }
 
@@ -78,8 +83,29 @@ public class SessionService {
         redis.delete("remember:" + token);
     }
 
+    // ---------- 2FA AUTH ----------
+
+    public String create2faAuth(TwoFactorAuth data) {
+        twoFactorAuthRepository.save(data);
+        redis.expire("2fa_auth:" + data.getId(), TWO_FACTOR_AUTH_TTL);
+        return data.getId();
+    }
+
+    public Optional<TwoFactorAuth> get2faAuth(String twoFactorAuthId) {
+        return twoFactorAuthRepository.findById(twoFactorAuthId);
+    }
+
+    public void delete2faAuth(String token) {
+        redis.delete("2fa_auth:" + token);
+    }
+
+
+
     public void deleteSessionsCookies(HttpServletResponse response) {
         CookiesUtils.deleteCookie(response, "SESSION");
         CookiesUtils.deleteCookie(response, "REMEMBER_ME");
+        CookiesUtils.deleteCookie(response, "2FA_AUTH");
     }
+
+
 }

@@ -9,7 +9,9 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.TwoFactorMethod;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.TwoFactor;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.TwoFactorAuth;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.CodeGenerator;
@@ -19,16 +21,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -84,13 +87,13 @@ public class TwoFactorService {
                 .orElseThrow(() -> new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name()));
 
         if (method.getEmailCode() == null || !BCrypt.checkpw(code, method.getEmailCode())) {
-            throw new AuthenticationException(AuthError.CODE_INVALID.name());
+            throw new AuthenticationException(AuthError.INVALID_OR_EXPIRED_CODE.name());
         }
 
         if (method.getCodeGeneratedAt() == null
                 || method.getCodeGeneratedAt().toInstant()
                 .plus(TWO_FACTOR_EMAIL_CODE_EXPIRATION_MINUTES, ChronoUnit.MINUTES).isBefore(Instant.now())) {
-            throw new AuthenticationException(AuthError.CODE_EXPIRED.name());
+            throw new AuthenticationException(AuthError.INVALID_OR_EXPIRED_CODE.name());
         }
 
         method.setEmailCode(null);
@@ -126,17 +129,17 @@ public class TwoFactorService {
                 .orElseThrow(() -> new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name()));
 
         if (method.getAuthenticatorSecret() == null) {
-            throw new AuthenticationException(AuthError.CODE_INVALID.name());
+            throw new AuthenticationException(AuthError.INVALID_OR_EXPIRED_CODE.name());
         }
 
         boolean isCodeValid = gAuth.authorize(method.getAuthenticatorSecret(), code);
         if (!isCodeValid) {
-            throw new AuthenticationException(AuthError.CODE_INVALID.name());
+            throw new AuthenticationException(AuthError.INVALID_OR_EXPIRED_CODE.name());
         }
 
     }
 
-    public void checkCode(CodeRequest codeRequest, HttpServletRequest request) {
+    public void checkCode(CodeRequest codeRequest, HttpServletRequest request, HttpServletResponse response) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_VERIFY);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(() -> new AuthenticationException("", "User not found"));
@@ -149,42 +152,60 @@ public class TwoFactorService {
             } catch (NumberFormatException e) {
                 throw new AuthenticationException(AuthError.CODE_FORMAT_INVALID.name());
             }
+        } else if (TwoFactor.valueOf(codeRequest.getMethod()).equals(TwoFactor.BACKUP_CODES)) {
+            useBackupCode(codeRequest.getCode(), request);
         } else {
             throw new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name());
         }
         successfulTwoFactorAuthentication(request);
+        TwoFactorAuth twoFactorAuth = new TwoFactorAuth(
+                UUID.randomUUID().toString(),
+                user.getId(),
+                getClientIp(request),
+                request.getHeader("User-Agent"));
+        CookiesUtils.setCookie(response, "2FA_AUTH", sessionService.create2faAuth(twoFactorAuth), Duration.ofMinutes(5).toSeconds());
     }
 
     @Transactional
-    public List<String> generateBackupCodes() {
+    public List<String> generateBackupCodes(HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_VERIFY);
+
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        if (!authPrincipal.isSudoMode()) {
+            throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
+        }
+
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(() -> new AuthenticationException("", "User not found"));
         List<BackupCode> backupCodes = new ArrayList<>();
 
+        List<String> codes = new ArrayList<>();
         for (int i = 0; i < BACKUP_CODES_COUNT; i++) {
             BackupCode backupCode = new BackupCode();
             String code = CodeGenerator.generateWithBase62(BACKUP_CODE_LENGTH);
             backupCode.setCode(BCrypt.hashpw(code, BCrypt.gensalt()));
             backupCodes.add(backupCode);
             backupCode.setUser(user);
+
+            codes.add(code);
         }
 
         user.addTwoFactorMethod(new TwoFactorMethod(TwoFactor.BACKUP_CODES));
         user.setBackupCodes(backupCodes);
         userRepository.save(user);
 
-        return new ArrayList<>(List.of("test"));
+        return codes;
     }
 
 
-    @PreAuthorize("hasAuthority('STATUS_2FA_PRE_2FA')")
-    public void useBackupCode(String code, HttpServletResponse response) {
+    public void useBackupCode(String code, HttpServletRequest request) {
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(() -> new AuthenticationException("", "User not found"));
+
         user.getTwoFactorMethods().stream()
                 .filter(m -> TwoFactor.BACKUP_CODES.equals(m.getMethodName()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Backup codes 2FA method not enabled"));
+                .orElseThrow(() -> new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name()));
 
         boolean correctCode = false;
         for (BackupCode backupCode : user.getBackupCodes()) {
@@ -195,9 +216,11 @@ public class TwoFactorService {
             }
         }
         if (!correctCode) {
-            throw new AuthenticationException(AuthError.CODE_INVALID.name());
+            throw new AuthenticationException(AuthError.INVALID_OR_EXPIRED_CODE.name());
         }
         userRepository.save(user);
+
+        successfulTwoFactorAuthentication(request);
     }
 
     private void successfulTwoFactorAuthentication(HttpServletRequest request) {
