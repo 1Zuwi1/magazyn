@@ -3,10 +3,6 @@ name: Deploy to production
 on:
   push:
     branches: [main]
-    paths:
-      - "frontend/**"
-      - "backend/**"
-      - ".github/workflows/build.yml"
 
 permissions:
   contents: read
@@ -43,6 +39,7 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
       - name: Set up Buildx
