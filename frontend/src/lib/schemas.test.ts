@@ -1,12 +1,31 @@
 import { describe, expect, it } from "vitest"
 
-import {
-  ApiMeSchema,
-  LoginSchema,
-  RegisterSchema,
-  Resend2FASchema,
-  Verify2FASchema,
-} from "./schemas"
+import messages from "../../messages/en.json"
+import { ApiMeSchema, createAuthSchemas } from "./schemas"
+
+const translate = (key: string, values?: Record<string, unknown>) => {
+  const message = key
+    .split(".")
+    .reduce<unknown>(
+      (acc, part) => (acc as Record<string, unknown>)?.[part],
+      messages
+    )
+
+  if (typeof message !== "string") {
+    throw new Error(`Missing message for key: ${key}`)
+  }
+
+  if (!values) {
+    return message
+  }
+
+  return message.replace(/\{(\w+)\}/g, (_match, token) =>
+    token in values ? String(values[token]) : `{${token}}`
+  )
+}
+
+const { LoginSchema, RegisterSchema, Resend2FASchema, Verify2FASchema } =
+  createAuthSchemas(translate)
 
 describe("LoginSchema", () => {
   it("accepts valid login input", () => {
@@ -31,7 +50,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi mieć co najmniej 6 znaków"
+        translate("auth.validation.password.min", { min: 6 })
       )
     }
   })
@@ -47,7 +66,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Nazwa użytkownika musi mieć co najmniej 3 znaki"
+        translate("auth.validation.username.min", { min: 3 })
       )
     }
   })
@@ -63,7 +82,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Nazwa użytkownika może mieć maksymalnie 20 znaków"
+        translate("auth.validation.username.max", { max: 20 })
       )
     }
   })
@@ -79,7 +98,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślenia"
+        translate("auth.validation.username.format")
       )
     }
   })
@@ -143,7 +162,9 @@ describe("RegisterSchema", () => {
 
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe("Hasła nie są zgodne")
+      expect(result.error.issues[0].message).toBe(
+        translate("auth.validation.password.mismatch")
+      )
     }
   })
 
@@ -177,7 +198,7 @@ describe("RegisterSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Imię i nazwisko musi mieć co najmniej 2 znaki"
+        translate("auth.validation.fullName.min", { min: 2 })
       )
     }
   })
@@ -247,7 +268,7 @@ describe("Verify2FASchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Kod musi mieć dokładnie 6 cyfr"
+        translate("auth.validation.code.length", { length: 6 })
       )
     }
   })

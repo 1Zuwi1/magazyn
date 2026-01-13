@@ -2,6 +2,7 @@
 
 import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { VIRTUALIZATION_THRESHOLDS } from "@/config/constants"
@@ -32,6 +33,7 @@ export function RackGridView({
   onNextRack,
   rack,
 }: RackGridViewProps) {
+  const t = useTranslations("rackVisualization")
   const [isItemsDialogOpen, setIsItemsDialogOpen] = useState(false)
   const parentRef = useRef<HTMLDivElement>(null)
 
@@ -137,13 +139,16 @@ export function RackGridView({
       {totalRacks > 0 && (
         <div className="flex flex-col items-center justify-center gap-2">
           <Button onClick={() => setIsItemsDialogOpen(true)} variant="outline">
-            <span>Przedmioty w regale</span>
+            <span>{t("actions.itemsInRack")}</span>
           </Button>
           <p className="text-muted-foreground text-xs sm:text-sm">
-            Regał:
+            {t("labels.rack")}
             <span className="font-semibold text-xs sm:text-sm">
               {" "}
-              {currentRackIndex + 1} / {totalRacks}
+              {t("labels.rackCount", {
+                current: String(currentRackIndex + 1),
+                total: String(totalRacks),
+              })}
             </span>
           </p>
         </div>

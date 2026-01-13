@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 import { VIRTUALIZATION_THRESHOLDS } from "@/config/constants"
 import type { Item } from "../types"
@@ -14,6 +15,7 @@ const VIRTUALIZATION_THRESHOLD = VIRTUALIZATION_THRESHOLDS.TABLE
 const ROW_HEIGHT = 64
 
 export function RackItemsTable({ items }: RackItemsTableProps) {
+  const t = useTranslations("rackItemsTable")
   const shouldVirtualize = items.length > VIRTUALIZATION_THRESHOLD
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
@@ -47,7 +49,7 @@ export function RackItemsTable({ items }: RackItemsTableProps) {
   if (items.length === 0) {
     return (
       <div className="flex h-32 items-center justify-center rounded-lg border border-dashed">
-        <p className="text-muted-foreground">Brak przedmiotów w tym regale</p>
+        <p className="text-muted-foreground">{t("empty")}</p>
       </div>
     )
   }

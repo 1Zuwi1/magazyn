@@ -23,29 +23,43 @@ import { cn } from "@/lib/utils"
 import { formatDate, getDaysUntilExpiry } from "../utils/helpers"
 import type { ItemInstance } from "./types"
 
-function getExpiryBadge(expiryDate: Date) {
+type Translator = (
+  key: string,
+  values?: Record<string, string | number>
+) => string
+
+interface AssortmentColumnOptions {
+  t: Translator
+  locale: string
+}
+
+const getExpiryBadge = (t: Translator, expiryDate: Date) => {
   const days = getDaysUntilExpiry(new Date(), expiryDate)
 
   if (days < 0) {
     return (
       <Badge variant="destructive">
-        Przeterminowany ({Math.abs(days)} dni temu)
+        {t("assortmentTable.expiry.expired", { days: Math.abs(days) })}
       </Badge>
     )
   }
 
   if (days === 0) {
-    return <Badge variant="destructive">Dzisiaj</Badge>
+    return (
+      <Badge variant="destructive">{t("assortmentTable.expiry.today")}</Badge>
+    )
   }
 
+  const dayLabel = t("assortmentTable.expiry.days", { count: days })
+
   if (days <= 3) {
-    return <Badge variant="destructive">{days} dni</Badge>
+    return <Badge variant="destructive">{dayLabel}</Badge>
   }
 
   if (days <= 7) {
     return (
       <Badge className="bg-orange-500" variant="default">
-        {days} dni
+        {dayLabel}
       </Badge>
     )
   }
@@ -53,19 +67,22 @@ function getExpiryBadge(expiryDate: Date) {
   if (days <= 14) {
     return (
       <Badge className="bg-yellow-500" variant="default">
-        {days} dni
+        {dayLabel}
       </Badge>
     )
   }
 
-  return <Badge variant="outline">{days} dni</Badge>
+  return <Badge variant="outline">{dayLabel}</Badge>
 }
 
-export const assortmentColumns: ColumnDef<ItemInstance>[] = [
+export const createAssortmentColumns = ({
+  t,
+  locale,
+}: AssortmentColumnOptions): ColumnDef<ItemInstance>[] => [
   {
     id: "category",
     accessorKey: "definition.category",
-    header: "Kategoria",
+    header: t("assortmentTable.columns.category"),
     enableHiding: true,
     cell: ({ row }) => (
       <Badge variant="secondary">{row.original.definition.category}</Badge>
@@ -73,7 +90,7 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
   },
   {
     accessorKey: "definition.name",
-    header: "Nazwa przedmiotu",
+    header: t("assortmentTable.columns.name"),
     cell: ({ row }) => {
       const definition = row.original.definition
       return (
@@ -96,19 +113,22 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
   },
   {
     accessorKey: "rackName",
-    header: "Regał",
+    header: t("assortmentTable.columns.rack"),
     cell: ({ row }) => (
       <div>
         <div className="font-medium">{row.original.rackName}</div>
         <div className="text-muted-foreground text-sm">
-          Rząd {row.original.position.row}, Kol. {row.original.position.col}
+          {t("assortmentTable.columns.position", {
+            row: String(row.original.position.row),
+            col: String(row.original.position.col),
+          })}
         </div>
       </div>
     ),
   },
   {
     accessorKey: "qrCode",
-    header: "QR Code",
+    header: t("assortmentTable.columns.qr"),
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <HugeiconsIcon
@@ -121,19 +141,21 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
   },
   {
     accessorKey: "addedDate",
-    header: "Data dodania",
-    cell: ({ row }) => formatDate(row.original.addedDate),
+    header: t("assortmentTable.columns.addedDate"),
+    cell: ({ row }) => formatDate(row.original.addedDate, locale),
   },
   {
     accessorKey: "expiryDate",
-    header: "Przeterminowanie",
+    header: t("assortmentTable.columns.expiryDate"),
     cell: ({ row }) => {
       const expiryBadge = useMemo(() => {
-        return getExpiryBadge(row.original.expiryDate)
-      }, [row.original.expiryDate])
+        return getExpiryBadge(t, row.original.expiryDate)
+      }, [row.original.expiryDate, t])
       return (
         <div className="space-y-1">
-          <div className="text-sm">{formatDate(row.original.expiryDate)}</div>
+          <div className="text-sm">
+            {formatDate(row.original.expiryDate, locale)}
+          </div>
           {expiryBadge}
         </div>
       )
@@ -147,7 +169,7 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
 
       return (
         <DropdownMenu>
-          <DropdownMenuTrigger aria-label="Otwórz menu">
+          <DropdownMenuTrigger aria-label={t("assortmentTable.actions.open")}>
             <HugeiconsIcon
               className={cn(
                 buttonVariants({ variant: "ghost", size: "icon-xs" })
@@ -158,24 +180,24 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => console.log("View", item.id)}>
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={EyeIcon} />
-              Szczegóły
+              {t("assortmentTable.actions.details")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => console.log("Edit", item.id)}>
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
-              Edytuj
+              {t("assortmentTable.actions.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => console.log("Show QR", item.qrCode)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={QrCodeIcon} />
-              Pokaż QR
+              {t("assortmentTable.actions.showQr")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
               onClick={() => console.log("Delete", item.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
-              Usuń
+              {t("assortmentTable.actions.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

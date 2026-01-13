@@ -1,6 +1,7 @@
 import { CircleLock01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -10,7 +11,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-export default function UnauthorizedComponent() {
+export default async function UnauthorizedComponent() {
+  const t = await getTranslations("unauthorized")
   return (
     <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center p-6">
       <Card className="w-full max-w-md text-center">
@@ -21,18 +23,13 @@ export default function UnauthorizedComponent() {
               icon={CircleLock01Icon}
             />
           </div>
-          <CardTitle className="mt-4 text-2xl">Brak dostępu</CardTitle>
-          <CardDescription>
-            Nie masz uprawnień do wyświetlenia tej strony.
-          </CardDescription>
+          <CardTitle className="mt-4 text-2xl">{t("title")}</CardTitle>
+          <CardDescription>{t("description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-muted-foreground text-sm">
-            Ta strona wymaga specjalnych uprawnień. Jeśli uważasz, że to błąd,
-            skontaktuj się z administratorem.
-          </p>
+          <p className="text-muted-foreground text-sm">{t("details")}</p>
           <Link href="/dashboard">
-            <Button className="w-full">Wróć do panelu głównego</Button>
+            <Button className="w-full">{t("actions.backToDashboard")}</Button>
           </Link>
         </CardContent>
       </Card>

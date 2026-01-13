@@ -1,3 +1,6 @@
+"use client"
+
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { useWarehouseStore } from "./store"
 import type { Item3D, Rack3D, Warehouse3D } from "./types"
@@ -7,17 +10,22 @@ interface DetailsPanelProps {
   warehouse: Warehouse3D
 }
 
-function getStatusText(status: Item3D["status"]): string {
+type Translator = (
+  key: string,
+  values?: Record<string, string | number>
+) => string
+
+function getStatusText(t: Translator, status: Item3D["status"]): string {
   if (status === "normal") {
-    return "Normalny"
+    return t("threeD.status.normal")
   }
   if (status === "expired") {
-    return "Przeterminowany"
+    return t("threeD.status.expired")
   }
   if (status === "expired-dangerous") {
-    return "Przeterminowany i niebezpieczny"
+    return t("threeD.status.expiredDangerous")
   }
-  return "Niebezpieczny"
+  return t("threeD.status.dangerous")
 }
 
 function getStatusColor(status: Item3D["status"]): string {
@@ -34,6 +42,7 @@ function getStatusColor(status: Item3D["status"]): string {
 }
 
 function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
+  const t = useTranslations()
   const totalSlots = warehouse.racks.reduce(
     (sum: number, rack: Rack3D) => sum + rack.grid.rows * rack.grid.cols,
     0
@@ -48,33 +57,43 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
 
   return (
     <div className="flex h-full flex-col border-l bg-background p-4">
-      <h2 className="mb-4 font-bold text-lg">Przegląd Magazynu</h2>
+      <h2 className="mb-4 font-bold text-lg">{t("threeD.overview.title")}</h2>
 
       <div className="space-y-4">
         <div className="rounded-lg border p-4">
-          <div className="text-muted-foreground text-sm">Liczba regałów</div>
+          <div className="text-muted-foreground text-sm">
+            {t("threeD.overview.racks")}
+          </div>
           <div className="font-bold text-2xl">{warehouse.racks.length}</div>
         </div>
 
         <div className="rounded-lg border p-4">
-          <div className="text-muted-foreground text-sm">Wszystkie miejsca</div>
+          <div className="text-muted-foreground text-sm">
+            {t("threeD.overview.totalSlots")}
+          </div>
           <div className="font-bold text-2xl">{totalSlots}</div>
         </div>
 
         <div className="rounded-lg border p-4">
-          <div className="text-muted-foreground text-sm">Zajęte miejsca</div>
+          <div className="text-muted-foreground text-sm">
+            {t("threeD.overview.occupiedSlots")}
+          </div>
           <div className="font-bold text-2xl text-green-600">
             {occupiedSlots}
           </div>
         </div>
 
         <div className="rounded-lg border p-4">
-          <div className="text-muted-foreground text-sm">Wolne miejsca</div>
+          <div className="text-muted-foreground text-sm">
+            {t("threeD.overview.freeSlots")}
+          </div>
           <div className="font-bold text-2xl text-blue-600">{freeSlots}</div>
         </div>
 
         <div className="rounded-lg border p-4">
-          <div className="text-muted-foreground text-sm">Stopień zajętości</div>
+          <div className="text-muted-foreground text-sm">
+            {t("threeD.overview.occupancy")}
+          </div>
           <div className="font-bold text-2xl">
             {totalSlots > 0
               ? Math.round((occupiedSlots / totalSlots) * 100)
@@ -88,6 +107,9 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
 }
 
 export function DetailsPanel({ warehouse }: DetailsPanelProps) {
+  const t = useTranslations()
+  const translate = (key: string, values?: Record<string, string | number>) =>
+    t(key as never, values as never)
   const {
     mode,
     selectedRackId,
@@ -118,7 +140,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
   return (
     <div className="flex h-full flex-col border-l bg-background p-4">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-bold text-lg">Szczegóły Regału</h2>
+        <h2 className="font-bold text-lg">{t("threeD.details.title")}</h2>
         <div className="flex w-full flex-col gap-2 *:w-full">
           {focusWindow && (
             <Button
@@ -127,7 +149,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
               }}
               variant="outline"
             >
-              Powrót do bloków
+              {t("threeD.details.backToBlocks")}
             </Button>
           )}
         </div>
@@ -137,22 +159,31 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
         <div className="mb-6 rounded-lg border p-4">
           <h3 className="mb-2 font-bold text-xl">{selectedRack.name}</h3>
           <div className="space-y-1 text-muted-foreground text-sm">
-            <div>Kod: {selectedRack.code}</div>
+            <div>{t("threeD.details.code", { code: selectedRack.code })}</div>
             <div>
-              Siatka: {selectedRack.grid.rows}×{selectedRack.grid.cols}
+              {t("threeD.details.grid", {
+                rows: String(selectedRack.grid.rows),
+                cols: String(selectedRack.grid.cols),
+              })}
             </div>
             <div>
-              Wszystkie miejsca:{" "}
-              {selectedRack.grid.rows * selectedRack.grid.cols}
+              {t("threeD.details.totalSlots", {
+                count: String(selectedRack.grid.rows * selectedRack.grid.cols),
+              })}
             </div>
             <div>
-              Zajęte:{" "}
-              {selectedRack.items.filter((item) => item !== null).length}
+              {t("threeD.details.occupiedSlots", {
+                count: String(
+                  selectedRack.items.filter((item) => item !== null).length
+                ),
+              })}
             </div>
             <div>
-              Maks. rozmiar elementu: {selectedRack.maxElementSize.width}×
-              {selectedRack.maxElementSize.height}×
-              {selectedRack.maxElementSize.depth} mm
+              {t("threeD.details.maxSize", {
+                width: String(selectedRack.maxElementSize.width),
+                height: String(selectedRack.maxElementSize.height),
+                depth: String(selectedRack.maxElementSize.depth),
+              })}
             </div>
           </div>
         </div>
@@ -162,10 +193,13 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
         <div className="flex-1">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-bold text-lg">
-              Rząd {selectedShelf.row + 1} półka {selectedShelf.col + 1}
+              {t("threeD.details.shelfTitle", {
+                row: String(selectedShelf.row + 1),
+                col: String(selectedShelf.col + 1),
+              })}
             </h3>
             <Button onClick={clearSelection} size="sm" variant="ghost">
-              Wyczyść
+              {t("common.actions.clear")}
             </Button>
           </div>
 
@@ -176,27 +210,35 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                   className={`h-3 w-3 rounded ${getStatusColor(selectedItem.status)}`}
                 />
                 <span className="font-semibold">
-                  {getStatusText(selectedItem.status)}
+                  {getStatusText(translate, selectedItem.status)}
                 </span>
               </div>
 
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="text-muted-foreground">ID:</span>{" "}
+                  <span className="text-muted-foreground">
+                    {t("threeD.details.item.id")}
+                  </span>{" "}
                   <span className="font-mono">{selectedItem.id}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Etykieta:</span>{" "}
+                  <span className="text-muted-foreground">
+                    {t("threeD.details.item.label")}
+                  </span>{" "}
                   <span>{selectedItem.label}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Typ:</span>{" "}
+                  <span className="text-muted-foreground">
+                    {t("threeD.details.item.type")}
+                  </span>{" "}
                   <span>{selectedItem.type}</span>
                 </div>
 
                 {selectedItem.meta && (
                   <div className="space-y-1">
-                    <div className="text-muted-foreground">Metadane:</div>
+                    <div className="text-muted-foreground">
+                      {t("threeD.details.item.meta")}
+                    </div>
                     {Object.entries(selectedItem.meta).map(([key, value]) => (
                       <div className="ml-2 font-mono text-xs" key={key}>
                         {key}: {String(value)}
@@ -208,16 +250,20 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
 
               <div className="mt-4 space-y-2">
                 <Button className="w-full" size="sm" variant="outline">
-                  Edytuj etykietę
+                  {t("threeD.details.item.editLabel")}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="rounded-lg border p-4 text-center text-muted-foreground">
-              <div className="mb-2 font-bold">Pusta półka</div>
+              <div className="mb-2 font-bold">
+                {t("threeD.details.emptyShelf.title")}
+              </div>
               <div className="text-sm">
-                Brak elementu na pozycji Rząd {selectedShelf.row + 1} półka{" "}
-                {selectedShelf.col + 1}
+                {t("threeD.details.emptyShelf.description", {
+                  row: String(selectedShelf.row + 1),
+                  col: String(selectedShelf.col + 1),
+                })}
               </div>
             </div>
           )}
@@ -227,8 +273,10 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
       {!selectedShelf && (
         <div className="flex-1 text-center text-muted-foreground">
           {showBlockHint
-            ? `Kliknij blok ${RACK_ZONE_SIZE}×${RACK_ZONE_SIZE}, aby zobaczyć szczegóły.`
-            : "Kliknij na półkę, aby zobaczyć szczegóły"}
+            ? t("threeD.details.blockHint", {
+                size: String(RACK_ZONE_SIZE),
+              })
+            : t("threeD.details.shelfHint")}
         </div>
       )}
     </div>

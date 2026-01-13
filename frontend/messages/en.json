@@ -1,0 +1,477 @@
+{
+  "app": {
+    "name": "GdzieToLeży"
+  },
+  "metadata": {
+    "title": "GdzieToLeży",
+    "description": "Warehouse management platform."
+  },
+  "languageSwitcher": {
+    "label": "Language",
+    "english": "English",
+    "polish": "Polish"
+  },
+  "landing": {
+    "actions": {
+      "login": "Log in",
+      "cta": "Go to login"
+    },
+    "hero": {
+      "titleLine1": "Warehouse management",
+      "titleHighlight": "for your business",
+      "subtitle": "Log in to access the warehouse management system."
+    },
+    "footer": "© 2025 GdzieToLeży. Internal system."
+  },
+  "auth": {
+    "form": {
+      "loginDescription": "Enter your username and password to access your account.",
+      "registerDescription": "Create an account to start using the app."
+    },
+    "fields": {
+      "email": "Email",
+      "fullName": "Full name",
+      "username": "Username",
+      "password": "Password",
+      "confirmPassword": "Confirm password"
+    },
+    "placeholders": {
+      "email": "jane.doe@example.com",
+      "fullName": "Jane Doe",
+      "username": "janeDoe",
+      "password": "••••••••"
+    },
+    "actions": {
+      "login": "Log in",
+      "register": "Register"
+    },
+    "prompt": {
+      "noAccount": "Don’t have an account?",
+      "hasAccount": "Already have an account?"
+    },
+    "errors": {
+      "loginFailed": "There was a problem logging in. Please try again.",
+      "registerFailed": "There was a problem registering. Please try again."
+    },
+    "success": {
+      "login": "Logged in successfully!",
+      "register": "Registration successful! You can now log in."
+    },
+    "validation": {
+      "username": {
+        "min": "Username must be at least {min} characters.",
+        "max": "Username must be at most {max} characters.",
+        "format": "Username can only contain letters, numbers, and underscores."
+      },
+      "password": {
+        "min": "Password must be at least {min} characters.",
+        "maxBytes": "Password cannot exceed {max} bytes in UTF-8 encoding.",
+        "mismatch": "Passwords do not match."
+      },
+      "fullName": {
+        "min": "Full name must be at least {min} characters."
+      },
+      "email": {
+        "invalid": "Invalid email address."
+      },
+      "code": {
+        "length": "Code must be exactly {length} digits."
+      }
+    }
+  },
+  "twoFactor": {
+    "methodTitles": {
+      "authenticator": "Enter the code from your authenticator app",
+      "sms": "Enter the code sent via SMS",
+      "email": "Enter the code sent by email"
+    },
+    "methodSwitch": {
+      "authenticator": "Use authenticator app",
+      "sms": "Send SMS code",
+      "email": "Send email code"
+    },
+    "errors": {
+      "invalidCode": "Invalid code or verification failed. Please try again.",
+      "unsupportedResend": "This resend method is not supported.",
+      "resendFailed": "Could not resend the code. Please try again shortly."
+    },
+    "success": {
+      "verified": "Verified!",
+      "resend": {
+        "sms": "A new SMS code has been sent.",
+        "email": "A new email code has been sent."
+      }
+    },
+    "actions": {
+      "backToHome": "Back to home",
+      "verify": "Verify"
+    },
+    "fields": {
+      "code": "Verification code"
+    },
+    "resend": {
+      "prompt": "Didn’t receive it?",
+      "action": "Resend"
+    },
+    "switch": {
+      "prompt": "Use a different method"
+    }
+  },
+  "pendingVerification": {
+    "title": "Pending verification",
+    "description": "Your account is awaiting administrator approval.",
+    "details": "Your registration has been accepted and is waiting for administrator approval. You will be notified once your account is activated. Thank you for your patience.",
+    "nextSteps": {
+      "title": "What’s next?",
+      "items": {
+        "confirmation": "Wait for a confirmation email",
+        "inbox": "Check your inbox regularly",
+        "contact": "Contact the administrator if it takes longer than 24 hours"
+      }
+    },
+    "actions": {
+      "backToLogin": "Back to login"
+    }
+  },
+  "unauthorized": {
+    "title": "Access denied",
+    "description": "You don’t have permission to view this page.",
+    "details": "This page requires special permissions. If you believe this is a mistake, contact the administrator.",
+    "actions": {
+      "backToDashboard": "Back to dashboard"
+    }
+  },
+  "dashboard": {
+    "search": {
+      "placeholder": "Search warehouses, racks, or ID..."
+    },
+    "title": "Your Warehouses",
+    "filters": {
+      "advancedTitle": "Advanced filters",
+      "minOccupancy": "Min. occupancy",
+      "temperatureRange": "Temperature range",
+      "showEmpty": "Show empty warehouses",
+      "reset": "Reset filters"
+    },
+    "warehouseGrid": {
+      "empty": "No warehouses to display.",
+      "badge": "{percent}% full",
+      "occupancy": "Occupancy",
+      "capacity": "{used, number} / {total, number} {total, plural, one {slot} other {slots}}",
+      "racks": "{count, plural, one {# rack} other {# racks}}",
+      "actions": {
+        "viewRacks": "View racks",
+        "view3d": "View 3D visualization"
+      }
+    }
+  },
+  "rackVisualization": {
+    "actions": {
+      "itemsInRack": "Items in rack"
+    },
+    "labels": {
+      "rack": "Rack:",
+      "rackCount": "{current} / {total}"
+    },
+    "parameters": {
+      "title": "Parameters",
+      "maxElement": "Max item size",
+      "maxElementValue": "{width} × {height} × {depth} mm",
+      "temperatureRange": "Temperature range",
+      "temperatureValue": "{min}°C - {max}°C",
+      "gridDimensions": "Grid dimensions",
+      "gridValue": "{rows} rows × {cols} columns"
+    },
+    "status": {
+      "title": "Status",
+      "occupied": "Occupied slots",
+      "free": "Free slots",
+      "capacity": "Total capacity",
+      "occupancy": "Occupancy"
+    }
+  },
+  "rackItemsTable": {
+    "empty": "No items in this rack",
+    "stats": {
+      "occupied": "Occupied slots",
+      "load": "Load",
+      "loadValue": "{current} / {max} kg"
+    },
+    "headers": {
+      "image": "Image",
+      "name": "Name",
+      "qr": "QR code",
+      "weight": "Weight",
+      "dimensions": "Dimensions",
+      "temperature": "Temp.",
+      "expiry": "Expiry date",
+      "status": "Status"
+    },
+    "dimensions": "{width}×{height}×{depth} mm",
+    "weight": "{weight} kg",
+    "temperatureRange": "{min}°C – {max}°C",
+    "badges": {
+      "dangerous": "Dangerous",
+      "expired": "Expired"
+    },
+    "actions": {
+      "open": "Open menu",
+      "view": "Preview",
+      "edit": "Edit",
+      "delete": "Delete"
+    }
+  },
+  "itemsTable": {
+    "search": {
+      "ariaLabel": "Search items",
+      "placeholder": "Search by name or category..."
+    },
+    "count": "{count, plural, one {# item} other {# items}}",
+    "empty": "No results.",
+    "columns": {
+      "name": "Name",
+      "category": "Category",
+      "quantity": "Quantity",
+      "quantityValue": "{count} pcs.",
+      "expiry": "Shelf life",
+      "danger": "Danger"
+    },
+    "expiry": {
+      "noData": "No data",
+      "expired": "Expired!",
+      "inDays": "{count, plural, one {in # day} other {in # days}}",
+      "days": "{count, plural, one {# day} other {# days}}"
+    },
+    "badges": {
+      "dangerous": "Dangerous",
+      "safe": "Safe"
+    },
+    "actions": {
+      "open": "Open menu",
+      "edit": "Edit",
+      "delete": "Delete"
+    }
+  },
+  "assortmentTable": {
+    "search": {
+      "ariaLabel": "Filter items by name or category",
+      "placeholder": "Search by name or category..."
+    },
+    "filters": {
+      "ariaLabel": "Filter by expiry",
+      "all": "All",
+      "expired": "Expired",
+      "threeDays": "3 days",
+      "sevenDays": "7 days",
+      "fourteenDays": "14 days"
+    },
+    "count": "{count, plural, one {# item} other {# items}}",
+    "empty": "No results.",
+    "columns": {
+      "category": "Category",
+      "name": "Item name",
+      "rack": "Rack",
+      "position": "Row {row}, Col {col}",
+      "qr": "QR code",
+      "addedDate": "Added date",
+      "expiryDate": "Expiry"
+    },
+    "expiry": {
+      "expired": "Expired ({days, plural, one {# day ago} other {# days ago}})",
+      "today": "Today",
+      "days": "{count, plural, one {# day} other {# days}}"
+    },
+    "actions": {
+      "open": "Open menu",
+      "details": "Details",
+      "edit": "Edit",
+      "showQr": "Show QR",
+      "delete": "Delete"
+    }
+  },
+  "assortmentPage": {
+    "title": "Warehouse assortment {id}",
+    "subtitle": "Browse all products in the warehouse"
+  },
+  "warehouse": {
+    "actions": {
+      "backToDashboard": "Back to dashboard"
+    },
+    "subtitle": "ID: {id} • {rack}"
+  },
+  "threeD": {
+    "title": "3D Warehouse Visualization",
+    "actions": {
+      "backToBlocks": "Back to blocks",
+      "backToDashboard": "Back to dashboard",
+      "backToOverview": "Back to overview"
+    },
+    "fallback": {
+      "title": "3D visualization unavailable",
+      "description": "There was a problem rendering the scene. Try again or return to overview mode.",
+      "retry": "Try again"
+    },
+    "mode": {
+      "label": "Mode:",
+      "overview": "Overview",
+      "details": "Details"
+    },
+    "sidebar": {
+      "title": "Warehouse explorer",
+      "trigger": "Explorer",
+      "search": {
+        "placeholder": "Search racks..."
+      },
+      "rack": {
+        "grid": "Grid: {rows}×{cols}",
+        "occupancy": "Occupancy:"
+      },
+      "legend": {
+        "title": "Legend",
+        "normal": "Normal",
+        "expired": "Expired",
+        "dangerous": "Dangerous",
+        "expiredDangerous": "Dangerous & expired",
+        "empty": "Empty shelf",
+        "selected": "Selected"
+      }
+    },
+    "details": {
+      "title": "Rack details",
+      "trigger": "Details",
+      "backToBlocks": "Back to blocks",
+      "code": "Code: {code}",
+      "grid": "Grid: {rows}×{cols}",
+      "totalSlots": "Total slots: {count}",
+      "occupiedSlots": "Occupied: {count}",
+      "maxSize": "Max item size: {width}×{height}×{depth} mm",
+      "shelfTitle": "Row {row} shelf {col}",
+      "item": {
+        "id": "ID:",
+        "label": "Label:",
+        "type": "Type:",
+        "meta": "Metadata:",
+        "editLabel": "Edit label"
+      },
+      "emptyShelf": {
+        "title": "Empty shelf",
+        "description": "No item at row {row} shelf {col}"
+      },
+      "blockHint": "Click a {size}×{size} block to see details.",
+      "shelfHint": "Click a shelf to see details"
+    },
+    "overview": {
+      "title": "Warehouse overview",
+      "racks": "Rack count",
+      "totalSlots": "Total slots",
+      "occupiedSlots": "Occupied slots",
+      "freeSlots": "Free slots",
+      "occupancy": "Occupancy"
+    },
+    "status": {
+      "normal": "Normal",
+      "expired": "Expired",
+      "expiredDangerous": "Expired & dangerous",
+      "dangerous": "Dangerous"
+    },
+    "blocks": {
+      "status": {
+        "normal": "Normal",
+        "dangerous": "Dangerous",
+        "expired": "Expired",
+        "expired-dangerous": "Expired & dangerous",
+        "empty": "Empty zone"
+      },
+      "tooltip": {
+        "zone": "Zone {startRow}–{endRow}, {startCol}–{endCol}",
+        "occupied": "Occupied: {occupied}/{total} ({percent}%)",
+        "status": "Status: {status}"
+      }
+    },
+    "racks": {
+      "tooltip": {
+        "occupied": "{percent}% occupied • {cols}×{rows}",
+        "maxSize": "Max: {width}×{height}×{depth} mm"
+      }
+    }
+  },
+  "scanner": {
+    "tabs": {
+      "take": "Receiving",
+      "remove": "Removing"
+    },
+    "actions": {
+      "openScanner": "Code scanner",
+      "close": "Close",
+      "retry": "Try again",
+      "confirm": "Confirm"
+    },
+    "errors": {
+      "title": "Something went wrong",
+      "noSpace": "There isn’t enough space in this warehouse for these items.",
+      "fallback": "There was a problem with the scanner. Please try again.",
+      "unexpected": "Unexpected scanner error.",
+      "startFailed": "Could not start the camera scanner.",
+      "cameraIntro": "An error occurred. Make sure your camera is connected and that you granted permission to use it.",
+      "details": "Details: {error}"
+    },
+    "mock": {
+      "itemName": "Sample item"
+    },
+    "camera": {
+      "scanning": "Scanning in warehouse: {warehouse}",
+      "unknownWarehouse": "Unknown warehouse"
+    },
+    "quantity": {
+      "title": "Enter item quantity",
+      "subtitle": "How many items do you want to add to the warehouse?",
+      "imageAlt": "Scanned item",
+      "unknownItem": "Unknown item",
+      "expiry": "Expiry in about {days, plural, one {# day} other {# days}}",
+      "label": "Item quantity"
+    },
+    "locations": {
+      "title": "Placement locations",
+      "subtitle": "Place items in the following locations:",
+      "confirm": "Items placed"
+    },
+    "success": {
+      "title": "Added successfully",
+      "subtitle": "Items have been added to the warehouse",
+      "action": "Scan another"
+    },
+    "location": {
+      "rack": "Rack",
+      "row": "Row",
+      "col": "Col."
+    }
+  },
+  "sidebar": {
+    "items": {
+      "dashboard": "Dashboard",
+      "assortment": "Assortment"
+    }
+  },
+  "common": {
+    "actions": {
+      "clear": "Clear",
+      "close": "Close"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "status": {
+      "loading": "Loading"
+    }
+  },
+  "breadcrumbs": {
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "racks": "Racks",
+    "warehouse": "Warehouse",
+    "item": "Item"
+  }
+}

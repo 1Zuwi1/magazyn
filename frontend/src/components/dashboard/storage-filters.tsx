@@ -1,5 +1,8 @@
+"use client"
+
 import { Filter } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
@@ -28,6 +31,7 @@ export function WarehouseFilters({
   filters,
   onFilterChange,
 }: WarehouseFiltersProps) {
+  const t = useTranslations("dashboard.filters")
   return (
     <Popover>
       <PopoverTrigger
@@ -41,12 +45,12 @@ export function WarehouseFilters({
       <PopoverContent className="w-80">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <h4 className="font-medium leading-none">Filtry zaawansowane</h4>
+            <h4 className="font-medium leading-none">{t("advancedTitle")}</h4>
           </div>
 
           <div className="space-y-2">
             <div className="flex justify-between">
-              <Label>Min. zapełnienie</Label>
+              <Label>{t("minOccupancy")}</Label>
               <span className="text-muted-foreground text-sm">
                 {filters.minOccupancy}%
               </span>
@@ -67,7 +71,7 @@ export function WarehouseFilters({
 
           <div className="space-y-2">
             <div className="flex justify-between">
-              <Label>Zakres temperatur</Label>
+              <Label>{t("temperatureRange")}</Label>
               <span className="text-muted-foreground text-sm">
                 {filters.tempRange[0]}°C - {filters.tempRange[1]}°C
               </span>
@@ -89,7 +93,7 @@ export function WarehouseFilters({
           </div>
 
           <div className="flex items-center justify-between">
-            <Label htmlFor="showEmpty">Pokaż puste magazyny</Label>
+            <Label htmlFor="showEmpty">{t("showEmpty")}</Label>
             <Switch
               checked={filters.showEmpty}
               id="showEmpty"
@@ -107,7 +111,7 @@ export function WarehouseFilters({
             size="sm"
             variant="ghost"
           >
-            Resetuj filtry
+            {t("reset")}
           </Button>
         </div>
       </PopoverContent>

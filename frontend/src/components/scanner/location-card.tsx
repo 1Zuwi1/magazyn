@@ -1,3 +1,6 @@
+"use client"
+
+import { useTranslations } from "next-intl"
 import type { Location } from "./scanner-types"
 
 interface LocationCardProps {
@@ -6,6 +9,7 @@ interface LocationCardProps {
 }
 
 export function LocationCard({ location, index }: LocationCardProps) {
+  const t = useTranslations("scanner")
   return (
     <div className="flex items-center justify-between rounded-lg border p-4">
       <div className="flex items-center gap-4">
@@ -13,17 +17,23 @@ export function LocationCard({ location, index }: LocationCardProps) {
         <div className="flex items-center gap-3">
           <div className="text-center">
             <div className="font-bold text-lg">{location.rack}</div>
-            <div className="text-muted-foreground text-xs">Regał</div>
+            <div className="text-muted-foreground text-xs">
+              {t("location.rack")}
+            </div>
           </div>
           <div className="h-6 w-px bg-border" />
           <div className="text-center">
             <div className="font-bold text-lg">{location.row}</div>
-            <div className="text-muted-foreground text-xs">Rząd</div>
+            <div className="text-muted-foreground text-xs">
+              {t("location.row")}
+            </div>
           </div>
           <div className="h-6 w-px bg-border" />
           <div className="text-center">
             <div className="font-bold text-lg">{location.col}</div>
-            <div className="text-muted-foreground text-xs">Kol.</div>
+            <div className="text-muted-foreground text-xs">
+              {t("location.col")}
+            </div>
           </div>
         </div>
       </div>

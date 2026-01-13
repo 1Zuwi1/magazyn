@@ -10,9 +10,9 @@ export function getSlotCoordinate(index: number, cols: number): string {
   return `${rowLabel}-${colLabel}`
 }
 
-export function formatDate(date: Date): string {
+export function formatDate(date: Date, locale: string): string {
   // TODO: Use date-fns here
-  return new Intl.DateTimeFormat("pl-PL", {
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -29,32 +29,6 @@ export function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }
 
-export function pluralize(
-  count: number,
-  singular: string,
-  few: string,
-  many: string
-): string {
-  if (count === 1) {
-    return singular
-  }
-  const lastDigit = count % 10
-  const lastTwoDigits = count % 100
-  if (
-    lastDigit >= 2 &&
-    lastDigit <= 4 &&
-    !(lastTwoDigits >= 12 && lastTwoDigits <= 14)
-  ) {
-    return few
-  }
-
-  return many
-}
-
-export const handleApiError = (err: unknown, fallback?: string) => {
-  toast.error(
-    err instanceof FetchError
-      ? err.message
-      : (fallback ?? "Wystąpił nieoczekiwany błąd.")
-  )
+export const handleApiError = (err: unknown, fallback: string) => {
+  toast.error(err instanceof FetchError ? err.message : fallback)
 }

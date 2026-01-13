@@ -1,3 +1,6 @@
+"use client"
+
+import { useTranslations } from "next-intl"
 import { Button } from "../ui/button"
 import { CancelButton } from "./cancel-button"
 import { LocationCard } from "./location-card"
@@ -17,6 +20,7 @@ export function ScannerLocationsStep({
   onBack,
   onConfirm,
 }: ScannerLocationsStepProps) {
+  const t = useTranslations("scanner")
   return (
     <ScannerBody>
       <div className="relative flex h-full flex-col">
@@ -24,11 +28,9 @@ export function ScannerLocationsStep({
         <div className="flex h-full flex-col">
           <div className="mb-6">
             <h2 className="mb-2 font-semibold text-xl">
-              Lokalizacje do umieszczenia
+              {t("locations.title")}
             </h2>
-            <p className="text-muted-foreground">
-              Umieść przedmioty w następujących miejscach:
-            </p>
+            <p className="text-muted-foreground">{t("locations.subtitle")}</p>
           </div>
           <div className="flex-1 space-y-3 overflow-y-auto">
             {locations.map((location, index) => (
@@ -45,7 +47,7 @@ export function ScannerLocationsStep({
             onClick={onConfirm}
             type="button"
           >
-            Przedmioty umieszczone
+            {t("locations.confirm")}
           </Button>
         </div>
       </div>

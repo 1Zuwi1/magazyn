@@ -1,4 +1,7 @@
+"use client"
+
 import { Edges, Html, useCursor } from "@react-three/drei"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { useWarehouseStore } from "../store"
 import type { Rack3D } from "../types"
@@ -44,6 +47,7 @@ function RackInstance({
   aisleIndex,
   onFocus,
 }: RackInstanceProps) {
+  const t = useTranslations("threeD.racks")
   const [hovered, setHovered] = useState(false)
   const occupiedCount = rack.items.filter((item) => item !== null).length
   const occupancy = (occupiedCount / (rack.grid.rows * rack.grid.cols)) * 100
@@ -146,12 +150,18 @@ function RackInstance({
           <div className="rounded border border-white/10 bg-slate-950/80 px-2 py-1 text-slate-100 text-xs">
             <div className="font-bold">{rack.code}</div>
             <div>
-              {Math.round(occupancy)}% zajęte • {rack.grid.cols}×
-              {rack.grid.rows}
+              {t("tooltip.occupied", {
+                percent: String(Math.round(occupancy)),
+                cols: String(rack.grid.cols),
+                rows: String(rack.grid.rows),
+              })}
             </div>
             <div className="text-slate-400">
-              Maks: {rack.maxElementSize.width}×{rack.maxElementSize.height}×
-              {rack.maxElementSize.depth} mm
+              {t("tooltip.maxSize", {
+                width: String(rack.maxElementSize.width),
+                height: String(rack.maxElementSize.height),
+                depth: String(rack.maxElementSize.depth),
+              })}
             </div>
           </div>
         </Html>

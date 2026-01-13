@@ -1,17 +1,71 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { NextIntlClientProvider } from "next-intl"
+import type { ReactElement } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import messages from "../../../../messages/en.json"
 import AuthForm from "./auth-form"
 
 // Constants for regex patterns
-const USERNAME_REGEX = /nazwa użytkownika/i
-const PASSWORD_REGEX = /^hasło$/i
-const EXACT_PASSWORD_REGEX = /^hasło$/i
-const CONFIRM_PASSWORD_REGEX = /potwierdź hasło/i
-const EMAIL_REGEX = /email/i
-const FULLNAME_REGEX = /pełne imię i nazwisko/i
-const LOGIN_BUTTON_REGEX = /zaloguj się/i
-const REGISTER_BUTTON_REGEX = /zarejestruj się/i
-const MISMATCH_ERROR_REGEX = /hasła nie są zgodne/i
+const getMessage = (key: string) => {
+  const value = key
+    .split(".")
+    .reduce<unknown>(
+      (acc, part) => (acc as Record<string, unknown>)?.[part],
+      messages
+    )
+
+  if (typeof value !== "string") {
+    throw new Error(`Missing message for key: ${key}`)
+  }
+
+  return value
+}
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+const USERNAME_REGEX = new RegExp(
+  escapeRegExp(getMessage("auth.fields.username")),
+  "i"
+)
+const PASSWORD_REGEX = new RegExp(
+  `^${escapeRegExp(getMessage("auth.fields.password"))}$`,
+  "i"
+)
+const EXACT_PASSWORD_REGEX = new RegExp(
+  `^${escapeRegExp(getMessage("auth.fields.password"))}$`,
+  "i"
+)
+const CONFIRM_PASSWORD_REGEX = new RegExp(
+  escapeRegExp(getMessage("auth.fields.confirmPassword")),
+  "i"
+)
+const EMAIL_REGEX = new RegExp(
+  escapeRegExp(getMessage("auth.fields.email")),
+  "i"
+)
+const FULLNAME_REGEX = new RegExp(
+  escapeRegExp(getMessage("auth.fields.fullName")),
+  "i"
+)
+const LOGIN_BUTTON_REGEX = new RegExp(
+  escapeRegExp(getMessage("auth.actions.login")),
+  "i"
+)
+const REGISTER_BUTTON_REGEX = new RegExp(
+  escapeRegExp(getMessage("auth.actions.register")),
+  "i"
+)
+const MISMATCH_ERROR_REGEX = new RegExp(
+  escapeRegExp(getMessage("auth.validation.password.mismatch")),
+  "i"
+)
+
+const renderWithIntl = (ui: ReactElement) =>
+  render(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      {ui}
+    </NextIntlClientProvider>
+  )
 
 // Mock next/navigation
 const mockPush = vi.fn()
@@ -61,7 +115,7 @@ describe("AuthForm", () => {
 
   describe("Login Mode", () => {
     it("renders login fields correctly", () => {
-      render(<AuthForm mode="login" />)
+      renderWithIntl(<AuthForm mode="login" />)
 
       expect(screen.getByLabelText(USERNAME_REGEX)).toBeInTheDocument()
       expect(screen.getByLabelText(PASSWORD_REGEX)).toBeInTheDocument()
@@ -74,7 +128,7 @@ describe("AuthForm", () => {
 
     it("handles successful login", async () => {
       mockApiFetch.mockResolvedValue({ requiresTwoFactor: false })
-      render(<AuthForm mode="login" />)
+      renderWithIntl(<AuthForm mode="login" />)
 
       fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
         target: { value: "testuser" },
@@ -103,7 +157,7 @@ describe("AuthForm", () => {
 
     it("handles successful login with 2FA requirement", async () => {
       mockApiFetch.mockResolvedValue({ requiresTwoFactor: true })
-      render(<AuthForm mode="login" />)
+      renderWithIntl(<AuthForm mode="login" />)
 
       fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
         target: { value: "testuser" },
@@ -122,7 +176,7 @@ describe("AuthForm", () => {
     it("handles login error", async () => {
       const error = new Error("Invalid credentials")
       mockApiFetch.mockRejectedValue(error)
-      render(<AuthForm mode="login" />)
+      renderWithIntl(<AuthForm mode="login" />)
 
       fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
         target: { value: "testuser" },
@@ -136,13 +190,13 @@ describe("AuthForm", () => {
       await waitFor(() => {
         expect(mockHandleApiError).toHaveBeenCalledWith(
           error,
-          expect.stringContaining("Wystąpił błąd")
+          getMessage("auth.errors.loginFailed")
         )
       })
     })
 
     it("validates empty fields", async () => {
-      render(<AuthForm mode="login" />)
+      renderWithIntl(<AuthForm mode="login" />)
 
       fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_REGEX }))
 
@@ -157,7 +211,7 @@ describe("AuthForm", () => {
 
   describe("Register Mode", () => {
     it("renders register fields correctly", () => {
-      render(<AuthForm mode="register" />)
+      renderWithIntl(<AuthForm mode="register" />)
 
       expect(screen.getByLabelText(USERNAME_REGEX)).toBeInTheDocument()
       expect(screen.getByLabelText(PASSWORD_REGEX)).toBeInTheDocument()
@@ -170,7 +224,7 @@ describe("AuthForm", () => {
 
     it("handles successful registration", async () => {
       mockApiFetch.mockResolvedValue({})
-      render(<AuthForm mode="register" />)
+      renderWithIntl(<AuthForm mode="register" />)
 
       fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
         target: { value: "test@example.com" },
@@ -216,7 +270,7 @@ describe("AuthForm", () => {
     })
 
     it("validates password mismatch", async () => {
-      render(<AuthForm mode="register" />)
+      renderWithIntl(<AuthForm mode="register" />)
 
       fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
         target: { value: "test@example.com" },
@@ -249,7 +303,7 @@ describe("AuthForm", () => {
     it("handles registration error", async () => {
       const error = new Error("Registration failed")
       mockApiFetch.mockRejectedValue(error)
-      render(<AuthForm mode="register" />)
+      renderWithIntl(<AuthForm mode="register" />)
 
       fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
         target: { value: "test@example.com" },
@@ -274,7 +328,7 @@ describe("AuthForm", () => {
       await waitFor(() => {
         expect(mockHandleApiError).toHaveBeenCalledWith(
           error,
-          expect.stringContaining("Wystąpił błąd")
+          getMessage("auth.errors.registerFailed")
         )
       })
     })

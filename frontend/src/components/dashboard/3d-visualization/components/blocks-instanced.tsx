@@ -1,4 +1,7 @@
+"use client"
+
 import { Html, Instance, Instances, useCursor } from "@react-three/drei"
+import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 import {
   BLOCK_EMPTY_VISUAL,
@@ -8,7 +11,6 @@ import {
   type BlockStatusKey,
   HIGHLIGHT_OPACITY,
   HOVER_COLOR,
-  STATUS_LABELS,
   TOOLTIP_OFFSET,
 } from "../constants"
 import { useWarehouseStore } from "../store"
@@ -186,6 +188,9 @@ export function BlocksInstanced({
   hoverable = true,
   clickable = true,
 }: BlocksInstancedProps) {
+  const t = useTranslations("threeD.blocks")
+  const translate = (key: string, values?: Record<string, string | number>) =>
+    t(key as never, values as never)
   const { setFocusWindow } = useWarehouseStore()
   const [hoveredBlockKey, setHoveredBlockKey] = useState<string | null>(null)
   const resolvedMetrics = metrics ?? getRackMetrics(rack)
@@ -375,22 +380,30 @@ export function BlocksInstanced({
         >
           <div className="pointer-events-none min-w-55 rounded border border-white/10 bg-slate-950/80 px-3 py-2 text-center text-slate-100 text-xs">
             <div className="font-bold">
-              Strefa {hoveredBlock.startRow + 1}–
-              {hoveredBlock.startRow + hoveredBlock.rows},{" "}
-              {hoveredBlock.startCol + 1}–
-              {hoveredBlock.startCol + hoveredBlock.cols}
+              {translate("tooltip.zone", {
+                startRow: hoveredBlock.startRow + 1,
+                endRow: hoveredBlock.startRow + hoveredBlock.rows,
+                startCol: hoveredBlock.startCol + 1,
+                endCol: hoveredBlock.startCol + hoveredBlock.cols,
+              })}
             </div>
             <div>
-              Zajęte: {hoveredBlock.occupiedCount}/{hoveredBlock.slotCount} (
-              {hoveredBlock.slotCount > 0
-                ? Math.round(
-                    (hoveredBlock.occupiedCount / hoveredBlock.slotCount) * 100
-                  )
-                : 0}
-              %)
+              {translate("tooltip.occupied", {
+                occupied: hoveredBlock.occupiedCount,
+                total: hoveredBlock.slotCount,
+                percent:
+                  hoveredBlock.slotCount > 0
+                    ? Math.round(
+                        (hoveredBlock.occupiedCount / hoveredBlock.slotCount) *
+                          100
+                      )
+                    : 0,
+              })}
             </div>
             <div className="text-slate-400">
-              Status: {STATUS_LABELS[hoveredBlock.status]}
+              {translate("tooltip.status", {
+                status: translate(`status.${hoveredBlock.status}`),
+              })}
             </div>
           </div>
         </Html>

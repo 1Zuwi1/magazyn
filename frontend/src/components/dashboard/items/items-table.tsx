@@ -11,7 +11,8 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
-import { useState } from "react"
+import { useTranslations } from "next-intl"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -22,8 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { pluralize } from "../utils/helpers"
-import { itemsColumns } from "./items-columns"
+import { createItemsColumns } from "./items-columns"
 import type { ItemStats } from "./types"
 
 interface ItemsTableProps {
@@ -46,13 +46,20 @@ const globalFilterFn: FilterFn<ItemStats> = (row, _columnId, filterValue) => {
 }
 
 export function ItemsTable({ items }: ItemsTableProps) {
+  const t = useTranslations()
+  const translate = useMemo(
+    () => (key: string, values?: Record<string, string | number>) =>
+      t(key as never, values as never),
+    [t]
+  )
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
+  const columns = useMemo(() => createItemsColumns(translate), [translate])
 
   const table = useReactTable({
     data: items,
-    columns: itemsColumns,
+    columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -72,20 +79,16 @@ export function ItemsTable({ items }: ItemsTableProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <Input
-          aria-label="Szukaj przedmiotów"
+          aria-label={t("itemsTable.search.ariaLabel")}
           className="max-w-sm"
           onChange={(event) => setGlobalFilter(event.target.value)}
-          placeholder="Szukaj po nazwie lub kategorii..."
+          placeholder={t("itemsTable.search.placeholder")}
           value={globalFilter ?? ""}
         />
         <div className="ml-auto text-muted-foreground text-sm">
-          {table.getFilteredRowModel().rows.length}{" "}
-          {pluralize(
-            table.getFilteredRowModel().rows.length,
-            "przedmiot",
-            "przedmioty",
-            "przedmiotów"
-          )}
+          {t("itemsTable.count", {
+            count: table.getFilteredRowModel().rows.length,
+          })}
         </div>
       </div>
 
@@ -128,9 +131,9 @@ export function ItemsTable({ items }: ItemsTableProps) {
               <TableRow>
                 <TableCell
                   className="h-24 text-center"
-                  colSpan={itemsColumns.length}
+                  colSpan={columns.length}
                 >
-                  Brak wyników.
+                  {t("itemsTable.empty")}
                 </TableCell>
               </TableRow>
             )}
@@ -145,7 +148,7 @@ export function ItemsTable({ items }: ItemsTableProps) {
           size="sm"
           variant="outline"
         >
-          Poprzednia
+          {t("common.pagination.previous")}
         </Button>
         <Button
           disabled={!table.getCanNextPage()}
@@ -153,7 +156,7 @@ export function ItemsTable({ items }: ItemsTableProps) {
           size="sm"
           variant="outline"
         >
-          Następna
+          {t("common.pagination.next")}
         </Button>
       </div>
     </div>

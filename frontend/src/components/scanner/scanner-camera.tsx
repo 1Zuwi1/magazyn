@@ -9,11 +9,12 @@ import {
   NotFoundException,
   type Result,
 } from "@zxing/library"
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "../ui/button"
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
-import { TAB_TRIGGERS } from "./scanner"
+import type { ScannerMode, ScannerTab } from "./scanner-types"
 
 const CODE_FORMATS = [
   BarcodeFormat.QR_CODE,
@@ -40,11 +41,12 @@ interface ScannerCameraProps {
   warehouseName?: string
   isMobile: boolean
   isOpen: boolean
-  mode: (typeof TAB_TRIGGERS)[number]["action"]
-  onModeChange: (value: (typeof TAB_TRIGGERS)[number]["action"]) => void
+  mode: ScannerMode
+  onModeChange: (value: ScannerMode) => void
   onScan: (text: string) => void
   onRequestClose: () => void
   isLoading?: boolean
+  tabTriggers: ScannerTab[]
 }
 
 export function ScannerCamera({
@@ -59,7 +61,9 @@ export function ScannerCamera({
   onRequestClose,
   onScan,
   isLoading,
+  tabTriggers,
 }: ScannerCameraProps) {
+  const t = useTranslations("scanner")
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const controlsRef = useRef<IScannerControls | null>(null)
   const readerRef = useRef<BrowserMultiFormatReader | null>(null)
@@ -75,10 +79,10 @@ export function ScannerCamera({
   const lastAtRef = useRef<number>(0)
 
   const getTranslation = useCallback(
-    (mode: (typeof TAB_TRIGGERS)[number]["action"]) => {
-      return TAB_TRIGGERS.findIndex((t) => t.action === mode) * 100
+    (nextMode: ScannerMode) => {
+      return tabTriggers.findIndex((t) => t.action === nextMode) * 100
     },
-    []
+    [tabTriggers]
   )
 
   const stopAfterScan = useCallback(() => {
@@ -125,12 +129,11 @@ export function ScannerCamera({
       }
 
       if (err && !(err instanceof NotFoundException)) {
-        const msg =
-          err instanceof Error ? err.message : "Unexpected scanner error."
+        const msg = err instanceof Error ? err.message : t("errors.unexpected")
         setErrorMsg(msg)
       }
     },
-    [handleDecodedText]
+    [handleDecodedText, t]
   )
 
   const stop = useCallback(() => {
@@ -173,13 +176,12 @@ export function ScannerCamera({
 
         controlsRef.current = controls
       } catch (e) {
-        const msg =
-          e instanceof Error ? e.message : "Could not start the camera scanner."
+        const msg = e instanceof Error ? e.message : t("errors.startFailed")
         setErrorMsg(msg)
         stop()
       }
     },
-    [constraints, handleScanResult, stop]
+    [constraints, handleScanResult, stop, t]
   )
 
   useEffect(() => {
@@ -208,17 +210,16 @@ export function ScannerCamera({
         variant="ghost"
       >
         <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
-        <span className="sr-only">Close</span>
+        <span className="sr-only">{t("actions.close")}</span>
       </Button>
 
       {errorMsg ? (
         <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2">
           <p className="m-4 text-center text-red-600">
-            Wystąpił błąd. Upewnij się że Twoja kamera jest podłączona i
-            dostępna oraz że udzieliłeś/aś pozwolenia na jej użycie.
+            {t("errors.cameraIntro")}
             <br />
             <br />
-            Szczegóły: {errorMsg}
+            {t("errors.details", { error: errorMsg })}
           </p>
 
           <Button
@@ -231,7 +232,7 @@ export function ScannerCamera({
             }}
             type="button"
           >
-            Spróbuj ponownie
+            {t("actions.retry")}
           </Button>
         </div>
       ) : (
@@ -245,7 +246,9 @@ export function ScannerCamera({
             )}
           >
             <p className="h-full w-full text-center">
-              Skanujesz w magazynie: {warehouseName}
+              {t("camera.scanning", {
+                warehouse: warehouseName ?? t("camera.unknownWarehouse"),
+              })}
             </p>
             <Tabs
               className="h-full w-full"
@@ -257,7 +260,7 @@ export function ScannerCamera({
                   "relative isolate flex w-full gap-2 rounded-full bg-black/50 p-1 py-4 *:rounded-full *:px-4 *:py-3"
                 }
               >
-                {TAB_TRIGGERS.map(({ text, action }) => (
+                {tabTriggers.map(({ text, action }) => (
                   <TabsTrigger
                     className={cn(
                       "z-10 w-0 flex-1 bg-transparent! text-white!",
@@ -277,7 +280,7 @@ export function ScannerCamera({
                   )}
                   role="presentation"
                   style={{
-                    width: `${100 / TAB_TRIGGERS.length}%`,
+                    width: `${100 / tabTriggers.length}%`,
                     transform: `translateX(${getTranslation(mode)}%)`,
                   }}
                 />

@@ -3,6 +3,7 @@
 import { Analytics01Icon, GroupItemsIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import type * as React from "react"
 // import { NavDocuments } from "@/components/nav-documents"
 // import { NavMain } from "@/components/nav-main"
@@ -39,20 +40,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   )
 }
 
-const items = [
-  {
-    title: "Panel główny",
-    href: "/dashboard",
-    icon: Analytics01Icon,
-  },
-  {
-    title: "Asortyment",
-    href: "/dashboard/items",
-    icon: GroupItemsIcon,
-  },
-]
-
 function NavMain() {
+  const t = useTranslations("sidebar")
+  const items = [
+    {
+      title: t("items.dashboard"),
+      href: "/dashboard",
+      icon: Analytics01Icon,
+    },
+    {
+      title: t("items.assortment"),
+      href: "/dashboard/items",
+      icon: GroupItemsIcon,
+    },
+  ]
+
   return (
     <SidebarMenu>
       {items.map((item) => (

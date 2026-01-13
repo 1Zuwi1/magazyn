@@ -1,6 +1,9 @@
+"use client"
+
 import { Package } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -12,7 +15,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { Warehouse } from "./types"
-import { pluralize } from "./utils/helpers"
 
 const FULL_WAREHOUSE_THRESHOLD = 90
 
@@ -25,11 +27,12 @@ const getOccupancyPercentage = (used: number, capacity: number): number => {
 }
 
 export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
+  const t = useTranslations("dashboard.warehouseGrid")
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {warehouses.length === 0 && (
         <p className="col-span-full text-center text-muted-foreground">
-          Brak magazynów do wyświetlenia.
+          {t("empty")}
         </p>
       )}
       {warehouses.map((warehouse) => {
@@ -56,7 +59,9 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                       : "secondary"
                   }
                 >
-                  {Math.round(occupancyPercentage)}% Pełny
+                  {t("badge", {
+                    percent: String(Math.round(occupancyPercentage)),
+                  })}
                 </Badge>
               </div>
             </CardHeader>
@@ -64,15 +69,14 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Zapełnienie</span>
+                    <span className="text-muted-foreground">
+                      {t("occupancy")}
+                    </span>
                     <span className="font-medium">
-                      {warehouse.used} / {warehouse.capacity}{" "}
-                      {pluralize(
-                        warehouse.capacity,
-                        "miejsce",
-                        "miejsca",
-                        "miejsc"
-                      )}
+                      {t("capacity", {
+                        used: warehouse.used,
+                        total: warehouse.capacity,
+                      })}
                     </span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-secondary">
@@ -86,13 +90,7 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center text-muted-foreground">
                     <HugeiconsIcon className="mr-2 h-4 w-4" icon={Package} />
-                    {warehouse.racks.length}{" "}
-                    {pluralize(
-                      warehouse.racks.length,
-                      "Regał",
-                      "Regały",
-                      "Regałów"
-                    )}
+                    {t("racks", { count: warehouse.racks.length })}
                   </div>
                 </div>
               </div>
@@ -104,7 +102,7 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                 })}
                 href={`/dashboard/warehouse/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}`}
               >
-                Zobacz Regały
+                {t("actions.viewRacks")}
               </Link>
               <Link
                 className={buttonVariants({
@@ -112,7 +110,7 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                 })}
                 href={`/dashboard/warehouse/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}/3d-visualization`}
               >
-                Zobacz Wizualizację 3D
+                {t("actions.view3d")}
               </Link>
             </CardFooter>
           </Card>

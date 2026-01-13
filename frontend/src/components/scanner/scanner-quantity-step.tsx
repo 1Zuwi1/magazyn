@@ -1,4 +1,7 @@
+"use client"
+
 import Image from "next/image"
+import { useTranslations } from "next-intl"
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
@@ -27,22 +30,19 @@ export function ScannerQuantityStep({
   onQuantityChange,
   onSubmit,
 }: ScannerQuantityStepProps) {
+  const t = useTranslations("scanner")
   return (
     <ScannerBody>
       <div className="relative flex h-full flex-col">
         <CancelButton onClick={onCancel} />
         <div className="mb-6 flex-1">
-          <h2 className="mb-2 font-semibold text-xl">
-            Podaj ilość przedmiotów
-          </h2>
-          <p className="text-muted-foreground">
-            Ile sztuk chcesz dodać do magazynu?
-          </p>
+          <h2 className="mb-2 font-semibold text-xl">{t("quantity.title")}</h2>
+          <p className="text-muted-foreground">{t("quantity.subtitle")}</p>
         </div>
         <div className="h-full">
           {scannedItem?.imageUrl && (
             <Image
-              alt={scannedItem.name || "Skanowany przedmiot"}
+              alt={scannedItem.name || t("quantity.imageAlt")}
               className="mb-4 max-h-40 w-auto rounded-md object-cover"
               height={160}
               src={scannedItem.imageUrl}
@@ -51,11 +51,11 @@ export function ScannerQuantityStep({
           )}
           <div className="mb-4">
             <h3 className="font-medium text-lg">
-              {scannedItem?.name || "Nieznany przedmiot"}
+              {scannedItem?.name || t("quantity.unknownItem")}
             </h3>
             {scannedItem?.expiresIn !== undefined && (
               <p className="text-muted-foreground text-sm">
-                Data przeterminowania za około {scannedItem.expiresIn} dni
+                {t("quantity.expiry", { days: scannedItem.expiresIn })}
               </p>
             )}
           </div>
@@ -66,7 +66,7 @@ export function ScannerQuantityStep({
               className="mb-2 block font-medium text-sm"
               htmlFor="quantity"
             >
-              Ilość przedmiotów
+              {t("quantity.label")}
             </label>
             <div className="flex items-center gap-2">
               <Button
@@ -118,7 +118,7 @@ export function ScannerQuantityStep({
             onClick={onSubmit}
             type="button"
           >
-            Potwierdź
+            {t("actions.confirm")}
           </Button>
         </div>
       </div>

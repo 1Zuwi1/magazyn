@@ -60,14 +60,6 @@ export const OVERVIEW_CAMERA_HEIGHT = 4
 export const FOCUS_CAMERA_HEIGHT = 3
 export const FOCUS_CAMERA_DISTANCE = 6
 
-export const STATUS_LABELS: Record<BlockStatusKey, string> = {
-  normal: "Normalny",
-  dangerous: "Niebezpieczny",
-  expired: "Przeterminowany",
-  "expired-dangerous": "Przeterminowany i niebezpieczny",
-  empty: "Pusta strefa",
-}
-
 export const GLOW_SETTINGS: Record<
   ItemStatus,
   { glowOpacity: number; emissiveIntensity: number }

@@ -19,23 +19,36 @@ import {
 import { cn } from "@/lib/utils"
 import type { ItemStats } from "./types"
 
-function getDaysUntilExpiryBadge(days: number | undefined) {
+type Translator = (
+  key: string,
+  values?: Record<string, string | number>
+) => string
+
+const getDaysUntilExpiryBadge = (t: Translator, days: number | undefined) => {
   if (days === undefined) {
-    return <Badge variant="outline">Brak danych</Badge>
+    return <Badge variant="outline">{t("itemsTable.expiry.noData")}</Badge>
   }
   if (days < 0) {
-    return <Badge variant="destructive">Przeterminowane!</Badge>
+    return <Badge variant="destructive">{t("itemsTable.expiry.expired")}</Badge>
   }
   if (days < 14) {
-    return <Badge variant="warning">za {days} dni</Badge>
+    return (
+      <Badge variant="warning">
+        {t("itemsTable.expiry.inDays", { count: days })}
+      </Badge>
+    )
   }
-  return <Badge variant="outline">{days} dni</Badge>
+  return (
+    <Badge variant="outline">
+      {t("itemsTable.expiry.days", { count: days })}
+    </Badge>
+  )
 }
 
-export const itemsColumns: ColumnDef<ItemStats>[] = [
+export const createItemsColumns = (t: Translator): ColumnDef<ItemStats>[] => [
   {
     accessorKey: "definition.name",
-    header: "Nazwa",
+    header: t("itemsTable.columns.name"),
     cell: ({ row }) => {
       const definition = row.original.definition
       return (
@@ -63,31 +76,35 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
   },
   {
     accessorKey: "definition.category",
-    header: "Kategoria",
+    header: t("itemsTable.columns.category"),
     cell: ({ row }) => (
       <Badge variant="secondary">{row.original.definition.category}</Badge>
     ),
   },
   {
     accessorKey: "totalQuantity",
-    header: "Ilość",
+    header: t("itemsTable.columns.quantity"),
     cell: ({ row }) => (
-      <div className="font-medium">{row.original.totalQuantity} szt.</div>
+      <div className="font-medium">
+        {t("itemsTable.columns.quantityValue", {
+          count: String(row.original.totalQuantity),
+        })}
+      </div>
     ),
   },
   {
     accessorKey: "daysUntilExpiry",
-    header: "Okres przydatności",
-    cell: ({ row }) => getDaysUntilExpiryBadge(row.original.daysUntilExpiry),
+    header: t("itemsTable.columns.expiry"),
+    cell: ({ row }) => getDaysUntilExpiryBadge(t, row.original.daysUntilExpiry),
   },
   {
     accessorKey: "definition.isDangerous",
-    header: "Niebezpieczeństwo",
+    header: t("itemsTable.columns.danger"),
     cell: ({ row }) =>
       row.original.definition.isDangerous ? (
-        <Badge variant="destructive">Niebezpieczny</Badge>
+        <Badge variant="destructive">{t("itemsTable.badges.dangerous")}</Badge>
       ) : (
-        <Badge variant="outline">Bezpieczny</Badge>
+        <Badge variant="outline">{t("itemsTable.badges.safe")}</Badge>
       ),
   },
   {
@@ -95,7 +112,7 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
     cell: ({ row }) => {
       return (
         <DropdownMenu>
-          <DropdownMenuTrigger aria-label="Otwórz menu">
+          <DropdownMenuTrigger aria-label={t("itemsTable.actions.open")}>
             <HugeiconsIcon
               className={cn(
                 buttonVariants({ variant: "ghost", size: "icon-xs" })
@@ -110,7 +127,7 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
               }}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
-              Edytuj
+              {t("itemsTable.actions.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
@@ -119,7 +136,7 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
               }}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
-              Usuń
+              {t("itemsTable.actions.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

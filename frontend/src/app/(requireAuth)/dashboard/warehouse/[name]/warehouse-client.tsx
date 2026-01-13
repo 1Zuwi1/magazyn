@@ -3,6 +3,7 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { RackGridView } from "@/components/dashboard/rack-visualization/rack-grid-view"
 import { RackParametersCard } from "@/components/dashboard/rack-visualization/rack-parameters-card"
@@ -31,6 +32,7 @@ export default function WarehouseClient({
   warehouseId: string
   warehouseName: string
 }) {
+  const t = useTranslations("warehouse")
   const [currentRackIndex, setCurrentRackIndex] = useState(0)
 
   const currentRack = racks[currentRackIndex]
@@ -64,7 +66,7 @@ export default function WarehouseClient({
               "size-8 sm:size-10"
             )}
             href="/dashboard"
-            title="Powrót do Dashboardu"
+            title={t("actions.backToDashboard")}
           >
             <HugeiconsIcon icon={ArrowLeft02Icon} />
           </Link>
@@ -73,7 +75,7 @@ export default function WarehouseClient({
               {warehouseName}
             </h2>
             <p className="text-muted-foreground text-xs sm:text-sm">
-              ID: {warehouseId} • {currentRack.name}
+              {t("subtitle", { id: warehouseId, rack: currentRack.name })}
             </p>
           </div>
         </div>

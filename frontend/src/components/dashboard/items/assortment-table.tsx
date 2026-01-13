@@ -10,6 +10,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
+import { useLocale, useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,19 +29,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { getDaysUntilExpiry, pluralize } from "../utils/helpers"
-import { assortmentColumns } from "./assortment-columns"
+import { getDaysUntilExpiry } from "../utils/helpers"
+import { createAssortmentColumns } from "./assortment-columns"
 import type { ItemInstance } from "./types"
 
 type ExpiryFilters = "14_DAYS" | "7_DAYS" | "3_DAYS" | "EXPIRED" | "ALL"
-
-const EXPIRY_FILTER_OPTIONS: { value: ExpiryFilters; label: string }[] = [
-  { value: "ALL", label: "Wszystkie" },
-  { value: "EXPIRED", label: "Przeterminowane" },
-  { value: "3_DAYS", label: "3 dni" },
-  { value: "7_DAYS", label: "7 dni" },
-  { value: "14_DAYS", label: "14 dni" },
-]
 
 function matchesExpiryFilter(
   item: ItemInstance,
@@ -71,10 +64,31 @@ interface AssortmentTableProps {
 }
 
 export function AssortmentTable({ items }: AssortmentTableProps) {
+  const t = useTranslations()
+  const locale = useLocale()
+  const translate = useMemo(
+    () => (key: string, values?: Record<string, string | number>) =>
+      t(key as never, values as never),
+    [t]
+  )
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
   const [expiryFilter, setExpiryFilter] = useState<ExpiryFilters>("ALL")
+  const expiryOptions = useMemo(
+    () => [
+      { value: "ALL", label: t("assortmentTable.filters.all") },
+      { value: "EXPIRED", label: t("assortmentTable.filters.expired") },
+      { value: "3_DAYS", label: t("assortmentTable.filters.threeDays") },
+      { value: "7_DAYS", label: t("assortmentTable.filters.sevenDays") },
+      { value: "14_DAYS", label: t("assortmentTable.filters.fourteenDays") },
+    ],
+    [t]
+  )
+  const columns = useMemo(
+    () => createAssortmentColumns({ t: translate, locale }),
+    [locale, translate]
+  )
 
   const filteredItems = useMemo(
     () => items.filter((item) => matchesExpiryFilter(item, expiryFilter)),
@@ -83,7 +97,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
 
   const table = useReactTable({
     data: filteredItems,
-    columns: assortmentColumns,
+    columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -119,10 +133,10 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <Input
-          aria-label="Filtruj przedmioty po nazwie lub kategorii"
+          aria-label={t("assortmentTable.search.ariaLabel")}
           className="max-w-sm"
           onChange={(event) => setGlobalFilter(event.target.value)}
-          placeholder="Szukaj po nazwie lub kategorii..."
+          placeholder={t("assortmentTable.search.placeholder")}
           value={globalFilter ?? ""}
         />
 
@@ -131,14 +145,14 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
           value={expiryFilter}
         >
           <SelectTrigger
-            aria-label="Filtruj według daty ważności"
+            aria-label={t("assortmentTable.filters.ariaLabel")}
             className="w-44"
           >
             <SelectValue
               render={
                 <span>
                   {
-                    EXPIRY_FILTER_OPTIONS.find(
+                    expiryOptions.find(
                       (option) => option.value === expiryFilter
                     )?.label
                   }
@@ -147,7 +161,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
             />
           </SelectTrigger>
           <SelectContent className="p-2">
-            {EXPIRY_FILTER_OPTIONS.map((option) => (
+            {expiryOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>
@@ -156,13 +170,9 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
         </Select>
 
         <div className="ml-auto text-muted-foreground text-sm">
-          {table.getFilteredRowModel().rows.length}{" "}
-          {pluralize(
-            table.getFilteredRowModel().rows.length,
-            "przedmiot",
-            "przedmioty",
-            "przedmiotów"
-          )}
+          {t("assortmentTable.count", {
+            count: table.getFilteredRowModel().rows.length,
+          })}
         </div>
       </div>
 
@@ -205,9 +215,9 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
               <TableRow>
                 <TableCell
                   className="h-24 text-center"
-                  colSpan={assortmentColumns.length}
+                  colSpan={columns.length}
                 >
-                  Brak wyników.
+                  {t("assortmentTable.empty")}
                 </TableCell>
               </TableRow>
             )}
@@ -222,7 +232,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
           size="sm"
           variant="outline"
         >
-          Poprzednia
+          {t("common.pagination.previous")}
         </Button>
         <Button
           disabled={!table.getCanNextPage()}
@@ -230,7 +240,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
           size="sm"
           variant="outline"
         >
-          Następna
+          {t("common.pagination.next")}
         </Button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useForm } from "@tanstack/react-form"
 import { REGEXP_ONLY_DIGITS } from "input-otp"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import Logo from "@/components/logo"
@@ -21,7 +22,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { apiFetch } from "@/lib/fetcher"
-import { Resend2FASchema, Verify2FASchema } from "@/lib/schemas"
+import { createAuthSchemas } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
 
 export type TwoFactorMethod = "authenticator" | "sms" | "email"
@@ -30,23 +31,40 @@ export type ResendType = Exclude<TwoFactorMethod, "authenticator">
 interface TwoFactorFormProps {
   linkedMethods: TwoFactorMethod[]
   resendMethods: ResendType[]
-  methodTitles: Record<TwoFactorMethod, string>
-  methodSwitchLabels: Record<TwoFactorMethod, string>
   otpLength: number
 }
 
 export default function TwoFactorForm({
   linkedMethods,
   resendMethods,
-  methodTitles,
-  methodSwitchLabels,
   otpLength,
 }: TwoFactorFormProps) {
+  const t = useTranslations()
+  const translate = useMemo(
+    () => (key: string, values?: Record<string, string | number>) =>
+      t(key as never, values as never),
+    [t]
+  )
   const defaultMethod = linkedMethods[0] ?? "email"
   const [method, setMethod] = useState<TwoFactorMethod>(defaultMethod)
   const [isResending, setIsResending] = useState(false)
   const autoSubmittedRef = useRef(false)
   const router = useRouter()
+  const { Resend2FASchema, Verify2FASchema } = useMemo(
+    () => createAuthSchemas(translate),
+    [translate]
+  )
+
+  const methodTitles: Record<TwoFactorMethod, string> = {
+    authenticator: t("twoFactor.methodTitles.authenticator"),
+    sms: t("twoFactor.methodTitles.sms"),
+    email: t("twoFactor.methodTitles.email"),
+  }
+  const methodSwitchLabels: Record<TwoFactorMethod, string> = {
+    authenticator: t("twoFactor.methodSwitch.authenticator"),
+    sms: t("twoFactor.methodSwitch.sms"),
+    email: t("twoFactor.methodSwitch.email"),
+  }
 
   const form = useForm({
     defaultValues: { code: "" },
@@ -59,12 +77,10 @@ export default function TwoFactorForm({
           })
         )
         if (err) {
-          toast.error(
-            "Nieprawidłowy kod lub błąd weryfikacji. Spróbuj ponownie."
-          )
+          toast.error(t("twoFactor.errors.invalidCode"))
           return
         }
-        toast.success("Zweryfikowano!")
+        toast.success(t("twoFactor.success.verified"))
         router.push("/dashboard")
       } finally {
         autoSubmittedRef.current = false
@@ -84,7 +100,7 @@ export default function TwoFactorForm({
 
   async function resendCode(m: ResendType) {
     if (!resendMethods.includes(m)) {
-      toast.error("Nieobsługiwana metoda ponownego wysyłania kodu.")
+      toast.error(t("twoFactor.errors.unsupportedResend"))
       return false
     }
     setIsResending(true)
@@ -97,13 +113,11 @@ export default function TwoFactorForm({
     setIsResending(false)
 
     if (err) {
-      toast.error("Nie udało się wysłać kodu ponownie. Spróbuj za chwilę.")
+      toast.error(t("twoFactor.errors.resendFailed"))
       return false
     }
 
-    toast.success(
-      m === "sms" ? "Wysłano nowy kod SMS." : "Wysłano nowy kod e-mailem."
-    )
+    toast.success(t(`twoFactor.success.resend.${m}`))
     return true
   }
 
@@ -127,7 +141,7 @@ export default function TwoFactorForm({
     >
       <FieldGroup>
         <Link className="underline" href="/">
-          Cofnij się do strony głównej
+          {t("twoFactor.actions.backToHome")}
         </Link>
         <div className="flex flex-col items-center gap-2 text-center">
           <Logo />
@@ -138,7 +152,7 @@ export default function TwoFactorForm({
           {(field) => (
             <Field disabled={form.state.isSubmitting || isResending}>
               <FieldLabel className="sr-only" htmlFor={field.name}>
-                Kod weryfikacyjny
+                {t("twoFactor.fields.code")}
               </FieldLabel>
 
               <InputOTP
@@ -186,7 +200,7 @@ export default function TwoFactorForm({
 
               {canResend ? (
                 <FieldDescription className="text-center">
-                  Nie dotarło?{" "}
+                  {t("twoFactor.resend.prompt")}{" "}
                   <Button
                     className="h-auto p-0 align-baseline"
                     isLoading={isResending}
@@ -194,7 +208,7 @@ export default function TwoFactorForm({
                     type="button"
                     variant="link"
                   >
-                    Wyślij ponownie
+                    {t("twoFactor.resend.action")}
                   </Button>
                 </FieldDescription>
               ) : null}
@@ -202,7 +216,7 @@ export default function TwoFactorForm({
               {alternatives.length ? (
                 <div className="mt-3">
                   <p className="text-center text-muted-foreground text-sm">
-                    Użyj innej metody
+                    {t("twoFactor.switch.prompt")}
                   </p>
                   <div className="mt-2 flex flex-col gap-1">
                     {alternatives.map((m) => (
@@ -231,7 +245,7 @@ export default function TwoFactorForm({
             isLoading={form.state.isSubmitting}
             type="submit"
           >
-            Zweryfikuj
+            {t("twoFactor.actions.verify")}
           </Button>
         </Field>
       </FieldGroup>

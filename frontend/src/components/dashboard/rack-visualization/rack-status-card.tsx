@@ -1,3 +1,6 @@
+"use client"
+
+import { useTranslations } from "next-intl"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface RackStatusCardProps {
@@ -13,38 +16,41 @@ export function RackStatusCard({
   totalCapacity,
   occupancyPercentage,
 }: RackStatusCardProps) {
+  const t = useTranslations("rackVisualization")
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-sm uppercase tracking-wide">
-          Status
+          {t("status.title")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-secondary-foreground/70 text-sm">
-            Zajęte miejsca
+            {t("status.occupied")}
           </span>
           <span className="font-semibold">{occupiedSlots}</span>
         </div>
 
         <div className="flex items-center justify-between">
           <span className="text-secondary-foreground/70 text-sm">
-            Wolne miejsca
+            {t("status.free")}
           </span>
           <span className="font-semibold">{freeSlots}</span>
         </div>
 
         <div className="flex items-center justify-between">
           <span className="text-secondary-foreground/70 text-sm">
-            Całkowita pojemność
+            {t("status.capacity")}
           </span>
           <span className="font-semibold">{totalCapacity}</span>
         </div>
 
         <div className="space-y-2 pt-2">
           <div className="flex justify-between text-xs">
-            <span className="text-secondary-foreground/70">Obłożenie</span>
+            <span className="text-secondary-foreground/70">
+              {t("status.occupancy")}
+            </span>
             <span className="font-medium">{occupancyPercentage}%</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-secondary-foreground/20">

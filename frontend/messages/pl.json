@@ -1,4 +1,470 @@
 {
+  "app": {
+    "name": "GdzieToLeży"
+  },
+  "metadata": {
+    "title": "GdzieToLeży",
+    "description": "Platforma do zarządzania magazynem."
+  },
+  "languageSwitcher": {
+    "label": "Język",
+    "english": "Angielski",
+    "polish": "Polski"
+  },
+  "landing": {
+    "actions": {
+      "login": "Zaloguj się",
+      "cta": "Przejdź do logowania"
+    },
+    "hero": {
+      "titleLine1": "Zarządzanie magazynem",
+      "titleHighlight": "dla firmy",
+      "subtitle": "Zaloguj się, aby uzyskać dostęp do systemu zarządzania magazynem."
+    },
+    "footer": "© 2025 GdzieToLeży. System wewnętrzny."
+  },
+  "auth": {
+    "form": {
+      "loginDescription": "Wprowadź swoją nazwę użytkownika i hasło, aby uzyskać dostęp do konta.",
+      "registerDescription": "Utwórz konto, aby korzystać z aplikacji."
+    },
+    "fields": {
+      "email": "Email",
+      "fullName": "Pełne imię i nazwisko",
+      "username": "Nazwa użytkownika",
+      "password": "Hasło",
+      "confirmPassword": "Potwierdź hasło"
+    },
+    "placeholders": {
+      "email": "jan@kowalski.pl",
+      "fullName": "Jan Kowalski",
+      "username": "janKowalski",
+      "password": "••••••••"
+    },
+    "actions": {
+      "login": "Zaloguj się",
+      "register": "Zarejestruj się"
+    },
+    "prompt": {
+      "noAccount": "Nie masz konta?",
+      "hasAccount": "Masz już konto?"
+    },
+    "errors": {
+      "loginFailed": "Wystąpił błąd podczas logowania. Spróbuj ponownie.",
+      "registerFailed": "Wystąpił błąd podczas rejestracji. Spróbuj ponownie."
+    },
+    "success": {
+      "login": "Zalogowano pomyślnie!",
+      "register": "Zarejestrowano pomyślnie! Możesz się teraz zalogować."
+    },
+    "validation": {
+      "username": {
+        "min": "Nazwa użytkownika musi mieć co najmniej {min} znaki",
+        "max": "Nazwa użytkownika może mieć maksymalnie {max} znaków",
+        "format": "Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślenia"
+      },
+      "password": {
+        "min": "Hasło musi mieć co najmniej {min} znaków",
+        "maxBytes": "Hasło nie może przekraczać {max} bajtów w kodowaniu UTF-8.",
+        "mismatch": "Hasła nie są zgodne"
+      },
+      "fullName": {
+        "min": "Imię i nazwisko musi mieć co najmniej {min} znaki"
+      },
+      "email": {
+        "invalid": "Nieprawidłowy adres email"
+      },
+      "code": {
+        "length": "Kod musi mieć dokładnie {length} cyfr"
+      }
+    }
+  },
+  "twoFactor": {
+    "methodTitles": {
+      "authenticator": "Wpisz kod z aplikacji uwierzytelniającej",
+      "sms": "Wpisz kod wysłany SMS-em",
+      "email": "Wpisz kod wysłany na e-mail"
+    },
+    "methodSwitch": {
+      "authenticator": "Użyj aplikacji uwierzytelniającej",
+      "sms": "Wyślij kod SMS-em",
+      "email": "Wyślij kod e-mailem"
+    },
+    "errors": {
+      "invalidCode": "Nieprawidłowy kod lub błąd weryfikacji. Spróbuj ponownie.",
+      "unsupportedResend": "Nieobsługiwana metoda ponownego wysyłania kodu.",
+      "resendFailed": "Nie udało się wysłać kodu ponownie. Spróbuj za chwilę."
+    },
+    "success": {
+      "verified": "Zweryfikowano!",
+      "resend": {
+        "sms": "Wysłano nowy kod SMS.",
+        "email": "Wysłano nowy kod e-mailem."
+      }
+    },
+    "actions": {
+      "backToHome": "Cofnij się do strony głównej",
+      "verify": "Zweryfikuj"
+    },
+    "fields": {
+      "code": "Kod weryfikacyjny"
+    },
+    "resend": {
+      "prompt": "Nie dotarło?",
+      "action": "Wyślij ponownie"
+    },
+    "switch": {
+      "prompt": "Użyj innej metody"
+    }
+  },
+  "pendingVerification": {
+    "title": "Oczekiwanie na weryfikację",
+    "description": "Twoje konto oczekuje na akceptację przez administratora.",
+    "details": "Twoja rejestracja została przyjęta i oczekuje na weryfikację przez administratora. Zostaniesz powiadomiony, gdy Twoje konto zostanie aktywowane. Prosimy o cierpliwość.",
+    "nextSteps": {
+      "title": "Co teraz?",
+      "items": {
+        "confirmation": "Oczekuj na wiadomość e-mail z potwierdzeniem",
+        "inbox": "Sprawdzaj swoją skrzynkę odbiorczą regularnie",
+        "contact": "Skontaktuj się z administratorem, jeśli to potrwa dłużej niż 24h"
+      }
+    },
+    "actions": {
+      "backToLogin": "Wróć do strony logowania"
+    }
+  },
+  "unauthorized": {
+    "title": "Brak dostępu",
+    "description": "Nie masz uprawnień do wyświetlenia tej strony.",
+    "details": "Ta strona wymaga specjalnych uprawnień. Jeśli uważasz, że to błąd, skontaktuj się z administratorem.",
+    "actions": {
+      "backToDashboard": "Wróć do panelu głównego"
+    }
+  },
+  "dashboard": {
+    "search": {
+      "placeholder": "Szukaj magazynu, regału lub ID..."
+    },
+    "title": "Twoje Magazyny",
+    "filters": {
+      "advancedTitle": "Filtry zaawansowane",
+      "minOccupancy": "Min. zapełnienie",
+      "temperatureRange": "Zakres temperatur",
+      "showEmpty": "Pokaż puste magazyny",
+      "reset": "Resetuj filtry"
+    },
+    "warehouseGrid": {
+      "empty": "Brak magazynów do wyświetlenia.",
+      "badge": "{percent}% Pełny",
+      "occupancy": "Zapełnienie",
+      "capacity": "{used, number} / {total, number} {total, plural, one {miejsce} few {miejsca} many {miejsc} other {miejsca}}",
+      "racks": "{count, plural, one {# Regał} few {# Regały} many {# Regałów} other {# Regału}}",
+      "actions": {
+        "viewRacks": "Zobacz Regały",
+        "view3d": "Zobacz Wizualizację 3D"
+      }
+    }
+  },
+  "rackVisualization": {
+    "actions": {
+      "itemsInRack": "Przedmioty w regale"
+    },
+    "labels": {
+      "rack": "Regał:",
+      "rackCount": "{current} / {total}"
+    },
+    "parameters": {
+      "title": "Parametry",
+      "maxElement": "Max rozmiar elementu",
+      "maxElementValue": "{width} × {height} × {depth} mm",
+      "temperatureRange": "Zakres temperatur",
+      "temperatureValue": "{min}°C - {max}°C",
+      "gridDimensions": "Wymiary siatki",
+      "gridValue": "{rows} rzędów × {cols} kolumn"
+    },
+    "status": {
+      "title": "Status",
+      "occupied": "Zajęte miejsca",
+      "free": "Wolne miejsca",
+      "capacity": "Całkowita pojemność",
+      "occupancy": "Obłożenie"
+    }
+  },
+  "rackItemsTable": {
+    "empty": "Brak przedmiotów w tym regale",
+    "stats": {
+      "occupied": "Zajęte miejsca",
+      "load": "Obciążenie",
+      "loadValue": "{current} / {max} kg"
+    },
+    "headers": {
+      "image": "Zdjęcie",
+      "name": "Nazwa",
+      "qr": "Kod QR",
+      "weight": "Waga",
+      "dimensions": "Wymiary",
+      "temperature": "Temp.",
+      "expiry": "Data ważności",
+      "status": "Status"
+    },
+    "dimensions": "{width}×{height}×{depth} mm",
+    "weight": "{weight} kg",
+    "temperatureRange": "{min}°C – {max}°C",
+    "badges": {
+      "dangerous": "Niebezpieczny",
+      "expired": "Przeterminowany"
+    },
+    "actions": {
+      "open": "Otwórz menu",
+      "view": "Podgląd",
+      "edit": "Edytuj",
+      "delete": "Usuń"
+    }
+  },
+  "itemsTable": {
+    "search": {
+      "ariaLabel": "Szukaj przedmiotów",
+      "placeholder": "Szukaj po nazwie lub kategorii..."
+    },
+    "count": "{count, plural, one {# przedmiot} few {# przedmioty} many {# przedmiotów} other {# przedmiotu}}",
+    "empty": "Brak wyników.",
+    "columns": {
+      "name": "Nazwa",
+      "category": "Kategoria",
+      "quantity": "Ilość",
+      "quantityValue": "{count} szt.",
+      "expiry": "Okres przydatności",
+      "danger": "Niebezpieczeństwo"
+    },
+    "expiry": {
+      "noData": "Brak danych",
+      "expired": "Przeterminowane!",
+      "inDays": "{count, plural, one {za # dzień} few {za # dni} many {za # dni} other {za # dnia}}",
+      "days": "{count, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}"
+    },
+    "badges": {
+      "dangerous": "Niebezpieczny",
+      "safe": "Bezpieczny"
+    },
+    "actions": {
+      "open": "Otwórz menu",
+      "edit": "Edytuj",
+      "delete": "Usuń"
+    }
+  },
+  "assortmentTable": {
+    "search": {
+      "ariaLabel": "Filtruj przedmioty po nazwie lub kategorii",
+      "placeholder": "Szukaj po nazwie lub kategorii..."
+    },
+    "filters": {
+      "ariaLabel": "Filtruj według daty ważności",
+      "all": "Wszystkie",
+      "expired": "Przeterminowane",
+      "threeDays": "3 dni",
+      "sevenDays": "7 dni",
+      "fourteenDays": "14 dni"
+    },
+    "count": "{count, plural, one {# przedmiot} few {# przedmioty} many {# przedmiotów} other {# przedmiotu}}",
+    "empty": "Brak wyników.",
+    "columns": {
+      "category": "Kategoria",
+      "name": "Nazwa przedmiotu",
+      "rack": "Regał",
+      "position": "Rząd {row}, Kol. {col}",
+      "qr": "Kod QR",
+      "addedDate": "Data dodania",
+      "expiryDate": "Przeterminowanie"
+    },
+    "expiry": {
+      "expired": "Przeterminowany ({days, plural, one {# dzień temu} few {# dni temu} many {# dni temu} other {# dnia temu}})",
+      "today": "Dzisiaj",
+      "days": "{count, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}"
+    },
+    "actions": {
+      "open": "Otwórz menu",
+      "details": "Szczegóły",
+      "edit": "Edytuj",
+      "showQr": "Pokaż QR",
+      "delete": "Usuń"
+    }
+  },
+  "assortmentPage": {
+    "title": "Asortyment magazynu {id}",
+    "subtitle": "Przeglądaj wszystkie produkty w magazynie"
+  },
+  "warehouse": {
+    "actions": {
+      "backToDashboard": "Powrót do panelu"
+    },
+    "subtitle": "ID: {id} • {rack}"
+  },
+  "threeD": {
+    "title": "Wizualizacja Magazynu 3D",
+    "actions": {
+      "backToBlocks": "Wróć do bloków",
+      "backToDashboard": "Wróć do panelu",
+      "backToOverview": "Wróć do przeglądu"
+    },
+    "fallback": {
+      "title": "Wizualizacja 3D niedostępna",
+      "description": "Wystąpił problem podczas renderowania sceny. Spróbuj ponownie lub wróć do trybu przeglądu.",
+      "retry": "Spróbuj ponownie"
+    },
+    "mode": {
+      "label": "Tryb:",
+      "overview": "Przegląd",
+      "details": "Szczegóły"
+    },
+    "sidebar": {
+      "title": "Eksplorator Magazynu",
+      "trigger": "Eksplorator",
+      "search": {
+        "placeholder": "Szukaj regałów..."
+      },
+      "rack": {
+        "grid": "Siatka: {rows}×{cols}",
+        "occupancy": "Zajętość:"
+      },
+      "legend": {
+        "title": "Legenda",
+        "normal": "Normalne",
+        "expired": "Przeterminowane",
+        "dangerous": "Niebezpieczne",
+        "expiredDangerous": "Niebezpieczne i przeterminowane",
+        "empty": "Pusta półka",
+        "selected": "Wybrana"
+      }
+    },
+    "details": {
+      "title": "Szczegóły Regału",
+      "trigger": "Szczegóły",
+      "backToBlocks": "Powrót do bloków",
+      "code": "Kod: {code}",
+      "grid": "Siatka: {rows}×{cols}",
+      "totalSlots": "Wszystkie miejsca: {count}",
+      "occupiedSlots": "Zajęte: {count}",
+      "maxSize": "Maks. rozmiar elementu: {width}×{height}×{depth} mm",
+      "shelfTitle": "Rząd {row} półka {col}",
+      "item": {
+        "id": "ID:",
+        "label": "Etykieta:",
+        "type": "Typ:",
+        "meta": "Metadane:",
+        "editLabel": "Edytuj etykietę"
+      },
+      "emptyShelf": {
+        "title": "Pusta półka",
+        "description": "Brak elementu na pozycji Rząd {row} półka {col}"
+      },
+      "blockHint": "Kliknij blok {size}×{size}, aby zobaczyć szczegóły.",
+      "shelfHint": "Kliknij na półkę, aby zobaczyć szczegóły"
+    },
+    "overview": {
+      "title": "Przegląd Magazynu",
+      "racks": "Liczba regałów",
+      "totalSlots": "Wszystkie miejsca",
+      "occupiedSlots": "Zajęte miejsca",
+      "freeSlots": "Wolne miejsca",
+      "occupancy": "Stopień zajętości"
+    },
+    "status": {
+      "normal": "Normalny",
+      "expired": "Przeterminowany",
+      "expiredDangerous": "Przeterminowany i niebezpieczny",
+      "dangerous": "Niebezpieczny"
+    },
+    "blocks": {
+      "status": {
+        "normal": "Normalny",
+        "dangerous": "Niebezpieczny",
+        "expired": "Przeterminowany",
+        "expired-dangerous": "Przeterminowany i niebezpieczny",
+        "empty": "Pusta strefa"
+      },
+      "tooltip": {
+        "zone": "Strefa {startRow}–{endRow}, {startCol}–{endCol}",
+        "occupied": "Zajęte: {occupied}/{total} ({percent}%)",
+        "status": "Status: {status}"
+      }
+    },
+    "racks": {
+      "tooltip": {
+        "occupied": "{percent}% zajęte • {cols}×{rows}",
+        "maxSize": "Maks: {width}×{height}×{depth} mm"
+      }
+    }
+  },
+  "scanner": {
+    "tabs": {
+      "take": "Przyjmowanie",
+      "remove": "Zdejmowanie"
+    },
+    "actions": {
+      "openScanner": "Skaner kodów",
+      "close": "Zamknij",
+      "retry": "Spróbuj ponownie",
+      "confirm": "Potwierdź"
+    },
+    "errors": {
+      "title": "Wystąpił błąd",
+      "noSpace": "W tym magazynie brakuje miejsca na te przedmioty.",
+      "fallback": "Wystąpił problem z działaniem skanera. Spróbuj ponownie.",
+      "unexpected": "Nieoczekiwany błąd skanera.",
+      "startFailed": "Nie udało się uruchomić skanera aparatu.",
+      "cameraIntro": "Wystąpił błąd. Upewnij się że Twoja kamera jest podłączona i dostępna oraz że udzieliłeś/aś pozwolenia na jej użycie.",
+      "details": "Szczegóły: {error}"
+    },
+    "mock": {
+      "itemName": "Przykładowy przedmiot"
+    },
+    "camera": {
+      "scanning": "Skanujesz w magazynie: {warehouse}",
+      "unknownWarehouse": "Nieznany magazyn"
+    },
+    "quantity": {
+      "title": "Podaj ilość przedmiotów",
+      "subtitle": "Ile sztuk chcesz dodać do magazynu?",
+      "imageAlt": "Skanowany przedmiot",
+      "unknownItem": "Nieznany przedmiot",
+      "expiry": "Data przeterminowania za około {days, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}",
+      "label": "Ilość przedmiotów"
+    },
+    "locations": {
+      "title": "Lokalizacje do umieszczenia",
+      "subtitle": "Umieść przedmioty w następujących miejscach:",
+      "confirm": "Przedmioty umieszczone"
+    },
+    "success": {
+      "title": "Dodano pomyślnie",
+      "subtitle": "Przedmioty zostały dodane do magazynu",
+      "action": "Zeskanuj kolejny"
+    },
+    "location": {
+      "rack": "Regał",
+      "row": "Rząd",
+      "col": "Kol."
+    }
+  },
+  "sidebar": {
+    "items": {
+      "dashboard": "Panel główny",
+      "assortment": "Asortyment"
+    }
+  },
+  "common": {
+    "actions": {
+      "clear": "Wyczyść",
+      "close": "Zamknij"
+    },
+    "pagination": {
+      "previous": "Poprzednia",
+      "next": "Następna"
+    },
+    "status": {
+      "loading": "Ładowanie"
+    }
+  },
   "breadcrumbs": {
     "dashboard": "Panel",
     "settings": "Ustawienia",

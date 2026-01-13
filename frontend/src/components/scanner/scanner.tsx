@@ -2,6 +2,7 @@
 
 import { QrCodeIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import { SCAN_DELAY_MS, SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -15,7 +16,12 @@ import { ScannerErrorState } from "./scanner-error-state"
 import { ScannerLocationsStep } from "./scanner-locations-step"
 import { ScannerQuantityStep } from "./scanner-quantity-step"
 import { ScannerSuccessStep } from "./scanner-success-step"
-import type { Location, ScanItem } from "./scanner-types"
+import type {
+  Location,
+  ScanItem,
+  ScannerMode,
+  ScannerTab,
+} from "./scanner-types"
 
 interface ScannerProps {
   /** Prevents spamming the same result continuously */
@@ -29,17 +35,6 @@ interface ScannerProps {
   /** Children to show instead of camera (e.g. scan results) */
   children?: ReactNode
 }
-
-export const TAB_TRIGGERS = [
-  {
-    text: "Przyjmowanie",
-    action: "take",
-  },
-  {
-    text: "Zdejmowanie",
-    action: "remove",
-  },
-] as const
 
 type Step = "camera" | "quantity" | "locations" | "success"
 
@@ -59,9 +54,14 @@ export function Scanner({
   className,
   children,
 }: ScannerProps) {
+  const t = useTranslations("scanner")
   const isMobile = useIsMobile()
-  const [mode, setMode] = useState<(typeof TAB_TRIGGERS)[number]["action"]>(
-    TAB_TRIGGERS[0].action
+  const tabTriggers: ScannerTab[] = [
+    { text: t("tabs.take"), action: "take" },
+    { text: t("tabs.remove"), action: "remove" },
+  ]
+  const [mode, setMode] = useState<ScannerMode>(
+    tabTriggers[0]?.action ?? "take"
   )
   const [open, setOpen] = useState<boolean>(false)
   const armedRef = useRef<boolean>(false)
@@ -123,27 +123,30 @@ export function Scanner({
     handleReset()
   }, [open, handleReset])
 
-  const onScan = useCallback(async (text: string) => {
-    setScannerState((current) => ({ ...current, isLoading: true }))
+  const onScan = useCallback(
+    async (text: string) => {
+      setScannerState((current) => ({ ...current, isLoading: true }))
 
-    await new Promise((resolve) => setTimeout(resolve, 500))
+      await new Promise((resolve) => setTimeout(resolve, 500))
 
-    setScannedItem({
-      expiresIn: 180,
-      id: "item-123",
-      name: "Przykładowy przedmiot",
-      qrCode: text,
-      weight: 2.5,
-      imageUrl: "https://placehold.co/600x400",
-    })
-    setScannerState((current) => ({
-      ...current,
-      step: "quantity",
-      locations: [],
-      isSubmitting: false,
-      isLoading: false,
-    }))
-  }, [])
+      setScannedItem({
+        expiresIn: 180,
+        id: "item-123",
+        name: t("mock.itemName"),
+        qrCode: text,
+        weight: 2.5,
+        imageUrl: "https://placehold.co/600x400",
+      })
+      setScannerState((current) => ({
+        ...current,
+        step: "quantity",
+        locations: [],
+        isSubmitting: false,
+        isLoading: false,
+      }))
+    },
+    [t]
+  )
 
   const handleSubmit = useCallback(async () => {
     setScannerState((current) => ({ ...current, isSubmitting: true }))
@@ -151,7 +154,7 @@ export function Scanner({
     await new Promise((resolve) => setTimeout(resolve, 500))
     const isError = Math.random() < 0.2
     if (isError) {
-      setError("W tym magazynie brakuje miejsca na te przedmioty.")
+      setError(t("errors.noSpace"))
       setScannerState((current) => ({ ...current, isSubmitting: false }))
       return
     }
@@ -171,7 +174,7 @@ export function Scanner({
       step: "locations",
       isSubmitting: false,
     }))
-  }, [quantity])
+  }, [quantity, t])
 
   const handleConfirmPlacement = useCallback(async () => {
     setScannerState((current) => ({ ...current, isSubmitting: true }))
@@ -204,14 +207,14 @@ export function Scanner({
   const renderScannerFallback = useCallback(
     (_error: Error, reset: () => void) => (
       <ScannerErrorState
-        error="Wystąpił problem z działaniem skanera. Spróbuj ponownie."
+        error={t("errors.fallback")}
         onRetry={() => {
           handleReset()
           reset()
         }}
       />
     ),
-    [handleReset]
+    [handleReset, t]
   )
 
   let content: ReactNode = (
@@ -226,6 +229,7 @@ export function Scanner({
       onScan={onScan}
       scanDelayMs={scanDelayMs}
       stopOnScan={stopOnScan}
+      tabTriggers={tabTriggers}
       warehouseName={warehouseName}
     />
   )
@@ -278,13 +282,13 @@ export function Scanner({
       open={open}
     >
       <DialogTrigger
-        aria-label="Skaner kodów"
+        aria-label={t("actions.openScanner")}
         className={buttonVariants({
           variant: "ghost",
           size: "icon",
           className: "mr-1 ml-auto size-8 rounded-xl sm:size-10",
         })}
-        title="Skaner kodów"
+        title={t("actions.openScanner")}
       >
         <HugeiconsIcon icon={QrCodeIcon} />
       </DialogTrigger>

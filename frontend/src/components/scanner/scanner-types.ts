@@ -12,3 +12,10 @@ export interface ScanItem {
   weight?: number
   imageUrl?: string
 }
+
+export type ScannerMode = "take" | "remove"
+
+export interface ScannerTab {
+  text: string
+  action: ScannerMode
+}

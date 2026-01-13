@@ -8,6 +8,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
+import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -35,14 +36,6 @@ interface TableRowContentProps {
   onDelete: (id: string) => void
 }
 
-function formatDimensions(dimensions: {
-  x: number
-  y: number
-  z: number
-}): string {
-  return `${dimensions.x}×${dimensions.y}×${dimensions.z} mm`
-}
-
 export function TableRowContent({
   item,
   expired,
@@ -50,6 +43,15 @@ export function TableRowContent({
   onEdit,
   onDelete,
 }: TableRowContentProps) {
+  const t = useTranslations("rackItemsTable")
+  const locale = useLocale()
+  const formatDimensions = (dimensions: { x: number; y: number; z: number }) =>
+    t("dimensions", {
+      width: String(dimensions.x),
+      height: String(dimensions.y),
+      depth: String(dimensions.z),
+    })
+
   return (
     <>
       <TableCell>
@@ -91,29 +93,32 @@ export function TableRowContent({
         </div>
       </TableCell>
       <TableCell className="font-mono text-sm">{item.qrCode}</TableCell>
-      <TableCell>{item.weight.toFixed(2)} kg</TableCell>
+      <TableCell>{t("weight", { weight: item.weight.toFixed(2) })}</TableCell>
       <TableCell className="text-sm">
         {formatDimensions(item.dimensions)}
       </TableCell>
       <TableCell className="text-sm">
-        {item.minTemp}°C – {item.maxTemp}°C
+        {t("temperatureRange", {
+          min: String(item.minTemp),
+          max: String(item.maxTemp),
+        })}
       </TableCell>
       <TableCell>
         <span className={expired ? "font-medium text-destructive" : ""}>
-          {formatDate(item.expiryDate)}
+          {formatDate(item.expiryDate, locale)}
         </span>
       </TableCell>
       <TableCell>
         <div className="flex flex-wrap gap-1">
           {item.isDangerous && (
-            <Badge variant="destructive">Niebezpieczny</Badge>
+            <Badge variant="destructive">{t("badges.dangerous")}</Badge>
           )}
-          {expired && <Badge variant="secondary">Przeterminowany</Badge>}
+          {expired && <Badge variant="secondary">{t("badges.expired")}</Badge>}
         </div>
       </TableCell>
       <TableCell className="text-right">
         <DropdownMenu>
-          <DropdownMenuTrigger aria-label="Otwórz menu">
+          <DropdownMenuTrigger aria-label={t("actions.open")}>
             <HugeiconsIcon
               className={cn(
                 buttonVariants({
@@ -130,21 +135,21 @@ export function TableRowContent({
               onClick={() => onView(item.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={ViewIcon} />
-              <span>Podgląd</span>
+              <span>{t("actions.view")}</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => onEdit(item.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilEdit01Icon} />
-              <span>Edytuj</span>
+              <span>{t("actions.edit")}</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer text-destructive focus:text-destructive"
               onClick={() => onDelete(item.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={Delete02Icon} />
-              <span>Usuń</span>
+              <span>{t("actions.delete")}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Fragment } from "react/jsx-runtime"
 import { cn } from "@/lib/utils"
+import { LanguageSwitcher } from "./language-switcher"
 import { Scanner } from "./scanner/scanner"
 import {
   Breadcrumb,
@@ -91,13 +92,16 @@ export default function SiteHeader() {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      {pathname.includes("/dashboard/warehouse/") && (
-        <Scanner
-          warehouseName={decodeURIComponent(
-            sanitizeVisibleText(safeDecodeURIComponent(splitted[2] ?? ""))
-          )}
-        />
-      )}
+      <div className="flex items-center gap-2 pr-4">
+        <LanguageSwitcher />
+        {pathname.includes("/dashboard/warehouse/") && (
+          <Scanner
+            warehouseName={decodeURIComponent(
+              sanitizeVisibleText(safeDecodeURIComponent(splitted[2] ?? ""))
+            )}
+          />
+        )}
+      </div>
     </header>
   )
 }

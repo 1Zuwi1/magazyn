@@ -2,6 +2,7 @@
 
 import { Search } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { MOCK_WAREHOUSES } from "./mock-data"
@@ -11,6 +12,7 @@ import type { FilterState } from "./types"
 import { filterWarehouses } from "./utils/filters"
 
 export const DashboardContent = () => {
+  const t = useTranslations("dashboard")
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const filteredWarehouses = filterWarehouses(MOCK_WAREHOUSES, filters)
 
@@ -25,7 +27,7 @@ export const DashboardContent = () => {
           <Input
             className="pl-8"
             onChange={(e) => setFilters({ ...filters, query: e.target.value })}
-            placeholder="Szukaj magazynu, regału lub ID..."
+            placeholder={t("search.placeholder")}
             value={filters.query}
           />
         </div>
@@ -33,7 +35,7 @@ export const DashboardContent = () => {
       </div>
 
       <div className="space-y-4">
-        <h3 className="font-semibold text-xl">Twoje Magazyny</h3>
+        <h3 className="font-semibold text-xl">{t("title")}</h3>
         <WarehouseGrid warehouses={filteredWarehouses} />
       </div>
     </div>

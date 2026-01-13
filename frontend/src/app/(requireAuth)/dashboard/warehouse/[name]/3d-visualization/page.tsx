@@ -3,6 +3,7 @@
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useMemo } from "react"
 import { DetailsPanel } from "@/components/dashboard/3d-visualization/details-panel"
 import { generateMockWarehouse } from "@/components/dashboard/3d-visualization/mock-data"
@@ -20,36 +21,35 @@ import {
 } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 
-const renderVisualizationFallback = (_error: Error, reset: () => void) => (
-  <div
-    className="flex h-full w-full flex-col items-center justify-center gap-4 bg-slate-950/40 p-6 text-center"
-    role="alert"
-  >
-    <div>
-      <h2 className="font-semibold text-lg">Wizualizacja 3D niedostępna</h2>
-      <p className="mt-2 text-muted-foreground text-sm">
-        Wystąpił problem podczas renderowania sceny. Spróbuj ponownie lub wróć
-        do trybu przeglądu.
-      </p>
-    </div>
-    <Button onClick={reset} size="sm" variant="outline">
-      Spróbuj ponownie
-    </Button>
-  </div>
-)
-
-const LABELS = {
-  overview: "Wróć do panelu",
-  focus: "Wróć do przeglądu",
-  details: "Wróć do bloków",
-}
-
 export default function ThreeDVisualizationPage() {
+  const t = useTranslations("threeD")
   // TODO: Replace mock data with real warehouse data fetched from the backend
   const warehouse = useMemo(() => generateMockWarehouse(20), [])
   const { mode, selectedRackId, goToOverview, focusWindow, setFocusWindow } =
     useWarehouseStore()
   const router = useRouter()
+  let backLabel = t("actions.backToOverview")
+  if (focusWindow) {
+    backLabel = t("actions.backToBlocks")
+  } else if (mode === "overview") {
+    backLabel = t("actions.backToDashboard")
+  }
+  const renderVisualizationFallback = (_error: Error, reset: () => void) => (
+    <div
+      className="flex h-full w-full flex-col items-center justify-center gap-4 bg-slate-950/40 p-6 text-center"
+      role="alert"
+    >
+      <div>
+        <h2 className="font-semibold text-lg">{t("fallback.title")}</h2>
+        <p className="mt-2 text-muted-foreground text-sm">
+          {t("fallback.description")}
+        </p>
+      </div>
+      <Button onClick={reset} size="sm" variant="outline">
+        {t("fallback.retry")}
+      </Button>
+    </div>
+  )
 
   return (
     <div className="flex h-screen flex-col overflow-hidden rounded-sm border bg-background">
@@ -57,7 +57,7 @@ export default function ThreeDVisualizationPage() {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center justify-center gap-2">
             <Button
-              aria-label={LABELS[focusWindow ? "details" : mode]}
+              aria-label={backLabel}
               onClick={() => {
                 if (focusWindow) {
                   setFocusWindow(null)
@@ -68,17 +68,17 @@ export default function ThreeDVisualizationPage() {
                 }
               }}
               size={"icon"}
-              title={LABELS[focusWindow ? "details" : mode]}
+              title={backLabel}
               variant="outline"
             >
               <HugeiconsIcon icon={ArrowLeft01Icon} />
             </Button>
             <div>
-              <h1 className="font-bold text-xl">Wizualizacja Magazynu 3D</h1>
+              <h1 className="font-bold text-xl">{t("title")}</h1>
               <div className="text-muted-foreground text-sm">
-                Tryb:{" "}
+                {t("mode.label")}{" "}
                 <span className="font-semibold">
-                  {mode === "overview" ? "Przegląd" : "Szczegóły"}
+                  {mode === "overview" ? t("mode.overview") : t("mode.details")}
                 </span>
               </div>
             </div>
@@ -90,11 +90,11 @@ export default function ThreeDVisualizationPage() {
                   buttonVariants({ size: "sm", variant: "outline" })
                 )}
               >
-                Eksplorator
+                {t("sidebar.trigger")}
               </SheetTrigger>
               <SheetContent className="p-0" side="left">
                 <SheetHeader className="border-b">
-                  <SheetTitle>Eksplorator Magazynu</SheetTitle>
+                  <SheetTitle>{t("sidebar.title")}</SheetTitle>
                 </SheetHeader>
                 <div className="min-h-0 flex-1">
                   <SidebarPanel racks={warehouse.racks} />
@@ -107,11 +107,11 @@ export default function ThreeDVisualizationPage() {
                   buttonVariants({ size: "sm", variant: "outline" })
                 )}
               >
-                Szczegóły
+                {t("details.trigger")}
               </SheetTrigger>
               <SheetContent className="p-0" side="right">
                 <SheetHeader className="border-b">
-                  <SheetTitle>Szczegóły Regału</SheetTitle>
+                  <SheetTitle>{t("details.title")}</SheetTitle>
                 </SheetHeader>
                 <div className="min-h-0 flex-1">
                   <DetailsPanel warehouse={warehouse} />
