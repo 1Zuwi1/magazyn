@@ -916,6 +916,20 @@ const MOCK_NOTIFICATIONS: Notification[] = [
     date: "1h temu",
     read: true,
   },
+  {
+    id: "5",
+    title: "Produkt 5",
+    description: "Opis 5",
+    date: "1h temu",
+    read: false,
+  },
+  {
+    id: "6",
+    title: "Produkt 6",
+    description: "Opis 6",
+    date: "1h temu",
+    read: false,
+  },
 ]
 
 export {
