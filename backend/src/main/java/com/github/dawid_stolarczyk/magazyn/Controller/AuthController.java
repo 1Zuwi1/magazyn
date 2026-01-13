@@ -55,7 +55,7 @@ public class AuthController {
     @GetMapping("/verify-email")
     public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
         try {
-            authService.verifyEmailCheck(token);
+            authService.verifyEmailCheck(token, request);
             return ResponseEntity.ok(new ResponseTemplate<>(true, "Email verified successfully"));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));

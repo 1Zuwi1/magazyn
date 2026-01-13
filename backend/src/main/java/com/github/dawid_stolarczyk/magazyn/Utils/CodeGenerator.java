@@ -13,6 +13,7 @@ public class CodeGenerator {
         }
         return sb.toString();
     }
+
     public static String generateBackupCodeWithBase62(int length) {
         StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++) {

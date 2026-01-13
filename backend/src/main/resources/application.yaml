@@ -12,6 +12,10 @@ auth:
       capacity: 5
       refill: 5
       duration: PT1M
+    AUTH_FREE:
+      capacity: 50
+      refill: 25
+      duration: PT1M
     TWO_FACTOR_FREE:
       capacity: 20
       refill: 20

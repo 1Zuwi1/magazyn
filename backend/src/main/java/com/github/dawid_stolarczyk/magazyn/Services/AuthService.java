@@ -9,6 +9,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
+import com.github.dawid_stolarczyk.magazyn.Repositories.EmailVerificationRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.RememberMeData;
@@ -16,6 +17,7 @@ import com.github.dawid_stolarczyk.magazyn.Security.Auth.SessionData;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
+import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,14 +39,21 @@ import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientI
 @Service
 public class AuthService {
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private Bucket4jRateLimiter rateLimiter;
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private SessionService sessionService;
+    @Autowired
+    private EmailVerificationRepository emailVerificationRepository;
+    @Autowired
+    private EmailService emailService;
 
     @Value("${auth.password.min-length}")
     private int MIN_PASSWORD_LENGTH;
+
+    @Value("${app.domain}")
+    private String domain;
 
     public void logoutUser(HttpServletResponse response, HttpServletRequest request, String rt) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.AUTH_LOGOUT);
@@ -125,30 +134,30 @@ public class AuthService {
         newUser.setFullName(registerRequest.getFullName());
         newUser.setUsername(registerRequest.getUsername());
         newUser.setRole(UserRole.USER);
-        newUser.setStatus(AccountStatus.ACTIVE);
+        newUser.setStatus(AccountStatus.PENDING_VERIFICATION);
 
         EmailVerification emailVerification = new EmailVerification();
         String emailVerificationToken = UUID.randomUUID().toString();
-        emailVerification.setVerificationToken(BCrypt.hashpw(emailVerificationToken, BCrypt.gensalt()));
+        emailVerification.setVerificationToken(Hasher.hashSHA256(emailVerificationToken));
         emailVerification.setExpiresAt(Instant.now().plus(15, java.time.temporal.ChronoUnit.MINUTES));
         newUser.setEmailVerifications(emailVerification);
         userRepository.save(newUser);
+
+        emailService.sendVerificationEmail(newUser.getEmail(), "http://%s:8080/api/auth/verify-email?token=%s".formatted(domain, emailVerificationToken));
     }
 
-    public void verifyEmailCheck(String token) {
-        User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException("", "User not found"));
-        EmailVerification emailVerification = user.getEmailVerifications();
+    public void verifyEmailCheck(String token, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.AUTH_FREE);
+        EmailVerification emailVerification = emailVerificationRepository.findByVerificationToken(Hasher.hashSHA256(token)).orElseThrow(()
+                -> new AuthenticationException(AuthError.TOKEN_INVALID.name()));
 
         if (emailVerification == null || emailVerification.getExpiresAt().isBefore(Instant.now())) {
             throw new AuthenticationException(AuthError.TOKEN_EXPIRED.name());
         }
-        if (!BCrypt.checkpw(token, user.getEmailVerifications().getVerificationToken())) {
-            throw new AuthenticationException(AuthError.TOKEN_INVALID.name());
-        }
-
+        User user = emailVerification.getUser();
         user.removeEmailVerifications();
         user.setStatus(AccountStatus.ACTIVE);
+        userRepository.save(user);
     }
 
     private boolean checkPasswordStrength(String password) {

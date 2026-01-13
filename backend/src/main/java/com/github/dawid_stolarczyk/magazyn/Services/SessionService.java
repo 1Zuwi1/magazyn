@@ -100,7 +100,6 @@ public class SessionService {
     }
 
 
-
     public void deleteSessionsCookies(HttpServletResponse response) {
         CookiesUtils.deleteCookie(response, "SESSION");
         CookiesUtils.deleteCookie(response, "REMEMBER_ME");

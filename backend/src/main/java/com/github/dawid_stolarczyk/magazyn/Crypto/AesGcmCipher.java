@@ -20,6 +20,7 @@ public class AesGcmCipher {
 
         return new Encrypted(cipher.doFinal(data), iv);
     }
+
     public static Encrypted encrypt(byte[] data, SecretKey key, byte[] aad) throws Exception {
         byte[] iv = new byte[12];
         SecureRandom random = new SecureRandom();
@@ -33,6 +34,7 @@ public class AesGcmCipher {
 
         return new Encrypted(encrypted, iv);
     }
+
     public static byte[] decrypt(byte[] cipherText, byte[] iv, SecretKey key) throws Exception {
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(TAG_BITS, iv));
@@ -46,7 +48,6 @@ public class AesGcmCipher {
         cipher.updateAAD(aad);
         return cipher.doFinal(cipherText);
     }
-
 
 
     public static StreamEncrypted encryptCipher(SecretKey key, byte[] aad) throws Exception {
@@ -71,7 +72,9 @@ public class AesGcmCipher {
     }
 
 
+    public record Encrypted(byte[] data, byte[] iv) {
+    }
 
-    public record Encrypted(byte[] data, byte[] iv) {}
-    public record StreamEncrypted(Cipher cipher, byte[] iv) {}
+    public record StreamEncrypted(Cipher cipher, byte[] iv) {
+    }
 }

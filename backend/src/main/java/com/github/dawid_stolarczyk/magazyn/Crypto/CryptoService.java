@@ -35,7 +35,6 @@ public class CryptoService {
     }
 
 
-
     public byte[] decrypt(EncryptedData encryptedData) throws Exception {
         SecretKey kek = keyProvider.getKey(encryptedData.kekName());
         if (kek == null) {
@@ -96,9 +95,6 @@ public class CryptoService {
         // przygotowanie Cipher dla danych z AAD
         return AesGcmCipher.decryptCipher(dek, dataIv, aad);
     }
-
-
-
 
 
 }

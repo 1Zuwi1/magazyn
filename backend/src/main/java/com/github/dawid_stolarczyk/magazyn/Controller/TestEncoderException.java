@@ -1,6 +1,5 @@
 package com.github.dawid_stolarczyk.magazyn.Controller;
 
-import com.github.dawid_stolarczyk.magazyn.Crypto.CryptoService;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Services.StringCryptoService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -44,6 +43,7 @@ public class TestEncoderException {
 
         fileCryptoService.encrypt(file.getInputStream(), response.getOutputStream());
     }
+
     @PostMapping("/decrypt-file")
     public void decrypt(@RequestParam MultipartFile file, HttpServletResponse response) throws Exception {
         response.setContentType("application/octet-stream");

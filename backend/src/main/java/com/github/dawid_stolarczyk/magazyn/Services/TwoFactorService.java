@@ -191,7 +191,9 @@ public class TwoFactorService {
             codes.add(code);
         }
 
-        user.addTwoFactorMethod(new TwoFactorMethod(TwoFactor.BACKUP_CODES));
+        if (user.getTwoFactorMethods().stream().noneMatch(m -> TwoFactor.BACKUP_CODES.equals(m.getMethodName()))) {
+            user.addTwoFactorMethod(new TwoFactorMethod(TwoFactor.BACKUP_CODES));
+        }
         user.getBackupCodes().addAll(backupCodes);
         userRepository.save(user);
 

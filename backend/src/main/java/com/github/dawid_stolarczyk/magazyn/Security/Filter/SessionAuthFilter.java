@@ -46,10 +46,15 @@ public class SessionAuthFilter extends OncePerRequestFilter {
 
         if (sessionId != null) {
             sessionService.getSession(sessionId).ifPresentOrElse(session -> {
-                User user = userRepository.findById(session.getUserId()).orElseThrow(AuthenticationException::new);
-                if (user.getStatus().equals(AccountStatus.ACTIVE) || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
-                    sessionService.refreshSession(sessionId);
-                    authenticateUser(user, session.getStatus2FA(), request);
+                try {
+                    User user = userRepository.findById(session.getUserId()).orElseThrow(RuntimeException::new);
+                    if (user.getStatus().equals(AccountStatus.ACTIVE) || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
+                        sessionService.refreshSession(sessionId);
+                        authenticateUser(user, session.getStatus2FA(), request);
+                    }
+                } catch (Exception ignore)  {
+                    sessionService.deleteSession(sessionId);
+                    deleteAuthCookies(response);
                 }
             }, () -> authorizeViaRememberMe(request, response));
         } else {
@@ -65,7 +70,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         if (twoFactorAuthId != null) {
             TwoFactorAuth twoFactorAuth = sessionService.get2faAuth(twoFactorAuthId).orElseThrow(AuthenticationException::new);
             if (twoFactorAuth.getIpAddress().equals(getClientIp(request)) && twoFactorAuth.getUserAgent().equals(request.getHeader("User-Agent"))) {
-               sudoMode = true;
+                sudoMode = true;
             }
         }
 
@@ -88,7 +93,15 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     sessionService.deleteSessionsCookies(response);
                     throw new AuthenticationException(AuthError.INVALID_REMEMBER_ME_TOKEN.name());
                 }
-                User user = userRepository.findById(rememberMeData.getUserId()).orElseThrow(AuthenticationException::new);
+                User user;
+                try {
+                    user = userRepository.findById(rememberMeData.getUserId()).orElseThrow(AuthenticationException::new);
+
+                } catch (Exception e) {
+                    sessionService.deleteRemember(rememberMeToken);
+                    sessionService.deleteSessionsCookies(response);
+                    return;
+                }
                 if (user.getStatus().equals(AccountStatus.ACTIVE) || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
                     SessionData newSessionData = new SessionData(
                             UUID.randomUUID().toString(),
@@ -104,5 +117,11 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                 }
             }, () -> sessionService.deleteSessionsCookies(response));
         }
+    }
+
+    private void deleteAuthCookies(HttpServletResponse response) {
+        CookiesUtils.deleteCookie(response, "SESSION");
+        CookiesUtils.deleteCookie(response, "REMEMBER_ME");
+        CookiesUtils.deleteCookie(response, "2FA_AUTH");
     }
 }

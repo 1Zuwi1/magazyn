@@ -37,6 +37,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ResponseTemplate<String>> handleOtherExceptions(Exception ex) {
+//        throw new RuntimeException(ex);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ResponseTemplate<>(false, null, ex.getMessage()));

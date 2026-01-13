@@ -48,6 +48,7 @@ public class FileCryptoService {
             in.transferTo(cos);
         }
     }
+
     public void decrypt(InputStream in, OutputStream out) throws Exception {
         DataInputStream dis = new DataInputStream(in);
         if (dis.readInt() != 0x4D414731) {
