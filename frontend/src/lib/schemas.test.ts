@@ -1,4 +1,3 @@
-import type { TranslationValues } from "use-intl/core"
 import { createTranslator } from "use-intl/core"
 import { describe, expect, it } from "vitest"
 
@@ -8,6 +7,7 @@ import { ApiMeSchema, createAuthSchemas } from "./schemas"
 const translator = createTranslator({
   locale: "en",
   messages,
+  namespace: "auth",
   onError: (error) => {
     throw error
   },
@@ -17,11 +17,8 @@ const translator = createTranslator({
   },
 })
 
-const translate = (key: string, values?: TranslationValues) =>
-  translator(key as never, values as never)
-
 const { LoginSchema, RegisterSchema, Resend2FASchema, Verify2FASchema } =
-  createAuthSchemas(translate)
+  createAuthSchemas(translator)
 
 describe("LoginSchema", () => {
   it("accepts valid login input", () => {
@@ -46,7 +43,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translate("auth.validation.password.min", { min: 6 })
+        translator("validation.password.min", { min: "6" })
       )
     }
   })
@@ -62,7 +59,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translate("auth.validation.username.min", { min: 3 })
+        translator("validation.username.min", { min: "3" })
       )
     }
   })
@@ -78,7 +75,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translate("auth.validation.username.max", { max: 20 })
+        translator("validation.username.max", { max: "20" })
       )
     }
   })
@@ -94,7 +91,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translate("auth.validation.username.format")
+        translator("validation.username.format")
       )
     }
   })
@@ -159,7 +156,7 @@ describe("RegisterSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translate("auth.validation.password.mismatch")
+        translator("validation.password.mismatch")
       )
     }
   })
@@ -194,7 +191,7 @@ describe("RegisterSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translate("auth.validation.fullName.min", { min: 2 })
+        translator("validation.fullName.min", { min: "2" })
       )
     }
   })
@@ -264,7 +261,7 @@ describe("Verify2FASchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translate("auth.validation.code.length", { length: 6 })
+        translator("validation.code.length", { length: "6" })
       )
     }
   })
