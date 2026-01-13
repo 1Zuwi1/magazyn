@@ -46,3 +46,11 @@ export interface Item {
 }
 
 export type ItemSlot = Item | null
+
+export interface Notification {
+  id: string
+  title: string
+  description: string
+  date: string
+  read: boolean
+}
