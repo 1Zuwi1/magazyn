@@ -887,7 +887,7 @@ const MOCK_ITEM_STATS: ItemStats[] = [
 
 const MOCK_ITEM_DEFINITIONS = MOCK_ITEM_STATS.map((stat) => stat.definition)
 
-export const mockNotifications: Notification[] = [
+const MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: "1",
     title: "Produkt 1",
@@ -924,4 +924,5 @@ export {
   MOCK_ITEMS,
   MOCK_ITEM_STATS,
   MOCK_ITEM_DEFINITIONS,
+  MOCK_NOTIFICATIONS,
 }

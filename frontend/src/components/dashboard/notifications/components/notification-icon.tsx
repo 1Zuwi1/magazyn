@@ -14,14 +14,14 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import { mockNotifications } from "../../mock-data"
+import { MOCK_NOTIFICATIONS } from "../../mock-data"
 
 interface NotificationInboxProps {
   count?: number
 }
 
 export function NotificationInbox({ count: _count }: NotificationInboxProps) {
-  const [notifications, setNotifications] = useState(mockNotifications)
+  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS)
   const [isOpen, setIsOpen] = useState(false)
   const unreadCount = notifications.filter((n) => !n.read).length
 
