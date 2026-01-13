@@ -156,7 +156,7 @@
     },
     "warehouseGrid": {
       "empty": "No warehouses to display.",
-      "badge": "{percent}% full",
+      "badge": "{percent, number}% full",
       "occupancy": "Occupancy",
       "capacity": "{used, number} / {total, number} {total, plural, one {slot} other {slots}}",
       "racks": "{count, plural, one {# rack} other {# racks}}",

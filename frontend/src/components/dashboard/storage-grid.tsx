@@ -60,7 +60,7 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                   }
                 >
                   {t("badge", {
-                    percent: String(Math.round(occupancyPercentage)),
+                    percent: Math.round(occupancyPercentage),
                   })}
                 </Badge>
               </div>

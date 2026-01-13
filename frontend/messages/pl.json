@@ -156,7 +156,7 @@
     },
     "warehouseGrid": {
       "empty": "Brak magazynów do wyświetlenia.",
-      "badge": "{percent}% Pełny",
+      "badge": "{percent, number}% Pełny",
       "occupancy": "Zapełnienie",
       "capacity": "{used, number} / {total, number} {total, plural, one {miejsce} few {miejsca} many {miejsc} other {miejsca}}",
       "racks": "{count, plural, one {# Regał} few {# Regały} many {# Regałów} other {# Regału}}",
