@@ -1,8 +1,10 @@
 "use client"
 
+import Cookies from "js-cookie"
 import { useRouter } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { LOCALE_COOKIE_NAME } from "@/config/constants"
 import { type Locale, locales } from "@/i18n/routing"
 import {
   Select,
@@ -12,36 +14,49 @@ import {
   SelectValue,
 } from "./ui/select"
 
-const LOCALE_ENDPOINT = "/api/locale"
-
 export function LanguageSwitcher() {
   const locale = useLocale() as Locale
   const t = useTranslations("languageSwitcher")
   const router = useRouter()
   const [isUpdating, setIsUpdating] = useState(false)
+  const hasSyncedStoredLocale = useRef(false)
 
   const languageLabels: Record<Locale, string> = {
     en: t("english"),
     pl: t("polish"),
   }
 
-  const updateLocale = async (nextLocale: Locale) => {
-    if (nextLocale === locale) {
+  const updateLocale = useCallback(
+    (nextLocale: Locale) => {
+      if (nextLocale === locale) {
+        return
+      }
+
+      setIsUpdating(true)
+      try {
+        Cookies.set(LOCALE_COOKIE_NAME, nextLocale, {
+          expires: 365, // 1 year
+        })
+      } finally {
+        setIsUpdating(false)
+        router.refresh()
+      }
+    },
+    [locale, router]
+  )
+
+  useEffect(() => {
+    const storedLocale = Cookies.get(LOCALE_COOKIE_NAME)
+
+    if (!storedLocale || hasSyncedStoredLocale.current) {
       return
     }
 
-    setIsUpdating(true)
-    try {
-      await fetch(LOCALE_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ locale: nextLocale }),
-      })
-    } finally {
-      setIsUpdating(false)
-      router.refresh()
+    if (locales.includes(storedLocale as Locale) && storedLocale !== locale) {
+      hasSyncedStoredLocale.current = true
+      updateLocale(storedLocale as Locale)
     }
-  }
+  }, [locale, updateLocale])
 
   const handleChange = (nextLocale: Locale | null) => {
     if (!nextLocale || nextLocale === locale) {
@@ -52,8 +67,8 @@ export function LanguageSwitcher() {
 
   return (
     <Select disabled={isUpdating} onValueChange={handleChange} value={locale}>
-      <SelectTrigger aria-label={t("label")} className="w-[120px]" size="sm">
-        <SelectValue />
+      <SelectTrigger aria-label={t("label")} className="w-30" size="sm">
+        <SelectValue render={<span>{languageLabels[locale]}</span>} />
       </SelectTrigger>
       <SelectContent>
         {locales.map((option) => (

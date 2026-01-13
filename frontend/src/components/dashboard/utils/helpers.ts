@@ -29,6 +29,10 @@ export function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }
 
-export const handleApiError = (err: unknown, fallback: string) => {
-  toast.error(err instanceof FetchError ? err.message : fallback)
+export const handleApiError = (err: unknown, fallback?: string) => {
+  toast.error(
+    err instanceof FetchError
+      ? err.message
+      : (fallback ?? "Wystąpił nieoczekiwany błąd.")
+  )
 }

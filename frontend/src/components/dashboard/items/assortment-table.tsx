@@ -160,7 +160,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
               }
             />
           </SelectTrigger>
-          <SelectContent className="p-2">
+          <SelectContent>
             {expiryOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
