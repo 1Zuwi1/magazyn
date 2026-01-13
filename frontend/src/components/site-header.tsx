@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Fragment } from "react/jsx-runtime"
 import { cn } from "@/lib/utils"
+import { NotificationInbox } from "./dashboard/notifications/components/notification-icon"
 import { Scanner } from "./scanner/scanner"
 import {
   Breadcrumb,
@@ -91,6 +92,8 @@ export default function SiteHeader() {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
+
+      <NotificationInbox />
       {pathname.includes("/dashboard/warehouse/") && (
         <Scanner
           warehouseName={decodeURIComponent(
