@@ -22,8 +22,8 @@ export function RackItemsStats({ rack, occupiedSlots }: RackItemsStatsProps) {
         <p className="text-muted-foreground text-sm">{t("stats.load")}</p>
         <p className="font-semibold text-2xl">
           {t("stats.loadValue", {
-            current: rack.currentWeight.toFixed(0),
-            max: String(rack.maxWeight),
+            current: rack.currentWeight,
+            max: rack.maxWeight,
           })}
         </p>
       </div>

@@ -1,6 +1,7 @@
 import { cookies, headers } from "next/headers"
 import type { Formats } from "next-intl"
 import { getRequestConfig, type RequestConfig } from "next-intl/server"
+import { LOCALE_COOKIE_NAME } from "@/config/constants"
 import { defaultLocale, type Locale, locales } from "./routing"
 
 export const formats = {
@@ -23,8 +24,6 @@ export const formats = {
     },
   },
 } satisfies Formats
-
-const LOCALE_COOKIE_NAME = "NEXT_LOCALE"
 
 const resolveLocale = (candidate: string | undefined | null): Locale | null => {
   if (!candidate) {

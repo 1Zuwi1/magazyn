@@ -260,7 +260,7 @@ export function ScannerCamera({
                   "relative isolate flex w-full gap-2 rounded-full bg-black/50 p-1 py-4 *:rounded-full *:px-4 *:py-3"
                 }
               >
-                {tabTriggers.map(({ text, action }) => (
+                {tabTriggers.map(({ action }) => (
                   <TabsTrigger
                     className={cn(
                       "z-10 w-0 flex-1 bg-transparent! text-white!",
@@ -271,7 +271,7 @@ export function ScannerCamera({
                     key={action}
                     value={action}
                   >
-                    {text}
+                    {t(`tabs.${action}`)}
                   </TabsTrigger>
                 ))}
                 <div

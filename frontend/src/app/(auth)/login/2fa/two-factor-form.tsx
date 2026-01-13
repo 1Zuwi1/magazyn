@@ -4,6 +4,7 @@ import { useForm } from "@tanstack/react-form"
 import { REGEXP_ONLY_DIGITS } from "input-otp"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import Logo from "@/components/logo"
@@ -20,7 +21,6 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { useTranslate } from "@/hooks/use-translate"
 import { apiFetch } from "@/lib/fetcher"
 import { createAuthSchemas } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -39,7 +39,7 @@ export default function TwoFactorForm({
   resendMethods,
   otpLength,
 }: TwoFactorFormProps) {
-  const translate = useTranslate("twoFactor")
+  const translate = useTranslations("twoFactor")
   const defaultMethod = linkedMethods[0] ?? "email"
   const [method, setMethod] = useState<TwoFactorMethod>(defaultMethod)
   const [isResending, setIsResending] = useState(false)

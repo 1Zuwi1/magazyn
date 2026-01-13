@@ -1,8 +1,8 @@
 "use client"
 
 import { Html, Instance, Instances, useCursor } from "@react-three/drei"
+import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
-import { useTranslate } from "@/hooks/use-translate"
 import {
   BLOCK_EMPTY_VISUAL,
   BLOCK_GAP_RATIO,
@@ -188,7 +188,7 @@ export function BlocksInstanced({
   hoverable = true,
   clickable = true,
 }: BlocksInstancedProps) {
-  const translate = useTranslate("threeD.blocks")
+  const translate = useTranslations("threeD.blocks")
   const { setFocusWindow } = useWarehouseStore()
   const [hoveredBlockKey, setHoveredBlockKey] = useState<string | null>(null)
   const resolvedMetrics = metrics ?? getRackMetrics(rack)

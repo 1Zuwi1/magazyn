@@ -16,6 +16,5 @@ export interface ScanItem {
 export type ScannerMode = "take" | "remove"
 
 export interface ScannerTab {
-  text: string
   action: ScannerMode
 }

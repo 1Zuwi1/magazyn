@@ -1,7 +1,8 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
-import { type TranslatorFor, useTranslate } from "@/hooks/use-translate"
+import type { TranslatorFor } from "@/types/translation"
 import { useWarehouseStore } from "./store"
 import type { Item3D, Rack3D, Warehouse3D } from "./types"
 import { RACK_ZONE_SIZE } from "./types"
@@ -10,7 +11,7 @@ interface DetailsPanelProps {
   warehouse: Warehouse3D
 }
 
-function getStatusTextranslate(
+function getStatusTranslate(
   translate: TranslatorFor<"threeD">,
   status: Item3D["status"]
 ): string {
@@ -40,7 +41,7 @@ function getStatusColor(status: Item3D["status"]): string {
 }
 
 function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
-  const translate = useTranslate("threeD")
+  const translate = useTranslations("threeD")
   const totalSlots = warehouse.racks.reduce(
     (sum: number, rack: Rack3D) => sum + rack.grid.rows * rack.grid.cols,
     0
@@ -105,8 +106,8 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
 }
 
 export function DetailsPanel({ warehouse }: DetailsPanelProps) {
-  const translate = useTranslate("threeD")
-  const common = useTranslate("common")
+  const translate = useTranslations("threeD")
+  const common = useTranslations("common")
   const {
     mode,
     selectedRackId,
@@ -159,27 +160,26 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
             <div>{translate("details.code", { code: selectedRack.code })}</div>
             <div>
               {translate("details.grid", {
-                rows: String(selectedRack.grid.rows),
-                cols: String(selectedRack.grid.cols),
+                rows: selectedRack.grid.rows,
+                cols: selectedRack.grid.cols,
               })}
             </div>
             <div>
               {translate("details.totalSlots", {
-                count: String(selectedRack.grid.rows * selectedRack.grid.cols),
+                count: selectedRack.grid.rows * selectedRack.grid.cols,
               })}
             </div>
             <div>
               {translate("details.occupiedSlots", {
-                count: String(
-                  selectedRack.items.filter((item) => item !== null).length
-                ),
+                count: selectedRack.items.filter((item) => item !== null)
+                  .length,
               })}
             </div>
             <div>
               {translate("details.maxSize", {
-                width: String(selectedRack.maxElementSize.width),
-                height: String(selectedRack.maxElementSize.height),
-                depth: String(selectedRack.maxElementSize.depth),
+                width: selectedRack.maxElementSize.width,
+                height: selectedRack.maxElementSize.height,
+                depth: selectedRack.maxElementSize.depth,
               })}
             </div>
           </div>
@@ -191,8 +191,8 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-bold text-lg">
               {translate("details.shelfTitle", {
-                row: String(selectedShelf.row + 1),
-                col: String(selectedShelf.col + 1),
+                row: selectedShelf.row + 1,
+                col: selectedShelf.col + 1,
               })}
             </h3>
             <Button onClick={clearSelection} size="sm" variant="ghost">
@@ -207,7 +207,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                   className={`h-3 w-3 rounded ${getStatusColor(selectedItem.status)}`}
                 />
                 <span className="font-semibold">
-                  {getStatusTextranslate(translate, selectedItem.status)}
+                  {getStatusTranslate(translate, selectedItem.status)}
                 </span>
               </div>
 
@@ -258,8 +258,8 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
               </div>
               <div className="text-sm">
                 {translate("details.emptyShelf.description", {
-                  row: String(selectedShelf.row + 1),
-                  col: String(selectedShelf.col + 1),
+                  row: selectedShelf.row + 1,
+                  col: selectedShelf.col + 1,
                 })}
               </div>
             </div>
@@ -271,7 +271,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
         <div className="flex-1 text-center text-muted-foreground">
           {showBlockHint
             ? translate("details.blockHint", {
-                size: String(RACK_ZONE_SIZE),
+                size: RACK_ZONE_SIZE,
               })
             : translate("details.shelfHint")}
         </div>

@@ -196,7 +196,7 @@
     "stats": {
       "occupied": "Zajęte miejsca",
       "load": "Obciążenie",
-      "loadValue": "{current} / {max} kg"
+      "loadValue": "{current, number} / {max, number} kg"
     },
     "headers": {
       "image": "Zdjęcie",
@@ -208,9 +208,9 @@
       "expiry": "Data ważności",
       "status": "Status"
     },
-    "dimensions": "{width}×{height}×{depth} mm",
-    "weight": "{weight} kg",
-    "temperatureRange": "{min}°C – {max}°C",
+    "dimensions": "{width, number}×{height, number}×{depth, number} mm",
+    "weight": "{weight, number} kg",
+    "temperatureRange": "{min, number}°C – {max, number}°C",
     "badges": {
       "dangerous": "Niebezpieczny",
       "expired": "Przeterminowany"
@@ -342,11 +342,11 @@
       "trigger": "Szczegóły",
       "backToBlocks": "Powrót do bloków",
       "code": "Kod: {code}",
-      "grid": "Siatka: {rows}×{cols}",
-      "totalSlots": "Wszystkie miejsca: {count}",
-      "occupiedSlots": "Zajęte: {count}",
-      "maxSize": "Maks. rozmiar elementu: {width}×{height}×{depth} mm",
-      "shelfTitle": "Rząd {row} półka {col}",
+      "grid": "Siatka: {rows, number}×{cols, number}",
+      "totalSlots": "Wszystkie miejsca: {count, number}",
+      "occupiedSlots": "Zajęte: {count, number}",
+      "maxSize": "Maks. rozmiar elementu: {width, number}×{height, number}×{depth, number} mm",
+      "shelfTitle": "Rząd {row, number} półka {col, number}",
       "item": {
         "id": "ID:",
         "label": "Etykieta:",
@@ -356,9 +356,9 @@
       },
       "emptyShelf": {
         "title": "Pusta półka",
-        "description": "Brak elementu na pozycji Rząd {row} półka {col}"
+        "description": "Brak elementu na pozycji Rząd {row, number} półka {col, number}"
       },
-      "blockHint": "Kliknij blok {size}×{size}, aby zobaczyć szczegóły.",
+      "blockHint": "Kliknij blok {size, number}×{size, number}, aby zobaczyć szczegóły.",
       "shelfHint": "Kliknij na półkę, aby zobaczyć szczegóły"
     },
     "overview": {
@@ -391,8 +391,8 @@
     },
     "racks": {
       "tooltip": {
-        "occupied": "{percent}% zajęte • {cols}×{rows}",
-        "maxSize": "Maks: {width}×{height}×{depth} mm"
+        "occupied": "{percent, number}% zajęte • {cols, number}×{rows, number}",
+        "maxSize": "Maks: {width, number}×{height, number}×{depth, number} mm"
       }
     }
   },

@@ -196,7 +196,7 @@
     "stats": {
       "occupied": "Occupied slots",
       "load": "Load",
-      "loadValue": "{current} / {max} kg"
+      "loadValue": "{current, number} / {max, number} kg"
     },
     "headers": {
       "image": "Image",
@@ -208,9 +208,9 @@
       "expiry": "Expiry date",
       "status": "Status"
     },
-    "dimensions": "{width}×{height}×{depth} mm",
-    "weight": "{weight} kg",
-    "temperatureRange": "{min}°C – {max}°C",
+    "dimensions": "{width, number}×{height, number}×{depth, number} mm",
+    "weight": "{weight, number} kg",
+    "temperatureRange": "{min, number}°C – {max, number}°C",
     "badges": {
       "dangerous": "Dangerous",
       "expired": "Expired"
@@ -342,11 +342,11 @@
       "trigger": "Details",
       "backToBlocks": "Back to blocks",
       "code": "Code: {code}",
-      "grid": "Grid: {rows}×{cols}",
-      "totalSlots": "Total slots: {count}",
-      "occupiedSlots": "Occupied: {count}",
-      "maxSize": "Max item size: {width}×{height}×{depth} mm",
-      "shelfTitle": "Row {row} shelf {col}",
+      "grid": "Grid: {rows, number}×{cols, number}",
+      "totalSlots": "Total slots: {count, number}",
+      "occupiedSlots": "Occupied: {count, number}",
+      "maxSize": "Max item size: {width, number}×{height, number}×{depth, number} mm",
+      "shelfTitle": "Row {row, number} shelf {col, number}",
       "item": {
         "id": "ID:",
         "label": "Label:",
@@ -356,9 +356,9 @@
       },
       "emptyShelf": {
         "title": "Empty shelf",
-        "description": "No item at row {row} shelf {col}"
+        "description": "No item at row {row, number} shelf {col, number}"
       },
-      "blockHint": "Click a {size}×{size} block to see details.",
+      "blockHint": "Click a {size, number}×{size, number} block to see details.",
       "shelfHint": "Click a shelf to see details"
     },
     "overview": {
@@ -391,8 +391,8 @@
     },
     "racks": {
       "tooltip": {
-        "occupied": "{percent}% occupied • {cols}×{rows}",
-        "maxSize": "Max: {width}×{height}×{depth} mm"
+        "occupied": "{percent, number}% occupied • {cols, number}×{rows, number}",
+        "maxSize": "Max: {width, number}×{height, number}×{depth, number} mm"
       }
     }
   },

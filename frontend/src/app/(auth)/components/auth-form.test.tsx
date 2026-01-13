@@ -86,18 +86,18 @@ vi.mock("sonner", () => ({
 // Mock API fetcher
 const mockApiFetch = vi.fn()
 vi.mock("@/lib/fetcher", () => ({
-  apiFetch: (...args: any[]) => mockApiFetch(...args),
+  apiFetch: (...args: unknown[]) => mockApiFetch(...args),
 }))
 
 // Mock helpers
 const mockHandleApiError = vi.fn()
 vi.mock("@/components/dashboard/utils/helpers", () => ({
-  handleApiError: (...args: any[]) => mockHandleApiError(...args),
+  useHandleApiError: () => mockHandleApiError,
 }))
 
 // Mock try-catch helper to act predictably
 vi.mock("@/lib/try-catch", () => ({
-  default: async (promise: Promise<any>) => {
+  default: async (promise: Promise<unknown>) => {
     try {
       const data = await promise
       return [null, data]

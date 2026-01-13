@@ -1,5 +1,5 @@
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
-import { useTranslate } from "@/hooks/use-translate"
 import { FetchError } from "@/lib/fetcher"
 
 // Helper function to convert index to coordinate (R01-P01, R02-P03, etc.)
@@ -31,7 +31,7 @@ export function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
 }
 
 export const useHandleApiError = () => {
-  const translator = useTranslate("auth.errors")
+  const translator = useTranslations("auth.errors")
 
   return (err: unknown, fallback?: string) => {
     toast.error(

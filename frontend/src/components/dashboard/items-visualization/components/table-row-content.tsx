@@ -47,9 +47,9 @@ export function TableRowContent({
   const locale = useLocale()
   const formatDimensions = (dimensions: { x: number; y: number; z: number }) =>
     t("dimensions", {
-      width: String(dimensions.x),
-      height: String(dimensions.y),
-      depth: String(dimensions.z),
+      width: dimensions.x,
+      height: dimensions.y,
+      depth: dimensions.z,
     })
 
   return (
@@ -93,14 +93,16 @@ export function TableRowContent({
         </div>
       </TableCell>
       <TableCell className="font-mono text-sm">{item.qrCode}</TableCell>
-      <TableCell>{t("weight", { weight: item.weight.toFixed(2) })}</TableCell>
+      <TableCell>
+        {t("weight", { weight: Number.parseFloat(item.weight.toFixed(2)) })}
+      </TableCell>
       <TableCell className="text-sm">
         {formatDimensions(item.dimensions)}
       </TableCell>
       <TableCell className="text-sm">
         {t("temperatureRange", {
-          min: String(item.minTemp),
-          max: String(item.maxTemp),
+          min: item.minTemp,
+          max: item.maxTemp,
         })}
       </TableCell>
       <TableCell>

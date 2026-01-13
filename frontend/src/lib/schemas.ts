@@ -1,5 +1,5 @@
 import z from "zod"
-import type { Namespace, TranslatorFor } from "@/hooks/use-translate"
+import type { Namespace, TranslatorFor } from "@/types/translation"
 import { createApiSchema } from "./create-api-schema"
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/

@@ -3,6 +3,7 @@
 import { type AnyFieldApi, useForm } from "@tanstack/react-form"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useMemo } from "react"
 import { toast } from "sonner"
 import type { ZodError } from "zod"
@@ -16,7 +17,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { useTranslate } from "@/hooks/use-translate"
 import { apiFetch } from "@/lib/fetcher"
 import { createAuthSchemas } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -54,7 +54,7 @@ const values = {
 type ValueTypes = typeof values
 
 export default function AuthForm({ mode }: AuthFormProps) {
-  const translate = useTranslate("auth")
+  const translate = useTranslations("auth")
   const router = useRouter()
   const isLogin = mode === "login"
   const { LoginSchema, RegisterSchema } = useMemo(

@@ -151,16 +151,16 @@ function RackInstance({
             <div className="font-bold">{rack.code}</div>
             <div>
               {t("tooltip.occupied", {
-                percent: String(Math.round(occupancy)),
-                cols: String(rack.grid.cols),
-                rows: String(rack.grid.rows),
+                percent: Math.round(occupancy),
+                cols: rack.grid.cols,
+                rows: rack.grid.rows,
               })}
             </div>
             <div className="text-slate-400">
               {t("tooltip.maxSize", {
-                width: String(rack.maxElementSize.width),
-                height: String(rack.maxElementSize.height),
-                depth: String(rack.maxElementSize.depth),
+                width: rack.maxElementSize.width,
+                height: rack.maxElementSize.height,
+                depth: rack.maxElementSize.depth,
               })}
             </div>
           </div>

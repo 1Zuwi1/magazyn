@@ -56,10 +56,7 @@ export function Scanner({
 }: ScannerProps) {
   const t = useTranslations("scanner")
   const isMobile = useIsMobile()
-  const tabTriggers: ScannerTab[] = [
-    { text: t("tabs.take"), action: "take" },
-    { text: t("tabs.remove"), action: "remove" },
-  ]
+  const tabTriggers: ScannerTab[] = [{ action: "take" }, { action: "remove" }]
   const [mode, setMode] = useState<ScannerMode>(
     tabTriggers[0]?.action ?? "take"
   )
