@@ -12,6 +12,7 @@ import {
 } from "@tanstack/react-table"
 import { useLocale, useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
+import type { TranslationValues } from "use-intl/core"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -67,7 +68,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
   const t = useTranslations()
   const locale = useLocale()
   const translate = useMemo(
-    () => (key: string, values?: Record<string, string | number>) =>
+    () => (key: string, values?: TranslationValues) =>
       t(key as never, values as never),
     [t]
   )

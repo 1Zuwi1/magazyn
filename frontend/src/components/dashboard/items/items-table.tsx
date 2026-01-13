@@ -13,6 +13,7 @@ import {
 } from "@tanstack/react-table"
 import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
+import type { TranslationValues } from "use-intl/core"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -48,7 +49,7 @@ const globalFilterFn: FilterFn<ItemStats> = (row, _columnId, filterValue) => {
 export function ItemsTable({ items }: ItemsTableProps) {
   const t = useTranslations()
   const translate = useMemo(
-    () => (key: string, values?: Record<string, string | number>) =>
+    () => (key: string, values?: TranslationValues) =>
       t(key as never, values as never),
     [t]
   )

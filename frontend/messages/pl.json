@@ -383,8 +383,8 @@
         "empty": "Pusta strefa"
       },
       "tooltip": {
-        "zone": "Strefa {startRow}–{endRow}, {startCol}–{endCol}",
-        "occupied": "Zajęte: {occupied}/{total} ({percent}%)",
+        "zone": "Strefa {startRow, number}–{endRow, number}, {startCol, number}–{endCol, number}",
+        "occupied": "Zajęte: {occupied, number}/{total, number} ({percent, number}%)",
         "status": "Status: {status}"
       }
     },

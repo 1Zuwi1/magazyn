@@ -383,8 +383,8 @@
         "empty": "Empty zone"
       },
       "tooltip": {
-        "zone": "Zone {startRow}–{endRow}, {startCol}–{endCol}",
-        "occupied": "Occupied: {occupied}/{total} ({percent}%)",
+        "zone": "Zone {startRow, number}–{endRow, number}, {startCol, number}–{endCol, number}",
+        "occupied": "Occupied: {occupied, number}/{total, number} ({percent, number}%)",
         "status": "Status: {status}"
       }
     },

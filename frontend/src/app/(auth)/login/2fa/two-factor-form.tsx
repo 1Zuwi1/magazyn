@@ -4,7 +4,6 @@ import { useForm } from "@tanstack/react-form"
 import { REGEXP_ONLY_DIGITS } from "input-otp"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
 import { useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import Logo from "@/components/logo"
@@ -21,6 +20,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
+import { useTranslate } from "@/hooks/use-translate"
 import { apiFetch } from "@/lib/fetcher"
 import { createAuthSchemas } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -39,12 +39,7 @@ export default function TwoFactorForm({
   resendMethods,
   otpLength,
 }: TwoFactorFormProps) {
-  const t = useTranslations()
-  const translate = useMemo(
-    () => (key: string, values?: Record<string, string | number>) =>
-      t(key as never, values as never),
-    [t]
-  )
+  const translate = useTranslate("twoFactor")
   const defaultMethod = linkedMethods[0] ?? "email"
   const [method, setMethod] = useState<TwoFactorMethod>(defaultMethod)
   const [isResending, setIsResending] = useState(false)
@@ -56,14 +51,14 @@ export default function TwoFactorForm({
   )
 
   const methodTitles: Record<TwoFactorMethod, string> = {
-    authenticator: t("twoFactor.methodTitles.authenticator"),
-    sms: t("twoFactor.methodTitles.sms"),
-    email: t("twoFactor.methodTitles.email"),
+    authenticator: translate("methodTitles.authenticator"),
+    sms: translate("methodTitles.sms"),
+    email: translate("methodTitles.email"),
   }
   const methodSwitchLabels: Record<TwoFactorMethod, string> = {
-    authenticator: t("twoFactor.methodSwitch.authenticator"),
-    sms: t("twoFactor.methodSwitch.sms"),
-    email: t("twoFactor.methodSwitch.email"),
+    authenticator: translate("methodSwitch.authenticator"),
+    sms: translate("methodSwitch.sms"),
+    email: translate("methodSwitch.email"),
   }
 
   const form = useForm({
@@ -77,10 +72,10 @@ export default function TwoFactorForm({
           })
         )
         if (err) {
-          toast.error(t("twoFactor.errors.invalidCode"))
+          toast.error(translate("errors.invalidCode"))
           return
         }
-        toast.success(t("twoFactor.success.verified"))
+        toast.success(translate("success.verified"))
         router.push("/dashboard")
       } finally {
         autoSubmittedRef.current = false
@@ -100,7 +95,7 @@ export default function TwoFactorForm({
 
   async function resendCode(m: ResendType) {
     if (!resendMethods.includes(m)) {
-      toast.error(t("twoFactor.errors.unsupportedResend"))
+      toast.error(translate("errors.unsupportedResend"))
       return false
     }
     setIsResending(true)
@@ -113,11 +108,11 @@ export default function TwoFactorForm({
     setIsResending(false)
 
     if (err) {
-      toast.error(t("twoFactor.errors.resendFailed"))
+      toast.error(translate("errors.resendFailed"))
       return false
     }
 
-    toast.success(t(`twoFactor.success.resend.${m}`))
+    toast.success(translate(`success.resend.${m}`))
     return true
   }
 
@@ -141,7 +136,7 @@ export default function TwoFactorForm({
     >
       <FieldGroup>
         <Link className="underline" href="/">
-          {t("twoFactor.actions.backToHome")}
+          {translate("actions.backToHome")}
         </Link>
         <div className="flex flex-col items-center gap-2 text-center">
           <Logo />
@@ -152,7 +147,7 @@ export default function TwoFactorForm({
           {(field) => (
             <Field disabled={form.state.isSubmitting || isResending}>
               <FieldLabel className="sr-only" htmlFor={field.name}>
-                {t("twoFactor.fields.code")}
+                {translate("fields.code")}
               </FieldLabel>
 
               <InputOTP
@@ -200,7 +195,7 @@ export default function TwoFactorForm({
 
               {canResend ? (
                 <FieldDescription className="text-center">
-                  {t("twoFactor.resend.prompt")}{" "}
+                  {translate("resend.prompt")}{" "}
                   <Button
                     className="h-auto p-0 align-baseline"
                     isLoading={isResending}
@@ -208,7 +203,7 @@ export default function TwoFactorForm({
                     type="button"
                     variant="link"
                   >
-                    {t("twoFactor.resend.action")}
+                    {translate("resend.action")}
                   </Button>
                 </FieldDescription>
               ) : null}
@@ -216,7 +211,7 @@ export default function TwoFactorForm({
               {alternatives.length ? (
                 <div className="mt-3">
                   <p className="text-center text-muted-foreground text-sm">
-                    {t("twoFactor.switch.prompt")}
+                    {translate("switch.prompt")}
                   </p>
                   <div className="mt-2 flex flex-col gap-1">
                     {alternatives.map((m) => (
@@ -245,7 +240,7 @@ export default function TwoFactorForm({
             isLoading={form.state.isSubmitting}
             type="submit"
           >
-            {t("twoFactor.actions.verify")}
+            {translate("actions.verify")}
           </Button>
         </Field>
       </FieldGroup>

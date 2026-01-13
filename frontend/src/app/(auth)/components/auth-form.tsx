@@ -3,7 +3,6 @@
 import { type AnyFieldApi, useForm } from "@tanstack/react-form"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
 import { useMemo } from "react"
 import { toast } from "sonner"
 import type { ZodError } from "zod"
@@ -17,6 +16,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { useTranslate } from "@/hooks/use-translate"
 import { apiFetch } from "@/lib/fetcher"
 import { createAuthSchemas } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -54,12 +54,7 @@ const values = {
 type ValueTypes = typeof values
 
 export default function AuthForm({ mode }: AuthFormProps) {
-  const t = useTranslations()
-  const translate = useMemo(
-    () => (key: string, values?: Record<string, string | number>) =>
-      t(key as never, values as never),
-    [t]
-  )
+  const translate = useTranslate("auth")
   const router = useRouter()
   const isLogin = mode === "login"
   const { LoginSchema, RegisterSchema } = useMemo(
@@ -80,11 +75,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
         )
 
         if (err) {
-          handleApiError(err, t("auth.errors.loginFailed"))
+          handleApiError(err, translate("errors.loginFailed"))
           return
         }
 
-        toast.success(t("auth.success.login"))
+        toast.success(translate("success.login"))
         router.push(res.requiresTwoFactor ? "/login/2fa" : "/dashboard")
       } else {
         const registerValue = value as ValueTypes["register"]
@@ -96,11 +91,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
         )
 
         if (err) {
-          handleApiError(err, t("auth.errors.registerFailed"))
+          handleApiError(err, translate("errors.registerFailed"))
           return
         }
 
-        toast.success(t("auth.success.register"))
+        toast.success(translate("success.register"))
         router.push("/login")
       }
     },
@@ -124,8 +119,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
             <Logo />
             <FieldDescription>
               {isLogin
-                ? t("auth.form.loginDescription")
-                : t("auth.form.registerDescription")}
+                ? translate("form.loginDescription")
+                : translate("form.registerDescription")}
             </FieldDescription>
           </div>
           {!isLogin && (
@@ -134,7 +129,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 {(field) => (
                   <Field>
                     <FieldLabel htmlFor={field.name}>
-                      {t("auth.fields.email")}
+                      {translate("fields.email")}
                     </FieldLabel>
                     <Input
                       className={
@@ -144,7 +139,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                       name={field.name}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder={t("auth.placeholders.email")}
+                      placeholder={translate("placeholders.email")}
                       type="email"
                       value={field.state.value}
                     />
@@ -157,7 +152,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 {(field) => (
                   <Field>
                     <FieldLabel htmlFor={field.name}>
-                      {t("auth.fields.fullName")}
+                      {translate("fields.fullName")}
                     </FieldLabel>
                     <Input
                       className={
@@ -167,7 +162,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                       name={field.name}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder={t("auth.placeholders.fullName")}
+                      placeholder={translate("placeholders.fullName")}
                       type="text"
                       value={field.state.value}
                     />
@@ -182,7 +177,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             {(field) => (
               <Field>
                 <FieldLabel htmlFor={field.name}>
-                  {t("auth.fields.username")}
+                  {translate("fields.username")}
                 </FieldLabel>
                 <Input
                   className={
@@ -192,7 +187,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   name={field.name}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={t("auth.placeholders.username")}
+                  placeholder={translate("placeholders.username")}
                   type="text"
                   value={field.state.value}
                 />
@@ -205,7 +200,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             {(field) => (
               <Field>
                 <FieldLabel htmlFor={field.name}>
-                  {t("auth.fields.password")}
+                  {translate("fields.password")}
                 </FieldLabel>
                 <Input
                   className={
@@ -215,7 +210,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   name={field.name}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={t("auth.placeholders.password")}
+                  placeholder={translate("placeholders.password")}
                   type="password"
                   value={field.state.value}
                 />
@@ -229,7 +224,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
               {(field) => (
                 <Field>
                   <FieldLabel htmlFor={field.name}>
-                    {t("auth.fields.confirmPassword")}
+                    {translate("fields.confirmPassword")}
                   </FieldLabel>
                   <Input
                     className={
@@ -239,7 +234,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     name={field.name}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={t("auth.placeholders.password")}
+                    placeholder={translate("placeholders.password")}
                     type="password"
                     value={field.state.value}
                   />
@@ -261,8 +256,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   type="submit"
                 >
                   {isLogin
-                    ? t("auth.actions.login")
-                    : t("auth.actions.register")}
+                    ? translate("actions.login")
+                    : translate("actions.register")}
                 </Button>
               )}
             </form.Subscribe>
@@ -271,16 +266,16 @@ export default function AuthForm({ mode }: AuthFormProps) {
           <div className="text-center text-sm">
             {isLogin ? (
               <>
-                {t("auth.prompt.noAccount")}{" "}
+                {translate("prompt.noAccount")}{" "}
                 <Link className="text-primary underline" href="/register">
-                  {t("auth.actions.register")}
+                  {translate("actions.register")}
                 </Link>
               </>
             ) : (
               <>
-                {t("auth.prompt.hasAccount")}{" "}
+                {translate("prompt.hasAccount")}{" "}
                 <Link className="text-primary underline" href="/login">
-                  {t("auth.actions.login")}
+                  {translate("actions.login")}
                 </Link>
               </>
             )}

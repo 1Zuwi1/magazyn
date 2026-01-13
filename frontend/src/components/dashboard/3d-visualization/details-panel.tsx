@@ -1,6 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
+import type { TranslationValues } from "use-intl/core"
 import { Button } from "@/components/ui/button"
 import { useWarehouseStore } from "./store"
 import type { Item3D, Rack3D, Warehouse3D } from "./types"
@@ -10,10 +11,7 @@ interface DetailsPanelProps {
   warehouse: Warehouse3D
 }
 
-type Translator = (
-  key: string,
-  values?: Record<string, string | number>
-) => string
+type Translator = (key: string, values?: TranslationValues) => string
 
 function getStatusText(t: Translator, status: Item3D["status"]): string {
   if (status === "normal") {
@@ -108,7 +106,7 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
 
 export function DetailsPanel({ warehouse }: DetailsPanelProps) {
   const t = useTranslations()
-  const translate = (key: string, values?: Record<string, string | number>) =>
+  const translate = (key: string, values?: TranslationValues) =>
     t(key as never, values as never)
   const {
     mode,

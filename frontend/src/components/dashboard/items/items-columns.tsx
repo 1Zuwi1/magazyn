@@ -8,6 +8,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { ColumnDef } from "@tanstack/react-table"
 import Image from "next/image"
+import type { TranslationValues } from "use-intl/core"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -19,10 +20,7 @@ import {
 import { cn } from "@/lib/utils"
 import type { ItemStats } from "./types"
 
-type Translator = (
-  key: string,
-  values?: Record<string, string | number>
-) => string
+type Translator = (key: string, values?: TranslationValues) => string
 
 const getDaysUntilExpiryBadge = (t: Translator, days: number | undefined) => {
   if (days === undefined) {

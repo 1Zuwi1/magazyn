@@ -1,28 +1,24 @@
+import type { TranslationValues } from "use-intl/core"
+import { createTranslator } from "use-intl/core"
 import { describe, expect, it } from "vitest"
 
 import messages from "../../messages/en.json"
 import { ApiMeSchema, createAuthSchemas } from "./schemas"
 
-const translate = (key: string, values?: Record<string, unknown>) => {
-  const message = key
-    .split(".")
-    .reduce<unknown>(
-      (acc, part) => (acc as Record<string, unknown>)?.[part],
-      messages
-    )
+const translator = createTranslator({
+  locale: "en",
+  messages,
+  onError: (error) => {
+    throw error
+  },
+  getMessageFallback: ({ key, namespace }) => {
+    const fullKey = namespace ? `${namespace}.${key}` : key
+    throw new Error(`Missing message for key: ${fullKey}`)
+  },
+})
 
-  if (typeof message !== "string") {
-    throw new Error(`Missing message for key: ${key}`)
-  }
-
-  if (!values) {
-    return message
-  }
-
-  return message.replace(/\{(\w+)\}/g, (_match, token) =>
-    token in values ? String(values[token]) : `{${token}}`
-  )
-}
+const translate = (key: string, values?: TranslationValues) =>
+  translator(key as never, values as never)
 
 const { LoginSchema, RegisterSchema, Resend2FASchema, Verify2FASchema } =
   createAuthSchemas(translate)
