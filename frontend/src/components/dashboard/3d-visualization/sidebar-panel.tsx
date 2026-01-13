@@ -1,4 +1,6 @@
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 import { useWarehouseStore } from "./store"
 import type { Rack3D } from "./types"
 
@@ -31,7 +33,7 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
         </div>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto">
+      <div className="flex-1 space-y-2 overflow-y-auto pr-2">
         {filteredRacks.map((rack) => {
           const occupiedCount = rack.items.filter(
             (item) => item !== null
@@ -39,17 +41,20 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
           const occupancy =
             (occupiedCount / (rack.grid.rows * rack.grid.cols)) * 100
           return (
-            <button
-              className={`w-full rounded-lg border p-3 text-left transition-colors ${
-                selectedRackId === rack.id
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:bg-muted"
-              }`}
+            <Button
+              className={cn(
+                "flex h-fit w-full flex-col items-start rounded-lg border p-3 text-left transition-colors",
+                {
+                  "border-primary bg-primary/5 hover:bg-primary/10!":
+                    selectedRackId === rack.id,
+                  "border-border hover:bg-muted": selectedRackId !== rack.id,
+                }
+              )}
               key={rack.id}
               onClick={() => {
                 focusRack(rack.id)
               }}
-              type="button"
+              variant="ghost"
             >
               <div className="mb-2 flex items-center justify-between">
                 <span className="font-semibold">{rack.name}</span>
@@ -57,11 +62,11 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
               <div className="mb-1 text-muted-foreground text-sm">
                 Siatka: {rack.grid.rows}×{rack.grid.cols}
               </div>
-              <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center justify-between gap-1 text-xs">
                 <span>Zajętość:</span>
                 <span className="font-semibold">{Math.round(occupancy)}%</span>
               </div>
-            </button>
+            </Button>
           )
         })}
       </div>

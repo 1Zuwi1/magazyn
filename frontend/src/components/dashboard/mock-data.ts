@@ -1,5 +1,5 @@
 import type { ItemInstance, ItemStats } from "./items/types"
-import type { Rack } from "./types"
+import type { Notification, Rack } from "./types"
 
 const MOCK_RACKS: Rack[] = [
   {
@@ -887,10 +887,56 @@ const MOCK_ITEM_STATS: ItemStats[] = [
 
 const MOCK_ITEM_DEFINITIONS = MOCK_ITEM_STATS.map((stat) => stat.definition)
 
+const MOCK_NOTIFICATIONS: Notification[] = [
+  {
+    id: "1",
+    title: "Produkt 1",
+    description: "Opis 1",
+    date: "2h temu",
+    read: false,
+  },
+  {
+    id: "2",
+    title: "Produkt 2",
+    description: "Opis 2",
+    date: "1h temu",
+    read: false,
+  },
+  {
+    id: "3",
+    title: "Produkt 3",
+    description: "Opis 3",
+    date: "2h temu",
+    read: true,
+  },
+  {
+    id: "4",
+    title: "Produkt 4",
+    description: "Opis 4",
+    date: "1h temu",
+    read: true,
+  },
+  {
+    id: "5",
+    title: "Produkt 5",
+    description: "Opis 5",
+    date: "1h temu",
+    read: false,
+  },
+  {
+    id: "6",
+    title: "Produkt 6",
+    description: "Opis 6",
+    date: "1h temu",
+    read: false,
+  },
+]
+
 export {
   MOCK_WAREHOUSES,
   MOCK_RACKS,
   MOCK_ITEMS,
   MOCK_ITEM_STATS,
   MOCK_ITEM_DEFINITIONS,
+  MOCK_NOTIFICATIONS,
 }

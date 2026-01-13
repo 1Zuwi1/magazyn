@@ -9,6 +9,13 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  turbopack: {
+    root: import.meta.dirname,
+  },
+  images: {
+    remotePatterns: [new URL("https://placehold.co/**")],
+    dangerouslyAllowSVG: true,
+  },
 }
 
 const withNextIntl = createNextIntlPlugin({

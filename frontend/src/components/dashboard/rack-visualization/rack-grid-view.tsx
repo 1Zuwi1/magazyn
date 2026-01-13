@@ -3,7 +3,7 @@
 import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useEffect, useRef, useState } from "react"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { VIRTUALIZATION_THRESHOLDS } from "@/config/constants"
 import { RackItemsDialog } from "../items-visualization/rack-items-dialog"
 import type { ItemSlot, Rack } from "../types"
@@ -82,17 +82,15 @@ export function RackGridView({
       <div className="flex h-full w-full items-center gap-2 sm:gap-4">
         {/* Left Navigation Arrow */}
         {showNavigation && onPreviousRack && (
-          <button
-            className={buttonVariants({
-              variant: "outline",
-              size: "icon",
-              className: "size-8 shrink-0 rounded-full sm:size-10",
-            })}
+          <Button
+            className="size-8 sm:size-10"
             onClick={onPreviousRack}
+            size="icon"
             type="button"
+            variant="outline"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} />
-          </button>
+          </Button>
         )}
 
         {/* Grid */}
@@ -124,17 +122,15 @@ export function RackGridView({
 
         {/* Right Navigation Arrow */}
         {showNavigation && onNextRack && (
-          <button
-            className={buttonVariants({
-              variant: "outline",
-              size: "icon",
-              className: "size-8 shrink-0 rounded-full sm:size-10",
-            })}
+          <Button
+            className="size-8 sm:size-10"
             onClick={onNextRack}
+            size="icon"
             type="button"
+            variant="outline"
           >
             <HugeiconsIcon icon={ArrowRight01Icon} />
-          </button>
+          </Button>
         )}
       </div>
       {/* Rack Indicator */}
