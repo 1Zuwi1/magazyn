@@ -21,11 +21,11 @@ public class StringCryptoService {
             EncryptedData encrypted = cryptoService.encrypt(data);
 
 
-            return Base64.getEncoder().encodeToString(encrypted.getCiphertext()) + ":" +
-                    Base64.getEncoder().encodeToString(encrypted.getEncryptedDek()) + ":" +
-                    Base64.getEncoder().encodeToString(encrypted.getIv()) + ":" +
-                    Base64.getEncoder().encodeToString(encrypted.getDekIv()) + ":" +
-                    encrypted.getKekName();
+            return Base64.getEncoder().encodeToString(encrypted.ciphertext()) + ":" +
+                    Base64.getEncoder().encodeToString(encrypted.encryptedDek()) + ":" +
+                    Base64.getEncoder().encodeToString(encrypted.iv()) + ":" +
+                    Base64.getEncoder().encodeToString(encrypted.dekIv()) + ":" +
+                    encrypted.kekName();
         } catch (Exception e) {
             throw new EncryptionException("Encryption error", e);
         }

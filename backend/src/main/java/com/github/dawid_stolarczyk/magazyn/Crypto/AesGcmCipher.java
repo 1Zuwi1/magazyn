@@ -33,4 +33,18 @@ public class AesGcmCipher {
         return cipher.doFinal(cipherText);
     }
 
+    public Cipher encryptCipher() throws Exception {
+        iv = new byte[12];
+        random.nextBytes(iv);
+
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(128, iv));
+        return cipher;
+    }
+
+    public Cipher decryptCipher(byte[] iv) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(128, iv));
+        return cipher;
+    }
 }

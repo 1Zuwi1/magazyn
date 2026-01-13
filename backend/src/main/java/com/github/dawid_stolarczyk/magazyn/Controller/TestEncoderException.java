@@ -1,14 +1,14 @@
 package com.github.dawid_stolarczyk.magazyn.Controller;
 
 import com.github.dawid_stolarczyk.magazyn.Crypto.CryptoService;
+import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Services.StringCryptoService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -17,6 +17,8 @@ import java.util.Map;
 public class TestEncoderException {
     @Autowired
     private StringCryptoService cryptoService;
+    @Autowired
+    private FileCryptoService fileCryptoService;
 
     @PostMapping("/test")
     public ResponseEntity<?> encodeTest(@RequestBody Map<String, String> payload) {
@@ -33,5 +35,20 @@ public class TestEncoderException {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
+
+    @PostMapping("/encrypt-file")
+    public void encrypt(@RequestParam MultipartFile file, HttpServletResponse response) throws Exception {
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-Disposition", "attachment; filename=\"encrypted.dat\"");
+
+        fileCryptoService.encrypt(file.getInputStream(), response.getOutputStream());
+    }
+    @PostMapping("/decrypt-file")
+    public void decrypt(@RequestParam MultipartFile file, HttpServletResponse response) throws Exception {
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-Disposition", "attachment; filename=\"decrypted\"");
+
+        fileCryptoService.decrypt(file.getInputStream(), response.getOutputStream());
     }
 }
