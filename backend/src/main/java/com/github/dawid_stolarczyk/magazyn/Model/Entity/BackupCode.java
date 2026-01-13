@@ -1,7 +1,11 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "backup_codes")
 public class BackupCode {
@@ -16,35 +20,4 @@ public class BackupCode {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public boolean isUsed() {
-        return used;
-    }
-
-    public void setUsed(boolean used) {
-        this.used = used;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
 }

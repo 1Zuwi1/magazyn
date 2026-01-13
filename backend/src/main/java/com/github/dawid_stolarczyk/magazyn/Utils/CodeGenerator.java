@@ -13,6 +13,16 @@ public class CodeGenerator {
         }
         return sb.toString();
     }
+    public static String generateBackupCodeWithBase62(int length) {
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            if (i > 0 && i % 4 == 0) {
+                sb.append('-');
+            }
+            sb.append(BASE62.charAt(RANDOM.nextInt(BASE62.length())));
+        }
+        return sb.toString();
+    }
 
     public static String generateWithNumbers(int length) {
         StringBuilder sb = new StringBuilder(length);

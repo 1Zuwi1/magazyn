@@ -60,7 +60,11 @@ public class TwoFactorController {
     @PostMapping("/backup-codes/generate")
     @Operation(summary = "Generate new backup codes for the current user.")
     public ResponseEntity<?> generateBackupCodes() {
-        return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.generateBackupCodes(request)));
+        try {
+            return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.generateBackupCodes(request)));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));
+        }
     }
 
     @Operation(summary = "Check the provided two-factor authentication code for the current user.")

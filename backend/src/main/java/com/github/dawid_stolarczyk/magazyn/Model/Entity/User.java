@@ -93,7 +93,6 @@ public class User {
         method.setUser(null);
     }
 
-
     public void setEmailVerifications(EmailVerification emailVerification) {
         emailVerification.setUser(this);
         this.emailVerifications = emailVerification;

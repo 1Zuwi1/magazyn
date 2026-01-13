@@ -180,9 +180,10 @@ public class TwoFactorService {
         List<BackupCode> backupCodes = new ArrayList<>();
 
         List<String> codes = new ArrayList<>();
+        user.getBackupCodes().clear();
         for (int i = 0; i < BACKUP_CODES_COUNT; i++) {
             BackupCode backupCode = new BackupCode();
-            String code = CodeGenerator.generateWithBase62(BACKUP_CODE_LENGTH);
+            String code = CodeGenerator.generateBackupCodeWithBase62(BACKUP_CODE_LENGTH);
             backupCode.setCode(BCrypt.hashpw(code, BCrypt.gensalt()));
             backupCodes.add(backupCode);
             backupCode.setUser(user);
@@ -191,7 +192,7 @@ public class TwoFactorService {
         }
 
         user.addTwoFactorMethod(new TwoFactorMethod(TwoFactor.BACKUP_CODES));
-        user.setBackupCodes(backupCodes);
+        user.getBackupCodes().addAll(backupCodes);
         userRepository.save(user);
 
         return codes;
