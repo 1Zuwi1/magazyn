@@ -8,6 +8,7 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class CryptoService {
@@ -17,20 +18,22 @@ public class CryptoService {
 
 
     public EncryptedData encrypt(byte[] data) throws Exception {
-        KeyGenerator kg = KeyGenerator.getInstance("AES");
-        kg.init(256);
-        SecretKey dek = kg.generateKey();
+        SecretKey dek = KeyGenerator.getInstance("AES").generateKey();
 
-        AesGcmCipher cipher = new AesGcmCipher(dek);
-        byte[] ciphertext = cipher.encrypt(data);
+        var dataEnc = AesGcmCipher.encrypt(data, dek);
 
         SecretKey kek = keyProvider.getActiveKey();
-        AesGcmCipher dekCipher = new AesGcmCipher(kek);
-        byte[] encryptedDek = dekCipher.encrypt(dek.getEncoded());
-        byte[] dekIv = dekCipher.getIv();
+        var dekEnc = AesGcmCipher.encrypt(dek.getEncoded(), kek);
 
-        return new EncryptedData(ciphertext, encryptedDek, dekIv, cipher.getIv(), keyProvider.getActiveKeyName());
+        return new EncryptedData(
+                dataEnc.data(),
+                dekEnc.data(),
+                dekEnc.iv(),
+                dataEnc.iv(),
+                keyProvider.getActiveKeyName()
+        );
     }
+
 
 
     public byte[] decrypt(EncryptedData encryptedData) throws Exception {
@@ -39,27 +42,39 @@ public class CryptoService {
             throw new EncryptionException("KEK not found: " + encryptedData.kekName());
         }
 
-        AesGcmCipher dekCipher = new AesGcmCipher(kek);
-        byte[] dekBytes = dekCipher.decrypt(encryptedData.encryptedDek(), encryptedData.dekIv());
+        byte[] dekBytes = AesGcmCipher.decrypt(
+                encryptedData.encryptedDek(),
+                encryptedData.dekIv(),
+                kek
+        );
+
         SecretKey dek = new SecretKeySpec(dekBytes, "AES");
 
-        AesGcmCipher dataCipher = new AesGcmCipher(dek);
-        return dataCipher.decrypt(encryptedData.ciphertext(), encryptedData.iv());
+        return AesGcmCipher.decrypt(
+                encryptedData.ciphertext(),
+                encryptedData.iv(),
+                dek
+        );
     }
 
-    public StreamEncryptedData prepareStreamEncryption() throws Exception {
-        KeyGenerator kg = KeyGenerator.getInstance("AES");
-        kg.init(256);
-        SecretKey dek = kg.generateKey();
 
-        AesGcmCipher dataCipher = new AesGcmCipher(dek);
-        Cipher cipher = dataCipher.encryptCipher();
+    public StreamEncryptedData prepareStreamEncryption() throws Exception {
+        SecretKey dek = KeyGenerator.getInstance("AES").generateKey();
+
+        byte[] aad = keyProvider.getActiveKeyName().getBytes(StandardCharsets.UTF_8);
+
+        var dataStream = AesGcmCipher.encryptCipher(dek, aad);
 
         SecretKey kek = keyProvider.getActiveKey();
-        AesGcmCipher dekCipher = new AesGcmCipher(kek);
-        byte[] encryptedDek = dekCipher.encrypt(dek.getEncoded());
+        var dekEnc = AesGcmCipher.encrypt(dek.getEncoded(), kek, aad);
 
-        return new StreamEncryptedData(keyProvider.getActiveKeyName(), encryptedDek, dekCipher.getIv(), dataCipher.getIv(), cipher);
+        return new StreamEncryptedData(
+                keyProvider.getActiveKeyName(),
+                dekEnc.data(),
+                dekEnc.iv(),
+                dataStream.iv(),
+                dataStream.cipher()
+        );
     }
 
     public Cipher prepareStreamDecryption(
@@ -70,14 +85,20 @@ public class CryptoService {
     ) throws Exception {
 
         SecretKey kek = keyProvider.getKey(kekName);
+        if (kek == null) throw new EncryptionException("KEK not found: " + kekName);
 
-        AesGcmCipher dekCipher = new AesGcmCipher(kek);
-        byte[] dekBytes = dekCipher.decrypt(encryptedDek, dekIv);
+        byte[] aad = kekName.getBytes(StandardCharsets.UTF_8);
+
+        // odszyfrowanie DEK z użyciem AAD
+        byte[] dekBytes = AesGcmCipher.decrypt(encryptedDek, kek, dekIv, aad);
         SecretKey dek = new SecretKeySpec(dekBytes, "AES");
 
-        AesGcmCipher dataCipher = new AesGcmCipher(dek);
-        return dataCipher.decryptCipher(dataIv);
+        // przygotowanie Cipher dla danych z AAD
+        return AesGcmCipher.decryptCipher(dek, dataIv, aad);
     }
+
+
+
 
 
 }

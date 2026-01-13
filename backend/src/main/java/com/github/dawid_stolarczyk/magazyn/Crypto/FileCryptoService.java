@@ -10,51 +10,58 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class FileCryptoService {
+
     @Autowired
     private CryptoService cryptoService;
 
+    private static final int MAGIC = 0x4D414731; // np. "MAG1"
+
     public void encrypt(InputStream in, OutputStream out) throws Exception {
         StreamEncryptedData meta = cryptoService.prepareStreamEncryption();
-
         DataOutputStream dos = new DataOutputStream(out);
 
-        dos.writeInt(0x4D414731);
-        dos.writeByte(meta.kekName().length());
-        dos.write(meta.kekName().getBytes());
-        dos.writeByte(meta.dekIv().length);
-        dos.write(meta.dekIv());
-        dos.writeShort(meta.encryptedDek().length);
-        dos.write(meta.encryptedDek());
-        dos.write(meta.dataIv().length);
-        dos.write(meta.dataIv());
+        byte[] kekNameBytes = meta.kekName().getBytes(StandardCharsets.UTF_8);
+        byte[] dekIv = meta.dekIv();
+        byte[] encryptedDek = meta.encryptedDek();
+        byte[] dataIv = meta.dataIv();
+
+        if (kekNameBytes.length > 255) throw new IllegalArgumentException("kekName too long");
+        if (dekIv.length > 255) throw new IllegalArgumentException("dekIv too long");
+        if (dataIv.length > 255) throw new IllegalArgumentException("dataIv too long");
+
+
+        dos.writeInt(MAGIC);
+        dos.writeByte(kekNameBytes.length);
+        dos.write(kekNameBytes);
+        dos.writeByte(dekIv.length);
+        dos.write(dekIv);
+        dos.writeShort(encryptedDek.length);
+        dos.write(encryptedDek);
+        dos.writeByte(dataIv.length);
+        dos.write(dataIv);
 
         try (CipherOutputStream cos = new CipherOutputStream(dos, meta.dataCipher())) {
             in.transferTo(cos);
         }
     }
-
     public void decrypt(InputStream in, OutputStream out) throws Exception {
         DataInputStream dis = new DataInputStream(in);
-
         if (dis.readInt() != 0x4D414731) {
             throw new IllegalArgumentException("Invalid file format");
         }
-
         byte[] kekName = dis.readNBytes(dis.readByte());
         byte[] dekIv = dis.readNBytes(dis.readByte());
         byte[] encryptedDek = dis.readNBytes(dis.readShort());
         byte[] dataIv = dis.readNBytes(dis.readByte());
-
         Cipher cipher = cryptoService.prepareStreamDecryption(
-                new String(kekName),
+                new String(kekName, StandardCharsets.UTF_8),
                 encryptedDek,
                 dekIv,
-                dataIv
-        );
-
+                dataIv);
         try (CipherInputStream cis = new CipherInputStream(dis, cipher)) {
             cis.transferTo(out);
         }
