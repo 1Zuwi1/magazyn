@@ -44,7 +44,7 @@ export default function AdminDashboard() {
       <SearchProvider navData={navData} subData={subData}>
         <Header>
           <TopNav links={topNav} />
-          <Search className="" placeholder="Szukaj..." />
+          <Search placeholder="Szukaj..." />
         </Header>
       </SearchProvider>
     </ProtectedPage>
