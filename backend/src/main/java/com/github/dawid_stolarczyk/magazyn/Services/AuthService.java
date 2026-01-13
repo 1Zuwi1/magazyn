@@ -11,7 +11,6 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
 import com.github.dawid_stolarczyk.magazyn.Repositories.EmailVerificationRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.RememberMeData;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.SessionData;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;

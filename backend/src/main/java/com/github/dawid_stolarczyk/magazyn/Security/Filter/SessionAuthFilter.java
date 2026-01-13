@@ -52,7 +52,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                         sessionService.refreshSession(sessionId);
                         authenticateUser(user, session.getStatus2FA(), request);
                     }
-                } catch (Exception ignore)  {
+                } catch (Exception ignore) {
                     sessionService.deleteSession(sessionId);
                     deleteAuthCookies(response);
                 }
