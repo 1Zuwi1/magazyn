@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { useMemo } from "react"
 import { toast } from "sonner"
 import type { ZodError } from "zod"
-import { handleApiError } from "@/components/dashboard/utils/helpers"
+import { useHandleApiError } from "@/components/dashboard/utils/helpers"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import {
@@ -61,6 +61,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
     () => createAuthSchemas(translate),
     [translate]
   )
+
+  const handleApiError = useHandleApiError()
 
   const form = useForm({
     defaultValues: values[mode],

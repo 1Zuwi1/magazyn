@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   output: "standalone",
-  distDir: process.env.NODE_ENV === "production" ? ".next" : ".next-dev",
   typescript: {
     ignoreBuildErrors: true,
   },

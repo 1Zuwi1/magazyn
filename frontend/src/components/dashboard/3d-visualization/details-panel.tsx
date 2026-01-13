@@ -1,8 +1,7 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-import type { TranslationValues } from "use-intl/core"
 import { Button } from "@/components/ui/button"
+import { type TranslatorFor, useTranslate } from "@/hooks/use-translate"
 import { useWarehouseStore } from "./store"
 import type { Item3D, Rack3D, Warehouse3D } from "./types"
 import { RACK_ZONE_SIZE } from "./types"
@@ -11,19 +10,20 @@ interface DetailsPanelProps {
   warehouse: Warehouse3D
 }
 
-type Translator = (key: string, values?: TranslationValues) => string
-
-function getStatusText(t: Translator, status: Item3D["status"]): string {
+function getStatusTextranslate(
+  translate: TranslatorFor<"threeD">,
+  status: Item3D["status"]
+): string {
   if (status === "normal") {
-    return t("threeD.status.normal")
+    return translate("status.normal")
   }
   if (status === "expired") {
-    return t("threeD.status.expired")
+    return translate("status.expired")
   }
   if (status === "expired-dangerous") {
-    return t("threeD.status.expiredDangerous")
+    return translate("status.expiredDangerous")
   }
-  return t("threeD.status.dangerous")
+  return translate("status.dangerous")
 }
 
 function getStatusColor(status: Item3D["status"]): string {
@@ -40,7 +40,7 @@ function getStatusColor(status: Item3D["status"]): string {
 }
 
 function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
-  const t = useTranslations()
+  const translate = useTranslate("threeD")
   const totalSlots = warehouse.racks.reduce(
     (sum: number, rack: Rack3D) => sum + rack.grid.rows * rack.grid.cols,
     0
@@ -55,26 +55,26 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
 
   return (
     <div className="flex h-full flex-col border-l bg-background p-4">
-      <h2 className="mb-4 font-bold text-lg">{t("threeD.overview.title")}</h2>
+      <h2 className="mb-4 font-bold text-lg">{translate("overview.title")}</h2>
 
       <div className="space-y-4">
         <div className="rounded-lg border p-4">
           <div className="text-muted-foreground text-sm">
-            {t("threeD.overview.racks")}
+            {translate("overview.racks")}
           </div>
           <div className="font-bold text-2xl">{warehouse.racks.length}</div>
         </div>
 
         <div className="rounded-lg border p-4">
           <div className="text-muted-foreground text-sm">
-            {t("threeD.overview.totalSlots")}
+            {translate("overview.totalSlots")}
           </div>
           <div className="font-bold text-2xl">{totalSlots}</div>
         </div>
 
         <div className="rounded-lg border p-4">
           <div className="text-muted-foreground text-sm">
-            {t("threeD.overview.occupiedSlots")}
+            {translate("overview.occupiedSlots")}
           </div>
           <div className="font-bold text-2xl text-green-600">
             {occupiedSlots}
@@ -83,14 +83,14 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
 
         <div className="rounded-lg border p-4">
           <div className="text-muted-foreground text-sm">
-            {t("threeD.overview.freeSlots")}
+            {translate("overview.freeSlots")}
           </div>
           <div className="font-bold text-2xl text-blue-600">{freeSlots}</div>
         </div>
 
         <div className="rounded-lg border p-4">
           <div className="text-muted-foreground text-sm">
-            {t("threeD.overview.occupancy")}
+            {translate("overview.occupancy")}
           </div>
           <div className="font-bold text-2xl">
             {totalSlots > 0
@@ -105,9 +105,8 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
 }
 
 export function DetailsPanel({ warehouse }: DetailsPanelProps) {
-  const t = useTranslations()
-  const translate = (key: string, values?: TranslationValues) =>
-    t(key as never, values as never)
+  const translate = useTranslate("threeD")
+  const common = useTranslate("common")
   const {
     mode,
     selectedRackId,
@@ -138,7 +137,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
   return (
     <div className="flex h-full flex-col border-l bg-background p-4">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-bold text-lg">{t("threeD.details.title")}</h2>
+        <h2 className="font-bold text-lg">{translate("details.title")}</h2>
         <div className="flex w-full flex-col gap-2 *:w-full">
           {focusWindow && (
             <Button
@@ -147,7 +146,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
               }}
               variant="outline"
             >
-              {t("threeD.details.backToBlocks")}
+              {translate("details.backToBlocks")}
             </Button>
           )}
         </div>
@@ -157,27 +156,27 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
         <div className="mb-6 rounded-lg border p-4">
           <h3 className="mb-2 font-bold text-xl">{selectedRack.name}</h3>
           <div className="space-y-1 text-muted-foreground text-sm">
-            <div>{t("threeD.details.code", { code: selectedRack.code })}</div>
+            <div>{translate("details.code", { code: selectedRack.code })}</div>
             <div>
-              {t("threeD.details.grid", {
+              {translate("details.grid", {
                 rows: String(selectedRack.grid.rows),
                 cols: String(selectedRack.grid.cols),
               })}
             </div>
             <div>
-              {t("threeD.details.totalSlots", {
+              {translate("details.totalSlots", {
                 count: String(selectedRack.grid.rows * selectedRack.grid.cols),
               })}
             </div>
             <div>
-              {t("threeD.details.occupiedSlots", {
+              {translate("details.occupiedSlots", {
                 count: String(
                   selectedRack.items.filter((item) => item !== null).length
                 ),
               })}
             </div>
             <div>
-              {t("threeD.details.maxSize", {
+              {translate("details.maxSize", {
                 width: String(selectedRack.maxElementSize.width),
                 height: String(selectedRack.maxElementSize.height),
                 depth: String(selectedRack.maxElementSize.depth),
@@ -191,13 +190,13 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
         <div className="flex-1">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-bold text-lg">
-              {t("threeD.details.shelfTitle", {
+              {translate("details.shelfTitle", {
                 row: String(selectedShelf.row + 1),
                 col: String(selectedShelf.col + 1),
               })}
             </h3>
             <Button onClick={clearSelection} size="sm" variant="ghost">
-              {t("common.actions.clear")}
+              {common("actions.clear")}
             </Button>
           </div>
 
@@ -208,26 +207,26 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                   className={`h-3 w-3 rounded ${getStatusColor(selectedItem.status)}`}
                 />
                 <span className="font-semibold">
-                  {getStatusText(translate, selectedItem.status)}
+                  {getStatusTextranslate(translate, selectedItem.status)}
                 </span>
               </div>
 
               <div className="space-y-2 text-sm">
                 <div>
                   <span className="text-muted-foreground">
-                    {t("threeD.details.item.id")}
+                    {translate("details.item.id")}
                   </span>{" "}
                   <span className="font-mono">{selectedItem.id}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">
-                    {t("threeD.details.item.label")}
+                    {translate("details.item.label")}
                   </span>{" "}
                   <span>{selectedItem.label}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">
-                    {t("threeD.details.item.type")}
+                    {translate("details.item.type")}
                   </span>{" "}
                   <span>{selectedItem.type}</span>
                 </div>
@@ -235,7 +234,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                 {selectedItem.meta && (
                   <div className="space-y-1">
                     <div className="text-muted-foreground">
-                      {t("threeD.details.item.meta")}
+                      {translate("details.item.meta")}
                     </div>
                     {Object.entries(selectedItem.meta).map(([key, value]) => (
                       <div className="ml-2 font-mono text-xs" key={key}>
@@ -248,17 +247,17 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
 
               <div className="mt-4 space-y-2">
                 <Button className="w-full" size="sm" variant="outline">
-                  {t("threeD.details.item.editLabel")}
+                  {translate("details.item.editLabel")}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="rounded-lg border p-4 text-center text-muted-foreground">
               <div className="mb-2 font-bold">
-                {t("threeD.details.emptyShelf.title")}
+                {translate("details.emptyShelf.title")}
               </div>
               <div className="text-sm">
-                {t("threeD.details.emptyShelf.description", {
+                {translate("details.emptyShelf.description", {
                   row: String(selectedShelf.row + 1),
                   col: String(selectedShelf.col + 1),
                 })}
@@ -271,10 +270,10 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
       {!selectedShelf && (
         <div className="flex-1 text-center text-muted-foreground">
           {showBlockHint
-            ? t("threeD.details.blockHint", {
+            ? translate("details.blockHint", {
                 size: String(RACK_ZONE_SIZE),
               })
-            : t("threeD.details.shelfHint")}
+            : translate("details.shelfHint")}
         </div>
       )}
     </div>

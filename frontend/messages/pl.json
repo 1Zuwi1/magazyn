@@ -51,7 +51,8 @@
     },
     "errors": {
       "loginFailed": "Wystąpił błąd podczas logowania. Spróbuj ponownie.",
-      "registerFailed": "Wystąpił błąd podczas rejestracji. Spróbuj ponownie."
+      "registerFailed": "Wystąpił błąd podczas rejestracji. Spróbuj ponownie.",
+      "unknownError": "Wystąpił nieoczekiwany błąd."
     },
     "success": {
       "login": "Zalogowano pomyślnie!",

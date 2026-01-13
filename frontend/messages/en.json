@@ -51,7 +51,8 @@
     },
     "errors": {
       "loginFailed": "There was a problem logging in. Please try again.",
-      "registerFailed": "There was a problem registering. Please try again."
+      "registerFailed": "There was a problem registering. Please try again.",
+      "unknownError": "An unexpected error occurred."
     },
     "success": {
       "login": "Logged in successfully!",
