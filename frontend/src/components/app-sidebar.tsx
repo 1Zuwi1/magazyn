@@ -2,6 +2,7 @@
 
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import type * as React from "react"
 // import { NavDocuments } from "@/components/nav-documents"
 // import { NavMain } from "@/components/nav-main"
@@ -40,23 +41,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 }
 
 function NavMain() {
+  const pathname = usePathname()
   return (
-    <SidebarMenu className="px-2">
-      {navigationItems.map(
-        (item, index) =>
-          !("pwaOnly" in item) && (
-            <SidebarMenuItem key={index}>
-              <SidebarMenuButton
-                render={
-                  <Link href={item.href}>
-                    <HugeiconsIcon className="mr-2 size-5" icon={item.icon} />
-                    {item.title}
-                  </Link>
-                }
-              />
-            </SidebarMenuItem>
-          )
-      )}
+    <SidebarMenu className="gap-2 px-2">
+      {navigationItems.map((item, index) => {
+        const isActive = pathname === item.href
+        return (
+          <SidebarMenuItem key={index}>
+            <SidebarMenuButton
+              isActive={isActive}
+              render={
+                <Link href={item.href}>
+                  <HugeiconsIcon className="mr-2 size-5" icon={item.icon} />
+                  {item.title}
+                </Link>
+              }
+              size={"lg"}
+            />
+          </SidebarMenuItem>
+        )
+      })}
     </SidebarMenu>
   )
 }

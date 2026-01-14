@@ -1,8 +1,4 @@
-import {
-  Analytics01Icon,
-  GroupItemsIcon,
-  QrCodeIcon,
-} from "@hugeicons/core-free-icons"
+import { Analytics01Icon, GroupItemsIcon } from "@hugeicons/core-free-icons"
 
 export const navigationItems = [
   {
@@ -11,26 +7,17 @@ export const navigationItems = [
     icon: Analytics01Icon,
   },
   {
-    title: "Skaner",
-    action: "scanner",
-    icon: QrCodeIcon,
-    pwaOnly: true,
-  },
-  {
     title: "Asortyment",
     href: "/dashboard/items",
     icon: GroupItemsIcon,
   },
-] as (
-  | {
-      title: string
-      href: string
-      icon: typeof Analytics01Icon
-    }
-  | {
-      title: string
-      action: "scanner"
-      icon: typeof Analytics01Icon
-      pwaOnly: true
-    }
-)[]
+] as const
+
+export const dockActions = [
+  {
+    title: "Skaner",
+    href: "#",
+    icon: GroupItemsIcon,
+    pwaOnly: true,
+  },
+]

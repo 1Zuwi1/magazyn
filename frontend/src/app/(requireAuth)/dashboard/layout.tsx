@@ -18,8 +18,8 @@ export default function DashboardLayout({
         } as React.CSSProperties
       }
     >
-      <AppSidebar className="standalone:hidden" variant="inset" />
-      <SidebarInset className="standalone:m-0! standalone:rounded-none! standalone:shadow-none!">
+      <AppSidebar variant="inset" />
+      <SidebarInset>
         <SiteHeader />
         <div className="p-8 pt-6 standalone:pb-24">{children}</div>
         <Dock />
