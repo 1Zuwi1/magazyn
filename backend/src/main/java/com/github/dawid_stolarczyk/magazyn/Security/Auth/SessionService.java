@@ -28,7 +28,7 @@ public class SessionService {
     @Autowired
     private final TwoFactorAuthRepository twoFactorAuthRepository;
     @Autowired
-    private final RedisTemplate<String, Object> redis;
+    private final RedisTemplate<String, String> redis;
 
     public String createSession(SessionData data) {
         sessionRepository.save(data);
