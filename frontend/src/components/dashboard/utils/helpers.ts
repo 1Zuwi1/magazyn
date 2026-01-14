@@ -1,7 +1,3 @@
-import { useTranslations } from "next-intl"
-import { toast } from "sonner"
-import { FetchError } from "@/lib/fetcher"
-
 // Helper function to convert index to coordinate (R01-P01, R02-P03, etc.)
 export function getSlotCoordinate(index: number, cols: number): string {
   const row = Math.floor(index / cols)
@@ -28,16 +24,4 @@ export function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
   expiry.setHours(0, 0, 0, 0)
   const diffTime = expiry.getTime() - todayDate.getTime()
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-}
-
-export const useHandleApiError = () => {
-  const translator = useTranslations("auth.errors")
-
-  return (err: unknown, fallback?: string) => {
-    toast.error(
-      err instanceof FetchError
-        ? err.message
-        : (fallback ?? translator("unknownError"))
-    )
-  }
 }

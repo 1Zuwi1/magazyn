@@ -7,19 +7,19 @@ const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/
 export const createAuthSchemas = (t: TranslatorFor<Namespace>) => {
   const usernameSchema = z
     .string()
-    .min(3, t("validation.username.min", { min: "3" }))
-    .max(20, t("validation.username.max", { max: "20" }))
+    .min(3, t("validation.username.min", { min: 3 }))
+    .max(20, t("validation.username.max", { max: 20 }))
     .regex(USERNAME_REGEX, t("validation.username.format"))
 
   const passwordSchema = z
     .string()
-    .min(6, t("validation.password.min", { min: "6" }))
+    .min(6, t("validation.password.min", { min: 6 }))
     .refine(
       (value) => {
         const bytes = new TextEncoder().encode(value).length
         return bytes <= 72
       },
-      t("validation.password.maxBytes", { max: "72" })
+      t("validation.password.maxBytes", { max: 72 })
     )
 
   const LoginSchema = createApiSchema({
@@ -37,9 +37,7 @@ export const createAuthSchemas = (t: TranslatorFor<Namespace>) => {
     POST: {
       input: z
         .object({
-          fullName: z
-            .string()
-            .min(2, t("validation.fullName.min", { min: "2" })),
+          fullName: z.string().min(2, t("validation.fullName.min", { min: 2 })),
           username: usernameSchema,
           email: z.email(t("validation.email.invalid")),
           password: passwordSchema,
@@ -57,9 +55,7 @@ export const createAuthSchemas = (t: TranslatorFor<Namespace>) => {
     POST: {
       input: z.object({
         method: z.enum(["authenticator", "sms", "email"]),
-        code: z
-          .string()
-          .length(6, t("validation.code.length", { length: "6" })),
+        code: z.string().length(6, t("validation.code.length", { length: 6 })),
       }),
       output: z.null(),
     },

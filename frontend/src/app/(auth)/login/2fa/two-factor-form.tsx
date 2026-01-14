@@ -21,6 +21,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
+import { useHandleApiError } from "@/hooks/use-handle-api-error"
 import { apiFetch } from "@/lib/fetcher"
 import { createAuthSchemas } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -40,6 +41,9 @@ export default function TwoFactorForm({
   otpLength,
 }: TwoFactorFormProps) {
   const translate = useTranslations("twoFactor")
+  const apiErrors = useTranslations("common.apiErrors")
+
+  const handleApiError = useHandleApiError()
   const defaultMethod = linkedMethods[0] ?? "email"
   const [method, setMethod] = useState<TwoFactorMethod>(defaultMethod)
   const [isResending, setIsResending] = useState(false)
@@ -72,7 +76,7 @@ export default function TwoFactorForm({
           })
         )
         if (err) {
-          toast.error(translate("errors.invalidCode"))
+          handleApiError(err, apiErrors("invalidCode"))
           return
         }
         toast.success(translate("success.verified"))
@@ -108,7 +112,7 @@ export default function TwoFactorForm({
     setIsResending(false)
 
     if (err) {
-      toast.error(translate("errors.resendFailed"))
+      handleApiError(err, apiErrors("resendFailed"))
       return false
     }
 

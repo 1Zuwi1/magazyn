@@ -49,34 +49,29 @@
       "noAccount": "Don’t have an account?",
       "hasAccount": "Already have an account?"
     },
-    "errors": {
-      "loginFailed": "There was a problem logging in. Please try again.",
-      "registerFailed": "There was a problem registering. Please try again.",
-      "unknownError": "An unexpected error occurred."
-    },
     "success": {
       "login": "Logged in successfully!",
       "register": "Registration successful! You can now log in."
     },
     "validation": {
       "username": {
-        "min": "Username must be at least {min} characters.",
-        "max": "Username must be at most {max} characters.",
+        "min": "Username must be at least {min, number} characters.",
+        "max": "Username must be at most {max, number} characters.",
         "format": "Username can only contain letters, numbers, and underscores."
       },
       "password": {
-        "min": "Password must be at least {min} characters.",
-        "maxBytes": "Password cannot exceed {max} bytes in UTF-8 encoding.",
+        "min": "Password must be at least {min, number} characters.",
+        "maxBytes": "Password cannot exceed {max, number} bytes in UTF-8 encoding.",
         "mismatch": "Passwords do not match."
       },
       "fullName": {
-        "min": "Full name must be at least {min} characters."
+        "min": "Full name must be at least {min, number} characters."
       },
       "email": {
         "invalid": "Invalid email address."
       },
       "code": {
-        "length": "Code must be exactly {length} digits."
+        "length": "Code must be exactly {length, number} digits."
       }
     }
   },
@@ -92,9 +87,7 @@
       "email": "Send email code"
     },
     "errors": {
-      "invalidCode": "Invalid code or verification failed. Please try again.",
-      "unsupportedResend": "This resend method is not supported.",
-      "resendFailed": "Could not resend the code. Please try again shortly."
+      "unsupportedResend": "This resend method is not supported."
     },
     "success": {
       "verified": "Verified!",
@@ -464,6 +457,13 @@
     },
     "status": {
       "loading": "Loading"
+    },
+    "apiErrors": {
+      "generic": "An unexpected error occurred. Please try again.",
+      "loginFailed": "There was a problem logging in. Please try again.",
+      "registerFailed": "There was a problem registering. Please try again.",
+      "invalidCode": "Invalid code or verification failed. Please try again.",
+      "resendFailed": "Could not resend the code. Please try again shortly."
     }
   },
   "breadcrumbs": {

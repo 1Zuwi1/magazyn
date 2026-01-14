@@ -43,7 +43,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translator("validation.password.min", { min: "6" })
+        translator("validation.password.min", { min: 6 })
       )
     }
   })
@@ -59,7 +59,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translator("validation.username.min", { min: "3" })
+        translator("validation.username.min", { min: 3 })
       )
     }
   })
@@ -75,7 +75,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translator("validation.username.max", { max: "20" })
+        translator("validation.username.max", { max: 20 })
       )
     }
   })
@@ -191,7 +191,7 @@ describe("RegisterSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translator("validation.fullName.min", { min: "2" })
+        translator("validation.fullName.min", { min: 2 })
       )
     }
   })
@@ -261,7 +261,7 @@ describe("Verify2FASchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translator("validation.code.length", { length: "6" })
+        translator("validation.code.length", { length: 6 })
       )
     }
   })

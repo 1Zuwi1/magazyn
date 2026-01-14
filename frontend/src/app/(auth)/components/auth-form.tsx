@@ -7,7 +7,6 @@ import { useTranslations } from "next-intl"
 import { useMemo } from "react"
 import { toast } from "sonner"
 import type { ZodError } from "zod"
-import { useHandleApiError } from "@/components/dashboard/utils/helpers"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,6 +16,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { useHandleApiError } from "@/hooks/use-handle-api-error"
 import { apiFetch } from "@/lib/fetcher"
 import { createAuthSchemas } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -55,6 +55,7 @@ type ValueTypes = typeof values
 
 export default function AuthForm({ mode }: AuthFormProps) {
   const translate = useTranslations("auth")
+  const apiErrors = useTranslations("common.apiErrors")
   const router = useRouter()
   const isLogin = mode === "login"
   const { LoginSchema, RegisterSchema } = useMemo(
@@ -77,7 +78,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         )
 
         if (err) {
-          handleApiError(err, translate("errors.loginFailed"))
+          handleApiError(err, apiErrors("loginFailed"))
           return
         }
 
@@ -93,7 +94,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         )
 
         if (err) {
-          handleApiError(err, translate("errors.registerFailed"))
+          handleApiError(err, apiErrors("registerFailed"))
           return
         }
 
