@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/>
+    <meta name="x-apple-disable-message-reformatting"/>
+</head>
+<body class="font-plaid" style="background-color:rgb(255,255,255)">
+<!--$--><!--html--><!--head--><!--body-->
+<table
+        border="0"
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+        role="presentation"
+        align="center">
+    <tbody>
+    <tr>
+        <td style="background-color:rgb(255,255,255)">
+            <table
+                    align="center"
+                    width="100%"
+                    border="0"
+                    cellpadding="0"
+                    cellspacing="0"
+                    role="presentation"
+                    style="max-width:360px;background-color:rgb(255,255,255);border-radius:0.25rem;margin-top:0;margin-right:auto;margin-left:auto;margin-bottom:0;padding-top:68px;padding-right:0;padding-left:0;padding-bottom:130px">
+                <tbody>
+                <tr style="width:100%">
+                    <td>
+                        <p
+                                style="font-size:11px;line-height:16px;color:rgb(10,133,234);font-weight:700;height:16px;letter-spacing:0;margin-top:16px;margin-bottom:8px;margin-right:8px;margin-left:8px;text-transform:uppercase;text-align:center">
+                            Potwierdź swoją tożsamość
+                        </p>
+                        <h1
+                                style="color:rgb(0,0,0);font-weight:500;font-family:HelveticaNeue-Medium,Helvetica,Arial,sans-serif;display:inline-block;font-size:20px;line-height:24px;margin-bottom:0;margin-top:0;text-align:center">
+                            Kliknij poniższy przycisk, aby zweryfikować swój adres e-mail.
+                        </h1>
+
+                        <!-- Przycisk weryfikacyjny -->
+                        <table
+                                align="center"
+                                width="100%"
+                                border="0"
+                                cellpadding="0"
+                                cellspacing="0"
+                                role="presentation"
+                                style="background-color:rgb(10,133,234);border-radius:0.25rem;margin-right:auto;margin-left:auto;font-family:HelveticaNeue-Bold;margin-top:24px;margin-bottom:14px;vertical-align:middle;width:280px">
+                            <tbody>
+                            <tr>
+                                <td>
+                                    <a th:href="${verificationLink}"
+                                       style="display:block;text-align:center;font-size:16px;color:#ffffff;font-weight:700;text-decoration:none;padding:12px 0;border-radius:4px;">
+                                        Weryfikuj e-mail
+                                    </a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                        <p
+                                style="font-size:15px;line-height:23px;color:rgb(68,68,68);letter-spacing:0;padding-bottom:0;padding-top:16px;padding-right:40px;padding-left:40px;margin:0;text-align:center;margin-top:0;margin-bottom:0;margin-left:0;margin-right:0">
+                            Link jest ważny przez 15 minut.
+                        </p>
+                        <p
+                                style="font-size:15px;line-height:23px;color:rgb(68,68,68);letter-spacing:0;padding-bottom:0;padding-top:0;padding-right:40px;padding-left:40px;margin:0;text-align:center;margin-top:0;margin-bottom:0;margin-left:0;margin-right:0">
+                            Jeżeli nie próbowałeś tworzyć konta lub zmieniać adresu e-mail,
+                            zignoruj tę wiadomość.
+                        </p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<!--/$-->
+</body>
+</html>
