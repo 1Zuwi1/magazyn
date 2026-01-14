@@ -17,14 +17,10 @@ server.servlet.context-path=/api
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=false
 
-jwt.secret=${JWT_SECRET}
-
 auth.token.expiration-seconds=3600
 
 app.domain=${DOMAIN}
 app.name=${APP_NAME}
-
-app.secretPlaintext=${SECRET_PLAINTEXT}
 
 auth.password.min-length=8
 
