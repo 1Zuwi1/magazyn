@@ -167,7 +167,7 @@ public class AuthService {
                 hasLower = true;
             else if (Character.isDigit(c))
                 hasDigit = true;
-            else
+            else if (!Character.isWhitespace(c))
                 hasSpecial = true;
         }
         return hasUpper && hasLower && hasDigit && hasSpecial;
