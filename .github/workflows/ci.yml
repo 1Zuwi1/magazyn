@@ -31,6 +31,11 @@ jobs:
           distribution: temurin
           java-version: "17"
           cache: maven
-      - name: Prepare test config
-        run: mv src/main/resources/application.properties.test src/main/resources/application.properties && mv .env.test .env
-      - run: ./mvnw -B verify
+      - name: Prepare test config and run tests
+        shell: bash
+        run: |
+          mv src/main/resources/application.properties.test src/main/resources/application.properties
+          set -a
+          source .env.test
+          set +a
+          ./mvnw -B verify
