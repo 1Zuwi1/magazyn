@@ -9,7 +9,7 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.SessionData;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.TwoFactorAuth;
-import com.github.dawid_stolarczyk.magazyn.Services.SessionService;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.SessionService;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

@@ -1,12 +1,9 @@
-package com.github.dawid_stolarczyk.magazyn.Services;
+package com.github.dawid_stolarczyk.magazyn.Security.Auth;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.RememberMeRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.SessionRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.TwoFactorAuthRepository;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.RememberMeData;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.SessionData;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.TwoFactorAuth;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

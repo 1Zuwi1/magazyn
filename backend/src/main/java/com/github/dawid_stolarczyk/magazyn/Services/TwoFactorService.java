@@ -11,6 +11,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.TwoFactor;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.SessionService;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.TwoFactorAuth;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;

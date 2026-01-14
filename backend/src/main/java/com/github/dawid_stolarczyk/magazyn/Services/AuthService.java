@@ -13,6 +13,7 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.EmailVerificationReposit
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.RememberMeData;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.SessionData;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.SessionService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
