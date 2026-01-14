@@ -13,7 +13,6 @@ jwt.secret=9f8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3
 auth.token.expiration-seconds=3600
 app.domain=localhost
 app.name=GdzieToLezy
-app.secretPlaintext=${SECRET_PLAINTEXT:test-secret-placeholder-at-least-32-chars}
 auth.password.min-length=8
 spring.redis.host=localhost
 spring.redis.port=6379
