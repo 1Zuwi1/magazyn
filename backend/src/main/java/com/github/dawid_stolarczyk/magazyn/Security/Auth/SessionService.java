@@ -6,7 +6,7 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.SessionRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.TwoFactorAuthRepository;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -14,16 +14,19 @@ import java.time.Duration;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class SessionService {
     private static final Duration SESSION_TTL = Duration.ofMinutes(15);
     private static final Duration REMEMBER_TTL = Duration.ofDays(14);
     private static final Duration TWO_FACTOR_AUTH_TTL = Duration.ofMinutes(5);
 
-    private final SessionRepository sessionRepository;
-    private final RememberMeRepository rememberMeRepository;
-    private final TwoFactorAuthRepository twoFactorAuthRepository;
-    private final RedisTemplate<String, String> redis;
+    @Autowired
+    private SessionRepository sessionRepository;
+    @Autowired
+    private RememberMeRepository rememberMeRepository;
+    @Autowired
+    private TwoFactorAuthRepository twoFactorAuthRepository;
+    @Autowired
+    private RedisTemplate<String, Object> redis;
 
     public String createSession(SessionData data) {
         sessionRepository.save(data);
