@@ -77,7 +77,7 @@ public class AuthService {
     public void loginUser(LoginRequest loginRequest, HttpServletResponse response, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.AUTH_LOGIN);
 
-        User user = userRepository.findByUsername(loginRequest.getUsername())
+        User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new AuthenticationException(AuthError.INVALID_CREDENTIALS.name()));
         if (!BCrypt.checkpw(loginRequest.getPassword(), user.getPassword())) {
             throw new AuthenticationException(AuthError.INVALID_CREDENTIALS.name());
@@ -121,9 +121,6 @@ public class AuthService {
         if (userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
             throw new AuthenticationException(AuthError.EMAIL_TAKEN.name());
         }
-        if (userRepository.findByUsername(registerRequest.getUsername()).isPresent()) {
-            throw new AuthenticationException(AuthError.USERNAME_TAKEN.name());
-        }
         if (!checkPasswordStrength(registerRequest.getPassword())) {
             throw new AuthenticationException(AuthError.WEAK_PASSWORD.name());
         }
@@ -131,7 +128,6 @@ public class AuthService {
         newUser.setEmail(registerRequest.getEmail());
         newUser.setRawPassword(registerRequest.getPassword());
         newUser.setFullName(registerRequest.getFullName());
-        newUser.setUsername(registerRequest.getUsername());
         newUser.setRole(UserRole.USER);
         newUser.setStatus(AccountStatus.PENDING_VERIFICATION);
 
@@ -150,7 +146,7 @@ public class AuthService {
         EmailVerification emailVerification = emailVerificationRepository.findByVerificationToken(Hasher.hashSHA256(token)).orElseThrow(()
                 -> new AuthenticationException(AuthError.TOKEN_INVALID.name()));
 
-        if (emailVerification == null || emailVerification.getExpiresAt().isBefore(Instant.now())) {
+        if (emailVerification.getExpiresAt().isBefore(Instant.now())) {
             throw new AuthenticationException(AuthError.TOKEN_EXPIRED.name());
         }
         User user = emailVerification.getUser();
@@ -162,6 +158,7 @@ public class AuthService {
     private boolean checkPasswordStrength(String password) {
         if (password.length() < MIN_PASSWORD_LENGTH)
             return false;
+        password = password.trim();
         boolean hasUpper = false, hasLower = false, hasDigit = false, hasSpecial = false;
         for (char c : password.toCharArray()) {
             if (Character.isUpperCase(c))

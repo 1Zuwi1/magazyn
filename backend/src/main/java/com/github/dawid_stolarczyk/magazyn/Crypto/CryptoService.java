@@ -23,6 +23,9 @@ public class CryptoService {
         var dataEnc = AesGcmCipher.encrypt(data, dek);
 
         SecretKey kek = keyProvider.getActiveKey();
+        if (kek == null) {
+            throw new EncryptionException("Active KEK not found");
+        }
         var dekEnc = AesGcmCipher.encrypt(dek.getEncoded(), kek);
 
         return new EncryptedData(
@@ -65,6 +68,9 @@ public class CryptoService {
         var dataStream = AesGcmCipher.encryptCipher(dek, aad);
 
         SecretKey kek = keyProvider.getActiveKey();
+        if (kek == null) {
+            throw new EncryptionException("Active KEK not found");
+        }
         var dekEnc = AesGcmCipher.encrypt(dek.getEncoded(), kek, aad);
 
         return new StreamEncryptedData(

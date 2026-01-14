@@ -29,11 +29,6 @@ public class User {
     @NotBlank
     @Size(min = 3, max = 100)
     private String fullName;
-    @Getter
-    @Column(unique = true, nullable = false)
-    @NotBlank
-    @Size(min = 3, max = 50)
-    private String username;
     @Column(nullable = false)
     @NotBlank
     private String password;

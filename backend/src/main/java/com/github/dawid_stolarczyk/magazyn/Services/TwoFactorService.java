@@ -60,14 +60,14 @@ public class TwoFactorService {
     public List<String> getUsersTwoFactorMethods(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_FREE);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException("", "User not found"));
+                .orElseThrow(AuthenticationException::new);
         return user.getTwoFactorMethods().stream().map(method -> method.getMethodName().name()).toList();
     }
 
     public void sendTwoFactorCodeViaEmail(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_STRICT);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException("", "User not found"));
+                .orElseThrow(AuthenticationException::new);
         TwoFactorMethod method = user.getTwoFactorMethods().stream()
                 .filter(m -> m.getMethodName() == TwoFactor.EMAIL)
                 .findFirst()
@@ -104,7 +104,7 @@ public class TwoFactorService {
     public TwoFactorAuthenticatorResponse generateTwoFactorGoogleSecret(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_STRICT);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException("", "User not found"));
+                .orElseThrow(AuthenticationException::new);
         TwoFactorMethod method = user.getTwoFactorMethods().stream()
                 .filter(m -> m.getMethodName() == TwoFactor.AUTHENTICATOR)
                 .findFirst()
@@ -142,7 +142,7 @@ public class TwoFactorService {
     public void checkCode(CodeRequest codeRequest, HttpServletRequest request, HttpServletResponse response) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_VERIFY);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException("", "User not found"));
+                .orElseThrow(AuthenticationException::new);
 
         if (TwoFactor.valueOf(codeRequest.getMethod()).equals(TwoFactor.EMAIL)) {
             checkTwoFactorEmailCode(codeRequest.getCode(), user);
@@ -176,7 +176,7 @@ public class TwoFactorService {
         }
 
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException("", "User not found"));
+                .orElseThrow(AuthenticationException::new);
         List<BackupCode> backupCodes = new ArrayList<>();
 
         List<String> codes = new ArrayList<>();
@@ -203,7 +203,7 @@ public class TwoFactorService {
 
     public void useBackupCode(String code, HttpServletRequest request) {
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException("", "User not found"));
+                .orElseThrow(AuthenticationException::new);
 
         user.getTwoFactorMethods().stream()
                 .filter(m -> TwoFactor.BACKUP_CODES.equals(m.getMethodName()))

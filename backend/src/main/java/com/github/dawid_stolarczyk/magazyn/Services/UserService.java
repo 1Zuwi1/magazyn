@@ -25,7 +25,6 @@ public class UserService {
         return new UserInfoResponse(
                 user.getId().intValue(),
                 user.getFullName(),
-                user.getUsername(),
                 user.getEmail(),
                 user.getRole().name(),
                 user.getStatus().name());

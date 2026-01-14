@@ -10,7 +10,6 @@ import lombok.Setter;
 public class UserInfoResponse {
     private int id;
     private String full_name;
-    private String username;
     private String email;
     private String role;
     private String account_status;
@@ -18,10 +17,9 @@ public class UserInfoResponse {
     public UserInfoResponse() {
     }
 
-    public UserInfoResponse(int id, String full_name, String username, String email, String role, String account_status) {
+    public UserInfoResponse(int id, String full_name, String email, String role, String account_status) {
         this.id = id;
         this.full_name = full_name;
-        this.username = username;
         this.email = email;
         this.role = role;
         this.account_status = account_status;
