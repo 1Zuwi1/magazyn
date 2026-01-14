@@ -9,16 +9,18 @@ export const navigationItems = [
     title: "Panel główny",
     href: "/dashboard",
     icon: Analytics01Icon,
-  },
-  {
-    title: "Magazyny",
-    href: "/dashboard/warehouse",
-    icon: Package,
-  },
-  {
-    title: "Asortyment",
-    href: "/dashboard/items",
-    icon: GroupItemsIcon,
+    items: [
+      {
+        title: "Magazyny",
+        href: "/dashboard/warehouse",
+        icon: Package,
+      },
+      {
+        title: "Asortyment",
+        href: "/dashboard/items",
+        icon: GroupItemsIcon,
+      },
+    ],
   },
 ] as const
 

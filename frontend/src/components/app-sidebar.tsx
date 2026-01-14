@@ -1,8 +1,5 @@
 "use client"
 
-import { HugeiconsIcon } from "@hugeicons/react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
 import type * as React from "react"
 // import { NavDocuments } from "@/components/nav-documents"
 // import { NavMain } from "@/components/nav-main"
@@ -19,6 +16,7 @@ import {
 } from "@/components/ui/sidebar"
 import { navigationItems } from "@/config/navigation"
 import Logo from "./logo"
+import SidebarButton from "./sidebar-button"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -26,8 +24,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="data-[slot=sidebar-menu-button]:p-1.5!">
-              <Logo />
+            <SidebarMenuButton className="data-[slot=sidebar-menu-button]:p-2.5!">
+              <Logo href="/" />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -41,29 +39,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 }
 
 function NavMain() {
-  const pathname = usePathname()
   return (
     <SidebarMenu className="gap-2 px-2">
-      {navigationItems.map((item) => {
-        const isActive =
-          item.href === "/dashboard"
-            ? pathname === item.href
-            : pathname.startsWith(item.href)
-        return (
-          <SidebarMenuItem key={item.href}>
-            <SidebarMenuButton
-              isActive={isActive}
-              render={
-                <Link href={item.href}>
-                  <HugeiconsIcon className="mr-2 size-5" icon={item.icon} />
-                  {item.title}
-                </Link>
-              }
-              size={"lg"}
-            />
-          </SidebarMenuItem>
-        )
-      })}
+      {navigationItems.map((item, index) => (
+        <SidebarButton item={item} key={index} />
+      ))}
     </SidebarMenu>
   )
 }
