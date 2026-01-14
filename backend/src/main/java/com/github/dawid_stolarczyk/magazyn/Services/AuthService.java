@@ -156,20 +156,31 @@ public class AuthService {
     }
 
     private boolean checkPasswordStrength(String password) {
+        if (password == null)
+            return false;
+
+        password = password.trim();
+
         if (password.length() < MIN_PASSWORD_LENGTH)
             return false;
-        password = password.trim();
-        boolean hasUpper = false, hasLower = false, hasDigit = false, hasSpecial = false;
+
+        boolean hasUpper = false;
+        boolean hasLower = false;
+        boolean hasDigit = false;
+        boolean hasSpecial = false;
+
         for (char c : password.toCharArray()) {
-            if (Character.isUpperCase(c))
+            if (Character.isUpperCase(c)) {
                 hasUpper = true;
-            else if (Character.isLowerCase(c))
+            } else if (Character.isLowerCase(c)) {
                 hasLower = true;
-            else if (Character.isDigit(c))
+            } else if (Character.isDigit(c)) {
                 hasDigit = true;
-            else if (!Character.isWhitespace(c))
+            } else if (!Character.isLetterOrDigit(c)) {
                 hasSpecial = true;
+            }
         }
+
         return hasUpper && hasLower && hasDigit && hasSpecial;
     }
 }
