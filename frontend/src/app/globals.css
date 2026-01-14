@@ -154,7 +154,7 @@
 
 /* TODO: Remove screen media in prod */
 @custom-variant standalone {
-  @media screen and (width <= 640px), (display-mode: standalone) {
+  @media screen and (width <= 40rem), (display-mode: standalone) {
     html & {
       @slot;
     }
