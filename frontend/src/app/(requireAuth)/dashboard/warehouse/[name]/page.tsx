@@ -23,13 +23,13 @@ export default async function WarehousePage({
         const warehouseId = (await cookies()).get("warehouseId")?.value
 
         if (!warehouseId) {
-          redirect("/dashboard")
+          redirect("/dashboard/warehouse")
         }
 
         const parsedName = decodeURIComponent(name)
 
         if (MOCK_WAREHOUSES_DATA[parsedName] === undefined) {
-          redirect("/dashboard")
+          redirect("/dashboard/warehouse")
         }
         const warehouseRacks = MOCK_WAREHOUSES_DATA[parsedName]
         return (

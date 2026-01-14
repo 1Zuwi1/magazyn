@@ -1,10 +1,19 @@
-import { Analytics01Icon, GroupItemsIcon } from "@hugeicons/core-free-icons"
+import {
+  Analytics01Icon,
+  GroupItemsIcon,
+  Package,
+} from "@hugeicons/core-free-icons"
 
 export const navigationItems = [
   {
     title: "Panel główny",
     href: "/dashboard",
     icon: Analytics01Icon,
+  },
+  {
+    title: "Magazyny",
+    href: "/dashboard/warehouse",
+    icon: Package,
   },
   {
     title: "Asortyment",

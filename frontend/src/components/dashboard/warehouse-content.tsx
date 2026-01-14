@@ -10,7 +10,7 @@ import { WarehouseGrid } from "./storage-grid"
 import type { FilterState } from "./types"
 import { filterWarehouses } from "./utils/filters"
 
-export const DashboardContent = () => {
+export const WarehouseContent = () => {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const filteredWarehouses = filterWarehouses(MOCK_WAREHOUSES, filters)
 

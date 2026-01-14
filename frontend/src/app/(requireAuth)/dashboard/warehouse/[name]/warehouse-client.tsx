@@ -63,8 +63,8 @@ export default function WarehouseClient({
               buttonVariants({ variant: "outline", size: "icon" }),
               "size-8 sm:size-10"
             )}
-            href="/dashboard"
-            title="Powrót do Dashboardu"
+            href="/dashboard/warehouse"
+            title="Powrót do listy magazynów"
           >
             <HugeiconsIcon icon={ArrowLeft02Icon} />
           </Link>

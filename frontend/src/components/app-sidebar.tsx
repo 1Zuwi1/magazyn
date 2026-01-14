@@ -44,10 +44,13 @@ function NavMain() {
   const pathname = usePathname()
   return (
     <SidebarMenu className="gap-2 px-2">
-      {navigationItems.map((item, index) => {
-        const isActive = pathname === item.href
+      {navigationItems.map((item) => {
+        const isActive =
+          item.href === "/dashboard"
+            ? pathname === item.href
+            : pathname.startsWith(item.href)
         return (
-          <SidebarMenuItem key={index}>
+          <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
               isActive={isActive}
               render={
