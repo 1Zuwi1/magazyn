@@ -2,6 +2,11 @@ name: CI
 
 on:
   pull_request:
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/build.yml"
 
 jobs:
   frontend:
@@ -11,13 +16,37 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
+      - name: Detect changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - "frontend/**"
+              - ".github/workflows/build.yml"
+      - name: Check for changes
+        id: change_status
+        run: |
+          if [[ "${{ steps.changes.outputs.frontend }}" == "true" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
       - uses: oven-sh/setup-bun@v1
+        if: steps.change_status.outputs.changed == 'true'
         with:
           bun-version: "1.1.38"
+      - run: exit 0
+        if: steps.change_status.outputs.changed == 'false'
       - run: bun install --frozen-lockfile
+        if: steps.change_status.outputs.changed == 'true'
       - run: bun run lint
+        if: steps.change_status.outputs.changed == 'true'
       - run: bun run test
+        if: steps.change_status.outputs.changed == 'true'
       - run: bun run build
+        if: steps.change_status.outputs.changed == 'true'
 
   backend:
     runs-on: ubuntu-latest
@@ -26,13 +55,34 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
+      - name: Detect changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - "backend/**"
+              - ".github/workflows/ci.yml"
+      - name: Check for changes
+        id: change_status
+        run: |
+          if [[ "${{ steps.changes.outputs.backend }}" == "true" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
       - uses: actions/setup-java@v4
+        if: steps.change_status.outputs.changed == 'true'
         with:
           distribution: temurin
           java-version: "17"
           cache: maven
+      - run: exit 0
+        if: steps.change_status.outputs.changed == 'false'
       - name: Prepare test config and run tests
         shell: bash
+        if: steps.change_status.outputs.changed == 'true'
         run: |
           mv src/main/resources/application.properties.test src/main/resources/application.properties
           set -a
