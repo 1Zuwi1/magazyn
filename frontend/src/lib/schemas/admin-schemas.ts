@@ -45,7 +45,7 @@ export const CsvRackRowSchema = z.object({
   cols: z.number().min(1),
   minTemp: z.number(),
   maxTemp: z.number(),
-  maxWeightKg: z.number().nonnegative(),
+  maxWeight: z.number().nonnegative(),
   maxItemSize: DimensionsSchema,
   comment: z.string().optional(),
 })

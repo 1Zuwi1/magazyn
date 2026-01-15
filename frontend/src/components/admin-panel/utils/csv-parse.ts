@@ -23,11 +23,6 @@ interface ParseCsvOptions {
   skipEmptyLines?: boolean
 }
 
-interface ParseCsvInput {
-  input: string
-  options: ParseCsvOptions
-}
-
 const BOM_HEADER_REGEX = /^\uFEFF/
 
 const normalizeHeader = (header: string) =>
@@ -59,82 +54,54 @@ const rackHeaderMap: Record<string, string> = {
   name: "name",
   rows: "rows",
   cols: "cols",
-  minTemp: "minTemp",
-  maxTemp: "maxTemp",
-  maxWeightKg: "maxWeightKg",
-  maxItemWidth: "maxItemSize.width",
-  maxItemHeight: "maxItemSize.height",
-  maxItemDepth: "maxItemSize.depth",
+  mintemp: "minTemp",
+  maxtemp: "maxTemp",
+  maxweightkg: "maxWeightKg",
+  maxitemwidth: "maxItemSize.width",
+  maxitemheight: "maxItemSize.height",
+  maxitemdepth: "maxItemSize.depth",
   comment: "comment",
 }
 
 const itemHeaderMap: Record<string, string> = {
   name: "name",
   id: "id",
-  imageUrl: "imageUrl",
-  minTemp: "minTemp",
-  maxTemp: "maxTemp",
+  imageurl: "imageUrl",
+  mintemp: "minTemp",
+  maxtemp: "maxTemp",
   weight: "weight",
   width: "dimensions.width",
   height: "dimensions.height",
   depth: "dimensions.depth",
   comment: "comment",
-  daysToExpiry: "daysToExpiry",
-  isDangerous: "isDangerous",
+  daystoexpiry: "daysToExpiry",
+  isdangerous: "isDangerous",
 }
 
 const coerceValue = (value: string, field: string): unknown => {
   const trimmed = value.trim()
 
-  if (trimmed.length === 0) {
+  if (!trimmed) {
     return undefined
   }
 
   if (numberFields.has(field)) {
-    const normalized = trimmed.replace(",", ".")
-    const parsed = Number.parseFloat(normalized)
+    const parsed = Number.parseFloat(trimmed.replace(",", "."))
     return Number.isNaN(parsed) ? undefined : parsed
   }
 
   if (booleanFields.has(field)) {
-    const normalized = trimmed.toLowerCase()
-
-    if (["true", "1", "tak", "yes"].includes(normalized)) {
+    const lower = trimmed.toLowerCase()
+    if (lower === "true") {
       return true
     }
-
-    if (["false", "0", "nie", "no"].includes(normalized)) {
+    if (lower === "false") {
       return false
     }
-
     return undefined
   }
 
   return trimmed
-}
-
-const setNestedValue = (
-  target: Record<string, unknown>,
-  path: string,
-  value: unknown
-) => {
-  const segments = path.split(".")
-  let current = target
-
-  for (const [index, segment] of segments.entries()) {
-    if (index === segments.length - 1) {
-      current[segment] = value
-      return
-    }
-
-    const next = current[segment]
-
-    if (!next || typeof next !== "object") {
-      current[segment] = {}
-    }
-
-    current = current[segment] as Record<string, unknown>
-  }
 }
 
 const mapRow = (
@@ -145,34 +112,26 @@ const mapRow = (
 
   for (const [key, value] of Object.entries(row)) {
     const mappedKey = headerMap[normalizeHeaderKey(key)]
-
     if (!mappedKey) {
       continue
     }
 
     const coercedValue = coerceValue(value, mappedKey)
-    setNestedValue(mapped, mappedKey, coercedValue)
+    if (coercedValue !== undefined) {
+      mapped[mappedKey] = coercedValue
+    }
   }
 
   return mapped
 }
 
-const collectSchemaErrors = (
-  row: number,
-  issues: z.core.$ZodIssue[]
-): CsvParseError[] =>
-  issues.map((issue) => ({
-    row,
-    message: `${issue.path.join(".")}: ${issue.message}`,
-  }))
-
 const isRowEmpty = (row: Record<string, string>) =>
-  Object.values(row).every((value) => value.trim().length === 0)
+  !Object.values(row).some((v) => v.trim())
 
-const parseCsvData = <T extends CsvRackRow | CsvItemRow>({
-  input,
-  options,
-}: ParseCsvInput): ParseCsvResult<T> => {
+export const parseCsvData = <T extends CsvRackRow | CsvItemRow>(
+  input: string,
+  options: ParseCsvOptions
+): ParseCsvResult<T> => {
   const result = Papa.parse<Record<string, string>>(input, {
     delimiter: options.delimiter ?? ";",
     skipEmptyLines: options.skipEmptyLines ?? true,
@@ -182,29 +141,34 @@ const parseCsvData = <T extends CsvRackRow | CsvItemRow>({
   })
 
   const headers = result.meta.fields ?? []
-  const parserErrors = result.errors.map((error: Papa.ParseError) => ({
-    row: error.row ?? 0,
-    message: error.message,
-  }))
+  const errors: CsvParseError[] = result.errors.map(
+    (error: Papa.ParseError) => ({
+      row: error.row ?? 0,
+      message: error.message,
+    })
+  )
 
   const rawRows = result.data.filter((row) => !isRowEmpty(row))
   const schema = options.type === "rack" ? CsvRackRowSchema : CsvItemRowSchema
   const headerMap = options.type === "rack" ? rackHeaderMap : itemHeaderMap
 
   const rows: T[] = []
-  const errors: CsvParseError[] = [...parserErrors]
 
   rawRows.forEach((row, index) => {
     const mapped = mapRow(row, headerMap)
     const parsed = schema.safeParse(mapped)
-    const rowNumber = index + 2
 
-    if (!parsed.success) {
-      errors.push(...collectSchemaErrors(rowNumber, parsed.error.issues))
-      return
+    if (parsed.success) {
+      rows.push(parsed.data as T)
+    } else {
+      const rowNumber = index + 2
+      for (const issue of parsed.error.issues) {
+        errors.push({
+          row: rowNumber,
+          message: `${issue.path.join(".")}: ${issue.message}`,
+        })
+      }
     }
-
-    rows.push(parsed.data as T)
   })
 
   return {
@@ -214,8 +178,3 @@ const parseCsvData = <T extends CsvRackRow | CsvItemRow>({
     errors,
   }
 }
-
-export const parseCSV = (
-  input: string,
-  options: ParseCsvOptions
-): ParseCsvResult<CsvRackRow | CsvItemRow> => parseCsvData({ input, options })
