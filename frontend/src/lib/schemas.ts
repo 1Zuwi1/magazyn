@@ -35,7 +35,7 @@ export const RegisterSchema = createApiSchema({
   },
 })
 
-export const FormRegisterSchema = RegisterSchema.shape.POST?.shape.input
+export const FormRegisterSchema = RegisterSchema.shape.POST.shape.input
   .extend({
     confirmPassword: PasswordSchema,
   })
