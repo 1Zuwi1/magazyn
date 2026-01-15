@@ -77,15 +77,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
         toast.success("Zalogowano pomyślnie!")
         router.push(res.requiresTwoFactor ? "/login/2fa" : "/dashboard")
       } else {
-        const registerValue = value as ValueTypes["register"]
+        const { confirmPassword, ...registerValue } =
+          value as ValueTypes["register"]
         const [err] = await tryCatch(
           apiFetch("/api/auth/register", RegisterSchema, {
             method: "POST",
-            body: {
-              email: registerValue.email,
-              password: registerValue.password,
-              fullName: registerValue.fullName,
-            },
+            body: registerValue,
           })
         )
 
