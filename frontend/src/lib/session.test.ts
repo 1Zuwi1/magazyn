@@ -19,7 +19,6 @@ vi.mock("next/navigation", () => ({
 interface SessionUser {
   id: number
   email: string
-  username: string
   full_name: string | null
   two_factor_enabled: boolean
   status: "verified" | "unverified" | "banned"
@@ -29,7 +28,6 @@ interface SessionUser {
 const buildUser = (overrides: Partial<SessionUser> = {}): SessionUser => ({
   id: 1,
   email: "user@example.com",
-  username: "testuser",
   full_name: "Test User",
   two_factor_enabled: true,
   role: "user",
