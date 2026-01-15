@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest"
 
 import {
   ApiMeSchema,
+  FormRegisterSchema,
   LoginSchema,
-  PasswordSchema,
   RegisterSchema,
   Resend2FASchema,
   Verify2FASchema,
@@ -80,15 +80,6 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
   })
 })
-
-const FormRegisterSchema = RegisterSchema.shape.POST?.shape.input
-  .extend({
-    confirmPassword: PasswordSchema,
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Hasła nie są zgodne",
-    path: ["confirmPassword"],
-  })
 
 describe("RegisterSchema", () => {
   it("accepts valid registration input", () => {

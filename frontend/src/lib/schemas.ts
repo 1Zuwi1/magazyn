@@ -33,6 +33,15 @@ export const RegisterSchema = createApiSchema({
   },
 })
 
+export const FormRegisterSchema = RegisterSchema.shape.POST?.shape.input
+  .extend({
+    confirmPassword: PasswordSchema,
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Hasła nie są zgodne",
+    path: ["confirmPassword"],
+  })
+
 export const Verify2FASchema = createApiSchema({
   POST: {
     input: z.object({

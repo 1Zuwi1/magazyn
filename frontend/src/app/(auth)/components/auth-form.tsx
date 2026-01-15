@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { apiFetch } from "@/lib/fetcher"
-import { LoginSchema, PasswordSchema, RegisterSchema } from "@/lib/schemas"
+import { FormRegisterSchema, LoginSchema, RegisterSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
 
 type AuthMode = "login" | "register"
@@ -77,7 +77,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
         toast.success("Zalogowano pomyślnie!")
         router.push(res.requiresTwoFactor ? "/login/2fa" : "/dashboard")
       } else {
-        const registerValue = value as ValueTypes["register"]
+        const registerValue = value as Omit<
+          ValueTypes["register"],
+          "confirmPassword"
+        >
         const [err] = await tryCatch(
           apiFetch("/api/auth/register", RegisterSchema, {
             method: "POST",
@@ -100,14 +103,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
     validators: {
       onSubmitAsync: isLogin
         ? LoginSchema.shape.POST.shape.input
-        : RegisterSchema.shape.POST.shape.input
-            .extend({
-              confirmPassword: PasswordSchema,
-            })
-            .refine((data) => data.password === data.confirmPassword, {
-              message: "Hasła nie są zgodne",
-              path: ["confirmPassword"],
-            }),
+        : FormRegisterSchema,
     },
   })
 
@@ -124,7 +120,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             <Logo />
             <FieldDescription>
               {isLogin
-                ? "Wprowadź swoją nazwę użytkownika i hasło, aby uzyskać dostęp do konta."
+                ? "Wprowadź swój adres email i hasło, aby uzyskać dostęp do konta."
                 : "Utwórz konto, aby korzystać z aplikacji."}
             </FieldDescription>
           </div>
