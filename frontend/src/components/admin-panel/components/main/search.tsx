@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { Search01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
+import { Search01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
-import { useSearch } from "@/components/admin-panel/components/search-provider"
-import { Input } from "@/components/ui/input"
-import { InputGroup, InputGroupButton } from "@/components/ui/input-group"
-import { cn } from "@/lib/utils"
+import { useSearch } from "@/components/admin-panel/components/main/search-provider";
+import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupButton } from "@/components/ui/input-group";
+import { cn } from "@/lib/utils";
 
 interface SearchProps {
-  className?: string
-  placeholder?: string
+  className?: string;
+  placeholder?: string;
 }
 
 export function Search({ className, placeholder = "Search" }: SearchProps) {
-  const { setOpen } = useSearch()
+  const { setOpen } = useSearch();
 
   return (
     <InputGroup className={cn("w-full sm:w-60", className)}>
@@ -26,5 +26,5 @@ export function Search({ className, placeholder = "Search" }: SearchProps) {
         <HugeiconsIcon icon={Search01Icon} />
       </InputGroupButton>
     </InputGroup>
-  )
+  );
 }

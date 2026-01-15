@@ -56,7 +56,6 @@ export function NotificationInbox({ count: _count }: NotificationInboxProps) {
           <span className="font-semibold text-sm">Powiadomienia</span>
         </div>
 
-        <Separator />
         <ScrollArea className="h-70">
           <div className="flex flex-col">
             {notifications.length === 0 ? (

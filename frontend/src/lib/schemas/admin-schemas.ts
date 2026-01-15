@@ -2,9 +2,9 @@ import z from "zod"
 import { createApiSchema } from "../create-api-schema"
 
 const DimensionsSchema = z.object({
-  x: z.number().positive(),
-  y: z.number().positive(),
-  z: z.number().positive(),
+  width: z.number().positive(),
+  height: z.number().positive(),
+  depth: z.number().positive(),
 })
 
 export const ItemSchema = z.object({
@@ -12,7 +12,7 @@ export const ItemSchema = z.object({
   id: z.string(),
   name: z.string(),
   qrCode: z.string(),
-  imageUrl: z.string().optional().nullable().or(z.literal("")),
+  imageUrl: z.string().optional().or(z.literal("")),
   minTemp: z.number(),
   maxTemp: z.number(),
   weight: z.number().nonnegative(),
@@ -23,7 +23,6 @@ export const ItemSchema = z.object({
 })
 
 export const RackSchema = z.object({
-  // id: z.string().uuid(),
   id: z.string(),
   name: z.string(),
   rows: z.number().min(1),
@@ -39,6 +38,8 @@ export const RackSchema = z.object({
 })
 
 export const CsvRackRowSchema = z.object({
+  // id: z.uuid(),
+  symbol: z.string(),
   name: z.string(),
   rows: z.number().min(1),
   cols: z.number().min(1),

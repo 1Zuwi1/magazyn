@@ -1,57 +1,57 @@
 export interface Rack {
-  id: string
-  name: string
-  rows: number
-  cols: number
-  minTemp: number
-  maxTemp: number
-  maxWeight: number
-  currentWeight: number
-  comment?: string
-  occupancy: number // 0-100
-  items: ItemSlot[]
+  id: string;
+  name: string;
+  rows: number;
+  cols: number;
+  minTemp: number;
+  maxTemp: number;
+  maxWeight: number;
+  currentWeight: number;
+  comment?: string;
+  occupancy: number; // 0-100
+  items: ItemSlot[];
 }
 
 export interface Warehouse {
-  id: string
-  name: string
-  capacity: number
-  used: number
-  racks: Rack[]
+  id: string;
+  name: string;
+  capacity: number;
+  used: number;
+  racks: Rack[];
 }
 export interface FilterState {
-  query: string
-  minOccupancy: number
-  tempRange: [number, number]
-  showEmpty: boolean
+  query: string;
+  minOccupancy: number;
+  tempRange: [number, number];
+  showEmpty: boolean;
 }
 
 export interface Dimensions {
-  x: number
-  y: number
-  z: number
+  x: number;
+  y: number;
+  z: number;
 }
 
 export interface Item {
-  id: string
-  name: string
-  qrCode: string
-  expiryDate: Date
-  weight: number
-  dimensions: Dimensions
-  minTemp: number
-  maxTemp: number
-  comment?: string
-  isDangerous: boolean
-  imageUrl?: string | null
+  id: string;
+  name: string;
+  qrCode: string;
+  expiryDate: Date;
+  weight: number;
+  dimensions: Dimensions;
+  minTemp: number;
+  maxTemp: number;
+  comment?: string;
+  isDangerous: boolean;
+  imageUrl?: string | null;
 }
 
-export type ItemSlot = Item | null
+export type ItemSlot = Item | null;
 
 export interface Notification {
-  id: string
-  title: string
-  description: string
-  date: string
-  read: boolean
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  read: boolean;
 }
