@@ -8,6 +8,10 @@ on:
       - ".github/workflows/ci.yml"
       - ".github/workflows/build.yml"
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   frontend:
     runs-on: ubuntu-latest
