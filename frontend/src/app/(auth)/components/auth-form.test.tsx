@@ -197,7 +197,6 @@ describe("AuthForm", () => {
               email: "test@example.com",
               fullName: "Test User",
               password: "password123",
-              confirmPassword: "password123",
             },
           })
         )

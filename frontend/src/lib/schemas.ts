@@ -1,11 +1,13 @@
 import z from "zod"
 import { createApiSchema } from "./create-api-schema"
 
+const txtEncoder = new TextEncoder()
+
 export const PasswordSchema = z
   .string()
   .min(6, "Hasło musi mieć co najmniej 6 znaków")
   .refine((value) => {
-    const bytes = new TextEncoder().encode(value).length
+    const bytes = txtEncoder.encode(value).length
     return bytes <= 72
   }, "Hasło nie może przekraczać 72 bajtów w kodowaniu UTF-8.")
 
