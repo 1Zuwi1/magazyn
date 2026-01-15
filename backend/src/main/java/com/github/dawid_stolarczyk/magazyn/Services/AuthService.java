@@ -139,7 +139,7 @@ public class AuthService {
         newUser.setEmailVerifications(emailVerification);
         userRepository.save(newUser);
 
-        emailService.sendVerificationEmail(newUser.getEmail(), "http://%s:8080/api/auth/verify-email?token=%s".formatted(domain, emailVerificationToken));
+        emailService.sendVerificationEmail(newUser.getEmail(), "http://%s/api/auth/verify-email?token=%s".formatted(domain, emailVerificationToken));
     }
 
     public void verifyEmailCheck(String token, HttpServletRequest request) {
