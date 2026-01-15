@@ -32,24 +32,12 @@ export const usersColumns: ColumnDef<User>[] = [
     cell: ({ row }) => (
       <div className="max-w-36 ps-3">{row.original.username}</div>
     ),
-    meta: {
-      className: cn(
-        "drop-shadow-[0_1px_2px_rgb(0_0_0_/_0.1)] dark:drop-shadow-[0_1px_2px_rgb(255_255_255_/_0.1)]",
-        "start-6 @4xl/content:table-cell ps-0.5 @4xl/content:drop-shadow-none max-md:sticky"
-      ),
-    },
     enableHiding: false,
   },
   {
     accessorKey: "email",
     header: "Email",
     cell: ({ row }) => <div className="max-w-48">{row.original.email}</div>,
-    meta: {
-      className: cn(
-        "drop-shadow-[0_1px_2px_rgb(0_0_0_/_0.1)] dark:drop-shadow-[0_1px_2px_rgb(255_255_255_/_0.1)]",
-        "start-7 @4xl/content:table-cell drop-shadow-none max-md:sticky"
-      ),
-    },
     enableHiding: false,
   },
   {

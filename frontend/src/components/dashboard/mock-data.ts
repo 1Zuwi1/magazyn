@@ -1,5 +1,5 @@
 import type { ItemInstance, ItemStats } from "./items/types"
-import type { Notification, Rack } from "./types"
+import type { Notification, Rack, User } from "./types"
 
 const MOCK_RACKS: Rack[] = [
   {
@@ -932,6 +932,79 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   },
 ]
 
+const MOCK_USERS: User[] = [
+  {
+    id: "u-1001",
+    username: "john_doe",
+    email: "john.doe@example.com",
+    role: "admin",
+    status: "active",
+  },
+  {
+    id: "u-1002",
+    username: "jane_smith",
+    email: "jane.smith@example.com",
+    role: "user",
+    status: "active",
+  },
+  {
+    id: "u-1003",
+    username: "pawel",
+    email: "pawel@example.com",
+    role: "user",
+    status: "inactive",
+  },
+  {
+    id: "u-1004",
+    username: "kasia",
+    email: "kasia@example.com",
+    role: "admin",
+    status: "active",
+  },
+  {
+    id: "u-1005",
+    username: "adam",
+    email: "adam@example.com",
+    role: "user",
+    status: "inactive",
+  },
+  {
+    id: "u-1006",
+    username: "ola",
+    email: "ola@example.com",
+    role: "user",
+    status: "active",
+  },
+  {
+    id: "u-1007",
+    username: "krzysiek",
+    email: "krzysiek@example.com",
+    role: "user",
+    status: "active",
+  },
+  {
+    id: "u-1008",
+    username: "magda",
+    email: "magda@example.com",
+    role: "admin",
+    status: "active",
+  },
+  {
+    id: "u-1009",
+    username: "dominik",
+    email: "dominik@example.com",
+    role: "user",
+    status: "inactive",
+  },
+  {
+    id: "u-1010",
+    username: "ania",
+    email: "ania@example.com",
+    role: "user",
+    status: "active",
+  },
+]
+
 export {
   MOCK_WAREHOUSES,
   MOCK_RACKS,
@@ -939,4 +1012,5 @@ export {
   MOCK_ITEM_STATS,
   MOCK_ITEM_DEFINITIONS,
   MOCK_NOTIFICATIONS,
+  MOCK_USERS,
 }

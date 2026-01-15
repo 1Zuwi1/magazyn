@@ -109,10 +109,12 @@ export function ActionDialog({
           <DialogTitle>
             {isEdit ? "Edytuj użytkownika" : "Dodaj użytkownika"}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="mt-2">
             {isEdit
-              ? "Zmień informacje o użytkowniku i zapisz zmiany."
+              ? "Zmień informacje o użytkowniku"
               : "Wprowadź informacje o nowym użytkowniku."}
+          </DialogDescription>
+          <DialogDescription className="mt-1">
             Kliknij przycisk "Zapisz", aby zatwierdzić.
           </DialogDescription>
         </DialogHeader>
