@@ -123,7 +123,7 @@ describe("createApiSchema", () => {
     const userSchema = z.object({
       id: z.number(),
       name: z.string(),
-      email: z.string().email(),
+      email: z.email(),
       address: addressSchema,
     })
 
