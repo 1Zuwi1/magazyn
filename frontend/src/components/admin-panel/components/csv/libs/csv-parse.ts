@@ -55,6 +55,7 @@ const numberFields = new Set([
 const booleanFields = new Set(["isDangerous"])
 
 const rackHeaderMap: Record<string, string> = {
+  symbol: "symbol",
   name: "name",
   rows: "rows",
   cols: "cols",
@@ -68,9 +69,9 @@ const rackHeaderMap: Record<string, string> = {
 }
 
 const itemHeaderMap: Record<string, string> = {
-  id: "id",
   name: "name",
-  imageurl: "imageUrl",
+  id: "id",
+  imageUrl: "imageUrl",
   minTemp: "minTemp",
   maxTemp: "maxTemp",
   weight: "weight",
