@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import AuthForm from "./auth-form"
 
 // Constants for regex patterns
-const USERNAME_REGEX = /nazwa użytkownika/i
 const PASSWORD_REGEX = /^hasło$/i
 const EXACT_PASSWORD_REGEX = /^hasło$/i
 const CONFIRM_PASSWORD_REGEX = /potwierdź hasło/i
@@ -63,10 +62,9 @@ describe("AuthForm", () => {
     it("renders login fields correctly", () => {
       render(<AuthForm mode="login" />)
 
-      expect(screen.getByLabelText(USERNAME_REGEX)).toBeInTheDocument()
       expect(screen.getByLabelText(PASSWORD_REGEX)).toBeInTheDocument()
+      expect(screen.queryByLabelText(EMAIL_REGEX)).toBeInTheDocument()
       expect(screen.queryByLabelText(FULLNAME_REGEX)).not.toBeInTheDocument()
-      expect(screen.queryByLabelText(EMAIL_REGEX)).not.toBeInTheDocument()
       expect(
         screen.getByRole("button", { name: LOGIN_BUTTON_REGEX })
       ).toBeInTheDocument()
@@ -76,8 +74,8 @@ describe("AuthForm", () => {
       mockApiFetch.mockResolvedValue({ requiresTwoFactor: false })
       render(<AuthForm mode="login" />)
 
-      fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
-        target: { value: "testuser" },
+      fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
+        target: { value: "testuser@example.com" },
       })
       fireEvent.change(screen.getByLabelText(PASSWORD_REGEX), {
         target: { value: "password123" },
@@ -91,7 +89,7 @@ describe("AuthForm", () => {
           expect.anything(),
           expect.objectContaining({
             method: "POST",
-            body: { username: "testuser", password: "password123" },
+            body: { email: "testuser@example.com", password: "password123" },
           })
         )
       })
@@ -105,8 +103,8 @@ describe("AuthForm", () => {
       mockApiFetch.mockResolvedValue({ requiresTwoFactor: true })
       render(<AuthForm mode="login" />)
 
-      fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
-        target: { value: "testuser" },
+      fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
+        target: { value: "testuser@example.com" },
       })
       fireEvent.change(screen.getByLabelText(PASSWORD_REGEX), {
         target: { value: "password123" },
@@ -124,8 +122,8 @@ describe("AuthForm", () => {
       mockApiFetch.mockRejectedValue(error)
       render(<AuthForm mode="login" />)
 
-      fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
-        target: { value: "testuser" },
+      fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
+        target: { value: "testuser@example.com" },
       })
       fireEvent.change(screen.getByLabelText(PASSWORD_REGEX), {
         target: { value: "password123" },
@@ -159,7 +157,6 @@ describe("AuthForm", () => {
     it("renders register fields correctly", () => {
       render(<AuthForm mode="register" />)
 
-      expect(screen.getByLabelText(USERNAME_REGEX)).toBeInTheDocument()
       expect(screen.getByLabelText(PASSWORD_REGEX)).toBeInTheDocument()
       expect(screen.getByLabelText(EMAIL_REGEX)).toBeInTheDocument()
       expect(screen.getByLabelText(FULLNAME_REGEX)).toBeInTheDocument()
@@ -177,9 +174,6 @@ describe("AuthForm", () => {
       })
       fireEvent.change(screen.getByLabelText(FULLNAME_REGEX), {
         target: { value: "Test User" },
-      })
-      fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
-        target: { value: "testuser" },
       })
       fireEvent.change(screen.getAllByLabelText(PASSWORD_REGEX)[0], {
         // Password field
@@ -202,7 +196,6 @@ describe("AuthForm", () => {
             body: {
               email: "test@example.com",
               fullName: "Test User",
-              username: "testuser",
               password: "password123",
               confirmPassword: "password123",
             },
@@ -223,9 +216,6 @@ describe("AuthForm", () => {
       })
       fireEvent.change(screen.getByLabelText(FULLNAME_REGEX), {
         target: { value: "Test User" },
-      })
-      fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
-        target: { value: "testuser" },
       })
 
       fireEvent.change(screen.getByLabelText(EXACT_PASSWORD_REGEX), {
@@ -256,9 +246,6 @@ describe("AuthForm", () => {
       })
       fireEvent.change(screen.getByLabelText(FULLNAME_REGEX), {
         target: { value: "Test User" },
-      })
-      fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
-        target: { value: "testuser" },
       })
       fireEvent.change(screen.getByLabelText(EXACT_PASSWORD_REGEX), {
         target: { value: "password123" },

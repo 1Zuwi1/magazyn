@@ -57,7 +57,6 @@ export const ApiMeSchema = createApiSchema({
     output: z.object({
       id: z.number(),
       email: z.email(),
-      username: z.string(),
       full_name: z.string().nullable(),
       two_factor_enabled: z.boolean(),
       status: z.enum(["verified", "unverified", "banned"]),
