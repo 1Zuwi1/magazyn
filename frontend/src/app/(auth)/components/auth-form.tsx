@@ -37,11 +37,10 @@ function FieldState({ field }: { field: AnyFieldApi }) {
 
 const values = {
   login: {
-    username: "",
+    email: "",
     password: "",
   },
   register: {
-    username: "",
     fullName: "",
     email: "",
     password: "",

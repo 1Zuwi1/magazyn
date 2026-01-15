@@ -1,15 +1,6 @@
 import z from "zod"
 import { createApiSchema } from "./create-api-schema"
 
-const usernameSchema = z
-  .string()
-  .min(3, "Nazwa użytkownika musi mieć co najmniej 3 znaki")
-  .max(20, "Nazwa użytkownika może mieć maksymalnie 20 znaków")
-  .regex(
-    /^[a-zA-Z0-9_]+$/,
-    "Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślenia"
-  )
-
 const passwordSchema = z
   .string()
   .min(6, "Hasło musi mieć co najmniej 6 znaków")
@@ -21,7 +12,7 @@ const passwordSchema = z
 export const LoginSchema = createApiSchema({
   POST: {
     input: z.object({
-      username: usernameSchema,
+      email: z.email("Nieprawidłowy adres email"),
       password: passwordSchema,
     }),
     output: z.object({
@@ -36,10 +27,9 @@ export const RegisterSchema = createApiSchema({
         fullName: z
           .string()
           .min(2, "Imię i nazwisko musi mieć co najmniej 2 znaki"),
-        username: usernameSchema,
         email: z.email("Nieprawidłowy adres email"),
         password: passwordSchema,
-        confirmPassword: z.string(),
+        confirmPassword: passwordSchema,
       })
       .refine((data) => data.password === data.confirmPassword, {
         message: "Hasła nie są zgodne",
