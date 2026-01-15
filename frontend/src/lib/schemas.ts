@@ -1,7 +1,7 @@
 import z from "zod"
 import { createApiSchema } from "./create-api-schema"
 
-const passwordSchema = z
+export const PasswordSchema = z
   .string()
   .min(6, "Hasło musi mieć co najmniej 6 znaków")
   .refine((value) => {
@@ -13,7 +13,7 @@ export const LoginSchema = createApiSchema({
   POST: {
     input: z.object({
       email: z.email("Nieprawidłowy adres email"),
-      password: passwordSchema,
+      password: PasswordSchema,
     }),
     output: z.object({
       requiresTwoFactor: z.boolean(),
@@ -22,19 +22,13 @@ export const LoginSchema = createApiSchema({
 })
 export const RegisterSchema = createApiSchema({
   POST: {
-    input: z
-      .object({
-        fullName: z
-          .string()
-          .min(2, "Imię i nazwisko musi mieć co najmniej 2 znaki"),
-        email: z.email("Nieprawidłowy adres email"),
-        password: passwordSchema,
-        confirmPassword: passwordSchema,
-      })
-      .refine((data) => data.password === data.confirmPassword, {
-        message: "Hasła nie są zgodne",
-        path: ["confirmPassword"],
-      }),
+    input: z.object({
+      fullName: z
+        .string()
+        .min(2, "Imię i nazwisko musi mieć co najmniej 2 znaki"),
+      email: z.email("Nieprawidłowy adres email"),
+      password: PasswordSchema,
+    }),
     output: z.null(),
   },
 })
