@@ -1,4 +1,4 @@
-package com.github.dawid_stolarczyk.magazyn.Security.Auth;
+package com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import lombok.AllArgsConstructor;

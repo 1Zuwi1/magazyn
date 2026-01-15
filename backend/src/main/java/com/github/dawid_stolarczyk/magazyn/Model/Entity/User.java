@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
@@ -105,4 +106,7 @@ public class User {
         this.password = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
     }
 
+    public @NonNull byte[] getIdAsBytes() {
+        return Long.toString(id).getBytes();
+    }
 }

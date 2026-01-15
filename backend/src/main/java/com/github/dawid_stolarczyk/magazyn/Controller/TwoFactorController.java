@@ -1,9 +1,14 @@
 package com.github.dawid_stolarczyk.magazyn.Controller;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.CodeRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RegistrationResponse;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Services.TwoFactorService;
+import com.yubico.webauthn.data.AuthenticatorAttestationResponse;
+import com.yubico.webauthn.data.ClientRegistrationExtensionOutputs;
+import com.yubico.webauthn.data.PublicKeyCredential;
+import com.yubico.webauthn.exception.RegistrationFailedException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,6 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -75,6 +81,26 @@ public class TwoFactorController {
             return ResponseEntity.ok(new ResponseTemplate<>(true, "2FA code verified"));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));
+        }
+    }
+    @Operation(summary = "Start the WebAuthn registration process for the current user.")
+    @PostMapping("/webauthn/register/start")
+    public ResponseEntity<?> startWebAuthnRegistration() {
+        try {
+            return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.startWebAuthnRegistration()));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));
+        }
+    }
+
+    @PostMapping("/webauthn/register/finish")
+    @Operation(summary = "Finish the WebAuthn registration process for the current user.")
+    public ResponseEntity<?> finishWebAuthnRegistration(@RequestBody PublicKeyCredential<AuthenticatorAttestationResponse, ClientRegistrationExtensionOutputs> credential) {
+        try {
+            twoFactorService.finishWebAuthnRegistration(credential);
+            return ResponseEntity.ok(new ResponseTemplate<>(true, "WebAuthn registration completed"));
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));
         }
     }
 }

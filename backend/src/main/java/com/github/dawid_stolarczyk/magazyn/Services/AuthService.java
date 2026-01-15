@@ -11,9 +11,9 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
 import com.github.dawid_stolarczyk.magazyn.Repositories.EmailVerificationRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.RememberMeData;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.SessionData;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.SessionService;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.RememberMeData;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.SessionData;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis.SessionService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
@@ -139,7 +139,7 @@ public class AuthService {
         newUser.setEmailVerifications(emailVerification);
         userRepository.save(newUser);
 
-        emailService.sendVerificationEmail(newUser.getEmail(), "http://%s:8080/api/auth/verify-email?token=%s".formatted(domain, emailVerificationToken));
+        emailService.sendVerificationEmail(newUser.getEmail(), "http://%s/api/auth/verify-email?token=%s".formatted(domain, emailVerificationToken));
     }
 
     public void verifyEmailCheck(String token, HttpServletRequest request) {
