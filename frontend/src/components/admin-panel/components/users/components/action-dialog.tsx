@@ -1,0 +1,271 @@
+import { type AnyFieldApi, useForm } from "@tanstack/react-form"
+import z from "zod"
+import { showSubmittedData } from "@/components/admin-panel/utils/show-submitted-data"
+import type { Role, Status, User } from "@/components/dashboard/types"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+const formSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  email: z.email({
+    error: "Invalid email address",
+  }),
+  role: z.enum(["user", "admin"]),
+  status: z.enum(["active", "inactive"]),
+})
+
+type UserForm = z.infer<typeof formSchema>
+
+const roleOptions: Array<{ label: string; value: Role }> = [
+  { label: "User", value: "user" },
+  { label: "Admin", value: "admin" },
+]
+
+const statusOptions: Array<{ label: string; value: Status }> = [
+  { label: "Active", value: "active" },
+  { label: "Inactive", value: "inactive" },
+]
+
+interface ActionDialogProps {
+  currentRow?: User
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function ActionDialog({
+  currentRow,
+  open,
+  onOpenChange,
+}: ActionDialogProps) {
+  const isEdit = !!currentRow
+  const form = useForm({
+    defaultValues: isEdit
+      ? {
+          username: currentRow.username,
+          email: currentRow.email,
+          role: currentRow.role,
+          status: currentRow.status,
+        }
+      : {
+          username: "",
+          email: "",
+          role: "user",
+          status: "active",
+        },
+    onSubmit: ({ value }) => {
+      form.reset()
+      showSubmittedData(value)
+      onOpenChange(false)
+    },
+  })
+
+  const renderError = (field: AnyFieldApi) => {
+    const error = field.state.meta.errors[0] as
+      | { message?: string }
+      | string
+      | undefined
+
+    const message = typeof error === "string" ? error : error?.message
+
+    if (!message) {
+      return null
+    }
+
+    return <FieldError className="col-span-4 col-start-3">{message}</FieldError>
+  }
+
+  return (
+    <Dialog
+      onOpenChange={(state) => {
+        form.reset()
+        onOpenChange(state)
+      }}
+      open={open}
+    >
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {isEdit ? "Edytuj użytkownika" : "Dodaj użytkownika"}
+          </DialogTitle>
+          <DialogDescription>
+            {isEdit
+              ? "Zmień informacje o użytkowniku i zapisz zmiany."
+              : "Wprowadź informacje o nowym użytkowniku."}
+            Kliknij przycisk "Zapisz", aby zatwierdzić.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="h-105 overflow-y-auto py-1 pe-3">
+          <form
+            className="space-y-4 px-0.5"
+            id="user-form"
+            onSubmit={(event) => {
+              event.preventDefault()
+              form.handleSubmit()
+            }}
+          >
+            <FieldGroup className="gap-4">
+              <form.Field name="username">
+                {(field) => (
+                  <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
+                    <FieldLabel
+                      className="col-span-2 text-end"
+                      htmlFor={field.name}
+                    >
+                      Username
+                    </FieldLabel>
+                    <FieldContent className="col-span-4">
+                      <Input
+                        autoComplete="off"
+                        className="w-full"
+                        id={field.name}
+                        name={field.name}
+                        onBlur={field.handleBlur}
+                        onChange={(event) =>
+                          field.handleChange(event.target.value)
+                        }
+                        placeholder="john_doe"
+                        value={field.state.value}
+                      />
+                    </FieldContent>
+                    {renderError(field)}
+                  </Field>
+                )}
+              </form.Field>
+
+              <form.Field name="email">
+                {(field) => (
+                  <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
+                    <FieldLabel
+                      className="col-span-2 text-end"
+                      htmlFor={field.name}
+                    >
+                      Email
+                    </FieldLabel>
+                    <FieldContent className="col-span-4">
+                      <Input
+                        className="w-full"
+                        id={field.name}
+                        name={field.name}
+                        onBlur={field.handleBlur}
+                        onChange={(event) =>
+                          field.handleChange(event.target.value)
+                        }
+                        placeholder="john.doe@gmail.com"
+                        type="email"
+                        value={field.state.value}
+                      />
+                    </FieldContent>
+                    {renderError(field)}
+                  </Field>
+                )}
+              </form.Field>
+
+              <form.Field name="role">
+                {(field) => (
+                  <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
+                    <FieldLabel
+                      className="col-span-2 text-end"
+                      htmlFor={field.name}
+                    >
+                      Role
+                    </FieldLabel>
+                    <FieldContent className="col-span-4">
+                      <Select
+                        onValueChange={(value) =>
+                          field.handleChange(value as UserForm["role"])
+                        }
+                        value={field.state.value}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                          {!field.state.value && (
+                            <span className="text-muted-foreground">
+                              Select a role
+                            </span>
+                          )}
+                        </SelectTrigger>
+                        <SelectContent>
+                          {roleOptions.map((role) => (
+                            <SelectItem key={role.value} value={role.value}>
+                              {role.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FieldContent>
+                    {renderError(field)}
+                  </Field>
+                )}
+              </form.Field>
+
+              <form.Field name="status">
+                {(field) => (
+                  <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
+                    <FieldLabel
+                      className="col-span-2 text-end"
+                      htmlFor={field.name}
+                    >
+                      Status
+                    </FieldLabel>
+                    <FieldContent className="col-span-4">
+                      <Select
+                        onValueChange={(value) =>
+                          field.handleChange(value as UserForm["status"])
+                        }
+                        value={field.state.value}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                          {!field.state.value && (
+                            <span className="text-muted-foreground">
+                              Select a status
+                            </span>
+                          )}
+                        </SelectTrigger>
+                        <SelectContent>
+                          {statusOptions.map((status) => (
+                            <SelectItem key={status.value} value={status.value}>
+                              {status.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FieldContent>
+                    {renderError(field)}
+                  </Field>
+                )}
+              </form.Field>
+            </FieldGroup>
+          </form>
+        </div>
+        <DialogFooter>
+          <Button form="user-form" type="submit">
+            Save changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
