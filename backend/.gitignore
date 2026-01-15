@@ -4,11 +4,11 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+
 # Ignore the real Spring Boot application configuration containing secrets.
 # Commit a non-sensitive template instead (e.g. src/main/resources/application.properties.example).
 src/main/resources/application.properties
 !src/main/resources/application.properties.example
-
 ### STS ###
 .apt_generated
 .classpath
@@ -36,3 +36,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+*.env

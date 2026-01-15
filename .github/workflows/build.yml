@@ -20,10 +20,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Detect changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - "frontend/**"
+              - ".github/workflows/build.yml"
+            backend:
+              - "backend/**"
+              - ".github/workflows/build.yml"
+
+      - name: Check for changes
+        id: change_status
+        run: |
+          if [[ "${{ steps.changes.outputs.frontend }}" == "true" || "${{ steps.changes.outputs.backend }}" == "true" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
       - name: Set up Buildx
+        if: steps.change_status.outputs.changed == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GHCR
+        if: steps.change_status.outputs.changed == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -31,16 +55,29 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # ---- WEB image ----
+
+      - name: Cache
+        uses: actions/cache@v4
+        if: steps.changes.outputs.frontend == 'true'
+        with:
+          path: |
+            ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-magazyn-${{ hashFiles('frontend/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-magazyn-
       - name: Web image metadata
         id: meta_web
         uses: docker/metadata-action@v5
+        if: steps.changes.outputs.frontend == 'true'
         with:
           images: ghcr.io/1zuwi1/magazyn-web
           tags: |
             type=raw,value=latest
+            type=sha
 
       - name: Build and push WEB image
         uses: docker/build-push-action@v6
+        if: steps.changes.outputs.frontend == 'true'
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
@@ -50,31 +87,44 @@ jobs:
           build-args: |
             APP_SCOPE=web
             APP_PATH=apps/web
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
 
       # ---- API image ----
+      - name: Cache Maven
+        uses: actions/cache@v4
+        if: steps.changes.outputs.backend == 'true'
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-magazyn-${{ hashFiles('backend/**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-magazyn-
+
       - name: API image metadata
         id: meta_api
         uses: docker/metadata-action@v5
+        if: steps.changes.outputs.backend == 'true'
         with:
           images: ghcr.io/1zuwi1/magazyn-api
           tags: |
             type=raw,value=latest
+            type=sha
 
       - name: Build and push API image
         uses: docker/build-push-action@v6
+        if: steps.changes.outputs.backend == 'true'
         with:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
           tags: ${{ steps.meta_api.outputs.tags }}
           labels: ${{ steps.meta_api.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
 
       # ---- DEPLOY on server ----
       - name: SSH deploy (pull + restart)
+        if: steps.change_status.outputs.changed == 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -96,8 +146,19 @@ jobs:
             AUTH="$(printf '%s:%s' "${{ secrets.GHCR_USERNAME }}" "${{ secrets.GHCR_PAT }}" | base64 | tr -d '\n')"
             export DOCKER_AUTH_CONFIG="{\"auths\":{\"ghcr.io\":{\"auth\":\"$AUTH\"}}}"
 
-            docker compose pull
-            docker compose up -d --remove-orphans
+            SERVICES=()
+            if [[ "${{ steps.changes.outputs.frontend }}" == "true" ]]; then
+              SERVICES+=("web")
+            fi
+
+            if [[ "${{ steps.changes.outputs.backend }}" == "true" ]]; then
+              SERVICES+=("api")
+            fi
+
+            if [ "${#SERVICES[@]}" -gt 0 ]; then
+              docker compose pull "${SERVICES[@]}"
+              docker compose up -d --remove-orphans "${SERVICES[@]}"
+            fi
             docker image prune -f
 
             unset DOCKER_AUTH_CONFIG
