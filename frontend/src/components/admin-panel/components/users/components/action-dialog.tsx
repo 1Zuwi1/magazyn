@@ -4,7 +4,7 @@ import { type AnyFieldApi, useForm } from "@tanstack/react-form"
 import { useState } from "react"
 import z from "zod"
 import type { User } from "@/components/dashboard/types"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ import {
 import { Input } from "@/components/ui/input"
 import {
   InputGroup,
-  InputGroupAddon,
+  InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group"
 import {
@@ -124,7 +124,6 @@ export function ActionDialog({
         <div className="h-105 overflow-y-auto py-1 pe-3">
           <form
             className="space-y-4 px-0.5"
-            id="user-form"
             onSubmit={(event) => {
               event.preventDefault()
               form.handleSubmit()
@@ -209,20 +208,27 @@ export function ActionDialog({
                           type={showPassword ? "text" : "password"}
                           value={field.state.value}
                         />
-                        <InputGroupAddon>
+                        <InputGroupButton
+                          onClick={(e) => {
+                            e.preventDefault()
+                            setShowPassword(!showPassword)
+                          }}
+                          type="button"
+                        >
                           <HugeiconsIcon
-                            className={cn("cursor-pointer hover:text-primary", {
-                              hidden: field.state.value,
-                              visible: !field.state.value,
-                            })}
+                            className={cn(
+                              buttonVariants({
+                                variant: "ghost",
+                                size: "icon-xs",
+                              }),
+                              {
+                                hidden: !field.state.value,
+                                visible: field.state.value,
+                              }
+                            )}
                             icon={showPassword ? ViewOffIcon : ViewIcon}
-                            onClick={(e) => {
-                              e.preventDefault()
-                              setShowPassword(!showPassword)
-                            }}
-                            type="button"
                           />
-                        </InputGroupAddon>
+                        </InputGroupButton>
                       </InputGroup>
                     </FieldContent>
                     {renderError(field)}

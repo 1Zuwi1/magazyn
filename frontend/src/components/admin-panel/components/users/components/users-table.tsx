@@ -2,7 +2,7 @@
 
 import { MoreHorizontalCircle01FreeIcons } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import type { User } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
 import {
@@ -37,26 +37,20 @@ export default function UsersTable({
   pageSize = 12,
 }: UsersTableProps) {
   const [page, setPage] = useState(1)
-  const normalizedSearch = search.trim().toLowerCase()
+  const filtered = search
+    ? data.filter(
+        (u) =>
+          u.username.toLowerCase().includes(search.toLowerCase()) ||
+          u.email.toLowerCase().includes(search.toLowerCase())
+      )
+    : data
 
-  const filteredData = useMemo(() => {
-    if (!normalizedSearch) {
-      return data
-    }
-
-    return data.filter((user) => {
-      const haystack = [user.username, user.email, user.role, user.status]
-        .join(" ")
-        .toLowerCase()
-
-      return haystack.includes(normalizedSearch)
-    })
-  }, [data, normalizedSearch])
-
-  const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize))
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const currentPage = Math.min(page, totalPages)
   const startIndex = (currentPage - 1) * pageSize
-  const pageData = filteredData.slice(startIndex, startIndex + pageSize)
+  const pageData = filtered.slice(startIndex, startIndex + pageSize)
+
+  const actions = onEdit || onDelete
 
   return (
     <div className="space-y-4">
@@ -65,7 +59,6 @@ export default function UsersTable({
           <TableRow>
             <TableHead>Username</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
@@ -79,9 +72,8 @@ export default function UsersTable({
               >
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell className="capitalize">{user.role}</TableCell>
                 <TableCell className="capitalize">{user.status}</TableCell>
-                {(onEdit || onDelete) && (
+                {actions && (
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger>
@@ -91,8 +83,8 @@ export default function UsersTable({
                         {onEdit && (
                           <DropdownMenuItem
                             className="cursor-pointer"
-                            onClick={(event) => {
-                              event.stopPropagation()
+                            onClick={(e) => {
+                              e.stopPropagation()
                               onEdit(user)
                             }}
                           >
@@ -102,8 +94,8 @@ export default function UsersTable({
                         {onDelete && (
                           <DropdownMenuItem
                             className="cursor-pointer text-destructive focus:text-destructive"
-                            onClick={(event) => {
-                              event.stopPropagation()
+                            onClick={(e) => {
+                              e.stopPropagation()
                               onDelete(user)
                             }}
                           >
@@ -120,7 +112,7 @@ export default function UsersTable({
             <TableRow>
               <TableCell
                 className="py-8 text-center text-muted-foreground"
-                colSpan={onEdit || onDelete ? 5 : 4}
+                colSpan={actions ? 5 : 4}
               >
                 Brak użytkowników do wyświetlenia.
               </TableCell>
@@ -133,7 +125,7 @@ export default function UsersTable({
         <div className="flex items-center gap-2">
           <Button
             disabled={currentPage === 1}
-            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+            onClick={() => setPage((p) => p - 1)}
             size="sm"
             variant="outline"
           >
@@ -141,7 +133,7 @@ export default function UsersTable({
           </Button>
           <Button
             disabled={currentPage === totalPages}
-            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+            onClick={() => setPage((p) => p + 1)}
             size="sm"
             variant="outline"
           >

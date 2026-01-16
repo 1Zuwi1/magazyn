@@ -41,26 +41,6 @@ export const usersColumns: ColumnDef<User>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "role",
-    header: "Role",
-    cell: ({ row }) => {
-      const { role } = row.original
-
-      if (!role) {
-        return null
-      }
-
-      return <div>{role}</div>
-    },
-    meta: {
-      className: cn("start-8 max-md:sticky"),
-    },
-    enableHiding: false,
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
-    },
-  },
-  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => <div>{row.original.status}</div>,
