@@ -3,7 +3,6 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { type AnyFieldApi, useForm } from "@tanstack/react-form"
 import { useState } from "react"
 import z from "zod"
-import { showSubmittedData } from "@/components/admin-panel/utils/show-submitted-data"
 import type { User } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
 import {
@@ -79,7 +78,7 @@ export function ActionDialog({
         },
     onSubmit: ({ value }) => {
       form.reset()
-      showSubmittedData(value)
+      JSON.stringify(value, null, 2)
       onOpenChange(false)
     },
   })
