@@ -13,8 +13,17 @@ const nextConfig: NextConfig = {
     root: import.meta.dirname,
   },
   images: {
-    remotePatterns: [new URL("https://placehold.co/**")],
-    dangerouslyAllowSVG: true,
+    remotePatterns:
+      process.env.NODE_ENV !== "production"
+        ? [new URL("https://placehold.co/**")]
+        : [],
+    dangerouslyAllowSVG: process.env.NODE_ENV !== "production",
+  },
+  experimental: {
+    // Enable filesystem caching for `next dev`
+    turbopackFileSystemCacheForDev: true,
+    // Enable filesystem caching for `next build`
+    turbopackFileSystemCacheForBuild: true,
   },
 }
 
