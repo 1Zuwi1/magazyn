@@ -938,6 +938,7 @@ const MOCK_USERS: User[] = [
     username: "john_doe",
     email: "john.doe@example.com",
     role: "admin",
+    password: "password123",
     status: "active",
   },
   {
@@ -945,6 +946,7 @@ const MOCK_USERS: User[] = [
     username: "jane_smith",
     email: "jane.smith@example.com",
     role: "user",
+    password: "password123",
     status: "active",
   },
   {
@@ -952,6 +954,7 @@ const MOCK_USERS: User[] = [
     username: "pawel",
     email: "pawel@example.com",
     role: "user",
+    password: "password123",
     status: "inactive",
   },
   {
@@ -959,6 +962,7 @@ const MOCK_USERS: User[] = [
     username: "kasia",
     email: "kasia@example.com",
     role: "admin",
+    password: "password123",
     status: "active",
   },
   {
@@ -966,6 +970,7 @@ const MOCK_USERS: User[] = [
     username: "adam",
     email: "adam@example.com",
     role: "user",
+    password: "password123",
     status: "inactive",
   },
   {
@@ -973,6 +978,7 @@ const MOCK_USERS: User[] = [
     username: "ola",
     email: "ola@example.com",
     role: "user",
+    password: "password123",
     status: "active",
   },
   {
@@ -980,6 +986,7 @@ const MOCK_USERS: User[] = [
     username: "krzysiek",
     email: "krzysiek@example.com",
     role: "user",
+    password: "password123",
     status: "active",
   },
   {
@@ -987,6 +994,7 @@ const MOCK_USERS: User[] = [
     username: "magda",
     email: "magda@example.com",
     role: "admin",
+    password: "password123",
     status: "active",
   },
   {
@@ -994,13 +1002,39 @@ const MOCK_USERS: User[] = [
     username: "dominik",
     email: "dominik@example.com",
     role: "user",
+    password: "password123",
     status: "inactive",
   },
   {
     id: "u-1010",
-    username: "ania",
-    email: "ania@example.com",
+    username: "user-10",
+    email: "user-10@example.com",
     role: "user",
+    password: "password123",
+    status: "active",
+  },
+  {
+    id: "u-1013",
+    username: "user-13",
+    email: "user-13@example.com",
+    role: "user",
+    password: "password123",
+    status: "active",
+  },
+  {
+    id: "u-1011",
+    username: "user-11",
+    email: "user-11@example.com",
+    role: "user",
+    password: "password123",
+    status: "active",
+  },
+  {
+    id: "u-1012",
+    username: "user-12",
+    email: "user-12@example.com",
+    role: "user",
+    password: "password123",
     status: "active",
   },
 ]

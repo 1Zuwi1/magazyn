@@ -1,7 +1,10 @@
+import { ViewIcon, ViewOffIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { type AnyFieldApi, useForm } from "@tanstack/react-form"
+import { useState } from "react"
 import z from "zod"
 import { showSubmittedData } from "@/components/admin-panel/utils/show-submitted-data"
-import type { Role, Status, User } from "@/components/dashboard/types"
+import type { User } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -20,12 +23,19 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
 
 const formSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -37,16 +47,6 @@ const formSchema = z.object({
 })
 
 type UserForm = z.infer<typeof formSchema>
-
-const roleOptions: Array<{ label: string; value: Role }> = [
-  { label: "User", value: "user" },
-  { label: "Admin", value: "admin" },
-]
-
-const statusOptions: Array<{ label: string; value: Status }> = [
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-]
 
 interface ActionDialogProps {
   currentRow?: User
@@ -60,17 +60,20 @@ export function ActionDialog({
   onOpenChange,
 }: ActionDialogProps) {
   const isEdit = !!currentRow
+  const [showPassword, setShowPassword] = useState(false)
   const form = useForm({
     defaultValues: isEdit
       ? {
           username: currentRow.username,
           email: currentRow.email,
+          password: currentRow.password ?? "",
           role: currentRow.role,
           status: currentRow.status,
         }
       : {
           username: "",
           email: "",
+          password: "",
           role: "user",
           status: "active",
         },
@@ -118,6 +121,7 @@ export function ActionDialog({
             Kliknij przycisk "Zapisz", aby zatwierdzić.
           </DialogDescription>
         </DialogHeader>
+        <Separator />
         <div className="h-105 overflow-y-auto py-1 pe-3">
           <form
             className="space-y-4 px-0.5"
@@ -183,6 +187,49 @@ export function ActionDialog({
                   </Field>
                 )}
               </form.Field>
+              <form.Field name="password">
+                {(field) => (
+                  <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
+                    <FieldLabel
+                      className="col-span-2 text-end"
+                      htmlFor={field.name}
+                    >
+                      Password
+                    </FieldLabel>
+                    <FieldContent className="col-span-4">
+                      <InputGroup>
+                        <InputGroupInput
+                          className="text-sm"
+                          id={field.name}
+                          name={field.name}
+                          onBlur={field.handleBlur}
+                          onChange={(event) =>
+                            field.handleChange(event.target.value)
+                          }
+                          placeholder="********"
+                          type={showPassword ? "text" : "password"}
+                          value={field.state.value}
+                        />
+                        <InputGroupAddon>
+                          <HugeiconsIcon
+                            className={cn("cursor-pointer hover:text-primary", {
+                              hidden: field.state.value,
+                              visible: !field.state.value,
+                            })}
+                            icon={showPassword ? ViewOffIcon : ViewIcon}
+                            onClick={(e) => {
+                              e.preventDefault()
+                              setShowPassword(!showPassword)
+                            }}
+                            type="button"
+                          />
+                        </InputGroupAddon>
+                      </InputGroup>
+                    </FieldContent>
+                    {renderError(field)}
+                  </Field>
+                )}
+              </form.Field>
 
               <form.Field name="role">
                 {(field) => (
@@ -209,7 +256,10 @@ export function ActionDialog({
                           )}
                         </SelectTrigger>
                         <SelectContent>
-                          {roleOptions.map((role) => (
+                          {[
+                            { label: "user", value: "user" },
+                            { label: "admin", value: "admin" },
+                          ].map((role) => (
                             <SelectItem key={role.value} value={role.value}>
                               {role.label}
                             </SelectItem>
@@ -247,7 +297,10 @@ export function ActionDialog({
                           )}
                         </SelectTrigger>
                         <SelectContent>
-                          {statusOptions.map((status) => (
+                          {[
+                            { label: "active", value: "active" },
+                            { label: "inactive", value: "inactive" },
+                          ].map((status) => (
                             <SelectItem key={status.value} value={status.value}>
                               {status.label}
                             </SelectItem>

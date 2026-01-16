@@ -34,7 +34,7 @@ export default function UsersTable({
   search,
   onEdit,
   onDelete,
-  pageSize = 8,
+  pageSize = 12,
 }: UsersTableProps) {
   const [page, setPage] = useState(1)
   const normalizedSearch = search.trim().toLowerCase()
