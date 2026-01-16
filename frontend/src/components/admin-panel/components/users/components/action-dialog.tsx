@@ -124,8 +124,9 @@ export function ActionDialog({
         <div className="h-105 overflow-y-auto py-1 pe-3">
           <form
             className="space-y-4 px-0.5"
-            onSubmit={(event) => {
-              event.preventDefault()
+            id="user-form"
+            onSubmit={(e) => {
+              e.preventDefault()
               form.handleSubmit()
             }}
           >
@@ -173,9 +174,7 @@ export function ActionDialog({
                         id={field.name}
                         name={field.name}
                         onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
+                        onChange={(e) => field.handleChange(e.target.value)}
                         placeholder="john.doe@gmail.com"
                         type="email"
                         value={field.state.value}
@@ -201,9 +200,7 @@ export function ActionDialog({
                           id={field.name}
                           name={field.name}
                           onBlur={field.handleBlur}
-                          onChange={(event) =>
-                            field.handleChange(event.target.value)
-                          }
+                          onChange={(e) => field.handleChange(e.target.value)}
                           placeholder="********"
                           type={showPassword ? "text" : "password"}
                           value={field.state.value}

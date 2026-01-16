@@ -60,6 +60,7 @@ export default function UsersTable({
             <TableHead>Username</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>{}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

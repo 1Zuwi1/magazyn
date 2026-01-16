@@ -10,15 +10,24 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 
-interface TopNavProps extends React.HTMLAttributes<HTMLElement> {
-  links: {
-    title: string
-    href: string
-    isActive: boolean
-  }[]
-}
-
-export function TopNav({ links }: TopNavProps) {
+export function TopNav() {
+  const links = [
+    {
+      title: "Przegląd",
+      href: "/dashboard/admin/",
+      isActive: true,
+    },
+    {
+      title: "Użytkownicy",
+      href: "/dashboard/admin/users",
+      isActive: false,
+    },
+    {
+      title: "Magazyny",
+      href: "/dashboard/admin/warehouses",
+      isActive: false,
+    },
+  ]
   return (
     <>
       <div className="lg:hidden">
@@ -56,7 +65,7 @@ export function TopNav({ links }: TopNavProps) {
           <Link
             aria-disabled={link.isActive ? undefined : true}
             className={cn(
-              "font-medium text-sm transition-colors hover:text-slate-50",
+              buttonVariants({ variant: "ghost", size: "sm" }),
               link.isActive ? "" : "text-muted-foreground"
             )}
             href={link.href}
