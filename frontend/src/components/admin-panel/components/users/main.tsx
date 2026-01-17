@@ -1,6 +1,5 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 import { ActionDialog } from "@/components/admin-panel/components/users/components/action-dialog"
 import UsersTable from "@/components/admin-panel/components/users/components/users-table"
@@ -9,7 +8,6 @@ import type { User } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
 
 export default function UsersMain() {
-  const router = useRouter()
   const [users, setUsers] = useState<User[]>(MOCK_USERS)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | undefined>(undefined)
@@ -54,7 +52,6 @@ export default function UsersMain() {
 
       <UsersTable
         data={users}
-        navigate={(path) => router.push(path)}
         onDelete={handleDeleteUser}
         onEdit={handleEditUser}
         search=""

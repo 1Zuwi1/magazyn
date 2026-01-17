@@ -23,7 +23,6 @@ import {
 interface UsersTableProps {
   data: User[]
   search: string
-  navigate: (path: string) => void
   onEdit?: (user: User) => void
   onDelete?: (user: User) => void
   pageSize?: number
@@ -60,17 +59,13 @@ export default function UsersTable({
             <TableHead>Username</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>{}</TableHead>
+            {actions && <TableHead />}
           </TableRow>
         </TableHeader>
         <TableBody>
           {pageData.length ? (
             pageData.map((user) => (
-              <TableRow
-                className="cursor-default"
-                key={user.id}
-                onClick={() => console.log(`${user.id} clicked`)}
-              >
+              <TableRow className="cursor-default" key={user.id}>
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell className="capitalize">{user.status}</TableCell>
@@ -113,7 +108,7 @@ export default function UsersTable({
             <TableRow>
               <TableCell
                 className="py-8 text-center text-muted-foreground"
-                colSpan={actions ? 5 : 4}
+                colSpan={actions ? 4 : 3}
               >
                 Brak użytkowników do wyświetlenia.
               </TableCell>

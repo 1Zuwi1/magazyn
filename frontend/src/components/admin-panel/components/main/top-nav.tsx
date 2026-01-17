@@ -1,6 +1,10 @@
+"use client"
+
 import { Menu } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { ADMIN_NAV_LINKS } from "@/components/admin-panel/utils/navigation"
 import { buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -11,23 +15,15 @@ import {
 import { cn } from "@/lib/utils"
 
 export function TopNav() {
-  const links = [
-    {
-      title: "Przegląd",
-      href: "/dashboard/admin/",
-      isActive: true,
-    },
-    {
-      title: "Użytkownicy",
-      href: "/dashboard/admin/users",
-      isActive: false,
-    },
-    {
-      title: "Magazyny",
-      href: "/dashboard/admin/warehouses",
-      isActive: false,
-    },
-  ]
+  const pathname = usePathname()
+
+  const links = ADMIN_NAV_LINKS.map((link) => ({
+    title: link.title,
+    href: link.url,
+    isActive:
+      pathname === link.url ||
+      (link.url === "/dashboard/admin" && pathname === "/dashboard/admin/"),
+  }))
   return (
     <>
       <div className="lg:hidden">

@@ -20,7 +20,6 @@ export function useSearch() {
 interface SearchProviderProps {
   children: React.ReactNode
   navData?: NavGroup[]
-  isActive?: boolean
 }
 
 export function SearchProvider({ children, navData }: SearchProviderProps) {

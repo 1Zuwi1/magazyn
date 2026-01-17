@@ -76,9 +76,10 @@ export function ActionDialog({
           role: "user",
           status: "active",
         },
-    onSubmit: ({ value }) => {
+    onSubmit: async ({ value }) => {
+      // TODO: Implement API call to save user
+      // await saveUser(value)
       form.reset()
-      JSON.stringify(value, null, 2)
       onOpenChange(false)
     },
   })

@@ -1,3 +1,3 @@
 export default function WarehousesPage() {
-  return <div> Warehouses Page</div>
+  return <div>Warehouses Page</div>
 }
