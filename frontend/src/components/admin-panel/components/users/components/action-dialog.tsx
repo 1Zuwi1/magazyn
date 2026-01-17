@@ -41,6 +41,7 @@ const formSchema = z.object({
   email: z.email({
     error: "Invalid email address",
   }),
+  password: z.string(),
   role: z.enum(["user", "admin"]),
   status: z.enum(["active", "inactive"]),
 })
@@ -76,19 +77,15 @@ export function ActionDialog({
           role: "user",
           status: "active",
         },
-    onSubmit: async ({ value }) => {
-      // TODO: Implement API call to save user
-      // await saveUser(value)
+    onSubmit: ({ value }: { value: UserForm }) => {
       form.reset()
+      console.log(JSON.stringify(value))
       onOpenChange(false)
     },
   })
 
   const renderError = (field: AnyFieldApi) => {
-    const error = field.state.meta.errors[0] as
-      | { message?: string }
-      | string
-      | undefined
+    const error = field.state.meta.errors[0] as { message?: string } | undefined
 
     const message = typeof error === "string" ? error : error?.message
 
