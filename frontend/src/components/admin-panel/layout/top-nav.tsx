@@ -4,7 +4,7 @@ import { Menu } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ADMIN_NAV_LINKS } from "@/components/admin-panel/utils/navigation"
+import { ADMIN_NAV_LINKS } from "@/components/admin-panel/lib/navigation"
 import { buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,

@@ -2,7 +2,7 @@
 
 import { MoreHorizontalCircle01FreeIcons } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import type { User } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
 import {
@@ -36,18 +36,24 @@ export default function UsersTable({
   pageSize = 12,
 }: UsersTableProps) {
   const [page, setPage] = useState(1)
-  const filtered = search
-    ? data.filter(
-        (u) =>
-          u.username.toLowerCase().includes(search.toLowerCase()) ||
-          u.email.toLowerCase().includes(search.toLowerCase())
-      )
-    : data
+  const filtered = useMemo(() => {
+    return search
+      ? data.filter(
+          (u) =>
+            u.username.toLowerCase().includes(search.toLowerCase()) ||
+            u.email.toLowerCase().includes(search.toLowerCase())
+        )
+      : data
+  }, [data, search])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
-  const currentPage = Math.min(page, totalPages)
-  const startIndex = (currentPage - 1) * pageSize
-  const pageData = filtered.slice(startIndex, startIndex + pageSize)
+  const { totalPages, currentPage } = useMemo(() => {
+    const total = Math.max(1, Math.ceil(filtered.length / pageSize))
+    const current = Math.min(page, total)
+    return {
+      totalPages: total,
+      currentPage: current,
+    }
+  }, [filtered, page, pageSize])
 
   const actions = onEdit || onDelete
 
@@ -63,8 +69,8 @@ export default function UsersTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {pageData.length ? (
-            pageData.map((user) => (
+          {data.length ? (
+            data.map((user) => (
               <TableRow className="cursor-default" key={user.id}>
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.email}</TableCell>

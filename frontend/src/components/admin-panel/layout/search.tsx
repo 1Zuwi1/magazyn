@@ -3,7 +3,7 @@
 import { Search01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
-import { useSearch } from "@/components/admin-panel/components/main/search-provider"
+import { useSearch } from "@/components/admin-panel/layout/search-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { InputGroup, InputGroupButton } from "@/components/ui/input-group"

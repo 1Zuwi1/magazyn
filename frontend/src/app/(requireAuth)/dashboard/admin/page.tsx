@@ -1,7 +1,7 @@
-import { Header } from "@/components/admin-panel/components/main/app-sidebar"
-import { Search } from "@/components/admin-panel/components/main/search"
-import { SearchProvider } from "@/components/admin-panel/components/main/search-provider"
-import { TopNav } from "@/components/admin-panel/components/main/top-nav"
+import { Header } from "@/components/admin-panel/layout/app-sidebar"
+import { Search } from "@/components/admin-panel/layout/search"
+import { SearchProvider } from "@/components/admin-panel/layout/search-provider"
+import { TopNav } from "@/components/admin-panel/layout/top-nav"
 import { ADMIN_NAV_DATA } from "@/components/admin-panel/lib/navigation"
 import ProtectedPage from "../../protected-page"
 export default function AdminDashboard() {

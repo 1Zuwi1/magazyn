@@ -1,8 +1,8 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ActionDialog } from "@/components/admin-panel/components/users/components/action-dialog"
-import UsersTable from "@/components/admin-panel/components/users/components/users-table"
+import { ActionDialog } from "@/components/admin-panel/users/components/action-dialog"
+import UsersTable from "@/components/admin-panel/users/components/users-table"
 import { MOCK_USERS } from "@/components/dashboard/mock-data"
 import type { User } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"

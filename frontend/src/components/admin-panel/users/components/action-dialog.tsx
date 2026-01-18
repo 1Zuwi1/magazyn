@@ -54,6 +54,16 @@ interface ActionDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
+const roles = [
+  { label: "user", value: "user" },
+  { label: "admin", value: "admin" },
+] as const
+
+const statuses = [
+  { label: "active", value: "active" },
+  { label: "inactive", value: "inactive" },
+] as const
+
 export function ActionDialog({
   currentRow,
   open,
@@ -256,10 +266,7 @@ export function ActionDialog({
                           )}
                         </SelectTrigger>
                         <SelectContent>
-                          {[
-                            { label: "user", value: "user" },
-                            { label: "admin", value: "admin" },
-                          ].map((role) => (
+                          {roles.map((role) => (
                             <SelectItem key={role.value} value={role.value}>
                               {role.label}
                             </SelectItem>
@@ -297,10 +304,7 @@ export function ActionDialog({
                           )}
                         </SelectTrigger>
                         <SelectContent>
-                          {[
-                            { label: "active", value: "active" },
-                            { label: "inactive", value: "inactive" },
-                          ].map((status) => (
+                          {statuses.map((status) => (
                             <SelectItem key={status.value} value={status.value}>
                               {status.label}
                             </SelectItem>
