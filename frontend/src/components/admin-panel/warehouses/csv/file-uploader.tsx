@@ -175,7 +175,7 @@ export function FileUploader(props: FileUploaderProps) {
                 </div>
                 <div className="flex flex-col gap-px">
                   <p className="font-medium text-muted-foreground">
-                    Przeciągnij i upuść pliki tutaj lub kliknij aby wybrać
+                    Kliknij aby wybrać plik z dysku
                   </p>
                   <p className="text-muted-foreground/70 text-sm">
                     {maxFileCount > 1
