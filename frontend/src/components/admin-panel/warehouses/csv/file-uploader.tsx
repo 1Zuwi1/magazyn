@@ -7,25 +7,14 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useCallback, useEffect, useState } from "react"
-import Dropzone, {
-  type DropzoneProps,
-  type FileRejection,
-} from "react-dropzone"
+import Dropzone, { type FileRejection } from "react-dropzone"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-
-function formatBytes(bytes: number, decimals = 1): string {
-  if (bytes === 0) {
-    return "0 B"
-  }
-  const k = 1024
-  const sizes = ["B", "KB", "MB", "GB"]
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${Number.parseFloat((bytes / k ** i).toFixed(decimals))} ${sizes[i]}`
-}
+import { formatBytes } from "../../lib/utils"
+import { DEFAULT_CONFIG } from "./constants"
 
 interface FileWithPreview extends File {
   preview: string
@@ -35,22 +24,14 @@ interface FileUploaderProps {
   value?: File[]
   onValueChange?: (files: File[]) => void
   onUpload?: (files: File[]) => void | Promise<void>
-  accept?: DropzoneProps["accept"]
-  maxSize?: number
-  maxFileCount?: number
   disabled?: boolean
-  className?: string
 }
 
 export function FileUploader({
   value,
   onValueChange,
   onUpload,
-  accept = { "text/csv": [".csv"] },
-  maxSize = 1024 * 1024 * 4,
-  maxFileCount = 1,
   disabled = false,
-  className,
 }: FileUploaderProps) {
   const [files, setFiles] = useState<FileWithPreview[]>([])
   const [isUploading, setIsUploading] = useState(false)
@@ -74,13 +55,17 @@ export function FileUploader({
 
   const onDrop = useCallback(
     async (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
-      if (acceptedFiles.length > maxFileCount) {
-        toast.error(`Możesz przesłać maksymalnie ${maxFileCount} plik(ów)`)
+      if (acceptedFiles.length > DEFAULT_CONFIG.maxFileCount) {
+        toast.error(
+          `Możesz przesłać maksymalnie ${DEFAULT_CONFIG.maxFileCount} plik(ów)`
+        )
         return
       }
 
-      if (files.length + acceptedFiles.length > maxFileCount) {
-        toast.error(`Możesz przesłać maksymalnie ${maxFileCount} plik(ów)`)
+      if (files.length + acceptedFiles.length > DEFAULT_CONFIG.maxFileCount) {
+        toast.error(
+          `Możesz przesłać maksymalnie ${DEFAULT_CONFIG.maxFileCount} plik(ów)`
+        )
         return
       }
 
@@ -97,7 +82,7 @@ export function FileUploader({
       setFiles(updatedFiles)
       onValueChange?.(updatedFiles)
 
-      if (onUpload && updatedFiles.length <= maxFileCount) {
+      if (onUpload && updatedFiles.length <= DEFAULT_CONFIG.maxFileCount) {
         setIsUploading(true)
         try {
           await onUpload(updatedFiles)
@@ -108,7 +93,7 @@ export function FileUploader({
         }
       }
     },
-    [files, maxFileCount, onUpload, onValueChange]
+    [files, onUpload, onValueChange]
   )
 
   const removeFile = useCallback(
@@ -121,26 +106,22 @@ export function FileUploader({
     [files, onValueChange]
   )
 
-  const isDisabled = disabled || files.length >= maxFileCount
+  const isDisabled = disabled || files.length >= DEFAULT_CONFIG.maxFileCount
 
   return (
     <div className="flex flex-col gap-4">
       <Dropzone
-        accept={accept}
+        accept={DEFAULT_CONFIG.accept}
         disabled={isDisabled}
-        maxFiles={maxFileCount}
-        maxSize={maxSize}
+        maxFiles={DEFAULT_CONFIG.maxFileCount}
+        maxSize={DEFAULT_CONFIG.maxSize}
         onDrop={onDrop}
       >
         {({ getRootProps, getInputProps, isDragActive }) => (
           <div
             {...getRootProps()}
             className={cn(
-              "group flex h-48 cursor-pointer flex-col items-center justify-center gap-4 rounded-lg border-2 border-muted-foreground/25 border-dashed px-4 py-6 text-center transition hover:bg-muted/25",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              isDragActive && "border-primary/50 bg-muted/25",
-              isDisabled && "pointer-events-none opacity-60",
-              className
+              "group flex h-48 cursor-pointer flex-col items-center justify-center gap-4 rounded-lg border-2"
             )}
           >
             <input {...getInputProps()} />
@@ -160,7 +141,7 @@ export function FileUploader({
                   Kliknij lub upuść plik CSV
                 </p>
                 <p className="text-muted-foreground/70 text-sm">
-                  Maksymalny rozmiar: {formatBytes(maxSize)}
+                  Maksymalny rozmiar: {formatBytes(DEFAULT_CONFIG.maxSize)}
                 </p>
               </div>
             )}
