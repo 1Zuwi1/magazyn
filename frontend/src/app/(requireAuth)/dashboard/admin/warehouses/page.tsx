@@ -21,9 +21,7 @@ export default function WarehousesPage() {
           <h1 className="font-semibold text-2xl">Zarządzaj magazynami</h1>
         </div>
 
-        <CsvImporter onImport={() => console.log("asd")} type="rack">
-          Importuj CSV regału
-        </CsvImporter>
+        <CsvImporter onImport={() => console.log("asd")} type="rack" />
       </div>
 
       <Separator />

@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, use, useState } from "react"
+import { createContext, useContext, useState } from "react"
 import { CommandMenu, type NavGroup } from "./command-menu"
 
 interface SearchContextType {
@@ -10,7 +10,7 @@ interface SearchContextType {
 const SearchContext = createContext<SearchContextType | null>(null)
 
 export function useSearch() {
-  const context = use(SearchContext)
+  const context = useContext(SearchContext)
   if (!context) {
     throw new Error("useSearch must be used within a SearchProvider")
   }
@@ -26,9 +26,9 @@ export function SearchProvider({ children, navData }: SearchProviderProps) {
   const [open, setOpen] = useState(false)
 
   return (
-    <SearchContext value={{ setOpen }}>
+    <SearchContext.Provider value={{ setOpen }}>
       {children}
       <CommandMenu navData={navData} open={open} setOpen={setOpen} />
-    </SearchContext>
+    </SearchContext.Provider>
   )
 }

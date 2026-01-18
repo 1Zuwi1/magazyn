@@ -1,9 +1,9 @@
 import type React from "react"
 
-export default function AdminLayout({
-  children,
-}: {
+interface AdminLayoutProps {
   children: React.ReactNode
-}) {
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
   return <div className="flex flex-col gap-4">{children}</div>
 }

@@ -5,7 +5,7 @@ interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   children: React.ReactNode
 }
 
-export function Header({ children, ...props }: HeaderProps) {
+export function AdminHeader({ children, ...props }: HeaderProps) {
   return (
     <header
       className={cn(

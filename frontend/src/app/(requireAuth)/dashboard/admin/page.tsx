@@ -1,4 +1,4 @@
-import { Header } from "@/components/admin-panel/layout/app-sidebar"
+import { AdminHeader } from "@/components/admin-panel/layout/app-sidebar"
 import { Search } from "@/components/admin-panel/layout/search"
 import { SearchProvider } from "@/components/admin-panel/layout/search-provider"
 import { TopNav } from "@/components/admin-panel/layout/top-nav"
@@ -13,10 +13,10 @@ export default function AdminDashboard() {
           items: [{ title: link.title, url: link.url }],
         }))}
       >
-        <Header>
+        <AdminHeader>
           <TopNav />
           <Search placeholder="Szukaj..." />
-        </Header>
+        </AdminHeader>
       </SearchProvider>
     </ProtectedPage>
   )

@@ -24,6 +24,7 @@ export function Search({ className, placeholder = "Search" }: SearchProps) {
         placeholder={placeholder}
       />
       <InputGroupButton
+        aria-label="Rozwiń menu wyszukiwania"
         className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
         onClick={() => setOpen(true)}
         title="Rozwiń menu"

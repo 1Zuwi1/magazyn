@@ -2,7 +2,6 @@
 
 import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import type React from "react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Dialog,
@@ -18,18 +17,16 @@ import {
   type CsvRowType,
   useCsvImporter,
 } from "../../hooks/use-csv-importer"
-import { ITEM_COLUMNS, RACK_COLUMNS } from "./constants"
+import { ITEM_COLUMNS, RACK_COLUMNS } from "./utils/constants"
 import { FileUploader } from "./file-uploader"
 import { PreviewTable } from "./preview-table"
 
 interface CsvImporterProps<T extends CsvImporterType> {
-  children: React.ReactNode
   type: T
   onImport: (data: CsvRowType<T>[]) => void
 }
 
 export function CsvImporter<T extends CsvImporterType>({
-  children,
   type,
   onImport,
 }: CsvImporterProps<T>) {
@@ -50,7 +47,8 @@ export function CsvImporter<T extends CsvImporterType>({
       <DialogTrigger
         className={cn(buttonVariants({ variant: "default" }), "w-fit gap-2")}
       >
-        {children}
+        Improtuj{" "}
+      
       </DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>

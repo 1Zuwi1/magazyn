@@ -37,13 +37,16 @@ export default function UsersTable({
 }: UsersTableProps) {
   const [page, setPage] = useState(1)
   const filtered = useMemo(() => {
-    return search
-      ? data.filter(
-          (u) =>
-            u.username.toLowerCase().includes(search.toLowerCase()) ||
-            u.email.toLowerCase().includes(search.toLowerCase())
-        )
-      : data
+    if (!search.trim()) {
+      return data
+    }
+    const normalized = search.toLowerCase()
+
+    return data.filter(
+      (u) =>
+        u.username.toLowerCase().includes(normalized) ||
+        u.email.toLowerCase().includes(normalized)
+    )
   }, [data, search])
 
   const { totalPages, currentPage } = useMemo(() => {
@@ -54,6 +57,11 @@ export default function UsersTable({
       currentPage: current,
     }
   }, [filtered, page, pageSize])
+
+  const paginated = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filtered.slice(start, start + pageSize)
+  }, [filtered, currentPage, pageSize])
 
   const actions = onEdit || onDelete
 
@@ -69,8 +77,8 @@ export default function UsersTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.length ? (
-            data.map((user) => (
+          {paginated.length ? (
+            paginated.map((user) => (
               <TableRow className="cursor-default" key={user.id}>
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.email}</TableCell>
@@ -78,7 +86,7 @@ export default function UsersTable({
                 {actions && (
                   <TableCell>
                     <DropdownMenu>
-                      <DropdownMenuTrigger>
+                      <DropdownMenuTrigger aria-label="Akcje użytkownika">
                         <HugeiconsIcon icon={MoreHorizontalCircle01FreeIcons} />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40">
@@ -123,7 +131,11 @@ export default function UsersTable({
         </TableBody>
       </Table>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-muted-foreground text-sm">{}</p>
+        <p className="text-muted-foreground text-sm">
+          {filtered.length
+            ? `Strona ${currentPage} z ${totalPages} ${filtered.length} użytkowników`
+            : "Brak wyników"}
+        </p>
         <div className="flex items-center gap-2">
           <Button
             disabled={currentPage === 1}

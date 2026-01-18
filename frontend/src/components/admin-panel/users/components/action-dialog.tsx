@@ -1,7 +1,7 @@
 import { ViewIcon, ViewOffIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { type AnyFieldApi, useForm } from "@tanstack/react-form"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import z from "zod"
 import type { User } from "@/components/dashboard/types"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -87,12 +87,32 @@ export function ActionDialog({
           role: "user",
           status: "active",
         },
-    onSubmit: ({ value }: { value: UserForm }) => {
+    onSubmit: ({ value }) => {
       form.reset()
       console.log(JSON.stringify(value))
       onOpenChange(false)
     },
   })
+  // biome-ignore lint:reason:useEffect dependency
+  useEffect(() => {
+    if (currentRow) {
+      form.reset({
+        username: currentRow.username,
+        email: currentRow.email,
+        password: currentRow.password ?? "",
+        role: currentRow.role,
+        status: currentRow.status,
+      })
+    } else {
+      form.reset({
+        username: "",
+        email: "",
+        password: "",
+        role: "user",
+        status: "active",
+      })
+    }
+  }, [currentRow])
 
   const renderError = (field: AnyFieldApi) => {
     const error = field.state.meta.errors[0] as { message?: string } | undefined
@@ -214,6 +234,9 @@ export function ActionDialog({
                           value={field.state.value}
                         />
                         <InputGroupButton
+                          aria-label={
+                            showPassword ? "Ukryj hasło" : "Pokaż hasło"
+                          }
                           onClick={(e) => {
                             e.preventDefault()
                             setShowPassword(!showPassword)

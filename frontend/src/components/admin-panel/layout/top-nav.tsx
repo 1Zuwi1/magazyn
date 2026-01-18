@@ -59,7 +59,7 @@ export function TopNav() {
       >
         {links.map((link) => (
           <Link
-            aria-disabled={link.isActive ? undefined : true}
+            aria-current={link.isActive ? undefined : true}
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
               link.isActive ? "" : "text-muted-foreground"

@@ -54,7 +54,9 @@ export function CommandMenu({ navData, open, setOpen }: CommandMenuProps) {
                     <CommandItem
                       key={`${navItem.url}-${i}`}
                       onSelect={() => {
-                        router.push(navItem.url as string)
+                        if (navItem.url) {
+                          router.push(navItem.url)
+                        }
 
                         setOpen(false)
                       }}
