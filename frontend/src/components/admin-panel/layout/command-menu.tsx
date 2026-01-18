@@ -33,7 +33,6 @@ export interface NavGroup {
 
 interface CommandMenuProps {
   navData?: NavGroup[]
-  subData?: NavItem[]
   open: boolean
   setOpen: (open: boolean) => void
 }
