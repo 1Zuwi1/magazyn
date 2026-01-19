@@ -464,6 +464,7 @@
     "notifications": "Notifications",
     "racks": "Racks",
     "warehouse": "Warehouse",
-    "item": "Item"
+    "item": "Item",
+    "assortment": "Assortment"
   }
 }
