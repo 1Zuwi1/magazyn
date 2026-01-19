@@ -41,6 +41,7 @@ export default function TwoFactorForm({
   otpLength,
 }: TwoFactorFormProps) {
   const translate = useTranslations("twoFactor")
+  const authTranslations = useTranslations("auth")
   const apiErrors = useTranslations("common.apiErrors")
 
   const handleApiError = useHandleApiError()
@@ -50,8 +51,8 @@ export default function TwoFactorForm({
   const autoSubmittedRef = useRef(false)
   const router = useRouter()
   const { Resend2FASchema, Verify2FASchema } = useMemo(
-    () => createAuthSchemas(translate),
-    [translate]
+    () => createAuthSchemas(authTranslations),
+    [authTranslations]
   )
 
   const methodTitles: Record<TwoFactorMethod, string> = {

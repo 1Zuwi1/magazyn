@@ -12,7 +12,6 @@ import {
 } from "@tanstack/react-table"
 import { useLocale, useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
-import type { TranslationValues } from "use-intl/core"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -65,30 +64,26 @@ interface AssortmentTableProps {
 }
 
 export function AssortmentTable({ items }: AssortmentTableProps) {
-  const t = useTranslations()
+  const t = useTranslations("assortmentTable")
+  const pagination = useTranslations("common.pagination")
   const locale = useLocale()
-  const translate = useMemo(
-    () => (key: string, values?: TranslationValues) =>
-      t(key as never, values as never),
-    [t]
-  )
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
   const [expiryFilter, setExpiryFilter] = useState<ExpiryFilters>("ALL")
   const expiryOptions = useMemo(
     () => [
-      { value: "ALL", label: t("assortmentTable.filters.all") },
-      { value: "EXPIRED", label: t("assortmentTable.filters.expired") },
-      { value: "3_DAYS", label: t("assortmentTable.filters.threeDays") },
-      { value: "7_DAYS", label: t("assortmentTable.filters.sevenDays") },
-      { value: "14_DAYS", label: t("assortmentTable.filters.fourteenDays") },
+      { value: "ALL", label: t("filters.all") },
+      { value: "EXPIRED", label: t("filters.expired") },
+      { value: "3_DAYS", label: t("filters.threeDays") },
+      { value: "7_DAYS", label: t("filters.sevenDays") },
+      { value: "14_DAYS", label: t("filters.fourteenDays") },
     ],
     [t]
   )
   const columns = useMemo(
-    () => createAssortmentColumns({ t: translate, locale }),
-    [locale, translate]
+    () => createAssortmentColumns({ t, locale }),
+    [locale, t]
   )
 
   const filteredItems = useMemo(
@@ -134,10 +129,10 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <Input
-          aria-label={t("assortmentTable.search.ariaLabel")}
+          aria-label={t("search.ariaLabel")}
           className="max-w-sm"
           onChange={(event) => setGlobalFilter(event.target.value)}
-          placeholder={t("assortmentTable.search.placeholder")}
+          placeholder={t("search.placeholder")}
           value={globalFilter ?? ""}
         />
 
@@ -145,10 +140,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
           onValueChange={(value) => setExpiryFilter(value as ExpiryFilters)}
           value={expiryFilter}
         >
-          <SelectTrigger
-            aria-label={t("assortmentTable.filters.ariaLabel")}
-            className="w-44"
-          >
+          <SelectTrigger aria-label={t("filters.ariaLabel")} className="w-44">
             <SelectValue
               render={
                 <span>
@@ -171,7 +163,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
         </Select>
 
         <div className="ml-auto text-muted-foreground text-sm">
-          {t("assortmentTable.count", {
+          {t("count", {
             count: table.getFilteredRowModel().rows.length,
           })}
         </div>
@@ -218,7 +210,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
                   className="h-24 text-center"
                   colSpan={columns.length}
                 >
-                  {t("assortmentTable.empty")}
+                  {t("empty")}
                 </TableCell>
               </TableRow>
             )}
@@ -233,7 +225,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
           size="sm"
           variant="outline"
         >
-          {t("common.pagination.previous")}
+          {pagination("previous")}
         </Button>
         <Button
           disabled={!table.getCanNextPage()}
@@ -241,7 +233,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
           size="sm"
           variant="outline"
         >
-          {t("common.pagination.next")}
+          {pagination("next")}
         </Button>
       </div>
     </div>

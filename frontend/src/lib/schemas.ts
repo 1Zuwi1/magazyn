@@ -1,25 +1,40 @@
 import z from "zod"
-import type { Namespace, TranslatorFor } from "@/types/translation"
+import type { TranslatorFor } from "@/types/translation"
 import { createApiSchema } from "./create-api-schema"
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/
+const USERNAME_MIN_LENGTH = 3
+const USERNAME_MAX_LENGTH = 20
+const PASSWORD_MIN_LENGTH = 6
+const PASSWORD_MAX_BYTES = 72
+const FULL_NAME_MIN_LENGTH = 2
+const CODE_LENGTH = 6
 
-export const createAuthSchemas = (t: TranslatorFor<Namespace>) => {
+export const createAuthSchemas = (t: TranslatorFor<"auth">) => {
   const usernameSchema = z
     .string()
-    .min(3, t("validation.username.min", { min: 3 }))
-    .max(20, t("validation.username.max", { max: 20 }))
+    .min(
+      USERNAME_MIN_LENGTH,
+      t("validation.username.min", { min: USERNAME_MIN_LENGTH })
+    )
+    .max(
+      USERNAME_MAX_LENGTH,
+      t("validation.username.max", { max: USERNAME_MAX_LENGTH })
+    )
     .regex(USERNAME_REGEX, t("validation.username.format"))
 
   const passwordSchema = z
     .string()
-    .min(6, t("validation.password.min", { min: 6 }))
+    .min(
+      PASSWORD_MIN_LENGTH,
+      t("validation.password.min", { min: PASSWORD_MIN_LENGTH })
+    )
     .refine(
       (value) => {
         const bytes = new TextEncoder().encode(value).length
-        return bytes <= 72
+        return bytes <= PASSWORD_MAX_BYTES
       },
-      t("validation.password.maxBytes", { max: 72 })
+      t("validation.password.maxBytes", { max: PASSWORD_MAX_BYTES })
     )
 
   const LoginSchema = createApiSchema({
@@ -37,7 +52,12 @@ export const createAuthSchemas = (t: TranslatorFor<Namespace>) => {
     POST: {
       input: z
         .object({
-          fullName: z.string().min(2, t("validation.fullName.min", { min: 2 })),
+          fullName: z
+            .string()
+            .min(
+              FULL_NAME_MIN_LENGTH,
+              t("validation.fullName.min", { min: FULL_NAME_MIN_LENGTH })
+            ),
           username: usernameSchema,
           email: z.email(t("validation.email.invalid")),
           password: passwordSchema,
@@ -55,7 +75,12 @@ export const createAuthSchemas = (t: TranslatorFor<Namespace>) => {
     POST: {
       input: z.object({
         method: z.enum(["authenticator", "sms", "email"]),
-        code: z.string().length(6, t("validation.code.length", { length: 6 })),
+        code: z
+          .string()
+          .length(
+            CODE_LENGTH,
+            t("validation.code.length", { length: CODE_LENGTH })
+          ),
       }),
       output: z.null(),
     },

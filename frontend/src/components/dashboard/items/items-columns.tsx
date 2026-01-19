@@ -8,7 +8,6 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { ColumnDef } from "@tanstack/react-table"
 import Image from "next/image"
-import type { TranslationValues } from "use-intl/core"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -18,35 +17,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import type { TranslatorFor } from "@/types/translation"
 import type { ItemStats } from "./types"
 
-type Translator = (key: string, values?: TranslationValues) => string
+type ItemsTableTranslator = TranslatorFor<"itemsTable">
 
-const getDaysUntilExpiryBadge = (t: Translator, days: number | undefined) => {
+const getDaysUntilExpiryBadge = (
+  t: ItemsTableTranslator,
+  days: number | undefined
+) => {
   if (days === undefined) {
-    return <Badge variant="outline">{t("itemsTable.expiry.noData")}</Badge>
+    return <Badge variant="outline">{t("expiry.noData")}</Badge>
   }
   if (days < 0) {
-    return <Badge variant="destructive">{t("itemsTable.expiry.expired")}</Badge>
+    return <Badge variant="destructive">{t("expiry.expired")}</Badge>
   }
   if (days < 14) {
     return (
-      <Badge variant="warning">
-        {t("itemsTable.expiry.inDays", { count: days })}
-      </Badge>
+      <Badge variant="warning">{t("expiry.inDays", { count: days })}</Badge>
     )
   }
-  return (
-    <Badge variant="outline">
-      {t("itemsTable.expiry.days", { count: days })}
-    </Badge>
-  )
+  return <Badge variant="outline">{t("expiry.days", { count: days })}</Badge>
 }
 
-export const createItemsColumns = (t: Translator): ColumnDef<ItemStats>[] => [
+export const createItemsColumns = (
+  t: ItemsTableTranslator
+): ColumnDef<ItemStats>[] => [
   {
     accessorKey: "definition.name",
-    header: t("itemsTable.columns.name"),
+    header: t("columns.name"),
     cell: ({ row }) => {
       const definition = row.original.definition
       return (
@@ -74,17 +73,17 @@ export const createItemsColumns = (t: Translator): ColumnDef<ItemStats>[] => [
   },
   {
     accessorKey: "definition.category",
-    header: t("itemsTable.columns.category"),
+    header: t("columns.category"),
     cell: ({ row }) => (
       <Badge variant="secondary">{row.original.definition.category}</Badge>
     ),
   },
   {
     accessorKey: "totalQuantity",
-    header: t("itemsTable.columns.quantity"),
+    header: t("columns.quantity"),
     cell: ({ row }) => (
       <div className="font-medium">
-        {t("itemsTable.columns.quantityValue", {
+        {t("columns.quantityValue", {
           count: String(row.original.totalQuantity),
         })}
       </div>
@@ -92,17 +91,17 @@ export const createItemsColumns = (t: Translator): ColumnDef<ItemStats>[] => [
   },
   {
     accessorKey: "daysUntilExpiry",
-    header: t("itemsTable.columns.expiry"),
+    header: t("columns.expiry"),
     cell: ({ row }) => getDaysUntilExpiryBadge(t, row.original.daysUntilExpiry),
   },
   {
     accessorKey: "definition.isDangerous",
-    header: t("itemsTable.columns.danger"),
+    header: t("columns.danger"),
     cell: ({ row }) =>
       row.original.definition.isDangerous ? (
-        <Badge variant="destructive">{t("itemsTable.badges.dangerous")}</Badge>
+        <Badge variant="destructive">{t("badges.dangerous")}</Badge>
       ) : (
-        <Badge variant="outline">{t("itemsTable.badges.safe")}</Badge>
+        <Badge variant="outline">{t("badges.safe")}</Badge>
       ),
   },
   {
@@ -110,7 +109,7 @@ export const createItemsColumns = (t: Translator): ColumnDef<ItemStats>[] => [
     cell: ({ row }) => {
       return (
         <DropdownMenu>
-          <DropdownMenuTrigger aria-label={t("itemsTable.actions.open")}>
+          <DropdownMenuTrigger aria-label={t("actions.open")}>
             <HugeiconsIcon
               className={cn(
                 buttonVariants({ variant: "ghost", size: "icon-xs" })
@@ -125,7 +124,7 @@ export const createItemsColumns = (t: Translator): ColumnDef<ItemStats>[] => [
               }}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
-              {t("itemsTable.actions.edit")}
+              {t("actions.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
@@ -134,7 +133,7 @@ export const createItemsColumns = (t: Translator): ColumnDef<ItemStats>[] => [
               }}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
-              {t("itemsTable.actions.delete")}
+              {t("actions.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

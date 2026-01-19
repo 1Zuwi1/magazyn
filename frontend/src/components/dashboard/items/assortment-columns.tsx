@@ -11,7 +11,6 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import type { ColumnDef } from "@tanstack/react-table"
 import Image from "next/image"
 import { useMemo } from "react"
-import type { TranslationValues } from "use-intl/core"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -22,34 +21,33 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { Locale } from "@/i18n/routing"
 import { cn } from "@/lib/utils"
+import type { TranslatorFor } from "@/types/translation"
 import { formatDate, getDaysUntilExpiry } from "../utils/helpers"
 import type { ItemInstance } from "./types"
 
-type Translator = (key: string, values?: TranslationValues) => string
+type AssortmentTableTranslator = TranslatorFor<"assortmentTable">
 
 interface AssortmentColumnOptions {
-  t: Translator
+  t: AssortmentTableTranslator
   locale: Locale
 }
 
-const getExpiryBadge = (t: Translator, expiryDate: Date) => {
+const getExpiryBadge = (t: AssortmentTableTranslator, expiryDate: Date) => {
   const days = getDaysUntilExpiry(new Date(), expiryDate)
 
   if (days < 0) {
     return (
       <Badge variant="destructive">
-        {t("assortmentTable.expiry.expired", { days: Math.abs(days) })}
+        {t("expiry.expired", { days: Math.abs(days) })}
       </Badge>
     )
   }
 
   if (days === 0) {
-    return (
-      <Badge variant="destructive">{t("assortmentTable.expiry.today")}</Badge>
-    )
+    return <Badge variant="destructive">{t("expiry.today")}</Badge>
   }
 
-  const dayLabel = t("assortmentTable.expiry.days", { count: days })
+  const dayLabel = t("expiry.days", { count: days })
 
   if (days <= 3) {
     return <Badge variant="destructive">{dayLabel}</Badge>
@@ -81,7 +79,7 @@ export const createAssortmentColumns = ({
   {
     id: "category",
     accessorKey: "definition.category",
-    header: t("assortmentTable.columns.category"),
+    header: t("columns.category"),
     enableHiding: true,
     cell: ({ row }) => (
       <Badge variant="secondary">{row.original.definition.category}</Badge>
@@ -89,7 +87,7 @@ export const createAssortmentColumns = ({
   },
   {
     accessorKey: "definition.name",
-    header: t("assortmentTable.columns.name"),
+    header: t("columns.name"),
     cell: ({ row }) => {
       const definition = row.original.definition
       return (
@@ -112,13 +110,13 @@ export const createAssortmentColumns = ({
   },
   {
     accessorKey: "rackName",
-    header: t("assortmentTable.columns.rack"),
+    header: t("columns.rack"),
     cell: ({ row }) => (
       <div>
         <div className="font-medium">{row.original.rackName}</div>
         <div className="text-muted-foreground text-sm">
-          row: row.original.position.row,
-          {t("assortmentTable.columns.position", {
+          {t("columns.position", {
+            row: row.original.position.row,
             col: row.original.position.col,
           })}
         </div>
@@ -127,7 +125,7 @@ export const createAssortmentColumns = ({
   },
   {
     accessorKey: "qrCode",
-    header: t("assortmentTable.columns.qr"),
+    header: t("columns.qr"),
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <HugeiconsIcon
@@ -140,12 +138,12 @@ export const createAssortmentColumns = ({
   },
   {
     accessorKey: "addedDate",
-    header: t("assortmentTable.columns.addedDate"),
+    header: t("columns.addedDate"),
     cell: ({ row }) => formatDate(row.original.addedDate, locale),
   },
   {
     accessorKey: "expiryDate",
-    header: t("assortmentTable.columns.expiryDate"),
+    header: t("columns.expiryDate"),
     cell: ({ row }) => {
       const expiryBadge = useMemo(() => {
         return getExpiryBadge(t, row.original.expiryDate)
@@ -168,7 +166,7 @@ export const createAssortmentColumns = ({
 
       return (
         <DropdownMenu>
-          <DropdownMenuTrigger aria-label={t("assortmentTable.actions.open")}>
+          <DropdownMenuTrigger aria-label={t("actions.open")}>
             <HugeiconsIcon
               className={cn(
                 buttonVariants({ variant: "ghost", size: "icon-xs" })
@@ -179,24 +177,24 @@ export const createAssortmentColumns = ({
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => console.log("View", item.id)}>
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={EyeIcon} />
-              {t("assortmentTable.actions.details")}
+              {t("actions.details")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => console.log("Edit", item.id)}>
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
-              {t("assortmentTable.actions.edit")}
+              {t("actions.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => console.log("Show QR", item.qrCode)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={QrCodeIcon} />
-              {t("assortmentTable.actions.showQr")}
+              {t("actions.showQr")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
               onClick={() => console.log("Delete", item.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
-              {t("assortmentTable.actions.delete")}
+              {t("actions.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

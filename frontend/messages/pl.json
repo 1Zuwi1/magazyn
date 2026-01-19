@@ -265,7 +265,7 @@
       "category": "Kategoria",
       "name": "Nazwa przedmiotu",
       "rack": "Regał",
-      "position": "Rząd {row}, Kol. {col}",
+      "position": "Rząd {row, number}, Kol. {col, number}",
       "qr": "Kod QR",
       "addedDate": "Data dodania",
       "expiryDate": "Przeterminowanie"

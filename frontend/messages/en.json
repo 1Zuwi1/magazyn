@@ -265,7 +265,7 @@
       "category": "Category",
       "name": "Item name",
       "rack": "Rack",
-      "position": "Row {row}, Col {col}",
+      "position": "Row {row, number}, Col {col, number}",
       "qr": "QR code",
       "addedDate": "Added date",
       "expiryDate": "Expiry"

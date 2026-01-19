@@ -13,7 +13,6 @@ import {
 } from "@tanstack/react-table"
 import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
-import type { TranslationValues } from "use-intl/core"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -47,16 +46,12 @@ const globalFilterFn: FilterFn<ItemStats> = (row, _columnId, filterValue) => {
 }
 
 export function ItemsTable({ items }: ItemsTableProps) {
-  const t = useTranslations()
-  const translate = useMemo(
-    () => (key: string, values?: TranslationValues) =>
-      t(key as never, values as never),
-    [t]
-  )
+  const t = useTranslations("itemsTable")
+  const pagination = useTranslations("common.pagination")
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
-  const columns = useMemo(() => createItemsColumns(translate), [translate])
+  const columns = useMemo(() => createItemsColumns(t), [t])
 
   const table = useReactTable({
     data: items,
@@ -80,14 +75,14 @@ export function ItemsTable({ items }: ItemsTableProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <Input
-          aria-label={t("itemsTable.search.ariaLabel")}
+          aria-label={t("search.ariaLabel")}
           className="max-w-sm"
           onChange={(event) => setGlobalFilter(event.target.value)}
-          placeholder={t("itemsTable.search.placeholder")}
+          placeholder={t("search.placeholder")}
           value={globalFilter ?? ""}
         />
         <div className="ml-auto text-muted-foreground text-sm">
-          {t("itemsTable.count", {
+          {t("count", {
             count: table.getFilteredRowModel().rows.length,
           })}
         </div>
@@ -134,7 +129,7 @@ export function ItemsTable({ items }: ItemsTableProps) {
                   className="h-24 text-center"
                   colSpan={columns.length}
                 >
-                  {t("itemsTable.empty")}
+                  {t("empty")}
                 </TableCell>
               </TableRow>
             )}
@@ -149,7 +144,7 @@ export function ItemsTable({ items }: ItemsTableProps) {
           size="sm"
           variant="outline"
         >
-          {t("common.pagination.previous")}
+          {pagination("previous")}
         </Button>
         <Button
           disabled={!table.getCanNextPage()}
@@ -157,7 +152,7 @@ export function ItemsTable({ items }: ItemsTableProps) {
           size="sm"
           variant="outline"
         >
-          {t("common.pagination.next")}
+          {pagination("next")}
         </Button>
       </div>
     </div>
