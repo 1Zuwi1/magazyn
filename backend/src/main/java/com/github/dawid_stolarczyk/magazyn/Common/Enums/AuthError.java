@@ -1,0 +1,16 @@
+package com.github.dawid_stolarczyk.magazyn.Common.Enums;
+
+public enum AuthError {
+    INVALID_CREDENTIALS,
+    EMAIL_TAKEN,
+    WEAK_PASSWORD,
+    NOT_AUTHENTICATED,
+    ACCOUNT_LOCKED,
+    TOKEN_EXPIRED,
+    TOKEN_INVALID,
+    TWO_FA_NOT_ENABLED,
+    INVALID_OR_EXPIRED_CODE,
+    CODE_FORMAT_INVALID,
+    INVALID_REMEMBER_ME_TOKEN,
+    INSUFFICIENT_PERMISSIONS
+}

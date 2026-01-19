@@ -39,11 +39,10 @@ function FieldState({ field }: { field: AnyFieldApi }) {
 
 const values = {
   login: {
-    username: "",
+    email: "",
     password: "",
   },
   register: {
-    username: "",
     fullName: "",
     email: "",
     password: "",
@@ -85,7 +84,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
         toast.success(translate("success.login"))
         router.push(res.requiresTwoFactor ? "/login/2fa" : "/dashboard")
       } else {
-        const registerValue = value as ValueTypes["register"]
+        const { confirmPassword, ...registerValue } =
+          value as ValueTypes["register"]
         const [err] = await tryCatch(
           apiFetch("/api/auth/register", RegisterSchema, {
             method: "POST",
@@ -105,7 +105,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
     validators: {
       onSubmitAsync: isLogin
         ? LoginSchema.shape.POST.shape.input
-        : RegisterSchema.shape.POST.shape.input,
+        : FormRegisterSchema,
     },
   })
 
@@ -198,6 +198,30 @@ export default function AuthForm({ mode }: AuthFormProps) {
               </Field>
             )}
           </form.Field>
+          {!isLogin && (
+            <form.Field name="fullName">
+              {(field) => (
+                <Field>
+                  <FieldLabel htmlFor={field.name}>
+                    Pełne imię i nazwisko
+                  </FieldLabel>
+                  <Input
+                    className={
+                      field.state.meta.errors.length ? "border-red-500" : ""
+                    }
+                    id={field.name}
+                    name={field.name}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Jan Kowalski"
+                    type="text"
+                    value={field.state.value}
+                  />
+                  <FieldState field={field} />
+                </Field>
+              )}
+            </form.Field>
+          )}
 
           <form.Field name="password">
             {(field) => (

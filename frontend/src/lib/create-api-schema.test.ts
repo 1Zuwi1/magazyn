@@ -15,7 +15,7 @@ describe("createApiSchema", () => {
     })
 
     expect(schema.shape.GET).toBeDefined()
-    expect(schema.shape.GET?.shape.output).toBe(UserSchema)
+    expect(schema.shape.GET.shape.output).toBe(UserSchema)
   })
 
   it("creates schema with POST input and output", () => {
@@ -32,8 +32,8 @@ describe("createApiSchema", () => {
     })
 
     expect(schema.shape.POST).toBeDefined()
-    expect(schema.shape.POST?.shape.input).toBe(inputSchema)
-    expect(schema.shape.POST?.shape.output).toBe(outputSchema)
+    expect(schema.shape.POST.shape.input).toBe(inputSchema)
+    expect(schema.shape.POST.shape.output).toBe(outputSchema)
   })
 
   it("creates schema with multiple methods", () => {
@@ -110,7 +110,7 @@ describe("createApiSchema", () => {
 
     // Verify the shape is correct
     expect(schema.shape.GET).toBeDefined()
-    expect(schema.shape.GET?.shape.output).toBe(outputSchema)
+    expect(schema.shape.GET.shape.output).toBe(outputSchema)
   })
 
   it("handles complex nested schemas", () => {
@@ -123,7 +123,7 @@ describe("createApiSchema", () => {
     const userSchema = z.object({
       id: z.number(),
       name: z.string(),
-      email: z.string().email(),
+      email: z.email(),
       address: addressSchema,
     })
 
@@ -131,7 +131,7 @@ describe("createApiSchema", () => {
       GET: { output: userSchema },
     })
 
-    expect(schema.shape.GET?.shape.output).toBe(userSchema)
+    expect(schema.shape.GET.shape.output).toBe(userSchema)
   })
 
   it("handles optional and nullable fields in schemas", () => {
@@ -146,7 +146,7 @@ describe("createApiSchema", () => {
       GET: { output: outputSchema },
     })
 
-    expect(schema.shape.GET?.shape.output).toBe(outputSchema)
+    expect(schema.shape.GET.shape.output).toBe(outputSchema)
   })
 
   it("handles discriminated unions in schemas", () => {
@@ -172,7 +172,7 @@ describe("createApiSchema", () => {
       },
     })
 
-    expect(schema.shape.POST?.shape.output).toBe(responseSchema)
+    expect(schema.shape.POST.shape.output).toBe(responseSchema)
   })
 
   it("handles array and transform schemas", () => {
@@ -187,6 +187,6 @@ describe("createApiSchema", () => {
       GET: { output: listSchema },
     })
 
-    expect(schema.shape.GET?.shape.output).toBe(listSchema)
+    expect(schema.shape.GET.shape.output).toBe(listSchema)
   })
 })

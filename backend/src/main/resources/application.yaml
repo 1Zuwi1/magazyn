@@ -1,0 +1,34 @@
+auth:
+  limits:
+    AUTH_LOGIN:
+      capacity: 5
+      refill: 5
+      duration: PT1M
+    AUTH_REGISTER:
+      capacity: 3
+      refill: 3
+      duration: PT5M
+    AUTH_LOGOUT:
+      capacity: 5
+      refill: 5
+      duration: PT1M
+    AUTH_FREE:
+      capacity: 50
+      refill: 25
+      duration: PT1M
+    TWO_FACTOR_FREE:
+      capacity: 20
+      refill: 20
+      duration: PT5M
+    TWO_FACTOR_VERIFY:
+      capacity: 10
+      refill: 10
+      duration: PT5M
+    TWO_FACTOR_STRICT:
+      capacity: 5
+      refill: 5
+      duration: PT5M
+    USER_ACTION_FREE:
+      capacity: 100
+      refill: 50
+      duration: PT2M
