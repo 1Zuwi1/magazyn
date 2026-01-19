@@ -84,7 +84,7 @@ export const createItemsColumns = (
     cell: ({ row }) => (
       <div className="font-medium">
         {t("columns.quantityValue", {
-          count: String(row.original.totalQuantity),
+          count: row.original.totalQuantity,
         })}
       </div>
     ),

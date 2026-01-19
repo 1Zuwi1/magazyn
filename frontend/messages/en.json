@@ -163,11 +163,11 @@
     "parameters": {
       "title": "Parameters",
       "maxElement": "Max item size",
-      "maxElementValue": "{width} × {height} × {depth} mm",
+      "maxElementValue": "{width, number} × {height, number} × {depth, number} mm",
       "temperatureRange": "Temperature range",
-      "temperatureValue": "{min}°C - {max}°C",
+      "temperatureValue": "{min, number}°C - {max, number}°C",
       "gridDimensions": "Grid dimensions",
-      "gridValue": "{rows} rows × {cols} columns"
+      "gridValue": "{rows, number} rows × {cols, number} columns"
     },
     "status": {
       "title": "Status",
@@ -219,7 +219,7 @@
       "name": "Name",
       "category": "Category",
       "quantity": "Quantity",
-      "quantityValue": "{count} pcs.",
+      "quantityValue": "{count, number} pcs.",
       "expiry": "Shelf life",
       "danger": "Danger"
     },

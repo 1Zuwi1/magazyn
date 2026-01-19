@@ -126,62 +126,34 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 : translate("form.registerDescription")}
             </FieldDescription>
           </div>
-          {!isLogin && (
-            <>
-              <form.Field name="email">
-                {(field) => (
-                  <Field>
-                    <FieldLabel htmlFor={field.name}>
-                      {translate("fields.email")}
-                    </FieldLabel>
-                    <Input
-                      className={
-                        field.state.meta.errors.length ? "border-red-500" : ""
-                      }
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder={translate("placeholders.email")}
-                      type="email"
-                      value={field.state.value}
-                    />
-                    <FieldState field={field} />
-                  </Field>
-                )}
-              </form.Field>
-
-              <form.Field name="fullName">
-                {(field) => (
-                  <Field>
-                    <FieldLabel htmlFor={field.name}>
-                      {translate("fields.fullName")}
-                    </FieldLabel>
-                    <Input
-                      className={
-                        field.state.meta.errors.length ? "border-red-500" : ""
-                      }
-                      id={field.name}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder={translate("placeholders.fullName")}
-                      type="text"
-                      value={field.state.value}
-                    />
-                    <FieldState field={field} />
-                  </Field>
-                )}
-              </form.Field>
-            </>
-          )}
-
+          <form.Field name="email">
+            {(field) => (
+              <Field>
+                <FieldLabel htmlFor={field.name}>
+                  {translate("fields.email")}
+                </FieldLabel>
+                <Input
+                  className={
+                    field.state.meta.errors.length ? "border-red-500" : ""
+                  }
+                  id={field.name}
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder={translate("placeholders.email")}
+                  type="email"
+                  value={field.state.value}
+                />
+                <FieldState field={field} />
+              </Field>
+            )}
+          </form.Field>
           {!isLogin && (
             <form.Field name="fullName">
               {(field) => (
                 <Field>
                   <FieldLabel htmlFor={field.name}>
-                    Pełne imię i nazwisko
+                    {translate("fields.fullName")}
                   </FieldLabel>
                   <Input
                     className={
@@ -191,7 +163,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     name={field.name}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="Jan Kowalski"
+                    placeholder={translate("placeholders.fullName")}
                     type="text"
                     value={field.state.value}
                   />

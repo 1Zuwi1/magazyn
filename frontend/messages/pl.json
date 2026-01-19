@@ -163,11 +163,11 @@
     "parameters": {
       "title": "Parametry",
       "maxElement": "Max rozmiar elementu",
-      "maxElementValue": "{width} × {height} × {depth} mm",
+      "maxElementValue": "{width, number} × {height, number} × {depth, number} mm",
       "temperatureRange": "Zakres temperatur",
-      "temperatureValue": "{min}°C - {max}°C",
+      "temperatureValue": "{min, number}°C - {max, number}°C",
       "gridDimensions": "Wymiary siatki",
-      "gridValue": "{rows} rzędów × {cols} kolumn"
+      "gridValue": "{rows, number} rzędów × {cols, number} kolumn"
     },
     "status": {
       "title": "Status",
@@ -219,7 +219,7 @@
       "name": "Nazwa",
       "category": "Kategoria",
       "quantity": "Ilość",
-      "quantityValue": "{count} szt.",
+      "quantityValue": "{count, number} szt.",
       "expiry": "Okres przydatności",
       "danger": "Niebezpieczeństwo"
     },

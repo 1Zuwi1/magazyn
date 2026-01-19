@@ -31,8 +31,6 @@ To add a new language:
 3. Add the language label under `languageSwitcher` in every messages file.
 4. Restart the dev server so the Next.js message declaration can be regenerated if needed.
 
-Locale selection is stored in the `NEXT_LOCALE` cookie (set via `/api/locale`). When no cookie is present, the app falls back to the `Accept-Language` header.
-
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

@@ -36,9 +36,9 @@ export function RackParametersCard({
             </p>
             <p className="font-medium text-sm">
               {t("parameters.maxElementValue", {
-                width: String(maxElementSize.width),
-                height: String(maxElementSize.height),
-                depth: String(maxElementSize.depth),
+                width: maxElementSize.width,
+                height: maxElementSize.height,
+                depth: maxElementSize.depth,
               })}
             </p>
           </div>
@@ -55,8 +55,8 @@ export function RackParametersCard({
             </p>
             <p className="font-medium text-sm">
               {t("parameters.temperatureValue", {
-                min: String(tempRange.min),
-                max: String(tempRange.max),
+                min: tempRange.min,
+                max: tempRange.max,
               })}
             </p>
           </div>
@@ -73,8 +73,8 @@ export function RackParametersCard({
             </p>
             <p className="font-medium text-sm">
               {t("parameters.gridValue", {
-                rows: String(gridDimensions.rows),
-                cols: String(gridDimensions.cols),
+                rows: gridDimensions.rows,
+                cols: gridDimensions.cols,
               })}
             </p>
           </div>
