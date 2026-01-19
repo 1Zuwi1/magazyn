@@ -56,7 +56,7 @@ export const createAuthSchemas = (t: TranslatorFor<"auth">) => {
     })
     .refine((data) => data.password === data.confirmPassword, {
       message: t("validation.password.mismatch"),
-      path: ["confirmPassowrd"],
+      path: ["confirmPassword"],
     })
 
   const Verify2FASchema = createApiSchema({

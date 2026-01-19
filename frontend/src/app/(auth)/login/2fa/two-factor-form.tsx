@@ -100,7 +100,7 @@ export default function TwoFactorForm({
 
   async function resendCode(m: ResendType) {
     if (!resendMethods.includes(m)) {
-      toast.error(translate("errors.unsupportedResend"))
+      toast.error(apiErrors("unsupportedResend"))
       return false
     }
     setIsResending(true)

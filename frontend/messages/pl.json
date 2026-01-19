@@ -79,9 +79,6 @@
       "sms": "Wyślij kod SMS-em",
       "email": "Wyślij kod e-mailem"
     },
-    "errors": {
-      "unsupportedResend": "Nieobsługiwana metoda ponownego wysyłania kodu."
-    },
     "success": {
       "verified": "Zweryfikowano!",
       "resend": {
@@ -456,7 +453,8 @@
       "loginFailed": "Wystąpił błąd podczas logowania. Spróbuj ponownie.",
       "registerFailed": "Wystąpił błąd podczas rejestracji. Spróbuj ponownie.",
       "invalidCode": "Nieprawidłowy kod lub błąd weryfikacji. Spróbuj ponownie.",
-      "resendFailed": "Nie udało się wysłać kodu ponownie. Spróbuj za chwilę."
+      "resendFailed": "Nie udało się wysłać kodu ponownie. Spróbuj za chwilę.",
+      "unsupportedResend": "Nieobsługiwana metoda ponownego wysyłania kodu."
     }
   },
   "breadcrumbs": {

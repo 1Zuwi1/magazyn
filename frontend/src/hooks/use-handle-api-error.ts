@@ -3,9 +3,12 @@ import { toast } from "sonner"
 import { FetchError } from "@/lib/fetcher"
 import type { TranslatorFor } from "@/types/translation"
 
-const getTranslated = (t: TranslatorFor<"common.apiErrors">, key: string) => {
-  if (t.has(key as never)) {
-    return t(key as never)
+const getTranslated = (
+  t: TranslatorFor<"common.apiErrors">,
+  key: Parameters<typeof t>[0]
+) => {
+  if (t.has(key)) {
+    return t(key)
   }
 
   return key
@@ -17,7 +20,7 @@ export const useHandleApiError = () => {
   return (err: unknown, fallback?: string) => {
     const message =
       err instanceof FetchError
-        ? getTranslated(translator, err.message)
+        ? getTranslated(translator, err.message as never)
         : (fallback ?? translator("generic"))
 
     toast.error(message)

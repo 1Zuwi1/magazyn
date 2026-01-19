@@ -189,7 +189,7 @@ describe("AuthForm", () => {
       await waitFor(() => {
         expect(mockHandleApiError).toHaveBeenCalledWith(
           error,
-          getMessage("auth.errors.loginFailed")
+          getMessage("common.apiErrors.loginFailed")
         )
       })
     })
@@ -315,7 +315,7 @@ describe("AuthForm", () => {
       await waitFor(() => {
         expect(mockHandleApiError).toHaveBeenCalledWith(
           error,
-          getMessage("auth.errors.registerFailed")
+          getMessage("common.apiErrors.registerFailed")
         )
       })
     })

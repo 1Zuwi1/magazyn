@@ -79,9 +79,6 @@
       "sms": "Send SMS code",
       "email": "Send email code"
     },
-    "errors": {
-      "unsupportedResend": "This resend method is not supported."
-    },
     "success": {
       "verified": "Verified!",
       "resend": {
@@ -456,7 +453,8 @@
       "loginFailed": "There was a problem logging in. Please try again.",
       "registerFailed": "There was a problem registering. Please try again.",
       "invalidCode": "Invalid code or verification failed. Please try again.",
-      "resendFailed": "Could not resend the code. Please try again shortly."
+      "resendFailed": "Could not resend the code. Please try again shortly.",
+      "unsupportedResend": "This resend method is not supported."
     }
   },
   "breadcrumbs": {
