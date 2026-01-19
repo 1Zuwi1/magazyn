@@ -51,15 +51,15 @@ export function LanguageSwitcher() {
   )
 
   useEffect(() => {
-    const storedLocale = Cookies.get(LOCALE_COOKIE_NAME)
-
-    if (!storedLocale || hasSyncedStoredLocale.current) {
-      return
-    }
-
-    if (locales.includes(storedLocale as Locale) && storedLocale !== locale) {
+    const storedLocale = Cookies.get(LOCALE_COOKIE_NAME) as Locale | undefined
+    if (
+      storedLocale &&
+      locales.includes(storedLocale) &&
+      storedLocale !== locale &&
+      !hasSyncedStoredLocale.current
+    ) {
       hasSyncedStoredLocale.current = true
-      updateLocale(storedLocale as Locale)
+      updateLocale(storedLocale)
     }
   }, [locale, updateLocale])
 

@@ -1,28 +1,25 @@
-import { useTranslations } from "next-intl"
+import { useMessages, useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { FetchError } from "@/lib/fetcher"
-import type { TranslatorFor } from "@/types/translation"
-
-const getTranslated = (
-  t: TranslatorFor<"common.apiErrors">,
-  key: Parameters<typeof t>[0]
-) => {
-  if (t.has(key)) {
-    return t(key)
-  }
-
-  return key
-}
 
 export const useHandleApiError = () => {
   const translator = useTranslations("common.apiErrors")
+  const messages = useMessages()
+  const apiErrorMessages = messages.common.apiErrors
+
+  const isApiErrorKey = (key: string): key is keyof typeof apiErrorMessages =>
+    Object.hasOwn(apiErrorMessages, key)
 
   return (err: unknown, fallback?: string) => {
-    const message =
-      err instanceof FetchError
-        ? getTranslated(translator, err.message as never)
-        : (fallback ?? translator("generic"))
+    if (err instanceof FetchError) {
+      const errorMessage = err.message
+      const message = isApiErrorKey(errorMessage)
+        ? translator(errorMessage)
+        : errorMessage
+      toast.error(message)
+      return
+    }
 
-    toast.error(message)
+    toast.error(fallback ?? translator("generic"))
   }
 }
