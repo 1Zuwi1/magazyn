@@ -2,28 +2,14 @@ import z from "zod"
 import type { TranslatorFor } from "@/types/translation"
 import { createApiSchema } from "./create-api-schema"
 
-const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/
-const USERNAME_MIN_LENGTH = 3
-const USERNAME_MAX_LENGTH = 20
 const PASSWORD_MIN_LENGTH = 6
 const PASSWORD_MAX_BYTES = 72
 const FULL_NAME_MIN_LENGTH = 2
 const CODE_LENGTH = 6
 
+const txtEncoder = new TextEncoder()
 export const createAuthSchemas = (t: TranslatorFor<"auth">) => {
-  const usernameSchema = z
-    .string()
-    .min(
-      USERNAME_MIN_LENGTH,
-      t("validation.username.min", { min: USERNAME_MIN_LENGTH })
-    )
-    .max(
-      USERNAME_MAX_LENGTH,
-      t("validation.username.max", { max: USERNAME_MAX_LENGTH })
-    )
-    .regex(USERNAME_REGEX, t("validation.username.format"))
-
-  const passwordSchema = z
+  const PasswordSchema = z
     .string()
     .min(
       PASSWORD_MIN_LENGTH,
@@ -31,7 +17,7 @@ export const createAuthSchemas = (t: TranslatorFor<"auth">) => {
     )
     .refine(
       (value) => {
-        const bytes = new TextEncoder().encode(value).length
+        const bytes = txtEncoder.encode(value).length
         return bytes <= PASSWORD_MAX_BYTES
       },
       t("validation.password.maxBytes", { max: PASSWORD_MAX_BYTES })
@@ -40,8 +26,8 @@ export const createAuthSchemas = (t: TranslatorFor<"auth">) => {
   const LoginSchema = createApiSchema({
     POST: {
       input: z.object({
-        username: usernameSchema,
-        password: passwordSchema,
+        email: z.email(t("validation.email.invalid")),
+        password: PasswordSchema,
       }),
       output: z.object({
         requiresTwoFactor: z.boolean(),
@@ -50,26 +36,28 @@ export const createAuthSchemas = (t: TranslatorFor<"auth">) => {
   })
   const RegisterSchema = createApiSchema({
     POST: {
-      input: z
-        .object({
-          fullName: z
-            .string()
-            .min(
-              FULL_NAME_MIN_LENGTH,
-              t("validation.fullName.min", { min: FULL_NAME_MIN_LENGTH })
-            ),
-          username: usernameSchema,
-          email: z.email(t("validation.email.invalid")),
-          password: passwordSchema,
-          confirmPassword: z.string(),
-        })
-        .refine((data) => data.password === data.confirmPassword, {
-          message: t("validation.password.mismatch"),
-          path: ["confirmPassword"],
-        }),
+      input: z.object({
+        fullName: z
+          .string()
+          .min(
+            FULL_NAME_MIN_LENGTH,
+            t("validation.fullName.min", { min: FULL_NAME_MIN_LENGTH })
+          ),
+        email: z.email(t("validation.email.invalid")),
+        password: PasswordSchema,
+      }),
       output: z.null(),
     },
   })
+
+  const FormRegisterSchema = RegisterSchema.shape.POST.shape.input
+    .extend({
+      confirmPassword: PasswordSchema,
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t("validation.password.mismatch"),
+      path: ["confirmPassowrd"],
+    })
 
   const Verify2FASchema = createApiSchema({
     POST: {
@@ -100,6 +88,7 @@ export const createAuthSchemas = (t: TranslatorFor<"auth">) => {
     RegisterSchema,
     Verify2FASchema,
     Resend2FASchema,
+    FormRegisterSchema,
   }
 }
 

@@ -25,20 +25,18 @@
   },
   "auth": {
     "form": {
-      "loginDescription": "Wprowadź swoją nazwę użytkownika i hasło, aby uzyskać dostęp do konta.",
+      "loginDescription": "Wprowadź swój adres email i hasło, aby uzyskać dostęp do konta.",
       "registerDescription": "Utwórz konto, aby korzystać z aplikacji."
     },
     "fields": {
       "email": "Email",
       "fullName": "Pełne imię i nazwisko",
-      "username": "Nazwa użytkownika",
       "password": "Hasło",
       "confirmPassword": "Potwierdź hasło"
     },
     "placeholders": {
       "email": "jan@kowalski.pl",
       "fullName": "Jan Kowalski",
-      "username": "janKowalski",
       "password": "••••••••"
     },
     "actions": {
@@ -54,11 +52,6 @@
       "register": "Zarejestrowano pomyślnie! Możesz się teraz zalogować."
     },
     "validation": {
-      "username": {
-        "min": "Nazwa użytkownika musi mieć co najmniej {min, number} znaki",
-        "max": "Nazwa użytkownika może mieć maksymalnie {max, number} znaków",
-        "format": "Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślenia"
-      },
       "password": {
         "min": "Hasło musi mieć co najmniej {min, number} znaków",
         "maxBytes": "Hasło nie może przekraczać {max, number} bajtów w kodowaniu UTF-8.",

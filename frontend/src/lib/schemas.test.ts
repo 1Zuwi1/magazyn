@@ -17,8 +17,13 @@ const translator = createTranslator({
   },
 })
 
-const { LoginSchema, RegisterSchema, Resend2FASchema, Verify2FASchema } =
-  createAuthSchemas(translator)
+const {
+  LoginSchema,
+  RegisterSchema,
+  Resend2FASchema,
+  Verify2FASchema,
+  FormRegisterSchema,
+} = createAuthSchemas(translator)
 
 describe("LoginSchema", () => {
   it("accepts valid login input", () => {
@@ -59,44 +64,12 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translator("validation.username.min", { min: 3 })
+        translator("validation.email.invalid")
       )
     }
   })
 
-  it("rejects username longer than 20 characters", () => {
-    const invalidInput = {
-      username: "a".repeat(21),
-      password: "password123",
-    }
-
-    const result = LoginSchema.shape.POST?.shape.input.safeParse(invalidInput)
-
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
-        translator("validation.username.max", { max: 20 })
-      )
-    }
-  })
-
-  it("rejects invalid characters in username", () => {
-    const invalidInput = {
-      username: "invalid@user",
-      password: "password123",
-    }
-
-    const result = LoginSchema.shape.POST?.shape.input.safeParse(invalidInput)
-
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
-        translator("validation.username.format")
-      )
-    }
-  })
-
-  it("accepts valid username with underscores and numbers", () => {
+  it("accepts valid email", () => {
     const validInput = {
       email: "validEmail@example.com",
       password: "password123",

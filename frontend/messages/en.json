@@ -25,20 +25,18 @@
   },
   "auth": {
     "form": {
-      "loginDescription": "Enter your username and password to access your account.",
+      "loginDescription": "Enter your email and password to access your account.",
       "registerDescription": "Create an account to start using the app."
     },
     "fields": {
       "email": "Email",
       "fullName": "Full name",
-      "username": "Username",
       "password": "Password",
       "confirmPassword": "Confirm password"
     },
     "placeholders": {
       "email": "jane.doe@example.com",
       "fullName": "Jane Doe",
-      "username": "janeDoe",
       "password": "••••••••"
     },
     "actions": {
@@ -54,11 +52,6 @@
       "register": "Registration successful! You can now log in."
     },
     "validation": {
-      "username": {
-        "min": "Username must be at least {min, number} characters.",
-        "max": "Username must be at most {max, number} characters.",
-        "format": "Username can only contain letters, numbers, and underscores."
-      },
       "password": {
         "min": "Password must be at least {min, number} characters.",
         "maxBytes": "Password cannot exceed {max, number} bytes in UTF-8 encoding.",

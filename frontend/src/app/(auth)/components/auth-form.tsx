@@ -57,7 +57,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const apiErrors = useTranslations("common.apiErrors")
   const router = useRouter()
   const isLogin = mode === "login"
-  const { LoginSchema, RegisterSchema } = useMemo(
+  const { LoginSchema, RegisterSchema, FormRegisterSchema } = useMemo(
     () => createAuthSchemas(translate),
     [translate]
   )
@@ -176,28 +176,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
             </>
           )}
 
-          <form.Field name="username">
-            {(field) => (
-              <Field>
-                <FieldLabel htmlFor={field.name}>
-                  {translate("fields.username")}
-                </FieldLabel>
-                <Input
-                  className={
-                    field.state.meta.errors.length ? "border-red-500" : ""
-                  }
-                  id={field.name}
-                  name={field.name}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={translate("placeholders.username")}
-                  type="text"
-                  value={field.state.value}
-                />
-                <FieldState field={field} />
-              </Field>
-            )}
-          </form.Field>
           {!isLogin && (
             <form.Field name="fullName">
               {(field) => (

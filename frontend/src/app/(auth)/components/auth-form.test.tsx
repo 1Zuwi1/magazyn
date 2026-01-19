@@ -23,10 +23,6 @@ const getMessage = (key: string) => {
 const escapeRegExp = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
-const USERNAME_REGEX = new RegExp(
-  escapeRegExp(getMessage("auth.fields.username")),
-  "i"
-)
 const PASSWORD_REGEX = new RegExp(
   `^${escapeRegExp(getMessage("auth.fields.password"))}$`,
   "i"
