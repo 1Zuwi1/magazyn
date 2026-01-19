@@ -146,8 +146,8 @@ export function RackGridView({
             <span className="font-semibold text-xs sm:text-sm">
               {" "}
               {t("labels.rackCount", {
-                current: String(currentRackIndex + 1),
-                total: String(totalRacks),
+                current: currentRackIndex + 1,
+                total: totalRacks,
               })}
             </span>
           </p>

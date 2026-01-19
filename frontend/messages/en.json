@@ -155,7 +155,7 @@
     },
     "labels": {
       "rack": "Rack:",
-      "rackCount": "{current} / {total}"
+      "rackCount": "{current, number} / {total, number}"
     },
     "parameters": {
       "title": "Parameters",
@@ -307,7 +307,7 @@
         "placeholder": "Search racks..."
       },
       "rack": {
-        "grid": "Grid: {rows}×{cols}",
+        "grid": "Grid: {rows, number}×{cols, number}",
         "occupancy": "Occupancy:"
       },
       "legend": {

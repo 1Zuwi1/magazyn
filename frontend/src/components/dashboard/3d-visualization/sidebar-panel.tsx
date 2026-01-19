@@ -65,8 +65,8 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
               </div>
               <div className="mb-1 text-muted-foreground text-sm">
                 {t("rack.grid", {
-                  rows: String(rack.grid.rows),
-                  cols: String(rack.grid.cols),
+                  rows: rack.grid.rows,
+                  cols: rack.grid.cols,
                 })}
               </div>
               <div className="flex items-center justify-between gap-1 text-xs">

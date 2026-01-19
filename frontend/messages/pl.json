@@ -155,7 +155,7 @@
     },
     "labels": {
       "rack": "Regał:",
-      "rackCount": "{current} / {total}"
+      "rackCount": "{current, number} / {total, number}"
     },
     "parameters": {
       "title": "Parametry",
@@ -307,7 +307,7 @@
         "placeholder": "Szukaj regałów..."
       },
       "rack": {
-        "grid": "Siatka: {rows}×{cols}",
+        "grid": "Siatka: {rows, number}×{cols, number}",
         "occupancy": "Zajętość:"
       },
       "legend": {
