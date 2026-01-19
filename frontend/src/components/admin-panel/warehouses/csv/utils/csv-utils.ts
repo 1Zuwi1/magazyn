@@ -29,13 +29,13 @@ const NUMBER_FIELDS = new Set([
   "minTemp",
   "maxTemp",
   "maxWeight",
-  "maxItemSize.width",
-  "maxItemSize.height",
-  "maxItemSize.depth",
+  "maxItemWidth",
+  "maxItemHeight",
+  "maxItemDepth",
   "weight",
-  "dimensions.width",
-  "dimensions.height",
-  "dimensions.depth",
+  "width",
+  "height",
+  "depth",
   "daysToExpiry",
 ])
 
@@ -49,9 +49,9 @@ const RACK_HEADER_MAP: Record<string, string> = {
   mintemp: "minTemp",
   maxtemp: "maxTemp",
   maxweight: "maxWeight",
-  maxitemwidth: "maxItemSize.width",
-  maxitemheight: "maxItemSize.height",
-  maxitemdepth: "maxItemSize.depth",
+  maxitemwidth: "maxItemWidth",
+  maxitemheight: "maxItemHeight",
+  maxitemdepth: "maxItemDepth",
   comment: "comment",
 }
 
@@ -62,9 +62,9 @@ const ITEM_HEADER_MAP: Record<string, string> = {
   mintemp: "minTemp",
   maxtemp: "maxTemp",
   weight: "weight",
-  width: "dimensions.width",
-  height: "dimensions.height",
-  depth: "dimensions.depth",
+  width: "width",
+  height: "height",
+  depth: "depth",
   comment: "comment",
   daystoexpiry: "daysToExpiry",
   isdangerous: "isDangerous",
@@ -122,36 +122,15 @@ function mapRow(
   const result: Record<string, unknown> = {}
 
   for (const [csvKey, value] of Object.entries(row)) {
-    const targetPath = headerMap[csvKey]
+    const targetField = headerMap[csvKey]
 
-    if (!(targetPath && value?.trim())) {
+    if (!(targetField && value?.trim())) {
       continue
     }
 
-    const coercedValue = coerceValue(value, targetPath)
-    if (coercedValue === undefined) {
-      continue
-    }
-
-    const pathParts = targetPath.split(".")
-
-    if (pathParts.length === 1) {
-      result[targetPath] = coercedValue
-    } else {
-      let current: Record<string, unknown> = result
-
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        const part = pathParts[i]
-        if (!current[part]) {
-          current[part] = {}
-        }
-        current = current[part] as Record<string, unknown>
-      }
-
-      const lastPart = pathParts.at(-1)
-      if (lastPart) {
-        current[lastPart] = coercedValue
-      }
+    const coercedValue = coerceValue(value, targetField)
+    if (coercedValue !== undefined) {
+      result[targetField] = coercedValue
     }
   }
 
@@ -173,7 +152,6 @@ export function parseCsvFile(
     Papa.parse<Record<string, string>>(file, {
       header: true,
       skipEmptyLines: true,
-      delimiter: ";",
       encoding: "UTF-8",
       transformHeader: normalizeHeader,
       complete: (results) => {
@@ -215,54 +193,4 @@ export function parseCsvFile(
       error: reject,
     })
   })
-}
-
-export function parseCsvString(
-  csvString: string,
-  type: CsvImporterType
-): CsvParseResult {
-  const config = CONFIG[type]
-  const errors: CsvParseError[] = []
-
-  const results = Papa.parse<Record<string, string>>(csvString, {
-    header: true,
-    skipEmptyLines: true,
-    delimiter: ";",
-    transformHeader: normalizeHeader,
-  })
-
-  for (const error of results.errors) {
-    errors.push({
-      row: error.row ?? 0,
-      message: error.message,
-    })
-  }
-
-  const rawRows = results.data.filter((row) => !isRowEmpty(row))
-  const validRows: CsvRow[] = []
-
-  for (const [index, row] of rawRows.entries()) {
-    const mapped = mapRow(row, config.headerMap)
-    const parsed = config.schema.safeParse(mapped)
-
-    if (parsed.success) {
-      validRows.push(parsed.data as CsvRow)
-    } else {
-      const rowNumber = index + 2
-
-      for (const issue of parsed.error.issues) {
-        errors.push({
-          row: rowNumber,
-          message: `${issue.path.join(".")}: ${issue.message}`,
-        })
-      }
-    }
-  }
-
-  return {
-    headers: results.meta.fields ?? [],
-    rows: validRows,
-    rawRows,
-    errors,
-  }
 }

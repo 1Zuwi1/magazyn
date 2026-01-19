@@ -38,7 +38,6 @@ export const RackSchema = z.object({
 })
 
 export const CsvRackRowSchema = z.object({
-  // id: z.uuid(),
   symbol: z.string(),
   name: z.string(),
   rows: z.number().min(1),
@@ -46,7 +45,9 @@ export const CsvRackRowSchema = z.object({
   minTemp: z.number(),
   maxTemp: z.number(),
   maxWeight: z.number().nonnegative(),
-  maxItemSize: DimensionsSchema,
+  maxItemWidth: z.number().positive(),
+  maxItemHeight: z.number().positive(),
+  maxItemDepth: z.number().positive(),
   comment: z.string().optional(),
 })
 
@@ -57,7 +58,9 @@ export const CsvItemRowSchema = z.object({
   minTemp: z.number(),
   maxTemp: z.number(),
   weight: z.number().nonnegative(),
-  dimensions: DimensionsSchema,
+  width: z.number().positive(),
+  height: z.number().positive(),
+  depth: z.number().positive(),
   comment: z.string().optional(),
   daysToExpiry: z.number(),
   isDangerous: z.boolean().default(false),

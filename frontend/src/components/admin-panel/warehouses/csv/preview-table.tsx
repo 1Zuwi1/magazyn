@@ -9,8 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { Column } from "./types"
 import { MAX_PREVIEW_ROWS } from "./utils/constants"
+import type { Column } from "./utils/types"
 
 interface PreviewTableProps {
   columns: Column[]

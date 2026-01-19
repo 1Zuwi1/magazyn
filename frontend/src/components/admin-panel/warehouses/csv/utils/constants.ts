@@ -21,6 +21,7 @@ export const DEFAULT_CONFIG = {
   accept: { "text/csv": [".csv"] },
   maxSize: 1024 * 1024 * 4,
   maxFileCount: 1,
+  delimiter: ",",
 } as const
 
 export const MAX_PREVIEW_ROWS = 10
