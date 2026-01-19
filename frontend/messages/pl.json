@@ -219,7 +219,7 @@
       "name": "Nazwa",
       "category": "Kategoria",
       "quantity": "Ilość",
-      "quantityValue": "{count, number} szt.",
+      "quantityValue": "{count, plural, one {# szt.} few {# szt.} many {# szt.} other {# szt.}}",
       "expiry": "Okres przydatności",
       "danger": "Niebezpieczeństwo"
     },

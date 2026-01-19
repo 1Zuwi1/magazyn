@@ -219,7 +219,7 @@
       "name": "Name",
       "category": "Category",
       "quantity": "Quantity",
-      "quantityValue": "{count, number} pcs.",
+      "quantityValue": "{count, plural, one {# pc.} other {# pcs.}}",
       "expiry": "Shelf life",
       "danger": "Danger"
     },
