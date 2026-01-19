@@ -20,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { Locale } from "@/i18n/routing"
 import { cn } from "@/lib/utils"
 import { formatDate, getDaysUntilExpiry } from "../utils/helpers"
 import type { ItemInstance } from "./types"
@@ -28,7 +29,7 @@ type Translator = (key: string, values?: TranslationValues) => string
 
 interface AssortmentColumnOptions {
   t: Translator
-  locale: string
+  locale: Locale
 }
 
 const getExpiryBadge = (t: Translator, expiryDate: Date) => {
@@ -116,9 +117,9 @@ export const createAssortmentColumns = ({
       <div>
         <div className="font-medium">{row.original.rackName}</div>
         <div className="text-muted-foreground text-sm">
+          row: row.original.position.row,
           {t("assortmentTable.columns.position", {
-            row: String(row.original.position.row),
-            col: String(row.original.position.col),
+            col: row.original.position.col,
           })}
         </div>
       </div>

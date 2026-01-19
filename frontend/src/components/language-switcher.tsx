@@ -33,13 +33,18 @@ export function LanguageSwitcher() {
       }
 
       setIsUpdating(true)
+      let err = false
       try {
         Cookies.set(LOCALE_COOKIE_NAME, nextLocale, {
           expires: 365, // 1 year
         })
+      } catch {
+        err = true
       } finally {
+        if (!err) {
+          router.refresh()
+        }
         setIsUpdating(false)
-        router.refresh()
       }
     },
     [locale, router]

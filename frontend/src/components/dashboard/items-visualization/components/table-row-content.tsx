@@ -93,9 +93,7 @@ export function TableRowContent({
         </div>
       </TableCell>
       <TableCell className="font-mono text-sm">{item.qrCode}</TableCell>
-      <TableCell>
-        {t("weight", { weight: Number.parseFloat(item.weight.toFixed(2)) })}
-      </TableCell>
+      <TableCell>{t("weight", { weight: item.weight })}</TableCell>
       <TableCell className="text-sm">
         {formatDimensions(item.dimensions)}
       </TableCell>

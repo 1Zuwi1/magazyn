@@ -85,13 +85,17 @@ vi.mock("sonner", () => ({
 
 // Mock API fetcher
 const mockApiFetch = vi.fn()
-vi.mock("@/lib/fetcher", () => ({
-  apiFetch: (...args: unknown[]) => mockApiFetch(...args),
-}))
+vi.mock("@/lib/fetcher", async (importOriginal) => {
+  const actual: Record<string, unknown> = await importOriginal()
+  return {
+    ...actual,
+    apiFetch: (...args: unknown[]) => mockApiFetch(...args),
+  }
+})
 
 // Mock helpers
 const mockHandleApiError = vi.fn()
-vi.mock("@/components/dashboard/utils/helpers", () => ({
+vi.mock("@/hooks/use-handle-api-error", () => ({
   useHandleApiError: () => mockHandleApiError,
 }))
 

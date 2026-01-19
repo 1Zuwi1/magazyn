@@ -1,3 +1,5 @@
+import type { Locale } from "@/i18n/routing"
+
 // Helper function to convert index to coordinate (R01-P01, R02-P03, etc.)
 export function getSlotCoordinate(index: number, cols: number): string {
   const row = Math.floor(index / cols)
@@ -7,7 +9,7 @@ export function getSlotCoordinate(index: number, cols: number): string {
   return `${rowLabel}-${colLabel}`
 }
 
-export function formatDate(date: Date, locale: string): string {
+export function formatDate(date: Date, locale: Locale): string {
   // TODO: Use date-fns here
   return new Intl.DateTimeFormat(locale, {
     year: "numeric",
