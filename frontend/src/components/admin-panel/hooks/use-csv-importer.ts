@@ -1,166 +1,72 @@
 "use client"
 
-import * as Papa from "papaparse"
 import { useState } from "react"
 import { toast } from "sonner"
-import type z from "zod"
-import { CsvItemRowSchema, CsvRackRowSchema } from "@/lib/schemas/admin-schemas"
+import {
+  type CsvImporterType,
+  type CsvParseError,
+  type CsvRow,
+  parseCsvFile,
+} from "../warehouses/csv/utils/csv-utils"
 
-export type CsvImporterType = "rack" | "item"
+export type { CsvImporterType, CsvRow } from "../warehouses/csv/utils/csv-utils"
 
-type CsvRackRow = z.infer<typeof CsvRackRowSchema>
-type CsvItemRow = z.infer<typeof CsvItemRowSchema>
-
-export type CsvRowType<T extends CsvImporterType> = T extends "rack"
-  ? CsvRackRow
-  : CsvItemRow
-
-interface UseCsvImporterProps<T extends CsvImporterType = CsvImporterType> {
-  type: T
-  onImport: (data: CsvRowType<T>[]) => void
+interface UseCsvImporterProps {
+  type: CsvImporterType
+  onImport: (data: CsvRow[]) => void
 }
 
-const CONFIG = {
-  rack: {
-    schema: CsvRackRowSchema,
-    headers: {
-      symbol: "symbol",
-      name: "name",
-      rows: "rows",
-      cols: "cols",
-      mintemp: "minTemp",
-      maxtemp: "maxTemp",
-      maxweight: "maxWeight",
-      maxitemwidth: "maxItemSize.width",
-      maxitemheight: "maxItemSize.height",
-      maxitemdepth: "maxItemSize.depth",
-      comment: "comment",
-    },
-  },
-  item: {
-    schema: CsvItemRowSchema,
-    headers: {
-      name: "name",
-      id: "id",
-      imageurl: "imageUrl",
-      mintemp: "minTemp",
-      maxtemp: "maxTemp",
-      weight: "weight",
-      width: "dimensions.width",
-      height: "dimensions.height",
-      depth: "dimensions.depth",
-      comment: "comment",
-      daystoexpiry: "daysToExpiry",
-      isdangerous: "isDangerous",
-    },
-  },
-} as const
-
-const BOM_HEADER_REGEX = /^\uFEFF/
-
-function normalizeHeader(header: string): string {
-  return header
-    .replace(BOM_HEADER_REGEX, "")
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "")
-}
-
-function parseCSV(file: File): Promise<Record<string, string>[]> {
-  return new Promise((resolve, reject) => {
-    Papa.parse<Record<string, string>>(file, {
-      header: true,
-      skipEmptyLines: true,
-      delimiter: ";",
-      encoding: "UTF-8",
-      transformHeader: normalizeHeader,
-      complete: (results) => resolve(results.data),
-      error: reject,
-    })
-  })
-}
-
-function mapRow(
-  row: Record<string, string>,
-  headerMap: Record<string, string>
-): Record<string, unknown> {
-  const result: Record<string, unknown> = {}
-
-  for (const [csvKey, value] of Object.entries(row)) {
-    const targetPath = headerMap[csvKey]
-    if (!(targetPath && value?.trim())) {
-      continue
-    }
-
-    const path = targetPath.split(".")
-    let current: Record<string, unknown> = result
-
-    for (let i = 0; i < path.length - 1; i++) {
-      current[path[i]] = current[path[i]] || ({} as Record<string, unknown>)
-      current = current[path[i]] as Record<string, unknown>
-    }
-
-    current[path.at(-1) as string] = value.trim()
-  }
-
-  return result
-}
-
-export function useCsvImporter<T extends CsvImporterType>({
-  type,
-  onImport,
-}: UseCsvImporterProps<T>) {
+export function useCsvImporter({ type, onImport }: UseCsvImporterProps) {
   const [open, setOpen] = useState(false)
   const [rawPreviewData, setRawPreviewData] = useState<
     Record<string, string>[]
   >([])
-  const [mappedData, setMappedData] = useState<Record<string, unknown>[]>([])
-
-  const config = CONFIG[type]
+  const [validatedData, setValidatedData] = useState<CsvRow[]>([])
+  const [parseErrors, setParseErrors] = useState<CsvParseError[]>([])
 
   async function processFile(files: File[]) {
-    if (!files[0]) {
+    const file = files[0]
+    if (!file) {
       return
     }
 
     setRawPreviewData([])
-    setMappedData([])
+    setValidatedData([])
+    setParseErrors([])
 
-    const rawData = await parseCSV(files[0])
-    const mapped = rawData.map((row) => mapRow(row, config.headers))
+    const result = await parseCsvFile(file, type)
 
-    setRawPreviewData(rawData)
-    setMappedData(mapped)
+    setRawPreviewData(result.rawRows)
+    setValidatedData(result.rows)
+    setParseErrors(result.errors)
+
+    if (result.errors.length > 0) {
+      toast.error("Wystąpił błąd podczas parsowania CSV", {
+        description: result.errors
+          .map((e) => `Wiersz ${e.row}: ${e.message}`)
+          .join("\n"),
+      })
+    }
   }
 
   function resetFile() {
     setRawPreviewData([])
-    setMappedData([])
+    setValidatedData([])
+    setParseErrors([])
   }
 
   function confirmImport() {
-    if (mappedData.length === 0) {
-      toast.error("Brak danych do zaimportowania")
+    if (validatedData.length === 0) {
+      toast.error("Brak poprawnych danych do zaimportowania")
       return
     }
 
-    const validatedRows: CsvRowType<T>[] = []
-
-    mappedData.forEach((row, index) => {
-      const result = config.schema.safeParse(row)
-
-      if (result.success) {
-        validatedRows.push(result.data as CsvRowType<T>)
-      } else {
-        toast.error(`Wiersz ${index + 2}: ${result.error.message}`)
-      }
+    onImport(validatedData)
+    toast.success(`Zaimportowano ${validatedData.length} wierszy`, {
+      description: validatedData.map((d) => JSON.stringify(d)).join("\n"),
     })
-
-    onImport(validatedRows)
-    toast.success(`Zaimportowano ${validatedRows.length} wierszy`)
     setOpen(false)
-    setRawPreviewData([])
-    setMappedData([])
+    resetFile()
   }
 
   return {
@@ -171,5 +77,7 @@ export function useCsvImporter<T extends CsvImporterType>({
     confirmImport,
     previewRows: rawPreviewData,
     resetFile,
+    errorCount: parseErrors.length,
+    validRowCount: validatedData.length,
   }
 }

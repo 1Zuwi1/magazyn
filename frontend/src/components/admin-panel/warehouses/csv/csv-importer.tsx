@@ -14,22 +14,19 @@ import {
 import { cn } from "@/lib/utils"
 import {
   type CsvImporterType,
-  type CsvRowType,
+  type CsvRow,
   useCsvImporter,
 } from "../../hooks/use-csv-importer"
-import { ITEM_COLUMNS, RACK_COLUMNS } from "./utils/constants"
 import { FileUploader } from "./file-uploader"
 import { PreviewTable } from "./preview-table"
+import { ITEM_COLUMNS, RACK_COLUMNS } from "./utils/constants"
 
-interface CsvImporterProps<T extends CsvImporterType> {
-  type: T
-  onImport: (data: CsvRowType<T>[]) => void
+interface CsvImporterProps {
+  type: CsvImporterType
+  onImport: (data: CsvRow[]) => void
 }
 
-export function CsvImporter<T extends CsvImporterType>({
-  type,
-  onImport,
-}: CsvImporterProps<T>) {
+export function CsvImporter({ type, onImport }: CsvImporterProps) {
   const {
     open,
     setOpen,
@@ -38,7 +35,7 @@ export function CsvImporter<T extends CsvImporterType>({
     confirmImport,
     previewRows,
     resetFile,
-  } = useCsvImporter<T>({ type, onImport })
+  } = useCsvImporter({ type, onImport })
 
   const columns = type === "rack" ? RACK_COLUMNS : ITEM_COLUMNS
 
@@ -47,8 +44,7 @@ export function CsvImporter<T extends CsvImporterType>({
       <DialogTrigger
         className={cn(buttonVariants({ variant: "default" }), "w-fit gap-2")}
       >
-        Improtuj{" "}
-      
+        Importuj CSV
       </DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
