@@ -2,6 +2,7 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import ProtectedPage from "@/app/(requireAuth)/protected-page"
 import { MOCK_RACKS } from "@/components/dashboard/mock-data"
+import tryCatch from "@/lib/try-catch"
 import WarehouseClient from "./warehouse-client"
 
 // TODO: fetch in prod
@@ -26,9 +27,13 @@ export default async function WarehousePage({
           redirect("/dashboard")
         }
 
-        const parsedName = decodeURIComponent(name)
+        const [err, parsedName] = await tryCatch(() => decodeURIComponent(name))
 
-        if (MOCK_WAREHOUSES_DATA[parsedName] === undefined) {
+        if (err) {
+          redirect("/dashboard")
+        }
+
+        if (!(parsedName in MOCK_WAREHOUSES_DATA)) {
           redirect("/dashboard")
         }
         const warehouseRacks = MOCK_WAREHOUSES_DATA[parsedName]

@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import type { ZodError } from "zod"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
 import Logo from "@/components/logo"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Field,
   FieldDescription,
@@ -29,7 +29,7 @@ function FieldState({ field }: { field: AnyFieldApi }) {
   const error = field.state.meta.errors[0] as ZodError | string | undefined
 
   return error ? (
-    <p className="mt-1 text-wrap text-red-600 text-xs">
+    <p aria-live="polite" className="mt-1 text-wrap text-red-600 text-xs">
       {typeof error === "string" ? error : error.message}
     </p>
   ) : null
@@ -127,14 +127,17 @@ export default function AuthForm({ mode }: AuthFormProps) {
               <Field>
                 <FieldLabel htmlFor={field.name}>Email</FieldLabel>
                 <Input
+                  autoComplete="email"
                   className={
                     field.state.meta.errors.length ? "border-red-500" : ""
                   }
                   id={field.name}
+                  inputMode="email"
                   name={field.name}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder="jan@kowalski.pl"
+                  spellCheck={false}
                   type="email"
                   value={field.state.value}
                 />
@@ -150,6 +153,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     Pełne imię i nazwisko
                   </FieldLabel>
                   <Input
+                    autoComplete="name"
                     className={
                       field.state.meta.errors.length ? "border-red-500" : ""
                     }
@@ -172,6 +176,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
               <Field>
                 <FieldLabel htmlFor={field.name}>Hasło</FieldLabel>
                 <Input
+                  autoComplete={isLogin ? "current-password" : "new-password"}
                   className={
                     field.state.meta.errors.length ? "border-red-500" : ""
                   }
@@ -180,6 +185,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder="••••••••"
+                  spellCheck={false}
                   type="password"
                   value={field.state.value}
                 />
@@ -194,6 +200,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 <Field>
                   <FieldLabel htmlFor={field.name}>Potwierdź hasło</FieldLabel>
                   <Input
+                    autoComplete="new-password"
                     className={
                       field.state.meta.errors.length ? "border-red-500" : ""
                     }
@@ -202,6 +209,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="••••••••"
+                    spellCheck={false}
                     type="password"
                     value={field.state.value}
                   />
@@ -232,14 +240,26 @@ export default function AuthForm({ mode }: AuthFormProps) {
             {isLogin ? (
               <>
                 Nie masz konta?{" "}
-                <Link className="text-primary underline" href="/register">
+                <Link
+                  className={buttonVariants({
+                    className: "h-auto p-0 text-primary",
+                    variant: "link",
+                  })}
+                  href="/register"
+                >
                   Zarejestruj się
                 </Link>
               </>
             ) : (
               <>
                 Masz już konto?{" "}
-                <Link className="text-primary underline" href="/login">
+                <Link
+                  className={buttonVariants({
+                    className: "h-auto p-0 text-primary",
+                    variant: "link",
+                  })}
+                  href="/login"
+                >
                   Zaloguj się
                 </Link>
               </>
