@@ -40,60 +40,68 @@ export function CsvImporter({ type, onImport }: CsvImporterProps) {
   const columns = type === "rack" ? RACK_COLUMNS : ITEM_COLUMNS
 
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger
-        className={cn(buttonVariants({ variant: "default" }), "w-fit gap-2")}
-      >
-        Importuj CSV
-      </DialogTrigger>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Importuj CSV</DialogTitle>
-        </DialogHeader>
+      <div className="flex min-w-max justify-center">
+        <Dialog onOpenChange={setOpen} open={open}>
+          <DialogTrigger
+            className={cn(
+              buttonVariants({ variant: "default" }),
+              "w-fit gap-2"
+            )}
+          >
+            Importuj CSV
+          </DialogTrigger>
+          <DialogContent className="max-w-[95vw]">
+            <DialogHeader>
+              <DialogTitle>Importuj CSV</DialogTitle>
+            </DialogHeader>
 
-        {isPreviewing ? (
-          <PreviewTable
-            columns={[...columns]}
-            rows={previewRows as Record<string, string>[]}
-          />
-        ) : (
-          <FileUploader onUpload={processFile} />
-        )}
+            {isPreviewing ? (
+              <PreviewTable
+                columns={[...columns]}
+                rows={previewRows as Record<string, string>[]}
+              />
+            ) : (
+              <FileUploader onUpload={processFile} />
+            )}
 
-        <DialogFooter className="flex-row justify-between sm:justify-between">
-          {isPreviewing ? (
-            <>
-              <Button
-                onClick={() => {
-                  setOpen(false)
-                }}
-                variant="outline"
-              >
-                <HugeiconsIcon className="mr-2 size-4" icon={ArrowLeft01Icon} />
-                Wróć
-              </Button>
-              <Button onClick={resetFile} variant="destructive">
-                Usuń
-              </Button>
-              <Button onClick={confirmImport}>
-                Importuj
-                <HugeiconsIcon
-                  className="ml-2 size-4"
-                  icon={ArrowRight01Icon}
-                />
-              </Button>
-            </>
-          ) : (
-            <Button
-              className="ml-auto"
-              onClick={() => setOpen(false)}
-              variant="outline"
-            >
-              Anuluj
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            <DialogFooter className="flex-row justify-between sm:justify-between">
+              {isPreviewing ? (
+                <>
+                  <Button
+                    onClick={() => {
+                      setOpen(false)
+                    }}
+                    variant="outline"
+                  >
+                    <HugeiconsIcon
+                      className="mr-2 size-4"
+                      icon={ArrowLeft01Icon}
+                    />
+                    Wróć
+                  </Button>
+                  <Button onClick={resetFile} variant="destructive">
+                    Usuń
+                  </Button>
+                  <Button onClick={confirmImport}>
+                    Importuj
+                    <HugeiconsIcon
+                      className="ml-2 size-4"
+                      icon={ArrowRight01Icon}
+                    />
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  className="ml-auto"
+                  onClick={() => setOpen(false)}
+                  variant="outline"
+                >
+                  Anuluj
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
   )
 }

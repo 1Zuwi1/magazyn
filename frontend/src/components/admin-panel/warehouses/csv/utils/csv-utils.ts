@@ -39,8 +39,6 @@ const NUMBER_FIELDS = new Set([
   "daysToExpiry",
 ])
 
-const BOOLEAN_FIELDS = new Set(["isDangerous"])
-
 const RACK_HEADER_MAP: Record<string, string> = {
   symbol: "symbol",
   name: "name",
@@ -101,12 +99,12 @@ function coerceValue(value: string, field: string): unknown {
     return Number.isNaN(parsed) ? undefined : parsed
   }
 
-  if (BOOLEAN_FIELDS.has(field)) {
+  if (new Set(["isdangerous"]).has(field)) {
     const lower = trimmed.toLowerCase()
-    if (lower === "true" || lower === "1" || lower === "tak") {
+    if (lower === "true") {
       return true
     }
-    if (lower === "false" || lower === "0" || lower === "nie") {
+    if (lower === "false") {
       return false
     }
     return undefined
