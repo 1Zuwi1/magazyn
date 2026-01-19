@@ -51,8 +51,8 @@ export function ItemsTable({ items }: ItemsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
-  // biome-ignore lint/correctness/useExhaustiveDependencies: next-intl translator is stable and doesn't need to trigger memo recalculation.
-  const columns = useMemo(() => createItemsColumns(t), [])
+
+  const columns = useMemo(() => createItemsColumns(t), [t])
 
   const table = useReactTable({
     data: items,

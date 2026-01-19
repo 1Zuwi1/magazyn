@@ -81,10 +81,9 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
     ],
     [t]
   )
-  // biome-ignore lint/correctness/useExhaustiveDependencies: next-intl translator is stable; locale changes drive updates.
   const columns = useMemo(
     () => createAssortmentColumns({ t, locale }),
-    [locale]
+    [locale, t]
   )
 
   const filteredItems = useMemo(
