@@ -1,11 +1,12 @@
 import z from "zod"
+import {
+  CODE_LENGTH,
+  FULL_NAME_MIN_LENGTH,
+  PASSWORD_MAX_BYTES,
+  PASSWORD_MIN_LENGTH,
+} from "@/config/constants"
 import type { TranslatorFor } from "@/types/translation"
 import { createApiSchema } from "./create-api-schema"
-
-const PASSWORD_MIN_LENGTH = 6
-const PASSWORD_MAX_BYTES = 72
-const FULL_NAME_MIN_LENGTH = 2
-const CODE_LENGTH = 6
 
 const txtEncoder = new TextEncoder()
 export const createAuthSchemas = (t: TranslatorFor<"auth">) => {
