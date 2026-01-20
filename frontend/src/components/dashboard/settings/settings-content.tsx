@@ -27,7 +27,6 @@ import { Textarea } from "@/components/ui/textarea"
 type AccountRole = "admin" | "user"
 type AccountStatus = "verified" | "unverified" | "banned"
 type TwoFactorMethod = "authenticator" | "sms" | "email"
-type NotificationKey = "security" | "warehouse" | "weekly" | "product"
 
 interface SettingsUser {
   id: number
@@ -45,12 +44,6 @@ interface SettingsContentProps {
 interface ProfileDetail {
   label: string
   value: string
-}
-
-interface NotificationOption {
-  id: NotificationKey
-  label: string
-  description: string
 }
 
 const STATUS_CONFIG = {
@@ -81,36 +74,6 @@ const TWO_FACTOR_METHODS = [
     hint: "Kod wysylany na skrzynke pocztowa.",
   },
 ] as const
-
-const NOTIFICATION_OPTIONS: NotificationOption[] = [
-  {
-    id: "security",
-    label: "Alerty bezpieczenstwa",
-    description: "Nowe logowanie i proby zmiany hasla.",
-  },
-  {
-    id: "warehouse",
-    label: "Alerty magazynowe",
-    description: "Niski stan zapasow, opoznienia i limity.",
-  },
-  {
-    id: "weekly",
-    label: "Tygodniowy raport",
-    description: "Podsumowanie obrotu i wykorzystania przestrzeni.",
-  },
-  {
-    id: "product",
-    label: "Nowosci produktu",
-    description: "Nowe funkcje, integracje i szkolenia.",
-  },
-]
-
-const DEFAULT_NOTIFICATIONS: Record<NotificationKey, boolean> = {
-  security: true,
-  warehouse: true,
-  weekly: false,
-  product: true,
-}
 
 const MOCK_PROFILE_FORM = {
   phone: "+48 555 019 203",
@@ -167,9 +130,6 @@ export function SettingsContent({ user }: SettingsContentProps) {
     TWO_FACTOR_METHODS[0].value
   )
   const [showRecoveryCodes, setShowRecoveryCodes] = useState<boolean>(false)
-  const [notifications, setNotifications] = useState<
-    Record<NotificationKey, boolean>
-  >(DEFAULT_NOTIFICATIONS)
   const [profileNote, setProfileNote] = useState<string>("")
   const [passwordNote, setPasswordNote] = useState<string>("")
 
@@ -185,13 +145,6 @@ export function SettingsContent({ user }: SettingsContentProps) {
   const handlePasswordSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setPasswordNote("Haslo zaktualizowane lokalnie (mock).")
-  }
-
-  const handleNotificationChange = (
-    key: NotificationKey,
-    enabled: boolean
-  ): void => {
-    setNotifications((prev) => ({ ...prev, [key]: enabled }))
   }
 
   const handleTwoFactorToggle = (enabled: boolean): void => {
@@ -264,6 +217,7 @@ export function SettingsContent({ user }: SettingsContentProps) {
                       autoComplete="email"
                       defaultValue={user.email}
                       id="email"
+                      placeholder="Wpisz adres email"
                       type="email"
                     />
                   </div>
@@ -322,48 +276,13 @@ export function SettingsContent({ user }: SettingsContentProps) {
                   <p className="text-muted-foreground text-sm">{profileNote}</p>
                 ) : null}
               </CardContent>
-              <CardFooter className="justify-end gap-3 border-t">
+              <CardFooter className="justify-end gap-3">
                 <Button type="button" variant="outline">
                   Anuluj
                 </Button>
                 <Button type="submit">Zapisz profil</Button>
               </CardFooter>
             </form>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Powiadomienia</CardTitle>
-              <p className="text-muted-foreground text-sm">
-                Dostosuj typy alertow, ktore chcesz otrzymywac.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {NOTIFICATION_OPTIONS.map((option, index) => (
-                <div className="space-y-4" key={option.id}>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <Label htmlFor={`notification-${option.id}`}>
-                        {option.label}
-                      </Label>
-                      <p className="text-muted-foreground text-sm">
-                        {option.description}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifications[option.id]}
-                      id={`notification-${option.id}`}
-                      onCheckedChange={(checked) =>
-                        handleNotificationChange(option.id, checked)
-                      }
-                    />
-                  </div>
-                  {index < NOTIFICATION_OPTIONS.length - 1 ? (
-                    <Separator />
-                  ) : null}
-                </div>
-              ))}
-            </CardContent>
           </Card>
         </div>
 
@@ -462,7 +381,7 @@ export function SettingsContent({ user }: SettingsContentProps) {
                 )}
               </div>
             </CardContent>
-            <CardFooter className="justify-end border-t">
+            <CardFooter className="justify-end">
               <Button type="button" variant="secondary">
                 Zapisz ustawienia bezpieczenstwa
               </Button>
@@ -514,7 +433,7 @@ export function SettingsContent({ user }: SettingsContentProps) {
                   </p>
                 ) : null}
               </CardContent>
-              <CardFooter className="justify-end border-t">
+              <CardFooter className="justify-end">
                 <Button type="submit">Zmien haslo</Button>
               </CardFooter>
             </form>
