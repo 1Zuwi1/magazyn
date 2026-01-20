@@ -39,48 +39,47 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
 
   return (
     <>
-      <ScrollArea className="w-full border rounded-md">
+      <ScrollArea className="w-full rounded-md border">
         <div className="mx-auto w-max min-w-full">
-
-        <Table className="w-max">
-          <TableHeader className="sticky top-0 z-10 bg-muted">
-            <TableRow>
-              {columns.map((col) => (
-                <TableHead
-                  className="whitespace-nowrap px-4 py-3 text-center font-semibold"
-                  key={col.key}
-                >
-                  {col.label}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {displayRows.length > 0 ? (
-              displayRows.map((row, rowIndex) => (
-                <TableRow key={rowIndex}>
-                  {columns.map((col) => (
-                    <TableCell
-                      className="whitespace-nowrap px-4 py-2 text-center"
-                      key={col.key}
-                    >
-                      {getRowValue(row, col.key)}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
+          <Table className="w-max">
+            <TableHeader className="sticky top-0 z-10 bg-muted">
               <TableRow>
-                <TableCell
-                  className="py-8 text-center text-muted-foreground"
-                  colSpan={columns.length}
-                >
-                  Brak danych do wyświetlenia
-                </TableCell>
+                {columns.map((col) => (
+                  <TableHead
+                    className="whitespace-nowrap px-4 py-3 text-center font-semibold"
+                    key={col.key}
+                  >
+                    {col.label}
+                  </TableHead>
+                ))}
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {displayRows.length > 0 ? (
+                displayRows.map((row, rowIndex) => (
+                  <TableRow key={rowIndex}>
+                    {columns.map((col) => (
+                      <TableCell
+                        className="whitespace-nowrap px-4 py-2 text-center"
+                        key={col.key}
+                      >
+                        {getRowValue(row, col.key)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    className="py-8 text-center text-muted-foreground"
+                    colSpan={columns.length}
+                  >
+                    Brak danych do wyświetlenia
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
       </ScrollArea>
 

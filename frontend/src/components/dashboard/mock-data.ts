@@ -261,16 +261,22 @@ const MOCK_WAREHOUSES = [
   {
     id: "A1",
     name: "Magazyn A1",
+    capacity: 5000,
+    used: 2500,
     racks: MOCK_RACKS.slice(0, 5),
   },
   {
     id: "A2",
     name: "Magazyn A2",
+    capacity: 3000,
+    used: 800,
     racks: MOCK_RACKS.slice(0, 1),
   },
   {
     id: "A3",
     name: "Magazyn A3",
+    capacity: 8000,
+    used: 4200,
     racks: MOCK_RACKS.slice(0, 8),
   },
 ]
