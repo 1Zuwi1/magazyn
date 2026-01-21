@@ -38,6 +38,7 @@ export const RackSchema = z.object({
 })
 
 export const CsvRackRowSchema = z.object({
+  id: z.string(),
   symbol: z.string(),
   name: z.string(),
   rows: z.number().min(1),

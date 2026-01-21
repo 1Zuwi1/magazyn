@@ -40,6 +40,7 @@ const NUMBER_FIELDS = new Set([
 ])
 
 const RACK_HEADER_MAP: Record<string, string> = {
+  id: "id",
   symbol: "symbol",
   name: "name",
   rows: "rows",

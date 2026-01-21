@@ -1,5 +1,6 @@
 export interface Rack {
-  symbol: string
+  id: string
+  symbol?: string
   name: string
   rows: number
   cols: number

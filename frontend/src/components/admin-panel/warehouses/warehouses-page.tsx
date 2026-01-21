@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { ConfirmDialog } from "@/components/admin-panel/components/confirm-dialog"
 import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
 import type { Rack, Warehouse } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
@@ -21,6 +22,10 @@ export default function WarehousesMain() {
   const [selectedWarehouse, setSelectedWarehouse] = useState<
     Warehouse | undefined
   >(undefined)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [warehouseToDelete, setWarehouseToDelete] = useState<
+    Warehouse | undefined
+  >(undefined)
 
   const warehouseOptions = useMemo(
     () => warehouses.map((w) => ({ id: w.id, name: w.name })),
@@ -38,7 +43,15 @@ export default function WarehousesMain() {
   }
 
   const handleDeleteWarehouse = (warehouse: Warehouse) => {
-    setWarehouses((prev) => prev.filter((w) => w.id !== warehouse.id))
+    setWarehouseToDelete(warehouse)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteWarehouse = () => {
+    if (warehouseToDelete) {
+      setWarehouses((prev) => prev.filter((w) => w.id !== warehouseToDelete.id))
+      setWarehouseToDelete(undefined)
+    }
   }
 
   const handleSubmit = (data: WarehouseFormData) => {
@@ -65,6 +78,7 @@ export default function WarehousesMain() {
 
     const rackRows = data as CsvRackRow[]
     const newRacks: Rack[] = rackRows.map((row) => ({
+      id: row.id,
       symbol: row.symbol,
       name: row.name,
       rows: row.rows,
@@ -118,6 +132,16 @@ export default function WarehousesMain() {
         onOpenChange={setOpen}
         onSubmit={handleSubmit}
         open={open}
+      />
+
+      <ConfirmDialog
+        confirmLabel="Usuń"
+        description={`Czy na pewno chcesz usunąć magazyn "${warehouseToDelete?.name}"? Wszystkie regały w tym magazynie zostaną również usunięte.`}
+        onConfirm={confirmDeleteWarehouse}
+        onOpenChange={setDeleteDialogOpen}
+        open={deleteDialogOpen}
+        title="Usuń magazyn"
+        variant="danger"
       />
     </section>
   )

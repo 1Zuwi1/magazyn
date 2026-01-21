@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { ConfirmDialog } from "@/components/admin-panel/components/confirm-dialog"
 import { ActionDialog } from "@/components/admin-panel/users/components/action-dialog"
 import UsersTable from "@/components/admin-panel/users/components/users-table"
 import { MOCK_USERS } from "@/components/dashboard/mock-data"
@@ -11,6 +12,8 @@ export default function UsersMain() {
   const [users, setUsers] = useState<User[]>(MOCK_USERS)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | undefined>(undefined)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<User | undefined>(undefined)
 
   const stats = useMemo(() => {
     const activeCount = users.filter((user) => user.status === "active").length
@@ -32,20 +35,14 @@ export default function UsersMain() {
   }
 
   const handleDeleteUser = (user: User) => {
-    setUsers((prev) => prev.filter((item) => item.id !== user.id))
+    setUserToDelete(user)
+    setDeleteDialogOpen(true)
   }
 
-  const handleSubmit = (user: User) => {
-    if (selectedUser) {
-      setUsers((prev) =>
-        prev.map((item) => (item.id === user.id ? { ...item, ...user } : item))
-      )
-    } else {
-      const newUser: User = {
-        ...user,
-        id: user.id || `user-${Date.now()}`,
-      }
-      setUsers((prev) => [...prev, newUser])
+  const confirmDeleteUser = () => {
+    if (userToDelete) {
+      setUsers((prev) => prev.filter((item) => item.id !== userToDelete.id))
+      setUserToDelete(undefined)
     }
   }
 
@@ -73,15 +70,23 @@ export default function UsersMain() {
 
       <ActionDialog
         currentRow={selectedUser}
-        formId="user-form"
         onOpenChange={(open) => {
           if (!open) {
             setSelectedUser(undefined)
           }
           setDialogOpen(open)
         }}
-        onSubmit={handleSubmit}
         open={dialogOpen}
+      />
+
+      <ConfirmDialog
+        confirmLabel="Usuń"
+        description={`Czy na pewno chcesz usunąć użytkownika "${userToDelete?.username}"? Ta operacja jest nieodwracalna.`}
+        onConfirm={confirmDeleteUser}
+        onOpenChange={setDeleteDialogOpen}
+        open={deleteDialogOpen}
+        title="Usuń użytkownika"
+        variant="danger"
       />
     </section>
   )
