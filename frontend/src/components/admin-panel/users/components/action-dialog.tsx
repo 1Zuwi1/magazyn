@@ -48,8 +48,20 @@ const getDefaultValues = (currentRow?: User): User => ({
   status: currentRow?.status ?? "active",
 })
 
-export function ActionDialog({ currentRow }: { currentRow?: User }) {
-  const [open, setOpen] = useState(true)
+interface ActionDialogProps {
+  currentRow?: User
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  formId?: string
+  onSubmit?: (user: User) => void
+}
+
+export function ActionDialog({
+  currentRow,
+  open,
+  onOpenChange,
+  formId,
+}: ActionDialogProps) {
   const isEdit = !!currentRow
   const [showPassword, setShowPassword] = useState(false)
 
@@ -58,7 +70,7 @@ export function ActionDialog({ currentRow }: { currentRow?: User }) {
     onSubmit: ({ value }) => {
       form.reset()
       console.log(JSON.stringify(value))
-      setOpen(false)
+      onOpenChange(false)
     },
   })
 
@@ -84,22 +96,20 @@ export function ActionDialog({ currentRow }: { currentRow?: User }) {
 
   return (
     <FormDialog
-      contentClassName="h-105 overflow-y-auto pe-3"
       description={
         isEdit
           ? "Zmień informacje o użytkowniku"
           : "Wprowadź informacje o nowym użytkowniku."
       }
-      formId="user-form"
+      formId={formId}
       onFormReset={handleFormReset}
-      onOpenChange={(open) => setOpen(open)}
+      onOpenChange={onOpenChange}
       open={open}
-      submitLabel="Zapisz"
       title={isEdit ? "Edytuj użytkownika" : "Dodaj użytkownika"}
     >
       <form
         className="space-y-4 px-0.5"
-        id="user-form"
+        id={formId}
         onSubmit={(e) => {
           e.preventDefault()
           form.handleSubmit()

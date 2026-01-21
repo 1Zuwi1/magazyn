@@ -72,12 +72,10 @@ export function WarehouseDialog({
       onFormReset={() => form.reset()}
       onOpenChange={onOpenChange}
       open={open}
-      submitLabel={isEdit ? "Zapisz zmiany" : "Dodaj magazyn"}
       title={isEdit ? "Edytuj magazyn" : "Dodaj magazyn"}
     >
       <form
         className="space-y-4 px-0.5 py-4"
-        id="warehouse-form"
         onSubmit={(e) => {
           e.preventDefault()
           form.handleSubmit()

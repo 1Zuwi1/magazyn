@@ -35,6 +35,20 @@ export default function UsersMain() {
     setUsers((prev) => prev.filter((item) => item.id !== user.id))
   }
 
+  const handleSubmit = (user: User) => {
+    if (selectedUser) {
+      setUsers((prev) =>
+        prev.map((item) => (item.id === user.id ? { ...item, ...user } : item))
+      )
+    } else {
+      const newUser: User = {
+        ...user,
+        id: user.id || `user-${Date.now()}`,
+      }
+      setUsers((prev) => [...prev, newUser])
+    }
+  }
+
   return (
     <section className="flex flex-col gap-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -59,12 +73,14 @@ export default function UsersMain() {
 
       <ActionDialog
         currentRow={selectedUser}
+        formId="user-form"
         onOpenChange={(open) => {
           if (!open) {
             setSelectedUser(undefined)
           }
           setDialogOpen(open)
         }}
+        onSubmit={handleSubmit}
         open={dialogOpen}
       />
     </section>

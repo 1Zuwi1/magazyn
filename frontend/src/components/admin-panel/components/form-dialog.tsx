@@ -11,19 +11,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
-import { cn } from "@/lib/utils"
 
 interface FormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
   description?: string
-  formId: string
-  submitLabel: string
   children: React.ReactNode
   onFormReset?: () => void
-  contentClassName?: string
-  showSeparator?: boolean
+  formId?: string
 }
 
 export function FormDialog({
@@ -31,12 +27,9 @@ export function FormDialog({
   onOpenChange,
   title,
   description,
-  formId,
-  submitLabel,
   children,
   onFormReset,
-  contentClassName,
-  showSeparator = true,
+  formId,
 }: FormDialogProps) {
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
@@ -56,11 +49,11 @@ export function FormDialog({
             </DialogDescription>
           )}
         </DialogHeader>
-        {showSeparator && <Separator />}
-        <div className={cn("py-1", contentClassName)}>{children}</div>
+        <Separator />
+        <div className="py-1">{children}</div>
         <DialogFooter>
           <Button form={formId} type="submit">
-            {submitLabel}
+            Zapisz
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -22,14 +22,6 @@ export default function WarehousesMain() {
     Warehouse | undefined
   >(undefined)
 
-  const stats = useMemo(() => {
-    const totalRacks = warehouses.reduce((sum, w) => sum + w.racks.length, 0)
-    return {
-      total: warehouses.length,
-      totalRacks,
-    }
-  }, [warehouses])
-
   const warehouseOptions = useMemo(
     () => warehouses.map((w) => ({ id: w.id, name: w.name })),
     [warehouses]
@@ -98,9 +90,6 @@ export default function WarehousesMain() {
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-semibold text-2xl">Zarządzaj magazynami</h1>
-          <p className="text-muted-foreground text-sm">
-            {stats.total} magazynów · {stats.totalRacks} regałów łącznie
-          </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <CsvImporter
@@ -126,12 +115,7 @@ export default function WarehousesMain() {
             ? { id: selectedWarehouse.id, name: selectedWarehouse.name }
             : undefined
         }
-        onOpenChange={(open) => {
-          setOpen(open)
-          if (!open) {
-            setSelectedWarehouse(undefined)
-          }
-        }}
+        onOpenChange={setOpen}
         onSubmit={handleSubmit}
         open={open}
       />
