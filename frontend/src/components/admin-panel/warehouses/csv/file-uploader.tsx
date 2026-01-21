@@ -114,7 +114,6 @@ export function FileUploader({
         accept={DEFAULT_CONFIG.accept}
         disabled={isDisabled}
         maxFiles={DEFAULT_CONFIG.maxFileCount}
-        maxSize={DEFAULT_CONFIG.maxSize}
         onDrop={onDrop}
       >
         {({ getRootProps, getInputProps, isDragActive }) => (
@@ -139,9 +138,6 @@ export function FileUploader({
               <div className="flex flex-col gap-1">
                 <p className="font-medium text-muted-foreground">
                   Kliknij lub upuść plik CSV
-                </p>
-                <p className="text-muted-foreground/70 text-sm">
-                  Maksymalny rozmiar: {formatBytes(DEFAULT_CONFIG.maxSize)}
                 </p>
               </div>
             )}

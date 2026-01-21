@@ -29,7 +29,6 @@ export const ITEM_COLUMNS = [
 
 export const DEFAULT_CONFIG = {
   accept: { "text/csv": [".csv"] },
-  maxSize: 1024 * 1024 * 4,
   maxFileCount: 1,
   delimiter: ",",
 } as const

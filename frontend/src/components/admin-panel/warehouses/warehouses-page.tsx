@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
-import type { Warehouse } from "@/components/dashboard/types"
+import type { Rack, Warehouse } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -10,12 +10,14 @@ import {
   type WarehouseFormData,
 } from "./components/warehouse-dialog"
 import { WarehouseGrid } from "./components/warehouse-grid"
+import { CsvImporter } from "./csv/csv-importer"
+import type { CsvRackRow, CsvRow } from "./csv/utils/csv-utils"
 
 export default function WarehousesMain() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>(
     MOCK_WAREHOUSES as Warehouse[]
   )
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [open, setOpen] = useState(false)
   const [selectedWarehouse, setSelectedWarehouse] = useState<
     Warehouse | undefined
   >(undefined)
@@ -28,14 +30,19 @@ export default function WarehousesMain() {
     }
   }, [warehouses])
 
+  const warehouseOptions = useMemo(
+    () => warehouses.map((w) => ({ id: w.id, name: w.name })),
+    [warehouses]
+  )
+
   const handleAddWarehouse = () => {
     setSelectedWarehouse(undefined)
-    setDialogOpen(true)
+    setOpen(true)
   }
 
   const handleEditWarehouse = (warehouse: Warehouse) => {
     setSelectedWarehouse(warehouse)
-    setDialogOpen(true)
+    setOpen(true)
   }
 
   const handleDeleteWarehouse = (warehouse: Warehouse) => {
@@ -59,6 +66,33 @@ export default function WarehousesMain() {
     }
   }
 
+  const handleCsvImport = (data: CsvRow[], warehouseId?: string) => {
+    if (!warehouseId) {
+      return
+    }
+
+    const rackRows = data as CsvRackRow[]
+    const newRacks: Rack[] = rackRows.map((row) => ({
+      symbol: row.symbol,
+      name: row.name,
+      rows: row.rows,
+      cols: row.cols,
+      minTemp: row.minTemp,
+      maxTemp: row.maxTemp,
+      maxWeight: row.maxWeight,
+      currentWeight: 0,
+      comment: row.comment,
+      occupancy: 0,
+      items: [],
+    }))
+
+    setWarehouses((prev) =>
+      prev.map((w) =>
+        w.id === warehouseId ? { ...w, racks: [...w.racks, ...newRacks] } : w
+      )
+    )
+  }
+
   return (
     <section className="flex flex-col gap-6 p-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -69,6 +103,11 @@ export default function WarehousesMain() {
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <CsvImporter
+            onImport={handleCsvImport}
+            type="rack"
+            warehouses={warehouseOptions}
+          />
           <Button onClick={handleAddWarehouse}>Dodaj magazyn</Button>
         </div>
       </header>
@@ -88,13 +127,13 @@ export default function WarehousesMain() {
             : undefined
         }
         onOpenChange={(open) => {
+          setOpen(open)
           if (!open) {
             setSelectedWarehouse(undefined)
           }
-          setDialogOpen(open)
         }}
         onSubmit={handleSubmit}
-        open={dialogOpen}
+        open={open}
       />
     </section>
   )
