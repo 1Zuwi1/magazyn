@@ -4,7 +4,6 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Exception.RateLimitExceededException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -16,14 +15,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseTemplate<String>> handleValidation(
             MethodArgumentNotValidException ex
     ) {
-        FieldError fieldError = ex.getBindingResult()
-                .getFieldErrors()
-                .get(0);
-        String message = "%s: %s".formatted(fieldError.getField(), fieldError.getDefaultMessage());
-
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ResponseTemplate<>(false, message));
+                .body(ResponseTemplate.error("VALIDATION_ERROR"));
     }
 
     @ExceptionHandler(RateLimitExceededException.class)
@@ -32,7 +26,7 @@ public class GlobalExceptionHandler {
     ) {
         return ResponseEntity
                 .status(HttpStatus.TOO_MANY_REQUESTS)
-                .body(new ResponseTemplate<>(false, "Too many requests, please try again later."));
+                .body(ResponseTemplate.error("RATE_LIMIT_EXCEEDED"));
     }
 
     @ExceptionHandler(Exception.class)
@@ -40,7 +34,7 @@ public class GlobalExceptionHandler {
 //        throw new RuntimeException(ex);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ResponseTemplate<>(false, null, ex.getMessage()));
+                .body(ResponseTemplate.error(ex.getMessage()));
     }
 
 }

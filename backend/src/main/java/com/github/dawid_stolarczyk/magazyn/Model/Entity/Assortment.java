@@ -19,6 +19,9 @@ public class Assortment {
     @JoinColumn(name = "created_by", nullable = false)
     private User user;
     private Timestamp created_at;
+    private Timestamp expires_at;
+    private Integer position_x;
+    private Integer position_y;
 
     @PrePersist
     public void initializeCreatedAt() {
@@ -57,6 +60,30 @@ public class Assortment {
 
     public void setCreated_at(Timestamp created_at) {
         this.created_at = created_at;
+    }
+
+    public Timestamp getExpires_at() {
+        return expires_at;
+    }
+
+    public void setExpires_at(Timestamp expires_at) {
+        this.expires_at = expires_at;
+    }
+
+    public Integer getPosition_x() {
+        return position_x;
+    }
+
+    public void setPosition_x(Integer position_x) {
+        this.position_x = position_x;
+    }
+
+    public Integer getPosition_y() {
+        return position_y;
+    }
+
+    public void setPosition_y(Integer position_y) {
+        this.position_y = position_y;
     }
 
     public User getUser() {

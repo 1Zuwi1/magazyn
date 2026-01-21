@@ -32,6 +32,6 @@ public class UserController {
     })
     @GetMapping("/me")
     public ResponseEntity<?> getBasic(HttpServletRequest request) {
-        return ResponseEntity.ok(new ResponseTemplate<>(true, userService.getBasicInformation(request)));
+        return ResponseEntity.ok(ResponseTemplate.success(userService.getBasicInformation(request)));
     }
 }

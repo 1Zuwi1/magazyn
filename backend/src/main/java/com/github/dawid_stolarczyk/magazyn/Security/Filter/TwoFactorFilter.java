@@ -40,7 +40,7 @@ public class TwoFactorFilter extends OncePerRequestFilter {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.setContentType("application/json;charset=UTF-8");
 
-                objectMapper.writeValue(response.getWriter(), new ResponseTemplate<>(false, "2FA_NOT_VERIFIED", null));
+                objectMapper.writeValue(response.getWriter(), ResponseTemplate.error("2FA_NOT_VERIFIED"));
                 return;
             }
         }

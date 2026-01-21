@@ -9,17 +9,20 @@ import lombok.Setter;
 @Setter
 public class ResponseTemplate<T> {
     private boolean success;
-    private String code;
+    private String message;
     private T data;
 
-    public ResponseTemplate(boolean success, T data) {
+    private ResponseTemplate(boolean success, T data, String message) {
         this.success = success;
         this.data = data;
+        this.message = message;
     }
 
-    public ResponseTemplate(boolean success, String code, T data) {
-        this.success = success;
-        this.code = code;
-        this.data = data;
+    public static <T> ResponseTemplate<T> success(T data) {
+        return new ResponseTemplate<>(true, data, null);
+    }
+
+    public static <T> ResponseTemplate<T> error(String message) {
+        return new ResponseTemplate<>(false, null, message);
     }
 }
