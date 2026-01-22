@@ -36,8 +36,7 @@ public class InventoryController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ResponseTemplate.error(result.code()));
         }
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ResponseTemplate.success(result.response()));
+        return ResponseEntity.ok(ResponseTemplate.success(result.response()));
     }
 
     @Operation(summary = "Confirm placement and store items in inventory")

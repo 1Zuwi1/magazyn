@@ -17,15 +17,19 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.time.Duration;
+import java.time.DateTimeException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -35,6 +39,10 @@ public class InventoryPlacementService {
     private static final String PLACEMENT_INVALID = "PLACEMENT_INVALID";
     private static final String NO_REGALS_MATCH = "NO_REGALS_MATCH";
     private static final String INSUFFICIENT_SPACE = "INSUFFICIENT_SPACE";
+    private static final String EXPIRE_AFTER_INVALID = "EXPIRE_AFTER_INVALID";
+    private static final int MAX_EXPIRE_DAYS = 36500;
+    private static final int MAX_RACK_SIDE = 1000;
+    private static final int MAX_RACK_AREA = 1_000_000;
 
     @Autowired
     private ItemRepository itemRepository;
@@ -66,7 +74,8 @@ public class InventoryPlacementService {
 
         candidates.sort(Comparator
                 .comparingInt(RackCapacity::availableCount).reversed()
-                .thenComparing(rackCapacity -> rackCapacity.rack().getMarker() == null ? "" : rackCapacity.rack().getMarker())
+                .thenComparing(rackCapacity -> rackCapacity.rack().getMarker(),
+                        Comparator.nullsLast(String::compareTo))
                 .thenComparing(rackCapacity -> rackCapacity.rack().getId()));
 
         int remaining = request.getQuantity();
@@ -95,7 +104,7 @@ public class InventoryPlacementService {
         response.setRemainingQuantity(remaining);
         response.setPlacements(placements);
 
-        if (placements.isEmpty()) {
+        if (response.getAllocatedQuantity() == 0) {
             return PlacementPlanResult.noMatch(NO_REGALS_MATCH);
         }
 
@@ -106,6 +115,7 @@ public class InventoryPlacementService {
         return PlacementPlanResult.full(response);
     }
 
+    @Transactional
     public PlacementConfirmationResponse confirmPlacement(PlacementConfirmationRequest request) {
         Item item = itemRepository.findById(request.getItemId())
                 .orElseThrow(() -> new IllegalArgumentException(ITEM_NOT_FOUND));
@@ -118,12 +128,13 @@ public class InventoryPlacementService {
         }
 
         List<Assortment> newAssortments = new ArrayList<>();
-        Timestamp createdAt = new Timestamp(System.currentTimeMillis());
-        Timestamp expiresAt = new Timestamp(createdAt.getTime() + Duration.ofDays(item.getExpireAfter()).toMillis());
+        Timestamp createdAt = Timestamp.from(Instant.now());
+        Timestamp expiresAt = calculateExpiresAt(item.getExpireAfter(), createdAt.toInstant());
 
         for (Map.Entry<Long, List<PlacementSlotRequest>> entry : placementsByRack.entrySet()) {
             Rack rack = rackRepository.findById(entry.getKey())
                     .orElseThrow(() -> new IllegalArgumentException(PLACEMENT_INVALID));
+            validateRackDimensions(rack);
             if (!rackMatchesItem(rack, item)) {
                 throw new IllegalArgumentException(PLACEMENT_INVALID);
             }
@@ -133,20 +144,20 @@ public class InventoryPlacementService {
             if (capacity == null || neededSlots > capacity.availableCount()) {
                 throw new IllegalArgumentException(PLACEMENT_INVALID);
             }
-            Set<String> occupied = new HashSet<>();
+            Set<Coordinate> occupied = new HashSet<>();
             for (Assortment assortment : existingAssortments) {
                 if (assortment.getPosition_x() != null && assortment.getPosition_y() != null) {
-                    occupied.add(assortment.getPosition_x() + ":" + assortment.getPosition_y());
+                    occupied.add(new Coordinate(assortment.getPosition_x(), assortment.getPosition_y()));
                 }
             }
-            Set<String> usedInRequest = new HashSet<>();
+            Set<Coordinate> usedInRequest = new HashSet<>();
             for (PlacementSlotRequest slot : entry.getValue()) {
                 if (slot.getPositionX() < 1 || slot.getPositionX() > rack.getSize_x()
                         || slot.getPositionY() < 1 || slot.getPositionY() > rack.getSize_y()) {
                     throw new IllegalArgumentException(PLACEMENT_INVALID);
                 }
-                String key = slot.getPositionX() + ":" + slot.getPositionY();
-                if (occupied.contains(key) || !usedInRequest.add(key)) {
+                Coordinate coordinate = new Coordinate(slot.getPositionX(), slot.getPositionY());
+                if (occupied.contains(coordinate) || !usedInRequest.add(coordinate)) {
                     throw new IllegalArgumentException(PLACEMENT_INVALID);
                 }
                 Assortment assortment = new Assortment();
@@ -170,6 +181,8 @@ public class InventoryPlacementService {
     }
 
     private boolean rackMatchesItem(Rack rack, Item item) {
+        Objects.requireNonNull(rack, "rack");
+        Objects.requireNonNull(item, "item");
         return rack.getMin_temp() <= item.getMin_temp()
                 && rack.getMax_temp() >= item.getMax_temp()
                 && item.getSize_x() <= rack.getMax_size_x()
@@ -183,19 +196,21 @@ public class InventoryPlacementService {
     }
 
     private RackCapacity resolveRackCapacity(Rack rack, Item item, List<Assortment> assortments) {
+        validateRackDimensions(rack);
         if (!rackMatchesItem(rack, item)) {
             return null;
         }
-        float currentLoad = assortments.stream()
+        double currentLoad = assortments.stream()
                 .map(Assortment::getItem)
-                .map(Item::getWeight)
-                .reduce(0.0f, Float::sum);
-        int totalSlots = rack.getSize_x() * rack.getSize_y();
+                .mapToDouble(Item::getWeight)
+                .sum();
+        int totalSlots = safeTotalSlots(rack);
         int occupiedSlots = assortments.size();
         int availableSlots = Math.max(0, totalSlots - occupiedSlots);
-        int maxByWeight = item.getWeight() <= 0
+        double itemWeight = item.getWeight();
+        int maxByWeight = itemWeight <= 0
                 ? availableSlots
-                : (int) Math.floor((rack.getMax_weight() - currentLoad) / item.getWeight());
+                : (int) Math.floor((rack.getMax_weight() - currentLoad) / itemWeight);
         if (maxByWeight <= 0 || availableSlots <= 0) {
             return null;
         }
@@ -208,6 +223,7 @@ public class InventoryPlacementService {
     }
 
     private List<Coordinate> findFreeCoordinates(Rack rack, List<Assortment> assortments) {
+        validateRackDimensions(rack);
         boolean[][] occupied = new boolean[rack.getSize_x()][rack.getSize_y()];
         for (Assortment assortment : assortments) {
             if (assortment.getPosition_x() == null || assortment.getPosition_y() == null) {
@@ -228,6 +244,46 @@ public class InventoryPlacementService {
             }
         }
         return free;
+    }
+
+    private void validateRackDimensions(Rack rack) {
+        if (rack == null) {
+            throw new IllegalArgumentException(PLACEMENT_INVALID);
+        }
+        if (rack.getSize_x() <= 0 || rack.getSize_y() <= 0) {
+            throw new IllegalArgumentException(PLACEMENT_INVALID);
+        }
+        if (rack.getSize_x() > MAX_RACK_SIDE || rack.getSize_y() > MAX_RACK_SIDE) {
+            throw new IllegalArgumentException(PLACEMENT_INVALID);
+        }
+        long area = (long) rack.getSize_x() * rack.getSize_y();
+        if (area > MAX_RACK_AREA) {
+            throw new IllegalArgumentException(PLACEMENT_INVALID);
+        }
+    }
+
+    private int safeTotalSlots(Rack rack) {
+        try {
+            int total = Math.multiplyExact(rack.getSize_x(), rack.getSize_y());
+            if (total > MAX_RACK_AREA) {
+                throw new IllegalArgumentException(PLACEMENT_INVALID);
+            }
+            return total;
+        } catch (ArithmeticException ex) {
+            throw new IllegalArgumentException(PLACEMENT_INVALID, ex);
+        }
+    }
+
+    private Timestamp calculateExpiresAt(int expireAfterDays, Instant createdAt) {
+        if (expireAfterDays < 0 || expireAfterDays > MAX_EXPIRE_DAYS) {
+            throw new IllegalArgumentException(EXPIRE_AFTER_INVALID);
+        }
+        try {
+            Instant expiresAt = createdAt.plus(expireAfterDays, ChronoUnit.DAYS);
+            return Timestamp.from(expiresAt);
+        } catch (DateTimeException ex) {
+            throw new IllegalArgumentException(EXPIRE_AFTER_INVALID, ex);
+        }
     }
 
     public record PlacementPlanResult(boolean success, String code, PlacementPlanResponse response) {
