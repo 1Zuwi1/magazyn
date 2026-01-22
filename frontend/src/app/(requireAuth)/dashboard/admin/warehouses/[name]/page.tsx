@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import WarehouseRacksPage from "@/components/admin-panel/warehouses/racks/warehouse-racks-page"
+import AdminRacksPage from "@/components/admin-panel/warehouses/racks/racks-page"
 import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
 
 interface WarehouseDetailPageProps {
@@ -17,5 +17,5 @@ export default async function WarehouseDetailPage({
     notFound()
   }
 
-  return <WarehouseRacksPage warehouse={warehouse} />
+  return <AdminRacksPage warehouse={warehouse} />
 }

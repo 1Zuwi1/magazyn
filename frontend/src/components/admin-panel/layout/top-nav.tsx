@@ -41,6 +41,7 @@ export function TopNav() {
             {links.map((link) => (
               <DropdownMenuItem key={link.href}>
                 <Link
+                  aria-current={link.isActive ? "page" : undefined}
                   className={link.isActive ? "" : "text-muted-foreground"}
                   href={link.href}
                 >
@@ -59,7 +60,7 @@ export function TopNav() {
       >
         {links.map((link) => (
           <Link
-            aria-current={link.isActive ? undefined : true}
+            aria-current={link.isActive ? "page" : undefined}
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
               link.isActive ? "" : "text-muted-foreground"

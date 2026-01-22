@@ -22,6 +22,7 @@ interface WarehouseDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: WarehouseFormData) => void
+  formId: string
 }
 
 export function WarehouseDialog({
@@ -29,6 +30,7 @@ export function WarehouseDialog({
   open,
   onOpenChange,
   onSubmit,
+  formId,
 }: WarehouseDialogProps) {
   const isEdit = !!currentRow
 
@@ -68,7 +70,7 @@ export function WarehouseDialog({
           ? "Zmień informacje o magazynie"
           : "Wprowadź informacje o nowym magazynie."
       }
-      formId="warehouse-form"
+      formId={formId}
       onFormReset={() => form.reset()}
       onOpenChange={onOpenChange}
       open={open}
@@ -76,6 +78,7 @@ export function WarehouseDialog({
     >
       <form
         className="space-y-4 px-0.5 py-4"
+        id={formId}
         onSubmit={(e) => {
           e.preventDefault()
           form.handleSubmit()

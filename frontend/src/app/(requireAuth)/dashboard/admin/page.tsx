@@ -6,7 +6,7 @@ import { ADMIN_NAV_LINKS } from "@/components/admin-panel/lib/navigation"
 import ProtectedPage from "../../protected-page"
 export default function AdminDashboard() {
   return (
-    <ProtectedPage needAdminPrivileges={false}>
+    <ProtectedPage needAdminPrivileges={true}>
       <SearchProvider
         navData={ADMIN_NAV_LINKS.map((link) => ({
           title: link.title,

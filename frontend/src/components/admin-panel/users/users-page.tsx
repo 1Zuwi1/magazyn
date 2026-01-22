@@ -80,13 +80,11 @@ export default function UsersMain() {
       />
 
       <ConfirmDialog
-        confirmLabel="Usuń"
         description={`Czy na pewno chcesz usunąć użytkownika "${userToDelete?.username}"? Ta operacja jest nieodwracalna.`}
         onConfirm={confirmDeleteUser}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
         title="Usuń użytkownika"
-        variant="danger"
       />
     </section>
   )

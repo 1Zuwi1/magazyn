@@ -124,7 +124,6 @@ export function RackDialog({
                     className="w-full"
                     id={field.name}
                     name={field.name}
-                    onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Regał A1"
                     value={field.state.value}
@@ -150,7 +149,6 @@ export function RackDialog({
                     className="w-full"
                     id={field.name}
                     name={field.name}
-                    onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="A1-01"
                     value={field.state.value}
@@ -173,7 +171,6 @@ export function RackDialog({
                     id={field.name}
                     min={1}
                     name={field.name}
-                    onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(Number(e.target.value))}
                     placeholder="Wiersze"
                     type="number"
@@ -189,7 +186,6 @@ export function RackDialog({
                     id={field.name}
                     min={1}
                     name={field.name}
-                    onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(Number(e.target.value))}
                     placeholder="Kolumny"
                     type="number"
@@ -211,7 +207,6 @@ export function RackDialog({
                     className="w-full"
                     id={field.name}
                     name={field.name}
-                    onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(Number(e.target.value))}
                     placeholder="Min °C"
                     type="number"
@@ -226,7 +221,6 @@ export function RackDialog({
                     className="w-full"
                     id={field.name}
                     name={field.name}
-                    onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(Number(e.target.value))}
                     placeholder="Max °C"
                     type="number"
@@ -252,7 +246,6 @@ export function RackDialog({
                     id={field.name}
                     min={1}
                     name={field.name}
-                    onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(Number(e.target.value))}
                     placeholder="1000"
                     type="number"
@@ -278,7 +271,6 @@ export function RackDialog({
                     className="w-full resize-none"
                     id={field.name}
                     name={field.name}
-                    onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Opcjonalny komentarz..."
                     rows={3}

@@ -7,19 +7,18 @@ import type {
   CsvRackRow,
   CsvRow,
 } from "@/components/admin-panel/warehouses/csv/utils/csv-utils"
+import { mapRackCsv } from "@/components/admin-panel/warehouses/csv/utils/map-csv"
 import type { Rack, Warehouse } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { RackDialog, type RackFormData } from "./rack-dialog"
 import { RackGrid } from "./rack-grid"
 
-interface WarehouseRacksPageProps {
+interface AdminRacksPageProps {
   warehouse: Warehouse
 }
 
-export default function WarehouseRacksPage({
-  warehouse,
-}: WarehouseRacksPageProps) {
+export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
   const [racks, setRacks] = useState<Rack[]>(warehouse.racks)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedRack, setSelectedRack] = useState<Rack | undefined>(undefined)
@@ -77,6 +76,11 @@ export default function WarehouseRacksPage({
         minTemp: data.minTemp,
         maxTemp: data.maxTemp,
         maxWeight: data.maxWeight,
+        maxItemSize: {
+          x: 0,
+          y: 0,
+          z: 0,
+        },
         currentWeight: 0,
         comment: data.comment,
         occupancy: 0,
@@ -88,20 +92,7 @@ export default function WarehouseRacksPage({
 
   const handleCsvImport = (data: CsvRow[]) => {
     const rackRows = data as CsvRackRow[]
-    const newRacks: Rack[] = rackRows.map((row) => ({
-      id: row.id,
-      symbol: row.symbol,
-      name: row.name,
-      rows: row.rows,
-      cols: row.cols,
-      minTemp: row.minTemp,
-      maxTemp: row.maxTemp,
-      maxWeight: row.maxWeight,
-      currentWeight: 0,
-      comment: row.comment,
-      occupancy: 0,
-      items: [],
-    }))
+    const newRacks = mapRackCsv(rackRows)
     setRacks((prev) => [...prev, ...newRacks])
   }
 

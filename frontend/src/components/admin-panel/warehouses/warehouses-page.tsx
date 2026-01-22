@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react"
 import { ConfirmDialog } from "@/components/admin-panel/components/confirm-dialog"
 import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
-import type { Rack, Warehouse } from "@/components/dashboard/types"
+import type { Warehouse } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -13,7 +13,7 @@ import {
 import { WarehouseGrid } from "./components/warehouse-grid"
 import { CsvImporter } from "./csv/csv-importer"
 import type { CsvRackRow, CsvRow } from "./csv/utils/csv-utils"
-
+import { mapRackCsv } from "./csv/utils/map-csv"
 export default function WarehousesMain() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>(
     MOCK_WAREHOUSES as Warehouse[]
@@ -77,20 +77,7 @@ export default function WarehousesMain() {
     }
 
     const rackRows = data as CsvRackRow[]
-    const newRacks: Rack[] = rackRows.map((row) => ({
-      id: row.id,
-      symbol: row.symbol,
-      name: row.name,
-      rows: row.rows,
-      cols: row.cols,
-      minTemp: row.minTemp,
-      maxTemp: row.maxTemp,
-      maxWeight: row.maxWeight,
-      currentWeight: 0,
-      comment: row.comment,
-      occupancy: 0,
-      items: [],
-    }))
+    const newRacks = mapRackCsv(rackRows)
 
     setWarehouses((prev) =>
       prev.map((w) =>
@@ -129,6 +116,7 @@ export default function WarehousesMain() {
             ? { id: selectedWarehouse.id, name: selectedWarehouse.name }
             : undefined
         }
+        formId="warehouse-form"
         onOpenChange={setOpen}
         onSubmit={handleSubmit}
         open={open}

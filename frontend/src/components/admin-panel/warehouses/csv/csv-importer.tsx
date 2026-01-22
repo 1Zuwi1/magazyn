@@ -39,8 +39,6 @@ interface CsvImporterProps {
   type: CsvImporterType
   onImport: (data: CsvRow[], warehouseId?: string) => void
   warehouses?: WarehouseOption[]
-  triggerLabel?: string
-  triggerClassName?: string
 }
 
 export function CsvImporter({ type, onImport, warehouses }: CsvImporterProps) {

@@ -8,6 +8,7 @@ export interface Rack {
   maxTemp: number
   maxWeight: number
   currentWeight: number
+  maxItemSize: Dimensions
   comment?: string
   occupancy: number // 0-100
   items: ItemSlot[]
