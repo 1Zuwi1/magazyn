@@ -21,30 +21,31 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import {
-  type CsvImporterType,
-  type CsvRow,
-  useCsvImporter,
-} from "../../hooks/use-csv-importer"
+import { useCsvImporter } from "../../hooks/use-csv-importer"
 import { FileUploader } from "./file-uploader"
 import { PreviewTable } from "./preview-table"
 import { ITEM_COLUMNS, RACK_COLUMNS } from "./utils/constants"
+import type { CsvImporterType, CsvRowType } from "./utils/types"
 
 interface WarehouseOption {
   id: string
   name: string
 }
 
-interface CsvImporterProps {
-  type: CsvImporterType
-  onImport: (data: CsvRow[], warehouseId?: string) => void
+interface CsvImporterProps<T extends CsvImporterType> {
+  type: T
+  onImport: (data: CsvRowType<T>[], warehouseId?: string) => void
   warehouses?: WarehouseOption[]
 }
 
-export function CsvImporter({ type, onImport, warehouses }: CsvImporterProps) {
+export function CsvImporter<T extends CsvImporterType>({
+  type,
+  onImport,
+  warehouses,
+}: CsvImporterProps<T>) {
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>("")
 
-  const handleImport = (data: CsvRow[]) => {
+  const handleImport = (data: CsvRowType<T>[]): void => {
     onImport(data, selectedWarehouseId || undefined)
   }
 
@@ -56,7 +57,7 @@ export function CsvImporter({ type, onImport, warehouses }: CsvImporterProps) {
     confirmImport,
     previewRows,
     resetFile,
-  } = useCsvImporter({ type, onImport: handleImport })
+  } = useCsvImporter<T>({ type, onImport: handleImport })
 
   const columns = type === "rack" ? RACK_COLUMNS : ITEM_COLUMNS
 

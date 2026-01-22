@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ConfirmDialog } from "@/components/admin-panel/components/confirm-dialog"
+import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { ActionDialog } from "@/components/admin-panel/users/components/action-dialog"
 import UsersTable from "@/components/admin-panel/users/components/users-table"
 import { MOCK_USERS } from "@/components/dashboard/mock-data"

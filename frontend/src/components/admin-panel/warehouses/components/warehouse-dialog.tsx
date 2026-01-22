@@ -2,7 +2,7 @@
 
 import { type AnyFieldApi, useForm } from "@tanstack/react-form"
 import { useEffect } from "react"
-import { FormDialog } from "@/components/admin-panel/components/form-dialog"
+import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import {
   Field,
   FieldContent,

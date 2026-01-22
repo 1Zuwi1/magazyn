@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import AdminRacksPage from "@/components/admin-panel/warehouses/racks/racks-page"
+import AdminRacksPage from "@/components/admin-panel/warehouses/racks-view/racks-page"
 import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
 
 interface WarehouseDetailPageProps {

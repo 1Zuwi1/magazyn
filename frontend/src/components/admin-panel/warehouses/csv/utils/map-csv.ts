@@ -1,7 +1,7 @@
 import type { Item, Rack } from "@/components/dashboard/types"
-import type { CsvItemRow, CsvRackRow } from "./csv-utils"
+import type { CsvRowType } from "./types"
 
-export function mapRackCsv(rows: CsvRackRow[]): Rack[] {
+export function mapRackCsv(rows: CsvRowType<"rack">[]): Rack[] {
   return rows.map((row) => ({
     id: row.id,
     symbol: row.symbol,
@@ -23,7 +23,7 @@ export function mapRackCsv(rows: CsvRackRow[]): Rack[] {
   }))
 }
 
-export function mapItemCsv(rows: CsvItemRow[]): Item[] {
+export function mapItemCsv(rows: CsvRowType<"item">[]): Item[] {
   return rows.map((row) => ({
     id: row.id,
     name: row.name,

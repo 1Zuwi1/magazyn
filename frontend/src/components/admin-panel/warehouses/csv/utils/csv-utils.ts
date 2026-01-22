@@ -1,25 +1,11 @@
 import Papa from "papaparse"
-import type z from "zod"
 import { CsvItemRowSchema, CsvRackRowSchema } from "@/lib/schemas/admin-schemas"
-
-export type CsvImporterType = "rack" | "item"
-
-export type CsvRackRow = z.infer<typeof CsvRackRowSchema>
-export type CsvItemRow = z.infer<typeof CsvItemRowSchema>
-
-export type CsvRow = CsvRackRow | CsvItemRow
-
-export interface CsvParseError {
-  row: number
-  message: string
-}
-
-export interface CsvParseResult {
-  headers: string[]
-  rows: CsvRow[]
-  rawRows: Record<string, string>[]
-  errors: CsvParseError[]
-}
+import type {
+  CsvImporterType,
+  CsvParseError,
+  CsvParseResult,
+  CsvRowType,
+} from "./types"
 
 const BOM_HEADER_REGEX = /^\uFEFF/
 
@@ -140,10 +126,10 @@ function isRowEmpty(row: Record<string, string>): boolean {
   return !Object.values(row).some((v) => v.trim())
 }
 
-export function parseCsvFile(
+export function parseCsvFile<T extends CsvImporterType>(
   file: File,
-  type: CsvImporterType
-): Promise<CsvParseResult> {
+  type: T
+): Promise<CsvParseResult<T>> {
   const config = CONFIG[type]
   const errors: CsvParseError[] = []
 
@@ -162,14 +148,14 @@ export function parseCsvFile(
         }
 
         const rawRows = results.data.filter((row) => !isRowEmpty(row))
-        const validRows: CsvRow[] = []
+        const validRows: CsvRowType<T>[] = []
 
         for (const [index, row] of rawRows.entries()) {
           const mapped = mapRow(row, config.headerMap)
           const parsed = config.schema.safeParse(mapped)
 
           if (parsed.success) {
-            validRows.push(parsed.data as CsvRow)
+            validRows.push(parsed.data as CsvRowType<T>)
           } else {
             const rowNumber = index + 2
 

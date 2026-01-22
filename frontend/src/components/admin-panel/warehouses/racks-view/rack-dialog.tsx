@@ -1,8 +1,7 @@
 "use client"
 
 import { type AnyFieldApi, useForm } from "@tanstack/react-form"
-import { useEffect } from "react"
-import { FormDialog } from "@/components/admin-panel/components/form-dialog"
+import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import type { Rack } from "@/components/dashboard/types"
 import {
   Field,
@@ -13,18 +12,8 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-
-export interface RackFormData {
-  id: string
-  symbol?: string
-  name: string
-  rows: number
-  cols: number
-  minTemp: number
-  maxTemp: number
-  maxWeight: number
-  comment?: string
-}
+import { DEFAULT_RACK } from "../csv/utils/constants"
+import type { RackFormData } from "../csv/utils/types"
 
 interface RackDialogProps {
   currentRow?: Rack
@@ -33,17 +22,6 @@ interface RackDialogProps {
   onSubmit: (data: RackFormData) => void
 }
 
-const getDefaultValues = (rack?: Rack): Omit<RackFormData, "id"> => ({
-  symbol: rack?.symbol ?? "",
-  name: rack?.name ?? "",
-  rows: rack?.rows ?? 1,
-  cols: rack?.cols ?? 1,
-  minTemp: rack?.minTemp ?? 0,
-  maxTemp: rack?.maxTemp ?? 25,
-  maxWeight: rack?.maxWeight ?? 100,
-  comment: rack?.comment ?? "",
-})
-
 export function RackDialog({
   currentRow,
   open,
@@ -51,9 +29,10 @@ export function RackDialog({
   onSubmit,
 }: RackDialogProps) {
   const isEdit = !!currentRow
+  const formValues = { ...DEFAULT_RACK, ...currentRow }
 
   const form = useForm({
-    defaultValues: getDefaultValues(currentRow),
+    defaultValues: formValues,
     onSubmit: ({ value }) => {
       const id = isEdit ? currentRow.id : `rack-${Date.now()}`
       onSubmit({
@@ -72,10 +51,6 @@ export function RackDialog({
     },
   })
 
-  useEffect(() => {
-    form.reset(getDefaultValues(currentRow))
-  }, [currentRow, form])
-
   const renderError = (field: AnyFieldApi) => {
     const error = field.state.meta.errors[0] as { message?: string } | undefined
     const message = typeof error === "string" ? error : error?.message
@@ -87,14 +62,12 @@ export function RackDialog({
     return <FieldError className="col-span-4 col-start-3">{message}</FieldError>
   }
 
-  const formId = "rack-form"
-
   return (
     <FormDialog
       description={
         isEdit ? "Zmień parametry regału" : "Wprowadź parametry nowego regału."
       }
-      formId={formId}
+      formId="rack-form"
       onFormReset={() => form.reset()}
       onOpenChange={onOpenChange}
       open={open}
@@ -102,7 +75,7 @@ export function RackDialog({
     >
       <form
         className="space-y-4 px-0.5 py-4"
-        id={formId}
+        id="rack-form"
         onSubmit={(e) => {
           e.preventDefault()
           form.handleSubmit()

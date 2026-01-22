@@ -27,6 +27,17 @@ export const ITEM_COLUMNS = [
   { key: "isdangerous", label: "Niebezpieczny" },
 ] as const
 
+export const DEFAULT_RACK = {
+  symbol: "",
+  name: "",
+  rows: 1,
+  cols: 1,
+  minTemp: 0,
+  maxTemp: 25,
+  maxWeight: 100,
+  comment: "",
+}
+
 export const DEFAULT_CONFIG = {
   accept: { "text/csv": [".csv"] },
   maxFileCount: 1,

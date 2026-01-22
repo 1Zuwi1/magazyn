@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { ConfirmDialog } from "@/components/admin-panel/components/confirm-dialog"
+import { useState } from "react"
+import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
 import type { Warehouse } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
@@ -11,9 +11,6 @@ import {
   type WarehouseFormData,
 } from "./components/warehouse-dialog"
 import { WarehouseGrid } from "./components/warehouse-grid"
-import { CsvImporter } from "./csv/csv-importer"
-import type { CsvRackRow, CsvRow } from "./csv/utils/csv-utils"
-import { mapRackCsv } from "./csv/utils/map-csv"
 export default function WarehousesMain() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>(
     MOCK_WAREHOUSES as Warehouse[]
@@ -26,11 +23,6 @@ export default function WarehousesMain() {
   const [warehouseToDelete, setWarehouseToDelete] = useState<
     Warehouse | undefined
   >(undefined)
-
-  const warehouseOptions = useMemo(
-    () => warehouses.map((w) => ({ id: w.id, name: w.name })),
-    [warehouses]
-  )
 
   const handleAddWarehouse = () => {
     setSelectedWarehouse(undefined)
@@ -71,21 +63,6 @@ export default function WarehousesMain() {
     }
   }
 
-  const handleCsvImport = (data: CsvRow[], warehouseId?: string) => {
-    if (!warehouseId) {
-      return
-    }
-
-    const rackRows = data as CsvRackRow[]
-    const newRacks = mapRackCsv(rackRows)
-
-    setWarehouses((prev) =>
-      prev.map((w) =>
-        w.id === warehouseId ? { ...w, racks: [...w.racks, ...newRacks] } : w
-      )
-    )
-  }
-
   return (
     <section className="flex flex-col gap-6 p-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -93,11 +70,6 @@ export default function WarehousesMain() {
           <h1 className="font-semibold text-2xl">Zarządzaj magazynami</h1>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          <CsvImporter
-            onImport={handleCsvImport}
-            type="rack"
-            warehouses={warehouseOptions}
-          />
           <Button onClick={handleAddWarehouse}>Dodaj magazyn</Button>
         </div>
       </header>

@@ -2,27 +2,26 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import {
-  type CsvImporterType,
-  type CsvParseError,
-  type CsvRow,
-  parseCsvFile,
-} from "../warehouses/csv/utils/csv-utils"
+import { parseCsvFile } from "../warehouses/csv/utils/csv-utils"
+import type { CsvParseError, CsvRowType } from "../warehouses/csv/utils/types"
 
-export type { CsvImporterType, CsvRow } from "../warehouses/csv/utils/csv-utils"
-
-interface UseCsvImporterProps {
-  type: CsvImporterType
-  onImport: (data: CsvRow[]) => void
+interface UseCsvImporterProps<T extends "rack" | "item"> {
+  type: T
+  onImport: (data: CsvRowType<T>[]) => void
 }
 
-export function useCsvImporter({ type, onImport }: UseCsvImporterProps) {
+export function useCsvImporter<T extends "rack" | "item">({
+  type,
+  onImport,
+}: UseCsvImporterProps<T>) {
   const [open, setOpen] = useState(false)
   const [rawPreviewData, setRawPreviewData] = useState<
     Record<string, string>[]
   >([])
-  const [validatedData, setValidatedData] = useState<CsvRow[]>([])
+  const [validatedData, setValidatedData] = useState<CsvRowType<T>[]>([])
   const [parseErrors, setParseErrors] = useState<CsvParseError[]>([])
+
+  const MAX_TOAST_ROWS = 7
 
   async function processFile(files: File[]) {
     const file = files[0]
@@ -41,10 +40,16 @@ export function useCsvImporter({ type, onImport }: UseCsvImporterProps) {
     setParseErrors(result.errors)
 
     if (result.errors.length > 0) {
-      toast.error("Wystąpił błąd podczas parsowania CSV", {
-        description: result.errors
-          .map((e) => `Wiersz ${e.row}: ${e.message}`)
-          .join("\n"),
+      const displayedErrors = result.errors
+        .slice(0, MAX_TOAST_ROWS)
+        .map((e) => `Wiersz ${e.row}: ${e.message}`)
+        .join("\n")
+
+      const remaining = result.errors.length - MAX_TOAST_ROWS
+      const suffix = remaining > 0 ? `\n...i ${remaining} więcej` : ""
+
+      toast.error(`Błędy parsowania CSV (${result.errors.length})`, {
+        description: displayedErrors + suffix,
       })
     }
   }
@@ -62,9 +67,7 @@ export function useCsvImporter({ type, onImport }: UseCsvImporterProps) {
     }
 
     onImport(validatedData)
-    toast.success(`Zaimportowano ${validatedData.length} wierszy`, {
-      description: validatedData.map((d) => JSON.stringify(d)).join("\n"),
-    })
+    toast.success(`Zaimportowano ${validatedData.length} wierszy`)
     setOpen(false)
     resetFile()
   }

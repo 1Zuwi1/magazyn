@@ -19,3 +19,9 @@ export function formatBytes(
 
   return `${(bytes / 1024 ** i).toFixed(decimals)} ${size}`
 }
+
+export const ADMIN_NAV_LINKS = [
+  { title: "Przegląd", url: "/dashboard/admin" },
+  { title: "Użytkownicy", url: "/dashboard/admin/users" },
+  { title: "Magazyny", url: "/dashboard/admin/warehouses" },
+]

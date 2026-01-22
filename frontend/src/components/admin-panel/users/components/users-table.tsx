@@ -2,7 +2,7 @@
 
 import { MoreHorizontalCircle01FreeIcons } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import type { User } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
 import {
@@ -36,6 +36,15 @@ export default function UsersTable({
   pageSize = 12,
 }: UsersTableProps) {
   const [page, setPage] = useState(1)
+  const prev = useRef(search)
+
+  if (prev.current !== search) {
+    prev.current = search
+    if (page !== 1) {
+      setPage(1)
+    }
+  }
+
   const filtered = useMemo(() => {
     if (!search.trim()) {
       return data

@@ -1,17 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { ConfirmDialog } from "@/components/admin-panel/components/confirm-dialog"
+import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
-import type {
-  CsvRackRow,
-  CsvRow,
-} from "@/components/admin-panel/warehouses/csv/utils/csv-utils"
+import type { CsvRackRow } from "@/components/admin-panel/warehouses/csv/utils/csv-utils"
 import { mapRackCsv } from "@/components/admin-panel/warehouses/csv/utils/map-csv"
 import type { Rack, Warehouse } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { RackDialog, type RackFormData } from "./rack-dialog"
+import type { RackFormData } from "../csv/utils/types"
+import { RackDialog } from "./rack-dialog"
 import { RackGrid } from "./rack-grid"
 
 interface AdminRacksPageProps {
@@ -66,33 +64,11 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
             : r
         )
       )
-    } else {
-      const newRack: Rack = {
-        id: data.id,
-        symbol: data.symbol,
-        name: data.name,
-        rows: data.rows,
-        cols: data.cols,
-        minTemp: data.minTemp,
-        maxTemp: data.maxTemp,
-        maxWeight: data.maxWeight,
-        maxItemSize: {
-          x: 0,
-          y: 0,
-          z: 0,
-        },
-        currentWeight: 0,
-        comment: data.comment,
-        occupancy: 0,
-        items: [],
-      }
-      setRacks((prev) => [...prev, newRack])
     }
   }
 
-  const handleCsvImport = (data: CsvRow[]) => {
-    const rackRows = data as CsvRackRow[]
-    const newRacks = mapRackCsv(rackRows)
+  const handleCsvImport = (data: CsvRackRow[]) => {
+    const newRacks = mapRackCsv(data)
     setRacks((prev) => [...prev, ...newRacks])
   }
 

@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Table,
@@ -21,21 +22,19 @@ function normalizeKey(key: string): string {
   return key.toLowerCase().replace(/\s+/g, "")
 }
 
-function getRowValue(row: Record<string, string>, columnKey: string): string {
-  const normalizedColumnKey = normalizeKey(columnKey)
-
-  for (const [rowKey, value] of Object.entries(row)) {
-    if (normalizeKey(rowKey) === normalizedColumnKey) {
-      return value || "-"
-    }
-  }
-
-  return "-"
-}
-
 export function PreviewTable({ columns, rows }: PreviewTableProps) {
-  const displayRows = rows.slice(0, MAX_PREVIEW_ROWS)
   const hasMoreRows = rows.length > MAX_PREVIEW_ROWS
+
+  const normalizedRows = useMemo(() => {
+    const displayRows = rows.slice(0, MAX_PREVIEW_ROWS)
+    return displayRows.map((row) => {
+      const normalized: Record<string, string> = {}
+      for (const [key, value] of Object.entries(row)) {
+        normalized[normalizeKey(key)] = value
+      }
+      return normalized
+    })
+  }, [rows])
 
   return (
     <>
@@ -55,15 +54,15 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {displayRows.length > 0 ? (
-                displayRows.map((row, rowIndex) => (
+              {normalizedRows.length > 0 ? (
+                normalizedRows.map((row, rowIndex) => (
                   <TableRow key={rowIndex}>
                     {columns.map((col) => (
                       <TableCell
                         className="whitespace-nowrap px-4 py-2 text-center"
                         key={col.key}
                       >
-                        {getRowValue(row, col.key)}
+                        {row[normalizeKey(col.key)] || "-"}
                       </TableCell>
                     ))}
                   </TableRow>

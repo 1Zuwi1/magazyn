@@ -4,7 +4,7 @@ import { ViewIcon, ViewOffIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { type AnyFieldApi, useForm } from "@tanstack/react-form"
 import { useEffect, useState } from "react"
-import { FormDialog } from "@/components/admin-panel/components/form-dialog"
+import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import type { Role, Status, User } from "@/components/dashboard/types"
 import { buttonVariants } from "@/components/ui/button"
 import {
