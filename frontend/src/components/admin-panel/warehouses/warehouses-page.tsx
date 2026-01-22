@@ -135,13 +135,11 @@ export default function WarehousesMain() {
       />
 
       <ConfirmDialog
-        confirmLabel="Usuń"
         description={`Czy na pewno chcesz usunąć magazyn "${warehouseToDelete?.name}"? Wszystkie regały w tym magazynie zostaną również usunięte.`}
         onConfirm={confirmDeleteWarehouse}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
         title="Usuń magazyn"
-        variant="danger"
       />
     </section>
   )

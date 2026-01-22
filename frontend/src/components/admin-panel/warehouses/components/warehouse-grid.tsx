@@ -7,9 +7,11 @@ import {
   PencilEdit01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import Link from "next/link"
 import type { Warehouse } from "@/components/dashboard/types"
 import { pluralize } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -153,7 +155,17 @@ export function WarehouseGrid({
                 </div>
               </div>
             </CardContent>
-            <CardFooter />
+            <CardFooter>
+              <Link
+                className={buttonVariants({
+                  variant: "outline",
+                  className: "w-full",
+                })}
+                href={`/dashboard/admin/warehouses/${encodeURIComponent(warehouse.name)}`}
+              >
+                Zarządzaj regałami
+              </Link>
+            </CardFooter>
           </Card>
         )
       })}
