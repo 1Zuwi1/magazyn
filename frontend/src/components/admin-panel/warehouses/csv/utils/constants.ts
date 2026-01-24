@@ -1,3 +1,5 @@
+import type { User } from "@/components/dashboard/types"
+
 export const RACK_COLUMNS = [
   { key: "symbol", label: "Symbol" },
   { key: "name", label: "Nazwa" },
@@ -36,6 +38,14 @@ export const DEFAULT_RACK = {
   maxTemp: 25,
   maxWeight: 100,
   comment: "",
+}
+
+export const DEFAULT_USER: User = {
+  id: "",
+  username: "",
+  email: "",
+  status: "active",
+  role: "user",
 }
 
 export const DEFAULT_CONFIG = {
