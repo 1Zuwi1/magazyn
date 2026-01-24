@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -10,6 +11,7 @@ import type {
   PasswordVerificationStage,
   TwoFactorMethod,
 } from "./types"
+import { useCountdown } from "./use-countdown"
 import {
   createPasswordChallenge,
   formatCountdown,
@@ -18,19 +20,23 @@ import {
 } from "./utils"
 
 interface PasswordVerificationSectionProps {
-  required: boolean
-  complete: boolean
   method: TwoFactorMethod
-  stage: PasswordVerificationStage
-  code: string
-  error: string
-  resendCooldown: number
-  challenge: PasswordChallenge | null
+  onVerificationChange: (complete: boolean) => void
+}
+
+interface PasswordVerificationFlowHandlers {
+  method: TwoFactorMethod
   onStageChange: (stage: PasswordVerificationStage) => void
-  onCodeChange: (code: string) => void
   onErrorChange: (error: string) => void
   onResendCooldownChange: (cooldown: number) => void
   onChallengeChange: (challenge: PasswordChallenge | null) => void
+}
+
+interface PasswordVerificationState {
+  stage: PasswordVerificationStage
+  code: string
+  error: string
+  challenge: PasswordChallenge | null
 }
 
 function usePasswordVerificationFlow({
@@ -39,14 +45,7 @@ function usePasswordVerificationFlow({
   onErrorChange,
   onResendCooldownChange,
   onChallengeChange,
-}: Pick<
-  PasswordVerificationSectionProps,
-  | "method"
-  | "onStageChange"
-  | "onErrorChange"
-  | "onResendCooldownChange"
-  | "onChallengeChange"
->) {
+}: PasswordVerificationFlowHandlers) {
   const requestCode = async (): Promise<void> => {
     onStageChange("sending")
     onErrorChange("")
@@ -163,20 +162,18 @@ function CodeInputEntry({
 }
 
 export function PasswordVerificationSection({
-  required,
-  complete,
   method,
-  stage,
-  code,
-  error,
-  resendCooldown,
-  challenge,
-  onStageChange,
-  onCodeChange,
-  onErrorChange,
-  onResendCooldownChange,
-  onChallengeChange,
+  onVerificationChange,
 }: PasswordVerificationSectionProps) {
+  const [state, setState] = useState<PasswordVerificationState>({
+    stage: "idle",
+    code: "",
+    error: "",
+    challenge: null,
+  })
+  const [resendCooldown, setResendCooldown] = useCountdown(0)
+  const { stage, code, error, challenge } = state
+  const complete = stage === "verified"
   const isBusy = stage === "sending" || stage === "verifying"
   const canResendCode = resendCooldown === 0 && !isBusy
   const canShowCodeInput =
@@ -185,21 +182,38 @@ export function PasswordVerificationSection({
     stage === "verifying" ||
     stage === "error"
 
-  const { requestCode, verifyCode } = usePasswordVerificationFlow({
-    method,
-    onStageChange,
-    onErrorChange,
-    onResendCooldownChange,
-    onChallengeChange,
-  })
-
-  const handleStartVerification = (): void => {
-    if (!required) {
+  useEffect(() => {
+    if (!method) {
       return
     }
 
+    setState({
+      stage: "idle",
+      code: "",
+      error: "",
+      challenge: null,
+    })
+    setResendCooldown(0)
+  }, [method, setResendCooldown])
+
+  useEffect(() => {
+    onVerificationChange(complete)
+  }, [complete, onVerificationChange])
+
+  const { requestCode, verifyCode } = usePasswordVerificationFlow({
+    method,
+    onStageChange: (nextStage) =>
+      setState((current) => ({ ...current, stage: nextStage })),
+    onErrorChange: (nextError) =>
+      setState((current) => ({ ...current, error: nextError })),
+    onResendCooldownChange: setResendCooldown,
+    onChallengeChange: (nextChallenge) =>
+      setState((current) => ({ ...current, challenge: nextChallenge })),
+  })
+
+  const handleStartVerification = (): void => {
     if (method === "authenticator") {
-      onStageChange("awaiting")
+      setState((current) => ({ ...current, stage: "awaiting" }))
       return
     }
 
@@ -260,7 +274,9 @@ export function PasswordVerificationSection({
               code={code}
               isBusy={isBusy}
               method={method}
-              onCodeChange={onCodeChange}
+              onCodeChange={(nextCode) =>
+                setState((current) => ({ ...current, code: nextCode }))
+              }
               onResend={handleResendCode}
               onVerify={handleVerifyCode}
               resendCooldown={resendCooldown}

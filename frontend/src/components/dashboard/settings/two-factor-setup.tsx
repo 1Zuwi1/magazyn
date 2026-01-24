@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -28,6 +29,7 @@ import type {
   TwoFactorSetupStage,
   TwoFactorStatus,
 } from "./types"
+import { useCountdown } from "./use-countdown"
 import {
   createTwoFactorChallenge,
   formatCountdown,
@@ -38,22 +40,8 @@ import {
 interface TwoFactorSetupProps {
   status: TwoFactorStatus
   method: TwoFactorMethod
-  setupStage: TwoFactorSetupStage
-  challenge: TwoFactorChallenge | null
-  code: string
-  error: string
-  resendCooldown: number
-  setupNote: string
-  showRecoveryCodes: boolean
   onStatusChange: (status: TwoFactorStatus) => void
-  onStageChange: (stage: TwoFactorSetupStage) => void
   onMethodChange: (method: TwoFactorMethod) => void
-  onChallengeChange: (challenge: TwoFactorChallenge | null) => void
-  onCodeChange: (code: string) => void
-  onErrorChange: (error: string) => void
-  onResendCooldownChange: (cooldown: number) => void
-  onSetupNoteChange: (note: string) => void
-  onShowRecoveryCodesChange: (show: boolean) => void
 }
 
 function TwoFactorStatusBadge({ status }: { status: TwoFactorStatus }): {
@@ -496,23 +484,16 @@ function TwoFactorConfigurationSection({
 export function TwoFactorSetup({
   status,
   method,
-  setupStage,
-  challenge,
-  code,
-  error,
-  resendCooldown,
-  setupNote,
-  showRecoveryCodes,
   onStatusChange,
-  onStageChange,
   onMethodChange,
-  onChallengeChange,
-  onCodeChange,
-  onErrorChange,
-  onResendCooldownChange,
-  onSetupNoteChange,
-  onShowRecoveryCodesChange,
 }: TwoFactorSetupProps) {
+  const [setupStage, setSetupStage] = useState<TwoFactorSetupStage>("idle")
+  const [challenge, setChallenge] = useState<TwoFactorChallenge | null>(null)
+  const [code, setCode] = useState<string>("")
+  const [error, setError] = useState<string>("")
+  const [resendCooldown, setResendCooldown] = useCountdown(0)
+  const [setupNote, setSetupNote] = useState<string>("")
+  const [showRecoveryCodes, setShowRecoveryCodes] = useState<boolean>(false)
   const enabled = status === "enabled"
   const setupActive = status === "setup"
   const isBusy =
@@ -532,12 +513,12 @@ export function TwoFactorSetup({
       challenge,
       code,
       onStatusChange,
-      onStageChange,
-      onCodeChange,
-      onErrorChange,
-      onSetupNoteChange,
-      onResendCooldownChange,
-      onChallengeChange
+      setSetupStage,
+      setCode,
+      setError,
+      setSetupNote,
+      setResendCooldown,
+      setChallenge
     )
 
   const handleToggle = (checked: boolean): void => {
@@ -618,7 +599,7 @@ export function TwoFactorSetup({
               code={code}
               isBusy={setupStage === "verifying"}
               method={method}
-              onCodeChange={onCodeChange}
+              onCodeChange={setCode}
               onResend={handleResendCode}
               onVerify={handleVerifyCode}
               resendCooldown={resendCooldown}
@@ -641,7 +622,7 @@ export function TwoFactorSetup({
 
       <RecoveryCodesSection
         enabled={enabled}
-        onToggle={() => onShowRecoveryCodesChange(!showRecoveryCodes)}
+        onToggle={() => setShowRecoveryCodes((current) => !current)}
         showRecoveryCodes={showRecoveryCodes}
       />
     </div>

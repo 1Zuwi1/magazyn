@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -9,46 +10,41 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PasswordVerificationSection } from "./password-verification-section"
+import type { TwoFactorMethod } from "./types"
 
 interface PasswordSectionProps {
   verificationRequired: boolean
-  verificationComplete: boolean
-  verificationBlocked: boolean
-  passwordNote: string
-  onPasswordSubmit: (event: React.FormEvent<HTMLFormElement>) => void
-  twoFactorMethod: string
-  verificationStage: import("./types").PasswordVerificationStage
-  verificationCode: string
-  verificationError: string
-  resendCooldown: number
-  challenge: import("./types").PasswordChallenge | null
-  onStageChange: (stage: import("./types").PasswordVerificationStage) => void
-  onCodeChange: (code: string) => void
-  onErrorChange: (error: string) => void
-  onResendCooldownChange: (cooldown: number) => void
-  onChallengeChange: (
-    challenge: import("./types").PasswordChallenge | null
-  ) => void
+  twoFactorMethod: TwoFactorMethod
 }
 
 export function PasswordSection({
   verificationRequired,
-  verificationComplete,
-  verificationBlocked,
-  passwordNote,
-  onPasswordSubmit,
   twoFactorMethod,
-  verificationStage,
-  verificationCode,
-  verificationError,
-  resendCooldown,
-  challenge,
-  onStageChange,
-  onCodeChange,
-  onErrorChange,
-  onResendCooldownChange,
-  onChallengeChange,
 }: PasswordSectionProps) {
+  const [passwordNote, setPasswordNote] = useState<string>("")
+  const [verificationComplete, setVerificationComplete] =
+    useState<boolean>(false)
+
+  const verificationBlocked = verificationRequired && !verificationComplete
+
+  const handlePasswordSubmit = (
+    event: React.FormEvent<HTMLFormElement>
+  ): void => {
+    event.preventDefault()
+    if (verificationBlocked) {
+      setPasswordNote("Najpierw potwierdź 2FA, aby zmienić hasło.")
+      return
+    }
+    setPasswordNote("Hasło zaktualizowane lokalnie (mock).")
+  }
+
+  useEffect(() => {
+    if (!verificationRequired) {
+      setVerificationComplete(false)
+      setPasswordNote("")
+    }
+  }, [verificationRequired])
+
   return (
     <Card>
       <CardHeader>
@@ -57,23 +53,12 @@ export function PasswordSection({
           Użyj silnego hasła, aby zabezpieczyć konto.
         </p>
       </CardHeader>
-      <form onSubmit={onPasswordSubmit}>
+      <form onSubmit={handlePasswordSubmit}>
         <CardContent className="space-y-4">
           {verificationRequired ? (
             <PasswordVerificationSection
-              challenge={challenge}
-              code={verificationCode}
-              complete={verificationComplete}
-              error={verificationError}
-              method={twoFactorMethod as import("./types").TwoFactorMethod}
-              onChallengeChange={onChallengeChange}
-              onCodeChange={onCodeChange}
-              onErrorChange={onErrorChange}
-              onResendCooldownChange={onResendCooldownChange}
-              onStageChange={onStageChange}
-              required={verificationRequired}
-              resendCooldown={resendCooldown}
-              stage={verificationStage}
+              method={twoFactorMethod}
+              onVerificationChange={setVerificationComplete}
             />
           ) : null}
 

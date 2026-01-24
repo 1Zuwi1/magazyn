@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,8 +19,6 @@ import type { ProfileDetail, SettingsUser } from "./types"
 
 interface ProfileSectionProps {
   user: SettingsUser
-  profileNote: string
-  onProfileSubmit: (event: React.FormEvent<HTMLFormElement>) => void
 }
 
 function ProfileDetailRow({ detail }: { detail: ProfileDetail }) {
@@ -60,14 +61,18 @@ function buildProfileDetails(user: SettingsUser): ProfileDetail[] {
   ]
 }
 
-export function ProfileSection({
-  user,
-  profileNote,
-  onProfileSubmit,
-}: ProfileSectionProps) {
+export function ProfileSection({ user }: ProfileSectionProps) {
+  const [profileNote, setProfileNote] = useState<string>("")
   const statusBadge = STATUS_CONFIG[user.status]
   const profileDetails = buildProfileDetails(user)
   const displayName = user.fullName ?? "Brak uzupełnionego imienia"
+
+  const handleProfileSubmit = (
+    event: React.FormEvent<HTMLFormElement>
+  ): void => {
+    event.preventDefault()
+    setProfileNote("Zapisano lokalnie (mock).")
+  }
 
   return (
     <Card>
@@ -85,7 +90,7 @@ export function ProfileSection({
           </div>
         </CardAction>
       </CardHeader>
-      <form onSubmit={onProfileSubmit}>
+      <form onSubmit={handleProfileSubmit}>
         <CardContent className="space-y-6">
           <div className="space-y-1">
             <p className="font-semibold text-lg">{displayName}</p>
