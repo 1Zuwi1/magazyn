@@ -5,10 +5,6 @@ export default function SettingsPage() {
   return (
     <ProtectedPage>
       {(session) => {
-        if (!session) {
-          return null
-        }
-
         return (
           <SettingsContent
             user={{
