@@ -10,6 +10,7 @@ const MOCK_RACKS: Rack[] = [
     minTemp: 15,
     maxTemp: 25,
     maxWeight: 1000,
+    maxItemSize: { x: 1000, y: 1000, z: 1000 },
     currentWeight: 450,
     occupancy: 70,
     items: [
@@ -147,6 +148,7 @@ const MOCK_RACKS: Rack[] = [
     minTemp: 10,
     maxTemp: 20,
     maxWeight: 1000,
+    maxItemSize: { x: 2000, y: 2000, z: 2000 },
     currentWeight: 620,
     occupancy: 40,
     items: [
@@ -205,6 +207,7 @@ const MOCK_RACKS: Rack[] = [
     minTemp: 5,
     maxTemp: 15,
     maxWeight: 1000,
+    maxItemSize: { x: 500, y: 500, z: 500 },
     currentWeight: 280,
     occupancy: 20,
     items: [
@@ -896,44 +899,77 @@ const MOCK_ITEM_DEFINITIONS = MOCK_ITEM_STATS.map((stat) => stat.definition)
 const MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: "1",
-    title: "Produkt 1",
-    description: "Opis 1",
+    title: "Nieautoryzowane pobranie",
+    description:
+      "Wykryto spadek wagi na regale R-001 bez zarejestrowanej operacji",
+    type: "UNAUTHORIZED_REMOVAL",
+    severity: "critical",
+    warehouseId: "wh-1",
+    rackId: "rack-001",
+    metadata: { weightDelta: -2.5, previousWeight: 450, currentWeight: 447.5 },
     date: "2h temu",
     read: false,
   },
   {
     id: "2",
-    title: "Produkt 2",
-    description: "Opis 2",
+    title: "Przekroczenie wagi regału",
+    description: "Regał R-002 przekroczył maksymalną wagę o 15kg",
+    type: "RACK_OVERWEIGHT",
+    severity: "warning",
+    warehouseId: "wh-1",
+    rackId: "rack-002",
+    metadata: { maxWeight: 500, currentWeight: 515 },
     date: "1h temu",
     read: false,
   },
   {
     id: "3",
-    title: "Produkt 3",
-    description: "Opis 3",
+    title: "Czujnik offline",
+    description: "Czujnik wagi na regale R-003 nie odpowiada od 30 minut",
+    type: "SENSOR_OFFLINE",
+    severity: "warning",
+    warehouseId: "wh-1",
+    rackId: "rack-003",
+    metadata: { lastSeen: "2024-01-15T10:30:00Z" },
     date: "2h temu",
     read: true,
   },
   {
     id: "4",
-    title: "Produkt 4",
-    description: "Opis 4",
+    title: "Produkt przeterminowany",
+    description: "Produkt 'Mleko 1L' na regale R-001 przekroczył datę ważności",
+    type: "ITEM_EXPIRED",
+    severity: "info",
+    warehouseId: "wh-1",
+    rackId: "rack-001",
+    itemId: "item-123",
+    metadata: { expiryDate: "2024-01-14", productName: "Mleko 1L" },
     date: "1h temu",
     read: true,
   },
   {
     id: "5",
-    title: "Produkt 5",
-    description: "Opis 5",
+    title: "Nieautoryzowane pobranie",
+    description:
+      "Wykryto spadek wagi na regale R-005 bez zarejestrowanej operacji",
+    type: "UNAUTHORIZED_REMOVAL",
+    severity: "critical",
+    warehouseId: "wh-2",
+    rackId: "rack-005",
+    metadata: { weightDelta: -5.0, previousWeight: 320, currentWeight: 315 },
     date: "1h temu",
     read: false,
   },
   {
     id: "6",
-    title: "Produkt 6",
-    description: "Opis 6",
-    date: "1h temu",
+    title: "Naruszenie temperatury",
+    description: "Temperatura na regale R-004 spadła poniżej minimum (2°C)",
+    type: "TEMPERATURE_VIOLATION",
+    severity: "warning",
+    warehouseId: "wh-1",
+    rackId: "rack-004",
+    metadata: { minTemp: 4, currentTemp: 2, maxTemp: 8 },
+    date: "30min temu",
     read: false,
   },
 ]
@@ -944,7 +980,6 @@ const MOCK_USERS: User[] = [
     username: "john_doe",
     email: "john.doe@example.com",
     role: "admin",
-    password: "password123",
     status: "active",
   },
   {
@@ -952,7 +987,6 @@ const MOCK_USERS: User[] = [
     username: "jane_smith",
     email: "jane.smith@example.com",
     role: "user",
-    password: "password123",
     status: "active",
   },
   {
@@ -960,7 +994,6 @@ const MOCK_USERS: User[] = [
     username: "pawel",
     email: "pawel@example.com",
     role: "user",
-    password: "password123",
     status: "inactive",
   },
   {
@@ -968,7 +1001,6 @@ const MOCK_USERS: User[] = [
     username: "kasia",
     email: "kasia@example.com",
     role: "admin",
-    password: "password123",
     status: "active",
   },
   {
@@ -976,7 +1008,6 @@ const MOCK_USERS: User[] = [
     username: "adam",
     email: "adam@example.com",
     role: "user",
-    password: "password123",
     status: "inactive",
   },
   {
@@ -984,7 +1015,6 @@ const MOCK_USERS: User[] = [
     username: "ola",
     email: "ola@example.com",
     role: "user",
-    password: "password123",
     status: "active",
   },
   {
@@ -992,7 +1022,6 @@ const MOCK_USERS: User[] = [
     username: "krzysiek",
     email: "krzysiek@example.com",
     role: "user",
-    password: "password123",
     status: "active",
   },
   {
@@ -1000,7 +1029,6 @@ const MOCK_USERS: User[] = [
     username: "magda",
     email: "magda@example.com",
     role: "admin",
-    password: "password123",
     status: "active",
   },
   {
@@ -1008,7 +1036,6 @@ const MOCK_USERS: User[] = [
     username: "dominik",
     email: "dominik@example.com",
     role: "user",
-    password: "password123",
     status: "inactive",
   },
   {
@@ -1016,7 +1043,6 @@ const MOCK_USERS: User[] = [
     username: "user-10",
     email: "user-10@example.com",
     role: "user",
-    password: "password123",
     status: "active",
   },
   {
@@ -1024,7 +1050,6 @@ const MOCK_USERS: User[] = [
     username: "user-13",
     email: "user-13@example.com",
     role: "user",
-    password: "password123",
     status: "active",
   },
   {
@@ -1032,7 +1057,6 @@ const MOCK_USERS: User[] = [
     username: "user-11",
     email: "user-11@example.com",
     role: "user",
-    password: "password123",
     status: "active",
   },
   {
@@ -1040,7 +1064,6 @@ const MOCK_USERS: User[] = [
     username: "user-12",
     email: "user-12@example.com",
     role: "user",
-    password: "password123",
     status: "active",
   },
 ]

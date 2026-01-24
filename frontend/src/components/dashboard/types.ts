@@ -50,10 +50,25 @@ export interface Item {
 
 export type ItemSlot = Item | null
 
+export type NotificationType =
+  | "UNAUTHORIZED_REMOVAL"
+  | "RACK_OVERWEIGHT"
+  | "SENSOR_OFFLINE"
+  | "ITEM_EXPIRED"
+  | "TEMPERATURE_VIOLATION"
+
+export type NotificationSeverity = "info" | "warning" | "critical"
+
 export interface Notification {
   id: string
   title: string
   description: string
+  type: NotificationType
+  severity: NotificationSeverity
+  warehouseId?: string
+  rackId?: string
+  itemId?: string
+  metadata: Record<string, unknown>
   date: string
   read: boolean
 }
