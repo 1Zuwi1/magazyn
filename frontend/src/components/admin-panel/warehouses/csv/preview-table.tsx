@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo } from "react"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Table,
   TableBody,
@@ -37,56 +36,55 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
   }, [rows])
 
   return (
-    <>
-      <ScrollArea className="w-full rounded-md border">
-        <div className="mx-auto w-max min-w-full">
-          <Table className="w-max">
-            <TableHeader className="sticky top-0 z-10 bg-muted">
-              <TableRow>
-                {columns.map((col) => (
-                  <TableHead
-                    className="whitespace-nowrap px-4 py-3 text-center font-semibold"
-                    key={col.key}
-                  >
-                    {col.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {normalizedRows.length > 0 ? (
-                normalizedRows.map((row, rowIndex) => (
-                  <TableRow key={rowIndex}>
-                    {columns.map((col) => (
-                      <TableCell
-                        className="whitespace-nowrap px-4 py-2 text-center"
-                        key={col.key}
-                      >
-                        {row[normalizeKey(col.key)] || "-"}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    className="py-8 text-center text-muted-foreground"
-                    colSpan={columns.length}
-                  >
-                    Brak danych do wyświetlenia
-                  </TableCell>
+    <div className="flex min-w-0 flex-col gap-2">
+      <div className="relative max-h-80 min-w-0 overflow-auto rounded-md border">
+        <Table className="w-full">
+          <TableHeader className="sticky top-0 z-10 bg-muted">
+            <TableRow>
+              {columns.map((col) => (
+                <TableHead
+                  className="min-w-32 whitespace-nowrap border-r px-4 py-3 text-center font-semibold last:border-r-0"
+                  key={col.key}
+                >
+                  {col.label}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {normalizedRows.length > 0 ? (
+              normalizedRows.map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  {columns.map((col) => (
+                    <TableCell
+                      className="min-w-32 max-w-56 truncate whitespace-nowrap border-r px-4 py-2 text-center last:border-r-0"
+                      key={col.key}
+                      title={row[normalizeKey(col.key)] || "-"}
+                    >
+                      {row[normalizeKey(col.key)] || "-"}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </ScrollArea>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  className="py-8 text-center text-muted-foreground"
+                  colSpan={columns.length}
+                >
+                  Brak danych do wyświetlenia
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       <p className="text-center text-muted-foreground text-sm">
         {hasMoreRows
           ? `Wyświetlono ${MAX_PREVIEW_ROWS} z ${rows.length} wierszy`
           : `${rows.length} ${rows.length === 1 ? "wiersz" : "wierszy"}`}
       </p>
-    </>
+    </div>
   )
 }

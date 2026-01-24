@@ -21,7 +21,6 @@ export function Search({ className, placeholder = "Search" }: SearchProps) {
     <InputGroup className={cn("w-full sm:w-60", className)}>
       <Input
         className="border-0 shadow-none focus-visible:ring-0"
-        onFocus={() => setOpen(true)}
         placeholder={placeholder}
       />
       <InputGroupButton

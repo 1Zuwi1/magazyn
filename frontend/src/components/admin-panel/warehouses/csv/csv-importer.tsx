@@ -7,19 +7,13 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { useCsvImporter } from "../../hooks/use-csv-importer"
 import { FileUploader } from "./file-uploader"
@@ -44,6 +38,7 @@ export function CsvImporter<T extends CsvImporterType>({
   warehouses,
 }: CsvImporterProps<T>) {
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>("")
+  const [itemName, setItemName] = useState<string>("")
 
   const handleImport = (data: CsvRowType<T>[]): void => {
     onImport(data, selectedWarehouseId || undefined)
@@ -69,6 +64,7 @@ export function CsvImporter<T extends CsvImporterType>({
     setOpen(isOpen)
     if (!isOpen) {
       setSelectedWarehouseId("")
+      setItemName("")
     }
   }
 
@@ -79,50 +75,30 @@ export function CsvImporter<T extends CsvImporterType>({
       >
         Importuj CSV
       </DialogTrigger>
-      <DialogContent className="max-w-[95vw]">
+      <DialogContent className="flex max-h-[90vh] max-w-[95vw] flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>
             {type === "rack"
               ? "Importuj regały z CSV"
               : "Importuj przedmioty z CSV"}
           </DialogTitle>
-          {needsWarehouseSelection && (
-            <DialogDescription>
-              Wybierz magazyn docelowy, do którego zostaną dodane regały
-            </DialogDescription>
-          )}
         </DialogHeader>
 
-        {needsWarehouseSelection && !isPreviewing && (
-          <div className="space-y-2">
-            <label className="font-medium text-sm" htmlFor="warehouse-select">
-              Magazyn docelowy
-            </label>
-            <Select
-              onValueChange={(value) => {
-                if (value) {
-                  setSelectedWarehouseId(value)
-                }
-              }}
-              value={selectedWarehouseId}
-            >
-              <SelectTrigger className="mt-2 w-full" id="warehouse-select">
-                <SelectValue>
-                  {selectedWarehouseId
-                    ? warehouses.find((w) => w.id === selectedWarehouseId)?.name
-                    : "Wybierz magazyn..."}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {warehouses.map((warehouse) => (
-                  <SelectItem key={warehouse.id} value={warehouse.id}>
-                    {warehouse.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div className="space-y-2">
+          <Label htmlFor="item-name">
+            {type === "rack" ? "Nazwa regału" : "Nazwa asortymentu"}
+          </Label>
+          <Input
+            id="item-name"
+            onChange={(e) => setItemName(e.target.value)}
+            placeholder={
+              type === "rack"
+                ? "Wprowadź nazwę regału..."
+                : "Wprowadź nazwę asortymentu..."
+            }
+            value={itemName}
+          />
+        </div>
 
         {isPreviewing ? (
           <PreviewTable
@@ -147,7 +123,13 @@ export function CsvImporter<T extends CsvImporterType>({
                 <HugeiconsIcon className="mr-2 size-4" icon={ArrowLeft01Icon} />
                 Wróć
               </Button>
-              <Button onClick={resetFile} variant="destructive">
+              <Button
+                onClick={() => {
+                  resetFile()
+                  setItemName("")
+                }}
+                variant="destructive"
+              >
                 Usuń
               </Button>
               <Button onClick={confirmImport}>
