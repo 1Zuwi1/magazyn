@@ -10,7 +10,6 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import type { Warehouse } from "@/components/dashboard/types"
 import { pluralize } from "@/components/dashboard/utils/helpers"
-import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
@@ -73,15 +72,6 @@ export function WarehouseGrid({
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge
-                    variant={
-                      occupancyPercentage > FULL_WAREHOUSE_THRESHOLD
-                        ? "destructive"
-                        : "secondary"
-                    }
-                  >
-                    {Math.round(occupancyPercentage)}% Pełny
-                  </Badge>
                   {actions && (
                     <DropdownMenu>
                       <DropdownMenuTrigger aria-label="Akcje magazynu">

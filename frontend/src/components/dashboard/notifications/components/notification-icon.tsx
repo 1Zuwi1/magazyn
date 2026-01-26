@@ -20,13 +20,9 @@ import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { MOCK_NOTIFICATIONS } from "../../mock-data"
 
-interface NotificationInboxProps {
-  count?: number
-}
-
-export function NotificationInbox({ count: _count }: NotificationInboxProps) {
+export function NotificationInbox() {
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS)
-  const [isOpen, setIsOpen] = useState(false)
+  const [open, setOpen] = useState(false)
   const unreadCount = notifications.filter((n) => !n.read).length
 
   const handleMarkAllRead = (checked: boolean) => {
@@ -35,12 +31,8 @@ export function NotificationInbox({ count: _count }: NotificationInboxProps) {
     }
   }
 
-  const clean = () => {
-    setNotifications([])
-  }
-
   return (
-    <Popover onOpenChange={setIsOpen} open={isOpen}>
+    <Popover onOpenChange={setOpen} open={open}>
       <PopoverTrigger>
         <div className="relative mr-3 flex size-11 cursor-pointer items-center justify-center rounded-xl bg-background transition-colors hover:bg-accent">
           <HugeiconsIcon className="size-1/2" icon={InboxIcon} />
@@ -110,7 +102,7 @@ export function NotificationInbox({ count: _count }: NotificationInboxProps) {
           <Button
             className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
             disabled={notifications.length === 0}
-            onClick={clean}
+            onClick={() => setNotifications([])}
             size="icon"
             title="Wyczyść wszystkie powiadomienia"
             variant="ghost"
@@ -123,7 +115,7 @@ export function NotificationInbox({ count: _count }: NotificationInboxProps) {
           <Button className="w-full justify-center text-xs" variant="ghost">
             <Link
               href="/dashboard/notifications"
-              onClick={() => setIsOpen(false)}
+              onClick={() => setOpen(false)}
             >
               Zobacz wszystkie powiadomienia
             </Link>

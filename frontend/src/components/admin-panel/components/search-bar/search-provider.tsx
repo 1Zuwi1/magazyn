@@ -1,7 +1,10 @@
 "use client"
 
 import { createContext, useContext, useState } from "react"
-import { CommandMenu, type NavGroup } from "./command-menu"
+import {
+  CommandMenu,
+  type NavGroup,
+} from "@/components/admin-panel/components/search-bar/command-menu"
 
 interface SearchContextType {
   setOpen: (open: boolean) => void
