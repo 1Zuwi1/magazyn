@@ -24,9 +24,9 @@ const GridPattern = (
 
 const GradientOrbs = (
   <>
-    <div className="absolute top-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-primary/[0.07] blur-[100px]" />
-    <div className="absolute bottom-[-10%] left-[-5%] h-[400px] w-[400px] rounded-full bg-primary/[0.05] blur-[80px]" />
-    <div className="absolute top-[40%] left-[20%] h-[300px] w-[300px] rounded-full bg-primary/[0.03] blur-[60px]" />
+    <div className="absolute top-[-20%] right-[-10%] h-125 w-125 rounded-full bg-primary/7 blur-[100px]" />
+    <div className="absolute bottom-[-10%] left-[-5%] h-100 w-100 rounded-full bg-primary/5 blur-[80px]" />
+    <div className="absolute top-[40%] left-[20%] h-75 w-75 rounded-full bg-primary/3 blur-[60px]" />
   </>
 )
 
