@@ -14,7 +14,9 @@ export default function NotificationsMain() {
         links={NOTIFICATIONS_NAV_LINKS}
       />
       <Separator className="m-2" orientation="vertical" />
-      <div className="flex-1">{/* Główny ekran mailboxa */}</div>
+      <div className="flex-1">
+        <main />
+      </div>
     </div>
   )
 }
