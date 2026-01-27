@@ -1,8 +1,8 @@
-import { AdminHeader } from "@/components/admin-panel/components/app-sidebar"
+import { AdminHeader } from "@/components/admin-panel/components/admin-header"
 import { Search } from "@/components/admin-panel/components/search-bar/search"
 import { SearchProvider } from "@/components/admin-panel/components/search-bar/search-provider"
 import { TopNav } from "@/components/admin-panel/components/top-nav"
-import { ADMIN_NAV_LINKS } from "@/components/admin-panel/lib/utils"
+import { ADMIN_NAV_LINKS } from "@/components/admin-panel/lib/constants"
 
 export default function AdminDashboard() {
   return (
