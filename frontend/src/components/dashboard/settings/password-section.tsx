@@ -4,8 +4,13 @@ import { useForm } from "@tanstack/react-form"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import type { ZodError } from "zod"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ChangePasswordFormSchema } from "@/lib/schemas"
@@ -37,6 +42,8 @@ export function PasswordSection({
   const [verificationComplete, setVerificationComplete] = useState(
     !verificationRequired
   )
+  const [isVerificationDialogOpen, setIsVerificationDialogOpen] =
+    useState(false)
 
   useEffect(() => {
     setVerificationComplete(!verificationRequired)
@@ -50,10 +57,9 @@ export function PasswordSection({
       newPassword: "",
       confirmPassword: "",
     },
-    onSubmit: async ({ value }) => {
-      console.log(value)
+    onSubmit: async () => {
       if (verificationBlocked) {
-        toast.error("Aby zmienić hasło, potwierdź weryfikację 2FA.")
+        setIsVerificationDialogOpen(true)
         return
       }
 
@@ -77,21 +83,6 @@ export function PasswordSection({
         form.handleSubmit()
       }}
     >
-      {verificationRequired ? (
-        <div className="space-y-4">
-          <Alert variant="default">
-            <AlertTitle>Wymagana weryfikacja 2FA</AlertTitle>
-            <AlertDescription>
-              Aby zmienić hasło, najpierw potwierdź swoją tożsamość kodem 2FA.
-            </AlertDescription>
-          </Alert>
-          <PasswordVerificationSection
-            method={twoFactorMethod}
-            onVerificationChange={setVerificationComplete}
-          />
-        </div>
-      ) : null}
-
       <div className="grid gap-4 sm:grid-cols-2">
         <form.Field name="oldPassword">
           {(field) => {
@@ -177,7 +168,7 @@ export function PasswordSection({
         >
           {([canSubmit, isSubmitting]) => (
             <Button
-              disabled={verificationBlocked || !canSubmit}
+              disabled={!canSubmit}
               isLoading={isSubmitting}
               type="submit"
             >
@@ -186,6 +177,29 @@ export function PasswordSection({
           )}
         </form.Subscribe>
       </div>
+      {verificationRequired ? (
+        <Dialog
+          onOpenChange={setIsVerificationDialogOpen}
+          open={isVerificationDialogOpen}
+        >
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="sr-only">
+                Potwierdź 2FA przed zmianą
+              </DialogTitle>
+            </DialogHeader>
+            <PasswordVerificationSection
+              method={twoFactorMethod}
+              onVerificationChange={(complete) => {
+                setVerificationComplete(complete)
+                if (complete) {
+                  setIsVerificationDialogOpen(false)
+                }
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </form>
   )
 }
