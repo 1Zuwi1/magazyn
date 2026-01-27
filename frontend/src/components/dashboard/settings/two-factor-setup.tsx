@@ -66,14 +66,14 @@ function TwoFactorMethodInput({
         const isSelected = method === m.value
 
         return (
-          <div key={m.value}>
+          <div className="flex" key={m.value}>
             <RadioGroupItem
               className="peer sr-only"
               id={`method-${m.value}`}
               value={m.value}
             />
             <Label
-              className={`flex cursor-pointer flex-col items-center justify-between gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${
+              className={`flex flex-1 cursor-pointer flex-col items-center justify-between gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${
                 disabled ? "pointer-events-none opacity-50" : ""
               }`}
               htmlFor={`method-${m.value}`}

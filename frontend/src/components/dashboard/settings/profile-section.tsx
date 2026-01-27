@@ -1,5 +1,4 @@
 import {
-  Building06Icon,
   Location04Icon,
   Mail01Icon,
   SmartPhone01Icon,
@@ -35,10 +34,6 @@ function ProfileDetailRow({ detail }: { detail: ProfileDetail }) {
 
 function buildProfileDetails(user: SettingsUser): ProfileDetail[] {
   return [
-    {
-      label: "ID użytkownika",
-      value: `#${user.id}`,
-    },
     {
       label: "Status konta",
       value: STATUS_CONFIG[user.status].label,
@@ -134,11 +129,6 @@ export function ProfileSection({ user }: ProfileSectionProps) {
             icon={SmartPhone01Icon}
             label="Telefon"
             value={MOCK_PROFILE_FORM.phone}
-          />
-          <InfoField
-            icon={Building06Icon}
-            label="Firma"
-            value={MOCK_PROFILE_FORM.company}
           />
           <InfoField
             icon={Location04Icon}

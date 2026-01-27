@@ -1,4 +1,4 @@
-import { SettingsContent } from "@/components/dashboard/settings/settings-content-old"
+import { SettingsContent } from "@/components/dashboard/settings/settings-content"
 import ProtectedPage from "../../protected-page"
 
 export default function SettingsPage() {

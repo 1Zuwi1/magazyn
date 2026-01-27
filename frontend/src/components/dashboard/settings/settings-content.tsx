@@ -8,7 +8,6 @@ export function SettingsContent({ user }: SettingsContentProps) {
   return (
     <div className="space-y-8">
       <header className="relative">
-        <div className="absolute -top-4 left-0 size-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 blur-2xl" />
         <div className="relative flex items-start gap-4">
           <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 ring-1 ring-primary/10">
             <HugeiconsIcon
