@@ -1,18 +1,19 @@
-"use client"
-
-import { useState } from "react"
+import {
+  Building06Icon,
+  Location04Icon,
+  Mail01Icon,
+  SmartPhone01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { MOCK_PROFILE_FORM, ROLE_LABELS, STATUS_CONFIG } from "./constants"
 import type { ProfileDetail, SettingsUser } from "./types"
@@ -24,10 +25,10 @@ interface ProfileSectionProps {
 function ProfileDetailRow({ detail }: { detail: ProfileDetail }) {
   return (
     <div className="space-y-1">
-      <dt className="text-muted-foreground text-xs uppercase">
+      <dt className="text-muted-foreground text-xs uppercase tracking-wide">
         {detail.label}
       </dt>
-      <dd className="font-medium">{detail.value}</dd>
+      <dd className="font-medium text-sm">{detail.value}</dd>
     </div>
   )
 }
@@ -36,7 +37,7 @@ function buildProfileDetails(user: SettingsUser): ProfileDetail[] {
   return [
     {
       label: "ID użytkownika",
-      value: `${user.id}`,
+      value: `#${user.id}`,
     },
     {
       label: "Status konta",
@@ -45,10 +46,6 @@ function buildProfileDetails(user: SettingsUser): ProfileDetail[] {
     {
       label: "Rola",
       value: ROLE_LABELS[user.role],
-    },
-    {
-      label: "Plan",
-      value: "Business",
     },
     {
       label: "Ostatnie logowanie",
@@ -61,18 +58,34 @@ function buildProfileDetails(user: SettingsUser): ProfileDetail[] {
   ]
 }
 
+interface InfoFieldProps {
+  icon: typeof Mail01Icon
+  label: string
+  value: string
+}
+
+function InfoField({ icon, label, value }: InfoFieldProps) {
+  return (
+    <div className="group flex items-start gap-3 rounded-lg bg-muted/30 p-3 ring-1 ring-border/50 transition-colors hover:bg-muted/50">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-background ring-1 ring-border/50">
+        <HugeiconsIcon
+          className="text-muted-foreground"
+          icon={icon}
+          size={16}
+        />
+      </div>
+      <div className="min-w-0 flex-1 space-y-0.5">
+        <p className="text-muted-foreground text-xs">{label}</p>
+        <p className="truncate font-medium text-sm">{value || "—"}</p>
+      </div>
+    </div>
+  )
+}
+
 export function ProfileSection({ user }: ProfileSectionProps) {
-  const [profileNote, setProfileNote] = useState<string>("")
   const statusBadge = STATUS_CONFIG[user.status]
   const profileDetails = buildProfileDetails(user)
   const displayName = user.fullName ?? "Brak uzupełnionego imienia"
-
-  const handleProfileSubmit = (
-    event: React.FormEvent<HTMLFormElement>
-  ): void => {
-    event.preventDefault()
-    setProfileNote("Zapisano lokalnie (mock).")
-  }
 
   return (
     <Card>
@@ -80,7 +93,7 @@ export function ProfileSection({ user }: ProfileSectionProps) {
         <div>
           <CardTitle>Profil użytkownika</CardTitle>
           <p className="text-muted-foreground text-sm">
-            Podstawowe dane kontaktowe oraz role dostępu.
+            Dane konta i informacje kontaktowe przypisane przez administratora.
           </p>
         </div>
         <CardAction>
@@ -90,92 +103,75 @@ export function ProfileSection({ user }: ProfileSectionProps) {
           </div>
         </CardAction>
       </CardHeader>
-      <form onSubmit={handleProfileSubmit}>
-        <CardContent className="space-y-6">
-          <div className="space-y-1">
-            <p className="font-semibold text-lg">{displayName}</p>
-            <p className="text-muted-foreground">{user.email}</p>
+
+      <CardContent className="space-y-6">
+        <div className="flex items-center gap-4">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 font-semibold text-lg text-primary ring-1 ring-primary/10">
+            {displayName
+              .split(" ")
+              .map((n) => n[0])
+              .slice(0, 2)
+              .join("")
+              .toUpperCase()}
           </div>
-
-          <Separator />
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="full-name">Imię i nazwisko</Label>
-              <Input
-                autoComplete="name"
-                defaultValue={user.fullName ?? ""}
-                id="full-name"
-                placeholder="Wpisz imię i nazwisko"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                autoComplete="email"
-                defaultValue={user.email}
-                id="email"
-                placeholder="Wpisz adres e-mail"
-                type="email"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefon</Label>
-              <Input
-                autoComplete="tel"
-                defaultValue={MOCK_PROFILE_FORM.phone}
-                id="phone"
-                placeholder="Wpisz numer telefonu"
-                type="tel"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="company">Firma</Label>
-              <Input
-                autoComplete="organization"
-                defaultValue={MOCK_PROFILE_FORM.company}
-                id="company"
-                placeholder="Nazwa firmy"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="location">Lokalizacja</Label>
-              <Input
-                autoComplete="address-level2"
-                defaultValue={MOCK_PROFILE_FORM.location}
-                id="location"
-                placeholder="Miasto"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="team">Zespół</Label>
-              <Input
-                defaultValue={MOCK_PROFILE_FORM.team}
-                id="team"
-                placeholder="Dział lub zespół"
-              />
-            </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-semibold text-lg">{displayName}</p>
+            <p className="truncate text-muted-foreground text-sm">
+              {user.email}
+            </p>
           </div>
+        </div>
 
-          <Separator />
+        <Separator />
 
-          <dl className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <InfoField
+            icon={Mail01Icon}
+            label="Adres e-mail"
+            value={user.email}
+          />
+          <InfoField
+            icon={SmartPhone01Icon}
+            label="Telefon"
+            value={MOCK_PROFILE_FORM.phone}
+          />
+          <InfoField
+            icon={Building06Icon}
+            label="Firma"
+            value={MOCK_PROFILE_FORM.company}
+          />
+          <InfoField
+            icon={Location04Icon}
+            label="Lokalizacja"
+            value={MOCK_PROFILE_FORM.location}
+          />
+          <InfoField
+            icon={UserGroupIcon}
+            label="Zespół"
+            value={MOCK_PROFILE_FORM.team}
+          />
+        </div>
+
+        <Separator />
+
+        <div>
+          <p className="mb-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+            Informacje systemowe
+          </p>
+          <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
             {profileDetails.map((detail) => (
               <ProfileDetailRow detail={detail} key={detail.label} />
             ))}
           </dl>
+        </div>
 
-          {profileNote ? (
-            <p className="text-muted-foreground text-sm">{profileNote}</p>
-          ) : null}
-        </CardContent>
-        <CardFooter className="justify-end gap-3">
-          <Button type="button" variant="outline">
-            Anuluj
-          </Button>
-          <Button type="submit">Zapisz profil</Button>
-        </CardFooter>
-      </form>
+        <div className="rounded-lg border border-muted-foreground/30 border-dashed bg-muted/20 px-4 py-3">
+          <p className="text-muted-foreground text-xs">
+            Dane profilu są zarządzane przez administratora systemu. Jeśli
+            potrzebujesz wprowadzić zmiany, skontaktuj się z działem IT.
+          </p>
+        </div>
+      </CardContent>
     </Card>
   )
 }
