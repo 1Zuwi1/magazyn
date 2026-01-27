@@ -1,12 +1,29 @@
 "use client"
 
+import { useForm } from "@tanstack/react-form"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
+import type { ZodError } from "zod"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ChangePasswordFormSchema } from "@/lib/schemas"
 import { PasswordVerificationSection } from "./password-verification-section"
 import type { TwoFactorMethod } from "./types"
+import { wait } from "./utils"
+
+function FieldErrorMessage({ message }: { message: string | null }) {
+  if (!message) {
+    return null
+  }
+
+  return (
+    <p className="text-destructive text-xs" role="alert">
+      {message}
+    </p>
+  )
+}
 
 interface PasswordSectionProps {
   verificationRequired: boolean
@@ -17,32 +34,49 @@ export function PasswordSection({
   verificationRequired,
   twoFactorMethod,
 }: PasswordSectionProps) {
-  const [passwordNote, setPasswordNote] = useState<string>("")
-  const [verificationComplete, setVerificationComplete] =
-    useState<boolean>(false)
+  const [verificationComplete, setVerificationComplete] = useState(
+    !verificationRequired
+  )
+
+  useEffect(() => {
+    setVerificationComplete(!verificationRequired)
+  }, [verificationRequired])
 
   const verificationBlocked = verificationRequired && !verificationComplete
 
-  const handlePasswordSubmit = (
-    event: React.FormEvent<HTMLFormElement>
-  ): void => {
-    event.preventDefault()
-    if (verificationBlocked) {
-      setPasswordNote("Najpierw potwierdź 2FA, aby zmienić hasło.")
-      return
-    }
-    setPasswordNote("Hasło zaktualizowane lokalnie (mock).")
-  }
+  const form = useForm({
+    defaultValues: {
+      oldPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+    onSubmit: async ({ value }) => {
+      console.log(value)
+      if (verificationBlocked) {
+        toast.error("Aby zmienić hasło, potwierdź weryfikację 2FA.")
+        return
+      }
 
-  useEffect(() => {
-    if (!verificationRequired) {
-      setVerificationComplete(false)
-      setPasswordNote("")
-    }
-  }, [verificationRequired])
+      try {
+        await wait(1000)
+        toast.success("Hasło zostało zmienione.")
+      } catch {
+        toast.error("Nie udało się zmienić hasła. Spróbuj ponownie.")
+      }
+    },
+    validators: {
+      onSubmitAsync: ChangePasswordFormSchema,
+    },
+  })
 
   return (
-    <form className="space-y-4" onSubmit={handlePasswordSubmit}>
+    <form
+      className="space-y-4"
+      onSubmit={(event) => {
+        event.preventDefault()
+        form.handleSubmit()
+      }}
+    >
       {verificationRequired ? (
         <div className="space-y-4">
           <Alert variant="default">
@@ -59,52 +93,99 @@ export function PasswordSection({
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="current-password">Obecne hasło</Label>
-          <Input
-            autoComplete="current-password"
-            disabled={verificationBlocked}
-            id="current-password"
-            placeholder="Wprowadź obecne hasło"
-            type="password"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="new-password">Nowe hasło</Label>
-          <Input
-            autoComplete="new-password"
-            disabled={verificationBlocked}
-            id="new-password"
-            placeholder="Co najmniej 8 znaków"
-            type="password"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="confirm-password">Potwierdź hasło</Label>
-          <Input
-            autoComplete="new-password"
-            disabled={verificationBlocked}
-            id="confirm-password"
-            placeholder="Powtórz nowe hasło"
-            type="password"
-          />
-        </div>
+        <form.Field name="oldPassword">
+          {(field) => {
+            const errorMessage =
+              field.state.meta.errors[0] || (null as ZodError | null)
+            return (
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="current-password">Obecne hasło</Label>
+                <Input
+                  aria-invalid={!!errorMessage}
+                  autoComplete="current-password"
+                  className={errorMessage ? "border-destructive" : ""}
+                  id="current-password"
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  placeholder="Wprowadź obecne hasło"
+                  type="password"
+                  value={field.state.value}
+                />
+                <FieldErrorMessage message={errorMessage?.message || null} />
+              </div>
+            )
+          }}
+        </form.Field>
+        <form.Field name="newPassword">
+          {(field) => {
+            const errorMessage =
+              field.state.meta.errors[0] || (null as ZodError | null)
+            return (
+              <div className="space-y-2">
+                <Label htmlFor="new-password">Nowe hasło</Label>
+                <Input
+                  aria-invalid={!!errorMessage}
+                  autoComplete="new-password"
+                  className={errorMessage ? "border-destructive" : ""}
+                  id="new-password"
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  placeholder="Co najmniej 8 znaków"
+                  type="password"
+                  value={field.state.value}
+                />
+                <FieldErrorMessage message={errorMessage?.message || null} />
+              </div>
+            )
+          }}
+        </form.Field>
+        <form.Field name="confirmPassword">
+          {(field) => {
+            const errorMessage =
+              field.state.meta.errors[0] || (null as ZodError | null)
+
+            return (
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Potwierdź hasło</Label>
+                <Input
+                  aria-invalid={!!errorMessage}
+                  autoComplete="new-password"
+                  className={errorMessage ? "border-destructive" : ""}
+                  id="confirm-password"
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  placeholder="Powtórz nowe hasło"
+                  type="password"
+                  value={field.state.value}
+                />
+                <FieldErrorMessage message={errorMessage?.message || null} />
+              </div>
+            )
+          }}
+        </form.Field>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground text-xs">
           Min. 8 znaków, w tym cyfry i znaki specjalne.
         </p>
-        <Button disabled={verificationBlocked} type="submit">
-          Zmień hasło
-        </Button>
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
+        >
+          {([canSubmit, isSubmitting]) => (
+            <Button
+              disabled={verificationBlocked || !canSubmit}
+              isLoading={isSubmitting}
+              type="submit"
+            >
+              Zmień hasło
+            </Button>
+          )}
+        </form.Subscribe>
       </div>
-
-      {passwordNote ? (
-        <Alert>
-          <AlertDescription>{passwordNote}</AlertDescription>
-        </Alert>
-      ) : null}
     </form>
   )
 }

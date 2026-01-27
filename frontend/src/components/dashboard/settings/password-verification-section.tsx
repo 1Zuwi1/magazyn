@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -58,28 +59,41 @@ function usePasswordVerificationFlow({
       onResendCooldownChange(RESEND_COOLDOWN_SECONDS)
     } catch {
       onStageChange("error")
-      onErrorChange("Nie udało się wysłać kodu. Spróbuj ponownie.")
+      const message = "Nie udało się wysłać kodu. Spróbuj ponownie."
+      onErrorChange(message)
+      toast.error(message)
     }
   }
 
   const verifyCode = async (inputCode: string): Promise<void> => {
     if (inputCode.length !== OTP_LENGTH) {
-      onErrorChange("Wpisz pełny kod weryfikacyjny.")
+      const message = "Wpisz pełny kod weryfikacyjny."
+      onErrorChange(message)
+      toast.error(message)
       return
     }
 
     onStageChange("verifying")
     onErrorChange("")
 
-    const isValid = await verifyOneTimeCode(inputCode)
+    try {
+      const isValid = await verifyOneTimeCode(inputCode)
 
-    if (isValid) {
-      onStageChange("verified")
-      return
+      if (isValid) {
+        onStageChange("verified")
+        return
+      }
+
+      onStageChange("error")
+      const message = "Kod jest nieprawidłowy. Spróbuj ponownie."
+      onErrorChange(message)
+      toast.error(message)
+    } catch {
+      onStageChange("error")
+      const message = "Wystąpił błąd podczas weryfikacji. Spróbuj ponownie."
+      onErrorChange(message)
+      toast.error(message)
     }
-
-    onStageChange("error")
-    onErrorChange("Kod jest nieprawidłowy. Spróbuj ponownie.")
   }
 
   return { requestCode, verifyCode }

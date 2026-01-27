@@ -4,7 +4,8 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { NON_DIGIT_REGEX, OTP_LENGTH } from "./constants"
+import { OTP_LENGTH } from "./constants"
+import { sanitizeOtpValue } from "./utils"
 
 interface OtpInputProps {
   id: string
@@ -14,9 +15,6 @@ interface OtpInputProps {
 }
 
 export function OtpInput({ id, onChange, value, disabled }: OtpInputProps) {
-  const sanitizeOtpValue = (raw: string): string =>
-    raw.replace(NON_DIGIT_REGEX, "").slice(0, OTP_LENGTH)
-
   return (
     <InputOTP
       containerClassName="gap-2"

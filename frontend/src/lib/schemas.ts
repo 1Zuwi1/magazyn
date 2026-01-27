@@ -5,11 +5,32 @@ const txtEncoder = new TextEncoder()
 
 export const PasswordSchema = z
   .string()
-  .min(6, "Hasło musi mieć co najmniej 6 znaków")
+  .min(8, "Hasło musi mieć co najmniej 8 znaków")
   .refine((value) => {
     const bytes = txtEncoder.encode(value).length
     return bytes <= 72
   }, "Hasło nie może przekraczać 72 bajtów w kodowaniu UTF-8.")
+
+export const ChangePasswordFormSchema = z
+  .object({
+    newPassword: PasswordSchema,
+    oldPassword: PasswordSchema,
+    confirmPassword: z.string().min(1, "Potwierdzenie hasła jest wymagane"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Hasła nie są zgodne",
+    path: ["confirmPassword"],
+  })
+
+export const ChangePasswordSchema = createApiSchema({
+  POST: {
+    input: z.object({
+      newPassword: PasswordSchema,
+      oldPassword: PasswordSchema,
+    }),
+    output: z.null(),
+  },
+})
 
 export const LoginSchema = createApiSchema({
   POST: {
