@@ -21,10 +21,10 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(true)
   })
 
-  it("rejects password shorter than 6 characters", () => {
+  it("rejects password shorter than 8 characters", () => {
     const invalidInput = {
       email: "testuser@example.com",
-      password: "12345",
+      password: "1234567",
     }
 
     const result = LoginSchema.shape.POST.shape.input.safeParse(invalidInput)
@@ -32,7 +32,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi mieć co najmniej 6 znaków"
+        "Hasło musi mieć co najmniej 8 znaków"
       )
     }
   })
