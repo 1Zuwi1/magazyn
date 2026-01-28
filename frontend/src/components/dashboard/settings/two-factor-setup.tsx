@@ -184,7 +184,6 @@ function useTwoFactorSetupFlow({
       dispatch({ type: "set_challenge", challenge: newChallenge })
       dispatch({ type: "set_stage", stage: "awaiting" })
       await sendVerificationCode(newChallenge.sessionId)
-      startTimer(60)
     } catch {
       dispatch({
         type: "set_error",
