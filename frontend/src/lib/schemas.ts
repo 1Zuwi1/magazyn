@@ -1,4 +1,5 @@
 import z from "zod"
+import { OTP_LENGTH } from "@/components/dashboard/settings/constants"
 import { createApiSchema } from "./create-api-schema"
 
 const txtEncoder = new TextEncoder()
@@ -20,7 +21,7 @@ export const PasswordSchema = z
 
 export const ChangePasswordFormSchema = z
   .object({
-    twoFactorCode: z.string(),
+    twoFactorCode: z.string().min(OTP_LENGTH, "Kod 2FA jest za krótki"),
     newPassword: PasswordSchema,
     oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
     confirmPassword: z.string().min(1, "Potwierdzenie hasła jest wymagane"),
@@ -35,6 +36,7 @@ export const ChangePasswordSchema = createApiSchema({
     input: z.object({
       newPassword: PasswordSchema,
       oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
+      twoFactorCode: z.string().min(OTP_LENGTH, "Kod 2FA jest za krótki"),
     }),
     output: z.null(),
   },

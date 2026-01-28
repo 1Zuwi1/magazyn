@@ -17,6 +17,7 @@ interface OtpInputProps {
 export function OtpInput({ id, onChange, value, disabled }: OtpInputProps) {
   return (
     <InputOTP
+      autoFocus
       containerClassName="gap-2"
       disabled={disabled}
       id={id}

@@ -7,7 +7,7 @@ export function FieldState({ field }: { field: AnyFieldApi }) {
   const error = field.state.meta.errors[0] as ZodError | string | undefined
 
   return error ? (
-    <p className="mt-1 text-wrap text-destructive text-xs">
+    <p className="mt-1 text-wrap text-destructive text-xs" role="alert">
       {typeof error === "string" ? error : error.message}
     </p>
   ) : null

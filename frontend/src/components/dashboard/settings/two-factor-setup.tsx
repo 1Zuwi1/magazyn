@@ -73,11 +73,15 @@ function TwoFactorMethodInput({
         return (
           <div className="flex" key={m.value}>
             <RadioGroupItem
+              aria-describedby={`method-${m.value}-hint`}
               aria-label={m.label}
               className="peer sr-only"
               id={`method-${m.value}`}
               value={m.value}
             />
+            <div className="sr-only" id={`method-${m.value}-hint`}>
+              {m.hint}
+            </div>
             <Label
               className={`flex flex-1 cursor-pointer flex-col items-center justify-between gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${
                 disabled ? "pointer-events-none opacity-50" : ""
@@ -271,6 +275,7 @@ function AuthenticatorSetup({
   const secret = challenge?.secret ?? MOCK_AUTHENTICATOR_SECRET
   const totpUri = generateTotpUri(secret, userEmail ?? "user@magazynpro.pl")
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const locale = useLocale()
 
   const handleCopySecret = async (): Promise<void> => {
     if (!navigator.clipboard) {
@@ -325,6 +330,7 @@ function AuthenticatorSetup({
           />
           <Button
             aria-label={copied ? "Klucz skopiowany" : "Skopiuj klucz"}
+            aria-pressed={copied}
             onClick={handleCopySecret}
             size="icon"
             type="button"
@@ -335,7 +341,7 @@ function AuthenticatorSetup({
         </div>
         <p className="text-muted-foreground text-xs">
           Wygenerowano:{" "}
-          {challenge?.issuedAt ?? new Date().toLocaleTimeString("pl-PL")}
+          {challenge?.issuedAt ?? new Date().toLocaleTimeString(locale)}
         </p>
       </div>
     </div>
@@ -403,9 +409,11 @@ function CodeInputEntry({
               type="button"
               variant="outline"
             >
-              {resendCooldown > 0
-                ? `Wyślij ponownie (${formatCountdown(resendCooldown)})`
-                : "Wyślij ponownie"}
+              <span aria-live="off">
+                {resendCooldown > 0
+                  ? `Wyślij ponownie (${formatCountdown(resendCooldown)})`
+                  : "Wyślij ponownie"}
+              </span>
             </Button>
           ) : null}
         </div>
@@ -442,8 +450,9 @@ function RecoveryCodesSection({
         </Button>
       </div>
 
-      {showRecoveryCodes ? (
+      {showRecoveryCodes && enabled ? (
         <Textarea
+          aria-label="Kody odzyskiwania"
           className="min-h-28"
           id="recovery-codes"
           readOnly
