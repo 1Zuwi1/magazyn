@@ -21,6 +21,7 @@ export function OtpInput({ id, onChange, value, disabled }: OtpInputProps) {
   return (
     <InputOTP
       aria-describedby={statusId}
+      aria-live="polite"
       autoFocus
       containerClassName="gap-2"
       disabled={disabled}

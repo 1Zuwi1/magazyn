@@ -59,7 +59,7 @@ function TwoFactorMethodInput({
 
   return (
     <RadioGroup
-      className="grid gap-3 sm:grid-cols-3"
+      className="grid gap-3 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3"
       disabled={disabled}
       onValueChange={(value) => {
         onMethodChange(value as TwoFactorMethod)
@@ -403,25 +403,36 @@ function CodeInputEntry({
             Zweryfikuj i aktywuj
           </Button>
           {method !== "authenticator" ? (
-            <Button
-              disabled={!canResend}
-              onClick={onResend}
-              type="button"
-              variant="outline"
-            >
-              <span aria-live="off">
+            <>
+              <Button
+                aria-describedby="resend-status"
+                aria-disabled={!canResend}
+                disabled={!canResend}
+                onClick={onResend}
+                type="button"
+                variant="outline"
+              >
                 {resendCooldown > 0
                   ? `Wyślij ponownie (${formatCountdown(resendCooldown)})`
                   : "Wyślij ponownie"}
+              </Button>
+              <span
+                aria-atomic="true"
+                aria-live="polite"
+                className="sr-only"
+                id="resend-status"
+              >
+                {resendCooldown > 0
+                  ? "Wyślij ponownie będzie dostępne po zakończeniu odliczania."
+                  : "Możesz teraz wysłać ponownie."}
               </span>
-            </Button>
+            </>
           ) : null}
         </div>
       </div>
     </div>
   )
 }
-
 function RecoveryCodesSection({
   enabled,
   showRecoveryCodes,

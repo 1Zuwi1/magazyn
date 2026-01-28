@@ -48,7 +48,12 @@ export function PasswordSection({
       oldPassword: "",
       newPassword: "",
       confirmPassword: "",
-      twoFactorCode: "",
+      twoFactorCode: null,
+    } as {
+      oldPassword: string
+      newPassword: string
+      confirmPassword: string
+      twoFactorCode: string | null
     },
     onSubmit: async () => {
       if (isVerificationBlocked()) {
@@ -68,6 +73,8 @@ export function PasswordSection({
       onSubmitAsync: ChangePasswordFormSchema,
     },
   })
+
+  console.log(form)
 
   return (
     <form
@@ -154,7 +161,7 @@ export function PasswordSection({
             <form.Field name="twoFactorCode">
               {(field) => (
                 <PasswordVerificationSection
-                  code={field.state.value}
+                  code={field.state.value || ""}
                   method={twoFactorMethod}
                   onInputChange={(code) => field.handleChange(code)}
                   onVerificationChange={(complete) => {

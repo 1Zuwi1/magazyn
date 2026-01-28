@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -227,14 +227,14 @@ export function PasswordVerificationSection({
       setState((current) => ({ ...current, challenge: nextChallenge })),
   })
 
-  const handleStartVerification = (): void => {
+  const handleStartVerification = useCallback(() => {
     if (method === "authenticator") {
       setState((current) => ({ ...current, stage: "awaiting" }))
       return
     }
 
     requestCode()
-  }
+  }, [method, requestCode])
 
   const handleResendCode = (): void => {
     if (method === "authenticator") {
@@ -246,6 +246,10 @@ export function PasswordVerificationSection({
 
   const handleVerifyCode = (): void => {
     verifyCode(code)
+  }
+
+  if (stage === "idle") {
+    handleStartVerification()
   }
 
   return (
@@ -271,18 +275,6 @@ export function PasswordVerificationSection({
         </Alert>
       ) : (
         <div className="space-y-3">
-          {method !== "authenticator" && (stage === "idle" || isSending) ? (
-            <Button
-              disabled={isSending}
-              isLoading={isSending}
-              onClick={handleStartVerification}
-              type="button"
-              variant="outline"
-            >
-              Wyślij kod
-            </Button>
-          ) : null}
-
           {isSending ? (
             <PasswordVerificationAlerts challenge={challenge} error={error} />
           ) : null}

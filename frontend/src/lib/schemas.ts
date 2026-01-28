@@ -21,7 +21,15 @@ export const PasswordSchema = z
 
 export const ChangePasswordFormSchema = z
   .object({
-    twoFactorCode: z.string().min(OTP_LENGTH, "Kod 2FA jest za krótki"),
+    twoFactorCode: z
+      .string()
+      .nullable()
+      .refine((val) => {
+        if (val === null) {
+          return true
+        }
+        return val.length === OTP_LENGTH
+      }, `Kod 2FA musi mieć dokładnie ${OTP_LENGTH} znaków`),
     newPassword: PasswordSchema,
     oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
     confirmPassword: z.string().min(1, "Potwierdzenie hasła jest wymagane"),
