@@ -3,7 +3,7 @@
 import { useForm } from "@tanstack/react-form"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
-import type { ZodError } from "zod"
+import { FieldWithState } from "@/components/helpers/field-state"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -11,24 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { ChangePasswordFormSchema } from "@/lib/schemas"
 import { PasswordVerificationSection } from "./password-verification-section"
 import type { TwoFactorMethod } from "./types"
 import { wait } from "./utils"
-
-function FieldErrorMessage({ message }: { message: string | null }) {
-  if (!message) {
-    return null
-  }
-
-  return (
-    <p className="text-destructive text-xs" role="alert">
-      {message}
-    </p>
-  )
-}
 
 interface PasswordSectionProps {
   verificationRequired: boolean
@@ -94,74 +80,45 @@ export function PasswordSection({
       <div className="grid gap-4 sm:grid-cols-2">
         <form.Field name="oldPassword">
           {(field) => {
-            const errorMessage = (field.state.meta.errors[0] ||
-              null) as ZodError | null
             return (
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="current-password">Obecne hasło</Label>
-                <Input
-                  aria-invalid={!!errorMessage}
+              <div className="sm:col-span-2">
+                <FieldWithState
                   autoComplete="current-password"
-                  className={errorMessage ? "border-destructive" : ""}
+                  field={field}
                   id="current-password"
-                  name={field.name}
-                  onBlur={field.handleBlur}
-                  onChange={(event) => field.handleChange(event.target.value)}
+                  label="Obecne hasło"
                   placeholder="Wprowadź obecne hasło"
                   type="password"
-                  value={field.state.value}
                 />
-                <FieldErrorMessage message={errorMessage?.message || null} />
               </div>
             )
           }}
         </form.Field>
         <form.Field name="newPassword">
           {(field) => {
-            const errorMessage = (field.state.meta.errors[0] ||
-              null) as ZodError | null
             return (
-              <div className="space-y-2">
-                <Label htmlFor="new-password">Nowe hasło</Label>
-                <Input
-                  aria-invalid={!!errorMessage}
-                  autoComplete="new-password"
-                  className={errorMessage ? "border-destructive" : ""}
-                  id="new-password"
-                  name={field.name}
-                  onBlur={field.handleBlur}
-                  onChange={(event) => field.handleChange(event.target.value)}
-                  placeholder="Co najmniej 8 znaków"
-                  type="password"
-                  value={field.state.value}
-                />
-                <FieldErrorMessage message={errorMessage?.message || null} />
-              </div>
+              <FieldWithState
+                autoComplete="new-password"
+                field={field}
+                id="new-password"
+                label="Nowe hasło"
+                placeholder="Co najmniej 8 znaków"
+                type="password"
+              />
             )
           }}
         </form.Field>
         <form.Field name="confirmPassword">
           {(field) => {
-            const errorMessage = (field.state.meta.errors[0] ||
-              null) as ZodError | null
-
             return (
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Potwierdź hasło</Label>
-                <Input
-                  aria-invalid={!!errorMessage}
-                  autoComplete="new-password"
-                  className={errorMessage ? "border-destructive" : ""}
-                  id="confirm-password"
-                  name={field.name}
-                  onBlur={field.handleBlur}
-                  onChange={(event) => field.handleChange(event.target.value)}
-                  placeholder="Powtórz nowe hasło"
-                  type="password"
-                  value={field.state.value}
-                />
-                <FieldErrorMessage message={errorMessage?.message || null} />
-              </div>
+              <FieldWithState
+                autoComplete="new-password"
+                field={field}
+                id="confirm-password"
+                label="Potwierdź hasło"
+                placeholder="Powtórz nowe hasło"
+                type="password"
+              />
             )
           }}
         </form.Field>

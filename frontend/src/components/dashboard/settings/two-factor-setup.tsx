@@ -226,7 +226,7 @@ function useTwoFactorSetupFlow({
 
       if (isValid) {
         onStatusChange("enabled")
-        dispatch({ type: "set_stage", stage: "idle" })
+        dispatch({ type: "set_stage", stage: "success" })
         dispatch({
           type: "set_note",
           note: `Weryfikacja dwuetapowa została włączona przy użyciu: ${

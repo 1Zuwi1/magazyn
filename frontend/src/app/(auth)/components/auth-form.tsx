@@ -1,20 +1,14 @@
 "use client"
 
-import { type AnyFieldApi, useForm } from "@tanstack/react-form"
+import { useForm } from "@tanstack/react-form"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import type { ZodError } from "zod"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
+import { FieldWithState } from "@/components/helpers/field-state"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Field, FieldDescription, FieldGroup } from "@/components/ui/field"
 import { apiFetch } from "@/lib/fetcher"
 import { FormRegisterSchema, LoginSchema, RegisterSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -23,16 +17,6 @@ type AuthMode = "login" | "register"
 
 interface AuthFormProps {
   mode: AuthMode
-}
-
-function FieldState({ field }: { field: AnyFieldApi }) {
-  const error = field.state.meta.errors[0] as ZodError | string | undefined
-
-  return error ? (
-    <p className="mt-1 text-wrap text-red-600 text-xs">
-      {typeof error === "string" ? error : error.message}
-    </p>
-  ) : null
 }
 
 const values = {
@@ -124,89 +108,49 @@ export default function AuthForm({ mode }: AuthFormProps) {
           </div>
           <form.Field name="email">
             {(field) => (
-              <Field>
-                <FieldLabel htmlFor={field.name}>Email</FieldLabel>
-                <Input
-                  className={
-                    field.state.meta.errors.length ? "border-red-500" : ""
-                  }
-                  id={field.name}
-                  name={field.name}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="jan@kowalski.pl"
-                  type="email"
-                  value={field.state.value}
-                />
-                <FieldState field={field} />
-              </Field>
+              <FieldWithState
+                field={field}
+                label="Email"
+                placeholder="jan@kowalski.pl"
+                type="email"
+              />
             )}
           </form.Field>
           {!isLogin && (
             <form.Field name="fullName">
               {(field) => (
-                <Field>
-                  <FieldLabel htmlFor={field.name}>
-                    Pełne imię i nazwisko
-                  </FieldLabel>
-                  <Input
-                    className={
-                      field.state.meta.errors.length ? "border-red-500" : ""
-                    }
-                    id={field.name}
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="Jan Kowalski"
-                    type="text"
-                    value={field.state.value}
-                  />
-                  <FieldState field={field} />
-                </Field>
+                <FieldWithState
+                  field={field}
+                  label="Pełne imię i nazwisko"
+                  placeholder="Jan Kowalski"
+                  type="text"
+                />
               )}
             </form.Field>
           )}
 
           <form.Field name="password">
-            {(field) => (
-              <Field>
-                <FieldLabel htmlFor={field.name}>Hasło</FieldLabel>
-                <Input
-                  className={
-                    field.state.meta.errors.length ? "border-red-500" : ""
-                  }
-                  id={field.name}
-                  name={field.name}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+            {(field) => {
+              return (
+                <FieldWithState
+                  field={field}
+                  label="Hasło"
                   placeholder="••••••••"
                   type="password"
-                  value={field.state.value}
                 />
-                <FieldState field={field} />
-              </Field>
-            )}
+              )
+            }}
           </form.Field>
 
           {!isLogin && (
             <form.Field name="confirmPassword">
               {(field) => (
-                <Field>
-                  <FieldLabel htmlFor={field.name}>Potwierdź hasło</FieldLabel>
-                  <Input
-                    className={
-                      field.state.meta.errors.length ? "border-red-500" : ""
-                    }
-                    id={field.name}
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="••••••••"
-                    type="password"
-                    value={field.state.value}
-                  />
-                  <FieldState field={field} />
-                </Field>
+                <FieldWithState
+                  field={field}
+                  label="Potwierdź hasło"
+                  placeholder="••••••••"
+                  type="password"
+                />
               )}
             </form.Field>
           )}
