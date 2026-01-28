@@ -86,8 +86,8 @@ export function PasswordSection({
       <div className="grid gap-4 sm:grid-cols-2">
         <form.Field name="oldPassword">
           {(field) => {
-            const errorMessage =
-              field.state.meta.errors[0] || (null as ZodError | null)
+            const errorMessage = (field.state.meta.errors[0] ||
+              null) as ZodError | null
             return (
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="current-password">Obecne hasło</Label>
@@ -110,8 +110,8 @@ export function PasswordSection({
         </form.Field>
         <form.Field name="newPassword">
           {(field) => {
-            const errorMessage =
-              field.state.meta.errors[0] || (null as ZodError | null)
+            const errorMessage = (field.state.meta.errors[0] ||
+              null) as ZodError | null
             return (
               <div className="space-y-2">
                 <Label htmlFor="new-password">Nowe hasło</Label>
@@ -134,8 +134,8 @@ export function PasswordSection({
         </form.Field>
         <form.Field name="confirmPassword">
           {(field) => {
-            const errorMessage =
-              field.state.meta.errors[0] || (null as ZodError | null)
+            const errorMessage = (field.state.meta.errors[0] ||
+              null) as ZodError | null
 
             return (
               <div className="space-y-2">
@@ -161,7 +161,7 @@ export function PasswordSection({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground text-xs">
-          Min. 8 znaków, w tym cyfry i znaki specjalne.
+          Min. 8 znaków, w tym cyfry, znaki specjalne, małe i wielkie litery.
         </p>
         <form.Subscribe
           selector={(state) => [state.canSubmit, state.isSubmitting]}

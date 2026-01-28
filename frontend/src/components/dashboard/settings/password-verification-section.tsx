@@ -185,7 +185,7 @@ export function PasswordVerificationSection({
     error: "",
     challenge: null,
   })
-  const [resendCooldown, resetCountdown] = useCountdown(0)
+  const [resendCooldown, startTimer] = useCountdown(0)
   const { stage, code, error, challenge } = state
   const complete = stage === "verified"
   const isBusy = stage === "sending" || stage === "verifying"
@@ -207,8 +207,8 @@ export function PasswordVerificationSection({
       error: "",
       challenge: null,
     })
-    resetCountdown()
-  }, [method, resetCountdown])
+    startTimer()
+  }, [method, startTimer])
 
   useEffect(() => {
     onVerificationChange(complete)
@@ -220,7 +220,7 @@ export function PasswordVerificationSection({
       setState((current) => ({ ...current, stage: nextStage })),
     onErrorChange: (nextError) =>
       setState((current) => ({ ...current, error: nextError })),
-    onResendCooldownChange: resetCountdown,
+    onResendCooldownChange: startTimer,
     onChallengeChange: (nextChallenge) =>
       setState((current) => ({ ...current, challenge: nextChallenge })),
   })

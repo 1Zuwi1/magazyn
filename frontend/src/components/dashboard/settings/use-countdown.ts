@@ -19,9 +19,9 @@ export function useCountdown(initialSeconds: number) {
     setSeconds(initialSeconds)
   }, [initialSeconds])
 
-  const resetCountdown = (seconds?: number) => {
+  const startTimer = (seconds?: number) => {
     setSeconds(seconds ?? 0)
   }
 
-  return [seconds, resetCountdown] as const
+  return [seconds, startTimer] as const
 }

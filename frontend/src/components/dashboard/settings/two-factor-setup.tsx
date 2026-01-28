@@ -6,6 +6,7 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
 import { useCallback, useEffect, useReducer, useState } from "react"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -146,7 +147,7 @@ interface TwoFactorSetupFlowParams {
   setupState: TwoFactorSetupState
   dispatch: (action: TwoFactorSetupAction) => void
   onStatusChange: (status: TwoFactorStatus) => void
-  resetCountdown: (cooldown?: number) => void
+  startTimer: (cooldown?: number) => void
 }
 
 function useTwoFactorSetupFlow({
@@ -155,13 +156,14 @@ function useTwoFactorSetupFlow({
   setupState,
   dispatch,
   onStatusChange,
-  resetCountdown,
+  startTimer,
 }: TwoFactorSetupFlowParams) {
   const { challenge, code } = setupState
   const resetFlow = useCallback(() => {
     dispatch({ type: "reset" })
-    resetCountdown()
-  }, [dispatch, resetCountdown])
+    startTimer()
+  }, [dispatch, startTimer])
+  const locale = useLocale()
 
   // If method changes while in idle, we don't need to do much,
   // but if we were in the middle of a flow, we should probably reset or update.
@@ -178,11 +180,11 @@ function useTwoFactorSetupFlow({
     onStatusChange("setup")
 
     try {
-      const newChallenge = await createTwoFactorChallenge(method)
+      const newChallenge = await createTwoFactorChallenge(method, locale)
       dispatch({ type: "set_challenge", challenge: newChallenge })
       dispatch({ type: "set_stage", stage: "awaiting" })
       await sendVerificationCode(newChallenge.sessionId)
-      resetCountdown(60)
+      startTimer(60)
     } catch {
       dispatch({
         type: "set_error",
@@ -202,7 +204,7 @@ function useTwoFactorSetupFlow({
 
     try {
       await sendVerificationCode(challenge.sessionId)
-      resetCountdown(60)
+      startTimer(60)
       dispatch({ type: "set_stage", stage: "awaiting" })
     } catch {
       dispatch({
@@ -535,7 +537,7 @@ export function TwoFactorSetup({
     twoFactorSetupReducer,
     initialTwoFactorSetupState
   )
-  const [resendCooldown, resetCountdown] = useCountdown(0)
+  const [resendCooldown, startTimer] = useCountdown(0)
   const [showRecoveryCodes, setShowRecoveryCodes] = useState<boolean>(false)
   const {
     stage: setupStage,
@@ -563,7 +565,7 @@ export function TwoFactorSetup({
       setupState,
       dispatch,
       onStatusChange,
-      resetCountdown,
+      startTimer,
     })
 
   const handleCancelSetup = (): void => {

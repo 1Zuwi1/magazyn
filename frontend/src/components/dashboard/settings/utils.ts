@@ -1,3 +1,4 @@
+import type { Locale } from "next-intl"
 import {
   MOCK_AUTHENTICATOR_SECRET,
   MOCK_TWO_FACTOR_DESTINATIONS,
@@ -35,10 +36,11 @@ export const getDestinationForMethod = (method: TwoFactorMethod): string => {
 }
 
 export const createTwoFactorChallenge = async (
-  method: TwoFactorMethod
+  method: TwoFactorMethod,
+  locale: Locale
 ): Promise<TwoFactorChallenge> => {
   await wait(900)
-  const issuedAt = new Date().toLocaleTimeString("pl-PL", {
+  const issuedAt = new Date().toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
   })

@@ -18,7 +18,7 @@ export const PasswordSchema = z
 export const ChangePasswordFormSchema = z
   .object({
     newPassword: PasswordSchema,
-    oldPassword: PasswordSchema,
+    oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
     confirmPassword: z.string().min(1, "Potwierdzenie hasła jest wymagane"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
@@ -30,7 +30,7 @@ export const ChangePasswordSchema = createApiSchema({
   POST: {
     input: z.object({
       newPassword: PasswordSchema,
-      oldPassword: PasswordSchema,
+      oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
     }),
     output: z.null(),
   },
