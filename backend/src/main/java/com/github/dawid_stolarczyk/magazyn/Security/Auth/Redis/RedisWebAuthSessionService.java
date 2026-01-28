@@ -1,6 +1,5 @@
 package com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yubico.webauthn.AssertionRequest;
 import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
 import org.springframework.data.redis.core.RedisTemplate;

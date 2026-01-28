@@ -1,7 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Security.Config;
 
-import com.yubico.webauthn.RelyingParty;
 import com.yubico.webauthn.CredentialRepository;
+import com.yubico.webauthn.RelyingParty;
 import com.yubico.webauthn.data.RelyingPartyIdentity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

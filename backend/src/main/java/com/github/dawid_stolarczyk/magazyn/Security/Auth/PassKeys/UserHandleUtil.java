@@ -8,7 +8,8 @@ import java.security.NoSuchAlgorithmException;
 
 public final class UserHandleUtil {
 
-    private UserHandleUtil() {}
+    private UserHandleUtil() {
+    }
 
     public static ByteArray fromEmail(String email) {
         try {
