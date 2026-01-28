@@ -13,7 +13,7 @@ describe("LoginSchema", () => {
   it("accepts valid login input", () => {
     const validInput = {
       email: "testuser@example.com",
-      password: "password123",
+      password: "Password123!",
     }
 
     const result = LoginSchema.shape.POST.shape.input.safeParse(validInput)
@@ -40,7 +40,7 @@ describe("LoginSchema", () => {
   it("rejects invalid emails", () => {
     const invalidInput = {
       email: "invalid@email",
-      password: "password123",
+      password: "Password123!",
     }
 
     const result = LoginSchema.shape.POST.shape.input.safeParse(invalidInput)
@@ -54,7 +54,7 @@ describe("LoginSchema", () => {
   it("accepts valid email", () => {
     const validInput = {
       email: "validEmail@example.com",
-      password: "password123",
+      password: "Password123!",
     }
 
     const result = LoginSchema.shape.POST.shape.input.safeParse(validInput)
@@ -86,8 +86,8 @@ describe("RegisterSchema", () => {
     const validInput = {
       fullName: "Test User",
       email: "user@example.com",
-      password: "password123",
-      confirmPassword: "password123",
+      password: "Password123!",
+      confirmPassword: "Password123!",
     }
 
     const result = FormRegisterSchema.safeParse(validInput)
@@ -99,8 +99,8 @@ describe("RegisterSchema", () => {
     const invalidInput = {
       fullName: "Test User",
       email: "user@example.com",
-      password: "password123",
-      confirmPassword: "different123",
+      password: "Password123!",
+      confirmPassword: "Different123!",
     }
 
     const result = FormRegisterSchema.safeParse(invalidInput)
@@ -115,8 +115,8 @@ describe("RegisterSchema", () => {
     const invalidInput = {
       fullName: "Test User",
       email: "not-an-email",
-      password: "password123",
-      confirmPassword: "password123",
+      password: "Password123!",
+      confirmPassword: "Password123!",
     }
 
     const result = FormRegisterSchema.safeParse(invalidInput)
@@ -128,8 +128,8 @@ describe("RegisterSchema", () => {
     const invalidInput = {
       fullName: "A",
       email: "user@example.com",
-      password: "password123",
-      confirmPassword: "password123",
+      password: "Password123!",
+      confirmPassword: "Password123!",
     }
 
     const result = FormRegisterSchema.safeParse(invalidInput)
