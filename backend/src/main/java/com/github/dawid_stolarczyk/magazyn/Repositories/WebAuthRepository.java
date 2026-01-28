@@ -12,9 +12,11 @@ public interface WebAuthRepository extends JpaRepository<WebAuthnCredential, Lon
             String credentialId,
             String userHandle
     );
+
     Optional<WebAuthnCredential> findByCredentialId(String credentialId);
 
     List<WebAuthnCredential> findByUserHandle(String userHandle);
+
     Optional<WebAuthnCredential> findFirstByUserHandle(String userHandle);
 
 

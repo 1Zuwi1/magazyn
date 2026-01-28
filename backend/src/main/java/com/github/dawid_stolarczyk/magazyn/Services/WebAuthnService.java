@@ -209,6 +209,7 @@ public class WebAuthnService {
         redisService.delete(userHandle.getBase64Url());
         return true;
     }
+
     private void successLogin(String email, HttpServletResponse httpServletResponse, HttpServletRequest httpServletRequest) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthenticationException(AuthError.INVALID_CREDENTIALS.name()));
