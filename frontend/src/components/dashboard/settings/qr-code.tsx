@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import QRCode from "qrcode"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
@@ -29,6 +30,7 @@ export function QRCodeDisplay({
     let isCancelled = false
     if (!value) {
       setDataUrl(null)
+      setError(null)
       return
     }
     const generateQrCode = async () => {
@@ -91,12 +93,12 @@ export function QRCodeDisplay({
         className
       )}
     >
-      {/* biome-ignore lint: QR code is generated dynamically as data URL */}
-      <img
+      <Image
         alt="Kod QR do zeskanowania"
         className="block"
         height={size}
         src={dataUrl}
+        unoptimized
         width={size}
       />
     </div>

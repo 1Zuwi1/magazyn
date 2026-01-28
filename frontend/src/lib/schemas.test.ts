@@ -4,10 +4,63 @@ import {
   ApiMeSchema,
   FormRegisterSchema,
   LoginSchema,
+  PasswordSchema,
   RegisterSchema,
   Resend2FASchema,
   Verify2FASchema,
 } from "./schemas"
+
+describe("PasswordSchema", () => {
+  it("accepts a strong password", () => {
+    const result = PasswordSchema.safeParse("Password123!")
+
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects passwords missing an uppercase letter", () => {
+    const result = PasswordSchema.safeParse("password123!")
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Hasło musi zawierać co najmniej jedną wielką literę"
+      )
+    }
+  })
+
+  it("rejects passwords missing a lowercase letter", () => {
+    const result = PasswordSchema.safeParse("PASSWORD123!")
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Hasło musi zawierać co najmniej jedną małą literę"
+      )
+    }
+  })
+
+  it("rejects passwords missing a digit", () => {
+    const result = PasswordSchema.safeParse("Password!!!")
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Hasło musi zawierać co najmniej jedną cyfrę"
+      )
+    }
+  })
+
+  it("rejects passwords missing a special character", () => {
+    const result = PasswordSchema.safeParse("Password123")
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Hasło musi zawierać co najmniej jeden znak specjalny"
+      )
+    }
+  })
+})
 
 describe("LoginSchema", () => {
   it("accepts valid login input", () => {

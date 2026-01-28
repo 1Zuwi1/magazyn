@@ -1,7 +1,7 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import type { ZodError } from "zod"
 import { Button } from "@/components/ui/button"
@@ -42,6 +42,7 @@ export function PasswordSection({
   const [verificationComplete, setVerificationComplete] = useState(
     !verificationRequired
   )
+  const verificationCompleteRef = useRef(verificationComplete)
   const [isVerificationDialogOpen, setIsVerificationDialogOpen] =
     useState(false)
 
@@ -49,7 +50,12 @@ export function PasswordSection({
     setVerificationComplete(!verificationRequired)
   }, [verificationRequired])
 
-  const verificationBlocked = verificationRequired && !verificationComplete
+  useEffect(() => {
+    verificationCompleteRef.current = verificationComplete
+  }, [verificationComplete])
+
+  const isVerificationBlocked = (): boolean =>
+    verificationRequired && !verificationCompleteRef.current
 
   const form = useForm({
     defaultValues: {
@@ -58,8 +64,8 @@ export function PasswordSection({
       confirmPassword: "",
       twoFactorCode: "",
     },
-    onSubmit: async ({ value }) => {
-      if (verificationBlocked && !value.twoFactorCode) {
+    onSubmit: async () => {
+      if (isVerificationBlocked()) {
         setIsVerificationDialogOpen(true)
         return
       }
@@ -197,6 +203,7 @@ export function PasswordSection({
                   onVerificationChange={(complete) => {
                     setVerificationComplete(complete)
                     if (complete) {
+                      verificationCompleteRef.current = true
                       setIsVerificationDialogOpen(false)
                       form.handleSubmit()
                     }

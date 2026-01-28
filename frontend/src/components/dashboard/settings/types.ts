@@ -21,7 +21,7 @@ export type PasswordVerificationStage =
 export interface SettingsUser {
   id: number
   email: string
-  fullName: string | null
+  fullName?: string | null
   role: AccountRole
   status: AccountStatus
   twoFactorEnabled: boolean

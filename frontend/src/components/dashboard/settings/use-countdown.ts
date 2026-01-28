@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 export function useCountdown(initialSeconds: number) {
   const [seconds, setSeconds] = useState<number>(initialSeconds)
@@ -27,11 +27,11 @@ export function useCountdown(initialSeconds: number) {
     isActiveRef.current = initialSeconds > 0
   }, [initialSeconds])
 
-  const startTimer = (nextSeconds?: number) => {
+  const startTimer = useCallback((nextSeconds?: number) => {
     const resolvedSeconds = nextSeconds ?? 0
     setSeconds(resolvedSeconds)
     isActiveRef.current = resolvedSeconds > 0
-  }
+  }, [])
 
   return [seconds, startTimer] as const
 }
