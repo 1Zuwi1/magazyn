@@ -6,7 +6,8 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useReducer, useState } from "react"
+import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -93,34 +94,74 @@ function TwoFactorMethodInput({
   )
 }
 
-function useTwoFactorSetupFlow(
-  status: TwoFactorStatus,
-  method: TwoFactorMethod,
-  challenge: TwoFactorChallenge | null,
-  code: string,
-  onStatusChange: (status: TwoFactorStatus) => void,
-  setSetupStage: (stage: TwoFactorSetupStage) => void,
-  setCode: (code: string) => void,
-  setError: (error: string) => void,
-  setSetupNote: (note: string) => void,
-  setResendCooldown: (cooldown: number) => void,
-  setChallenge: (challenge: TwoFactorChallenge | null) => void
-) {
+interface TwoFactorSetupState {
+  stage: TwoFactorSetupStage
+  challenge: TwoFactorChallenge | null
+  code: string
+  error: string
+  note: string
+}
+
+type TwoFactorSetupAction =
+  | { type: "reset" }
+  | { type: "set_stage"; stage: TwoFactorSetupStage }
+  | { type: "set_challenge"; challenge: TwoFactorChallenge | null }
+  | { type: "set_code"; code: string }
+  | { type: "set_error"; error: string }
+  | { type: "set_note"; note: string }
+
+const initialTwoFactorSetupState: TwoFactorSetupState = {
+  stage: "idle",
+  challenge: null,
+  code: "",
+  error: "",
+  note: "",
+}
+
+function twoFactorSetupReducer(
+  state: TwoFactorSetupState,
+  action: TwoFactorSetupAction
+): TwoFactorSetupState {
+  switch (action.type) {
+    case "reset":
+      return { ...initialTwoFactorSetupState }
+    case "set_stage":
+      return { ...state, stage: action.stage }
+    case "set_challenge":
+      return { ...state, challenge: action.challenge }
+    case "set_code":
+      return { ...state, code: action.code }
+    case "set_error":
+      return { ...state, error: action.error }
+    case "set_note":
+      return { ...state, note: action.note }
+    default:
+      return state
+  }
+}
+
+interface TwoFactorSetupFlowParams {
+  status: TwoFactorStatus
+  method: TwoFactorMethod
+  setupState: TwoFactorSetupState
+  dispatch: (action: TwoFactorSetupAction) => void
+  onStatusChange: (status: TwoFactorStatus) => void
+  resetCountdown: (cooldown?: number) => void
+}
+
+function useTwoFactorSetupFlow({
+  status,
+  method,
+  setupState,
+  dispatch,
+  onStatusChange,
+  resetCountdown,
+}: TwoFactorSetupFlowParams) {
+  const { challenge, code } = setupState
   const resetFlow = useCallback(() => {
-    setSetupStage("idle")
-    setChallenge(null)
-    setCode("")
-    setError("")
-    setSetupNote("")
-    setResendCooldown(0)
-  }, [
-    setSetupStage,
-    setChallenge,
-    setCode,
-    setError,
-    setSetupNote,
-    setResendCooldown,
-  ])
+    dispatch({ type: "reset" })
+    resetCountdown()
+  }, [dispatch, resetCountdown])
 
   // If method changes while in idle, we don't need to do much,
   // but if we were in the middle of a flow, we should probably reset or update.
@@ -132,17 +173,22 @@ function useTwoFactorSetupFlow(
   }, [status, resetFlow])
 
   const startSetup = async () => {
-    setError("")
-    setSetupStage("requesting")
+    dispatch({ type: "set_error", error: "" })
+    dispatch({ type: "set_stage", stage: "requesting" })
     onStatusChange("setup")
 
     try {
       const newChallenge = await createTwoFactorChallenge(method)
-      setChallenge(newChallenge)
-      setSetupStage("awaiting")
+      dispatch({ type: "set_challenge", challenge: newChallenge })
+      dispatch({ type: "set_stage", stage: "awaiting" })
+      await sendVerificationCode(newChallenge.sessionId)
+      resetCountdown(60)
     } catch {
-      setError("Nie udało się zainicjować konfiguracji. Spróbuj ponownie.")
-      setSetupStage("error")
+      dispatch({
+        type: "set_error",
+        error: "Nie udało się zainicjować konfiguracji. Spróbuj ponownie.",
+      })
+      dispatch({ type: "set_stage", stage: "error" })
     }
   }
 
@@ -151,41 +197,51 @@ function useTwoFactorSetupFlow(
       return
     }
 
-    setError("")
-    setSetupStage("sending")
+    dispatch({ type: "set_error", error: "" })
+    dispatch({ type: "set_stage", stage: "sending" })
 
     try {
       await sendVerificationCode(challenge.sessionId)
-      setResendCooldown(60)
-      setSetupStage("awaiting")
+      resetCountdown(60)
+      dispatch({ type: "set_stage", stage: "awaiting" })
     } catch {
-      setError("Nie udało się wysłać kodu. Spróbuj ponownie.")
-      setSetupStage("error")
+      dispatch({
+        type: "set_error",
+        error: "Nie udało się wysłać kodu. Spróbuj ponownie.",
+      })
+      dispatch({ type: "set_stage", stage: "error" })
     }
   }
 
   const verifySetup = async () => {
-    setSetupStage("verifying")
-    setError("")
+    dispatch({ type: "set_stage", stage: "verifying" })
+    dispatch({ type: "set_error", error: "" })
 
     try {
       const isValid = await verifyOneTimeCode(code)
 
       if (isValid) {
         onStatusChange("enabled")
-        setSetupStage("idle")
-        setSetupNote(
-          `Weryfikacja dwuetapowa została włączona przy użyciu: ${
+        dispatch({ type: "set_stage", stage: "idle" })
+        dispatch({
+          type: "set_note",
+          note: `Weryfikacja dwuetapowa została włączona przy użyciu: ${
             TWO_FACTOR_METHODS.find((m) => m.value === method)?.label
-          }.`
-        )
+          }.`,
+        })
       } else {
-        setError("Nieprawidłowy kod weryfikacyjny. Spróbuj ponownie.")
-        setSetupStage("error")
+        dispatch({
+          type: "set_error",
+          error: "Nieprawidłowy kod weryfikacyjny. Spróbuj ponownie.",
+        })
+        dispatch({ type: "set_stage", stage: "error" })
       }
     } catch {
-      setError("Wystąpił błąd podczas weryfikacji. Spróbuj ponownie.")
-      setSetupStage("error")
+      dispatch({
+        type: "set_error",
+        error: "Wystąpił błąd podczas weryfikacji. Spróbuj ponownie.",
+      })
+      dispatch({ type: "set_stage", stage: "error" })
     }
   }
 
@@ -212,12 +268,17 @@ function AuthenticatorSetup({
   const totpUri = generateTotpUri(secret, userEmail ?? "user@magazynpro.pl")
 
   const handleCopySecret = async (): Promise<void> => {
+    if (!navigator.clipboard) {
+      toast.error("Schowek jest niedostępny w tej przeglądarce.")
+      return
+    }
+
     try {
       await navigator.clipboard.writeText(secret.replace(/\s/g, ""))
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Clipboard API not available
+      toast.error("Nie udało się skopiować klucza. Skopiuj ręcznie.")
     }
   }
 
@@ -470,13 +531,19 @@ export function TwoFactorSetup({
   onMethodChange,
   userEmail,
 }: TwoFactorSetupProps) {
-  const [setupStage, setSetupStage] = useState<TwoFactorSetupStage>("idle")
-  const [challenge, setChallenge] = useState<TwoFactorChallenge | null>(null)
-  const [code, setCode] = useState<string>("")
-  const [error, setError] = useState<string>("")
-  const [resendCooldown, setResendCooldown] = useCountdown(0)
-  const [setupNote, setSetupNote] = useState<string>("")
+  const [setupState, dispatch] = useReducer(
+    twoFactorSetupReducer,
+    initialTwoFactorSetupState
+  )
+  const [resendCooldown, resetCountdown] = useCountdown(0)
   const [showRecoveryCodes, setShowRecoveryCodes] = useState<boolean>(false)
+  const {
+    stage: setupStage,
+    challenge,
+    code,
+    error,
+    note: setupNote,
+  } = setupState
   const enabled = status === "enabled"
   const setupActive = status === "setup"
   const isBusy =
@@ -490,19 +557,14 @@ export function TwoFactorSetup({
   const canResendCode = resendCooldown === 0 && !isBusy
 
   const { resetFlow, startSetup, resendCode, verifySetup } =
-    useTwoFactorSetupFlow(
+    useTwoFactorSetupFlow({
       status,
       method,
-      challenge,
-      code,
+      setupState,
+      dispatch,
       onStatusChange,
-      setSetupStage,
-      setCode,
-      setError,
-      setSetupNote,
-      setResendCooldown,
-      setChallenge
-    )
+      resetCountdown,
+    })
 
   const handleCancelSetup = (): void => {
     onStatusChange("disabled")
@@ -564,7 +626,9 @@ export function TwoFactorSetup({
               code={code}
               isBusy={setupStage === "verifying"}
               method={method}
-              onCodeChange={setCode}
+              onCodeChange={(nextCode) =>
+                dispatch({ type: "set_code", code: nextCode })
+              }
               onResend={handleResendCode}
               onVerify={handleVerifyCode}
               resendCooldown={resendCooldown}

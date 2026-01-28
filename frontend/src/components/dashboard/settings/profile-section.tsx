@@ -108,6 +108,7 @@ export function ProfileSection({ user }: ProfileSectionProps) {
               .slice(0, 2)
               .join("")
               .toUpperCase()}
+            {/* TODO: Add fallback image when displayName is not available */}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold text-lg">{displayName}</p>

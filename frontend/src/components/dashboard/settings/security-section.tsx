@@ -53,6 +53,7 @@ export function SecuritySection({
   const [twoFactorStatus, setTwoFactorStatus] = useState<TwoFactorStatus>(
     initialTwoFactorEnabled ? "enabled" : "disabled"
   )
+  // FIXME: In production this should be fetched from user settings
   const [twoFactorMethod, setTwoFactorMethod] = useState<TwoFactorMethod>(
     TWO_FACTOR_METHODS[0].value
   )

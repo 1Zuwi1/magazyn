@@ -2,6 +2,8 @@
 
 set -e
 
+export PATH="$HOME/.bun/bin:$PATH"
+
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT/frontend"
 

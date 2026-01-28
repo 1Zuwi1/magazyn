@@ -15,5 +15,13 @@ export function useCountdown(initialSeconds: number) {
     return () => clearInterval(timer)
   }, [seconds])
 
-  return [seconds, setSeconds] as const
+  useEffect(() => {
+    setSeconds(initialSeconds)
+  }, [initialSeconds])
+
+  const resetCountdown = (seconds?: number) => {
+    setSeconds(seconds ?? 0)
+  }
+
+  return [seconds, resetCountdown] as const
 }

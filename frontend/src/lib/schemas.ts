@@ -6,6 +6,10 @@ const txtEncoder = new TextEncoder()
 export const PasswordSchema = z
   .string()
   .min(8, "Hasło musi mieć co najmniej 8 znaków")
+  .regex(/[A-Z]/, "Hasło musi zawierać co najmniej jedną wielką literę")
+  .regex(/[a-z]/, "Hasło musi zawierać co najmniej jedną małą literę")
+  .regex(/[0-9]/, "Hasło musi zawierać co najmniej jedną cyfrę")
+  .regex(/[^A-Za-z0-9]/, "Hasło musi zawierać co najmniej jeden znak specjalny")
   .refine((value) => {
     const bytes = txtEncoder.encode(value).length
     return bytes <= 72

@@ -25,15 +25,15 @@ export function OtpInput({ id, onChange, value, disabled }: OtpInputProps) {
       value={value}
     >
       <InputOTPGroup className="gap-2 *:data-[slot=input-otp-slot]:h-9 *:data-[slot=input-otp-slot]:w-8 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-sm">
-        <InputOTPSlot index={0} />
-        <InputOTPSlot index={1} />
-        <InputOTPSlot index={2} />
+        {Array.from({ length: OTP_LENGTH / 2 }).map((_, idx) => (
+          <InputOTPSlot index={idx} key={idx} />
+        ))}
       </InputOTPGroup>
       <InputOTPSeparator />
       <InputOTPGroup className="gap-2 *:data-[slot=input-otp-slot]:h-9 *:data-[slot=input-otp-slot]:w-8 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-sm">
-        <InputOTPSlot index={3} />
-        <InputOTPSlot index={4} />
-        <InputOTPSlot index={5} />
+        {Array.from({ length: OTP_LENGTH / 2 }).map((_, idx) => (
+          <InputOTPSlot index={idx + OTP_LENGTH / 2} key={idx} />
+        ))}
       </InputOTPGroup>
     </InputOTP>
   )

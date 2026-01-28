@@ -102,7 +102,7 @@ export function generateTotpUri(
 ): string {
   const encodedIssuer = encodeURIComponent(issuer)
   const encodedAccount = encodeURIComponent(accountName)
-  const cleanSecret = secret.replace(/\s/g, "")
+  const cleanSecret = secret.replace(/\s/g, "").toUpperCase()
 
   return `otpauth://totp/${encodedIssuer}:${encodedAccount}?secret=${cleanSecret}&issuer=${encodedIssuer}&algorithm=SHA1&digits=6&period=30`
 }
