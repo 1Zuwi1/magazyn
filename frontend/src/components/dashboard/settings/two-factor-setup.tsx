@@ -7,7 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useLocale } from "next-intl"
-import { useCallback, useEffect, useReducer, useState } from "react"
+import { useCallback, useEffect, useReducer, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -270,6 +270,7 @@ function AuthenticatorSetup({
   const [copied, setCopied] = useState(false)
   const secret = challenge?.secret ?? MOCK_AUTHENTICATOR_SECRET
   const totpUri = generateTotpUri(secret, userEmail ?? "user@magazynpro.pl")
+  const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleCopySecret = async (): Promise<void> => {
     if (!navigator.clipboard) {
@@ -280,11 +281,25 @@ function AuthenticatorSetup({
     try {
       await navigator.clipboard.writeText(secret.replace(/\s/g, ""))
       setCopied(true)
-      setTimeout(() => setCopied(false), COPY_FEEDBACK_TIMEOUT_MS)
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current)
+      }
+      copyTimeoutRef.current = setTimeout(
+        () => setCopied(false),
+        COPY_FEEDBACK_TIMEOUT_MS
+      )
     } catch {
       toast.error("Nie udało się skopiować klucza. Skopiuj ręcznie.")
     }
   }
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current)
+      }
+    }
+  }, [])
 
   return (
     <div className="grid gap-6 sm:grid-cols-[auto_1fr]">

@@ -56,9 +56,10 @@ export function PasswordSection({
       oldPassword: "",
       newPassword: "",
       confirmPassword: "",
+      twoFactorCode: "",
     },
-    onSubmit: async () => {
-      if (verificationBlocked) {
+    onSubmit: async ({ value }) => {
+      if (verificationBlocked && !value.twoFactorCode) {
         setIsVerificationDialogOpen(true)
         return
       }
@@ -185,19 +186,24 @@ export function PasswordSection({
         >
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle className="sr-only">
-                Potwierdź 2FA przed zmianą
-              </DialogTitle>
+              <DialogTitle>Potwierdź 2FA przed zmianą</DialogTitle>
             </DialogHeader>
-            <PasswordVerificationSection
-              method={twoFactorMethod}
-              onVerificationChange={(complete) => {
-                setVerificationComplete(complete)
-                if (complete) {
-                  setIsVerificationDialogOpen(false)
-                }
-              }}
-            />
+            <form.Field name="twoFactorCode">
+              {(field) => (
+                <PasswordVerificationSection
+                  code={field.state.value}
+                  method={twoFactorMethod}
+                  onInputChange={(code) => field.handleChange(code)}
+                  onVerificationChange={(complete) => {
+                    setVerificationComplete(complete)
+                    if (complete) {
+                      setIsVerificationDialogOpen(false)
+                      form.handleSubmit()
+                    }
+                  }}
+                />
+              )}
+            </form.Field>
           </DialogContent>
         </Dialog>
       ) : null}

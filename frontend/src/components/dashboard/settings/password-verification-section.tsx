@@ -23,6 +23,8 @@ import {
 interface PasswordVerificationSectionProps {
   method: TwoFactorMethod
   onVerificationChange: (complete: boolean) => void
+  onInputChange: (code: string) => void
+  code: string
 }
 
 interface PasswordVerificationFlowHandlers {
@@ -35,7 +37,6 @@ interface PasswordVerificationFlowHandlers {
 
 interface PasswordVerificationState {
   stage: PasswordVerificationStage
-  code: string
   error: string
   challenge: PasswordChallenge | null
 }
@@ -178,15 +179,16 @@ function CodeInputEntry({
 export function PasswordVerificationSection({
   method,
   onVerificationChange,
+  onInputChange,
+  code,
 }: PasswordVerificationSectionProps) {
   const [state, setState] = useState<PasswordVerificationState>({
     stage: "idle",
-    code: "",
     error: "",
     challenge: null,
   })
   const [resendCooldown, startTimer] = useCountdown(0)
-  const { stage, code, error, challenge } = state
+  const { stage, error, challenge } = state
   const complete = stage === "verified"
   const isBusy = stage === "sending" || stage === "verifying"
   const isSending = stage === "sending"
@@ -204,7 +206,6 @@ export function PasswordVerificationSection({
 
     setState({
       stage: "idle",
-      code: "",
       error: "",
       challenge: null,
     })
@@ -291,9 +292,9 @@ export function PasswordVerificationSection({
               code={code}
               isBusy={isBusy}
               method={method}
-              onCodeChange={(nextCode) =>
-                setState((current) => ({ ...current, code: nextCode }))
-              }
+              onCodeChange={(nextCode) => {
+                onInputChange(nextCode)
+              }}
               onResend={handleResendCode}
               onVerify={handleVerifyCode}
               resendCooldown={resendCooldown}

@@ -17,6 +17,7 @@ export const PasswordSchema = z
 
 export const ChangePasswordFormSchema = z
   .object({
+    twoFactorCode: z.string(),
     newPassword: PasswordSchema,
     oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
     confirmPassword: z.string().min(1, "Potwierdzenie hasła jest wymagane"),
@@ -93,7 +94,7 @@ export const ApiMeSchema = createApiSchema({
     output: z.object({
       id: z.number(),
       email: z.email(),
-      full_name: z.string().nullable(),
+      full_name: z.string().nullish(),
       two_factor_enabled: z.boolean(),
       status: z.enum(["verified", "unverified", "banned"]),
       role: z.enum(["user", "admin"]),
