@@ -49,6 +49,10 @@ export const RECOVERY_CODES = [
 
 export const OTP_LENGTH = 6
 export const RESEND_COOLDOWN_SECONDS = 30
+export const TWO_FACTOR_RESEND_SECONDS = 60
+export const QR_CODE_DEFAULT_SIZE = 160
+export const AUTHENTICATOR_QR_SIZE = 140
+export const COPY_FEEDBACK_TIMEOUT_MS = 2000
 export const NON_DIGIT_REGEX = /\D/g
 export const MOCK_AUTHENTICATOR_SECRET = "H8X2 Q9LP 4T7Z 1V6K"
 export const MOCK_TWO_FACTOR_DESTINATIONS = {

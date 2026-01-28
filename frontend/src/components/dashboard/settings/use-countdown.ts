@@ -1,26 +1,36 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 export function useCountdown(initialSeconds: number) {
   const [seconds, setSeconds] = useState<number>(initialSeconds)
+  const isActiveRef = useRef(initialSeconds > 0)
 
   useEffect(() => {
-    if (seconds <= 0) {
-      return
-    }
-
     const timer = setInterval(() => {
-      setSeconds((current) => Math.max(0, current - 1))
+      if (!isActiveRef.current) {
+        return
+      }
+
+      setSeconds((current) => {
+        if (current <= 0) {
+          isActiveRef.current = false
+          return 0
+        }
+        return Math.max(0, current - 1)
+      })
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [seconds])
+  }, [])
 
   useEffect(() => {
     setSeconds(initialSeconds)
+    isActiveRef.current = initialSeconds > 0
   }, [initialSeconds])
 
-  const startTimer = (seconds?: number) => {
-    setSeconds(seconds ?? 0)
+  const startTimer = (nextSeconds?: number) => {
+    const resolvedSeconds = nextSeconds ?? 0
+    setSeconds(resolvedSeconds)
+    isActiveRef.current = resolvedSeconds > 0
   }
 
   return [seconds, startTimer] as const

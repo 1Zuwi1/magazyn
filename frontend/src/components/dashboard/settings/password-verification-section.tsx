@@ -189,6 +189,7 @@ export function PasswordVerificationSection({
   const { stage, code, error, challenge } = state
   const complete = stage === "verified"
   const isBusy = stage === "sending" || stage === "verifying"
+  const isSending = stage === "sending"
   const canResendCode = resendCooldown === 0 && !isBusy
   const canShowCodeInput =
     method === "authenticator" ||
@@ -269,9 +270,10 @@ export function PasswordVerificationSection({
         </Alert>
       ) : (
         <div className="space-y-3">
-          {method !== "authenticator" && stage === "idle" ? (
+          {method !== "authenticator" && (stage === "idle" || isSending) ? (
             <Button
-              isLoading={false}
+              disabled={isSending}
+              isLoading={isSending}
               onClick={handleStartVerification}
               type="button"
               variant="outline"
@@ -280,8 +282,9 @@ export function PasswordVerificationSection({
             </Button>
           ) : null}
 
-          <PasswordVerificationAlerts challenge={challenge} error={error} />
-
+          {isSending ? (
+            <PasswordVerificationAlerts challenge={challenge} error={error} />
+          ) : null}
           {canShowCodeInput ? (
             <CodeInputEntry
               canResend={canResendCode}

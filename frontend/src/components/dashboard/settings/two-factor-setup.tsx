@@ -18,10 +18,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import {
+  AUTHENTICATOR_QR_SIZE,
+  COPY_FEEDBACK_TIMEOUT_MS,
   MOCK_AUTHENTICATOR_SECRET,
   OTP_LENGTH,
   RECOVERY_CODES,
   TWO_FACTOR_METHODS,
+  TWO_FACTOR_RESEND_SECONDS,
 } from "./constants"
 import { OtpInput } from "./otp-input"
 import { generateTotpUri, QRCodeDisplay } from "./qr-code"
@@ -70,6 +73,7 @@ function TwoFactorMethodInput({
         return (
           <div className="flex" key={m.value}>
             <RadioGroupItem
+              aria-label={m.label}
               className="peer sr-only"
               id={`method-${m.value}`}
               value={m.value}
@@ -185,11 +189,11 @@ function useTwoFactorSetupFlow({
       dispatch({ type: "set_stage", stage: "awaiting" })
       await sendVerificationCode(newChallenge.sessionId)
     } catch {
-      dispatch({
-        type: "set_error",
-        error: "Nie udało się zainicjować konfiguracji. Spróbuj ponownie.",
-      })
+      const message =
+        "Nie udało się zainicjować konfiguracji. Spróbuj ponownie."
+      dispatch({ type: "set_error", error: message })
       dispatch({ type: "set_stage", stage: "error" })
+      toast.error(message)
     }
   }
 
@@ -203,14 +207,13 @@ function useTwoFactorSetupFlow({
 
     try {
       await sendVerificationCode(challenge.sessionId)
-      startTimer(60)
+      startTimer(TWO_FACTOR_RESEND_SECONDS)
       dispatch({ type: "set_stage", stage: "awaiting" })
     } catch {
-      dispatch({
-        type: "set_error",
-        error: "Nie udało się wysłać kodu. Spróbuj ponownie.",
-      })
+      const message = "Nie udało się wysłać kodu. Spróbuj ponownie."
+      dispatch({ type: "set_error", error: message })
       dispatch({ type: "set_stage", stage: "error" })
+      toast.error(message)
     }
   }
 
@@ -277,7 +280,7 @@ function AuthenticatorSetup({
     try {
       await navigator.clipboard.writeText(secret.replace(/\s/g, ""))
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setTimeout(() => setCopied(false), COPY_FEEDBACK_TIMEOUT_MS)
     } catch {
       toast.error("Nie udało się skopiować klucza. Skopiuj ręcznie.")
     }
@@ -286,7 +289,7 @@ function AuthenticatorSetup({
   return (
     <div className="grid gap-6 sm:grid-cols-[auto_1fr]">
       <div className="flex flex-col items-center gap-3">
-        <QRCodeDisplay size={140} value={totpUri} />
+        <QRCodeDisplay size={AUTHENTICATOR_QR_SIZE} value={totpUri} />
         <p className="text-center text-muted-foreground text-xs">
           Zeskanuj kodem QR
         </p>
@@ -306,6 +309,7 @@ function AuthenticatorSetup({
             value={secret}
           />
           <Button
+            aria-label={copied ? "Klucz skopiowany" : "Skopiuj klucz"}
             onClick={handleCopySecret}
             size="icon"
             type="button"

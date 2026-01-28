@@ -3,6 +3,7 @@
 import QRCode from "qrcode"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
+import { QR_CODE_DEFAULT_SIZE } from "./constants"
 
 interface QRCodeDisplayProps {
   /** The text/URL to encode in the QR code */
@@ -17,7 +18,7 @@ interface QRCodeDisplayProps {
 
 export function QRCodeDisplay({
   value,
-  size = 160,
+  size = QR_CODE_DEFAULT_SIZE,
   className,
   errorCorrectionLevel = "M",
 }: QRCodeDisplayProps) {

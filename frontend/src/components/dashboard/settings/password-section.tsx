@@ -65,6 +65,7 @@ export function PasswordSection({
 
       try {
         await wait(1000)
+        form.reset()
         toast.success("Hasło zostało zmienione.")
       } catch {
         toast.error("Nie udało się zmienić hasła. Spróbuj ponownie.")
