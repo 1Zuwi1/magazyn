@@ -33,6 +33,8 @@ public class User {
     @Column(nullable = false)
     @NotBlank
     private String password;
+    @Column(nullable = false, unique = true, length = 64)
+    private String userHandle; // Base64Url
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private UserRole role = UserRole.USER;
@@ -55,9 +57,6 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BackupCode> backupCodes = new ArrayList<>();
 
-    public User() {
-        addTwoFactorMethod(new TwoFactorMethod(TwoFactor.EMAIL));
-    }
 
     public void addWarehouse(Warehouse warehouse) {
         warehouses.add(warehouse);

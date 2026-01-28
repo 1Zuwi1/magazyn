@@ -4,11 +4,9 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.RememberMeRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.SessionRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.TwoFactorAuthRepository;
-import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.WebAuthnChallengeRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.RememberMeData;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.SessionData;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.TwoFactorAuth;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.WebAuthnChallenge;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +28,6 @@ public class SessionService {
     private RememberMeRepository rememberMeRepository;
     @Autowired
     private TwoFactorAuthRepository twoFactorAuthRepository;
-    @Autowired
-    private WebAuthnChallengeRepository webAuthnChallengeRepository;
     @Autowired
     private RedisTemplate<String, Object> redis;
 
@@ -102,29 +98,11 @@ public class SessionService {
     }
 
 
-
-    // ---------- PASSKEY CHALLENGE ----------
-
-    public String createWebauthnChallenge(WebAuthnChallenge data) {
-        getWebauthnChallenge(data.getUserIdKey()).ifPresent(existing -> webAuthnChallengeRepository.deleteById(existing.getUserIdKey()));
-        webAuthnChallengeRepository.save(data);
-        redis.expire("webauthnChallenge:" + data.getUserId(), TWO_FACTOR_AUTH_TTL);
-        return data.getUserIdKey();
-    }
-
-    public Optional<WebAuthnChallenge> getWebauthnChallenge(String webAuthnChallengeId) {
-        return webAuthnChallengeRepository.findById(webAuthnChallengeId);
-    }
-
-    public void deleteWebauthnChallenge(String token) {
-        redis.delete("webauthnChallenge:" + token);
-    }
-
-
     public void deleteSessionsCookies(HttpServletResponse response) {
         CookiesUtils.deleteCookie(response, "SESSION");
         CookiesUtils.deleteCookie(response, "REMEMBER_ME");
         CookiesUtils.deleteCookie(response, "2FA_AUTH");
     }
+
 
 }

@@ -2,43 +2,30 @@ package com.github.dawid_stolarczyk.magazyn.Services;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.CodeRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RegistrationResponse;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.TwoFactorAuthenticatorResponse;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.BackupCode;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.TwoFactorMethod;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
-import com.github.dawid_stolarczyk.magazyn.Model.Entity.WebAuthnCredential;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.TwoFactor;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
-import com.github.dawid_stolarczyk.magazyn.Repositories.WebAuthnCredentialRepository;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.WebAuthnChallenge;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis.SessionService;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.TwoFactorAuth;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis.SessionService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.CodeGenerator;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
-import com.yubico.webauthn.FinishRegistrationOptions;
-import com.yubico.webauthn.RegistrationResult;
-import com.yubico.webauthn.RelyingParty;
-import com.yubico.webauthn.StartRegistrationOptions;
-import com.yubico.webauthn.data.*;
-import com.yubico.webauthn.exception.RegistrationFailedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
@@ -46,7 +33,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -62,10 +48,6 @@ public class TwoFactorService {
     private EmailService emailService;
     @Autowired
     private SessionService sessionService;
-    @Autowired
-    private RelyingParty relyingParty;
-    @Autowired
-    private WebAuthnCredentialRepository webAuthnCredentialRepository;
 
     @Value("${app.name}")
     private String appName;
@@ -245,70 +227,6 @@ public class TwoFactorService {
         successfulTwoFactorAuthentication(request);
     }
 
-    public PublicKeyCredentialCreationOptions startWebAuthnRegistration() {
-        User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(AuthenticationException::new);
-        PublicKeyCredentialCreationOptions options = relyingParty.startRegistration(
-                StartRegistrationOptions.builder()
-                        .user(UserIdentity.builder()
-                                .name(user.getEmail())
-                                .displayName(user.getEmail())
-                                .id(new ByteArray(ByteBuffer.allocate(Long.BYTES).putLong(user.getId()).array()))
-                                .build())
-                        .build());
-
-        WebAuthnChallenge webAuthnChallenge = new WebAuthnChallenge();
-        webAuthnChallenge.setUserId(user.getId());
-        webAuthnChallenge.setRegistrationOptions(options);
-        webAuthnChallenge.setUserId(user.getId());
-        sessionService.createWebauthnChallenge(webAuthnChallenge);
-        return options;
-    }
-
-    public void finishWebAuthnRegistration(PublicKeyCredential<AuthenticatorAttestationResponse, ClientRegistrationExtensionOutputs> credential) {
-        User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(AuthenticationException::new);
-
-        WebAuthnChallenge webAuthnChallenge = sessionService.getWebauthnChallenge(String.valueOf(user.getId()))
-                .orElseThrow(() -> new AuthenticationException(AuthError.INVALID_OR_EXPIRED_CHALLENGE.name()));
-
-        RegistrationResult result;
-        try {
-            result = relyingParty.finishRegistration(
-                    FinishRegistrationOptions.builder()
-                            .request(webAuthnChallenge.getRegistrationOptions())
-                            .response(credential)
-                            .build()
-            );
-        } catch (RegistrationFailedException e) {
-            throw new RuntimeException(e);
-        }
-
-
-        WebAuthnCredential webAuthnCredential = new WebAuthnCredential();
-        webAuthnCredential.setUser(user);
-        webAuthnCredential.setCredentialId(credential.getId().getBytes());
-
-        webAuthnCredential.setPublicKey(result.getKeyId().getId().getBytes());
-
-        webAuthnCredential.setSignatureCount(result.getSignatureCount());
-        webAuthnCredential.setFor2FA(true);
-
-        AuthenticatorAttestationResponse attestationResponse = credential.getResponse();
-        if (attestationResponse.getTransports() != null) {
-            webAuthnCredential.setTransports(
-                    attestationResponse.getTransports().stream()
-                            .map(AuthenticatorTransport::getId)
-                            .collect(Collectors.joining(","))
-            );
-        } else {
-            webAuthnCredential.setTransports("UNKNOWN");
-        }
-
-        webAuthnCredentialRepository.save(webAuthnCredential);
-
-        sessionService.deleteWebauthnChallenge(String.valueOf(user.getId()));
-    }
 
     private void successfulTwoFactorAuthentication(HttpServletRequest request) {
         String sessionId = CookiesUtils.getCookie(request, "SESSION");

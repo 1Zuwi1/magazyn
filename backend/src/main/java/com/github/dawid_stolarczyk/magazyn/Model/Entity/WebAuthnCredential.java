@@ -1,31 +1,43 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
-@Table(name = "webauthn_credentials")
+@Table(name = "webauthn_credential")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class WebAuthnCredential {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
+    // ID credentiala (Base64Url)
     @Column(nullable = false, unique = true)
-    private byte[] credentialId;
+    private String credentialId;
 
+    // Klucz publiczny w formacie COSE (Base64Url)
+    @Column(nullable = false, length = 2048)
+    private String publicKeyCose;
+
+    // Counter podpisu (do ochrony przed replay attack)
     @Column(nullable = false)
-    private byte[] publicKey;
+    private Long signatureCount;
 
-    private long signatureCount;
+    // userHandle powiązany z kontem (Base64Url)
+    @Column(nullable = false)
+    private String userHandle;
 
-    private String transports; // USB, BLE, INTERNAL
+    // Email właściciela credentiala (potrzebny dla SDK i mapowania username)
+    @Column(nullable = false)
+    private String email;
 
-    private boolean isFor2FA; // true jeśli 2FA, false jeśli passwordless
+    // Flaga czy credential jest discoverable (passkey)
+    @Column
+    private Boolean isDiscoverable;
+
 }
