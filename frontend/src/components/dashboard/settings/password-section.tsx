@@ -74,8 +74,6 @@ export function PasswordSection({
     },
   })
 
-  console.log(form)
-
   return (
     <form
       className="space-y-4"

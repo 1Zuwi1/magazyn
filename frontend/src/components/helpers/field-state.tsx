@@ -13,6 +13,14 @@ export function FieldState({ field }: { field: AnyFieldApi }) {
   ) : null
 }
 
+const SPELLCHECK_DISABLED_INPUT_TYPES = [
+  "password",
+  "email",
+  "number",
+  "tel",
+  "url",
+]
+
 export function FieldWithState({
   field,
   label,
@@ -31,6 +39,11 @@ export function FieldWithState({
         name={field.name}
         onBlur={field.handleBlur}
         onChange={(e) => field.handleChange(e.target.value)}
+        spellCheck={
+          SPELLCHECK_DISABLED_INPUT_TYPES.includes(props.type ?? "")
+            ? "false"
+            : undefined
+        }
         value={field.state.value}
         {...props}
       />

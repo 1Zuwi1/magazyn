@@ -44,7 +44,15 @@ export const ChangePasswordSchema = createApiSchema({
     input: z.object({
       newPassword: PasswordSchema,
       oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
-      twoFactorCode: z.string().min(OTP_LENGTH, "Kod 2FA jest za krótki"),
+      twoFactorCode: z
+        .string()
+        .nullable()
+        .refine((val) => {
+          if (val === null) {
+            return true
+          }
+          return val.length === OTP_LENGTH
+        }, `Kod 2FA musi mieć dokładnie ${OTP_LENGTH} znaków`),
     }),
     output: z.null(),
   },

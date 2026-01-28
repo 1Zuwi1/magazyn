@@ -248,9 +248,11 @@ export function PasswordVerificationSection({
     verifyCode(code)
   }
 
-  if (stage === "idle") {
-    handleStartVerification()
-  }
+  useEffect(() => {
+    if (stage === "idle") {
+      handleStartVerification()
+    }
+  }, [stage, handleStartVerification])
 
   return (
     <div className="space-y-3 rounded-lg border bg-muted/30 p-3">

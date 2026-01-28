@@ -97,6 +97,7 @@ export function QRCodeDisplay({
         alt="Kod QR do zeskanowania"
         className="block"
         height={size}
+        priority
         src={dataUrl}
         unoptimized
         width={size}
