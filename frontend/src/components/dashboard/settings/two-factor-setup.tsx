@@ -584,6 +584,25 @@ export function TwoFactorSetup({
     setupStage === "verifying" ||
     setupStage === "error"
   const canResendCode = resendCooldown === 0 && !isBusy
+  const shouldWarnOnNavigate =
+    setupActive && setupStage !== "idle" && setupStage !== "success"
+
+  useEffect(() => {
+    if (!shouldWarnOnNavigate) {
+      return
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ""
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+    }
+  }, [shouldWarnOnNavigate])
 
   const { resetFlow, startSetup, resendCode, verifySetup } =
     useTwoFactorSetupFlow({

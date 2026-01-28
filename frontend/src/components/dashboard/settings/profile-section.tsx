@@ -101,7 +101,7 @@ export function ProfileSection({ user }: ProfileSectionProps) {
 
       <CardContent className="space-y-6">
         <div className="flex items-center gap-4">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 font-semibold text-lg text-primary ring-1 ring-primary/10">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary/20 to-primary/5 font-semibold text-lg text-primary ring-1 ring-primary/10">
             {displayName
               .split(" ")
               .map((n) => n[0])

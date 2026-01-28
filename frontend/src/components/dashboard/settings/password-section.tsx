@@ -158,9 +158,9 @@ export function PasswordSection({
                   method={twoFactorMethod}
                   onInputChange={(code) => field.handleChange(code)}
                   onVerificationChange={(complete) => {
+                    verificationCompleteRef.current = complete
                     setVerificationComplete(complete)
                     if (complete) {
-                      verificationCompleteRef.current = true
                       setIsVerificationDialogOpen(false)
                       form.handleSubmit()
                     }
