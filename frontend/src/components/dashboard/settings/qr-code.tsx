@@ -37,7 +37,7 @@ export function QRCodeDisplay({
       try {
         const url = await QRCode.toDataURL(value, {
           width: size,
-          margin: 2,
+          margin: 4,
           errorCorrectionLevel,
           color: {
             dark: "#000000",
@@ -49,10 +49,11 @@ export function QRCodeDisplay({
         }
         setDataUrl(url)
         setError(null)
-      } catch {
+      } catch (e) {
         if (isCancelled) {
           return
         }
+        console.error(e)
         setError("Nie udało się wygenerować kodu QR")
         setDataUrl(null)
       }
@@ -87,12 +88,7 @@ export function QRCodeDisplay({
   }
 
   return (
-    <div
-      className={cn(
-        "overflow-hidden rounded-lg border bg-white p-2",
-        className
-      )}
-    >
+    <div className={cn("overflow-hidden rounded-lg border", className)}>
       <Image
         alt="Kod QR do zeskanowania"
         className="block"

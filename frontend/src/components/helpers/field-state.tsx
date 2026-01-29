@@ -41,7 +41,7 @@ export function FieldWithState({
         onChange={(e) => field.handleChange(e.target.value)}
         spellCheck={
           SPELLCHECK_DISABLED_INPUT_TYPES.includes(props.type ?? "")
-            ? "false"
+            ? false
             : undefined
         }
         value={field.state.value}
