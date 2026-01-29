@@ -38,7 +38,7 @@ public class WebAuthnConfig {
                 )
                 .credentialRepository(credentialRepository)
                 .origins(Set.of(
-                        appUrl
+                        appUrl, "http://localhost:3000"
                 ))
                 .allowUntrustedAttestation(allowUntrustedAttestation)        // dev/test, produkcja: false
                 .build();

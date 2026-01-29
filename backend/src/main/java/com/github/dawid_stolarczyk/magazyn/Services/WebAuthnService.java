@@ -1,14 +1,14 @@
 package com.github.dawid_stolarczyk.magazyn.Services;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserIdDto;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UsernameDto;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.WebAuthnCredential;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.WebAuthRepository;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis.RedisWebAuthSessionService;
 import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.List;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -51,17 +50,20 @@ public class WebAuthnService {
 
     /* ===================== REGISTRATION ===================== */
 
-    public PublicKeyCredentialCreationOptions startRegistration(UserIdDto dto, HttpServletRequest httpServletRequest) throws Base64UrlException {
+    public PublicKeyCredentialCreationOptions startRegistration(HttpServletRequest httpServletRequest) throws Base64UrlException {
         rateLimiter.consumeOrThrow(getClientIp(httpServletRequest), RateLimitOperation.WEBAUTH_REGISTRATION);
-        // Używamy userHandle jako stabilnego identyfikatora
-        User userEntity = userRepository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        if (!authPrincipal.isSudoMode()) {
+            throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
+        }
+        User userEntity = userRepository.findById(authPrincipal.getUserId()).orElseThrow();
 
         ByteArray userHandle = ByteArray.fromBase64Url(userEntity.getUserHandle());
 
         UserIdentity user = UserIdentity.builder()
-                .name(dto.getEmail())
-                .displayName(dto.getEmail())
+                .name(userEntity.getEmail())
+                .displayName(userEntity.getEmail())
                 .id(userHandle)
                 .build();
 
@@ -84,17 +86,16 @@ public class WebAuthnService {
     }
 
     @Transactional
-    public void finishRegistration(String json, String email, HttpServletRequest httpServletRequest)
+    public void finishRegistration(String json, HttpServletRequest httpServletRequest)
             throws IOException, RegistrationFailedException, Base64UrlException {
         rateLimiter.consumeOrThrow(getClientIp(httpServletRequest), RateLimitOperation.WEBAUTH_REGISTRATION);
 
-        if (email == null || email.isEmpty()) {
-            throw new IllegalStateException("Email is required");
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        if (!authPrincipal.isSudoMode()) {
+            throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
         }
+        User userEntity = userRepository.findById(authPrincipal.getUserId()).orElseThrow();
 
-        User userEntity = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("User not found"));
-        ;
         ByteArray userHandle = ByteArray.fromBase64Url(userEntity.getUserHandle());
 
         // Pobieramy zapisany request z Redis
@@ -118,7 +119,7 @@ public class WebAuthnService {
                 .publicKeyCose(result.getPublicKeyCose().getBase64Url())
                 .signatureCount(result.getSignatureCount())
                 .userHandle(userHandle.getBase64Url())
-                .email(email)
+                .email(userEntity.getEmail())
                 .isDiscoverable(result.isDiscoverable().orElse(false))
                 .build();
 
@@ -131,52 +132,24 @@ public class WebAuthnService {
 
     /* ===================== ASSERTION ===================== */
 
-    public PublicKeyCredentialRequestOptions startAssertion(UsernameDto dto, HttpServletRequest httpServletRequest)
+    public PublicKeyCredentialRequestOptions startAssertion(HttpServletRequest httpServletRequest)
             throws Base64UrlException {
         rateLimiter.consumeOrThrow(getClientIp(httpServletRequest), RateLimitOperation.WEBAUTH_ASSERTION);
 
-        User userEntity = userRepository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new IllegalStateException("User not found"));
+        AssertionRequest assertionRequest = relyingParty.startAssertion(
+                StartAssertionOptions.builder()
+                        .userVerification(UserVerificationRequirement.PREFERRED)
+                        .build()
+        );
 
-        ByteArray userHandle = ByteArray.fromBase64Url(userEntity.getUserHandle());
+        String challengeBase64Url =
+                assertionRequest.getPublicKeyCredentialRequestOptions()
+                        .getChallenge()
+                        .getBase64Url();
 
-        // Lista credentiali dozwolonych dla użytkownika
-        List<PublicKeyCredentialDescriptor> allowCredentials =
-                webAuthRepository.findByUserHandle(userHandle.getBase64Url())
-                        .stream()
-                        .map(c -> {
-                            try {
-                                return PublicKeyCredentialDescriptor.builder()
-                                        .id(ByteArray.fromBase64Url(c.getCredentialId()))
-                                        .type(PublicKeyCredentialType.PUBLIC_KEY)
-                                        .build();
-                            } catch (Base64UrlException e) {
-                                throw new RuntimeException(e);
-                            }
-                        })
-                        .toList();
+        redisService.saveAssertionRequest(challengeBase64Url, assertionRequest);
 
-        StartAssertionOptions options = StartAssertionOptions.builder()
-                .userVerification(UserVerificationRequirement.PREFERRED)
-                .build();
-
-        // Tworzymy request do przeglądarki
-        AssertionRequest request = relyingParty.startAssertion(options);
-
-        // Uzupełniamy request o dozwolone credentiale
-        AssertionRequest enriched = request.toBuilder()
-                .publicKeyCredentialRequestOptions(
-                        request.getPublicKeyCredentialRequestOptions()
-                                .toBuilder()
-                                .allowCredentials(allowCredentials)
-                                .build()
-                )
-                .build();
-
-        // Zapis w Redis
-        redisService.saveAssertionRequest(userHandle.getBase64Url(), enriched);
-
-        return enriched.getPublicKeyCredentialRequestOptions();
+        return assertionRequest.getPublicKeyCredentialRequestOptions();
     }
 
     @Transactional
@@ -184,31 +157,41 @@ public class WebAuthnService {
             throws IOException, AssertionFailedException {
         rateLimiter.consumeOrThrow(getClientIp(httpServletRequest), RateLimitOperation.WEBAUTH_ASSERTION);
 
-        PublicKeyCredential<AuthenticatorAssertionResponse, ClientAssertionExtensionOutputs> response =
+        PublicKeyCredential<AuthenticatorAssertionResponse, ClientAssertionExtensionOutputs> credential =
                 PublicKeyCredential.parseAssertionResponseJson(json);
 
         // userHandle zawsze zwracany przez authenticator
-        ByteArray userHandle = response.getResponse()
+        ByteArray userHandle = credential.getResponse()
                 .getUserHandle()
                 .orElseThrow(() -> new IllegalStateException("Missing userHandle"));
 
+        String challengeFromClient =
+                credential.getResponse()
+                        .getClientData()
+                        .getChallenge()
+                        .getBase64Url();
+
         // Pobranie requestu z Redis
-        AssertionRequest request = redisService.getAssertionRequest(userHandle.getBase64Url());
+        AssertionRequest assertionRequest =
+                redisService.getAssertionRequest(challengeFromClient);
+
 
         // Weryfikacja
         AssertionResult result = relyingParty.finishAssertion(
                 FinishAssertionOptions.builder()
-                        .request(request)
-                        .response(response)
+                        .request(assertionRequest)
+                        .response(credential)
                         .build()
         );
 
+
+        redisService.delete(userHandle.getBase64Url());
         if (!result.isSuccess()) return false;
 
 
         // Aktualizacja countera w DB
         webAuthRepository.updateSignatureCount(
-                response.getId().getBase64Url(),
+                credential.getId().getBase64Url(),
                 result.getSignatureCount()
         );
 
@@ -222,7 +205,6 @@ public class WebAuthnService {
                 httpServletRequest
         );
 
-        redisService.delete(userHandle.getBase64Url());
         return true;
     }
 
