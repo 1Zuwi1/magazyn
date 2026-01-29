@@ -17,11 +17,11 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
+import { OTP_LENGTH } from "@/config/constants"
 import {
   AUTHENTICATOR_QR_SIZE,
   COPY_FEEDBACK_TIMEOUT_MS,
   MOCK_AUTHENTICATOR_SECRET,
-  OTP_LENGTH,
   RECOVERY_CODES,
   TWO_FACTOR_METHODS,
   TWO_FACTOR_RESEND_SECONDS,

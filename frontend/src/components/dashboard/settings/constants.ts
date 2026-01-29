@@ -47,7 +47,6 @@ export const RECOVERY_CODES = [
   "R3JD-5FQ8",
 ] as const
 
-export const OTP_LENGTH = 6
 export const RESEND_COOLDOWN_SECONDS = 30
 export const TWO_FACTOR_RESEND_SECONDS = 60
 export const QR_CODE_DEFAULT_SIZE = 160

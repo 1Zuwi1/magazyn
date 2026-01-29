@@ -1,9 +1,9 @@
 import type { Locale } from "next-intl"
+import { OTP_LENGTH } from "@/config/constants"
 import {
   MOCK_AUTHENTICATOR_SECRET,
   MOCK_TWO_FACTOR_DESTINATIONS,
   NON_DIGIT_REGEX,
-  OTP_LENGTH,
 } from "./constants"
 import type {
   PasswordChallenge,

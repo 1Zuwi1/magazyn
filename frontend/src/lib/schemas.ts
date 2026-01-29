@@ -1,5 +1,5 @@
 import z from "zod"
-import { OTP_LENGTH } from "@/components/dashboard/settings/constants"
+import { OTP_LENGTH } from "@/config/constants"
 import { createApiSchema } from "./create-api-schema"
 
 const txtEncoder = new TextEncoder()

@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Spinner } from "@/components/ui/spinner"
-import { OTP_LENGTH, RESEND_COOLDOWN_SECONDS } from "./constants"
+import { OTP_LENGTH } from "@/config/constants"
+import { RESEND_COOLDOWN_SECONDS } from "./constants"
 import { OtpInput } from "./otp-input"
 import type {
   PasswordChallenge,

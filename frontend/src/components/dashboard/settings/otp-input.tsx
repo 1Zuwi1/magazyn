@@ -5,7 +5,7 @@ import {
   InputOTPSlot,
   InputOTPStatus,
 } from "@/components/ui/input-otp"
-import { OTP_LENGTH } from "./constants"
+import { OTP_LENGTH } from "@/config/constants"
 import { sanitizeOtpValue } from "./utils"
 
 interface OtpInputProps {
