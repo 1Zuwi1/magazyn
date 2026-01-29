@@ -909,6 +909,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
     metadata: { weightDelta: -2.5, previousWeight: 450, currentWeight: 447.5 },
     date: "2h temu",
     read: false,
+    createdAt: new Date("2024-01-15T09:30:00Z"),
   },
   {
     id: "2",
@@ -921,6 +922,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
     metadata: { maxWeight: 500, currentWeight: 515 },
     date: "1h temu",
     read: false,
+    createdAt: new Date("2024-01-15T10:15:00Z"),
   },
   {
     id: "3",
@@ -933,6 +935,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
     metadata: { lastSeen: "2024-01-15T10:30:00Z" },
     date: "2h temu",
     read: true,
+    createdAt: new Date("2024-01-15T09:45:00Z"),
   },
   {
     id: "4",
@@ -946,6 +949,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
     metadata: { expiryDate: "2024-01-14", productName: "Mleko 1L" },
     date: "1h temu",
     read: true,
+    createdAt: new Date("2024-01-15T10:45:00Z"),
   },
   {
     id: "5",
@@ -959,6 +963,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
     metadata: { weightDelta: -5.0, previousWeight: 320, currentWeight: 315 },
     date: "1h temu",
     read: false,
+    createdAt: new Date("2024-01-15T10:30:00Z"),
   },
   {
     id: "6",
@@ -971,6 +976,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
     metadata: { minTemp: 4, currentTemp: 2, maxTemp: 8 },
     date: "30min temu",
     read: false,
+    createdAt: new Date("2024-01-15T11:00:00Z"),
   },
 ]
 

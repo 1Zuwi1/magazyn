@@ -1,10 +1,20 @@
 import { useState } from "react"
 import type { Notification } from "@/components/dashboard/types"
 
-export function useNotification(notifications: Notification[]) {
-  const [notification, setNotification] = useState<Notification | null>(
-    notifications[0] ?? null
-  )
+export function useNotification(initialNotifications: Notification[]) {
+  const [notifications, setNotifications] =
+    useState<Notification[]>(initialNotifications)
+  const [selectedNotification, setSelectedNotification] =
+    useState<Notification | null>(initialNotifications[0] ?? null)
 
-  return [notification, setNotification] as const
+  const markAllAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+  }
+
+  return {
+    notifications,
+    selectedNotification,
+    setSelectedNotification,
+    markAllAsRead,
+  }
 }

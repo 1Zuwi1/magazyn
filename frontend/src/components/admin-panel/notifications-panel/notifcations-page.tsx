@@ -1,8 +1,10 @@
 "use client"
+import { MOCK_NOTIFICATIONS } from "@/components/dashboard/mock-data"
 import { Separator } from "@/components/ui/separator"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { NOTIFICATIONS_NAV_LINKS } from "../lib/constants"
 import { AdminNotificationsNav } from "./components/nav"
+import { NotificationList } from "./components/notification-list"
 
 export default function NotificationsMain() {
   const isMobile = useIsMobile()
@@ -15,7 +17,7 @@ export default function NotificationsMain() {
       />
       <Separator className="m-2" orientation="vertical" />
       <div className="flex-1">
-        <main />
+        <NotificationList items={MOCK_NOTIFICATIONS} />
       </div>
     </div>
   )

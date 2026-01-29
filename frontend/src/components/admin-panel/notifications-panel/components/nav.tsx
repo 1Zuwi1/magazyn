@@ -19,7 +19,7 @@ interface NavProps {
 export function AdminNotificationsNav({ links, isCollapsed }: NavProps) {
   return (
     <div
-      className="group flex flex-col gap-4 py-2 data-[collapsed=true]:py-2"
+      className="flex flex-col data-[collapsed=true]:py-2"
       data-collapsed={isCollapsed}
     >
       <nav className="grid gap-1 group-data-[collapsed=true]:justify-start">
@@ -27,6 +27,7 @@ export function AdminNotificationsNav({ links, isCollapsed }: NavProps) {
           isCollapsed ? (
             <Tooltip key={index}>
               <TooltipTrigger>
+                {/*TODO: zrobić to jako filtrowanie*/}
                 <Link
                   className={cn(
                     buttonVariants({
@@ -49,7 +50,7 @@ export function AdminNotificationsNav({ links, isCollapsed }: NavProps) {
             <Link
               className={cn(
                 buttonVariants({ variant: "ghost", size: "sm" }),
-                "justify-start px-6"
+                "justify-start px-3"
               )}
               href="#"
               key={index}
