@@ -4,16 +4,69 @@ import {
   ApiMeSchema,
   FormRegisterSchema,
   LoginSchema,
+  PasswordSchema,
   RegisterSchema,
   Resend2FASchema,
   Verify2FASchema,
 } from "./schemas"
 
+describe("PasswordSchema", () => {
+  it("accepts a strong password", () => {
+    const result = PasswordSchema.safeParse("Password123!")
+
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects passwords missing an uppercase letter", () => {
+    const result = PasswordSchema.safeParse("password123!")
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Hasło musi zawierać co najmniej jedną wielką literę"
+      )
+    }
+  })
+
+  it("rejects passwords missing a lowercase letter", () => {
+    const result = PasswordSchema.safeParse("PASSWORD123!")
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Hasło musi zawierać co najmniej jedną małą literę"
+      )
+    }
+  })
+
+  it("rejects passwords missing a digit", () => {
+    const result = PasswordSchema.safeParse("Password!!!")
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Hasło musi zawierać co najmniej jedną cyfrę"
+      )
+    }
+  })
+
+  it("rejects passwords missing a special character", () => {
+    const result = PasswordSchema.safeParse("Password123")
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Hasło musi zawierać co najmniej jeden znak specjalny"
+      )
+    }
+  })
+})
+
 describe("LoginSchema", () => {
   it("accepts valid login input", () => {
     const validInput = {
       email: "testuser@example.com",
-      password: "password123",
+      password: "Password123!",
     }
 
     const result = LoginSchema.shape.POST.shape.input.safeParse(validInput)
@@ -21,10 +74,10 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(true)
   })
 
-  it("rejects password shorter than 6 characters", () => {
+  it("rejects password shorter than 8 characters", () => {
     const invalidInput = {
       email: "testuser@example.com",
-      password: "12345",
+      password: "1234567",
     }
 
     const result = LoginSchema.shape.POST.shape.input.safeParse(invalidInput)
@@ -32,7 +85,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi mieć co najmniej 6 znaków"
+        "Hasło musi mieć co najmniej 8 znaków"
       )
     }
   })
@@ -40,7 +93,7 @@ describe("LoginSchema", () => {
   it("rejects invalid emails", () => {
     const invalidInput = {
       email: "invalid@email",
-      password: "password123",
+      password: "Password123!",
     }
 
     const result = LoginSchema.shape.POST.shape.input.safeParse(invalidInput)
@@ -54,7 +107,7 @@ describe("LoginSchema", () => {
   it("accepts valid email", () => {
     const validInput = {
       email: "validEmail@example.com",
-      password: "password123",
+      password: "Password123!",
     }
 
     const result = LoginSchema.shape.POST.shape.input.safeParse(validInput)
@@ -86,8 +139,8 @@ describe("RegisterSchema", () => {
     const validInput = {
       fullName: "Test User",
       email: "user@example.com",
-      password: "password123",
-      confirmPassword: "password123",
+      password: "Password123!",
+      confirmPassword: "Password123!",
     }
 
     const result = FormRegisterSchema.safeParse(validInput)
@@ -99,8 +152,8 @@ describe("RegisterSchema", () => {
     const invalidInput = {
       fullName: "Test User",
       email: "user@example.com",
-      password: "password123",
-      confirmPassword: "different123",
+      password: "Password123!",
+      confirmPassword: "Different123!",
     }
 
     const result = FormRegisterSchema.safeParse(invalidInput)
@@ -115,8 +168,8 @@ describe("RegisterSchema", () => {
     const invalidInput = {
       fullName: "Test User",
       email: "not-an-email",
-      password: "password123",
-      confirmPassword: "password123",
+      password: "Password123!",
+      confirmPassword: "Password123!",
     }
 
     const result = FormRegisterSchema.safeParse(invalidInput)
@@ -128,8 +181,8 @@ describe("RegisterSchema", () => {
     const invalidInput = {
       fullName: "A",
       email: "user@example.com",
-      password: "password123",
-      confirmPassword: "password123",
+      password: "Password123!",
+      confirmPassword: "Password123!",
     }
 
     const result = FormRegisterSchema.safeParse(invalidInput)
