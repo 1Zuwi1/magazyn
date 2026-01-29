@@ -3,10 +3,11 @@ import { Search } from "@/components/admin-panel/components/search-bar/search"
 import { SearchProvider } from "@/components/admin-panel/components/search-bar/search-provider"
 import { TopNav } from "@/components/admin-panel/components/top-nav"
 import { ADMIN_NAV_LINKS } from "@/components/admin-panel/lib/constants"
+import ProtectedPage from "../../protected-page"
 
 export default function AdminDashboard() {
   return (
-    <div>
+    <ProtectedPage needAdminPrivileges>
       <SearchProvider
         navData={ADMIN_NAV_LINKS.map((link) => ({
           title: link.title,
@@ -18,6 +19,6 @@ export default function AdminDashboard() {
           <Search placeholder="Szukaj..." />
         </AdminHeader>
       </SearchProvider>
-    </div>
+    </ProtectedPage>
   )
 }

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import ProtectedPage from "@/app/(requireAuth)/protected-page"
 import AdminRacksPage from "@/components/admin-panel/warehouses/racks-view/racks-page"
 import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
 
@@ -17,5 +18,9 @@ export default async function WarehouseDetailPage({
     notFound()
   }
 
-  return <AdminRacksPage warehouse={warehouse} />
+  return (
+    <ProtectedPage needAdminPrivileges>
+      <AdminRacksPage warehouse={warehouse} />
+    </ProtectedPage>
+  )
 }
