@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
@@ -39,6 +38,8 @@ public class User {
     private UserRole role = UserRole.USER;
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private EmailVerification emailVerifications;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WebAuthnCredential> webAuthnCredentials = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -99,12 +100,14 @@ public class User {
         }
     }
 
+    public void addWebAuthnCredential(WebAuthnCredential credential) {
+        webAuthnCredentials.add(credential);
+        credential.setUser(this);
+    }
+
 
     public void setRawPassword(String rawPassword) {
         this.password = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
     }
 
-    public @NonNull byte[] getIdAsBytes() {
-        return Long.toString(id).getBytes();
-    }
 }

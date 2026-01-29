@@ -36,6 +36,10 @@ public class WebAuthnCredential {
     @Column(nullable = false)
     private String email;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     // Flaga czy credential jest discoverable (passkey)
     @Column
     private Boolean isDiscoverable;

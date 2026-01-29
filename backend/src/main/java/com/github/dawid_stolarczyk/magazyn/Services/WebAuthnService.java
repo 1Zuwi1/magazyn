@@ -129,6 +129,9 @@ public class WebAuthnService {
 
         webAuthRepository.save(entity);
 
+        userEntity.addWebAuthnCredential(entity);
+        userRepository.save(userEntity);
+
         // Usuwamy challenge z Redis
         redisService.delete(userHandle.getBase64Url());
     }
