@@ -13,7 +13,7 @@ function Spinner({
       className={cn("size-4 animate-spin fill-current", className)}
       icon={Loading02Icon}
       role="status"
-      strokeWidth={0}
+      strokeWidth={Number.parseInt(strokeWidth?.toString() ?? "0", 10)}
       {...props}
     />
   )

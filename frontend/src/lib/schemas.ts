@@ -19,17 +19,19 @@ export const PasswordSchema = z
     return bytes <= 72
   }, "Hasło nie może przekraczać 72 bajtów w kodowaniu UTF-8.")
 
+const OTPSchema = z
+  .string()
+  .nullable()
+  .refine((val) => {
+    if (val === null) {
+      return true
+    }
+    return val.length === OTP_LENGTH
+  }, `Kod 2FA musi mieć dokładnie ${OTP_LENGTH} znaków`)
+
 export const ChangePasswordFormSchema = z
   .object({
-    twoFactorCode: z
-      .string()
-      .nullable()
-      .refine((val) => {
-        if (val === null) {
-          return true
-        }
-        return val.length === OTP_LENGTH
-      }, `Kod 2FA musi mieć dokładnie ${OTP_LENGTH} znaków`),
+    twoFactorCode: OTPSchema,
     newPassword: PasswordSchema,
     oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
     confirmPassword: z.string().min(1, "Potwierdzenie hasła jest wymagane"),
@@ -44,15 +46,7 @@ export const ChangePasswordSchema = createApiSchema({
     input: z.object({
       newPassword: PasswordSchema,
       oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
-      twoFactorCode: z
-        .string()
-        .nullable()
-        .refine((val) => {
-          if (val === null) {
-            return true
-          }
-          return val.length === OTP_LENGTH
-        }, `Kod 2FA musi mieć dokładnie ${OTP_LENGTH} znaków`),
+      twoFactorCode: OTPSchema,
     }),
     output: z.null(),
   },
