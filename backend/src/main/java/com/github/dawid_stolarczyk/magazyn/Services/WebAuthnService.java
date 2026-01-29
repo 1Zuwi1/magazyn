@@ -59,6 +59,9 @@ public class WebAuthnService {
         }
         User userEntity = userRepository.findById(authPrincipal.getUserId()).orElseThrow();
 
+        if (!userEntity.getStatus().equals(AccountStatus.ACTIVE))
+            throw new AuthenticationException(AuthError.ACCOUNT_LOCKED.name());
+
         ByteArray userHandle = ByteArray.fromBase64Url(userEntity.getUserHandle());
 
         UserIdentity user = UserIdentity.builder()
@@ -165,45 +168,43 @@ public class WebAuthnService {
                 .getUserHandle()
                 .orElseThrow(() -> new IllegalStateException("Missing userHandle"));
 
-        String challengeFromClient =
-                credential.getResponse()
-                        .getClientData()
-                        .getChallenge()
-                        .getBase64Url();
+        try {
+            String challengeFromClient =
+                    credential.getResponse()
+                            .getClientData()
+                            .getChallenge()
+                            .getBase64Url();
 
-        // Pobranie requestu z Redis
-        AssertionRequest assertionRequest =
-                redisService.getAssertionRequest(challengeFromClient);
+            // Pobranie requestu z Redis
+            AssertionRequest assertionRequest =
+                    redisService.getAssertionRequest(challengeFromClient);
+            // Weryfikacja
+            AssertionResult result = relyingParty.finishAssertion(
+                    FinishAssertionOptions.builder()
+                            .request(assertionRequest)
+                            .response(credential)
+                            .build()
+            );
+            if (!result.isSuccess()) return false;
 
+            // Aktualizacja countera w DB
+            webAuthRepository.updateSignatureCount(
+                    credential.getId().getBase64Url(),
+                    result.getSignatureCount()
+            );
 
-        // Weryfikacja
-        AssertionResult result = relyingParty.finishAssertion(
-                FinishAssertionOptions.builder()
-                        .request(assertionRequest)
-                        .response(credential)
-                        .build()
-        );
+            String email = webAuthRepository.findFirstByUserHandle(userHandle.getBase64Url())
+                    .orElseThrow(() -> new IllegalStateException("User not found"))
+                    .getEmail();
 
-
-        redisService.delete(userHandle.getBase64Url());
-        if (!result.isSuccess()) return false;
-
-
-        // Aktualizacja countera w DB
-        webAuthRepository.updateSignatureCount(
-                credential.getId().getBase64Url(),
-                result.getSignatureCount()
-        );
-
-        String email = webAuthRepository.findFirstByUserHandle(userHandle.getBase64Url())
-                .orElseThrow(() -> new IllegalStateException("User not found"))
-                .getEmail();
-
-        successLogin(
-                email,
-                httpServletResponse,
-                httpServletRequest
-        );
+            successLogin(
+                    email,
+                    httpServletResponse,
+                    httpServletRequest
+            );
+        } finally {
+            redisService.delete(userHandle.getBase64Url());
+        }
 
         return true;
     }

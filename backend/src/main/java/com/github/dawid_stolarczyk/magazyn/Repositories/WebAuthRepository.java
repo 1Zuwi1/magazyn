@@ -30,5 +30,4 @@ public interface WebAuthRepository extends JpaRepository<WebAuthnCredential, Lon
     void updateSignatureCount(@Param("credentialId") String credentialId, @Param("newCount") long newCount);
 
 
-
 }
