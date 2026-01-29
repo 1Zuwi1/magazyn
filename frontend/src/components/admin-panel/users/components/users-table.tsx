@@ -28,7 +28,7 @@ interface UsersTableProps {
   pageSize?: number
 }
 
-export default function UsersTable({
+export function UsersTable({
   data,
   search,
   onEdit,

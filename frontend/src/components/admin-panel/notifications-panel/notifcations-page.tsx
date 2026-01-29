@@ -2,7 +2,7 @@
 import { Separator } from "@/components/ui/separator"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { NOTIFICATIONS_NAV_LINKS } from "../lib/constants"
-import AdminNotificationsNav from "./components/nav"
+import { AdminNotificationsNav } from "./components/nav"
 
 export default function NotificationsMain() {
   const isMobile = useIsMobile()

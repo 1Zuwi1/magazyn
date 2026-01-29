@@ -3,12 +3,11 @@
 import { useState } from "react"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
-import type { CsvRackRow } from "@/components/admin-panel/warehouses/csv/utils/csv-utils"
 import { mapRackCsv } from "@/components/admin-panel/warehouses/csv/utils/map-csv"
 import type { Rack, Warehouse } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import type { RackFormData } from "../csv/utils/types"
+import type { CsvRowType, RackFormData } from "../csv/utils/types"
 import { RackDialog } from "./rack-dialog"
 import { RackGrid } from "./rack-grid"
 
@@ -67,7 +66,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     }
   }
 
-  const handleCsvImport = (data: CsvRackRow[]) => {
+  const handleCsvImport = (data: CsvRowType<"rack">[]) => {
     const newRacks = mapRackCsv(data)
     setRacks((prev) => [...prev, ...newRacks])
   }

@@ -53,7 +53,6 @@ export type ItemSlot = Item | null
 export type NotificationType =
   | "UNAUTHORIZED_REMOVAL"
   | "RACK_OVERWEIGHT"
-  | "SENSOR_OFFLINE"
   | "ITEM_EXPIRED"
   | "TEMPERATURE_VIOLATION"
 
@@ -71,6 +70,7 @@ export interface Notification {
   metadata: Record<string, unknown>
   date: string
   read: boolean
+  createdAt: Date
 }
 
 export type Role = "user" | "admin"
