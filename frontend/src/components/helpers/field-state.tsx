@@ -28,21 +28,26 @@ export function FieldWithState({
   field,
   label,
   icon,
+  additionalNode,
   ...props
 }: {
   field: AnyFieldApi
   label: string
   icon?: typeof Mail01Icon
+  additionalNode?: React.ReactNode
 } & React.ComponentProps<"input">) {
   const isInvalid = field.state.meta.errors.length > 0
   return (
     <Field>
-      <FieldLabel
-        className="font-medium text-foreground/80 text-xs uppercase tracking-wide"
-        htmlFor={props.id ?? field.name}
-      >
-        {label}
-      </FieldLabel>
+      <div className="flex items-center justify-between">
+        <FieldLabel
+          className="font-medium text-foreground/80 text-xs uppercase tracking-wide"
+          htmlFor={props.id ?? field.name}
+        >
+          {label}
+        </FieldLabel>
+        {additionalNode}
+      </div>
       <div className="relative">
         <Input
           className={cn(
