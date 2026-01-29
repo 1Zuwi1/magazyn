@@ -24,8 +24,8 @@ public class AuthController {
 
     @Operation(summary = "Logout the current user by invalidating their session.")
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response, @CookieValue(name = "refresh-token", required = false) String refreshToken) {
-        authService.logoutUser(response, request, refreshToken);
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        authService.logoutUser(response, request);
         return ResponseEntity.ok(new ResponseTemplate<>(true, "Logged out successfully"));
     }
 

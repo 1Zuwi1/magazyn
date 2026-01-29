@@ -11,8 +11,8 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.TwoFactor;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.TwoFactorAuth;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis.SessionService;
+import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.CodeGenerator;
@@ -20,19 +20,16 @@ import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -42,20 +39,26 @@ public class TwoFactorService {
     private static final int BACKUP_CODE_LENGTH = 12;
     private static final int EMAIL_CODE_LENGTH = 6;
     private static final int TWO_FACTOR_EMAIL_CODE_EXPIRATION_MINUTES = 15;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private EmailService emailService;
-    @Autowired
-    private SessionService sessionService;
+
+    private final UserRepository userRepository;
+    private final EmailService emailService;
+    private final SessionService sessionService;
+    private final SessionManager sessionManager;
+    private final Bucket4jRateLimiter rateLimiter;
 
     @Value("${app.name}")
     private String appName;
 
     private final GoogleAuthenticator gAuth = new GoogleAuthenticator();
 
-    @Autowired
-    private Bucket4jRateLimiter rateLimiter;
+
+    public TwoFactorService(UserRepository userRepository, EmailService emailService, SessionService sessionService, SessionManager sessionManager, Bucket4jRateLimiter rateLimiter) {
+        this.userRepository = userRepository;
+        this.emailService = emailService;
+        this.sessionService = sessionService;
+        this.sessionManager = sessionManager;
+        this.rateLimiter = rateLimiter;
+    }
 
 
     public List<String> getUsersTwoFactorMethods(HttpServletRequest request) {
@@ -159,12 +162,7 @@ public class TwoFactorService {
             throw new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name());
         }
         successfulTwoFactorAuthentication(request);
-        TwoFactorAuth twoFactorAuth = new TwoFactorAuth(
-                UUID.randomUUID().toString(),
-                user.getId(),
-                getClientIp(request),
-                request.getHeader("User-Agent"));
-        CookiesUtils.setCookie(response, "2FA_AUTH", sessionService.create2faAuth(twoFactorAuth), Duration.ofMinutes(5).toSeconds());
+        sessionManager.create2FASuccessSession(user, request, response);
     }
 
     @Transactional

@@ -18,6 +18,8 @@ public class WebAuthnConfig {
     private String appDomain;
     @Value("${app.name}")
     private String appName;
+    @Value("${app.url}")
+    private String appUrl;
 
     public WebAuthnConfig(CredentialRepository credentialRepository) {
         this.credentialRepository = credentialRepository;
@@ -34,8 +36,7 @@ public class WebAuthnConfig {
                 )
                 .credentialRepository(credentialRepository)
                 .origins(Set.of(
-                        "https://twoja-domena.pl",      // frontend origin
-                        "http://localhost:3000"         // lokalny dev
+                        appUrl
                 ))
                 .allowUntrustedAttestation(true)        // dev/test, produkcja: false
                 .build();

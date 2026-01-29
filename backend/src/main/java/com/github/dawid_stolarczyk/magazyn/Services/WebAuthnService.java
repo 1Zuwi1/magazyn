@@ -7,15 +7,12 @@ import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.WebAuthnCredential;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.WebAuthRepository;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.RememberMeData;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.SessionData;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.PassKeys.UserHandleUtil;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis.RedisWebAuthSessionService;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis.SessionService;
-import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
+import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.yubico.webauthn.*;
 import com.yubico.webauthn.data.*;
 import com.yubico.webauthn.data.exception.Base64UrlException;
@@ -24,12 +21,10 @@ import com.yubico.webauthn.exception.RegistrationFailedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.UUID;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -40,23 +35,29 @@ public class WebAuthnService {
     private final WebAuthRepository webAuthRepository;
     private final UserRepository userRepository;
     private final RedisWebAuthSessionService redisService;
-    private final SessionService sessionService;
+    private final SessionManager sessionManager;
+    private final Bucket4jRateLimiter rateLimiter;
 
     public WebAuthnService(RelyingParty relyingParty,
                            WebAuthRepository webAuthRepository, UserRepository userRepository,
-                           RedisWebAuthSessionService redisService, SessionService sessionService) {
+                           RedisWebAuthSessionService redisService, SessionManager sessionManager, Bucket4jRateLimiter rateLimiter) {
         this.relyingParty = relyingParty;
         this.webAuthRepository = webAuthRepository;
         this.userRepository = userRepository;
         this.redisService = redisService;
-        this.sessionService = sessionService;
+        this.sessionManager = sessionManager;
+        this.rateLimiter = rateLimiter;
     }
 
     /* ===================== REGISTRATION ===================== */
 
-    public PublicKeyCredentialCreationOptions startRegistration(UserIdDto dto) {
+    public PublicKeyCredentialCreationOptions startRegistration(UserIdDto dto, HttpServletRequest httpServletRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpServletRequest), RateLimitOperation.WEBAUTH_REGISTRATION);
         // Używamy userHandle jako stabilnego identyfikatora
-        ByteArray userHandle = UserHandleUtil.fromEmail(dto.getEmail());
+        User userEntity = userRepository.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+        ;
+        ByteArray userHandle = ByteArray.fromBase64(String.valueOf(userEntity.getUserHandle()));
 
         UserIdentity user = UserIdentity.builder()
                 .name(dto.getEmail())
@@ -82,10 +83,19 @@ public class WebAuthnService {
         return request;
     }
 
-    public void finishRegistration(String json, String email)
+    @Transactional
+    public void finishRegistration(String json, String email, HttpServletRequest httpServletRequest)
             throws IOException, RegistrationFailedException {
+        rateLimiter.consumeOrThrow(getClientIp(httpServletRequest), RateLimitOperation.WEBAUTH_REGISTRATION);
 
-        ByteArray userHandle = UserHandleUtil.fromEmail(email);
+        if (email == null || email.isEmpty()) {
+            throw new IllegalStateException("Email is required");
+        }
+
+        User userEntity = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+        ;
+        ByteArray userHandle = ByteArray.fromBase64(String.valueOf(userEntity.getUserHandle()));
 
         // Pobieramy zapisany request z Redis
         PublicKeyCredentialCreationOptions request =
@@ -121,10 +131,13 @@ public class WebAuthnService {
 
     /* ===================== ASSERTION ===================== */
 
-    public PublicKeyCredentialRequestOptions startAssertion(UsernameDto dto)
+    public PublicKeyCredentialRequestOptions startAssertion(UsernameDto dto, HttpServletRequest httpServletRequest)
             throws Base64UrlException {
+        rateLimiter.consumeOrThrow(getClientIp(httpServletRequest), RateLimitOperation.WEBAUTH_ASSERTION);
 
-        ByteArray userHandle = UserHandleUtil.fromEmail(dto.getEmail());
+        User userEntity = userRepository.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+        ByteArray userHandle = ByteArray.fromBase64(String.valueOf(userEntity.getUserHandle()));
 
         // Lista credentiali dozwolonych dla użytkownika
         List<PublicKeyCredentialDescriptor> allowCredentials =
@@ -167,6 +180,7 @@ public class WebAuthnService {
 
     public boolean finishAssertion(String json, HttpServletResponse httpServletResponse, HttpServletRequest httpServletRequest)
             throws IOException, AssertionFailedException {
+        rateLimiter.consumeOrThrow(getClientIp(httpServletRequest), RateLimitOperation.WEBAUTH_ASSERTION);
 
         PublicKeyCredential<AuthenticatorAssertionResponse, ClientAssertionExtensionOutputs> response =
                 PublicKeyCredential.parseAssertionResponseJson(json);
@@ -217,29 +231,8 @@ public class WebAuthnService {
         if (!user.getStatus().equals(AccountStatus.ACTIVE) && !user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
             throw new AuthenticationException(AuthError.ACCOUNT_LOCKED.name());
         }
-
-        String sessionId = UUID.randomUUID().toString();
-        SessionData sessionData = new SessionData(
-                sessionId,
-                user.getId(),
-                Status2FA.PRE_2FA,
-                getClientIp(httpServletRequest),
-                httpServletRequest.getHeader("User-Agent"));
-
-        CookiesUtils.setCookie(httpServletResponse, "SESSION", sessionService.createSession(sessionData), null);
-
-        RememberMeData rememberMeData = new RememberMeData(
-                UUID.randomUUID().toString(),
-                user.getId(),
-                Status2FA.PRE_2FA,
-                getClientIp(httpServletRequest),
-                httpServletRequest.getHeader("User-Agent"));
-
-        CookiesUtils.setCookie(
-                httpServletResponse,
-                "REMEMBER_ME",
-                sessionService.createRememberToken(rememberMeData),
-                Duration.of(14, ChronoUnit.DAYS).getSeconds());
+        sessionManager.createSuccessLoginSession(user, httpServletRequest, httpServletResponse, true);
+        sessionManager.create2FASuccessSession(user, httpServletRequest, httpServletResponse);
     }
 
 }

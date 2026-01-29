@@ -39,3 +39,13 @@ auth:
       capacity: 300
       refill: 150
       duration: PT2M
+
+    WEBAUTH_REGISTRATION:
+      capacity: 10
+      refill: 5
+      duration: PT10M
+
+    WEBAUTH_ASSERTION:
+      capacity: 15
+      refill: 5
+      duration: PT10M

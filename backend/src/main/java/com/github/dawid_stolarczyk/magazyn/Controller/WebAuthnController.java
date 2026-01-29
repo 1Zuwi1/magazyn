@@ -12,6 +12,7 @@ import com.yubico.webauthn.exception.AssertionFailedException;
 import com.yubico.webauthn.exception.RegistrationFailedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,12 +39,11 @@ public class WebAuthnController {
 
     // Start registration → zwraca PublicKeyCredentialCreationOptions
     @PostMapping("/register/start")
-    public ResponseEntity<?> startRegistration(@RequestBody UserIdDto dto) {
+    public ResponseEntity<?> startRegistration(@Valid @RequestBody UserIdDto dto) {
         try {
-            PublicKeyCredentialCreationOptions options = webAuthnService.startRegistration(dto);
+            PublicKeyCredentialCreationOptions options = webAuthnService.startRegistration(dto, httpServletRequest);
             return ResponseEntity.ok(new ResponseTemplate<>(true, options));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, AuthError.INVALID_PASSKEY_REGISTRATION));
         }
     }
@@ -55,10 +55,9 @@ public class WebAuthnController {
             @RequestBody String credentialJson
     ) {
         try {
-            webAuthnService.finishRegistration(credentialJson, email);
+            webAuthnService.finishRegistration(credentialJson, email, httpServletRequest);
             return ResponseEntity.ok(new ResponseTemplate<>(true, "Registration finished"));
         } catch (IOException | RegistrationFailedException e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, AuthError.INVALID_PASSKEY_REGISTRATION));
         }
     }
@@ -67,12 +66,11 @@ public class WebAuthnController {
 
     // Start assertion → zwraca PublicKeyCredentialRequestOptions
     @PostMapping("/assertion/start")
-    public ResponseEntity<?> startAssertion(@RequestBody UsernameDto dto) {
+    public ResponseEntity<?> startAssertion(@Valid @RequestBody UsernameDto dto) {
         try {
-            PublicKeyCredentialRequestOptions options = webAuthnService.startAssertion(dto);
+            PublicKeyCredentialRequestOptions options = webAuthnService.startAssertion(dto, httpServletRequest);
             return ResponseEntity.ok(new ResponseTemplate<>(true, options));
         } catch (Base64UrlException e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, AuthError.INVALID_PASSKEY_ASSERTION));
         }
     }
@@ -88,7 +86,6 @@ public class WebAuthnController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, AuthError.INVALID_PASSKEY_ASSERTION));
             }
         } catch (IOException | AssertionFailedException e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, AuthError.INVALID_PASSKEY_ASSERTION));
         }
     }
