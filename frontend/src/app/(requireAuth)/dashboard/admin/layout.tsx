@@ -7,7 +7,7 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <ProtectedPage needAdminPrivileges={false}>
+    <ProtectedPage needAdminPrivileges>
       <main className="flex flex-col gap-4">{children}</main>
     </ProtectedPage>
   )
