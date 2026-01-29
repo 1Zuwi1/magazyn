@@ -1,4 +1,4 @@
-package com.github.dawid_stolarczyk.magazyn.Security.Auth;
+package com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.redis.serializer.RedisSerializer;

@@ -1,9 +1,12 @@
-package com.github.dawid_stolarczyk.magazyn.Security.Auth;
+package com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.RememberMeRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.SessionRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.Redis.TwoFactorAuthRepository;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.RememberMeData;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.SessionData;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.TwoFactorAuth;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -3,6 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Security.Auth;
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationNotFoundException;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

@@ -22,9 +22,12 @@ auth.token.expiration-seconds=3600
 
 app.domain=${DOMAIN}
 app.name=${APP_NAME}
+app.url=${APP_URL}
 
 auth.password.min-length=8
 
 spring.redis.host=redis
 spring.redis.port=6379
 spring.redis.password=${REDIS_PASSWORD}
+
+webauthn.allow-untrusted-attestation:false
