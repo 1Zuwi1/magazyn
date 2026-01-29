@@ -27,7 +27,6 @@ vi.mock("./components/unauthorized", () => ({
 const MOCK_SESSION = {
   id: 1,
   email: "user@example.com",
-  username: "testuser",
   full_name: "Test User",
   two_factor_enabled: false,
   status: "verified",

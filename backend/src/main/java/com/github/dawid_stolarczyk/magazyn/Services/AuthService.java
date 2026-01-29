@@ -28,6 +28,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -123,7 +124,10 @@ public class AuthService {
         newUser.setEmailVerifications(emailVerification);
         userRepository.save(newUser);
 
-        emailService.sendVerificationEmail(newUser.getEmail(), "http://%s/api/auth/verify-email?token=%s".formatted(domain, emailVerificationToken));
+        String baseUrl = ServletUriComponentsBuilder.fromRequest(request)
+                .path("/auth/verify-email")
+                .toUriString();
+        emailService.sendVerificationEmail(newUser.getEmail(), baseUrl + "?token=" + emailVerificationToken);
     }
 
     public void verifyEmailCheck(String token, HttpServletRequest request) {

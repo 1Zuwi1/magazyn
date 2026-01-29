@@ -9,6 +9,7 @@ spring.mail.port=${MAIL_PORT}
 spring.mail.username=${MAIL_USERNAME}
 spring.mail.password=${MAIL_PASSWORD}
 
+server.forward-headers-strategy=framework
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 
