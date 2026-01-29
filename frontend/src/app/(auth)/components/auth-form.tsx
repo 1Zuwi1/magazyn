@@ -18,6 +18,7 @@ import { Field, FieldDescription, FieldGroup } from "@/components/ui/field"
 import { apiFetch } from "@/lib/fetcher"
 import { FormRegisterSchema, LoginSchema, RegisterSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
+import { getAnimationStyle } from "@/lib/utils"
 
 type AuthMode = "login" | "register"
 
@@ -135,10 +136,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             {/* Header */}
             <div
               className="fade-in flex animate-in flex-col items-center gap-3 text-center duration-500"
-              style={{
-                animationDelay: "100ms",
-                animationFillMode: "backwards",
-              }}
+              style={getAnimationStyle("100ms")}
             >
               <div className="relative">
                 <div className="absolute -inset-3 rounded-full bg-primary/10 blur-lg" />
@@ -152,10 +150,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
             </div>
             <div
               className="fade-in mt-2 animate-in space-y-4 duration-500"
-              style={{
-                animationDelay: "200ms",
-                animationFillMode: "backwards",
-              }}
+              style={getAnimationStyle("200ms")}
             >
               <form.Field name="email">
                 {(field) => (

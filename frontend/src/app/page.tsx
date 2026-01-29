@@ -1,9 +1,10 @@
 import Link from "next/link"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
+import { getAnimationStyle } from "@/lib/utils"
 
 // Static decorative components - hoisted outside to avoid re-creation
-const GridPattern = (
+const GridPattern = () => (
   <svg
     aria-hidden="true"
     className="absolute inset-0 h-full w-full opacity-[0.02]"
@@ -22,7 +23,7 @@ const GridPattern = (
   </svg>
 )
 
-const GradientOrbs = (
+const GradientOrbs = () => (
   <>
     <div className="absolute top-[-20%] right-[-10%] h-125 w-125 rounded-full bg-primary/7 blur-[100px]" />
     <div className="absolute bottom-[-10%] left-[-5%] h-100 w-100 rounded-full bg-primary/5 blur-[80px]" />
@@ -30,7 +31,7 @@ const GradientOrbs = (
   </>
 )
 
-const FloatingElements = (
+const FloatingElements = () => (
   <>
     <div className="absolute top-[12%] left-[8%] h-2 w-2 rotate-45 animate-pulse bg-primary/20" />
     <div
@@ -196,9 +197,9 @@ export default function LandingPage() {
     <div className="relative min-h-screen bg-background">
       {/* Background decorations */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        {GradientOrbs}
-        {GridPattern}
-        {FloatingElements}
+        <GradientOrbs />
+        <GridPattern />
+        <FloatingElements />
       </div>
 
       {/* Header */}
@@ -234,10 +235,7 @@ export default function LandingPage() {
             {/* Headline */}
             <h1
               className="fade-in slide-in-from-bottom-4 max-w-4xl animate-in font-bold text-4xl tracking-tight duration-700 sm:text-5xl md:text-6xl lg:text-7xl"
-              style={{
-                animationDelay: "100ms",
-                animationFillMode: "backwards",
-              }}
+              style={getAnimationStyle("100ms")}
             >
               Zarządzanie magazynem <br className="hidden sm:block" />
               <span className="relative inline-block">
@@ -264,10 +262,7 @@ export default function LandingPage() {
             {/* Subheadline */}
             <p
               className="fade-in slide-in-from-bottom-5 mt-8 max-w-2xl animate-in text-lg text-muted-foreground duration-700 sm:text-xl"
-              style={{
-                animationDelay: "200ms",
-                animationFillMode: "backwards",
-              }}
+              style={getAnimationStyle("200ms")}
             >
               Kompletny system do zarządzania stanami magazynowymi, śledzenia
               produktów i optymalizacji operacji logistycznych.
@@ -276,10 +271,7 @@ export default function LandingPage() {
             {/* CTA buttons */}
             <div
               className="fade-in slide-in-from-bottom-6 mt-10 flex animate-in flex-wrap items-center justify-center gap-4 duration-700"
-              style={{
-                animationDelay: "300ms",
-                animationFillMode: "backwards",
-              }}
+              style={getAnimationStyle("300ms")}
             >
               <Link href="/register">
                 <Button
@@ -310,10 +302,7 @@ export default function LandingPage() {
             {/* Trust indicators */}
             <div
               className="fade-in slide-in-from-bottom-7 mt-16 flex animate-in flex-wrap items-center justify-center gap-8 text-muted-foreground/60 text-sm duration-700"
-              style={{
-                animationDelay: "400ms",
-                animationFillMode: "backwards",
-              }}
+              style={getAnimationStyle("400ms")}
             >
               <div className="flex items-center gap-2">
                 <svg
@@ -376,10 +365,7 @@ export default function LandingPage() {
               <div
                 className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card/50 p-6 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:bg-card/80 hover:shadow-lg hover:shadow-primary/5"
                 key={feature.title}
-                style={{
-                  animationDelay: `${index * 100}ms`,
-                  animationFillMode: "backwards",
-                }}
+                style={getAnimationStyle(`${index * 100}ms`)}
               >
                 {/* Corner accent on hover */}
                 <div className="pointer-events-none absolute top-0 right-0 h-20 w-20 translate-x-8 -translate-y-8 rounded-full bg-primary/10 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
