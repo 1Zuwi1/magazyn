@@ -13,6 +13,7 @@ import com.yubico.webauthn.exception.RegistrationFailedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,10 +26,6 @@ import java.io.IOException;
 public class WebAuthnController {
 
     private final WebAuthnService webAuthnService;
-    @Autowired
-    private HttpServletResponse httpServletResponse;
-    @Autowired
-    private HttpServletRequest httpServletRequest;
 
     @Autowired
     public WebAuthnController(WebAuthnService webAuthnService) {
@@ -39,7 +36,7 @@ public class WebAuthnController {
 
     // Start registration → zwraca PublicKeyCredentialCreationOptions
     @PostMapping("/register/start")
-    public ResponseEntity<?> startRegistration(@Valid @RequestBody UserIdDto dto) {
+    public ResponseEntity<?> startRegistration(@Valid @RequestBody UserIdDto dto, HttpServletRequest httpServletRequest) {
         try {
             PublicKeyCredentialCreationOptions options = webAuthnService.startRegistration(dto, httpServletRequest);
             return ResponseEntity.ok(new ResponseTemplate<>(true, options));
@@ -51,13 +48,14 @@ public class WebAuthnController {
     // Finish registration → przyjmuje JSON credential z frontendu
     @PostMapping("/register/finish")
     public ResponseEntity<?> finishRegistration(
-            @RequestParam("email") String email,
-            @RequestBody String credentialJson
+            @RequestParam("email") @Email String email,
+            @RequestBody String credentialJson,
+            HttpServletRequest httpServletRequest
     ) {
         try {
             webAuthnService.finishRegistration(credentialJson, email, httpServletRequest);
             return ResponseEntity.ok(new ResponseTemplate<>(true, "Registration finished"));
-        } catch (IOException | RegistrationFailedException e) {
+        } catch (IOException | RegistrationFailedException | Base64UrlException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, AuthError.INVALID_PASSKEY_REGISTRATION));
         }
     }
@@ -66,7 +64,7 @@ public class WebAuthnController {
 
     // Start assertion → zwraca PublicKeyCredentialRequestOptions
     @PostMapping("/assertion/start")
-    public ResponseEntity<?> startAssertion(@Valid @RequestBody UsernameDto dto) {
+    public ResponseEntity<?> startAssertion(@RequestBody @Valid UsernameDto dto, HttpServletRequest httpServletRequest) {
         try {
             PublicKeyCredentialRequestOptions options = webAuthnService.startAssertion(dto, httpServletRequest);
             return ResponseEntity.ok(new ResponseTemplate<>(true, options));
@@ -77,7 +75,9 @@ public class WebAuthnController {
 
     // Finish assertion → przyjmuje credential JSON z frontendu
     @PostMapping("/assertion/finish")
-    public ResponseEntity<?> finishAssertion(@RequestBody String credentialJson) {
+    public ResponseEntity<?> finishAssertion(@RequestBody String credentialJson,
+                                             HttpServletResponse httpServletResponse,
+                                             HttpServletRequest httpServletRequest) {
         try {
             boolean success = webAuthnService.finishAssertion(credentialJson, httpServletResponse, httpServletRequest);
             if (success) {

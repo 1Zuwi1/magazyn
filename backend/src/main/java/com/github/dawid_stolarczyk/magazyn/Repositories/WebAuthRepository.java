@@ -19,6 +19,8 @@ public interface WebAuthRepository extends JpaRepository<WebAuthnCredential, Lon
 
     Optional<WebAuthnCredential> findFirstByUserHandle(String userHandle);
 
+    Optional<WebAuthnCredential> findFirstByEmail(String email);
+
 
     default void updateSignatureCount(String credentialId, long newCount) {
         findByCredentialId(credentialId).ifPresent(c -> {

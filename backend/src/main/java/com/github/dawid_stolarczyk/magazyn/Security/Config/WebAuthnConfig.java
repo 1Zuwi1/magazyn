@@ -20,6 +20,8 @@ public class WebAuthnConfig {
     private String appName;
     @Value("${app.url}")
     private String appUrl;
+    @Value("${webauthn.allow-untrusted-attestation:false}")
+    private boolean allowUntrustedAttestation;
 
     public WebAuthnConfig(CredentialRepository credentialRepository) {
         this.credentialRepository = credentialRepository;
@@ -38,7 +40,7 @@ public class WebAuthnConfig {
                 .origins(Set.of(
                         appUrl
                 ))
-                .allowUntrustedAttestation(true)        // dev/test, produkcja: false
+                .allowUntrustedAttestation(allowUntrustedAttestation)        // dev/test, produkcja: false
                 .build();
     }
 }

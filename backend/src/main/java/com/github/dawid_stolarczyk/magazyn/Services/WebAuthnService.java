@@ -51,13 +51,13 @@ public class WebAuthnService {
 
     /* ===================== REGISTRATION ===================== */
 
-    public PublicKeyCredentialCreationOptions startRegistration(UserIdDto dto, HttpServletRequest httpServletRequest) {
+    public PublicKeyCredentialCreationOptions startRegistration(UserIdDto dto, HttpServletRequest httpServletRequest) throws Base64UrlException {
         rateLimiter.consumeOrThrow(getClientIp(httpServletRequest), RateLimitOperation.WEBAUTH_REGISTRATION);
         // Używamy userHandle jako stabilnego identyfikatora
         User userEntity = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new IllegalStateException("User not found"));
-        ;
-        ByteArray userHandle = ByteArray.fromBase64(String.valueOf(userEntity.getUserHandle()));
+
+        ByteArray userHandle = ByteArray.fromBase64Url(userEntity.getUserHandle());
 
         UserIdentity user = UserIdentity.builder()
                 .name(dto.getEmail())
@@ -85,7 +85,7 @@ public class WebAuthnService {
 
     @Transactional
     public void finishRegistration(String json, String email, HttpServletRequest httpServletRequest)
-            throws IOException, RegistrationFailedException {
+            throws IOException, RegistrationFailedException, Base64UrlException {
         rateLimiter.consumeOrThrow(getClientIp(httpServletRequest), RateLimitOperation.WEBAUTH_REGISTRATION);
 
         if (email == null || email.isEmpty()) {
@@ -95,7 +95,7 @@ public class WebAuthnService {
         User userEntity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
         ;
-        ByteArray userHandle = ByteArray.fromBase64(String.valueOf(userEntity.getUserHandle()));
+        ByteArray userHandle = ByteArray.fromBase64Url(userEntity.getUserHandle());
 
         // Pobieramy zapisany request z Redis
         PublicKeyCredentialCreationOptions request =
@@ -137,7 +137,8 @@ public class WebAuthnService {
 
         User userEntity = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new IllegalStateException("User not found"));
-        ByteArray userHandle = ByteArray.fromBase64(String.valueOf(userEntity.getUserHandle()));
+
+        ByteArray userHandle = ByteArray.fromBase64Url(userEntity.getUserHandle());
 
         // Lista credentiali dozwolonych dla użytkownika
         List<PublicKeyCredentialDescriptor> allowCredentials =
@@ -178,6 +179,7 @@ public class WebAuthnService {
         return enriched.getPublicKeyCredentialRequestOptions();
     }
 
+    @Transactional
     public boolean finishAssertion(String json, HttpServletResponse httpServletResponse, HttpServletRequest httpServletRequest)
             throws IOException, AssertionFailedException {
         rateLimiter.consumeOrThrow(getClientIp(httpServletRequest), RateLimitOperation.WEBAUTH_ASSERTION);

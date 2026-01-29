@@ -26,7 +26,10 @@ public class WebAuthnCredentialRepository implements CredentialRepository {
     // Used when username IS KNOWN
     @Override
     public Set<PublicKeyCredentialDescriptor> getCredentialIdsForUsername(String username) {
-        String userHandle = UserHandleUtil.fromEmail(username).getBase64Url();
+        String userHandle = repository
+                .findFirstByEmail(username)
+                .orElseThrow(() -> new IllegalStateException("User not found"))
+                .getUserHandle();
 
         return repository.findByUserHandle(userHandle)
                 .stream()
@@ -43,10 +46,17 @@ public class WebAuthnCredentialRepository implements CredentialRepository {
                 .collect(Collectors.toSet());
     }
 
-    // username → userHandle
     @Override
     public Optional<ByteArray> getUserHandleForUsername(String username) {
-        return Optional.of(UserHandleUtil.fromEmail(username));
+        return repository
+                .findFirstByEmail(username)
+                .map(c -> {
+                    try {
+                        return ByteArray.fromBase64Url(c.getUserHandle());
+                    } catch (Base64UrlException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
     // userHandle → username
