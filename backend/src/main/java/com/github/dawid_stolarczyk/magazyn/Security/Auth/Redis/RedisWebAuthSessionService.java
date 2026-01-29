@@ -2,7 +2,7 @@ package com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis;
 
 import com.yubico.webauthn.AssertionRequest;
 import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -15,11 +15,9 @@ public class RedisWebAuthSessionService {
     private static final String ASSERT_PREFIX = "webauthn:assert:";
     private static final Duration TTL = Duration.ofMinutes(5);
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
-    public RedisWebAuthSessionService(
-            RedisTemplate<String, String> redisTemplate
-    ) {
+    public RedisWebAuthSessionService(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 

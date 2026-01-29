@@ -36,16 +36,6 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, String> redisTemplateString(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, String> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new StringRedisSerializer());
-        template.afterPropertiesSet();
-        return template;
-    }
-
-    @Bean
     public ObjectMapper redisObjectMapper() {
         ObjectMapper mapper = JsonMapper.builder()
                 .addModule(new JavaTimeModule())
