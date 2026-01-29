@@ -171,13 +171,12 @@ public class WebAuthnService {
                 .getUserHandle()
                 .orElseThrow(() -> new IllegalStateException("Missing userHandle"));
 
+        String challengeFromClient =
+                credential.getResponse()
+                        .getClientData()
+                        .getChallenge()
+                        .getBase64Url();
         try {
-            String challengeFromClient =
-                    credential.getResponse()
-                            .getClientData()
-                            .getChallenge()
-                            .getBase64Url();
-
             // Pobranie requestu z Redis
             AssertionRequest assertionRequest =
                     redisService.getAssertionRequest(challengeFromClient);
@@ -206,7 +205,7 @@ public class WebAuthnService {
                     httpServletRequest
             );
         } finally {
-            redisService.delete(userHandle.getBase64Url());
+            redisService.delete(challengeFromClient);
         }
 
         return true;
