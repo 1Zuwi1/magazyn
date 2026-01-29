@@ -7,35 +7,31 @@ import ProtectedPage from "../../protected-page"
 export default function ItemsPage() {
   return (
     <ProtectedPage>
-      {() => {
-        const stats = MOCK_ITEM_STATS
-        const items = MOCK_ITEMS
-        return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="font-bold text-3xl tracking-tight">
-                Zarządzanie przedmiotami
-              </h1>
-              <p className="text-muted-foreground">
-                Przeglądaj katalog produktów i aktualne stany magazynowe
-              </p>
-            </div>
-
-            <Tabs className="space-y-4" defaultValue="assortment">
-              <TabsList>
-                <TabsTrigger value="assortment">Stan Magazynowy</TabsTrigger>
-                <TabsTrigger value="definitions">Katalog Produktów</TabsTrigger>
-              </TabsList>
-              <TabsContent className="space-y-4" value="assortment">
-                <ItemsTable items={stats} />
-              </TabsContent>
-              <TabsContent className="space-y-4" value="definitions">
-                <AssortmentTable items={items} />
-              </TabsContent>
-            </Tabs>
+      {() => (
+        <div className="space-y-6">
+          <div>
+            <h1 className="font-bold text-3xl tracking-tight">
+              Zarządzanie przedmiotami
+            </h1>
+            <p className="text-muted-foreground">
+              Przeglądaj katalog produktów i aktualne stany magazynowe
+            </p>
           </div>
-        )
-      }}
+
+          <Tabs className="space-y-4" defaultValue="assortment">
+            <TabsList>
+              <TabsTrigger value="assortment">Stan Magazynowy</TabsTrigger>
+              <TabsTrigger value="definitions">Katalog Produktów</TabsTrigger>
+            </TabsList>
+            <TabsContent className="space-y-4" value="assortment">
+              <ItemsTable items={MOCK_ITEM_STATS} />
+            </TabsContent>
+            <TabsContent className="space-y-4" value="definitions">
+              <AssortmentTable items={MOCK_ITEMS} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
     </ProtectedPage>
   )
 }

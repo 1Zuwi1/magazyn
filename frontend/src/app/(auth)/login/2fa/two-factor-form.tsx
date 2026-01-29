@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import { useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import Logo from "@/components/logo"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Field,
   FieldDescription,
@@ -126,8 +126,14 @@ export default function TwoFactorForm({
       }}
     >
       <FieldGroup>
-        <Link className="underline" href="/">
-          Cofnij się do strony głównej
+        <Link
+          className={buttonVariants({
+            className: "h-auto p-0 underline",
+            variant: "link",
+          })}
+          href="/"
+        >
+          Cofnij do strony głównej
         </Link>
         <div className="flex flex-col items-center gap-2 text-center">
           <Logo />
@@ -142,8 +148,10 @@ export default function TwoFactorForm({
               </FieldLabel>
 
               <InputOTP
+                autoComplete="one-time-code"
                 containerClassName="gap-4 items-center justify-center"
                 id={field.name}
+                inputMode="numeric"
                 maxLength={otpLength}
                 onChange={(raw) => {
                   const code = raw.replace(/\D/g, "").slice(0, otpLength)
@@ -167,6 +175,7 @@ export default function TwoFactorForm({
                 }}
                 pattern={REGEXP_ONLY_DIGITS}
                 required
+                spellCheck={false}
                 value={field.state.value}
               >
                 <InputOTPGroup className="gap-2.5 *:data-[slot=input-otp-slot]:h-16 *:data-[slot=input-otp-slot]:w-12 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-xl">
