@@ -1,5 +1,12 @@
 "use client"
 
+import {
+  LockPasswordIcon,
+  Mail01Icon,
+  Shield01Icon,
+  User03Icon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { type AnyFieldApi, useForm } from "@tanstack/react-form"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -31,7 +38,8 @@ function FieldState({ field }: { field: AnyFieldApi }) {
   return error ? (
     <p className="fade-in slide-in-from-top-1 mt-1.5 flex animate-in items-center gap-1.5 text-red-500 text-xs duration-200">
       <svg
-        className="h-3.5 w-3.5 flex-shrink-0"
+        aria-label="Error"
+        className="h-3.5 w-3.5 shrink-0"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
@@ -67,18 +75,26 @@ function AuthCardDecoration() {
   return (
     <>
       {/* Corner accents */}
-      <div className="pointer-events-none absolute top-0 left-0 h-16 w-16">
-        <div className="absolute top-3 left-3 h-px w-6 bg-gradient-to-r from-primary/40 to-transparent" />
-        <div className="absolute top-3 left-3 h-6 w-px bg-gradient-to-b from-primary/40 to-transparent" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute top-0 left-0 h-16 w-16"
+      >
+        <div className="absolute top-3 left-3 h-px w-6 bg-linear-to-r from-primary/40 to-transparent" />
+        <div className="absolute top-3 left-3 h-6 w-px bg-linear-to-b from-primary/40 to-transparent" />
       </div>
-      <div className="pointer-events-none absolute top-0 right-0 h-16 w-16">
-        <div className="absolute top-3 right-3 h-px w-6 bg-gradient-to-l from-primary/40 to-transparent" />
-        <div className="absolute top-3 right-3 h-6 w-px bg-gradient-to-b from-primary/40 to-transparent" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute top-0 right-0 h-16 w-16"
+      >
+        <div className="absolute top-3 right-3 h-px w-6 bg-linear-to-l from-primary/40 to-transparent" />
+        <div className="absolute top-3 right-3 h-6 w-px bg-linear-to-b from-primary/40 to-transparent" />
       </div>
     </>
   )
 }
 
+const ICON_STYLE =
+  "pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/50"
 export default function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter()
   const isLogin = mode === "login"
@@ -137,7 +153,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
   return (
     <div className="fade-in slide-in-from-bottom-4 relative animate-in duration-500">
       {/* Background glow */}
-      <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-gradient-to-b from-primary/5 via-transparent to-transparent blur-2xl" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -inset-4 rounded-3xl bg-linear-to-b from-primary/5 via-transparent to-transparent blur-2xl"
+      />
 
       {/* Card container */}
       <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/80 p-8 shadow-black/5 shadow-xl backdrop-blur-xl">
@@ -162,7 +181,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 <div className="absolute -inset-3 rounded-full bg-primary/10 blur-lg" />
                 <Logo className="relative" />
               </div>
-              <FieldDescription className="mt-2 max-w-[280px] text-muted-foreground/80">
+              <FieldDescription className="mt-2 max-w-70 text-muted-foreground/80">
                 {isLogin
                   ? "Wprowadź swój adres email i hasło, aby uzyskać dostęp do konta."
                   : "Utwórz konto, aby korzystać z aplikacji."}
@@ -187,6 +206,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                       Email
                     </FieldLabel>
                     <div className="relative">
+                      <HugeiconsIcon className={ICON_STYLE} icon={Mail01Icon} />
                       <Input
                         className={`h-11 bg-background/50 pl-10 transition-all duration-200 focus:bg-background ${
                           field.state.meta.errors.length
@@ -201,16 +221,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
                         type="email"
                         value={field.state.value}
                       />
-                      <svg
-                        className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/50"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <rect height="16" rx="2" width="20" x="2" y="4" />
-                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                      </svg>
                     </div>
                     <FieldState field={field} />
                   </Field>
@@ -242,16 +252,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
                           type="text"
                           value={field.state.value}
                         />
-                        <svg
-                          className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/50"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                          <circle cx="12" cy="7" r="4" />
-                        </svg>
+                        <HugeiconsIcon
+                          className={ICON_STYLE}
+                          icon={User03Icon}
+                        />
                       </div>
                       <FieldState field={field} />
                     </Field>
@@ -283,23 +287,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
                         type="password"
                         value={field.state.value}
                       />
-                      <svg
-                        className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/50"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <rect
-                          height="11"
-                          rx="2"
-                          ry="2"
-                          width="18"
-                          x="3"
-                          y="11"
-                        />
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                      </svg>
+                      <HugeiconsIcon
+                        className={ICON_STYLE}
+                        icon={LockPasswordIcon}
+                      />
                     </div>
                     <FieldState field={field} />
                   </Field>
@@ -331,15 +322,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
                           type="password"
                           value={field.state.value}
                         />
-                        <svg
-                          className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/50"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                        </svg>
+                        <HugeiconsIcon
+                          className={ICON_STYLE}
+                          icon={Shield01Icon}
+                        />
                       </div>
                       <FieldState field={field} />
                     </Field>
@@ -442,7 +428,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       </div>
 
       {/* Bottom decoration */}
-      <div className="pointer-events-none absolute -bottom-2 left-1/2 h-px w-1/2 -translate-x-1/2 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+      <div className="pointer-events-none absolute -bottom-2 left-1/2 h-px w-1/2 -translate-x-1/2 bg-linear-to-r from-transparent via-primary/30 to-transparent" />
     </div>
   )
 }

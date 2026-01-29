@@ -241,7 +241,7 @@ export default function LandingPage() {
             >
               Zarządzanie magazynem <br className="hidden sm:block" />
               <span className="relative inline-block">
-                <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                   dla firmy
                 </span>
                 <svg
@@ -251,7 +251,7 @@ export default function LandingPage() {
                   viewBox="0 0 200 12"
                 >
                   <path
-                    d="M1 9c30-6 70-6 100 0s70 6 98 0"
+                    d="M1 9c30-6 70-6 100 0s70 -3 98 0"
                     fill="none"
                     stroke="currentColor"
                     strokeLinecap="round"
@@ -283,7 +283,7 @@ export default function LandingPage() {
             >
               <Link href="/register">
                 <Button
-                  className="group min-w-[180px] shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-primary/30 hover:shadow-xl"
+                  className="group min-w-45 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-primary/30 hover:shadow-xl"
                   size="lg"
                 >
                   Rozpocznij teraz
@@ -301,7 +301,7 @@ export default function LandingPage() {
                 </Button>
               </Link>
               <Link href="/login">
-                <Button className="min-w-[180px]" size="lg" variant="outline">
+                <Button className="min-w-45" size="lg" variant="outline">
                   Zaloguj się
                 </Button>
               </Link>
@@ -404,7 +404,7 @@ export default function LandingPage() {
       {/* Benefits/Stats Section */}
       <section className="relative">
         <div className="container mx-auto px-4 py-24 md:py-32">
-          <div className="rounded-3xl border border-border/50 bg-gradient-to-b from-card/80 to-card/40 p-8 backdrop-blur-sm md:p-12">
+          <div className="rounded-3xl border border-border/50 bg-linear-to-b from-card/80 to-card/40 p-8 backdrop-blur-sm md:p-12">
             <div className="mb-12 text-center">
               <h2 className="font-bold text-3xl tracking-tight sm:text-4xl">
                 Niezawodność, na której możesz polegać
@@ -439,10 +439,16 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="relative border-border/40 border-t">
         <div className="container mx-auto px-4 py-24 md:py-32">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 md:p-16">
+          <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-primary/10 via-primary/5 to-transparent p-8 md:p-16">
             {/* Decorative elements */}
-            <div className="pointer-events-none absolute top-0 right-0 h-64 w-64 translate-x-1/3 -translate-y-1/3 rounded-full bg-primary/10 blur-3xl" />
-            <div className="pointer-events-none absolute bottom-0 left-0 h-48 w-48 -translate-x-1/3 translate-y-1/3 rounded-full bg-primary/5 blur-2xl" />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute top-0 right-0 h-64 w-64 translate-x-1/3 -translate-y-1/3 rounded-full bg-primary/10 blur-3xl"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute bottom-0 left-0 h-48 w-48 -translate-x-1/3 translate-y-1/3 rounded-full bg-primary/5 blur-2xl"
+            />
 
             <div className="relative flex flex-col items-center text-center">
               <h2 className="max-w-2xl font-bold text-3xl tracking-tight sm:text-4xl">
@@ -502,7 +508,7 @@ export default function LandingPage() {
                 Rejestracja
               </Link>
             </div>
-            <div className="h-px w-full max-w-xs bg-gradient-to-r from-transparent via-border to-transparent" />
+            <div className="h-px w-full max-w-xs bg-linear-to-r from-transparent via-border to-transparent" />
             <p className="text-muted-foreground/70 text-sm">
               © 2025 GdzieToLeży. System wewnętrzny.
             </p>
