@@ -161,16 +161,30 @@ function CodeInputEntry({
           Zweryfikuj kod
         </Button>
         {method !== "authenticator" ? (
-          <Button
-            disabled={!canResend}
-            onClick={onResend}
-            type="button"
-            variant="outline"
-          >
-            {resendCooldown > 0
-              ? `Wyślij ponownie (${formatCountdown(resendCooldown)})`
-              : "Wyślij ponownie"}
-          </Button>
+          <>
+            <Button
+              aria-describedby="resend-status"
+              aria-disabled={!canResend}
+              disabled={!canResend}
+              onClick={onResend}
+              type="button"
+              variant="outline"
+            >
+              {resendCooldown > 0
+                ? `Wyślij ponownie (${formatCountdown(resendCooldown)})`
+                : "Wyślij ponownie"}
+            </Button>
+            <span
+              aria-atomic="true"
+              aria-live="polite"
+              className="sr-only"
+              id="resend-status"
+            >
+              {resendCooldown > 0
+                ? "Wyślij ponownie będzie dostępne po zakończeniu odliczania."
+                : "Możesz teraz wysłać ponownie."}
+            </span>
+          </>
         ) : null}
       </div>
     </div>
