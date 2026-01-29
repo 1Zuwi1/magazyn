@@ -138,8 +138,8 @@ describe("createApiSchema", () => {
     const outputSchema = z.object({
       id: z.number(),
       name: z.string(),
-      nickname: z.string().optional(),
-      bio: z.string().nullable(),
+      nickname: z.string().nullish(),
+      bio: z.string().nullish(),
     })
 
     const schema = createApiSchema({
