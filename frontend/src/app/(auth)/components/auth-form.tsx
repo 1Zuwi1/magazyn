@@ -6,22 +6,15 @@ import {
   Shield01Icon,
   User03Icon,
 } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { type AnyFieldApi, useForm } from "@tanstack/react-form"
+import { useForm } from "@tanstack/react-form"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import type { ZodError } from "zod"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
+import { FieldWithState } from "@/components/helpers/field-state"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Field, FieldDescription, FieldGroup } from "@/components/ui/field"
 import { apiFetch } from "@/lib/fetcher"
 import { FormRegisterSchema, LoginSchema, RegisterSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -30,30 +23,6 @@ type AuthMode = "login" | "register"
 
 interface AuthFormProps {
   mode: AuthMode
-}
-
-function FieldState({ field }: { field: AnyFieldApi }) {
-  const error = field.state.meta.errors[0] as ZodError | string | undefined
-
-  return error ? (
-    <p className="fade-in slide-in-from-top-1 mt-1.5 flex animate-in items-center gap-1.5 text-red-500 text-xs duration-200">
-      <svg
-        aria-label="Error"
-        className="h-3.5 w-3.5 shrink-0"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        viewBox="0 0 24 24"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" x2="12" y1="8" y2="12" />
-        <line x1="12" x2="12.01" y1="16" y2="16" />
-      </svg>
-      <span className="text-wrap">
-        {typeof error === "string" ? error : error.message}
-      </span>
-    </p>
-  ) : null
 }
 
 const values = {
@@ -93,8 +62,6 @@ function AuthCardDecoration() {
   )
 }
 
-const ICON_STYLE =
-  "pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/50"
 export default function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter()
   const isLogin = mode === "login"
@@ -153,15 +120,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
   return (
     <div className="fade-in slide-in-from-bottom-4 relative animate-in duration-500">
       {/* Background glow */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -inset-4 rounded-3xl bg-linear-to-b from-primary/5 via-transparent to-transparent blur-2xl"
-      />
+      <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-linear-to-b from-primary/5 via-transparent to-transparent blur-2xl" />
 
       {/* Card container */}
       <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/80 p-8 shadow-black/5 shadow-xl backdrop-blur-xl">
         <AuthCardDecoration />
-
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -187,8 +150,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   : "Utwórz konto, aby korzystać z aplikacji."}
               </FieldDescription>
             </div>
-
-            {/* Form fields */}
             <div
               className="fade-in mt-2 animate-in space-y-4 duration-500"
               style={{
@@ -198,236 +159,96 @@ export default function AuthForm({ mode }: AuthFormProps) {
             >
               <form.Field name="email">
                 {(field) => (
-                  <Field>
-                    <FieldLabel
-                      className="font-medium text-foreground/80 text-xs uppercase tracking-wide"
-                      htmlFor={field.name}
-                    >
-                      Email
-                    </FieldLabel>
-                    <div className="relative">
-                      <HugeiconsIcon className={ICON_STYLE} icon={Mail01Icon} />
-                      <Input
-                        className={`h-11 bg-background/50 pl-10 transition-all duration-200 focus:bg-background ${
-                          field.state.meta.errors.length
-                            ? "border-red-500/50 focus:border-red-500"
-                            : "border-border/50 focus:border-primary/50"
-                        }`}
-                        id={field.name}
-                        name={field.name}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder="jan@kowalski.pl"
-                        type="email"
-                        value={field.state.value}
-                      />
-                    </div>
-                    <FieldState field={field} />
-                  </Field>
+                  <FieldWithState
+                    field={field}
+                    icon={Mail01Icon}
+                    label="Email"
+                    placeholder="jan@kowalski.pl"
+                    type="email"
+                  />
                 )}
               </form.Field>
-
               {!isLogin && (
                 <form.Field name="fullName">
                   {(field) => (
-                    <Field>
-                      <FieldLabel
-                        className="font-medium text-foreground/80 text-xs uppercase tracking-wide"
-                        htmlFor={field.name}
-                      >
-                        Pełne imię i nazwisko
-                      </FieldLabel>
-                      <div className="relative">
-                        <Input
-                          className={`h-11 bg-background/50 pl-10 transition-all duration-200 focus:bg-background ${
-                            field.state.meta.errors.length
-                              ? "border-red-500/50 focus:border-red-500"
-                              : "border-border/50 focus:border-primary/50"
-                          }`}
-                          id={field.name}
-                          name={field.name}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          placeholder="Jan Kowalski"
-                          type="text"
-                          value={field.state.value}
-                        />
-                        <HugeiconsIcon
-                          className={ICON_STYLE}
-                          icon={User03Icon}
-                        />
-                      </div>
-                      <FieldState field={field} />
-                    </Field>
+                    <FieldWithState
+                      field={field}
+                      icon={User03Icon}
+                      label="Pełne imię i nazwisko"
+                      placeholder="Jan Kowalski"
+                      type="text"
+                    />
                   )}
                 </form.Field>
               )}
 
               <form.Field name="password">
-                {(field) => (
-                  <Field>
-                    <FieldLabel
-                      className="font-medium text-foreground/80 text-xs uppercase tracking-wide"
-                      htmlFor={field.name}
-                    >
-                      Hasło
-                    </FieldLabel>
-                    <div className="relative">
-                      <Input
-                        className={`h-11 bg-background/50 pl-10 transition-all duration-200 focus:bg-background ${
-                          field.state.meta.errors.length
-                            ? "border-red-500/50 focus:border-red-500"
-                            : "border-border/50 focus:border-primary/50"
-                        }`}
-                        id={field.name}
-                        name={field.name}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder="••••••••"
-                        type="password"
-                        value={field.state.value}
-                      />
-                      <HugeiconsIcon
-                        className={ICON_STYLE}
-                        icon={LockPasswordIcon}
-                      />
-                    </div>
-                    <FieldState field={field} />
-                  </Field>
-                )}
+                {(field) => {
+                  return (
+                    <FieldWithState
+                      field={field}
+                      icon={LockPasswordIcon}
+                      label="Hasło"
+                      placeholder="••••••••"
+                      type="password"
+                    />
+                  )
+                }}
               </form.Field>
 
               {!isLogin && (
                 <form.Field name="confirmPassword">
                   {(field) => (
-                    <Field>
-                      <FieldLabel
-                        className="font-medium text-foreground/80 text-xs uppercase tracking-wide"
-                        htmlFor={field.name}
-                      >
-                        Potwierdź hasło
-                      </FieldLabel>
-                      <div className="relative">
-                        <Input
-                          className={`h-11 bg-background/50 pl-10 transition-all duration-200 focus:bg-background ${
-                            field.state.meta.errors.length
-                              ? "border-red-500/50 focus:border-red-500"
-                              : "border-border/50 focus:border-primary/50"
-                          }`}
-                          id={field.name}
-                          name={field.name}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          placeholder="••••••••"
-                          type="password"
-                          value={field.state.value}
-                        />
-                        <HugeiconsIcon
-                          className={ICON_STYLE}
-                          icon={Shield01Icon}
-                        />
-                      </div>
-                      <FieldState field={field} />
-                    </Field>
+                    <FieldWithState
+                      field={field}
+                      icon={Shield01Icon}
+                      label="Potwierdź hasło"
+                      placeholder="••••••••"
+                      type="password"
+                    />
                   )}
                 </form.Field>
               )}
-            </div>
 
-            {/* Submit button */}
-            <div
-              className="fade-in mt-6 animate-in duration-500"
-              style={{
-                animationDelay: "300ms",
-                animationFillMode: "backwards",
-              }}
-            >
               <Field>
                 <form.Subscribe
                   selector={(state) => [state.canSubmit, state.isSubmitting]}
                 >
                   {([canSubmit, isSubmitting]) => (
                     <Button
-                      className="group relative h-11 w-full overflow-hidden shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-primary/30 hover:shadow-xl"
+                      className="w-full"
                       disabled={!canSubmit}
                       isLoading={isSubmitting}
+                      size="lg"
                       type="submit"
                     >
-                      <span className="relative z-10 flex items-center justify-center gap-2">
-                        {isLogin ? "Zaloguj się" : "Zarejestruj się"}
-                        {!isSubmitting && (
-                          <svg
-                            className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                          </svg>
-                        )}
-                      </span>
+                      {isLogin ? "Zaloguj się" : "Zarejestruj się"}
                     </Button>
                   )}
                 </form.Subscribe>
               </Field>
-            </div>
 
-            {/* Footer links */}
-            <div
-              className="fade-in mt-6 animate-in space-y-3 text-center text-sm duration-500"
-              style={{
-                animationDelay: "400ms",
-                animationFillMode: "backwards",
-              }}
-            >
-              {isLogin ? (
-                <p className="text-muted-foreground">
-                  Nie masz konta?{" "}
-                  <Link
-                    className="font-medium text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline"
-                    href="/register"
-                  >
-                    Zarejestruj się
-                  </Link>
-                </p>
-              ) : (
-                <p className="text-muted-foreground">
-                  Masz już konto?{" "}
-                  <Link
-                    className="font-medium text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline"
-                    href="/login"
-                  >
-                    Zaloguj się
-                  </Link>
-                </p>
-              )}
-
-              <Link
-                className="inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
-                href="/"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M19 12H5M12 19l-7-7 7-7" />
-                </svg>
-                Powrót do strony głównej
-              </Link>
+              <div className="text-center text-sm">
+                {isLogin ? (
+                  <>
+                    Nie masz konta?{" "}
+                    <Link className="text-primary underline" href="/register">
+                      Zarejestruj się
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    Masz już konto?{" "}
+                    <Link className="text-primary underline" href="/login">
+                      Zaloguj się
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </FieldGroup>
         </form>
       </div>
-
-      {/* Bottom decoration */}
       <div className="pointer-events-none absolute -bottom-2 left-1/2 h-px w-1/2 -translate-x-1/2 bg-linear-to-r from-transparent via-primary/30 to-transparent" />
     </div>
   )

@@ -1,15 +1,56 @@
 import z from "zod"
+import { OTP_LENGTH } from "@/config/constants"
 import { createApiSchema } from "./create-api-schema"
 
 const txtEncoder = new TextEncoder()
 
 export const PasswordSchema = z
   .string()
-  .min(6, "Hasło musi mieć co najmniej 6 znaków")
+  .min(8, "Hasło musi mieć co najmniej 8 znaków")
+  .regex(/[A-Z]/, "Hasło musi zawierać co najmniej jedną wielką literę")
+  .regex(/[a-z]/, "Hasło musi zawierać co najmniej jedną małą literę")
+  .regex(/[0-9]/, "Hasło musi zawierać co najmniej jedną cyfrę")
+  .regex(
+    /[!@#$%^&*()_\-+=[\]{};':"\\|,.<>/?]/,
+    "Hasło musi zawierać co najmniej jeden znak specjalny"
+  )
   .refine((value) => {
     const bytes = txtEncoder.encode(value).length
     return bytes <= 72
   }, "Hasło nie może przekraczać 72 bajtów w kodowaniu UTF-8.")
+
+const OTPSchema = z
+  .string()
+  .nullable()
+  .refine((val) => {
+    if (val === null) {
+      return true
+    }
+    return val.length === OTP_LENGTH
+  }, `Kod 2FA musi mieć dokładnie ${OTP_LENGTH} znaków`)
+
+export const ChangePasswordFormSchema = z
+  .object({
+    twoFactorCode: OTPSchema,
+    newPassword: PasswordSchema,
+    oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
+    confirmPassword: z.string().min(1, "Potwierdzenie hasła jest wymagane"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Hasła nie są zgodne",
+    path: ["confirmPassword"],
+  })
+
+export const ChangePasswordSchema = createApiSchema({
+  POST: {
+    input: z.object({
+      newPassword: PasswordSchema,
+      oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
+      twoFactorCode: OTPSchema,
+    }),
+    output: z.null(),
+  },
+})
 
 export const LoginSchema = createApiSchema({
   POST: {
@@ -68,7 +109,7 @@ export const ApiMeSchema = createApiSchema({
     output: z.object({
       id: z.number(),
       email: z.email(),
-      full_name: z.string().nullable(),
+      full_name: z.string().nullish(),
       two_factor_enabled: z.boolean(),
       status: z.enum(["verified", "unverified", "banned"]),
       role: z.enum(["user", "admin"]),

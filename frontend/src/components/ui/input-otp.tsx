@@ -31,7 +31,7 @@ function InputOTPGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex items-center rounded-md has-aria-invalid:border-destructive has-aria-invalid:ring-[2px] has-aria-invalid:ring-destructive/20 dark:has-aria-invalid:ring-destructive/40",
+        "flex items-center rounded-md has-aria-invalid:border-destructive has-aria-invalid:ring-2 has-aria-invalid:ring-destructive/20 dark:has-aria-invalid:ring-destructive/40",
         className
       )}
       data-slot="input-otp-group"
@@ -48,25 +48,55 @@ function InputOTPSlot({
   index: number
 }) {
   const inputOTPContext = React.useContext(OTPInputContext)
-  const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {}
-
+  const slots = inputOTPContext?.slots ?? []
+  const { char, hasFakeCaret, isActive } = slots[index] ?? {}
+  const totalSlots = slots.length
   return (
+    // biome-ignore lint/a11y/useSemanticElements: <div> is required here
     <div
+      aria-current={isActive ? "step" : undefined}
+      aria-posinset={totalSlots > 0 ? index + 1 : undefined}
+      aria-setsize={totalSlots > 0 ? totalSlots : undefined}
       className={cn(
-        "relative flex size-7 items-center justify-center border-input border-y border-r bg-input/20 text-xs/relaxed outline-none transition-all first:rounded-l-md first:border-l last:rounded-r-md aria-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-[2px] data-[active=true]:ring-ring/30 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 dark:bg-input/30 dark:data-[active=true]:aria-invalid:ring-destructive/40",
+        "relative flex size-7 items-center justify-center border-input border-y border-r bg-input/20 text-xs/relaxed outline-none transition-all first:rounded-l-md first:border-l last:rounded-r-md aria-invalid:border-destructive data-[active=true]:z-10 data-[active=true]:border-ring data-[active=true]:ring-2 data-[active=true]:ring-ring/30 data-[active=true]:aria-invalid:border-destructive data-[active=true]:aria-invalid:ring-destructive/20 dark:bg-input/30 dark:data-[active=true]:aria-invalid:ring-destructive/40",
         className
       )}
       data-active={isActive}
       data-slot="input-otp-slot"
+      role="listitem"
       {...props}
     >
       {char}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-4 h-4 w-px w-px animate-caret-blink bg-foreground bg-foreground duration-1000" />
+          <div className="h-4 w-px animate-caret-blink bg-foreground duration-1000" />
         </div>
       )}
     </div>
+  )
+}
+
+function InputOTPStatus({ className, id }: { className?: string; id: string }) {
+  const inputOTPContext = React.useContext(OTPInputContext)
+  const slots = inputOTPContext?.slots ?? []
+  const totalSlots = slots.length
+  const filledCount = slots.reduce(
+    (count, slot) => count + (slot.char ? 1 : 0),
+    0
+  )
+  const activeIndex = slots.findIndex((slot) => slot.isActive)
+  const activePosition = activeIndex >= 0 ? activeIndex + 1 : null
+  const statusMessage =
+    totalSlots > 0
+      ? `Wpisano ${filledCount} z ${totalSlots} cyfr.${
+          activePosition ? ` Aktywna pozycja ${activePosition}.` : ""
+        }`
+      : "Wpisz kod weryfikacyjny."
+
+  return (
+    <span aria-live="polite" className={cn("sr-only", className)} id={id}>
+      {statusMessage}
+    </span>
   )
 }
 
@@ -83,4 +113,10 @@ function InputOTPSeparator({ ...props }: React.ComponentProps<"div">) {
   )
 }
 
-export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator }
+export {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+  InputOTPSeparator,
+  InputOTPStatus,
+}
