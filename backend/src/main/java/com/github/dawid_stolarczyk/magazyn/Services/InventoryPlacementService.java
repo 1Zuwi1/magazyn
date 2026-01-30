@@ -11,6 +11,7 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.RackRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,7 @@ public class InventoryPlacementService {
     private static final int MAX_EXPIRE_DAYS = 36500;
     private static final int MAX_RACK_SIDE = 1000;
     private static final int MAX_RACK_AREA = 1_000_000;
+    private static final double EPS = 1e-6;
 
     @Autowired
     private ItemRepository itemRepository;
@@ -160,7 +162,12 @@ public class InventoryPlacementService {
             }
         }
 
-        assortmentRepository.saveAll(newAssortments);
+        try {
+            assortmentRepository.saveAll(newAssortments);
+        } catch (DataIntegrityViolationException ex) {
+            // jeśli wystąpi konflikt z powodu równoległego wstawienia tej samej pozycji
+            throw new IllegalArgumentException(PLACEMENT_INVALID);
+        }
 
         PlacementConfirmationResponse response = new PlacementConfirmationResponse();
         response.setItemId(item.getId());
@@ -173,9 +180,13 @@ public class InventoryPlacementService {
         Objects.requireNonNull(item, "item");
         return rack.getMin_temp() <= item.getMin_temp()
                 && rack.getMax_temp() >= item.getMax_temp()
-                && item.getSize_x() <= rack.getMax_size_x()
-                && item.getSize_y() <= rack.getMax_size_y()
-                && item.getSize_z() <= rack.getMax_size_z();
+                && lessOrEqualWithEps(item.getSize_x(), rack.getMax_size_x())
+                && lessOrEqualWithEps(item.getSize_y(), rack.getMax_size_y())
+                && lessOrEqualWithEps(item.getSize_z(), rack.getMax_size_z());
+    }
+
+    private boolean lessOrEqualWithEps(double a, double b) {
+        return a <= b || Math.abs(a - b) < EPS;
     }
 
     private RackCapacity resolveRackCapacity(Rack rack, Item item) {
@@ -196,9 +207,24 @@ public class InventoryPlacementService {
         int occupiedSlots = assortments.size();
         int availableSlots = Math.max(0, totalSlots - occupiedSlots);
         double itemWeight = item.getWeight();
-        int maxByWeight = itemWeight <= 0
-                ? availableSlots
-                : (int) Math.floor((rack.getMax_weight() - currentLoad) / itemWeight);
+
+        int maxByWeight;
+        if (itemWeight <= 0) {
+            maxByWeight = availableSlots;
+        } else {
+            double possible = (rack.getMax_weight() - currentLoad) / itemWeight;
+            if (Double.isInfinite(possible) || Double.isNaN(possible) || possible <= 0) {
+                maxByWeight = 0;
+            } else {
+                long possibleLong = (long) Math.floor(possible);
+                if (possibleLong > Integer.MAX_VALUE) {
+                    maxByWeight = Integer.MAX_VALUE;
+                } else {
+                    maxByWeight = (int) possibleLong;
+                }
+            }
+        }
+
         if (maxByWeight <= 0 || availableSlots <= 0) {
             return null;
         }
