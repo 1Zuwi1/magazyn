@@ -36,7 +36,7 @@ public class InventoryController {
         InventoryPlacementService.PlacementPlanResult result = placementService.buildPlacementPlan(request);
         if (!result.success()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ResponseTemplate.error(result.code()));
+                    .body(ResponseTemplate.error(result.code() != null ? result.code().name() : null));
         }
         return ResponseEntity.ok(ResponseTemplate.success(result.response()));
     }
