@@ -54,6 +54,6 @@ public class ResponseTemplate<T> {
     }
 
     public static <T> ResponseTemplate<T> error(String message) {
-        return new ResponseTemplate<>(false, null, message);
+        return new ResponseTemplate<>(false, null, message != null ? message : "UNKNOWN_ERROR");
     }
 }

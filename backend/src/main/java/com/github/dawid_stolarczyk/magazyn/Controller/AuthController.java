@@ -14,7 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,11 +23,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 @Tag(name = "Authentication", description = "Endpoints for user authentication and session management")
+@RequiredArgsConstructor
+@Slf4j
 public class AuthController {
-    @Autowired
-    private AuthService authService;
-    @Autowired
-    private HttpServletRequest request;
+    private final AuthService authService;
+    private final HttpServletRequest request;
 
     @Operation(summary = "Logout the current user by invalidating their session.")
     @ApiResponses(value = {
@@ -52,6 +53,7 @@ public class AuthController {
             authService.loginUser(loginRequest, response, request);
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
+            log.error("Login failed for user: {}", loginRequest.getEmail(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
         }
     }
@@ -69,6 +71,7 @@ public class AuthController {
             authService.registerUser(registerRequest, request);
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
+            log.error("Registration failed for email: {}", registerRequest.getEmail(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
         }
     }
@@ -86,6 +89,7 @@ public class AuthController {
             authService.verifyEmailCheck(token, request);
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
+            log.error("Email verification failed for token: {}", token, e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
         }
     }

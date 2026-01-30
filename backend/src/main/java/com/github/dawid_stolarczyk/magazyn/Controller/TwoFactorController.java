@@ -14,7 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,13 +25,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/2fa")
 @Tag(name = "Two-Factor Authentication", description = "Endpoints for managing 2FA methods and verification")
+@RequiredArgsConstructor
+@Slf4j
 public class TwoFactorController {
-    @Autowired
-    private TwoFactorService twoFactorService;
-    @Autowired
-    private HttpServletRequest request;
-    @Autowired
-    private HttpServletResponse response;
+    private final TwoFactorService twoFactorService;
+    private final HttpServletRequest request;
+    private final HttpServletResponse response;
 
     @Operation(summary = "Retrieve the current user's two-factor authentication methods.")
     @ApiResponses(value = {
@@ -77,6 +77,7 @@ public class TwoFactorController {
         try {
             return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateBackupCodes(request)));
         } catch (AuthenticationException e) {
+            log.error("Failed to generate backup codes", e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
         }
     }
@@ -94,6 +95,7 @@ public class TwoFactorController {
             twoFactorService.checkCode(codeRequest, request, response);
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
+            log.error("2FA check failed for user session", e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
         }
     }

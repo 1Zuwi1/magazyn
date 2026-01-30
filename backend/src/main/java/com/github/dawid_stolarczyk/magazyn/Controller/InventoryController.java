@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,12 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/inventory")
 @Tag(name = "Inventory", description = "Endpoints for managing inventory placement and storage")
+@RequiredArgsConstructor
+@Slf4j
 public class InventoryController {
     private final InventoryPlacementService placementService;
-
-    public InventoryController(InventoryPlacementService placementService) {
-        this.placementService = placementService;
-    }
 
     @Operation(summary = "Generate a scan-driven placement plan for incoming items")
     @ApiResponses(value = {
@@ -39,7 +39,7 @@ public class InventoryController {
         InventoryPlacementService.PlacementPlanResult result = placementService.buildPlacementPlan(request);
         if (!result.success()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ResponseTemplate.error(result.code() != null ? result.code().name() : null));
+                    .body(ResponseTemplate.error(result.code() != null ? result.code().name() : "PLACEMENT_INVALID"));
         }
         return ResponseEntity.ok(ResponseTemplate.success(result.response()));
     }
