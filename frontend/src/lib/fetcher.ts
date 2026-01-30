@@ -6,7 +6,7 @@ import tryCatch from "./try-catch"
 
 const createApiSchemas = <S extends z.ZodTypeAny>(dataSchema: S) =>
   z.discriminatedUnion("success", [
-    z.object({ success: z.literal(true), data: dataSchema }),
+    z.object({ success: z.literal(true), data: dataSchema.optional() }),
     z.object({ success: z.literal(false), message: z.string() }),
   ])
 
@@ -25,16 +25,6 @@ const getCachedSchema = <S extends z.ZodTypeAny>(dataSchema: S) => {
 }
 
 // ----------------- Public types -----------------
-
-export interface ApiError {
-  success: false
-  message: string
-}
-export interface ApiSuccess<S> {
-  success: true
-  data: S
-}
-export type ApiResponse<S> = ApiError | ApiSuccess<S>
 
 export class FetchError extends Error {
   status?: number
@@ -172,7 +162,9 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
     )
 
     const baseUrl =
-      typeof window === "undefined" ? process.env.INTERNAL_API_URL : undefined
+      typeof window === "undefined"
+        ? process.env.INTERNAL_API_URL
+        : (process.env.NEXT_PUBLIC_API_URL ?? "")
 
     const res = await fetch(resolveRequestUrl(path, baseUrl), {
       ...restInit,

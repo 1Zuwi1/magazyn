@@ -52,7 +52,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
     onSubmit: async ({ value }) => {
       if (isLogin) {
         const loginValue = value as ValueTypes["login"]
-        const [err, res] = await tryCatch(
+        const [err] = await tryCatch(
           apiFetch("/api/auth/login", LoginSchema, {
             method: "POST",
             body: loginValue,
@@ -68,7 +68,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         }
 
         toast.success("Zalogowano pomyślnie!")
-        router.push(res.requiresTwoFactor ? "/login/2fa" : "/dashboard")
+        router.push("/login/2fa")
       } else {
         const { confirmPassword, ...registerValue } =
           value as ValueTypes["register"]

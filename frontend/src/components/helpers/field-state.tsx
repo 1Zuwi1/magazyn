@@ -29,53 +29,65 @@ export function FieldWithState({
   label,
   icon,
   additionalNode,
+  labelClassName,
+  renderInput,
   ...props
 }: {
   field: AnyFieldApi
   label: string
   icon?: typeof Mail01Icon
   additionalNode?: React.ReactNode
+  labelClassName?: string
+  renderInput?: (args: { id: string; isInvalid: boolean }) => React.ReactNode
 } & React.ComponentProps<"input">) {
   const isInvalid = field.state.meta.errors.length > 0
+  const inputId = props.id ?? field.name
   return (
     <Field>
       <div className="flex items-center justify-between">
         <FieldLabel
-          className="font-medium text-foreground/80 text-xs uppercase tracking-wide"
-          htmlFor={props.id ?? field.name}
+          className={cn(
+            "font-medium text-foreground/80 text-xs uppercase tracking-wide",
+            labelClassName
+          )}
+          htmlFor={inputId}
         >
           {label}
         </FieldLabel>
         {additionalNode}
       </div>
-      <div className="relative">
-        <Input
-          className={cn(
-            "h-10 bg-background/50 transition-all duration-200 focus:bg-background",
-            {
-              "border-destructive": isInvalid,
-              "pl-10": !!icon,
+      {renderInput ? (
+        renderInput({ id: inputId, isInvalid })
+      ) : (
+        <div className="relative">
+          <Input
+            className={cn(
+              "h-10 bg-background/50 transition-all duration-200 focus:bg-background",
+              {
+                "border-destructive": isInvalid,
+                "pl-10": !!icon,
+              }
+            )}
+            id={inputId}
+            name={field.name}
+            onBlur={field.handleBlur}
+            onChange={(e) => field.handleChange(e.target.value)}
+            spellCheck={
+              SPELLCHECK_DISABLED_INPUT_TYPES.includes(props.type ?? "")
+                ? false
+                : undefined
             }
-          )}
-          id={field.name}
-          name={field.name}
-          onBlur={field.handleBlur}
-          onChange={(e) => field.handleChange(e.target.value)}
-          spellCheck={
-            SPELLCHECK_DISABLED_INPUT_TYPES.includes(props.type ?? "")
-              ? false
-              : undefined
-          }
-          value={field.state.value}
-          {...props}
-        />
-        {icon && (
-          <HugeiconsIcon
-            className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/50"
-            icon={icon}
+            value={field.state.value}
+            {...props}
           />
-        )}
-      </div>
+          {icon && (
+            <HugeiconsIcon
+              className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/50"
+              icon={icon}
+            />
+          )}
+        </div>
+      )}
       <FieldState field={field} />
     </Field>
   )

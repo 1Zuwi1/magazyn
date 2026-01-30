@@ -58,9 +58,7 @@ export const LoginSchema = createApiSchema({
       email: z.email("Nieprawidłowy adres email"),
       password: PasswordSchema,
     }),
-    output: z.object({
-      requiresTwoFactor: z.boolean(),
-    }),
+    output: z.null(),
   },
 })
 export const RegisterSchema = createApiSchema({
