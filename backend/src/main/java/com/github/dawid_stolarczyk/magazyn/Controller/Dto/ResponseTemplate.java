@@ -1,16 +1,43 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 @Setter
+@Schema(description = "Generic response template")
 public class ResponseTemplate<T> {
     private boolean success;
     private String message;
     private T data;
+
+    // Schematy dla dokumentacji OpenAPI
+    @Schema(name = "ApiSuccess")
+    @Getter
+    public static class ApiSuccess {
+        @Schema(example = "true")
+        private final boolean success = true;
+    }
+
+    @Schema(name = "ApiSuccessData")
+    @Getter
+    public static class ApiSuccessData<T> {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private T data;
+    }
+
+    @Schema(name = "ApiError")
+    @Getter
+    public static class ApiError {
+        @Schema(example = "false")
+        private final boolean success = false;
+        @Schema(example = "ERROR_CODE")
+        private String message;
+    }
 
     private ResponseTemplate(boolean success, T data, String message) {
         this.success = success;
@@ -20,6 +47,10 @@ public class ResponseTemplate<T> {
 
     public static <T> ResponseTemplate<T> success(T data) {
         return new ResponseTemplate<>(true, data, null);
+    }
+
+    public static ResponseTemplate<Void> success() {
+        return new ResponseTemplate<>(true, null, null);
     }
 
     public static <T> ResponseTemplate<T> error(String message) {

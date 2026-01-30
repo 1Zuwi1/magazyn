@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/users")
+@Tag(name = "Users", description = "Endpoints for user-related information")
 public class UserController {
     @Autowired
     private UserService userService;
@@ -24,14 +26,12 @@ public class UserController {
     @Operation(summary = "Get basic information about the currently authenticated user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved user information",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = UserInfoResponse.class)
-                    )),
-            @ApiResponse(responseCode = "400", description = "Bad request, could not retrieve user information")
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request, could not retrieve user information",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/me")
-    public ResponseEntity<?> getBasic(HttpServletRequest request) {
+    public ResponseEntity<ResponseTemplate<UserInfoResponse>> getBasic(HttpServletRequest request) {
         return ResponseEntity.ok(ResponseTemplate.success(userService.getBasicInformation(request)));
     }
 }

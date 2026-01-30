@@ -18,8 +18,7 @@ public class TestController {
             @ApiResponse(responseCode = "200", description = "API is operational")
     })
     @GetMapping
-    public ResponseEntity<ResponseTemplate<String>> testEndpoint() {
-        ResponseTemplate<String> response = ResponseTemplate.success("API is operational");
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ResponseTemplate<Void>> testEndpoint() {
+        return ResponseEntity.ok(ResponseTemplate.success());
     }
 }

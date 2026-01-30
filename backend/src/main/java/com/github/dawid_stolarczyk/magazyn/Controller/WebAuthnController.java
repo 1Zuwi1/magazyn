@@ -8,6 +8,12 @@ import com.yubico.webauthn.data.PublicKeyCredentialRequestOptions;
 import com.yubico.webauthn.data.exception.Base64UrlException;
 import com.yubico.webauthn.exception.AssertionFailedException;
 import com.yubico.webauthn.exception.RegistrationFailedException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +28,7 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/webauthn")
+@Tag(name = "WebAuthn (Passkeys)", description = "Endpoints for passwordless authentication using FIDO2/WebAuthn")
 public class WebAuthnController {
 
     private final WebAuthnService webAuthnService;
@@ -33,9 +40,15 @@ public class WebAuthnController {
 
     /* ===================== REGISTRATION ===================== */
 
-    // Start registration → zwraca PublicKeyCredentialCreationOptions
+    @Operation(summary = "Initiate passkey registration for the current user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Registration options generated successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "400", description = "Registration initiation failed",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @PostMapping("/register/start")
-    public ResponseEntity<?> startRegistration(HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ResponseTemplate<PublicKeyCredentialCreationOptions>> startRegistration(HttpServletRequest httpServletRequest) {
         try {
             PublicKeyCredentialCreationOptions options = webAuthnService.startRegistration(httpServletRequest);
             return ResponseEntity.ok(ResponseTemplate.success(options));
@@ -45,14 +58,21 @@ public class WebAuthnController {
     }
 
     // Finish registration → przyjmuje JSON credential z frontendu
+    @Operation(summary = "Complete passkey registration with the credential received from the browser.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Registration completed successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "400", description = "Registration verification failed",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @PostMapping("/register/finish")
-    public ResponseEntity<?> finishRegistration(
+    public ResponseEntity<ResponseTemplate<Void>> finishRegistration(
             @RequestBody String credentialJson,
             HttpServletRequest httpServletRequest
     ) {
         try {
             webAuthnService.finishRegistration(credentialJson, httpServletRequest);
-            return ResponseEntity.ok(ResponseTemplate.success("Registration finished"));
+            return ResponseEntity.ok(ResponseTemplate.success());
         } catch (IOException | RegistrationFailedException | Base64UrlException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_REGISTRATION.name()));
         }
@@ -61,8 +81,15 @@ public class WebAuthnController {
     /* ===================== ASSERTION / LOGIN ===================== */
 
     // Start assertion → zwraca PublicKeyCredentialRequestOptions
+    @Operation(summary = "Initiate passkey authentication (login).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Authentication options generated successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "400", description = "Authentication initiation failed",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @PostMapping("/assertion/start")
-    public ResponseEntity<?> startAssertion(HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ResponseTemplate<PublicKeyCredentialRequestOptions>> startAssertion(HttpServletRequest httpServletRequest) {
         try {
             PublicKeyCredentialRequestOptions options = webAuthnService.startAssertion(httpServletRequest);
             return ResponseEntity.ok(ResponseTemplate.success(options));
@@ -72,14 +99,23 @@ public class WebAuthnController {
     }
 
     // Finish assertion → przyjmuje credential JSON z frontendu
+    @Operation(summary = "Complete passkey authentication and log in the user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Authentication successful and user logged in",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication verification failed",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request - invalid format",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @PostMapping("/assertion/finish")
-    public ResponseEntity<?> finishAssertion(@RequestBody String credentialJson,
-                                             HttpServletResponse httpServletResponse,
-                                             HttpServletRequest httpServletRequest) {
+    public ResponseEntity<ResponseTemplate<Void>> finishAssertion(@RequestBody String credentialJson,
+                                                                  HttpServletResponse httpServletResponse,
+                                                                  HttpServletRequest httpServletRequest) {
         try {
             boolean success = webAuthnService.finishAssertion(credentialJson, httpServletResponse, httpServletRequest);
             if (success) {
-                return ResponseEntity.ok(ResponseTemplate.success("Login successful"));
+                return ResponseEntity.ok(ResponseTemplate.success());
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_ASSERTION.name()));
             }
