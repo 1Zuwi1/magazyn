@@ -56,7 +56,7 @@ public class AuthService {
     @Value("${app.domain}")
     private String domain;
 
-    public void logoutUser(HttpServletResponse response, HttpServletRequest request, String rt) {
+    public void logoutUser(HttpServletResponse response, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.AUTH_LOGOUT);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null) {

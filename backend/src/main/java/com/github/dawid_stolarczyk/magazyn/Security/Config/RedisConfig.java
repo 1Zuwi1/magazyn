@@ -34,6 +34,7 @@ public class RedisConfig {
         template.afterPropertiesSet();
         return template;
     }
+
     @Bean
     public ObjectMapper redisObjectMapper() {
         ObjectMapper mapper = JsonMapper.builder()

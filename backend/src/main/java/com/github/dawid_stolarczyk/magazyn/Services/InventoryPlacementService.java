@@ -1,11 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Services;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PlacementConfirmationRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PlacementConfirmationResponse;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PlacementPlanRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PlacementPlanResponse;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PlacementSlotRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PlacementSlotResponse;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Assortment;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Rack;
@@ -23,14 +18,7 @@ import java.sql.Timestamp;
 import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class InventoryPlacementService {
