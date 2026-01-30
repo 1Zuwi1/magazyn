@@ -1,11 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Controller;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.CodeRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RemoveTwoFactorMethodRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.SendTwoFactorCodeRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.TwoFactorAuthenticatorResponse;
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Services.TwoFactorService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -63,7 +59,7 @@ public class TwoFactorController {
             }
             twoFactorService.sendTwoFactorCodeViaEmail(request);
             return ResponseEntity.ok(ResponseTemplate.success());
-        }  catch (AuthenticationException e) {
+        } catch (AuthenticationException e) {
             log.error("Failed to send 2FA code for method: {}", sendRequest.getMethod(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
         }

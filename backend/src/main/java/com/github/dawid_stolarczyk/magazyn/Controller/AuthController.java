@@ -4,7 +4,6 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.LoginRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RegisterRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
-import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;
 import com.github.dawid_stolarczyk.magazyn.Services.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

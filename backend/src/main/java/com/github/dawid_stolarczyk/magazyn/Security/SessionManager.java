@@ -6,7 +6,6 @@ import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.RememberMeData;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.SessionData;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.TwoFactorAuth;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis.SessionService;
-import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

@@ -1,10 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Controller;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangeEmailRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangeFullNameRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangePasswordRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserInfoResponse;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,6 +57,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
         }
     }
+
     @Operation(summary = "Change the current user's password.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Password changed successfully",
@@ -78,6 +75,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
         }
     }
+
     @Operation(summary = "Change the current user's full name.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Full name changed successfully",

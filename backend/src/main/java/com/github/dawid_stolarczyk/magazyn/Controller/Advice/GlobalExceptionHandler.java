@@ -74,6 +74,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ResponseTemplate.error("INTERNAL_ERROR"));
     }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ResponseTemplate<String>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         log.debug("Malformed JSON request", ex);
