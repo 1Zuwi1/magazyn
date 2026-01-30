@@ -59,7 +59,7 @@ describe("getSession", () => {
     expect(result).toEqual(userData)
     expect(mockApiFetch).toHaveBeenCalledTimes(1)
     const [path, schema, init] = mockApiFetch.mock.calls[0] ?? []
-    expect(path).toBe("/api/auth/me")
+    expect(path).toBe("/api/users/me")
     expect(schema).toBe(ApiMeSchema)
     expect(init).toEqual(expect.objectContaining({ method: "GET" }))
     expect(mockHeaders).not.toHaveBeenCalled()
@@ -114,7 +114,7 @@ describe("getSession", () => {
 
     expect(mockHeaders).toHaveBeenCalledTimes(1)
     const [path, schema, init] = mockApiFetch.mock.calls[0] ?? []
-    expect(path).toBe("/api/auth/me")
+    expect(path).toBe("/api/users/me")
     expect(schema).toBe(ApiMeSchema)
     expect(init).toEqual(
       expect.objectContaining({ method: "GET", headers: serverHeaders })

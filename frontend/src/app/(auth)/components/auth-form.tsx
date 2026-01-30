@@ -20,6 +20,7 @@ import { FormRegisterSchema, LoginSchema, RegisterSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
 import { getAnimationStyle } from "@/lib/utils"
 import AuthCard from "./auth-card"
+import PasskeyLogin from "./passkey-login"
 
 type AuthMode = "login" | "register"
 
@@ -205,6 +206,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 )}
               </form.Subscribe>
             </Field>
+
+            {isLogin ? (
+              <PasskeyLogin disabled={form.state.isSubmitting} />
+            ) : null}
 
             <div className="text-center text-sm">
               {isLogin ? (

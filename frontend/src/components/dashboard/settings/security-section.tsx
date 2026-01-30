@@ -6,6 +6,7 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TWO_FACTOR_METHODS } from "./constants"
+import { PasskeysSection } from "./passkeys-section"
 import { PasswordSection } from "./password-section"
 import { TwoFactorSetup } from "./two-factor-setup"
 import type { TwoFactorMethod, TwoFactorStatus } from "./types"
@@ -92,6 +93,8 @@ export function SecuritySection({
           />
         </CardContent>
       </Card>
+
+      <PasskeysSection />
 
       <Card>
         <CardHeader>

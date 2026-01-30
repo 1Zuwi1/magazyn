@@ -6,7 +6,7 @@ import { ApiMeSchema } from "./schemas"
 
 export const getSession = cache(async (redirectTo?: string) => {
   try {
-    const res = await apiFetch("/api/auth/me", ApiMeSchema, {
+    const res = await apiFetch("/api/users/me", ApiMeSchema, {
       method: "GET",
       ...(typeof window === "undefined" ? { headers: await headers() } : {}),
     })
