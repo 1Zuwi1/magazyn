@@ -1,0 +1,21 @@
+package com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity;
+
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
+
+@RedisHash(value = "rememberMe")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class RememberMeData {
+    @Id
+    private String id;
+    private Long userId;
+    private Status2FA status2FA;
+    private String ipAddress;
+    private String userAgent;
+}

@@ -1,0 +1,719 @@
+import {
+  Copy01Icon,
+  Key01Icon,
+  Mail01Icon,
+  SmartPhone01Icon,
+  Tick02Icon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
+import { useCallback, useEffect, useReducer, useRef, useState } from "react"
+import { toast } from "sonner"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Spinner } from "@/components/ui/spinner"
+import { Textarea } from "@/components/ui/textarea"
+import { OTP_LENGTH } from "@/config/constants"
+import {
+  AUTHENTICATOR_QR_SIZE,
+  COPY_FEEDBACK_TIMEOUT_MS,
+  MOCK_AUTHENTICATOR_SECRET,
+  RECOVERY_CODES,
+  TWO_FACTOR_METHODS,
+  TWO_FACTOR_RESEND_SECONDS,
+} from "./constants"
+import { OtpInput } from "./otp-input"
+import { generateTotpUri, QRCodeDisplay } from "./qr-code"
+import type {
+  TwoFactorChallenge,
+  TwoFactorMethod,
+  TwoFactorSetupStage,
+  TwoFactorStatus,
+} from "./types"
+import { useCountdown } from "./use-countdown"
+import {
+  createTwoFactorChallenge,
+  formatCountdown,
+  sendVerificationCode,
+  verifyOneTimeCode,
+} from "./utils"
+
+function TwoFactorMethodInput({
+  method,
+  onMethodChange,
+  disabled,
+}: {
+  method: TwoFactorMethod
+  onMethodChange: (method: TwoFactorMethod) => void
+  disabled?: boolean
+}) {
+  const icons = {
+    authenticator: Key01Icon,
+    sms: SmartPhone01Icon,
+    email: Mail01Icon,
+  }
+
+  return (
+    <RadioGroup
+      className="grid gap-3 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3"
+      disabled={disabled}
+      onValueChange={(value) => {
+        onMethodChange(value as TwoFactorMethod)
+      }}
+      value={method}
+    >
+      {TWO_FACTOR_METHODS.map((m) => {
+        const Icon = icons[m.value as keyof typeof icons]
+        const isSelected = method === m.value
+
+        return (
+          <div className="flex" key={m.value}>
+            <RadioGroupItem
+              aria-describedby={`method-${m.value}-hint`}
+              aria-label={m.label}
+              className="peer sr-only"
+              id={`method-${m.value}`}
+              value={m.value}
+            />
+            <div className="sr-only" id={`method-${m.value}-hint`}>
+              {m.hint}
+            </div>
+            <Label
+              className={`flex flex-1 cursor-pointer flex-col items-center justify-between gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${
+                disabled ? "pointer-events-none opacity-50" : ""
+              }`}
+              htmlFor={`method-${m.value}`}
+            >
+              <HugeiconsIcon
+                className={`size-6 ${isSelected ? "text-primary" : "text-muted-foreground"}`}
+                icon={Icon}
+              />
+              <div className="text-center">
+                <p className="font-semibold text-sm leading-none">{m.label}</p>
+              </div>
+            </Label>
+          </div>
+        )
+      })}
+    </RadioGroup>
+  )
+}
+
+interface TwoFactorSetupState {
+  stage: TwoFactorSetupStage
+  challenge: TwoFactorChallenge | null
+  code: string
+  error: string
+  note: string
+}
+
+type TwoFactorSetupAction =
+  | { type: "reset" }
+  | { type: "set_stage"; stage: TwoFactorSetupStage }
+  | { type: "set_challenge"; challenge: TwoFactorChallenge | null }
+  | { type: "set_code"; code: string }
+  | { type: "set_error"; error: string }
+  | { type: "set_note"; note: string }
+
+const initialTwoFactorSetupState: TwoFactorSetupState = {
+  stage: "idle",
+  challenge: null,
+  code: "",
+  error: "",
+  note: "",
+}
+
+function twoFactorSetupReducer(
+  state: TwoFactorSetupState,
+  action: TwoFactorSetupAction
+): TwoFactorSetupState {
+  switch (action.type) {
+    case "reset":
+      return { ...initialTwoFactorSetupState }
+    case "set_stage":
+      return { ...state, stage: action.stage }
+    case "set_challenge":
+      return { ...state, challenge: action.challenge }
+    case "set_code":
+      return { ...state, code: action.code }
+    case "set_error":
+      return { ...state, error: action.error }
+    case "set_note":
+      return { ...state, note: action.note }
+    default:
+      return state
+  }
+}
+
+interface TwoFactorSetupFlowParams {
+  status: TwoFactorStatus
+  method: TwoFactorMethod
+  setupState: TwoFactorSetupState
+  dispatch: (action: TwoFactorSetupAction) => void
+  onStatusChange: (status: TwoFactorStatus) => void
+  startTimer: (cooldown?: number) => void
+}
+
+function useTwoFactorSetupFlow({
+  status,
+  method,
+  setupState,
+  dispatch,
+  onStatusChange,
+  startTimer,
+}: TwoFactorSetupFlowParams) {
+  const { challenge, code } = setupState
+  const resetFlow = useCallback(() => {
+    dispatch({ type: "reset" })
+    startTimer()
+  }, [dispatch, startTimer])
+  const locale = useLocale()
+
+  // If method changes while in idle, we don't need to do much,
+  // but if we were in the middle of a flow, we should probably reset or update.
+  // The requirement says: "ensure that when a user changes the method, the contact information (destination) updates correctly"
+  useEffect(() => {
+    if (status === "disabled") {
+      resetFlow()
+    }
+  }, [status, resetFlow])
+
+  const startSetup = async () => {
+    dispatch({ type: "set_error", error: "" })
+    dispatch({ type: "set_stage", stage: "requesting" })
+    onStatusChange("setup")
+
+    try {
+      const newChallenge = await createTwoFactorChallenge(method, locale)
+      dispatch({ type: "set_challenge", challenge: newChallenge })
+      dispatch({ type: "set_stage", stage: "awaiting" })
+      await sendVerificationCode(newChallenge.sessionId)
+    } catch {
+      const message =
+        "Nie udało się zainicjować konfiguracji. Spróbuj ponownie."
+      dispatch({ type: "set_error", error: message })
+      dispatch({ type: "set_stage", stage: "error" })
+      toast.error(message)
+    }
+  }
+
+  const resendCode = async () => {
+    if (!challenge) {
+      return
+    }
+
+    dispatch({ type: "set_error", error: "" })
+    dispatch({ type: "set_stage", stage: "sending" })
+
+    try {
+      await sendVerificationCode(challenge.sessionId)
+      startTimer(TWO_FACTOR_RESEND_SECONDS)
+      dispatch({ type: "set_stage", stage: "awaiting" })
+    } catch {
+      const message = "Nie udało się wysłać kodu. Spróbuj ponownie."
+      dispatch({ type: "set_error", error: message })
+      dispatch({ type: "set_stage", stage: "error" })
+      toast.error(message)
+    }
+  }
+
+  const verifySetup = async () => {
+    dispatch({ type: "set_stage", stage: "verifying" })
+    dispatch({ type: "set_error", error: "" })
+
+    try {
+      const isValid = await verifyOneTimeCode(code)
+
+      if (isValid) {
+        onStatusChange("enabled")
+        dispatch({ type: "set_stage", stage: "success" })
+        dispatch({
+          type: "set_note",
+          note: `Weryfikacja dwuetapowa została włączona przy użyciu: ${
+            TWO_FACTOR_METHODS.find((m) => m.value === method)?.label
+          }.`,
+        })
+      } else {
+        dispatch({
+          type: "set_error",
+          error: "Nieprawidłowy kod weryfikacyjny. Spróbuj ponownie.",
+        })
+        dispatch({ type: "set_stage", stage: "error" })
+      }
+    } catch {
+      dispatch({
+        type: "set_error",
+        error: "Wystąpił błąd podczas weryfikacji. Spróbuj ponownie.",
+      })
+      dispatch({ type: "set_stage", stage: "error" })
+    }
+  }
+
+  return { resetFlow, startSetup, resendCode, verifySetup }
+}
+
+interface TwoFactorSetupProps {
+  status: TwoFactorStatus
+  method: TwoFactorMethod
+  onStatusChange: (status: TwoFactorStatus) => void
+  onMethodChange: (method: TwoFactorMethod) => void
+  userEmail?: string
+}
+
+function AuthenticatorSetup({
+  challenge,
+  userEmail,
+}: {
+  challenge: TwoFactorChallenge | null
+  userEmail?: string
+}) {
+  const [copied, setCopied] = useState(false)
+  const secret = challenge?.secret ?? MOCK_AUTHENTICATOR_SECRET
+  const totpUri = generateTotpUri(secret, userEmail ?? "user@magazynpro.pl")
+  const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const locale = useLocale()
+
+  const handleCopySecret = async (): Promise<void> => {
+    if (!navigator.clipboard) {
+      toast.error("Schowek jest niedostępny w tej przeglądarce.")
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(secret.replace(/\s/g, ""))
+      setCopied(true)
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current)
+      }
+      copyTimeoutRef.current = setTimeout(
+        () => setCopied(false),
+        COPY_FEEDBACK_TIMEOUT_MS
+      )
+    } catch {
+      toast.error("Nie udało się skopiować klucza. Skopiuj ręcznie.")
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  return (
+    <div className="grid gap-6 sm:grid-cols-[auto_1fr]">
+      <div className="flex flex-col items-center gap-3">
+        <QRCodeDisplay size={AUTHENTICATOR_QR_SIZE} value={totpUri} />
+        <p className="text-center text-muted-foreground text-xs">
+          Zeskanuj kodem QR
+        </p>
+      </div>
+      <div className="space-y-3">
+        <div>
+          <p className="font-medium text-sm">Lub wprowadź klucz ręcznie</p>
+          <p className="text-muted-foreground text-sm">
+            Użyj aplikacji uwierzytelniającej (Google Authenticator, Authy,
+            1Password).
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Input
+            className="flex-1 font-mono text-xs tracking-wider"
+            readOnly
+            value={secret}
+          />
+          <Button
+            aria-label={copied ? "Klucz skopiowany" : "Skopiuj klucz"}
+            aria-pressed={copied}
+            onClick={handleCopySecret}
+            size="icon"
+            type="button"
+            variant="outline"
+          >
+            <HugeiconsIcon icon={copied ? Tick02Icon : Copy01Icon} size={16} />
+          </Button>
+        </div>
+        <p className="text-muted-foreground text-xs">
+          Wygenerowano:{" "}
+          {challenge?.issuedAt ?? new Date().toLocaleTimeString(locale)}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function CodeInputEntry({
+  method,
+  challenge,
+  code,
+  resendCooldown,
+  isBusy,
+  canResend,
+  onCodeChange,
+  onResend,
+  onVerify,
+  userEmail,
+}: {
+  method: TwoFactorMethod
+  challenge: TwoFactorChallenge | null
+  code: string
+  resendCooldown: number
+  isBusy: boolean
+  canResend: boolean
+  onCodeChange: (code: string) => void
+  onResend: () => void
+  onVerify: () => void
+  userEmail?: string
+}) {
+  return (
+    <div className="space-y-4">
+      {method === "authenticator" ? (
+        <AuthenticatorSetup challenge={challenge} userEmail={userEmail} />
+      ) : (
+        <div className="space-y-2">
+          <p className="font-medium text-sm">Kod jednorazowy</p>
+          <p className="text-muted-foreground text-sm">
+            {method === "sms"
+              ? "SMS z kodem został wysłany."
+              : "E-mail z kodem został wysłany."}{" "}
+            Kontakt: {challenge?.destination ?? "wybrana metoda"}.
+          </p>
+          <p className="text-muted-foreground text-xs">
+            Możesz poprosić o ponowną wysyłkę, jeśli kod nie dotarł.
+          </p>
+        </div>
+      )}
+
+      <div className="space-y-3">
+        <Label htmlFor="two-factor-code">Kod weryfikacyjny</Label>
+        <OtpInput id="two-factor-code" onChange={onCodeChange} value={code} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            disabled={code.length !== OTP_LENGTH}
+            isLoading={isBusy}
+            onClick={onVerify}
+            type="button"
+          >
+            Zweryfikuj i aktywuj
+          </Button>
+          {method !== "authenticator" ? (
+            <>
+              <Button
+                aria-describedby="resend-status"
+                aria-disabled={!canResend}
+                disabled={!canResend}
+                onClick={onResend}
+                type="button"
+                variant="outline"
+              >
+                {resendCooldown > 0
+                  ? `Wyślij ponownie (${formatCountdown(resendCooldown)})`
+                  : "Wyślij ponownie"}
+              </Button>
+              <span
+                aria-atomic="true"
+                aria-live="polite"
+                className="sr-only"
+                id="resend-status"
+              >
+                {resendCooldown > 0
+                  ? "Wyślij ponownie będzie dostępne po zakończeniu odliczania."
+                  : "Możesz teraz wysłać ponownie."}
+              </span>
+            </>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  )
+}
+function RecoveryCodesSection({
+  enabled,
+  showRecoveryCodes,
+  onToggle,
+}: {
+  enabled: boolean
+  showRecoveryCodes: boolean
+  onToggle: () => void
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="space-y-1">
+          <Label htmlFor="recovery-codes">Kody odzyskiwania</Label>
+          <p className="text-muted-foreground text-sm">
+            Przechowuj je w bezpiecznym miejscu.
+          </p>
+        </div>
+        <Button
+          disabled={!enabled}
+          onClick={onToggle}
+          type="button"
+          variant="outline"
+        >
+          {showRecoveryCodes ? "Ukryj" : "Pokaż"}
+        </Button>
+      </div>
+
+      {showRecoveryCodes && enabled ? (
+        <Textarea
+          aria-label="Kody odzyskiwania"
+          className="min-h-28"
+          id="recovery-codes"
+          readOnly
+          value={RECOVERY_CODES.join("\n")}
+        />
+      ) : (
+        <p className="text-muted-foreground text-sm">
+          {enabled
+            ? 'Kliknij "Pokaż", aby wyświetlić kody.'
+            : "Włącz 2FA, aby wygenerować kody."}
+        </p>
+      )}
+    </div>
+  )
+}
+
+function TwoFactorConfigurationSection({
+  status,
+  setupStage,
+  method,
+  onMethodChange,
+  onStartSetup,
+  onCancelSetup,
+}: {
+  status: TwoFactorStatus
+  setupStage: TwoFactorSetupStage
+  method: TwoFactorMethod
+  onMethodChange: (method: TwoFactorMethod) => void
+  onStartSetup: () => void
+  onCancelSetup: () => void
+}) {
+  // User can only change method in Step 1 (when not in setup phase or fully enabled)
+  const canSelectMethod =
+    (status === "disabled" || setupStage === "idle") && status !== "enabled"
+
+  // Step 1 is complete when setup has started (method selected)
+  const step1Complete = status === "setup" || status === "enabled"
+
+  // Step 2 is complete when awaiting code entry or beyond
+  const step2Complete =
+    status === "enabled" ||
+    (status === "setup" &&
+      (setupStage === "awaiting" ||
+        setupStage === "verifying" ||
+        setupStage === "error"))
+
+  // Step 3 is complete only when fully enabled
+  const step3Complete = status === "enabled"
+
+  return (
+    <div className="space-y-4 rounded-xl border bg-muted/30 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-1">
+          <p className="font-semibold">Konfiguracja 2FA</p>
+          <p className="text-muted-foreground text-sm">
+            Dodaj drugi krok weryfikacji i chroń krytyczne działania.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {status === "disabled" ? (
+            <Button
+              isLoading={setupStage === "requesting"}
+              onClick={onStartSetup}
+              type="button"
+            >
+              Rozpocznij konfigurację
+            </Button>
+          ) : null}
+          {status === "setup" ? (
+            <Button onClick={onCancelSetup} type="button" variant="outline">
+              Anuluj konfigurację
+            </Button>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="grid gap-3 text-muted-foreground text-xs sm:grid-cols-3">
+        <div className="flex items-center gap-2">
+          <Badge variant={step1Complete ? "success" : "outline"}>1</Badge>
+          <span>Wybierz metodę</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant={step2Complete ? "success" : "outline"}>2</Badge>
+          <span>Potwierdź kod</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant={step3Complete ? "success" : "outline"}>3</Badge>
+          <span>Zapisz kody</span>
+        </div>
+      </div>
+
+      <TwoFactorMethodInput
+        disabled={!canSelectMethod}
+        method={method}
+        onMethodChange={onMethodChange}
+      />
+    </div>
+  )
+}
+
+export function TwoFactorSetup({
+  status,
+  method,
+  onStatusChange,
+  onMethodChange,
+  userEmail,
+}: TwoFactorSetupProps) {
+  const [setupState, dispatch] = useReducer(
+    twoFactorSetupReducer,
+    initialTwoFactorSetupState
+  )
+  const [resendCooldown, startTimer] = useCountdown(0)
+  const [showRecoveryCodes, setShowRecoveryCodes] = useState<boolean>(false)
+  const {
+    stage: setupStage,
+    challenge,
+    code,
+    error,
+    note: setupNote,
+  } = setupState
+  const enabled = status === "enabled"
+  const setupActive = status === "setup"
+  const isBusy =
+    setupStage === "requesting" ||
+    setupStage === "sending" ||
+    setupStage === "verifying"
+  const showCodeEntry =
+    setupStage === "awaiting" ||
+    setupStage === "verifying" ||
+    setupStage === "error"
+  const canResendCode = resendCooldown === 0 && !isBusy
+  const shouldWarnOnNavigate =
+    setupActive && setupStage !== "idle" && setupStage !== "success"
+
+  useEffect(() => {
+    if (!shouldWarnOnNavigate) {
+      return
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ""
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+    }
+  }, [shouldWarnOnNavigate])
+
+  const { resetFlow, startSetup, resendCode, verifySetup } =
+    useTwoFactorSetupFlow({
+      status,
+      method,
+      setupState,
+      dispatch,
+      onStatusChange,
+      startTimer,
+    })
+
+  const handleCancelSetup = (): void => {
+    onStatusChange("disabled")
+    resetFlow()
+  }
+
+  const handleResendCode = (): void => {
+    resendCode()
+  }
+
+  const handleVerifyCode = (): void => {
+    verifySetup()
+  }
+
+  return (
+    <div className="space-y-6">
+      <TwoFactorConfigurationSection
+        method={method}
+        onCancelSetup={handleCancelSetup}
+        onMethodChange={onMethodChange}
+        onStartSetup={startSetup}
+        setupStage={setupStage}
+        status={status}
+      />
+
+      {setupActive ? (
+        <div className="space-y-4 rounded-lg border bg-background/80 p-4">
+          {setupStage === "requesting" ? (
+            <Alert>
+              <Spinner className="text-muted-foreground" />
+              <AlertTitle>Łączymy się z usługą 2FA</AlertTitle>
+              <AlertDescription>
+                Generujemy klucz i przygotowujemy kolejne kroki.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+
+          {setupStage === "sending" ? (
+            <Alert>
+              <Spinner className="text-muted-foreground" />
+              <AlertTitle>Wysyłamy kod</AlertTitle>
+              <AlertDescription>
+                Kod trafia na {challenge?.destination ?? "wybraną metodę"}.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+
+          {setupStage === "error" && error ? (
+            <Alert variant="destructive">
+              <AlertTitle>Nie udało się aktywować 2FA</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          {showCodeEntry ? (
+            <CodeInputEntry
+              canResend={canResendCode}
+              challenge={challenge}
+              code={code}
+              isBusy={setupStage === "verifying"}
+              method={method}
+              onCodeChange={(nextCode) =>
+                dispatch({ type: "set_code", code: nextCode })
+              }
+              onResend={handleResendCode}
+              onVerify={handleVerifyCode}
+              resendCooldown={resendCooldown}
+              userEmail={userEmail}
+            />
+          ) : null}
+        </div>
+      ) : null}
+
+      {status === "enabled" ? (
+        <Alert>
+          <AlertTitle>2FA aktywna</AlertTitle>
+          <AlertDescription>
+            {setupNote ||
+              "Logowanie i zmiana hasła wymagają kodu. Jeśli utracisz dostęp, użyj kodów odzyskiwania."}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      <div className="h-px bg-border" />
+
+      <RecoveryCodesSection
+        enabled={enabled}
+        onToggle={() => setShowRecoveryCodes((current) => !current)}
+        showRecoveryCodes={showRecoveryCodes}
+      />
+    </div>
+  )
+}

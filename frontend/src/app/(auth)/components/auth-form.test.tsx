@@ -78,7 +78,7 @@ describe("AuthForm", () => {
         target: { value: "testuser@example.com" },
       })
       fireEvent.change(screen.getByLabelText(PASSWORD_REGEX), {
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
 
       fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_REGEX }))
@@ -89,7 +89,7 @@ describe("AuthForm", () => {
           expect.anything(),
           expect.objectContaining({
             method: "POST",
-            body: { email: "testuser@example.com", password: "password123" },
+            body: { email: "testuser@example.com", password: "Password123!" },
           })
         )
       })
@@ -107,7 +107,7 @@ describe("AuthForm", () => {
         target: { value: "testuser@example.com" },
       })
       fireEvent.change(screen.getByLabelText(PASSWORD_REGEX), {
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
 
       fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_REGEX }))
@@ -126,7 +126,7 @@ describe("AuthForm", () => {
         target: { value: "testuser@example.com" },
       })
       fireEvent.change(screen.getByLabelText(PASSWORD_REGEX), {
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
 
       fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_REGEX }))
@@ -177,10 +177,10 @@ describe("AuthForm", () => {
       })
       fireEvent.change(screen.getAllByLabelText(PASSWORD_REGEX)[0], {
         // Password field
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
       fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_REGEX), {
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
 
       fireEvent.click(
@@ -196,7 +196,7 @@ describe("AuthForm", () => {
             body: {
               email: "test@example.com",
               fullName: "Test User",
-              password: "password123",
+              password: "Password123!",
             },
           })
         )
@@ -218,10 +218,10 @@ describe("AuthForm", () => {
       })
 
       fireEvent.change(screen.getByLabelText(EXACT_PASSWORD_REGEX), {
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
       fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_REGEX), {
-        target: { value: "password456" },
+        target: { value: "Password456!" },
       })
 
       fireEvent.click(
@@ -247,10 +247,10 @@ describe("AuthForm", () => {
         target: { value: "Test User" },
       })
       fireEvent.change(screen.getByLabelText(EXACT_PASSWORD_REGEX), {
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
       fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_REGEX), {
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
 
       fireEvent.click(

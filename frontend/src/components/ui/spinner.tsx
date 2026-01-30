@@ -10,10 +10,10 @@ function Spinner({
   return (
     <HugeiconsIcon
       aria-label="Loading"
-      className={cn("size-6 animate-spin fill-current", className)}
+      className={cn("size-4 animate-spin fill-current", className)}
       icon={Loading02Icon}
       role="status"
-      strokeWidth={Number.parseFloat(strokeWidth?.toString() || "2")}
+      strokeWidth={Number.parseInt(strokeWidth?.toString() ?? "0", 10)}
       {...props}
     />
   )
