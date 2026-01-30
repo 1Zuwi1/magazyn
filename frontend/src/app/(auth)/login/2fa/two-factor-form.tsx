@@ -1,11 +1,14 @@
 "use client"
 
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { useForm } from "@tanstack/react-form"
 import { REGEXP_ONLY_DIGITS } from "input-otp"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
+import AuthCard from "@/app/(auth)/components/auth-card"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,6 +26,7 @@ import {
 import { apiFetch } from "@/lib/fetcher"
 import { Resend2FASchema, Verify2FASchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
+import { getAnimationStyle } from "@/lib/utils"
 
 export type TwoFactorMethod = "authenticator" | "sms" | "email"
 export type ResendType = Exclude<TwoFactorMethod, "authenticator">
@@ -119,122 +123,150 @@ export default function TwoFactorForm({
   }
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault()
-        form.handleSubmit()
-      }}
-    >
-      <FieldGroup>
-        <Link className="underline" href="/">
-          Cofnij się do strony głównej
-        </Link>
-        <div className="flex flex-col items-center gap-2 text-center">
-          <Logo />
-          <FieldDescription>{methodTitles[method]}</FieldDescription>
-        </div>
+    <AuthCard>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          form.handleSubmit()
+        }}
+      >
+        <FieldGroup>
+          <div
+            className="fade-in flex animate-in items-center justify-start duration-500"
+            style={getAnimationStyle("50ms")}
+          >
+            <Link
+              className="inline-flex items-center gap-1 font-medium text-foreground/80 text-xs uppercase tracking-wide hover:text-primary hover:underline"
+              href="/login"
+            >
+              <HugeiconsIcon className="size-4" icon={ArrowLeft01Icon} />
+              Cofnij do logowania
+            </Link>
+          </div>
+          <div
+            className="fade-in flex animate-in flex-col items-center gap-3 text-center duration-500"
+            style={getAnimationStyle("100ms")}
+          >
+            <div className="relative">
+              <div className="absolute -inset-3 rounded-full bg-primary/10 blur-lg" />
+              <Logo className="relative" />
+            </div>
+            <FieldDescription className="mt-2 text-muted-foreground/80">
+              {methodTitles[method]}
+            </FieldDescription>
+          </div>
 
-        <form.Field name="code">
-          {(field) => (
-            <Field disabled={form.state.isSubmitting || isResending}>
-              <FieldLabel className="sr-only" htmlFor={field.name}>
-                Kod weryfikacyjny
-              </FieldLabel>
+          <div
+            className="fade-in mt-2 animate-in space-y-4 duration-500"
+            style={getAnimationStyle("200ms")}
+          >
+            <form.Field name="code">
+              {(field) => (
+                <Field disabled={form.state.isSubmitting || isResending}>
+                  <FieldLabel className="sr-only" htmlFor={field.name}>
+                    Kod weryfikacyjny
+                  </FieldLabel>
 
-              <InputOTP
-                containerClassName="gap-4 items-center justify-center"
-                id={field.name}
-                maxLength={otpLength}
-                onChange={(raw) => {
-                  const code = raw.replace(/\D/g, "").slice(0, otpLength)
-                  field.handleChange(code)
+                  <InputOTP
+                    autoComplete="one-time-code"
+                    containerClassName="gap-4 items-center justify-center"
+                    id={field.name}
+                    inputMode="numeric"
+                    maxLength={otpLength}
+                    onChange={(raw) => {
+                      const code = raw.replace(/\D/g, "").slice(0, otpLength)
+                      field.handleChange(code)
 
-                  if (code.length < otpLength) {
-                    autoSubmittedRef.current = false
-                    return
-                  }
+                      if (code.length < otpLength) {
+                        autoSubmittedRef.current = false
+                        return
+                      }
 
-                  if (
-                    code.length === otpLength &&
-                    !autoSubmittedRef.current &&
-                    !form.state.isSubmitting
-                  ) {
-                    autoSubmittedRef.current = true
-                    queueMicrotask(() => {
-                      form.handleSubmit()
-                    })
-                  }
-                }}
-                pattern={REGEXP_ONLY_DIGITS}
-                required
-                value={field.state.value}
-              >
-                <InputOTPGroup className="gap-2.5 *:data-[slot=input-otp-slot]:h-16 *:data-[slot=input-otp-slot]:w-12 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-xl">
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                </InputOTPGroup>
-
-                <InputOTPSeparator />
-
-                <InputOTPGroup className="gap-2.5 *:data-[slot=input-otp-slot]:h-16 *:data-[slot=input-otp-slot]:w-12 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-xl">
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-
-              {canResend ? (
-                <FieldDescription className="text-center">
-                  Nie dotarło?{" "}
-                  <Button
-                    className="h-auto p-0 align-baseline"
-                    isLoading={isResending}
-                    onClick={() => resendCode(method as ResendType)}
-                    type="button"
-                    variant="link"
+                      if (
+                        code.length === otpLength &&
+                        !autoSubmittedRef.current &&
+                        !form.state.isSubmitting
+                      ) {
+                        autoSubmittedRef.current = true
+                        queueMicrotask(() => {
+                          form.handleSubmit()
+                        })
+                      }
+                    }}
+                    pattern={REGEXP_ONLY_DIGITS}
+                    required
+                    spellCheck={false}
+                    value={field.state.value}
                   >
-                    Wyślij ponownie
-                  </Button>
-                </FieldDescription>
-              ) : null}
+                    <InputOTPGroup className="gap-2.5 *:data-[slot=input-otp-slot]:h-16 *:data-[slot=input-otp-slot]:w-12 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-xl">
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                    </InputOTPGroup>
 
-              {alternatives.length ? (
-                <div className="mt-3">
-                  <p className="text-center text-muted-foreground text-sm">
-                    Użyj innej metody
-                  </p>
-                  <div className="mt-2 flex flex-col gap-1">
-                    {alternatives.map((m) => (
+                    <InputOTPSeparator />
+
+                    <InputOTPGroup className="gap-2.5 *:data-[slot=input-otp-slot]:h-16 *:data-[slot=input-otp-slot]:w-12 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-xl">
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+
+                  {canResend ? (
+                    <FieldDescription className="text-center">
+                      Nie dotarło?{" "}
                       <Button
-                        className="h-9 justify-start px-2"
-                        isLoading={isResending || form.state.isSubmitting}
-                        key={m}
-                        onClick={() => handleSwitchMethod(m)}
-                        showSpinner={false}
-                        size="sm"
+                        className="h-auto p-0 align-baseline"
+                        isLoading={isResending}
+                        onClick={() => resendCode(method as ResendType)}
                         type="button"
                         variant="link"
                       >
-                        {methodSwitchLabels[m]}
+                        Wyślij ponownie
                       </Button>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
+                    </FieldDescription>
+                  ) : null}
+
+                  {alternatives.length ? (
+                    <div className="mt-3">
+                      <p className="text-center text-muted-foreground text-sm">
+                        Użyj innej metody
+                      </p>
+                      <div className="mt-2 flex flex-col gap-1">
+                        {alternatives.map((m) => (
+                          <Button
+                            className="h-9 justify-start px-2"
+                            isLoading={isResending || form.state.isSubmitting}
+                            key={m}
+                            onClick={() => handleSwitchMethod(m)}
+                            showSpinner={false}
+                            size="sm"
+                            type="button"
+                            variant="link"
+                          >
+                            {methodSwitchLabels[m]}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </Field>
+              )}
+            </form.Field>
+            <Field>
+              <Button
+                className="w-full"
+                isLoading={form.state.isSubmitting}
+                size="lg"
+                type="submit"
+              >
+                Zweryfikuj
+              </Button>
             </Field>
-          )}
-        </form.Field>
-        <Field>
-          <Button
-            className="w-full"
-            isLoading={form.state.isSubmitting}
-            type="submit"
-          >
-            Zweryfikuj
-          </Button>
-        </Field>
-      </FieldGroup>
-    </form>
+          </div>
+        </FieldGroup>
+      </form>
+    </AuthCard>
   )
 }

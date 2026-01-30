@@ -12,14 +12,14 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${app.domain}")
+    @Value("${app.url}")
     private String allowedOrigin;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                allowedOrigin));
+                allowedOrigin, "http://localhost:3000"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

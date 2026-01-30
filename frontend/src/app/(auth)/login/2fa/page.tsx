@@ -29,16 +29,12 @@ export default async function TwoFactorPage() {
   }
 
   return (
-    <div className="flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <TwoFactorForm
-          linkedMethods={LINKED_METHODS}
-          methodSwitchLabels={METHOD_SWITCH_LABELS}
-          methodTitles={METHOD_TITLES}
-          otpLength={6}
-          resendMethods={RESEND_METHODS}
-        />
-      </div>
-    </div>
+    <TwoFactorForm
+      linkedMethods={LINKED_METHODS}
+      methodSwitchLabels={METHOD_SWITCH_LABELS}
+      methodTitles={METHOD_TITLES}
+      otpLength={6}
+      resendMethods={RESEND_METHODS}
+    />
   )
 }

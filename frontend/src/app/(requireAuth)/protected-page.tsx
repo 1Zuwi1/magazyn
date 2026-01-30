@@ -6,7 +6,9 @@ import UnauthorizedComponent from "./components/unauthorized"
 
 type Children =
   | ReactNode
-  | ((session: Awaited<ReturnType<typeof getSession>>) => ReactNode)
+  | ((
+      session: NonNullable<Awaited<ReturnType<typeof getSession>>>
+    ) => ReactNode)
 
 interface Props {
   children: Children

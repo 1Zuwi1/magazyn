@@ -1,7 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Entity;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.TwoFactor;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -32,11 +31,15 @@ public class User {
     @Column(nullable = false)
     @NotBlank
     private String password;
+    @Column(nullable = false, unique = true, length = 64)
+    private String userHandle; // Base64Url
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private UserRole role = UserRole.USER;
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private EmailVerification emailVerifications;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WebAuthnCredential> webAuthnCredentials = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -54,9 +57,6 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BackupCode> backupCodes = new ArrayList<>();
 
-    public User() {
-        addTwoFactorMethod(new TwoFactorMethod(TwoFactor.EMAIL));
-    }
 
     public void addWarehouse(Warehouse warehouse) {
         warehouses.add(warehouse);
@@ -98,6 +98,11 @@ public class User {
             emailVerifications.setUser(null);
             emailVerifications = null;
         }
+    }
+
+    public void addWebAuthnCredential(WebAuthnCredential credential) {
+        webAuthnCredentials.add(credential);
+        credential.setUser(this);
     }
 
 

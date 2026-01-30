@@ -9,5 +9,7 @@ public enum RateLimitOperation {
     TWO_FACTOR_VERIFY,
     TWO_FACTOR_STRICT,
     USER_ACTION_FREE,
+    WEBAUTH_ASSERTION,
+    WEBAUTH_REGISTRATION
 
 }
