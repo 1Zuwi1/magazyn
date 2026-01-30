@@ -26,7 +26,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
         authService.logoutUser(response, request);
-        return ResponseEntity.ok(new ResponseTemplate<>(true, "Logged out successfully"));
+        return ResponseEntity.ok(ResponseTemplate.success("Logged out successfully"));
     }
 
     @Operation(summary = "Login a user with provided credentials.")
@@ -34,9 +34,9 @@ public class AuthController {
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response) {
         try {
             authService.loginUser(loginRequest, response, request);
-            return ResponseEntity.ok(new ResponseTemplate<>(true, "Logged in successfully"));
+            return ResponseEntity.ok(ResponseTemplate.success("Logged in successfully"));
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
         }
     }
 
@@ -45,9 +45,9 @@ public class AuthController {
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest, HttpServletResponse response) {
         try {
             authService.registerUser(registerRequest, request);
-            return ResponseEntity.ok(new ResponseTemplate<>(true, "Registered successfully"));
+            return ResponseEntity.ok(ResponseTemplate.success("Registered successfully"));
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
         }
     }
 
@@ -56,9 +56,9 @@ public class AuthController {
     public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
         try {
             authService.verifyEmailCheck(token, request);
-            return ResponseEntity.ok(new ResponseTemplate<>(true, "Email verified successfully"));
+            return ResponseEntity.ok(ResponseTemplate.success("Email verified successfully"));
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
         }
     }
 

@@ -38,9 +38,9 @@ public class WebAuthnController {
     public ResponseEntity<?> startRegistration(HttpServletRequest httpServletRequest) {
         try {
             PublicKeyCredentialCreationOptions options = webAuthnService.startRegistration(httpServletRequest);
-            return ResponseEntity.ok(new ResponseTemplate<>(true, options));
+            return ResponseEntity.ok(ResponseTemplate.success(options));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, AuthError.INVALID_PASSKEY_REGISTRATION));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_REGISTRATION.name()));
         }
     }
 
@@ -52,9 +52,9 @@ public class WebAuthnController {
     ) {
         try {
             webAuthnService.finishRegistration(credentialJson, httpServletRequest);
-            return ResponseEntity.ok(new ResponseTemplate<>(true, "Registration finished"));
+            return ResponseEntity.ok(ResponseTemplate.success("Registration finished"));
         } catch (IOException | RegistrationFailedException | Base64UrlException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, AuthError.INVALID_PASSKEY_REGISTRATION));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_REGISTRATION.name()));
         }
     }
 
@@ -65,9 +65,9 @@ public class WebAuthnController {
     public ResponseEntity<?> startAssertion(HttpServletRequest httpServletRequest) {
         try {
             PublicKeyCredentialRequestOptions options = webAuthnService.startAssertion(httpServletRequest);
-            return ResponseEntity.ok(new ResponseTemplate<>(true, options));
+            return ResponseEntity.ok(ResponseTemplate.success(options));
         } catch (Base64UrlException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, AuthError.INVALID_PASSKEY_ASSERTION));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_ASSERTION.name()));
         }
     }
 
@@ -79,12 +79,12 @@ public class WebAuthnController {
         try {
             boolean success = webAuthnService.finishAssertion(credentialJson, httpServletResponse, httpServletRequest);
             if (success) {
-                return ResponseEntity.ok(new ResponseTemplate<>(true, "Login successful"));
+                return ResponseEntity.ok(ResponseTemplate.success("Login successful"));
             } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, AuthError.INVALID_PASSKEY_ASSERTION));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_ASSERTION.name()));
             }
         } catch (IOException | AssertionFailedException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, AuthError.INVALID_PASSKEY_ASSERTION));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_ASSERTION.name()));
         }
     }
 }

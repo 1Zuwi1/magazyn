@@ -41,29 +41,29 @@ public class TwoFactorController {
     })
     @GetMapping
     public ResponseEntity<?> twoFactorMethods() {
-        return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.getUsersTwoFactorMethods(request)));
+        return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.getUsersTwoFactorMethods(request)));
     }
 
     @Operation(summary = "Send a two-factor authentication code via email to the current user.")
     @PostMapping("/email/send")
     public ResponseEntity<?> sendEmailCode() {
         twoFactorService.sendTwoFactorCodeViaEmail(request);
-        return ResponseEntity.ok(new ResponseTemplate<>(true, "2FA code sent via email"));
+        return ResponseEntity.ok(ResponseTemplate.success("2FA code sent via email"));
     }
 
     @Operation(summary = "Generate a new Google Authenticator secret for the current user.")
     @PostMapping("/authenticator/start")
     public ResponseEntity<?> generateAuthenticatorSecret() {
-        return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.generateTwoFactorGoogleSecret(request)));
+        return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateTwoFactorGoogleSecret(request)));
     }
 
     @PostMapping("/backup-codes/generate")
     @Operation(summary = "Generate new backup codes for the current user.")
     public ResponseEntity<?> generateBackupCodes() {
         try {
-            return ResponseEntity.ok(new ResponseTemplate<>(true, twoFactorService.generateBackupCodes(request)));
+            return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateBackupCodes(request)));
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
         }
     }
 
@@ -72,9 +72,9 @@ public class TwoFactorController {
     public ResponseEntity<?> checkCode(@Valid @RequestBody CodeRequest codeRequest) {
         try {
             twoFactorService.checkCode(codeRequest, request, response);
-            return ResponseEntity.ok(new ResponseTemplate<>(true, "2FA code verified"));
+            return ResponseEntity.ok(ResponseTemplate.success("2FA code verified"));
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ResponseTemplate<>(false, e.getCode(), e.getMessage()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
         }
     }
 }
