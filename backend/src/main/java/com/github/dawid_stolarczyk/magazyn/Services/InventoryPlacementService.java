@@ -10,7 +10,6 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.ItemRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.RackRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,14 +33,21 @@ public class InventoryPlacementService {
     private static final int MAX_RACK_AREA = 1_000_000;
     private static final double EPS = 1e-6;
 
-    @Autowired
-    private ItemRepository itemRepository;
-    @Autowired
-    private RackRepository rackRepository;
-    @Autowired
-    private AssortmentRepository assortmentRepository;
-    @Autowired
-    private UserRepository userRepository;
+    private final ItemRepository itemRepository;
+    private final RackRepository rackRepository;
+    private final AssortmentRepository assortmentRepository;
+    private final UserRepository userRepository;
+
+    public InventoryPlacementService(
+            ItemRepository itemRepository,
+            RackRepository rackRepository,
+            AssortmentRepository assortmentRepository,
+            UserRepository userRepository) {
+        this.itemRepository = itemRepository;
+        this.rackRepository = rackRepository;
+        this.assortmentRepository = assortmentRepository;
+        this.userRepository = userRepository;
+    }
 
     public PlacementPlanResult buildPlacementPlan(PlacementPlanRequest request) {
         Item item = itemRepository.findById(request.getItemId())
@@ -105,6 +111,28 @@ public class InventoryPlacementService {
         return PlacementPlanResult.full(response);
     }
 
+    /**
+     * Confirms placement and stores items in inventory.
+     * <p>
+     * Note: This method has a known race condition window between validation (line 138)
+     * and insertion (line 173). Concurrent calls may validate against the same state
+     * and attempt to insert conflicting positions. This is mitigated by:
+     * <ul>
+     *   <li>@Transactional isolation</li>
+     *   <li>Catching DataIntegrityViolationException and returning PLACEMENT_INVALID</li>
+     * </ul>
+     * <p>
+     * Future improvements could include:
+     * <ul>
+     *   <li>Adding DB unique constraint on (rack_id, position_x, position_y)</li>
+     *   <li>Plan validation token/checksum to verify unmodified plan data</li>
+     *   <li>Pessimistic locking with SELECT FOR UPDATE</li>
+     * </ul>
+     *
+     * @param request Placement confirmation request with item and positions
+     * @return Placement confirmation response with stored quantity
+     * @throws IllegalArgumentException if placement is invalid or conflicts occur
+     */
     @Transactional
     public PlacementConfirmationResponse confirmPlacement(PlacementConfirmationRequest request) {
         Item item = itemRepository.findById(request.getItemId())
@@ -238,22 +266,23 @@ public class InventoryPlacementService {
 
     private List<Coordinate> findFreeCoordinates(Rack rack, List<Assortment> assortments) {
         validateRackDimensions(rack);
-        boolean[][] occupied = new boolean[rack.getSize_x()][rack.getSize_y()];
+        Set<Coordinate> occupied = new HashSet<>();
         for (Assortment assortment : assortments) {
             if (assortment.getPosition_x() == null || assortment.getPosition_y() == null) {
                 continue;
             }
-            int xIndex = assortment.getPosition_x() - 1;
-            int yIndex = assortment.getPosition_y() - 1;
-            if (xIndex >= 0 && xIndex < rack.getSize_x() && yIndex >= 0 && yIndex < rack.getSize_y()) {
-                occupied[xIndex][yIndex] = true;
+            int x = assortment.getPosition_x();
+            int y = assortment.getPosition_y();
+            if (x >= 1 && x <= rack.getSize_x() && y >= 1 && y <= rack.getSize_y()) {
+                occupied.add(new Coordinate(x, y));
             }
         }
         List<Coordinate> free = new ArrayList<>();
-        for (int x = 0; x < rack.getSize_x(); x++) {
-            for (int y = 0; y < rack.getSize_y(); y++) {
-                if (!occupied[x][y]) {
-                    free.add(new Coordinate(x + 1, y + 1));
+        for (int x = 1; x <= rack.getSize_x(); x++) {
+            for (int y = 1; y <= rack.getSize_y(); y++) {
+                Coordinate coord = new Coordinate(x, y);
+                if (!occupied.contains(coord)) {
+                    free.add(coord);
                 }
             }
         }

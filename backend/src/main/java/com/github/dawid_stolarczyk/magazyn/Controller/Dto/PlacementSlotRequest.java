@@ -12,8 +12,12 @@ import lombok.Setter;
 public class PlacementSlotRequest {
     @NotNull
     private Long rackId;
+
+    // Primitive int with @Min(1) ensures value >= 1 (default 0 would fail validation)
     @Min(1)
     private int positionX;
+
+    // Primitive int with @Min(1) ensures value >= 1 (default 0 would fail validation)
     @Min(1)
     private int positionY;
 }

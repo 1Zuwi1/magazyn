@@ -38,10 +38,25 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ResponseTemplate<String>> handleDataIntegrity(DataIntegrityViolationException ex) {
-        log.warn("Data integrity violation", ex);
+        log.warn("Data integrity violation: {}", ex.getMessage(), ex);
+
+        // Rozróżnienie typów konfliktów na podstawie komunikatu wyjątku
+        String errorCode = "CONFLICT";
+        String message = ex.getMessage();
+
+        if (message != null) {
+            if (message.contains("position") || message.contains("rack_id")) {
+                errorCode = "PLACEMENT_CONFLICT";
+            } else if (message.contains("duplicate") || message.contains("unique")) {
+                errorCode = "DUPLICATE_ENTRY";
+            } else if (message.contains("foreign key") || message.contains("constraint")) {
+                errorCode = "CONSTRAINT_VIOLATION";
+            }
+        }
+
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(ResponseTemplate.error("CONFLICT"));
+                .body(ResponseTemplate.error(errorCode));
     }
 
     @ExceptionHandler(Exception.class)

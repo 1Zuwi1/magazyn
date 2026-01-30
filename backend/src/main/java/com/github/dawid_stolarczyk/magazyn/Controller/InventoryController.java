@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,8 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/inventory")
 public class InventoryController {
-    @Autowired
-    private InventoryPlacementService placementService;
+    private final InventoryPlacementService placementService;
+
+    public InventoryController(InventoryPlacementService placementService) {
+        this.placementService = placementService;
+    }
 
     @Operation(summary = "Generate a scan-driven placement plan for incoming items")
     @ApiResponses(value = {
@@ -41,13 +43,14 @@ public class InventoryController {
 
     @Operation(summary = "Confirm placement and store items in inventory")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Placement confirmed"),
-            @ApiResponse(responseCode = "400", description = "Invalid placement or item not found")
+            @ApiResponse(responseCode = "201", description = "Placement confirmed and resources created"),
+            @ApiResponse(responseCode = "400", description = "Invalid placement or item not found"),
+            @ApiResponse(responseCode = "409", description = "Placement conflict")
     })
     @PostMapping("/placements/confirm")
     public ResponseEntity<ResponseTemplate<PlacementConfirmationResponse>> confirmPlacement(
             @Valid @RequestBody PlacementConfirmationRequest request) {
         PlacementConfirmationResponse response = placementService.confirmPlacement(request);
-        return ResponseEntity.ok(ResponseTemplate.success(response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(response));
     }
 }

@@ -3,6 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Model.Entity;
 import jakarta.persistence.*;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 
 @Entity
 public class Assortment {
@@ -26,7 +27,7 @@ public class Assortment {
     @PrePersist
     public void initializeCreatedAt() {
         if (created_at == null) {
-            created_at = new Timestamp(System.currentTimeMillis());
+            created_at = Timestamp.from(Instant.now());
         }
     }
 

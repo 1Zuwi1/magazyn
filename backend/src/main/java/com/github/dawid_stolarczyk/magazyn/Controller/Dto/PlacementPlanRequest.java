@@ -12,7 +12,10 @@ import lombok.Setter;
 public class PlacementPlanRequest {
     @NotNull
     private Long itemId;
+
+    // Primitive int with @Min(1) ensures value >= 1 (default 0 would fail validation)
     @Min(1)
     private int quantity;
+
     private Long warehouseId;
 }
