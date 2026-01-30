@@ -1,8 +1,11 @@
 package com.github.dawid_stolarczyk.magazyn.Controller;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.CodeRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RemoveTwoFactorMethodRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.SendTwoFactorCodeRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.TwoFactorAuthenticatorResponse;
+import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Services.TwoFactorService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,15 +47,26 @@ public class TwoFactorController {
         return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.getUsersTwoFactorMethods(request)));
     }
 
-    @Operation(summary = "Send a two-factor authentication code via email to the current user.")
+    @Operation(summary = "Send a two-factor authentication code via the selected method for the current user.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "2FA code sent successfully via email",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class)))
+            @ApiResponse(responseCode = "200", description = "2FA code sent successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @PostMapping("/email/send")
-    public ResponseEntity<ResponseTemplate<Void>> sendEmailCode() {
-        twoFactorService.sendTwoFactorCodeViaEmail(request);
-        return ResponseEntity.ok(ResponseTemplate.success());
+    @PostMapping("/send")
+    public ResponseEntity<ResponseTemplate<Void>> sendCode(@Valid @RequestBody SendTwoFactorCodeRequest sendRequest) {
+        try {
+            if (!sendRequest.getMethod().equals("EMAIL")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ResponseTemplate.error(AuthError.UNSUPPORTED_2FA_METHOD.name()));
+            }
+            twoFactorService.sendTwoFactorCodeViaEmail(request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        }  catch (AuthenticationException e) {
+            log.error("Failed to send 2FA code for method: {}", sendRequest.getMethod(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
+        }
     }
 
     @Operation(summary = "Generate a new Google Authenticator secret for the current user.")
@@ -77,7 +91,7 @@ public class TwoFactorController {
         try {
             return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateBackupCodes(request)));
         } catch (AuthenticationException e) {
-            log.error("Failed to generate backup codes", e);
+            log.error("Failed to generate backup codes");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
         }
     }
@@ -97,6 +111,24 @@ public class TwoFactorController {
         } catch (AuthenticationException e) {
             log.error("2FA check failed for user session", e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
+        }
+    }
+
+    @Operation(summary = "Remove a 2FA method for the current user (EMAIL cannot be removed).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "2FA method removed successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @DeleteMapping("/methods")
+    public ResponseEntity<ResponseTemplate<Void>> removeTwoFactorMethod(@Valid @RequestBody RemoveTwoFactorMethodRequest removeRequest) {
+        try {
+            twoFactorService.removeTwoFactorMethod(removeRequest.getMethod(), request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            log.error("Failed to remove 2FA method: {}", removeRequest.getMethod());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
         }
     }
 }

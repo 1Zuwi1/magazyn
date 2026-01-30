@@ -10,13 +10,14 @@ import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.SessionData;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.TwoFactorAuth;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis.SessionService;
+import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,11 +34,11 @@ import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientI
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class SessionAuthFilter extends OncePerRequestFilter {
-    @Autowired
-    private SessionService sessionService;
-    @Autowired
-    private UserRepository userRepository;
+    private final SessionService sessionService;
+    private final UserRepository userRepository;
+    private final SessionManager sessionManager;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -51,10 +52,14 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     if (user.getStatus().equals(AccountStatus.ACTIVE) || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
                         sessionService.refreshSession(sessionId);
                         authenticateUser(user, session.getStatus2FA(), request);
+                    } else {
+                        SecurityContextHolder.clearContext();
+                        sessionManager.logoutUser(response, request);
                     }
-                } catch (Exception ignore) {
-                    sessionService.deleteSession(sessionId);
-                    deleteAuthCookies(response);
+                } catch (Exception e) {
+                    log.warn("Session auth failed, logging out", e);
+                    SecurityContextHolder.clearContext();
+                    sessionManager.logoutUser(response, request);
                 }
             }, () -> authorizeViaRememberMe(request, response));
         } else {
@@ -89,17 +94,18 @@ public class SessionAuthFilter extends OncePerRequestFilter {
             sessionService.getRememberMeSession(rememberMeToken).ifPresentOrElse(rememberMeData -> {
                 if (!rememberMeData.getIpAddress().equals(getClientIp(request)) ||
                         !rememberMeData.getUserAgent().equals(request.getHeader("User-Agent"))) {
-                    sessionService.deleteRemember(rememberMeToken);
-                    sessionService.deleteSessionsCookies(response);
-                    throw new AuthenticationException(AuthError.INVALID_REMEMBER_ME_TOKEN.name());
+                    log.warn("Remember-me token mismatch, logging out");
+                    SecurityContextHolder.clearContext();
+                    sessionManager.logoutUser(response, request);
+                    return;
                 }
                 User user;
                 try {
                     user = userRepository.findById(rememberMeData.getUserId()).orElseThrow(AuthenticationException::new);
-
                 } catch (Exception e) {
-                    sessionService.deleteRemember(rememberMeToken);
-                    sessionService.deleteSessionsCookies(response);
+                    log.warn("Remember-me user lookup failed, logging out", e);
+                    SecurityContextHolder.clearContext();
+                    sessionManager.logoutUser(response, request);
                     return;
                 }
                 if (user.getStatus().equals(AccountStatus.ACTIVE) || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
@@ -114,14 +120,12 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     authenticateUser(user, rememberMeData.getStatus2FA(), request);
 
                     CookiesUtils.setCookie(response, "SESSION", newSessionData.getSessionId(), null);
+                } else {
+                    log.info("Inactive user status, logging out");
+                    SecurityContextHolder.clearContext();
+                    sessionManager.logoutUser(response, request);
                 }
-            }, () -> sessionService.deleteSessionsCookies(response));
+            }, () -> sessionManager.logoutUser(response, request));
         }
-    }
-
-    private void deleteAuthCookies(HttpServletResponse response) {
-        CookiesUtils.deleteCookie(response, "SESSION");
-        CookiesUtils.deleteCookie(response, "REMEMBER_ME");
-        CookiesUtils.deleteCookie(response, "2FA_AUTH");
     }
 }

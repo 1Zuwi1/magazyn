@@ -65,43 +65,39 @@ public class TwoFactorService {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_FREE);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(AuthenticationException::new);
-        return user.getTwoFactorMethods().stream().map(method -> method.getMethodName().name()).toList();
+        List<String> methods = new ArrayList<>(user.getTwoFactorMethods().stream().map(method -> method.getMethodName().name()).toList());
+        methods.add("EMAIL");
+
+        return methods;
     }
 
     public void sendTwoFactorCodeViaEmail(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_STRICT);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(AuthenticationException::new);
-        TwoFactorMethod method = user.getTwoFactorMethods().stream()
-                .filter(m -> m.getMethodName() == TwoFactor.EMAIL)
-                .findFirst()
-                .orElseThrow(() -> new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name(), "Email 2FA method not enabled"));
+
         String code = CodeGenerator.generateWithNumbers(EMAIL_CODE_LENGTH);
-        method.setEmailCode(BCrypt.hashpw(code, BCrypt.gensalt()));
-        method.setCodeGeneratedAt(Timestamp.from(Instant.now()));
+        user.setVerifyCode(BCrypt.hashpw(code, BCrypt.gensalt()));
+        user.setVerifyCodeGeneratedAt(Timestamp.from(Instant.now()));
         userRepository.save(user);
 
         emailService.sendTwoFactorCode(user.getEmail(), code);
     }
 
     public void checkTwoFactorEmailCode(String code, User user) {
-        TwoFactorMethod method = user.getTwoFactorMethods().stream()
-                .filter(m -> m.getMethodName() == TwoFactor.EMAIL)
-                .findFirst()
-                .orElseThrow(() -> new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name()));
 
-        if (method.getEmailCode() == null || !BCrypt.checkpw(code, method.getEmailCode())) {
-            throw new AuthenticationException(AuthError.INVALID_OR_EXPIRED_CODE.name());
-        }
-
-        if (method.getCodeGeneratedAt() == null
-                || method.getCodeGeneratedAt().toInstant()
+        if (user.getVerifyCodeGeneratedAt() == null
+                || user.getVerifyCodeGeneratedAt().toInstant()
                 .plus(TWO_FACTOR_EMAIL_CODE_EXPIRATION_MINUTES, ChronoUnit.MINUTES).isBefore(Instant.now())) {
             throw new AuthenticationException(AuthError.INVALID_OR_EXPIRED_CODE.name());
         }
 
-        method.setEmailCode(null);
-        method.setCodeGeneratedAt(null);
+        if (user.getVerifyCode() == null || !BCrypt.checkpw(code, user.getVerifyCode())) {
+            throw new AuthenticationException(AuthError.INVALID_OR_EXPIRED_CODE.name());
+        }
+
+        user.setVerifyCode(null);
+        user.setVerifyCodeGeneratedAt(null);
         userRepository.save(user);
     }
 
@@ -148,7 +144,7 @@ public class TwoFactorService {
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(AuthenticationException::new);
 
-        if (TwoFactor.valueOf(codeRequest.getMethod()).equals(TwoFactor.EMAIL)) {
+        if (codeRequest.getMethod().equals("EMAIL")) {
             checkTwoFactorEmailCode(codeRequest.getCode(), user);
         } else if (codeRequest.getMethod().equals(TwoFactor.AUTHENTICATOR.name())) {
             try {
@@ -230,5 +226,34 @@ public class TwoFactorService {
         String sessionId = CookiesUtils.getCookie(request, "SESSION");
         String rememberMeId = CookiesUtils.getCookie(request, "REMEMBER_ME");
         sessionService.completeSessionTwoFactor(sessionId, rememberMeId);
+    }
+
+    public void removeTwoFactorMethod(String stringMethod, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_FREE);
+
+        TwoFactor method;
+        try {
+            method = TwoFactor.valueOf(stringMethod);
+        } catch (IllegalArgumentException e) {
+            if (stringMethod.equals("EMAIL")) {
+                throw new AuthenticationException(AuthError.EMAIL_2FA_REQUIRED.name());
+            }
+            throw new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name());
+        }
+
+        User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
+                .orElseThrow(AuthenticationException::new);
+
+        TwoFactorMethod existing = user.getTwoFactorMethods().stream()
+                .filter(m -> m.getMethodName() == method)
+                .findFirst()
+                .orElseThrow(() -> new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name()));
+
+        if (method == TwoFactor.BACKUP_CODES) {
+            user.getBackupCodes().clear();
+        }
+
+        user.removeTwoFactorMethod(existing);
+        userRepository.save(user);
     }
 }

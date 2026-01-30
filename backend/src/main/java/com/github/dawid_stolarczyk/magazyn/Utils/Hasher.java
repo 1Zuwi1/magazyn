@@ -15,4 +15,9 @@ public class Hasher {
             throw new RuntimeException("SHA-256 not available", e);
         }
     }
+    public static String generateRandomBase64Url() {
+        byte[] randomBytes = new byte[32];
+        new java.security.SecureRandom().nextBytes(randomBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+    }
 }
