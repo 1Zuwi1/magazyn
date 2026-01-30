@@ -59,6 +59,13 @@ public class GlobalExceptionHandler {
                 .body(ResponseTemplate.error(errorCode));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ResponseTemplate<String>> handleValidation(IllegalArgumentException ex) {
+        log.debug("Validation error", ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ResponseTemplate.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ResponseTemplate<String>> handleOtherExceptions(Exception ex) {
         log.error("Internal server error", ex);

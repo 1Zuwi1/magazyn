@@ -28,7 +28,7 @@ public class InventoryPlacementService {
     private static final String NO_REGALS_MATCH = "NO_REGALS_MATCH";
     private static final String INSUFFICIENT_SPACE = "INSUFFICIENT_SPACE";
     private static final String EXPIRE_AFTER_INVALID = "EXPIRE_AFTER_INVALID";
-    private static final int MAX_EXPIRE_DAYS = 36500;
+    private static final int MAX_EXPIRE_DAYS = 3650;
     private static final int MAX_RACK_SIDE = 1000;
     private static final int MAX_RACK_AREA = 1_000_000;
     private static final double EPS = 1e-6;
