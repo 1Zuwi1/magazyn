@@ -12,12 +12,16 @@ export const ADMIN_NAV_LINKS = [
 ] as const
 
 export const NOTIFICATIONS_NAV_LINKS = [
-  { title: "Wszystkie", label: "Powiadomienia", icon: InboxIcon },
-  { title: "Przeciążenia", label: "Przeciążenia", icon: WeightScale01Icon },
+  { title: "Wszystkie", icon: InboxIcon, filterValue: null },
+  {
+    title: "Przeciążenia",
+    icon: WeightScale01Icon,
+    filterValue: "RACK_OVERWEIGHT" as const,
+  },
   {
     title: "Nieautoryzowane",
-    label: "Nieautoryzowane",
     icon: Alert01Icon,
+    filterValue: "UNAUTHORIZED_REMOVAL" as const,
   },
 ]
 

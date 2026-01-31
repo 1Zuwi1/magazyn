@@ -1,6 +1,7 @@
 "use client"
 import { MOCK_NOTIFICATIONS } from "@/components/dashboard/mock-data"
 import { Separator } from "@/components/ui/separator"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useNotification } from "../hooks/use-notification"
 import { NOTIFICATIONS_NAV_LINKS } from "../lib/constants"
@@ -12,6 +13,8 @@ export default function NotificationsMain() {
   const isMobile = useIsMobile()
   const {
     notifications,
+    filterType,
+    setFilterType,
     selectedNotification,
     setSelectedNotification,
     markAllAsRead,
@@ -20,7 +23,12 @@ export default function NotificationsMain() {
 
   return (
     <div className="flex h-full">
-      <NotificationNav isCollapsed={isMobile} links={NOTIFICATIONS_NAV_LINKS} />
+      <NotificationNav
+        activeFilter={filterType}
+        isCollapsed={isMobile}
+        links={NOTIFICATIONS_NAV_LINKS}
+        onFilterChange={setFilterType}
+      />
       <Separator className="m-2" orientation="vertical" />
       <div className="flex-1">
         <NotificationList
@@ -30,13 +38,30 @@ export default function NotificationsMain() {
           selectedNotification={selectedNotification}
         />
       </div>
-      <Separator className="m-2" orientation="vertical" />
-      <div className="w-100">
-        <NotificationDetail
-          notification={selectedNotification}
-          onDismiss={dismiss}
-        />
-      </div>
+
+      {isMobile ? (
+        <Sheet
+          onOpenChange={(open) => !open && setSelectedNotification(null)}
+          open={!!selectedNotification}
+        >
+          <SheetContent side="bottom">
+            <NotificationDetail
+              notification={selectedNotification}
+              onDismiss={dismiss}
+            />
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <>
+          <Separator className="m-2" orientation="vertical" />
+          <div className="w-100">
+            <NotificationDetail
+              notification={selectedNotification}
+              onDismiss={dismiss}
+            />
+          </div>
+        </>
+      )}
     </div>
   )
 }

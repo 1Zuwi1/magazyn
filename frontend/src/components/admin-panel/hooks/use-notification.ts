@@ -1,11 +1,24 @@
-import { useState } from "react"
-import type { Notification } from "@/components/dashboard/types"
+import { useMemo, useState } from "react"
+import type {
+  Notification,
+  NotificationType,
+} from "@/components/dashboard/types"
 
 export function useNotification(initialNotifications: Notification[]) {
   const [notifications, setNotifications] =
     useState<Notification[]>(initialNotifications)
   const [selectedNotification, setSelectedNotification] =
     useState<Notification | null>(initialNotifications[0] ?? null)
+  const [filterType, setFilterType] = useState<NotificationType | null>(null)
+
+  const filteredNotifications = useMemo(() => {
+    if (filterType === null) {
+      return notifications
+    }
+    return notifications.filter(
+      (notification) => notification.type === filterType
+    )
+  }, [notifications, filterType])
 
   const markAllAsRead = () => {
     setNotifications((prev) =>
@@ -21,7 +34,9 @@ export function useNotification(initialNotifications: Notification[]) {
   }
 
   return {
-    notifications,
+    notifications: filteredNotifications,
+    filterType,
+    setFilterType,
     selectedNotification,
     setSelectedNotification,
     markAllAsRead,

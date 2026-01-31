@@ -49,7 +49,7 @@ export function NotificationList({
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">{item.title}</span>
                     {!item.read && (
-                      <span className="flex h-2 w-2 rounded-full bg-blue-500" />
+                      <span className="flex h-2 w-2 rounded-full bg-primary" />
                     )}
                   </div>
                 </div>
