@@ -1,11 +1,10 @@
 "use client"
 
-import { InformationCircleIcon, Key02Icon } from "@hugeicons/core-free-icons"
+import { Key02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -169,42 +168,31 @@ export function PasskeysSection() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <Alert className="border-border/60 bg-background">
-            <HugeiconsIcon icon={InformationCircleIcon} />
-            <AlertTitle>Dodawanie tylko po zalogowaniu</AlertTitle>
-            <AlertDescription>
-              Klucz bezpieczeństwa dodasz tutaj po zalogowaniu. Po aktywacji
-              możesz użyć go do logowania na ekranie logowania.
-            </AlertDescription>
-          </Alert>
-
-          <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-1">
-                <p className="font-medium text-sm">
-                  Dodaj nowy klucz bezpieczeństwa
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  Potwierdź biometrią, kluczem sprzętowym lub PIN-em.
-                </p>
-              </div>
-              <Button
-                disabled={isDisabled}
-                isLoading={isLoading}
-                onClick={handleAddPasskey}
-                type="button"
-              >
-                Dodaj klucz bezpieczeństwa
-              </Button>
-            </div>
-            {status === "success" ? (
-              <p className="mt-3 text-muted-foreground text-xs">
-                Klucz bezpieczeństwa został dodany. Możesz teraz logować się bez
-                hasła.
+        <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="font-medium text-sm">
+                Dodaj nowy klucz bezpieczeństwa
               </p>
-            ) : null}
+              <p className="text-muted-foreground text-xs">
+                Potwierdź biometrią, kluczem sprzętowym lub PIN-em.
+              </p>
+            </div>
+            <Button
+              disabled={isDisabled}
+              isLoading={isLoading}
+              onClick={handleAddPasskey}
+              type="button"
+            >
+              Dodaj klucz bezpieczeństwa
+            </Button>
           </div>
+          {status === "success" ? (
+            <p className="mt-3 text-muted-foreground text-xs">
+              Klucz bezpieczeństwa został dodany. Możesz teraz logować się bez
+              hasła.
+            </p>
+          ) : null}
         </div>
       </CardContent>
     </Card>

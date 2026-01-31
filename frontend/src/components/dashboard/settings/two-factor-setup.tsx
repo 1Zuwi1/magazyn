@@ -3,6 +3,7 @@ import {
   Key01Icon,
   Mail01Icon,
   SmartPhone01Icon,
+  Tick01Icon,
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -49,6 +50,12 @@ const TWO_FACTOR_METHOD_ICONS: Record<TwoFactorMethod, typeof Key01Icon> = {
   AUTHENTICATOR: Key01Icon,
   SMS: SmartPhone01Icon,
   EMAIL: Mail01Icon,
+}
+
+const TWO_FACTOR_METHOD_HINTS: Record<TwoFactorMethod, string> = {
+  AUTHENTICATOR: "Najpewniejsza metoda",
+  SMS: "Kod SMS",
+  EMAIL: "Kod e-mail",
 }
 
 const TWO_FACTOR_METHOD_LABELS: Record<TwoFactorMethod, string> =
@@ -145,21 +152,41 @@ function TwoFactorMethodInput({
   method,
   onMethodChange,
   disabled,
+  availableMethods,
 }: {
   method: TwoFactorMethod
   onMethodChange: (method: TwoFactorMethod) => void
   disabled?: boolean
+  availableMethods?: TwoFactorMethod[]
 }) {
+  // If availableMethods is provided, filter to only those; otherwise show all
+  const methodsToShow = availableMethods
+    ? TWO_FACTOR_METHODS.filter((m) =>
+        availableMethods.includes(m.value as TwoFactorMethod)
+      )
+    : TWO_FACTOR_METHODS
+
+  // Determine grid columns based on number of methods
+  const getGridClass = (count: number): string => {
+    if (count === 1) {
+      return "grid gap-3 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1"
+    }
+    if (count === 2) {
+      return "grid gap-3 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2"
+    }
+    return "grid gap-3 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3"
+  }
+
   return (
     <RadioGroup
-      className="grid gap-3 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3"
+      className={getGridClass(methodsToShow.length)}
       disabled={disabled}
       onValueChange={(value) => {
         onMethodChange(value as TwoFactorMethod)
       }}
       value={method}
     >
-      {TWO_FACTOR_METHODS.map((m) => {
+      {methodsToShow.map((m) => {
         const Icon = TWO_FACTOR_METHOD_ICONS[m.value as TwoFactorMethod]
         const isSelected = method === m.value
 
@@ -365,34 +392,65 @@ function ConnectedMethods({
 }) {
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-muted-foreground text-xs">
-        <Spinner className="size-4" />
-        <span>Ładujemy połączone metody...</span>
+      <div className="flex items-center gap-3 rounded-lg border border-muted-foreground/30 border-dashed bg-muted/20 px-4 py-3">
+        <Spinner className="size-4 text-muted-foreground" />
+        <span className="text-muted-foreground text-sm">
+          Ładowanie połączonych metod...
+        </span>
       </div>
     )
   }
 
   if (!linkedMethods?.length) {
     return (
-      <p className="text-muted-foreground text-xs">Brak połączonych metod.</p>
+      <div className="flex items-center gap-3 rounded-lg border border-muted-foreground/30 border-dashed bg-muted/20 px-4 py-3">
+        <div className="flex size-8 items-center justify-center rounded-full bg-muted">
+          <HugeiconsIcon
+            className="text-muted-foreground"
+            icon={Key01Icon}
+            size={16}
+          />
+        </div>
+        <div>
+          <p className="font-medium text-muted-foreground text-sm">
+            Brak połączonych metod
+          </p>
+          <p className="text-muted-foreground/70 text-xs">
+            Dodaj metodę weryfikacji, aby zabezpieczyć konto
+          </p>
+        </div>
+      </div>
     )
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="space-y-2">
       {linkedMethods.map((linkedMethod) => {
         const Icon = TWO_FACTOR_METHOD_ICONS[linkedMethod]
         const label = TWO_FACTOR_METHOD_LABELS[linkedMethod] ?? linkedMethod
+        const hint = TWO_FACTOR_METHOD_HINTS[linkedMethod]
 
         return (
-          <Badge
-            className="flex items-center gap-1"
+          <div
+            className="group flex items-center gap-3 rounded-lg border border-green-500/20 bg-linear-to-r from-green-500/5 to-transparent px-4 py-3 transition-all hover:border-green-500/30 hover:from-green-500/10"
             key={linkedMethod}
-            variant="secondary"
           >
-            <HugeiconsIcon icon={Icon} size={12} />
-            <span>{label}</span>
-          </Badge>
+            <div className="flex size-9 items-center justify-center rounded-full bg-green-500/10 ring-1 ring-green-500/20">
+              <HugeiconsIcon
+                className="text-green-600 dark:text-green-500"
+                icon={Icon}
+                size={18}
+              />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-sm">{label}</p>
+              <p className="text-muted-foreground text-xs">{hint}</p>
+            </div>
+            <div className="flex items-center gap-1.5 rounded-full bg-green-500/10 px-2 py-1 text-green-600 dark:text-green-500">
+              <HugeiconsIcon icon={Tick01Icon} size={14} />
+              <span className="font-medium text-xs">Aktywna</span>
+            </div>
+          </div>
         )
       })}
     </div>
@@ -615,6 +673,29 @@ function RecoveryCodesSection({
   )
 }
 
+const isStepComplete = (
+  step: 1 | 2 | 3,
+  setupStage: TwoFactorSetupStage
+): boolean => {
+  const isSetupInProgress =
+    setupStage === "REQUESTING" ||
+    setupStage === "SENDING" ||
+    setupStage === "AWAITING" ||
+    setupStage === "VERIFYING" ||
+    setupStage === "SUCCESS"
+  const isSuccess = setupStage === "SUCCESS"
+
+  switch (step) {
+    case 1:
+      return isSetupInProgress
+    case 2:
+    case 3:
+      return isSuccess
+    default:
+      return false
+  }
+}
+
 function TwoFactorConfigurationSection({
   status,
   setupStage,
@@ -636,10 +717,8 @@ function TwoFactorConfigurationSection({
 }) {
   const isIdleStage = isIdleSetupStage(setupStage)
   const isSetupInProgress = !isIdleStage
-  const { hasAvailableMethods, isSelectedLinked } = getLinkedMethodsState(
-    linkedMethods,
-    method
-  )
+  const { hasAvailableMethods, isSelectedLinked, availableMethods } =
+    getLinkedMethodsState(linkedMethods, method)
   const canStartSetup = getCanStartSetup({
     status,
     isIdleStage,
@@ -655,88 +734,92 @@ function TwoFactorConfigurationSection({
     isSelectedLinked,
   })
 
-  // Step 1 is complete when setup has started (method selected)
-  const step1Complete = status === "SETUP" || status === "ENABLED"
-
-  // Step 2 is complete when awaiting code entry or beyond
-  const step2Complete =
-    status === "ENABLED" ||
-    (status === "SETUP" &&
-      (setupStage === "AWAITING" ||
-        setupStage === "VERIFYING" ||
-        setupStage === "ERROR"))
-
-  // Step 3 is complete only when fully enabled
-  const step3Complete = status === "ENABLED"
-
   return (
     <div className="space-y-4 rounded-xl border bg-muted/30 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-1">
-          <p className="font-semibold">Konfiguracja 2FA</p>
-          <p className="text-muted-foreground text-sm">
-            Dodaj drugi krok weryfikacji i chroń krytyczne działania.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {status === "DISABLED" && !isSetupInProgress ? (
-            <Button
-              disabled={!canStartSetup}
-              isLoading={setupStage === "REQUESTING"}
-              onClick={onStartSetup}
-              type="button"
-            >
-              Rozpocznij konfigurację
-            </Button>
-          ) : null}
-          {status === "ENABLED" && !isSetupInProgress ? (
-            <Button
-              disabled={!canStartSetup}
-              onClick={onStartSetup}
-              type="button"
-            >
-              Dodaj metodę
-            </Button>
-          ) : null}
-          {status === "SETUP" || isSetupInProgress ? (
-            <Button onClick={onCancelSetup} type="button" variant="outline">
-              Anuluj konfigurację
-            </Button>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="grid gap-3 text-muted-foreground text-xs sm:grid-cols-3">
-        <div className="flex items-center gap-2">
-          <Badge variant={step1Complete ? "success" : "outline"}>1</Badge>
-          <span>Wybierz metodę</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={step2Complete ? "success" : "outline"}>2</Badge>
-          <span>Potwierdź kod</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={step3Complete ? "success" : "outline"}>3</Badge>
-          <span>Zapisz kody</span>
-        </div>
-      </div>
-
       <div className="space-y-2">
-        <p className="text-muted-foreground text-xs">Połączone metody</p>
+        <p className="font-medium text-sm">Połączone metody</p>
         <ConnectedMethods
           isLoading={isLinkedMethodsLoading}
           linkedMethods={linkedMethods}
         />
       </div>
+      {hasAvailableMethods ? (
+        <>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-1">
+              <p className="font-semibold">Konfiguracja 2FA</p>
+              <p className="text-muted-foreground text-sm">
+                Dodaj drugi krok weryfikacji i chroń krytyczne działania.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {status === "DISABLED" && !isSetupInProgress ? (
+                <Button
+                  disabled={!canStartSetup}
+                  isLoading={setupStage === "REQUESTING"}
+                  onClick={onStartSetup}
+                  type="button"
+                >
+                  Rozpocznij konfigurację
+                </Button>
+              ) : null}
+              {status === "ENABLED" && !isSetupInProgress ? (
+                <Button
+                  disabled={!canStartSetup}
+                  onClick={onStartSetup}
+                  type="button"
+                >
+                  Dodaj metodę
+                </Button>
+              ) : null}
+              {status === "SETUP" || isSetupInProgress ? (
+                <Button onClick={onCancelSetup} type="button" variant="outline">
+                  Anuluj konfigurację
+                </Button>
+              ) : null}
+            </div>
+          </div>
 
-      <TwoFactorMethodInput
-        disabled={!canSelectMethod}
-        method={method}
-        onMethodChange={onMethodChange}
-      />
-
-      {linkedMethodsHint ? (
-        <p className="text-muted-foreground text-xs">{linkedMethodsHint}</p>
+          <div className="grid gap-3 text-muted-foreground text-xs sm:grid-cols-3">
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={isStepComplete(1, setupStage) ? "success" : "outline"}
+              >
+                1
+              </Badge>
+              <span>Wybierz metodę</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={isStepComplete(2, setupStage) ? "success" : "outline"}
+              >
+                2
+              </Badge>
+              <span>Potwierdź kod</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={isStepComplete(3, setupStage) ? "success" : "outline"}
+              >
+                3
+              </Badge>
+              <span>Zapisz kody</span>
+            </div>
+          </div>
+          <TwoFactorMethodInput
+            availableMethods={
+              status === "ENABLED"
+                ? availableMethods.map((m) => m.value as TwoFactorMethod)
+                : undefined
+            }
+            disabled={!canSelectMethod}
+            method={method}
+            onMethodChange={onMethodChange}
+          />
+          {linkedMethodsHint ? (
+            <p className="text-muted-foreground text-xs">{linkedMethodsHint}</p>
+          ) : null}
+        </>
       ) : null}
     </div>
   )
@@ -754,10 +837,7 @@ export function TwoFactorSetup({
     refetch: refetchLinkedMethods,
   } = useQuery({
     queryKey: ["linked-2fa-methods"],
-    queryFn: async () => {
-      const response = await apiFetch("/api/2fa", TFASchema)
-      return response
-    },
+    queryFn: async () => await apiFetch("/api/2fa", TFASchema),
   })
   const [setupState, dispatch] = useReducer(
     twoFactorSetupReducer,
@@ -765,13 +845,7 @@ export function TwoFactorSetup({
   )
   const [resendCooldown, startTimer] = useCountdown(0)
   const [showRecoveryCodes, setShowRecoveryCodes] = useState<boolean>(false)
-  const {
-    stage: setupStage,
-    challenge,
-    code,
-    error,
-    note: setupNote,
-  } = setupState
+  const { stage: setupStage, challenge, code, error } = setupState
   const enabled = status === "ENABLED"
   const setupActive =
     status === "SETUP" || (setupStage !== "IDLE" && setupStage !== "SUCCESS")
@@ -887,16 +961,6 @@ export function TwoFactorSetup({
             />
           ) : null}
         </div>
-      ) : null}
-
-      {status === "ENABLED" ? (
-        <Alert>
-          <AlertTitle>2FA aktywna</AlertTitle>
-          <AlertDescription>
-            {setupNote ||
-              "Logowanie i zmiana hasła wymagają kodu. Jeśli utracisz dostęp, użyj kodów odzyskiwania."}
-          </AlertDescription>
-        </Alert>
       ) : null}
 
       <div className="h-px bg-border" />
