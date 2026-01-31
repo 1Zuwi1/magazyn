@@ -77,7 +77,7 @@ export const RegisterSchema = createApiSchema({
 export const WebAuthnStartRegistrationSchema = createApiSchema({
   POST: {
     input: z.object({}),
-    output: z.unknown(),
+    output: z.string(),
   },
 })
 
@@ -86,14 +86,14 @@ export const WebAuthnFinishRegistrationSchema = createApiSchema({
     input: z.object({
       credentialJson: z.string().min(1, "Credential JSON jest wymagany"),
     }),
-    output: z.unknown(),
+    output: z.null(),
   },
 })
 
 export const WebAuthnStartAssertionSchema = createApiSchema({
   POST: {
     input: z.object({}),
-    output: z.unknown(),
+    output: z.string(),
   },
 })
 
@@ -102,7 +102,7 @@ export const WebAuthnFinishAssertionSchema = createApiSchema({
     input: z.object({
       credentialJson: z.string().min(1, "Credential JSON jest wymagany"),
     }),
-    output: z.unknown(),
+    output: z.null(),
   },
 })
 

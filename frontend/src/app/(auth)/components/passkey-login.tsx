@@ -99,14 +99,12 @@ export default function PasskeyLogin({ disabled }: PasskeyLoginProps) {
         return
       }
 
-      const publicKeyCredential = credential ?? null
-
-      if (!isPublicKeyCredential(publicKeyCredential)) {
+      if (!isPublicKeyCredential(credential)) {
         toast.error("Nie udało się odczytać danych klucza bezpieczeństwa.")
         return
       }
 
-      const credentialJson = serializeCredential(publicKeyCredential)
+      const credentialJson = serializeCredential(credential)
 
       const [finishError] = await tryCatch(
         apiFetch(
