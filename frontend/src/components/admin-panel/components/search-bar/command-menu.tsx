@@ -26,21 +26,35 @@ export interface NavGroup {
 }
 
 interface CommandMenuProps {
+  initialQuery?: string
   navData?: NavGroup[]
   open: boolean
   setOpen: (open: boolean) => void
 }
 
-export function CommandMenu({ navData, open, setOpen }: CommandMenuProps) {
+export function CommandMenu({
+  initialQuery = "",
+  navData,
+  open,
+  setOpen,
+}: CommandMenuProps) {
   const { setTheme } = useTheme()
   const router = useRouter()
   const navGroups = navData || []
+  function changeTheme(theme: "light" | "dark" | "system") {
+    setTheme(theme)
+    setOpen(false)
+  }
   return (
     <CommandDialog onOpenChange={setOpen} open={open}>
-      <CommandInput placeholder="Wpisz polecenie lub wyszukaj" />
+      <CommandInput
+        defaultValue={initialQuery}
+        placeholder="Wpisz polecenie lub wyszukaj"
+      />
       <CommandList>
         <ScrollArea className="h-72 pe-1">
           <CommandEmpty>No results found.</CommandEmpty>
+
           {navGroups.map((group) => (
             <CommandGroup key={group.title}>
               {group.items.map((item) => (
@@ -63,16 +77,14 @@ export function CommandMenu({ navData, open, setOpen }: CommandMenuProps) {
           <CommandGroup heading="Motyw">
             <CommandItem
               onSelect={() => {
-                setTheme("light")
-                setOpen(false)
+                changeTheme("light")
               }}
             >
               <HugeiconsIcon icon={Sun03Icon} /> <span>Jasny</span>
             </CommandItem>
             <CommandItem
               onSelect={() => {
-                setTheme("dark")
-                setOpen(false)
+                changeTheme("dark")
               }}
             >
               <HugeiconsIcon className="scale-90" icon={Moon02Icon} />
@@ -80,8 +92,7 @@ export function CommandMenu({ navData, open, setOpen }: CommandMenuProps) {
             </CommandItem>
             <CommandItem
               onSelect={() => {
-                setTheme("system")
-                setOpen(false)
+                changeTheme("system")
               }}
             >
               <HugeiconsIcon icon={LaptopIcon} />

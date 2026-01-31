@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
+import { MAX_TOAST_ROWS } from "../lib/constants"
 import { parseCsvFile } from "../warehouses/csv/utils/csv-utils"
 import type { CsvParseError, CsvRowType } from "../warehouses/csv/utils/types"
 
@@ -21,36 +22,35 @@ export function useCsvImporter<T extends "rack" | "item">({
   const [validatedData, setValidatedData] = useState<CsvRowType<T>[]>([])
   const [parseErrors, setParseErrors] = useState<CsvParseError[]>([])
 
-  const MAX_TOAST_ROWS = 7
-
   async function processFile(files: File[]) {
-    const file = files[0]
-    if (!file) {
-      return
-    }
+    for (const file of files) {
+      if (!file) {
+        return
+      }
 
-    setRawPreviewData([])
-    setValidatedData([])
-    setParseErrors([])
+      setRawPreviewData([])
+      setValidatedData([])
+      setParseErrors([])
 
-    const result = await parseCsvFile(file, type)
+      const result = await parseCsvFile(file, type)
 
-    setRawPreviewData(result.rawRows)
-    setValidatedData(result.rows)
-    setParseErrors(result.errors)
+      setRawPreviewData(result.rawRows)
+      setValidatedData(result.rows)
+      setParseErrors(result.errors)
 
-    if (result.errors.length > 0) {
-      const displayedErrors = result.errors
-        .slice(0, MAX_TOAST_ROWS)
-        .map((e) => `Wiersz ${e.row}: ${e.message}`)
-        .join("\n")
+      if (result.errors.length > 0) {
+        const displayedErrors = result.errors
+          .slice(0, MAX_TOAST_ROWS)
+          .map((e) => `Wiersz ${e.row}: ${e.message}`)
+          .join("\n")
 
-      const remaining = result.errors.length - MAX_TOAST_ROWS
-      const suffix = remaining > 0 ? `\n...i ${remaining} więcej` : ""
+        const remaining = result.errors.length - MAX_TOAST_ROWS
+        const suffix = remaining > 0 ? `\n...i ${remaining} więcej` : ""
 
-      toast.error(`Błędy parsowania CSV (${result.errors.length})`, {
-        description: displayedErrors + suffix,
-      })
+        toast.error(`Błędy parsowania CSV (${result.errors.length})`, {
+          description: displayedErrors + suffix,
+        })
+      }
     }
   }
 

@@ -8,7 +8,9 @@ export function useNotification(initialNotifications: Notification[]) {
     useState<Notification | null>(initialNotifications[0] ?? null)
 
   const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+    setNotifications((prev) =>
+      prev.map((notification) => ({ ...notification, read: true }))
+    )
   }
 
   return {

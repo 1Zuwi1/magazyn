@@ -24,12 +24,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { FULL_WAREHOUSE_THRESHOLD } from "../lib/constants"
-import { unreadAlerts } from "../lib/utils"
+import { countUnreadNotifications } from "../lib/utils"
 import { StatCard } from "./stat-card"
 
 export function AdminOverview() {
   const stats = useMemo(() => {
-    const activeUsers = MOCK_USERS.filter((u) => u.status === "active").length
+    const activeUsers = MOCK_USERS.filter(
+      (user) => user.status === "active"
+    ).length
     const totalItems = MOCK_WAREHOUSES.reduce(
       (sum, warehouse) =>
         sum +
@@ -42,14 +44,18 @@ export function AdminOverview() {
     return {
       users: { total: MOCK_USERS.length, active: activeUsers },
       warehouses: { total: MOCK_WAREHOUSES.length },
-      alerts: { unread: unreadAlerts, total: MOCK_NOTIFICATIONS.length },
+      alerts: {
+        unread: countUnreadNotifications(MOCK_NOTIFICATIONS),
+        total: MOCK_NOTIFICATIONS.length,
+      },
       items: { total: totalItems },
     }
   }, [])
 
   const criticalWarehouses = useMemo(() => {
-    return MOCK_WAREHOUSES.filter((w) => {
-      const occupancy = w.capacity > 0 ? (w.used / w.capacity) * 100 : 0
+    return MOCK_WAREHOUSES.filter((warehouse) => {
+      const occupancy =
+        warehouse.capacity > 0 ? (warehouse.used / warehouse.capacity) * 100 : 0
       return occupancy >= FULL_WAREHOUSE_THRESHOLD
     })
   }, [])

@@ -22,3 +22,4 @@ export const NOTIFICATIONS_NAV_LINKS = [
 ]
 
 export const FULL_WAREHOUSE_THRESHOLD = 90
+export const MAX_TOAST_ROWS = 7

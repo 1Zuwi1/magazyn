@@ -45,11 +45,15 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
   }
 
   const handleSubmit = (data: RackFormData) => {
-    if (!selectedRack) {
-      return
-    }
     if (selectedRack === undefined) {
-      return setRacks((prev) => [...prev, data as Rack])
+      const newRack: Rack = {
+        ...data,
+        id: crypto.randomUUID(),
+        currentWeight: 0,
+        occupancy: 0,
+        items: [],
+      }
+      return setRacks((prev) => [...prev, newRack])
     }
     setRacks((prev) =>
       prev.map((rack) =>

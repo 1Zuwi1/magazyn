@@ -23,9 +23,9 @@ export function NotificationNav({ links, isCollapsed }: NavProps) {
       data-collapsed={isCollapsed}
     >
       <nav className="grid gap-1 group-data-[collapsed=true]:justify-start">
-        {links.map((link, index) =>
+        {links.map((link) =>
           isCollapsed ? (
-            <Tooltip key={index}>
+            <Tooltip key={link.title}>
               <TooltipTrigger>
                 {/*TODO: zrobić to jako filtrowanie*/}
                 <Link
@@ -53,7 +53,7 @@ export function NotificationNav({ links, isCollapsed }: NavProps) {
                 "justify-start px-3"
               )}
               href="#"
-              key={index}
+              key={link.title}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={link.icon} />
               {link.title}

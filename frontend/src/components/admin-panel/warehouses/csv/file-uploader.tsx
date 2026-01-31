@@ -97,9 +97,12 @@ export function FileUploader({
   )
 
   const removeFile = useCallback(
-    (index: number) => {
-      const newFiles = files.filter((_, i) => i !== index)
-      URL.revokeObjectURL(files[index].preview)
+    (fileName: string) => {
+      const fileToRemove = files.find((f) => f.name === fileName)
+      if (fileToRemove) {
+        URL.revokeObjectURL(fileToRemove.preview)
+      }
+      const newFiles = files.filter((f) => f.name !== fileName)
       setFiles(newFiles)
       onValueChange?.(newFiles)
     },
@@ -148,7 +151,7 @@ export function FileUploader({
       {files.length > 0 && (
         <ScrollArea className="max-h-48">
           <div className="flex flex-col gap-3">
-            {files.map((file, index) => (
+            {files.map((file) => (
               <div
                 className="flex items-center gap-3 rounded-md border p-3"
                 key={file.name}
@@ -168,7 +171,7 @@ export function FileUploader({
                 </div>
                 <Button
                   disabled={isUploading}
-                  onClick={() => removeFile(index)}
+                  onClick={() => removeFile(file.name)}
                   size="icon-sm"
                   type="button"
                   variant="outline"

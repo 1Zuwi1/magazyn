@@ -60,3 +60,20 @@ export const ApiItemsSchema = createApiSchema({
     output: ItemSchema,
   },
 })
+
+// Schema dla formularza użytkownika (admin panel)
+const usernameSchema = z
+  .string()
+  .min(3, "Nazwa użytkownika musi mieć co najmniej 3 znaki")
+  .max(20, "Nazwa użytkownika może mieć maksymalnie 20 znaków")
+  .regex(
+    /^[a-zA-Z0-9_]+$/,
+    "Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślenia"
+  )
+
+export const UserFormSchema = z.object({
+  username: usernameSchema,
+  email: z.email("Nieprawidłowy adres email"),
+  role: z.enum(["user", "admin"], "Wybierz rolę użytkownika"),
+  status: z.enum(["active", "inactive"], "Wybierz status użytkownika"),
+})

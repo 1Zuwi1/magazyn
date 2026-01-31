@@ -52,9 +52,9 @@ export function UsersTable({
     const normalized = search.toLowerCase()
 
     return data.filter(
-      (u) =>
-        u.username.toLowerCase().includes(normalized) ||
-        u.email.toLowerCase().includes(normalized)
+      (user) =>
+        user.username.toLowerCase().includes(normalized) ||
+        user.email.toLowerCase().includes(normalized)
     )
   }, [data, search])
 

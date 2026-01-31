@@ -1,6 +1,8 @@
 "use client"
 
 import { type AnyFieldApi, useForm } from "@tanstack/react-form"
+import { useEffect } from "react"
+import type { ZodError } from "zod"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import type { Role, Status, User } from "@/components/dashboard/types"
 import {
@@ -18,17 +20,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { DEFAULT_USER } from "../../warehouses/csv/utils/constants"
+import { UserFormSchema } from "@/lib/schemas/admin-schemas"
 
 const roles: { label: string; value: Role }[] = [
-  { label: "user", value: "user" },
-  { label: "admin", value: "admin" },
+  { label: "Użytkownik", value: "user" },
+  { label: "Administrator", value: "admin" },
 ]
 
 const statuses: { label: string; value: Status }[] = [
-  { label: "active", value: "active" },
-  { label: "inactive", value: "inactive" },
+  { label: "Aktywny", value: "active" },
+  { label: "Nieaktywny", value: "inactive" },
 ]
+
+const DEFAULT_FORM_VALUES = {
+  username: "",
+  email: "",
+  status: "active" as Status,
+  role: "user" as Role,
+}
 
 interface ActionDialogProps {
   currentRow?: User
@@ -43,22 +52,47 @@ export function ActionDialog({
   open,
   onOpenChange,
   formId,
+  onSubmit,
 }: ActionDialogProps) {
   const isEdit = !!currentRow
 
-  const formValues = { ...DEFAULT_USER, ...currentRow }
+  const getFormValues = () => ({
+    username: currentRow?.username ?? DEFAULT_FORM_VALUES.username,
+    email: currentRow?.email ?? DEFAULT_FORM_VALUES.email,
+    role: currentRow?.role ?? DEFAULT_FORM_VALUES.role,
+    status: currentRow?.status ?? DEFAULT_FORM_VALUES.status,
+  })
 
   const form = useForm({
-    defaultValues: formValues,
+    defaultValues: getFormValues(),
     onSubmit: ({ value }) => {
-      form.reset(formValues)
-      console.log(JSON.stringify(value))
+      if (onSubmit) {
+        const user: User = {
+          id: currentRow?.id ?? crypto.randomUUID(),
+          ...value,
+        }
+        onSubmit(user)
+      }
       onOpenChange(false)
+    },
+    validators: {
+      onSubmit: UserFormSchema,
     },
   })
 
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        username: currentRow?.username ?? DEFAULT_FORM_VALUES.username,
+        email: currentRow?.email ?? DEFAULT_FORM_VALUES.email,
+        role: currentRow?.role ?? DEFAULT_FORM_VALUES.role,
+        status: currentRow?.status ?? DEFAULT_FORM_VALUES.status,
+      })
+    }
+  }, [open, currentRow, form])
+
   const renderError = (field: AnyFieldApi) => {
-    const error = field.state.meta.errors[0] as { message?: string } | undefined
+    const error = field.state.meta.errors[0] as ZodError | string | undefined
     const message = typeof error === "string" ? error : error?.message
 
     if (!message) {
@@ -76,7 +110,7 @@ export function ActionDialog({
           : "Wprowadź informacje o nowym użytkowniku."
       }
       formId={formId}
-      onFormReset={() => form.reset(formValues)}
+      onFormReset={() => form.reset(getFormValues())}
       onOpenChange={onOpenChange}
       open={open}
       title={isEdit ? "Edytuj użytkownika" : "Dodaj użytkownika"}
@@ -97,17 +131,19 @@ export function ActionDialog({
                   className="col-span-2 text-end"
                   htmlFor={field.name}
                 >
-                  Username
+                  Nazwa użytkownika
                 </FieldLabel>
                 <FieldContent className="col-span-4">
                   <Input
                     autoComplete="off"
-                    className="w-full"
+                    className={
+                      field.state.meta.errors.length ? "border-red-500" : ""
+                    }
                     id={field.name}
                     name={field.name}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    placeholder="john_doe"
+                    placeholder="jan_kowalski"
                     value={field.state.value}
                   />
                 </FieldContent>
@@ -127,12 +163,14 @@ export function ActionDialog({
                 </FieldLabel>
                 <FieldContent className="col-span-4">
                   <Input
-                    className="w-full"
+                    className={
+                      field.state.meta.errors.length ? "border-red-500" : ""
+                    }
                     id={field.name}
                     name={field.name}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="john.doe@gmail.com"
+                    placeholder="jan.kowalski@example.com"
                     type="email"
                     value={field.state.value}
                   />
@@ -149,7 +187,7 @@ export function ActionDialog({
                   className="col-span-2 text-end"
                   htmlFor={field.name}
                 >
-                  Role
+                  Rola
                 </FieldLabel>
                 <FieldContent className="col-span-4">
                   <Select
@@ -160,9 +198,14 @@ export function ActionDialog({
                     }}
                     value={field.state.value}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger
+                      className={
+                        field.state.meta.errors.length ? "border-red-500" : ""
+                      }
+                    >
                       <SelectValue>
-                        {field.state.value || "Select a role"}
+                        {roles.find((r) => r.value === field.state.value)
+                          ?.label ?? "Wybierz rolę"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -197,9 +240,14 @@ export function ActionDialog({
                     }}
                     value={field.state.value}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger
+                      className={
+                        field.state.meta.errors.length ? "border-red-500" : ""
+                      }
+                    >
                       <SelectValue>
-                        {field.state.value || "Select a status"}
+                        {statuses.find((s) => s.value === field.state.value)
+                          ?.label ?? "Wybierz status"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>

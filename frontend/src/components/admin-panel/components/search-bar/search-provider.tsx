@@ -1,13 +1,13 @@
 "use client"
 
-import { createContext, useContext, useState } from "react"
+import { createContext, useContext, useMemo, useState } from "react"
 import {
   CommandMenu,
   type NavGroup,
 } from "@/components/admin-panel/components/search-bar/command-menu"
 
 interface SearchContextType {
-  setOpen: (open: boolean) => void
+  openWithQuery: (query?: string) => void
 }
 
 const SearchContext = createContext<SearchContextType | null>(null)
@@ -27,11 +27,34 @@ interface SearchProviderProps {
 
 export function SearchProvider({ children, navData }: SearchProviderProps) {
   const [open, setOpen] = useState(false)
+  const [initialQuery, setInitialQuery] = useState("")
+
+  const contextValue = useMemo(
+    () => ({
+      openWithQuery: (query?: string) => {
+        setInitialQuery(query ?? "")
+        setOpen(true)
+      },
+    }),
+    []
+  )
+
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen)
+    if (!isOpen) {
+      setInitialQuery("")
+    }
+  }
 
   return (
-    <SearchContext.Provider value={{ setOpen }}>
+    <SearchContext.Provider value={contextValue}>
       {children}
-      <CommandMenu navData={navData} open={open} setOpen={setOpen} />
+      <CommandMenu
+        initialQuery={initialQuery}
+        navData={navData}
+        open={open}
+        setOpen={handleOpenChange}
+      />
     </SearchContext.Provider>
   )
 }
