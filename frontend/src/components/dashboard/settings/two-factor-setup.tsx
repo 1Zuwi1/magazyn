@@ -154,7 +154,6 @@ interface TwoFactorSetupFlowParams {
   method: TwoFactorMethod
   setupState: TwoFactorSetupState
   dispatch: (action: TwoFactorSetupAction) => void
-  onStatusChange: (status: TwoFactorStatus) => void
   startTimer: (cooldown?: number) => void
 }
 
@@ -163,7 +162,6 @@ function useTwoFactorSetupFlow({
   method,
   setupState,
   dispatch,
-  onStatusChange,
   startTimer,
 }: TwoFactorSetupFlowParams) {
   const { challenge, code } = setupState
@@ -185,7 +183,6 @@ function useTwoFactorSetupFlow({
   const startSetup = async () => {
     dispatch({ type: "set_error", error: "" })
     dispatch({ type: "set_stage", stage: "REQUESTING" })
-    onStatusChange("SETUP")
 
     try {
       const newChallenge = await createTwoFactorChallenge(method, locale)
@@ -229,7 +226,6 @@ function useTwoFactorSetupFlow({
       const isValid = await verifyOneTimeCode(code)
 
       if (isValid) {
-        onStatusChange("ENABLED")
         dispatch({ type: "set_stage", stage: "SUCCESS" })
         dispatch({
           type: "set_note",
@@ -259,7 +255,6 @@ function useTwoFactorSetupFlow({
 interface TwoFactorSetupProps {
   status: TwoFactorStatus
   method: TwoFactorMethod
-  onStatusChange: (status: TwoFactorStatus) => void
   onMethodChange: (method: TwoFactorMethod) => void
   userEmail?: string
 }
@@ -567,7 +562,6 @@ function TwoFactorConfigurationSection({
 export function TwoFactorSetup({
   status,
   method,
-  onStatusChange,
   onMethodChange,
   userEmail,
 }: TwoFactorSetupProps) {
@@ -621,12 +615,10 @@ export function TwoFactorSetup({
       method,
       setupState,
       dispatch,
-      onStatusChange,
       startTimer,
     })
 
   const handleCancelSetup = (): void => {
-    onStatusChange("DISABLED")
     resetFlow()
   }
 

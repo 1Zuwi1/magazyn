@@ -49,12 +49,7 @@ const SWITCH_EMAIL_REGEX = /switch to email/i
 
 describe("SecuritySection", () => {
   it("updates password verification requirement when 2FA is enabled", () => {
-    render(
-      <SecuritySection
-        initialTwoFactorEnabled={false}
-        userEmail="user@site.pl"
-      />
-    )
+    render(<SecuritySection userEmail="user@site.pl" />)
 
     expect(screen.getByText(BASIC_STATUS_REGEX)).toBeInTheDocument()
     expect(screen.getByTestId("password-section")).toHaveTextContent(

@@ -1,5 +1,9 @@
 export type AccountRole = "ADMIN" | "USER"
-export type AccountStatus = "VERIFIED" | "UNVERIFIED" | "BANNED"
+export type AccountStatus =
+  | "ACTIVE"
+  | "PENDING_VERIFICATION"
+  | "DISABLED"
+  | "LOCKED"
 export type TwoFactorMethod = "AUTHENTICATOR" | "SMS" | "EMAIL"
 export type TwoFactorStatus = "DISABLED" | "SETUP" | "ENABLED"
 export type TwoFactorSetupStage =
@@ -24,7 +28,6 @@ export interface SettingsUser {
   fullName?: string | null
   role: AccountRole
   status: AccountStatus
-  twoFactorEnabled: boolean
 }
 
 export interface SettingsContentProps {

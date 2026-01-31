@@ -90,20 +90,19 @@ const SHOW_CODES_REGEX = /pokaż/i
 const RECOVERY_CODES_REGEX = /kody odzyskiwania/i
 
 function TwoFactorSetupHarness({
-  initialStatus = "DISABLED",
+  initialStatus = "ENABLED",
   initialMethod = "SMS",
 }: {
   initialStatus?: TwoFactorStatus
   initialMethod?: TwoFactorMethod
 }) {
-  const [status, setStatus] = useState<TwoFactorStatus>(initialStatus)
+  const [status] = useState<TwoFactorStatus>(initialStatus)
   const [method, setMethod] = useState<TwoFactorMethod>(initialMethod)
 
   return (
     <TwoFactorSetup
       method={method}
       onMethodChange={setMethod}
-      onStatusChange={setStatus}
       status={status}
       userEmail="test@example.com"
     />

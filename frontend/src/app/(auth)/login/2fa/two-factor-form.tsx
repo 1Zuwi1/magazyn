@@ -6,13 +6,13 @@ import { useForm } from "@tanstack/react-form"
 import { REGEXP_ONLY_DIGITS } from "input-otp"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import AuthCard from "@/app/(auth)/components/auth-card"
 import { FieldWithState } from "@/components/helpers/field-state"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
-import { Field, FieldDescription, FieldGroup } from "@/components/ui/field"
+import { FieldDescription, FieldGroup } from "@/components/ui/field"
 import {
   InputOTP,
   InputOTPGroup,
@@ -34,7 +34,6 @@ interface TwoFactorFormProps {
   methodSwitchLabels: Record<TwoFactorMethod, string>
   otpLength: number
 }
-const defaultMethod: TwoFactorMethod = "EMAIL"
 
 export default function TwoFactorForm({
   linkedMethods,
@@ -43,6 +42,7 @@ export default function TwoFactorForm({
   methodSwitchLabels,
   otpLength,
 }: TwoFactorFormProps) {
+  const [defaultMethod] = useState(() => linkedMethods[0])
   const [isResending, setIsResending] = useState(false)
   const autoSubmittedRef = useRef(false)
   const router = useRouter()
@@ -77,30 +77,35 @@ export default function TwoFactorForm({
     },
   })
 
-  async function resendCode(m: ResendType) {
-    if (!resendMethods.includes(m)) {
-      toast.error("Nieobsługiwana metoda ponownego wysyłania kodu.")
-      return false
-    }
-    setIsResending(true)
-    const [err] = await tryCatch(
-      apiFetch("/api/2fa/email/send", Resend2FASchema, {
-        method: "POST",
-        body: { method: m },
-      })
-    )
-    setIsResending(false)
+  const resendCode = useCallback(
+    async (m: ResendType, showNotSupportedError = true) => {
+      if (!resendMethods.includes(m)) {
+        if (showNotSupportedError) {
+          toast.error("Nieobsługiwana metoda ponownego wysyłania kodu.")
+        }
+        return false
+      }
+      setIsResending(true)
+      const [err] = await tryCatch(
+        apiFetch("/api/2fa/email/send", Resend2FASchema, {
+          method: "POST",
+          body: { method: m },
+        })
+      )
+      setIsResending(false)
 
-    if (err) {
-      toast.error("Nie udało się wysłać kodu ponownie. Spróbuj za chwilę.")
-      return false
-    }
+      if (err) {
+        toast.error("Nie udało się wysłać kodu ponownie. Spróbuj za chwilę.")
+        return false
+      }
 
-    toast.success(
-      m === "SMS" ? "Wysłano nowy kod SMS." : "Wysłano nowy kod e-mailem."
-    )
-    return true
-  }
+      toast.success(
+        m === "SMS" ? "Wysłano nowy kod SMS." : "Wysłano nowy kod e-mailem."
+      )
+      return true
+    },
+    [resendMethods]
+  )
 
   async function handleSwitchMethod(next: TwoFactorMethod) {
     form.setFieldValue("method", next)
@@ -112,6 +117,10 @@ export default function TwoFactorForm({
       await resendCode(next as ResendType)
     }
   }
+
+  useEffect(() => {
+    resendCode(defaultMethod as ResendType, false)
+  }, [defaultMethod, resendCode])
 
   return (
     <AuthCard>
@@ -134,8 +143,13 @@ export default function TwoFactorForm({
               Cofnij do logowania
             </Link>
           </div>
-          <form.Subscribe selector={(state) => state.values.method}>
-            {(method) => {
+          <form.Subscribe
+            selector={(state) => ({
+              method: state.values.method,
+              isSubmitting: state.isSubmitting,
+            })}
+          >
+            {({ method, isSubmitting }) => {
               const alternatives = linkedMethods.filter((m) => m !== method)
               const canResend = resendMethods.includes(method as ResendType)
               const slotClassName =
@@ -170,7 +184,7 @@ export default function TwoFactorForm({
                               aria-invalid={isInvalid}
                               autoComplete="one-time-code"
                               containerClassName="items-center justify-center gap-4"
-                              disabled={form.state.isSubmitting || isResending}
+                              disabled={isSubmitting || isResending}
                               id={id}
                               inputMode="numeric"
                               maxLength={otpLength}
@@ -275,16 +289,18 @@ export default function TwoFactorForm({
               )
             }}
           </form.Subscribe>
-          <Field>
-            <Button
-              className="w-full"
-              isLoading={form.state.isSubmitting}
-              size="lg"
-              type="submit"
-            >
-              Zweryfikuj
-            </Button>
-          </Field>
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
+              <Button
+                className="w-full"
+                disabled={isSubmitting}
+                isLoading={isSubmitting}
+                type="submit"
+              >
+                Zweryfikuj kod
+              </Button>
+            )}
+          </form.Subscribe>
         </FieldGroup>
       </form>
     </AuthCard>

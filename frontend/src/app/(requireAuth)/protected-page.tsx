@@ -26,7 +26,7 @@ export default async function ProtectedPage({
     return null
   }
 
-  if (session.status === "UNVERIFIED") {
+  if (session.account_status === "PENDING_VERIFICATION") {
     redirect("/pending-verification")
   }
 

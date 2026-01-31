@@ -12,7 +12,6 @@ import { TwoFactorSetup } from "./two-factor-setup"
 import type { TwoFactorMethod, TwoFactorStatus } from "./types"
 
 interface SecuritySectionProps {
-  initialTwoFactorEnabled: boolean
   userEmail: string
 }
 
@@ -47,19 +46,11 @@ function SecurityStatusIndicator({ status }: { status: TwoFactorStatus }) {
   )
 }
 
-export function SecuritySection({
-  initialTwoFactorEnabled,
-  userEmail,
-}: SecuritySectionProps) {
-  const [twoFactorStatus, setTwoFactorStatus] = useState<TwoFactorStatus>(
-    initialTwoFactorEnabled ? "ENABLED" : "DISABLED"
-  )
+export function SecuritySection({ userEmail }: SecuritySectionProps) {
   // FIXME: In production this should be fetched from user settings
   const [twoFactorMethod, setTwoFactorMethod] = useState<TwoFactorMethod>(
     TWO_FACTOR_METHODS[0].value
   )
-  const verificationRequired = twoFactorStatus === "ENABLED"
-
   return (
     <div className="space-y-6">
       <Card>
@@ -80,15 +71,14 @@ export function SecuritySection({
                 Chroń swoje konto dodatkową warstwą zabezpieczeń.
               </p>
             </div>
-            <SecurityStatusIndicator status={twoFactorStatus} />
+            <SecurityStatusIndicator status="ENABLED" />
           </div>
         </CardHeader>
         <CardContent>
           <TwoFactorSetup
             method={twoFactorMethod}
             onMethodChange={setTwoFactorMethod}
-            onStatusChange={setTwoFactorStatus}
-            status={twoFactorStatus}
+            status="ENABLED"
             userEmail={userEmail}
           />
         </CardContent>
@@ -117,7 +107,7 @@ export function SecuritySection({
         <CardContent>
           <PasswordSection
             twoFactorMethod={twoFactorMethod}
-            verificationRequired={verificationRequired}
+            verificationRequired
           />
         </CardContent>
       </Card>

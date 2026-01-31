@@ -1,7 +1,8 @@
 export const STATUS_CONFIG = {
-  VERIFIED: { label: "Zweryfikowane", variant: "success" },
-  UNVERIFIED: { label: "Niezweryfikowane", variant: "warning" },
-  BANNED: { label: "Zablokowane", variant: "destructive" },
+  LOCKED: { label: "Zablokowane", variant: "destructive" },
+  PENDING_VERIFICATION: { label: "Niezweryfikowane", variant: "warning" },
+  DISABLED: { label: "Wyłączone", variant: "destructive" },
+  ACTIVE: { label: "Aktywne", variant: "success" },
 } as const
 
 export const ROLE_LABELS = {

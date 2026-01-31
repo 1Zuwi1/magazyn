@@ -3,6 +3,7 @@ import z from "zod"
 import { createApiSchema } from "@/lib/create-api-schema"
 import { apiFetch } from "@/lib/fetcher"
 import { getSession } from "@/lib/session"
+import tryCatch from "@/lib/try-catch"
 import TwoFactorForm, {
   type ResendType,
   type TwoFactorMethod,
@@ -20,13 +21,11 @@ const METHOD_SWITCH_LABELS: Record<TwoFactorMethod, string> = {
   EMAIL: "Wyślij kod e-mailem",
 }
 
-// TODO: Fetch linked_methods from backend API
-const LINKED_METHODS: TwoFactorMethod[] = ["AUTHENTICATOR", "SMS", "EMAIL"]
 const RESEND_METHODS: ResendType[] = ["SMS", "EMAIL"]
 
 const TfaSchema = createApiSchema({
   GET: {
-    output: z.string(),
+    output: z.array(z.enum(["AUTHENTICATOR", "SMS", "EMAIL"])),
   },
 })
 
@@ -37,12 +36,15 @@ export default async function TwoFactorPage() {
     redirect("/dashboard")
   }
 
-  const linkedMethods = await apiFetch("/api/2fa", TfaSchema)
-  console.log(linkedMethods)
+  const [err, linkedMethods] = await tryCatch(apiFetch("/api/2fa", TfaSchema))
+
+  if (err) {
+    redirect("/login")
+  }
 
   return (
     <TwoFactorForm
-      linkedMethods={LINKED_METHODS}
+      linkedMethods={linkedMethods}
       methodSwitchLabels={METHOD_SWITCH_LABELS}
       methodTitles={METHOD_TITLES}
       otpLength={6}
