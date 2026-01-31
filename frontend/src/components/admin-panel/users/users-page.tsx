@@ -65,7 +65,6 @@ export default function UsersMain() {
         data={users}
         onDelete={handleDeleteUser}
         onEdit={handleEditUser}
-        search=""
       />
 
       <ActionDialog
