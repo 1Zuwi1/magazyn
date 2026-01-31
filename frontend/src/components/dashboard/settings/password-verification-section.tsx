@@ -21,11 +21,21 @@ import {
   verifyOneTimeCode,
 } from "./utils"
 
+export interface PasswordVerificationCopy {
+  title?: string
+  description?:
+    | string
+    | ((context: { method: TwoFactorMethod; destination?: string }) => string)
+  verifiedTitle?: string
+  verifiedDescription?: string
+}
+
 interface PasswordVerificationSectionProps {
   method: TwoFactorMethod
   onVerificationChange: (complete: boolean) => void
   onInputChange: (code: string) => void
   code: string
+  copy?: PasswordVerificationCopy
 }
 
 interface PasswordVerificationFlowHandlers {
@@ -196,6 +206,7 @@ export function PasswordVerificationSection({
   onVerificationChange,
   onInputChange,
   code,
+  copy,
 }: PasswordVerificationSectionProps) {
   const [state, setState] = useState<PasswordVerificationState>({
     stage: "IDLE",
@@ -269,16 +280,30 @@ export function PasswordVerificationSection({
     }
   }, [stage, handleStartVerification])
 
+  const title = copy?.title ?? "Potwierdź 2FA przed zmianą"
+  const verifiedTitle = copy?.verifiedTitle ?? "Zweryfikowano"
+  const verifiedDescription =
+    copy?.verifiedDescription ?? "Możesz bezpiecznie zmienić hasło."
+  const description = (() => {
+    if (copy?.description) {
+      return typeof copy.description === "function"
+        ? copy.description({
+            method,
+            destination: challenge?.destination,
+          })
+        : copy.description
+    }
+    return method === "AUTHENTICATOR"
+      ? "Wpisz kod z aplikacji uwierzytelniającej."
+      : `Wyślemy kod na ${challenge?.destination ?? "wybraną metodę"}.`
+  })()
+
   return (
     <div className="space-y-3 rounded-lg border bg-muted/30 p-3">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
-          <p className="font-semibold text-sm">Potwierdź 2FA przed zmianą</p>
-          <p className="text-muted-foreground text-sm">
-            {method === "AUTHENTICATOR"
-              ? "Wpisz kod z aplikacji uwierzytelniającej."
-              : `Wyślemy kod na ${challenge?.destination ?? "wybraną metodę"}.`}
-          </p>
+          <p className="font-semibold text-sm">{title}</p>
+          <p className="text-muted-foreground text-sm">{description}</p>
         </div>
         <Badge variant={complete ? "success" : "warning"}>
           {complete ? "Zweryfikowano" : "Wymagane"}
@@ -287,8 +312,8 @@ export function PasswordVerificationSection({
 
       {complete ? (
         <Alert>
-          <AlertTitle>Zweryfikowano</AlertTitle>
-          <AlertDescription>Możesz bezpiecznie zmienić hasło.</AlertDescription>
+          <AlertTitle>{verifiedTitle}</AlertTitle>
+          <AlertDescription>{verifiedDescription}</AlertDescription>
         </Alert>
       ) : (
         <div className="space-y-3">

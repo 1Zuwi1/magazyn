@@ -696,6 +696,53 @@ const isStepComplete = (
   }
 }
 
+function TwoFactorActionButtons({
+  status,
+  isSetupInProgress,
+  canStartSetup,
+  setupStage,
+  onStartSetup,
+  onCancelSetup,
+}: {
+  status: TwoFactorStatus
+  isSetupInProgress: boolean
+  canStartSetup: boolean
+  setupStage: TwoFactorSetupStage
+  onStartSetup: () => void
+  onCancelSetup: () => void
+}) {
+  if (status === "DISABLED" && !isSetupInProgress) {
+    return (
+      <Button
+        disabled={!canStartSetup}
+        isLoading={setupStage === "REQUESTING"}
+        onClick={onStartSetup}
+        type="button"
+      >
+        Rozpocznij konfigurację
+      </Button>
+    )
+  }
+
+  if (status === "ENABLED" && !isSetupInProgress) {
+    return (
+      <Button disabled={!canStartSetup} onClick={onStartSetup} type="button">
+        Dodaj metodę
+      </Button>
+    )
+  }
+
+  if (status === "SETUP" || isSetupInProgress) {
+    return (
+      <Button onClick={onCancelSetup} type="button" variant="outline">
+        Anuluj konfigurację
+      </Button>
+    )
+  }
+
+  return null
+}
+
 function TwoFactorConfigurationSection({
   status,
   setupStage,
@@ -743,7 +790,7 @@ function TwoFactorConfigurationSection({
           linkedMethods={linkedMethods}
         />
       </div>
-      {hasAvailableMethods ? (
+      {hasAvailableMethods && !isLinkedMethodsLoading ? (
         <>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">
@@ -753,30 +800,14 @@ function TwoFactorConfigurationSection({
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {status === "DISABLED" && !isSetupInProgress ? (
-                <Button
-                  disabled={!canStartSetup}
-                  isLoading={setupStage === "REQUESTING"}
-                  onClick={onStartSetup}
-                  type="button"
-                >
-                  Rozpocznij konfigurację
-                </Button>
-              ) : null}
-              {status === "ENABLED" && !isSetupInProgress ? (
-                <Button
-                  disabled={!canStartSetup}
-                  onClick={onStartSetup}
-                  type="button"
-                >
-                  Dodaj metodę
-                </Button>
-              ) : null}
-              {status === "SETUP" || isSetupInProgress ? (
-                <Button onClick={onCancelSetup} type="button" variant="outline">
-                  Anuluj konfigurację
-                </Button>
-              ) : null}
+              <TwoFactorActionButtons
+                canStartSetup={canStartSetup}
+                isSetupInProgress={isSetupInProgress}
+                onCancelSetup={onCancelSetup}
+                onStartSetup={onStartSetup}
+                setupStage={setupStage}
+                status={status}
+              />
             </div>
           </div>
 
@@ -837,7 +868,20 @@ export function TwoFactorSetup({
     refetch: refetchLinkedMethods,
   } = useQuery({
     queryKey: ["linked-2fa-methods"],
-    queryFn: async () => await apiFetch("/api/2fa", TFASchema),
+    queryFn: async () => {
+      const linked = await apiFetch("/api/2fa", TFASchema)
+
+      if (linked.includes(method)) {
+        const available = TWO_FACTOR_METHODS.find(
+          (m) => !linked.includes(m.value)
+        )?.value
+        if (available) {
+          onMethodChange(available)
+        }
+      }
+
+      return linked
+    },
   })
   const [setupState, dispatch] = useReducer(
     twoFactorSetupReducer,
@@ -887,6 +931,7 @@ export function TwoFactorSetup({
       startTimer,
       onSuccess: () => {
         refetchLinkedMethods().catch(() => undefined)
+        resetFlow()
       },
     })
 

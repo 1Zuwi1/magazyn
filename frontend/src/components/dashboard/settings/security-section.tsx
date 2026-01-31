@@ -46,7 +46,6 @@ function SecurityStatusIndicator({ status }: { status: TwoFactorStatus }) {
 }
 
 export function SecuritySection({ userEmail }: SecuritySectionProps) {
-  // FIXME: In production this should be fetched from user settings
   const [twoFactorMethod, setTwoFactorMethod] =
     useState<TwoFactorMethod>("EMAIL")
   return (

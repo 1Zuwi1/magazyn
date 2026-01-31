@@ -5,14 +5,8 @@ import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { ChangePasswordFormSchema } from "@/lib/schemas"
-import { PasswordVerificationSection } from "./password-verification-section"
+import { TwoFactorVerificationDialog } from "./two-factor-verification-dialog"
 import type { TwoFactorMethod } from "./types"
 import { wait } from "./utils"
 
@@ -148,33 +142,24 @@ export function PasswordSection({
         </form.Subscribe>
       </div>
       {verificationRequired ? (
-        <Dialog
-          onOpenChange={setIsVerificationDialogOpen}
-          open={isVerificationDialogOpen}
-        >
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Potwierdź 2FA przed zmianą</DialogTitle>
-            </DialogHeader>
-            <form.Field name="twoFactorCode">
-              {(field) => (
-                <PasswordVerificationSection
-                  code={field.state.value || ""}
-                  method={twoFactorMethod}
-                  onInputChange={(code) => field.handleChange(code)}
-                  onVerificationChange={(complete) => {
-                    verificationCompleteRef.current = complete
-                    setVerificationComplete(complete)
-                    if (complete) {
-                      setIsVerificationDialogOpen(false)
-                      form.handleSubmit()
-                    }
-                  }}
-                />
-              )}
-            </form.Field>
-          </DialogContent>
-        </Dialog>
+        <form.Field name="twoFactorCode">
+          {(field) => (
+            <TwoFactorVerificationDialog
+              code={field.state.value || ""}
+              method={twoFactorMethod}
+              onCodeChange={(nextCode) => field.handleChange(nextCode)}
+              onOpenChange={setIsVerificationDialogOpen}
+              onVerificationChange={(complete) => {
+                verificationCompleteRef.current = complete
+                setVerificationComplete(complete)
+              }}
+              onVerified={() => {
+                form.handleSubmit()
+              }}
+              open={isVerificationDialogOpen}
+            />
+          )}
+        </form.Field>
       ) : null}
     </form>
   )

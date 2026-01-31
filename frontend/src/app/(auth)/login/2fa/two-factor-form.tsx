@@ -87,7 +87,7 @@ export default function TwoFactorForm({
       }
       setIsResending(true)
       const [err] = await tryCatch(
-        apiFetch("/api/2fa/email/send", Resend2FASchema, {
+        apiFetch("/api/2fa/send", Resend2FASchema, {
           method: "POST",
           body: { method: m },
         })
