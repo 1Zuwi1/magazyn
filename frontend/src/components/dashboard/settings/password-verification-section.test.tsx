@@ -6,15 +6,10 @@ import {
   within,
 } from "@testing-library/react"
 import { useState } from "react"
-import { toast } from "sonner"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import type { TwoFactorMethod } from "@/lib/schemas"
 import { PasswordVerificationSection } from "./password-verification-section"
-import type { TwoFactorMethod } from "./types"
-import {
-  createPasswordChallenge,
-  sendVerificationCode,
-  verifyOneTimeCode,
-} from "./utils"
+import { createPasswordChallenge, sendVerificationCode } from "./utils"
 
 vi.mock("sonner", () => ({
   toast: {
@@ -60,7 +55,6 @@ vi.mock("./use-countdown", async () => {
 vi.mock("./utils", () => ({
   createPasswordChallenge: vi.fn(),
   sendVerificationCode: vi.fn(),
-  verifyOneTimeCode: vi.fn(),
   formatCountdown: (seconds: number) => {
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
@@ -70,7 +64,6 @@ vi.mock("./utils", () => ({
 
 const mockCreatePasswordChallenge = vi.mocked(createPasswordChallenge)
 const mockSendVerificationCode = vi.mocked(sendVerificationCode)
-const mockVerifyOneTimeCode = vi.mocked(verifyOneTimeCode)
 
 const RESEND_BUTTON_REGEX = /wyślij ponownie/i
 const CODE_INPUT_REGEX = /kod 2fa/i
@@ -80,19 +73,25 @@ const SAFE_CHANGE_TEXT_REGEX = /możesz bezpiecznie zmienić hasło/i
 
 function PasswordVerificationHarness({
   method,
-  onVerificationChange,
+  onVerify,
+  autoVerify,
+  isVerified,
 }: {
   method: TwoFactorMethod
-  onVerificationChange: (complete: boolean) => void
+  onVerify: (code: string) => void
+  autoVerify?: boolean
+  isVerified?: boolean
 }) {
   const [code, setCode] = useState<string>("")
 
   return (
     <PasswordVerificationSection
+      autoVerify={autoVerify}
       code={code}
+      isVerified={isVerified}
       method={method}
       onInputChange={setCode}
-      onVerificationChange={onVerificationChange}
+      onVerify={onVerify}
     />
   )
 }
@@ -109,12 +108,7 @@ describe("PasswordVerificationSection", () => {
     })
     mockSendVerificationCode.mockResolvedValue()
 
-    render(
-      <PasswordVerificationHarness
-        method="EMAIL"
-        onVerificationChange={vi.fn()}
-      />
-    )
+    render(<PasswordVerificationHarness method="EMAIL" onVerify={vi.fn()} />)
 
     await waitFor(() => {
       expect(mockCreatePasswordChallenge).toHaveBeenCalledWith("EMAIL")
@@ -130,15 +124,11 @@ describe("PasswordVerificationSection", () => {
     expect(resendButton).toBeDisabled()
   })
 
-  it("verifies authenticator codes and signals completion", async () => {
-    mockVerifyOneTimeCode.mockResolvedValue(true)
-    const onVerificationChange = vi.fn()
+  it("submits the code and renders verified state from the parent", async () => {
+    const onVerify = vi.fn()
 
-    render(
-      <PasswordVerificationHarness
-        method="AUTHENTICATOR"
-        onVerificationChange={onVerificationChange}
-      />
+    const { rerender } = render(
+      <PasswordVerificationHarness method="AUTHENTICATOR" onVerify={onVerify} />
     )
 
     const codeInput = await screen.findByLabelText(CODE_INPUT_REGEX)
@@ -149,26 +139,30 @@ describe("PasswordVerificationSection", () => {
     fireEvent.click(screen.getByRole("button", { name: VERIFY_BUTTON_REGEX }))
 
     await waitFor(() => {
-      expect(mockVerifyOneTimeCode).toHaveBeenCalledWith("654321")
+      expect(onVerify).toHaveBeenCalledWith("654321")
     })
 
-    await waitFor(() => {
-      expect(onVerificationChange).toHaveBeenLastCalledWith(true)
-    })
+    rerender(
+      <PasswordVerificationHarness
+        isVerified
+        method="AUTHENTICATOR"
+        onVerify={onVerify}
+      />
+    )
 
     const alert = await screen.findByRole("alert")
     expect(within(alert).getByText(VERIFIED_TEXT_REGEX)).toBeInTheDocument()
     expect(within(alert).getByText(SAFE_CHANGE_TEXT_REGEX)).toBeInTheDocument()
   })
 
-  it("shows an error when the verification code is invalid", async () => {
-    const onVerificationChange = vi.fn()
-    mockVerifyOneTimeCode.mockResolvedValue(false)
+  it("auto-submits when the last digit is entered", async () => {
+    const onVerify = vi.fn()
 
     render(
       <PasswordVerificationHarness
+        autoVerify
         method="AUTHENTICATOR"
-        onVerificationChange={onVerificationChange}
+        onVerify={onVerify}
       />
     )
 
@@ -177,12 +171,8 @@ describe("PasswordVerificationSection", () => {
       target: { value: "123456" },
     })
 
-    fireEvent.click(screen.getByRole("button", { name: VERIFY_BUTTON_REGEX }))
-
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith(
-        "Kod jest nieprawidłowy. Spróbuj ponownie."
-      )
+      expect(onVerify).toHaveBeenCalledWith("123456")
     })
   })
 })

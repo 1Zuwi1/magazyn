@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
+import type { TwoFactorMethod } from "@/lib/schemas"
 import { SecuritySection } from "./security-section"
-import type { TwoFactorMethod, TwoFactorStatus } from "./types"
+import type { TwoFactorStatus } from "./types"
 
 vi.mock("./password-section", () => ({
   PasswordSection: ({

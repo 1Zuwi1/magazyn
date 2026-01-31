@@ -4,7 +4,6 @@ export type AccountStatus =
   | "PENDING_VERIFICATION"
   | "DISABLED"
   | "LOCKED"
-export type TwoFactorMethod = "AUTHENTICATOR" | "SMS" | "EMAIL"
 export type TwoFactorStatus = "DISABLED" | "SETUP" | "ENABLED"
 export type TwoFactorSetupStage =
   | "IDLE"

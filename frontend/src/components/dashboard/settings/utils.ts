@@ -1,15 +1,12 @@
 import type { Locale } from "next-intl"
 import { OTP_LENGTH } from "@/config/constants"
+import type { TwoFactorMethod } from "@/lib/schemas"
 import {
   MOCK_AUTHENTICATOR_SECRET,
   MOCK_TWO_FACTOR_DESTINATIONS,
   NON_DIGIT_REGEX,
 } from "./constants"
-import type {
-  PasswordChallenge,
-  TwoFactorChallenge,
-  TwoFactorMethod,
-} from "./types"
+import type { PasswordChallenge, TwoFactorChallenge } from "./types"
 
 export const wait = async (durationMs: number): Promise<void> =>
   new Promise((resolve) => {

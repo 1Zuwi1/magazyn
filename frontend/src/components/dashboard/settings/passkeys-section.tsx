@@ -21,6 +21,7 @@ import {
   parseRegistrationOptions,
   serializeCredential,
 } from "@/lib/webauthn"
+import { TwoFactorVerificationDialog } from "./two-factor-verification-dialog"
 
 const SUPPORT_LABELS = {
   checking: "Sprawdzanie",
@@ -42,6 +43,7 @@ export function PasskeysSection() {
   const [supportState, setSupportState] = useState<SupportState>("checking")
   const [status, setStatus] = useState<PasskeyStatus>("idle")
   const [isLoading, setIsLoading] = useState(false)
+  const [showSudoDialog, setShowSudoDialog] = useState(false)
 
   useEffect(() => {
     setSupportState(getWebAuthnSupport())
@@ -68,12 +70,16 @@ export function PasskeysSection() {
           WebAuthnStartRegistrationSchema,
           {
             method: "POST",
-            body: {},
+            body: null,
           }
         )
       )
 
       if (startError) {
+        if (startError.message === "INSUFFICIENT_PERMISSIONS") {
+          setShowSudoDialog(true)
+          return
+        }
         handleApiError(
           startError,
           "Nie udało się rozpocząć dodawania klucza bezpieczeństwa."
@@ -142,57 +148,63 @@ export function PasskeysSection() {
   const isDisabled = supportState !== "supported" || isLoading
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
-                <HugeiconsIcon
-                  className="text-primary"
-                  icon={Key02Icon}
-                  size={16}
-                />
-              </div>
-              Klucze bezpieczeństwa
-            </CardTitle>
-            <p className="text-muted-foreground text-sm">
-              Dodaj klucz dostępu, aby logować się bez hasła.
-            </p>
-          </div>
-          <Badge variant={SUPPORT_VARIANTS[supportState]}>
-            {SUPPORT_LABELS[supportState]}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <>
+      <TwoFactorVerificationDialog
+        onOpenChange={setShowSudoDialog}
+        open={showSudoDialog}
+      />
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
-              <p className="font-medium text-sm">
-                Dodaj nowy klucz bezpieczeństwa
-              </p>
-              <p className="text-muted-foreground text-xs">
-                Potwierdź biometrią, kluczem sprzętowym lub PIN-em.
+              <CardTitle className="flex items-center gap-2">
+                <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+                  <HugeiconsIcon
+                    className="text-primary"
+                    icon={Key02Icon}
+                    size={16}
+                  />
+                </div>
+                Klucze bezpieczeństwa
+              </CardTitle>
+              <p className="text-muted-foreground text-sm">
+                Dodaj klucz dostępu, aby logować się bez hasła.
               </p>
             </div>
-            <Button
-              disabled={isDisabled}
-              isLoading={isLoading}
-              onClick={handleAddPasskey}
-              type="button"
-            >
-              Dodaj klucz bezpieczeństwa
-            </Button>
+            <Badge variant={SUPPORT_VARIANTS[supportState]}>
+              {SUPPORT_LABELS[supportState]}
+            </Badge>
           </div>
-          {status === "success" ? (
-            <p className="mt-3 text-muted-foreground text-xs">
-              Klucz bezpieczeństwa został dodany. Możesz teraz logować się bez
-              hasła.
-            </p>
-          ) : null}
-        </div>
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <p className="font-medium text-sm">
+                  Dodaj nowy klucz bezpieczeństwa
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Potwierdź biometrią, kluczem sprzętowym lub PIN-em.
+                </p>
+              </div>
+              <Button
+                disabled={isDisabled}
+                isLoading={isLoading}
+                onClick={handleAddPasskey}
+                type="button"
+              >
+                Dodaj klucz bezpieczeństwa
+              </Button>
+            </div>
+            {status === "success" ? (
+              <p className="mt-3 text-muted-foreground text-xs">
+                Klucz bezpieczeństwa został dodany. Możesz teraz logować się bez
+                hasła.
+              </p>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
+    </>
   )
 }

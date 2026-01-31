@@ -4,6 +4,11 @@ import { createApiSchema } from "./create-api-schema"
 
 const txtEncoder = new TextEncoder()
 
+export const TFAMethods = z.enum(["AUTHENTICATOR", "SMS", "EMAIL"])
+export type TwoFactorMethod = z.infer<typeof TFAMethods>
+
+export type ResendType = Exclude<TwoFactorMethod, "AUTHENTICATOR">
+
 export const PasswordSchema = z
   .string()
   .min(8, "Hasło musi mieć co najmniej 8 znaków")
@@ -29,9 +34,20 @@ const OTPSchema = z
     return val.length === OTP_LENGTH
   }, `Kod 2FA musi mieć dokładnie ${OTP_LENGTH} znaków`)
 
+export const Check2FASchema = createApiSchema({
+  POST: {
+    input: z.object({
+      code: OTPSchema,
+      method: TFAMethods,
+    }),
+    output: z.object({
+      success: z.literal(true),
+    }),
+  },
+})
+
 export const ChangePasswordFormSchema = z
   .object({
-    twoFactorCode: OTPSchema,
     newPassword: PasswordSchema,
     oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
     confirmPassword: z.string().min(1, "Potwierdzenie hasła jest wymagane"),
@@ -46,7 +62,6 @@ export const ChangePasswordSchema = createApiSchema({
     input: z.object({
       newPassword: PasswordSchema,
       oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
-      twoFactorCode: OTPSchema,
     }),
     output: z.null(),
   },
@@ -76,7 +91,7 @@ export const RegisterSchema = createApiSchema({
 
 export const WebAuthnStartRegistrationSchema = createApiSchema({
   POST: {
-    input: z.object({}),
+    input: z.null(),
     output: z.string(),
   },
 })
@@ -120,7 +135,7 @@ export const FormRegisterSchema = RegisterSchema.shape.POST.shape.input
 export const Verify2FASchema = createApiSchema({
   POST: {
     input: z.object({
-      method: z.enum(["AUTHENTICATOR", "SMS", "EMAIL"]),
+      method: TFAMethods,
       code: z.string().length(6, "Kod musi mieć dokładnie 6 cyfr"),
     }),
     output: z.null(),
@@ -155,6 +170,6 @@ export const ApiMeSchema = createApiSchema({
 
 export const TFASchema = createApiSchema({
   GET: {
-    output: z.array(z.enum(["AUTHENTICATOR", "SMS", "EMAIL"])),
+    output: z.array(TFAMethods),
   },
 })

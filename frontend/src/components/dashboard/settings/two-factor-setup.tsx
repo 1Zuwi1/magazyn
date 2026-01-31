@@ -21,7 +21,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { OTP_LENGTH } from "@/config/constants"
 import { apiFetch } from "@/lib/fetcher"
-import { TFASchema } from "@/lib/schemas"
+import { TFASchema, type TwoFactorMethod } from "@/lib/schemas"
 import {
   AUTHENTICATOR_QR_SIZE,
   COPY_FEEDBACK_TIMEOUT_MS,
@@ -34,7 +34,6 @@ import { OtpInput } from "./otp-input"
 import { generateTotpUri, QRCodeDisplay } from "./qr-code"
 import type {
   TwoFactorChallenge,
-  TwoFactorMethod,
   TwoFactorSetupStage,
   TwoFactorStatus,
 } from "./types"

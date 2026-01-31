@@ -1,12 +1,9 @@
 import { redirect } from "next/navigation"
 import { apiFetch } from "@/lib/fetcher"
-import { TFASchema } from "@/lib/schemas"
+import { type ResendType, TFASchema, type TwoFactorMethod } from "@/lib/schemas"
 import { getSession } from "@/lib/session"
 import tryCatch from "@/lib/try-catch"
-import TwoFactorForm, {
-  type ResendType,
-  type TwoFactorMethod,
-} from "./two-factor-form"
+import TwoFactorForm from "./two-factor-form"
 
 const METHOD_TITLES: Record<TwoFactorMethod, string> = {
   AUTHENTICATOR: "Wpisz kod z aplikacji uwierzytelniającej",

@@ -5,10 +5,11 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { TwoFactorMethod } from "@/lib/schemas"
 import { PasskeysSection } from "./passkeys-section"
 import { PasswordSection } from "./password-section"
 import { TwoFactorSetup } from "./two-factor-setup"
-import type { TwoFactorMethod, TwoFactorStatus } from "./types"
+import type { TwoFactorStatus } from "./types"
 
 interface SecuritySectionProps {
   userEmail: string
@@ -102,10 +103,7 @@ export function SecuritySection({ userEmail }: SecuritySectionProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <PasswordSection
-            twoFactorMethod={twoFactorMethod}
-            verificationRequired
-          />
+          <PasswordSection twoFactorMethod={twoFactorMethod} />
         </CardContent>
       </Card>
 

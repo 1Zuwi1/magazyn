@@ -10,17 +10,21 @@ vi.mock("sonner", () => ({
   },
 }))
 
+vi.mock("@/lib/fetcher", () => ({
+  apiFetch: vi.fn(() => Promise.resolve({ success: true })),
+}))
+
 vi.mock("./utils", () => ({
   wait: () => Promise.resolve(),
 }))
 
 vi.mock("./password-verification-section", () => ({
   PasswordVerificationSection: ({
-    onVerificationChange,
+    onVerify,
   }: {
-    onVerificationChange: (complete: boolean) => void
+    onVerify: (code: string) => void
   }) => (
-    <button onClick={() => onVerificationChange(true)} type="button">
+    <button onClick={() => onVerify("654321")} type="button">
       Zatwierdź weryfikację
     </button>
   ),
@@ -35,7 +39,7 @@ const CONFIRM_REGEX = /zatwierdź/i
 
 describe("PasswordSection", () => {
   it("blocks submission until 2FA verification completes", async () => {
-    render(<PasswordSection twoFactorMethod="EMAIL" verificationRequired />)
+    render(<PasswordSection twoFactorMethod="EMAIL" />)
 
     fireEvent.change(screen.getByLabelText(OLD_PASSWORD_REGEX), {
       target: { value: "OldPassword1!" },

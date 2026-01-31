@@ -20,12 +20,14 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { apiFetch } from "@/lib/fetcher"
-import { Resend2FASchema, Verify2FASchema } from "@/lib/schemas"
+import {
+  Resend2FASchema,
+  type ResendType,
+  type TwoFactorMethod,
+  Verify2FASchema,
+} from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
 import { getAnimationStyle } from "@/lib/utils"
-
-export type TwoFactorMethod = "AUTHENTICATOR" | "SMS" | "EMAIL"
-export type ResendType = Exclude<TwoFactorMethod, "AUTHENTICATOR">
 
 interface TwoFactorFormProps {
   linkedMethods: TwoFactorMethod[]

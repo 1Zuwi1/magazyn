@@ -6,7 +6,7 @@ import tryCatch from "./try-catch"
 
 const createApiSchemas = <S extends z.ZodTypeAny>(dataSchema: S) =>
   z.discriminatedUnion("success", [
-    z.object({ success: z.literal(true), data: dataSchema }),
+    z.object({ success: z.literal(true), data: dataSchema.optional() }),
     z.object({ success: z.literal(false), message: z.string() }),
   ])
 
