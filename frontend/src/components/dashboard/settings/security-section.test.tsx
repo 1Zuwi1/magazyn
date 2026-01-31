@@ -21,52 +21,38 @@ vi.mock("./two-factor-setup", () => ({
   TwoFactorSetup: ({
     method,
     onMethodChange,
-    onStatusChange,
     status,
   }: {
     method: TwoFactorMethod
     onMethodChange: (method: TwoFactorMethod) => void
-    onStatusChange: (status: TwoFactorStatus) => void
     status: TwoFactorStatus
   }) => (
     <div>
       <div data-testid="twofactor-status">{status}</div>
-      <button onClick={() => onStatusChange("ENABLED")} type="button">
-        Enable
-      </button>
-      <button onClick={() => onMethodChange("EMAIL")} type="button">
-        Switch to email
+      <button onClick={() => onMethodChange("SMS")} type="button">
+        Switch to SMS
       </button>
       <span>Method: {method}</span>
     </div>
   ),
 }))
 
-const BASIC_STATUS_REGEX = /podstawowe/i
-const ENABLE_BUTTON_REGEX = /enable/i
 const PROTECTED_STATUS_REGEX = /chronione/i
-const SWITCH_EMAIL_REGEX = /switch to email/i
+const SWITCH_SMS_REGEX = /switch to sms/i
 
 describe("SecuritySection", () => {
-  it("updates password verification requirement when 2FA is enabled", () => {
+  it("keeps 2FA enabled by default and updates method", () => {
     render(<SecuritySection userEmail="user@site.pl" />)
-
-    expect(screen.getByText(BASIC_STATUS_REGEX)).toBeInTheDocument()
-    expect(screen.getByTestId("password-section")).toHaveTextContent(
-      "optional-AUTHENTICATOR"
-    )
-
-    fireEvent.click(screen.getByRole("button", { name: ENABLE_BUTTON_REGEX }))
 
     expect(screen.getByText(PROTECTED_STATUS_REGEX)).toBeInTheDocument()
     expect(screen.getByTestId("password-section")).toHaveTextContent(
-      "required-AUTHENTICATOR"
+      "required-EMAIL"
     )
 
-    fireEvent.click(screen.getByRole("button", { name: SWITCH_EMAIL_REGEX }))
+    fireEvent.click(screen.getByRole("button", { name: SWITCH_SMS_REGEX }))
 
     expect(screen.getByTestId("password-section")).toHaveTextContent(
-      "required-EMAIL"
+      "required-SMS"
     )
   })
 })

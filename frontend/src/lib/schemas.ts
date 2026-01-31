@@ -150,3 +150,9 @@ export const ApiMeSchema = createApiSchema({
     }),
   },
 })
+
+export const TFASchema = createApiSchema({
+  GET: {
+    output: z.array(z.enum(["AUTHENTICATOR", "SMS", "EMAIL"])),
+  },
+})

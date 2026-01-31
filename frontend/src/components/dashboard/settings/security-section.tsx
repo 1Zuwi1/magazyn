@@ -5,7 +5,6 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TWO_FACTOR_METHODS } from "./constants"
 import { PasskeysSection } from "./passkeys-section"
 import { PasswordSection } from "./password-section"
 import { TwoFactorSetup } from "./two-factor-setup"
@@ -48,9 +47,8 @@ function SecurityStatusIndicator({ status }: { status: TwoFactorStatus }) {
 
 export function SecuritySection({ userEmail }: SecuritySectionProps) {
   // FIXME: In production this should be fetched from user settings
-  const [twoFactorMethod, setTwoFactorMethod] = useState<TwoFactorMethod>(
-    TWO_FACTOR_METHODS[0].value
-  )
+  const [twoFactorMethod, setTwoFactorMethod] =
+    useState<TwoFactorMethod>("EMAIL")
   return (
     <div className="space-y-6">
       <Card>

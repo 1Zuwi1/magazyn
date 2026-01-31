@@ -28,8 +28,7 @@ const MOCK_SESSION = {
   id: 1,
   email: "user@example.com",
   full_name: "Test User",
-  two_factor_enabled: false,
-  status: "VERIFIED",
+  account_status: "ACTIVE",
   role: "USER",
 }
 
@@ -130,7 +129,7 @@ describe("ProtectedPage", () => {
     })
 
     const mockSession = { ...MOCK_SESSION }
-    mockSession.status = "UNVERIFIED"
+    mockSession.account_status = "PENDING_VERIFICATION"
     mockGetSession.mockResolvedValue(mockSession)
 
     await expect(

@@ -336,8 +336,7 @@ describe("ApiMeSchema", () => {
       id: 1,
       email: "user@example.com",
       full_name: "Test User",
-      two_factor_enabled: true,
-      status: "VERIFIED",
+      account_status: "ACTIVE",
       role: "USER",
     }
 
@@ -351,8 +350,7 @@ describe("ApiMeSchema", () => {
       id: 1,
       email: "user@example.com",
       full_name: null,
-      two_factor_enabled: false,
-      status: "VERIFIED",
+      account_status: "ACTIVE",
       role: "ADMIN",
     }
 
@@ -366,8 +364,7 @@ describe("ApiMeSchema", () => {
       id: 1,
       email: "not-an-email",
       full_name: null,
-      two_factor_enabled: false,
-      status: "randomstatus",
+      account_status: "ACTIVE",
       role: "USER",
     }
 
@@ -381,8 +378,7 @@ describe("ApiMeSchema", () => {
       id: "not-a-number",
       email: "user@example.com",
       full_name: null,
-      two_factor_enabled: false,
-      status: "VERIFIED",
+      account_status: "ACTIVE",
       role: "USER",
     }
 
@@ -390,13 +386,12 @@ describe("ApiMeSchema", () => {
     expect(result.success).toBe(false)
   })
 
-  it("rejects non-boolean two_factor_enabled", () => {
+  it("rejects invalid account_status", () => {
     const invalidOutput = {
       id: 1,
       email: "user@example.com",
       full_name: null,
-      two_factor_enabled: "true",
-      status: "VERIFIED",
+      account_status: "VERIFIED",
       role: "USER",
     }
 

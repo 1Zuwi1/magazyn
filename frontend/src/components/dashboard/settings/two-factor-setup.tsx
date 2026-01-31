@@ -6,6 +6,7 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useQuery } from "@tanstack/react-query"
 import { useLocale } from "next-intl"
 import { useCallback, useEffect, useReducer, useRef, useState } from "react"
 import { toast } from "sonner"
@@ -18,6 +19,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { OTP_LENGTH } from "@/config/constants"
+import { apiFetch } from "@/lib/fetcher"
+import { TFASchema } from "@/lib/schemas"
 import {
   AUTHENTICATOR_QR_SIZE,
   COPY_FEEDBACK_TIMEOUT_MS,
@@ -52,9 +55,9 @@ function TwoFactorMethodInput({
   disabled?: boolean
 }) {
   const icons = {
-    authenticator: Key01Icon,
-    sms: SmartPhone01Icon,
-    email: Mail01Icon,
+    AUTHENTICATOR: Key01Icon,
+    SMS: SmartPhone01Icon,
+    EMAIL: Mail01Icon,
   }
 
   return (
@@ -507,6 +510,14 @@ function TwoFactorConfigurationSection({
 
   // Step 3 is complete only when fully enabled
   const step3Complete = status === "ENABLED"
+
+  const { data: _linkedMethods } = useQuery({
+    queryKey: ["linked-2fa-methods"],
+    queryFn: async () => {
+      const response = await apiFetch("/api/2fa", TFASchema)
+      return response
+    },
+  })
 
   return (
     <div className="space-y-4 rounded-xl border bg-muted/30 p-4">

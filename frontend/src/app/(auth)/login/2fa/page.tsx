@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation"
-import z from "zod"
-import { createApiSchema } from "@/lib/create-api-schema"
 import { apiFetch } from "@/lib/fetcher"
+import { TFASchema } from "@/lib/schemas"
 import { getSession } from "@/lib/session"
 import tryCatch from "@/lib/try-catch"
 import TwoFactorForm, {
@@ -23,12 +22,6 @@ const METHOD_SWITCH_LABELS: Record<TwoFactorMethod, string> = {
 
 const RESEND_METHODS: ResendType[] = ["SMS", "EMAIL"]
 
-const TfaSchema = createApiSchema({
-  GET: {
-    output: z.array(z.enum(["AUTHENTICATOR", "SMS", "EMAIL"])),
-  },
-})
-
 export default async function TwoFactorPage() {
   const session = await getSession()
 
@@ -36,7 +29,7 @@ export default async function TwoFactorPage() {
     redirect("/dashboard")
   }
 
-  const [err, linkedMethods] = await tryCatch(apiFetch("/api/2fa", TfaSchema))
+  const [err, linkedMethods] = await tryCatch(apiFetch("/api/2fa", TFASchema))
 
   if (err) {
     redirect("/login")

@@ -4,7 +4,7 @@ import ProtectedPage from "../../protected-page"
 export default function SettingsPage() {
   return (
     <ProtectedPage>
-      {(session) => {
+      {async (session) => {
         return (
           <SettingsContent
             user={{
