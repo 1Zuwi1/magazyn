@@ -13,10 +13,18 @@ export function useNotification(initialNotifications: Notification[]) {
     )
   }
 
+  const dismiss = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id))
+    if (selectedNotification?.id === id) {
+      setSelectedNotification(null)
+    }
+  }
+
   return {
     notifications,
     selectedNotification,
     setSelectedNotification,
     markAllAsRead,
+    dismiss,
   }
 }

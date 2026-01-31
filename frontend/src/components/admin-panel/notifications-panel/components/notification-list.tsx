@@ -3,20 +3,21 @@ import type { Notification } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { useNotification } from "../../hooks/use-notification"
 
 interface NotificationListProps {
   items: Notification[]
+  selectedNotification: Notification | null
+  onSelectNotification: (notification: Notification) => void
+  onMarkAllAsRead: () => void
 }
-export function NotificationList({ items }: NotificationListProps) {
-  const {
-    notifications,
-    selectedNotification,
-    setSelectedNotification,
-    markAllAsRead,
-  } = useNotification(items)
 
-  const hasUnread = notifications.some((n) => !n.read)
+export function NotificationList({
+  items,
+  selectedNotification,
+  onSelectNotification,
+  onMarkAllAsRead,
+}: NotificationListProps) {
+  const hasUnread = items.some((n) => !n.read)
 
   return (
     <div className="flex h-full flex-col">
@@ -25,7 +26,7 @@ export function NotificationList({ items }: NotificationListProps) {
         <Button
           className="cursor-pointer"
           disabled={!hasUnread}
-          onClick={markAllAsRead}
+          onClick={onMarkAllAsRead}
           size="sm"
           variant="outline"
         >
@@ -34,13 +35,13 @@ export function NotificationList({ items }: NotificationListProps) {
       </div>
       <ScrollArea className="flex-1">
         <div>
-          {notifications.map((item) => (
+          {items.map((item) => (
             <button
               className={cn(
                 "flex w-full flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent"
               )}
               key={item.id}
-              onClick={() => setSelectedNotification(item)}
+              onClick={() => onSelectNotification(item)}
               type="button"
             >
               <div className="flex w-full flex-col gap-1">

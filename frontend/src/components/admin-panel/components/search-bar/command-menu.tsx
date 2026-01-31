@@ -49,7 +49,7 @@ export function CommandMenu({
     <CommandDialog onOpenChange={setOpen} open={open}>
       <CommandInput
         defaultValue={initialQuery}
-        placeholder="Wpisz polecenie lub wyszukaj"
+        placeholder="Wyszukuj polecenie"
       />
       <CommandList>
         <ScrollArea className="h-72 pe-1">
