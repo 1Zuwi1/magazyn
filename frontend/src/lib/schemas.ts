@@ -93,7 +93,9 @@ export const WebAuthnFinishRegistrationSchema = createApiSchema({
 export const WebAuthnStartAssertionSchema = createApiSchema({
   POST: {
     input: z.object({}),
-    output: z.string(),
+    output: z.object({
+      challenge: z.string(),
+    }),
   },
 })
 

@@ -868,21 +868,22 @@ export function TwoFactorSetup({
     refetch: refetchLinkedMethods,
   } = useQuery({
     queryKey: ["linked-2fa-methods"],
-    queryFn: async () => {
-      const linked = await apiFetch("/api/2fa", TFASchema)
-
-      if (linked.includes(method)) {
-        const available = TWO_FACTOR_METHODS.find(
-          (m) => !linked.includes(m.value)
-        )?.value
-        if (available) {
-          onMethodChange(available)
-        }
-      }
-
-      return linked
-    },
+    queryFn: () => apiFetch("/api/2fa", TFASchema),
   })
+
+  useEffect(() => {
+    if (!linkedMethods) {
+      return
+    }
+    if (linkedMethods.includes(method)) {
+      const available = TWO_FACTOR_METHODS.find(
+        (m) => !linkedMethods.includes(m.value)
+      )?.value
+      if (available) {
+        onMethodChange(available)
+      }
+    }
+  }, [linkedMethods, method, onMethodChange])
   const [setupState, dispatch] = useReducer(
     twoFactorSetupReducer,
     initialTwoFactorSetupState
@@ -930,7 +931,12 @@ export function TwoFactorSetup({
       dispatch,
       startTimer,
       onSuccess: () => {
-        refetchLinkedMethods().catch(() => undefined)
+        refetchLinkedMethods().catch((error) => {
+          console.error("Failed to refresh linked two-factor methods", error)
+          toast.error(
+            "We couldn't refresh your two-factor methods. Your new method may not appear until you reload this page."
+          )
+        })
         resetFlow()
       },
     })
