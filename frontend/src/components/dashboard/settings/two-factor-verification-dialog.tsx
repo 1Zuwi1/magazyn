@@ -141,7 +141,6 @@ export function TwoFactorVerificationDialog({
           </Label>
           <RadioGroup
             aria-labelledby="verification-method-label"
-            // className={getMethodGridClass(methodOptions.length)}
             className={"grid gap-0"}
             onValueChange={(value) => {
               const nextMethod = value as TwoFactorMethod

@@ -7,15 +7,9 @@ import type { TwoFactorStatus } from "./types"
 vi.mock("./password-section", () => ({
   PasswordSection: ({
     twoFactorMethod,
-    verificationRequired,
   }: {
     twoFactorMethod: TwoFactorMethod
-    verificationRequired: boolean
-  }) => (
-    <div data-testid="password-section">
-      {verificationRequired ? "required" : "optional"}-{twoFactorMethod}
-    </div>
-  ),
+  }) => <div data-testid="password-section">{twoFactorMethod}</div>,
 }))
 
 vi.mock("./two-factor-setup", () => ({
@@ -46,14 +40,10 @@ describe("SecuritySection", () => {
     render(<SecuritySection userEmail="user@site.pl" />)
 
     expect(screen.getByText(PROTECTED_STATUS_REGEX)).toBeInTheDocument()
-    expect(screen.getByTestId("password-section")).toHaveTextContent(
-      "required-EMAIL"
-    )
+    expect(screen.getByTestId("password-section")).toHaveTextContent("EMAIL")
 
     fireEvent.click(screen.getByRole("button", { name: SWITCH_SMS_REGEX }))
 
-    expect(screen.getByTestId("password-section")).toHaveTextContent(
-      "required-SMS"
-    )
+    expect(screen.getByTestId("password-section")).toHaveTextContent("SMS")
   })
 })

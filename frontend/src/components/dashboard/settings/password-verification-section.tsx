@@ -231,7 +231,7 @@ export function PasswordVerificationSection({
       return
     }
 
-    requestCode(false)
+    requestCode()
   }, [method, requestCode])
 
   const handleResendCode = (): void => {

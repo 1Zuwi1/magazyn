@@ -27,7 +27,7 @@ import {
   Verify2FASchema,
 } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
-import { getAnimationStyle } from "@/lib/utils"
+import { cn, getAnimationStyle } from "@/lib/utils"
 
 interface TwoFactorFormProps {
   linkedMethods: TwoFactorMethod[]
@@ -221,11 +221,10 @@ export default function TwoFactorForm({
                               value={field.state.value}
                             >
                               <InputOTPGroup
-                                className={`${slotClassName} ${
-                                  isInvalid
-                                    ? "*:data-[slot=input-otp-slot]:border-destructive"
-                                    : ""
-                                }`}
+                                className={cn(slotClassName, {
+                                  "*:data-[slot=input-otp-slot]:border-destructive":
+                                    isInvalid,
+                                })}
                               >
                                 <InputOTPSlot index={0} />
                                 <InputOTPSlot index={1} />
@@ -235,11 +234,10 @@ export default function TwoFactorForm({
                               <InputOTPSeparator />
 
                               <InputOTPGroup
-                                className={`${slotClassName} ${
-                                  isInvalid
-                                    ? "*:data-[slot=input-otp-slot]:border-destructive"
-                                    : ""
-                                }`}
+                                className={cn(slotClassName, {
+                                  "*:data-[slot=input-otp-slot]:border-destructive":
+                                    isInvalid,
+                                })}
                               >
                                 <InputOTPSlot index={3} />
                                 <InputOTPSlot index={4} />
