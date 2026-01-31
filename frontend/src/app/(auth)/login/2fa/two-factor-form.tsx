@@ -42,6 +42,9 @@ export default function TwoFactorForm({
   methodSwitchLabels,
   otpLength,
 }: TwoFactorFormProps) {
+  if (linkedMethods.length === 0) {
+    throw new Error("TwoFactorForm requires at least one linked 2FA method.")
+  }
   const [defaultMethod] = useState(() => linkedMethods[0])
   const [isResending, setIsResending] = useState(false)
   const autoSubmittedRef = useRef(false)

@@ -122,7 +122,7 @@ describe("LoginSchema", () => {
   })
 
   it("rejects non-null output", () => {
-    const invalidOutput = { requiresTwoFactor: true }
+    const invalidOutput = {}
 
     const result = LoginSchema.shape.POST.shape.output.safeParse(invalidOutput)
 

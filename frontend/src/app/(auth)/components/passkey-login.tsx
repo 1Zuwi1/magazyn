@@ -32,19 +32,6 @@ interface PasskeyLoginProps {
   disabled?: boolean
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null
-
-const getRequiresTwoFactor = (value: unknown): boolean => {
-  if (!isRecord(value)) {
-    return false
-  }
-
-  return typeof value.requiresTwoFactor === "boolean"
-    ? value.requiresTwoFactor
-    : false
-}
-
 export default function PasskeyLogin({ disabled }: PasskeyLoginProps) {
   const router = useRouter()
   const [supportState, setSupportState] = useState<SupportState>("checking")
@@ -121,7 +108,7 @@ export default function PasskeyLogin({ disabled }: PasskeyLoginProps) {
 
       const credentialJson = serializeCredential(publicKeyCredential)
 
-      const [finishError, finishResponse] = await tryCatch(
+      const [finishError] = await tryCatch(
         apiFetch(
           "/api/webauthn/assertion/finish",
           WebAuthnFinishAssertionSchema,
@@ -141,9 +128,7 @@ export default function PasskeyLogin({ disabled }: PasskeyLoginProps) {
       }
 
       toast.success("Zalogowano kluczem bezpieczeństwa.")
-      router.push(
-        getRequiresTwoFactor(finishResponse) ? "/login/2fa" : "/dashboard"
-      )
+      router.push("/dashboard")
     } finally {
       setIsLoading(false)
     }
