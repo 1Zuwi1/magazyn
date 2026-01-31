@@ -45,6 +45,102 @@ import {
   verifyOneTimeCode,
 } from "./utils"
 
+const TWO_FACTOR_METHOD_ICONS: Record<TwoFactorMethod, typeof Key01Icon> = {
+  AUTHENTICATOR: Key01Icon,
+  SMS: SmartPhone01Icon,
+  EMAIL: Mail01Icon,
+}
+
+const TWO_FACTOR_METHOD_LABELS: Record<TwoFactorMethod, string> =
+  TWO_FACTOR_METHODS.reduce(
+    (acc, current) => {
+      acc[current.value] = current.label
+      return acc
+    },
+    {} as Record<TwoFactorMethod, string>
+  )
+
+const isIdleSetupStage = (stage: TwoFactorSetupStage): boolean =>
+  stage === "IDLE" || stage === "SUCCESS"
+
+const getLinkedMethodsState = (
+  linkedMethods: TwoFactorMethod[] | undefined,
+  method: TwoFactorMethod
+) => {
+  const safeLinkedMethods = linkedMethods ?? []
+  const availableMethods = TWO_FACTOR_METHODS.filter(
+    (candidate) =>
+      !safeLinkedMethods.includes(candidate.value as TwoFactorMethod)
+  )
+  const hasAvailableMethods = availableMethods.length > 0
+  const isSelectedLinked = safeLinkedMethods.includes(method)
+
+  return {
+    availableMethods,
+    hasAvailableMethods,
+    isSelectedLinked,
+    hasLinkedMethods: safeLinkedMethods.length > 0,
+  }
+}
+
+const getCanStartSetup = ({
+  status,
+  isIdleStage,
+  linkedMethods,
+  hasAvailableMethods,
+  isSelectedLinked,
+}: {
+  status: TwoFactorStatus
+  isIdleStage: boolean
+  linkedMethods: TwoFactorMethod[] | undefined
+  hasAvailableMethods: boolean
+  isSelectedLinked: boolean
+}): boolean => {
+  if (!isIdleStage) {
+    return false
+  }
+
+  if (status === "DISABLED") {
+    return true
+  }
+
+  if (status !== "ENABLED") {
+    return false
+  }
+
+  if (!(linkedMethods && hasAvailableMethods)) {
+    return false
+  }
+
+  return !isSelectedLinked
+}
+
+const getLinkedMethodsHint = ({
+  status,
+  linkedMethods,
+  hasAvailableMethods,
+  isSelectedLinked,
+}: {
+  status: TwoFactorStatus
+  linkedMethods: TwoFactorMethod[] | undefined
+  hasAvailableMethods: boolean
+  isSelectedLinked: boolean
+}): string | null => {
+  if (status !== "ENABLED" || linkedMethods === undefined) {
+    return null
+  }
+
+  if (!hasAvailableMethods) {
+    return "Wszystkie dostępne metody są już połączone."
+  }
+
+  if (isSelectedLinked) {
+    return "Wybrana metoda jest już połączona. Wybierz inną, aby dodać nową."
+  }
+
+  return "Wybierz metodę, którą chcesz dodać."
+}
+
 function TwoFactorMethodInput({
   method,
   onMethodChange,
@@ -54,12 +150,6 @@ function TwoFactorMethodInput({
   onMethodChange: (method: TwoFactorMethod) => void
   disabled?: boolean
 }) {
-  const icons = {
-    AUTHENTICATOR: Key01Icon,
-    SMS: SmartPhone01Icon,
-    EMAIL: Mail01Icon,
-  }
-
   return (
     <RadioGroup
       className="grid gap-3 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3"
@@ -70,7 +160,7 @@ function TwoFactorMethodInput({
       value={method}
     >
       {TWO_FACTOR_METHODS.map((m) => {
-        const Icon = icons[m.value as keyof typeof icons]
+        const Icon = TWO_FACTOR_METHOD_ICONS[m.value as TwoFactorMethod]
         const isSelected = method === m.value
 
         return (
@@ -158,6 +248,7 @@ interface TwoFactorSetupFlowParams {
   setupState: TwoFactorSetupState
   dispatch: (action: TwoFactorSetupAction) => void
   startTimer: (cooldown?: number) => void
+  onSuccess?: () => void
 }
 
 function useTwoFactorSetupFlow({
@@ -166,6 +257,7 @@ function useTwoFactorSetupFlow({
   setupState,
   dispatch,
   startTimer,
+  onSuccess,
 }: TwoFactorSetupFlowParams) {
   const { challenge, code } = setupState
   const resetFlow = useCallback(() => {
@@ -185,6 +277,7 @@ function useTwoFactorSetupFlow({
 
   const startSetup = async () => {
     dispatch({ type: "set_error", error: "" })
+    dispatch({ type: "set_code", code: "" })
     dispatch({ type: "set_stage", stage: "REQUESTING" })
 
     try {
@@ -236,6 +329,7 @@ function useTwoFactorSetupFlow({
             TWO_FACTOR_METHODS.find((m) => m.value === method)?.label
           }.`,
         })
+        onSuccess?.()
       } else {
         dispatch({
           type: "set_error",
@@ -260,6 +354,49 @@ interface TwoFactorSetupProps {
   method: TwoFactorMethod
   onMethodChange: (method: TwoFactorMethod) => void
   userEmail?: string
+}
+
+function ConnectedMethods({
+  linkedMethods,
+  isLoading,
+}: {
+  linkedMethods?: TwoFactorMethod[]
+  isLoading: boolean
+}) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+        <Spinner className="size-4" />
+        <span>Ładujemy połączone metody...</span>
+      </div>
+    )
+  }
+
+  if (!linkedMethods?.length) {
+    return (
+      <p className="text-muted-foreground text-xs">Brak połączonych metod.</p>
+    )
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {linkedMethods.map((linkedMethod) => {
+        const Icon = TWO_FACTOR_METHOD_ICONS[linkedMethod]
+        const label = TWO_FACTOR_METHOD_LABELS[linkedMethod] ?? linkedMethod
+
+        return (
+          <Badge
+            className="flex items-center gap-1"
+            key={linkedMethod}
+            variant="secondary"
+          >
+            <HugeiconsIcon icon={Icon} size={12} />
+            <span>{label}</span>
+          </Badge>
+        )
+      })}
+    </div>
+  )
 }
 
 function AuthenticatorSetup({
@@ -485,6 +622,8 @@ function TwoFactorConfigurationSection({
   onMethodChange,
   onStartSetup,
   onCancelSetup,
+  linkedMethods,
+  isLinkedMethodsLoading,
 }: {
   status: TwoFactorStatus
   setupStage: TwoFactorSetupStage
@@ -492,10 +631,29 @@ function TwoFactorConfigurationSection({
   onMethodChange: (method: TwoFactorMethod) => void
   onStartSetup: () => void
   onCancelSetup: () => void
+  linkedMethods?: TwoFactorMethod[]
+  isLinkedMethodsLoading: boolean
 }) {
-  // User can only change method in Step 1 (when not in setup phase or fully enabled)
-  const canSelectMethod =
-    (status === "DISABLED" || setupStage === "IDLE") && status !== "ENABLED"
+  const isIdleStage = isIdleSetupStage(setupStage)
+  const isSetupInProgress = !isIdleStage
+  const { hasAvailableMethods, isSelectedLinked } = getLinkedMethodsState(
+    linkedMethods,
+    method
+  )
+  const canStartSetup = getCanStartSetup({
+    status,
+    isIdleStage,
+    linkedMethods,
+    hasAvailableMethods,
+    isSelectedLinked,
+  })
+  const canSelectMethod = isIdleStage
+  const linkedMethodsHint = getLinkedMethodsHint({
+    status,
+    linkedMethods,
+    hasAvailableMethods,
+    isSelectedLinked,
+  })
 
   // Step 1 is complete when setup has started (method selected)
   const step1Complete = status === "SETUP" || status === "ENABLED"
@@ -511,14 +669,6 @@ function TwoFactorConfigurationSection({
   // Step 3 is complete only when fully enabled
   const step3Complete = status === "ENABLED"
 
-  const { data: _linkedMethods } = useQuery({
-    queryKey: ["linked-2fa-methods"],
-    queryFn: async () => {
-      const response = await apiFetch("/api/2fa", TFASchema)
-      return response
-    },
-  })
-
   return (
     <div className="space-y-4 rounded-xl border bg-muted/30 p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -529,8 +679,9 @@ function TwoFactorConfigurationSection({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {status === "DISABLED" ? (
+          {status === "DISABLED" && !isSetupInProgress ? (
             <Button
+              disabled={!canStartSetup}
               isLoading={setupStage === "REQUESTING"}
               onClick={onStartSetup}
               type="button"
@@ -538,7 +689,16 @@ function TwoFactorConfigurationSection({
               Rozpocznij konfigurację
             </Button>
           ) : null}
-          {status === "SETUP" ? (
+          {status === "ENABLED" && !isSetupInProgress ? (
+            <Button
+              disabled={!canStartSetup}
+              onClick={onStartSetup}
+              type="button"
+            >
+              Dodaj metodę
+            </Button>
+          ) : null}
+          {status === "SETUP" || isSetupInProgress ? (
             <Button onClick={onCancelSetup} type="button" variant="outline">
               Anuluj konfigurację
             </Button>
@@ -561,11 +721,23 @@ function TwoFactorConfigurationSection({
         </div>
       </div>
 
+      <div className="space-y-2">
+        <p className="text-muted-foreground text-xs">Połączone metody</p>
+        <ConnectedMethods
+          isLoading={isLinkedMethodsLoading}
+          linkedMethods={linkedMethods}
+        />
+      </div>
+
       <TwoFactorMethodInput
         disabled={!canSelectMethod}
         method={method}
         onMethodChange={onMethodChange}
       />
+
+      {linkedMethodsHint ? (
+        <p className="text-muted-foreground text-xs">{linkedMethodsHint}</p>
+      ) : null}
     </div>
   )
 }
@@ -576,6 +748,17 @@ export function TwoFactorSetup({
   onMethodChange,
   userEmail,
 }: TwoFactorSetupProps) {
+  const {
+    data: linkedMethods,
+    isLoading: isLinkedMethodsLoading,
+    refetch: refetchLinkedMethods,
+  } = useQuery({
+    queryKey: ["linked-2fa-methods"],
+    queryFn: async () => {
+      const response = await apiFetch("/api/2fa", TFASchema)
+      return response
+    },
+  })
   const [setupState, dispatch] = useReducer(
     twoFactorSetupReducer,
     initialTwoFactorSetupState
@@ -590,7 +773,8 @@ export function TwoFactorSetup({
     note: setupNote,
   } = setupState
   const enabled = status === "ENABLED"
-  const setupActive = status === "SETUP"
+  const setupActive =
+    status === "SETUP" || (setupStage !== "IDLE" && setupStage !== "SUCCESS")
   const isBusy =
     setupStage === "REQUESTING" ||
     setupStage === "SENDING" ||
@@ -627,6 +811,9 @@ export function TwoFactorSetup({
       setupState,
       dispatch,
       startTimer,
+      onSuccess: () => {
+        refetchLinkedMethods().catch(() => undefined)
+      },
     })
 
   const handleCancelSetup = (): void => {
@@ -644,6 +831,8 @@ export function TwoFactorSetup({
   return (
     <div className="space-y-6">
       <TwoFactorConfigurationSection
+        isLinkedMethodsLoading={isLinkedMethodsLoading}
+        linkedMethods={linkedMethods}
         method={method}
         onCancelSetup={handleCancelSetup}
         onMethodChange={onMethodChange}

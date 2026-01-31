@@ -1,9 +1,15 @@
 import { fireEvent, render, screen } from "@testing-library/react"
 import { useState } from "react"
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { RECOVERY_CODES } from "./constants"
 import { TwoFactorSetup } from "./two-factor-setup"
 import type { TwoFactorMethod, TwoFactorStatus } from "./types"
+
+const mockUseQuery = vi.fn()
+
+vi.mock("@tanstack/react-query", () => ({
+  useQuery: (...args: unknown[]) => mockUseQuery(...args),
+}))
 
 vi.mock("next-intl", () => ({
   useLocale: () => "pl",
@@ -60,6 +66,7 @@ vi.mock("./use-countdown", async () => {
 })
 
 const START_SETUP_REGEX = /rozpocznij konfigurację/i
+const ADD_METHOD_REGEX = /dodaj metodę/i
 const ACTIVE_STATUS_REGEX = /2fa aktywna/i
 const SHOW_CODES_REGEX = /pokaż/i
 const RECOVERY_CODES_REGEX = /kody odzyskiwania/i
@@ -85,13 +92,19 @@ function TwoFactorSetupHarness({
 }
 
 describe("TwoFactorSetup", () => {
+  beforeEach(() => {
+    mockUseQuery.mockReturnValue({
+      data: ["EMAIL"],
+      isLoading: false,
+      refetch: vi.fn(),
+    })
+  })
+
   it("renders enabled state by default", () => {
     render(<TwoFactorSetupHarness />)
 
     expect(screen.getByText(ACTIVE_STATUS_REGEX)).toBeInTheDocument()
-    expect(
-      screen.queryByRole("button", { name: START_SETUP_REGEX })
-    ).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: ADD_METHOD_REGEX })).toBeEnabled()
   })
 
   it("shows start action when 2FA is disabled", () => {
