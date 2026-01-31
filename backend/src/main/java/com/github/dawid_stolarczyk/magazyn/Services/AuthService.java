@@ -13,6 +13,7 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
+import com.github.dawid_stolarczyk.magazyn.Utils.CodeGenerator;
 import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -78,7 +79,7 @@ public class AuthService {
         newUser.setRole(UserRole.USER);
         newUser.setStatus(AccountStatus.PENDING_VERIFICATION);
 
-        newUser.setUserHandle(Hasher.generateRandomBase64Url());
+        newUser.setUserHandle(CodeGenerator.generateRandomBase64Url());
 
         EmailVerification emailVerification = new EmailVerification();
         String emailVerificationToken = UUID.randomUUID().toString();

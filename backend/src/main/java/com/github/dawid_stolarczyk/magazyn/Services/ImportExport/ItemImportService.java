@@ -1,11 +1,13 @@
-package com.github.dawid_stolarczyk.magazyn.Services;
+package com.github.dawid_stolarczyk.magazyn.Services.ImportExport;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackDto;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackImportError;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackImportReport;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemDto;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemImportError;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemImportReport;
+import com.github.dawid_stolarczyk.magazyn.Services.ItemService;
 import com.github.dawid_stolarczyk.magazyn.Utils.CsvImportUtils;
 import com.github.dawid_stolarczyk.magazyn.Utils.CsvImportUtils.CsvRow;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,33 +17,32 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class RackImportService {
-    private static final int EXPECTED_COLUMNS =12;
+public class ItemImportService {
+    private static final int EXPECTED_COLUMNS = 10;
     private static final String[] REQUIRED_COLUMNS = {
-            "marker",
-            "warehouse_id",
-            "comment",
-            "size_x",
-            "size_y",
+            "name",
             "min_temp",
             "max_temp",
-            "max_weight",
-            "max_size_x",
-            "max_size_y",
-            "max_size_z",
-            "accepts_dangerous"
+            "weight",
+            "size_x",
+            "size_y",
+            "size_z",
+            "comment",
+            "expire_after_days",
+            "is_dangerous"
     };
 
-    private final RackService rackService;
+    private final ItemService itemService;
 
-    public RackImportReport importFromCsv(MultipartFile file) {
+    public ItemImportReport importFromCsv(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("EMPTY_FILE");
         }
 
-        List<RackImportError> errors = new ArrayList<>();
+        List<ItemImportError> errors = new ArrayList<>();
         int processedLines = 0;
         int imported = 0;
 
@@ -62,21 +63,13 @@ public class RackImportService {
             headerIndex = CsvImportUtils.buildHeaderIndex(headerRow.columns());
         } catch (IllegalArgumentException ex) {
             errors.add(error(headerRow.lineNumber(), ex.getMessage(), headerRow.rawLine()));
-            return RackImportReport.builder()
-                    .processedLines(0)
-                    .imported(0)
-                    .errors(errors)
-                    .build();
+            return report(0, 0, errors);
         }
 
         for (String required : REQUIRED_COLUMNS) {
             if (!headerIndex.containsKey(required)) {
                 errors.add(error(headerRow.lineNumber(), "MISSING_COLUMN " + required, headerRow.rawLine()));
-                return RackImportReport.builder()
-                        .processedLines(0)
-                        .imported(0)
-                        .errors(errors)
-                        .build();
+                return report(0, 0, errors);
             }
         }
 
@@ -84,11 +77,7 @@ public class RackImportService {
             errors.add(error(headerRow.lineNumber(),
                     "INVALID_COLUMN_COUNT expected=" + EXPECTED_COLUMNS + " actual=" + headerIndex.size(),
                     headerRow.rawLine()));
-            return RackImportReport.builder()
-                    .processedLines(0)
-                    .imported(0)
-                    .errors(errors)
-                    .build();
+            return report(0, 0, errors);
         }
 
         for (int i = 1; i < rows.size(); i++) {
@@ -104,43 +93,46 @@ public class RackImportService {
             }
 
             try {
-                RackDto dto = mapToRackDto(columns, headerIndex);
-                rackService.createRack(dto);
+                ItemDto dto = mapToDto(columns, headerIndex);
+                log.info("Importing item from line {}: {}", row.lineNumber(), dto);
+                itemService.createItem(dto);
                 imported++;
             } catch (IllegalArgumentException ex) {
                 errors.add(error(row.lineNumber(), ex.getMessage(), row.rawLine()));
             }
         }
 
-        return RackImportReport.builder()
+        return report(processedLines, imported, errors);
+    }
+
+    private ItemImportReport report(int processedLines, int imported, List<ItemImportError> errors) {
+        return ItemImportReport.builder()
                 .processedLines(processedLines)
                 .imported(imported)
                 .errors(errors)
                 .build();
     }
 
-    private RackImportError error(int lineNumber, String message, String rawLine) {
-        return RackImportError.builder()
+    private ItemImportError error(int lineNumber, String message, String rawLine) {
+        return ItemImportError.builder()
                 .lineNumber(lineNumber)
                 .message(message)
                 .rawLine(rawLine)
                 .build();
     }
 
-    private RackDto mapToRackDto(String[] columns, Map<String, Integer> headerIndex) {
-        RackDto dto = new RackDto();
-        dto.setMarker(emptyToNull(value(columns, headerIndex, "marker")));
-        dto.setWarehouseId(parseLong(value(columns, headerIndex, "warehouse_id"), "INVALID_WAREHOUSE_ID"));
-        dto.setComment(emptyToNull(value(columns, headerIndex, "comment")));
-        dto.setSizeX(parseInt(value(columns, headerIndex, "size_x"), "INVALID_SIZE_X"));
-        dto.setSizeY(parseInt(value(columns, headerIndex, "size_y"), "INVALID_SIZE_Y"));
+    private ItemDto mapToDto(String[] columns, Map<String, Integer> headerIndex) {
+        ItemDto dto = new ItemDto();
+        dto.setName(value(columns, headerIndex, "name"));
         dto.setMinTemp(parseFloat(value(columns, headerIndex, "min_temp"), "INVALID_MIN_TEMP"));
         dto.setMaxTemp(parseFloat(value(columns, headerIndex, "max_temp"), "INVALID_MAX_TEMP"));
-        dto.setMaxWeight(parseFloat(value(columns, headerIndex, "max_weight"), "INVALID_MAX_WEIGHT"));
-        dto.setMaxSizeX(parseFloat(value(columns, headerIndex, "max_size_x"), "INVALID_MAX_SIZE_X"));
-        dto.setMaxSizeY(parseFloat(value(columns, headerIndex, "max_size_y"), "INVALID_MAX_SIZE_Y"));
-        dto.setMaxSizeZ(parseFloat(value(columns, headerIndex, "max_size_z"), "INVALID_MAX_SIZE_Z"));
-        dto.setAcceptsDangerous(parseBoolean(value(columns, headerIndex, "accepts_dangerous"), "INVALID_ACCEPTS_DANGEROUS"));
+        dto.setWeight(parseFloat(value(columns, headerIndex, "weight"), "INVALID_WEIGHT"));
+        dto.setSizeX(parseFloat(value(columns, headerIndex, "size_x"), "INVALID_SIZE_X"));
+        dto.setSizeY(parseFloat(value(columns, headerIndex, "size_y"), "INVALID_SIZE_Y"));
+        dto.setSizeZ(parseFloat(value(columns, headerIndex, "size_z"), "INVALID_SIZE_Z"));
+        dto.setComment(value(columns, headerIndex, "comment"));
+        dto.setExpireAfterDays(parseLong(value(columns, headerIndex, "expire_after_days"), "INVALID_EXPIRE_AFTER_DAYS"));
+        dto.setDangerous(parseBoolean(value(columns, headerIndex, "is_dangerous"), "INVALID_IS_DANGEROUS"));
 
         return dto;
     }
@@ -154,22 +146,9 @@ public class RackImportService {
         return raw.equalsIgnoreCase("NULL") ? "" : raw;
     }
 
-    private String emptyToNull(String value) {
-        String trimmed = value == null ? "" : value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
-    }
-
     private long parseLong(String value, String errorCode) {
         try {
             return Long.parseLong(value.trim());
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException(errorCode, ex);
-        }
-    }
-
-    private int parseInt(String value, String errorCode) {
-        try {
-            return Integer.parseInt(value.trim());
         } catch (NumberFormatException ex) {
             throw new IllegalArgumentException(errorCode, ex);
         }

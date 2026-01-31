@@ -1,8 +1,8 @@
 package com.github.dawid_stolarczyk.magazyn.Services;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentDto;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentImportError;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentImportReport;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseDto;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseImportError;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseImportReport;
 import com.github.dawid_stolarczyk.magazyn.Utils.CsvImportUtils;
 import com.github.dawid_stolarczyk.magazyn.Utils.CsvImportUtils.CsvRow;
 import lombok.RequiredArgsConstructor;
@@ -10,33 +10,26 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class AssortmentImportService {
+public class WarehouseImportService {
+    private static final int EXPECTED_COLUMNS = 1;
     private static final String[] REQUIRED_COLUMNS = {
-            "item_id",
-            "rack_id",
-            "position_x",
-            "position_y"
+            "name"
     };
 
-    private final AssortmentService assortmentService;
+    private final WarehouseService warehouseService;
 
-    public AssortmentImportReport importFromCsv(MultipartFile file) {
+    public WarehouseImportReport importFromCsv(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("EMPTY_FILE");
         }
 
-        List<AssortmentImportError> errors = new ArrayList<>();
+        List<WarehouseImportError> errors = new ArrayList<>();
         int processedLines = 0;
         int imported = 0;
 
@@ -67,6 +60,13 @@ public class AssortmentImportService {
             }
         }
 
+        if (headerIndex.size() != EXPECTED_COLUMNS) {
+            errors.add(error(headerRow.lineNumber(),
+                    "INVALID_COLUMN_COUNT expected=" + EXPECTED_COLUMNS + " actual=" + headerIndex.size(),
+                    headerRow.rawLine()));
+            return report(0, 0, errors);
+        }
+
         for (int i = 1; i < rows.size(); i++) {
             CsvRow row = rows.get(i);
             processedLines++;
@@ -80,10 +80,10 @@ public class AssortmentImportService {
             }
 
             try {
-                AssortmentDto dto = mapToDto(columns, headerIndex);
-                assortmentService.createAssortment(dto);
+                WarehouseDto dto = mapToDto(columns, headerIndex);
+                warehouseService.createWarehouse(dto);
                 imported++;
-            } catch (IllegalArgumentException ex) {
+            } catch (Exception ex) {
                 errors.add(error(row.lineNumber(), ex.getMessage(), row.rawLine()));
             }
         }
@@ -91,30 +91,28 @@ public class AssortmentImportService {
         return report(processedLines, imported, errors);
     }
 
-    private AssortmentImportReport report(int processedLines, int imported, List<AssortmentImportError> errors) {
-        return AssortmentImportReport.builder()
+    private WarehouseImportReport report(int processedLines, int imported, List<WarehouseImportError> errors) {
+        return WarehouseImportReport.builder()
                 .processedLines(processedLines)
                 .imported(imported)
                 .errors(errors)
                 .build();
     }
 
-    private AssortmentImportError error(int lineNumber, String message, String rawLine) {
-        return AssortmentImportError.builder()
+    private WarehouseImportError error(int lineNumber, String message, String rawLine) {
+        return WarehouseImportError.builder()
                 .lineNumber(lineNumber)
                 .message(message)
                 .rawLine(rawLine)
                 .build();
     }
 
-    private AssortmentDto mapToDto(String[] columns, Map<String, Integer> headerIndex) {
-        AssortmentDto dto = new AssortmentDto();
-        dto.setItemId(parseLong(value(columns, headerIndex, "item_id"), "INVALID_ITEM_ID"));
-        dto.setRackId(parseLong(value(columns, headerIndex, "rack_id"), "INVALID_RACK_ID"));
-        dto.setPositionX(parseInt(value(columns, headerIndex, "position_x"), "INVALID_POSITION_X"));
-        dto.setPositionY(parseInt(value(columns, headerIndex, "position_y"), "INVALID_POSITION_Y"));
-        dto.setExpiresAt(parseTimestamp(value(columns, headerIndex, "expires_at"), "INVALID_EXPIRES_AT"));
-
+    private WarehouseDto mapToDto(String[] columns, Map<String, Integer> headerIndex) {
+        WarehouseDto dto = new WarehouseDto();
+        dto.setName(value(columns, headerIndex, "name"));
+        if (dto.getName() == null || dto.getName().isBlank()) {
+            throw new IllegalArgumentException("INVALID_NAME");
+        }
         return dto;
     }
 
@@ -125,37 +123,5 @@ public class AssortmentImportService {
         }
         String raw = columns[idx].trim();
         return raw.equalsIgnoreCase("NULL") ? "" : raw;
-    }
-
-    private long parseLong(String value, String errorCode) {
-        try {
-            return Long.parseLong(value.trim());
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException(errorCode, ex);
-        }
-    }
-
-    private int parseInt(String value, String errorCode) {
-        try {
-            return Integer.parseInt(value.trim());
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException(errorCode, ex);
-        }
-    }
-
-    private Timestamp parseTimestamp(String value, String errorCode) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        try {
-            return Timestamp.from(Instant.parse(value));
-        } catch (DateTimeParseException ex) {
-            try {
-                LocalDate date = LocalDate.parse(value);
-                return Timestamp.from(date.atStartOfDay().toInstant(ZoneOffset.UTC));
-            } catch (DateTimeParseException nested) {
-                throw new IllegalArgumentException(errorCode, ex);
-            }
-        }
     }
 }

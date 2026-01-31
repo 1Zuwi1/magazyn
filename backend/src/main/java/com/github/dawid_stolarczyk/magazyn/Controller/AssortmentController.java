@@ -3,7 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Controller;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentImportReport;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
-import com.github.dawid_stolarczyk.magazyn.Services.AssortmentImportService;
+import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.AssortmentImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.AssortmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -56,6 +57,7 @@ public class AssortmentController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseTemplate<AssortmentDto>> createAssortment(@Valid @RequestBody AssortmentDto assortmentDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(assortmentService.createAssortment(assortmentDto)));
     }
@@ -68,6 +70,7 @@ public class AssortmentController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseTemplate<AssortmentDto>> updateAssortment(@PathVariable Long id, @Valid @RequestBody AssortmentDto assortmentDto) {
         return ResponseEntity.ok(ResponseTemplate.success(assortmentService.updateAssortment(id, assortmentDto)));
     }
@@ -80,6 +83,7 @@ public class AssortmentController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseTemplate<Void>> deleteAssortment(@PathVariable Long id) {
         assortmentService.deleteAssortment(id);
         return ResponseEntity.ok(ResponseTemplate.success());
@@ -93,6 +97,7 @@ public class AssortmentController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping(value = "/import", consumes = "multipart/form-data")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseTemplate<AssortmentImportReport>> importAssortments(
             @RequestPart("file") MultipartFile file) {
         return ResponseEntity.ok(ResponseTemplate.success(assortmentImportService.importFromCsv(file)));

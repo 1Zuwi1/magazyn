@@ -3,7 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Controller;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackImportReport;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
-import com.github.dawid_stolarczyk.magazyn.Services.RackImportService;
+import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.RackImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.RackService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -64,6 +65,7 @@ public class RackController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseTemplate<RackDto>> createRack(@Valid @RequestBody RackDto rackDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(rackService.createRack(rackDto)));
     }
@@ -76,6 +78,7 @@ public class RackController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseTemplate<RackDto>> updateRack(@PathVariable Long id, @Valid @RequestBody RackDto rackDto) {
         return ResponseEntity.ok(ResponseTemplate.success(rackService.updateRack(id, rackDto)));
     }
@@ -88,6 +91,7 @@ public class RackController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseTemplate<Void>> deleteRack(@PathVariable Long id) {
         rackService.deleteRack(id);
         return ResponseEntity.ok(ResponseTemplate.success());
@@ -101,7 +105,11 @@ public class RackController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping(value = "/import", consumes = "multipart/form-data")
-    public ResponseEntity<ResponseTemplate<RackImportReport>> importRacks(@RequestPart("file") MultipartFile file) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<RackImportReport>> importRacks(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("warehouseId") Long warehouseId
+    ) {
         return ResponseEntity.ok(ResponseTemplate.success(rackImportService.importFromCsv(file)));
     }
 }

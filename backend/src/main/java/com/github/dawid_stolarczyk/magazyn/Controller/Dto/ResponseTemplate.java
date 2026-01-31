@@ -44,6 +44,22 @@ public class ResponseTemplate<T> {
         private AssortmentImportReport data;
     }
 
+    @Schema(name = "ApiSuccessItemImport")
+    @Getter
+    public static class ApiSuccessItemImport {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private ItemImportReport data;
+    }
+
+    @Schema(name = "ApiSuccessWarehouseImport")
+    @Getter
+    public static class ApiSuccessWarehouseImport {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private WarehouseImportReport data;
+    }
+
     @Schema(name = "ApiError")
     @Getter
     public static class ApiError {

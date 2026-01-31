@@ -6,7 +6,6 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.Rack;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Warehouse;
 import com.github.dawid_stolarczyk.magazyn.Repositories.RackRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.WarehouseRepository;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,19 +21,13 @@ public class RackService {
 
     public List<RackDto> getAllRacks() {
         return rackRepository.findAll().stream()
-                .filter(rack -> rack.getWarehouse() != null
-                        && rack.getWarehouse().getUser() != null
-                        && rack.getWarehouse().getUser().getId().equals(AuthUtil.getCurrentAuthPrincipal().getUserId()))
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
     public List<RackDto> getRacksByWarehouse(Long warehouseId) {
-        Warehouse warehouse = warehouseRepository.findById(warehouseId)
-                .orElseThrow(() -> new IllegalArgumentException(InventoryError.WAREHOUSE_NOT_FOUND.name()));
-        if (warehouse.getUser() == null
-                || !warehouse.getUser().getId().equals(AuthUtil.getCurrentAuthPrincipal().getUserId())) {
-            throw new IllegalArgumentException(InventoryError.WAREHOUSE_ACCESS_DENIED.name());
+        if (!warehouseRepository.existsById(warehouseId)) {
+            throw new IllegalArgumentException(InventoryError.WAREHOUSE_NOT_FOUND.name());
         }
         return rackRepository.findByWarehouseId(warehouseId).stream()
                 .map(this::mapToDto)
@@ -44,11 +37,6 @@ public class RackService {
     public RackDto getRackById(Long id) {
         Rack rack = rackRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.RACK_NOT_FOUND.name()));
-        Warehouse rackWarehouse = rack.getWarehouse();
-        if (rackWarehouse == null || rackWarehouse.getUser() == null
-                || !rackWarehouse.getUser().getId().equals(AuthUtil.getCurrentAuthPrincipal().getUserId())) {
-            throw new IllegalArgumentException(InventoryError.WAREHOUSE_ACCESS_DENIED.name());
-        }
         return mapToDto(rack);
     }
 
@@ -57,10 +45,6 @@ public class RackService {
         validateRackDto(rackDto);
         Warehouse warehouse = warehouseRepository.findById(rackDto.getWarehouseId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.WAREHOUSE_NOT_FOUND.name()));
-        if (warehouse.getUser() == null
-                || !warehouse.getUser().getId().equals(AuthUtil.getCurrentAuthPrincipal().getUserId())) {
-            throw new IllegalArgumentException(InventoryError.WAREHOUSE_ACCESS_DENIED.name());
-        }
 
         Rack rack = new Rack();
         updateRackFromDto(rack, rackDto);
@@ -74,18 +58,9 @@ public class RackService {
         validateRackDto(rackDto);
         Rack rack = rackRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.RACK_NOT_FOUND.name()));
-        Warehouse currentWarehouse = rack.getWarehouse();
-        if (currentWarehouse == null || currentWarehouse.getUser() == null
-                || !currentWarehouse.getUser().getId().equals(AuthUtil.getCurrentAuthPrincipal().getUserId())) {
-            throw new IllegalArgumentException(InventoryError.WAREHOUSE_ACCESS_DENIED.name());
-        }
 
         Warehouse warehouse = warehouseRepository.findById(rackDto.getWarehouseId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.WAREHOUSE_NOT_FOUND.name()));
-        if (warehouse.getUser() == null
-                || !warehouse.getUser().getId().equals(AuthUtil.getCurrentAuthPrincipal().getUserId())) {
-            throw new IllegalArgumentException(InventoryError.WAREHOUSE_ACCESS_DENIED.name());
-        }
 
         updateRackFromDto(rack, rackDto);
         rack.setWarehouse(warehouse);
@@ -97,11 +72,6 @@ public class RackService {
     public void deleteRack(Long id) {
         Rack rack = rackRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.RACK_NOT_FOUND.name()));
-        Warehouse warehouse = rack.getWarehouse();
-        if (warehouse == null || warehouse.getUser() == null
-                || !warehouse.getUser().getId().equals(AuthUtil.getCurrentAuthPrincipal().getUserId())) {
-            throw new IllegalArgumentException(InventoryError.WAREHOUSE_ACCESS_DENIED.name());
-        }
         rackRepository.delete(rack);
     }
 

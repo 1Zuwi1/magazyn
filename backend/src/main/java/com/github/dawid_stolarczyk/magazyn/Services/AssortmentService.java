@@ -49,10 +49,7 @@ public class AssortmentService {
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
         Rack rack = rackRepository.findById(dto.getRackId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.RACK_NOT_FOUND.name()));
-        if (rack.getWarehouse() == null || rack.getWarehouse().getUser() == null
-                || !rack.getWarehouse().getUser().getId().equals(AuthUtil.getCurrentAuthPrincipal().getUserId())) {
-            throw new IllegalArgumentException(InventoryError.WAREHOUSE_ACCESS_DENIED.name());
-        }
+
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.USER_NOT_FOUND.name()));
 
@@ -91,10 +88,6 @@ public class AssortmentService {
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
         Rack rack = rackRepository.findById(dto.getRackId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.RACK_NOT_FOUND.name()));
-        if (rack.getWarehouse() == null || rack.getWarehouse().getUser() == null
-                || !rack.getWarehouse().getUser().getId().equals(AuthUtil.getCurrentAuthPrincipal().getUserId())) {
-            throw new IllegalArgumentException(InventoryError.WAREHOUSE_ACCESS_DENIED.name());
-        }
 
         validatePlacement(rack, item, dto.getPositionX(), dto.getPositionY(), id);
 
@@ -113,11 +106,6 @@ public class AssortmentService {
     public void deleteAssortment(Long id) {
         Assortment assortment = assortmentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
-        Rack rack = assortment.getRack();
-        if (rack == null || rack.getWarehouse() == null || rack.getWarehouse().getUser() == null
-                || !rack.getWarehouse().getUser().getId().equals(AuthUtil.getCurrentAuthPrincipal().getUserId())) {
-            throw new IllegalArgumentException(InventoryError.WAREHOUSE_ACCESS_DENIED.name());
-        }
         assortmentRepository.delete(assortment);
     }
 

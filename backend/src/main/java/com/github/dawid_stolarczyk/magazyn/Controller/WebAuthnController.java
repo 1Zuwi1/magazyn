@@ -52,7 +52,7 @@ public class WebAuthnController {
         try {
             PublicKeyCredentialCreationOptions options = webAuthnService.startRegistration(httpServletRequest);
             return ResponseEntity.ok(ResponseTemplate.success(options));
-        } catch (Exception e) {
+        } catch (Base64UrlException e) {
             log.error("Failed to start WebAuthn registration", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_REGISTRATION.name()));
         }
@@ -79,9 +79,6 @@ public class WebAuthnController {
         } catch (IOException | RegistrationFailedException | Base64UrlException e) {
             log.error("Failed to verify WebAuthn registration", e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_REGISTRATION.name()));
-        } catch (Exception e) {
-            log.error("Unexpected error finishing WebAuthn registration", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_REGISTRATION.name()));
         }
     }
 
@@ -105,9 +102,6 @@ public class WebAuthnController {
         } catch (Base64UrlException e) {
             log.error("Base64 decoding error during WebAuthn assertion start", e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_ASSERTION.name()));
-        } catch (Exception e) {
-            log.error("Unexpected error starting WebAuthn assertion", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_ASSERTION.name()));
         }
     }
 
@@ -138,9 +132,6 @@ public class WebAuthnController {
         } catch (IOException | AssertionFailedException e) {
             log.error("WebAuthn assertion verification failed", e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_ASSERTION.name()));
-        } catch (Exception e) {
-            log.error("Unexpected error finishing WebAuthn assertion", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_ASSERTION.name()));
         }
     }
 }

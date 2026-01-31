@@ -23,7 +23,7 @@ public class Assortment {
     @JoinColumn(name = "rack_id", nullable = false)
     private Rack rack;
     @ManyToOne
-    @JoinColumn(name = "created_by", nullable = false)
+    @JoinColumn(name = "created_by")
     private User user;
     private Timestamp created_at;
     private Timestamp expires_at;
