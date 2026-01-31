@@ -21,6 +21,7 @@ public class Rack {
     @ManyToOne
     @JoinColumn(name = "warehouse_id")
     private Warehouse warehouse;
+
     private String comment;
     @Min(1)
     private int size_x;
@@ -38,6 +39,8 @@ public class Rack {
     private float max_size_y;
     @DecimalMin("0.0")
     private float max_size_z;
+
+    private boolean acceptsDangerous;
 
     @OneToMany(mappedBy = "rack", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Assortment> assortments = new ArrayList<>();

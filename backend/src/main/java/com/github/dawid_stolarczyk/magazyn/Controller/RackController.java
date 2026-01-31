@@ -1,7 +1,9 @@
 package com.github.dawid_stolarczyk.magazyn.Controller;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackDto;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackImportReport;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
+import com.github.dawid_stolarczyk.magazyn.Services.RackImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.RackService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -23,6 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RackController {
     private final RackService rackService;
+    private final RackImportService rackImportService;
 
     @Operation(summary = "Get all racks")
     @ApiResponse(responseCode = "200", description = "List of all racks",
@@ -87,5 +91,17 @@ public class RackController {
     public ResponseEntity<ResponseTemplate<Void>> deleteRack(@PathVariable Long id) {
         rackService.deleteRack(id);
         return ResponseEntity.ok(ResponseTemplate.success());
+    }
+
+    @Operation(summary = "Import racks from CSV")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Import report",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessRackImport.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid CSV file",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @PostMapping(value = "/import", consumes = "multipart/form-data")
+    public ResponseEntity<ResponseTemplate<RackImportReport>> importRacks(@RequestPart("file") MultipartFile file) {
+        return ResponseEntity.ok(ResponseTemplate.success(rackImportService.importFromCsv(file)));
     }
 }

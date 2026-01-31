@@ -27,6 +27,7 @@ public class SessionManager {
     private final SessionService sessionService;
 
     public void createSuccessLoginSession(User user, HttpServletRequest request, HttpServletResponse response, boolean rememberMe) {
+        logoutUser(response, request);
         String sessionId = UUID.randomUUID().toString();
         SessionData sessionData = new SessionData(
                 sessionId,

@@ -201,6 +201,11 @@ public class InventoryPlacementService {
     private boolean rackMatchesItem(Rack rack, Item item) {
         Objects.requireNonNull(rack, "rack");
         Objects.requireNonNull(item, "item");
+
+        if (item.isDangerous() && !rack.isAcceptsDangerous()) {
+            return false;
+        }
+
         return rack.getMin_temp() <= item.getMin_temp()
                 && rack.getMax_temp() >= item.getMax_temp()
                 && lessOrEqualWithEps(item.getSize_x(), rack.getMax_size_x())

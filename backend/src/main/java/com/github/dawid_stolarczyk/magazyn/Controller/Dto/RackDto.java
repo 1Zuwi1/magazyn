@@ -18,7 +18,6 @@ public class RackDto {
     @Schema(description = "Unique identifier of the rack", example = "1")
     private Long id;
 
-    @NotBlank
     @Schema(description = "Rack marker/label", example = "A-01")
     private String marker;
 
@@ -60,4 +59,7 @@ public class RackDto {
     @DecimalMin("0.0")
     @Schema(description = "Maximum item depth", example = "1.0")
     private float maxSizeZ;
+
+    @Schema(description = "Whether the rack accepts dangerous items", example = "false")
+    private boolean acceptsDangerous;
 }

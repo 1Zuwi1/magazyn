@@ -28,6 +28,22 @@ public class ResponseTemplate<T> {
         private T data;
     }
 
+    @Schema(name = "ApiSuccessRackImport")
+    @Getter
+    public static class ApiSuccessRackImport {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private RackImportReport data;
+    }
+
+    @Schema(name = "ApiSuccessAssortmentImport")
+    @Getter
+    public static class ApiSuccessAssortmentImport {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private AssortmentImportReport data;
+    }
+
     @Schema(name = "ApiError")
     @Getter
     public static class ApiError {
