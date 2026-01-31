@@ -29,6 +29,14 @@ export const NotificationSchema = z.object({
   read: z.boolean(),
 })
 
+export const WeightAlertSchema = z.object({
+  id: z.string(),
+  rackId: z.string(),
+  previousWeight: z.number(),
+  currentWeight: z.number(),
+  timestamp: z.date(),
+})
+
 export const ApiNotificationsSchema = createApiSchema({
   GET: {
     output: z.array(NotificationSchema),
