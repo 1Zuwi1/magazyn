@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Security.Filter;
 
+import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
@@ -47,22 +48,28 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         if (sessionId != null) {
             sessionService.getSession(sessionId).ifPresentOrElse(session -> {
                 try {
-                    User user = userRepository.findById(session.getUserId()).orElseThrow(RuntimeException::new);
+                    User user = userRepository.findById(session.getUserId())
+                            .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
                     if (user.getStatus().equals(AccountStatus.ACTIVE) || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
                         sessionService.refreshSession(sessionId);
                         authenticateUser(user, session.getStatus2FA(), request);
                     } else {
                         SecurityContextHolder.clearContext();
                         sessionManager.logoutUser(response, request);
+                        request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                     }
                 } catch (Exception e) {
                     log.warn("Session auth failed, logging out", e);
                     SecurityContextHolder.clearContext();
                     sessionManager.logoutUser(response, request);
+                    request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                 }
             }, () -> authorizeViaRememberMe(request, response));
         } else {
             authorizeViaRememberMe(request, response);
+        }
+        if (Boolean.TRUE.equals(request.getAttribute("AUTH_LOGOUT"))) {
+            return;
         }
         filterChain.doFilter(request, response);
     }
@@ -96,15 +103,18 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     log.warn("Remember-me token mismatch, logging out");
                     SecurityContextHolder.clearContext();
                     sessionManager.logoutUser(response, request);
+                    request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                     return;
                 }
                 User user;
                 try {
-                    user = userRepository.findById(rememberMeData.getUserId()).orElseThrow(AuthenticationException::new);
+                    user = userRepository.findById(rememberMeData.getUserId())
+                            .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
                 } catch (Exception e) {
                     log.warn("Remember-me user lookup failed, logging out", e);
                     SecurityContextHolder.clearContext();
                     sessionManager.logoutUser(response, request);
+                    request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                     return;
                 }
                 if (user.getStatus().equals(AccountStatus.ACTIVE) || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
@@ -123,8 +133,12 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     log.info("Inactive user status, logging out");
                     SecurityContextHolder.clearContext();
                     sessionManager.logoutUser(response, request);
+                    request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                 }
-            }, () -> sessionManager.logoutUser(response, request));
+            }, () -> {
+                sessionManager.logoutUser(response, request);
+                request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
+            });
         }
     }
 }

@@ -21,6 +21,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.Instant;
@@ -40,7 +41,8 @@ public class UserService {
 
     public UserInfoResponse getBasicInformation(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
-        User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId()).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
+                .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
         return new UserInfoResponse(
                 user.getId().intValue(),
                 user.getFullName(),
@@ -49,6 +51,7 @@ public class UserService {
                 user.getStatus().name());
     }
 
+    @Transactional
     public void changeEmail(ChangeEmailRequest changeRequest, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
@@ -58,7 +61,7 @@ public class UserService {
         }
 
         User user = userRepository.findById(authPrincipal.getUserId())
-                .orElseThrow(AuthenticationException::new);
+                .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
 
         String newEmail = changeRequest.getNewEmail().trim();
         if (newEmail.equalsIgnoreCase(user.getEmail())) {
@@ -69,6 +72,7 @@ public class UserService {
             throw new AuthenticationException(AuthError.EMAIL_TAKEN.name());
         }
 
+        user.removeEmailVerifications();
         user.setEmail(newEmail);
         user.setStatus(AccountStatus.PENDING_VERIFICATION);
 
@@ -94,7 +98,7 @@ public class UserService {
         }
 
         User user = userRepository.findById(authPrincipal.getUserId())
-                .orElseThrow(AuthenticationException::new);
+                .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
 
         if (!BCrypt.checkpw(changeRequest.getOldPassword(), user.getPassword())) {
             throw new AuthenticationException(AuthError.INVALID_CREDENTIALS.name());
@@ -114,7 +118,7 @@ public class UserService {
             throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
         }
         User user = userRepository.findById(authPrincipal.getUserId())
-                .orElseThrow(AuthenticationException::new);
+                .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
 
         user.setFullName(changeRequest.getNewFullName());
         userRepository.save(user);
@@ -129,7 +133,7 @@ public class UserService {
         }
 
         User user = userRepository.findById(authPrincipal.getUserId())
-                .orElseThrow(AuthenticationException::new);
+                .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
 
         sessionManager.logoutUser(response, request);
         userRepository.delete(user);

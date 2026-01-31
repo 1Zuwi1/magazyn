@@ -1,4 +1,4 @@
-package com.github.dawid_stolarczyk.magazyn.Exception;
+package com.github.dawid_stolarczyk.magazyn.Controller;
 
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Services.StringCryptoService;
@@ -21,7 +21,7 @@ import java.util.Map;
 @RequestMapping("/crypto")
 @RequiredArgsConstructor
 @Slf4j
-public class TestEncoderException {
+public class TestEncoderController {
     private final StringCryptoService cryptoService;
     private final FileCryptoService fileCryptoService;
 

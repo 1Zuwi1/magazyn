@@ -101,6 +101,7 @@ public class AuthService {
         emailService.sendVerificationEmail(newUser.getEmail(), baseUrl + "?token=" + emailVerificationToken);
     }
 
+    @Transactional
     public void verifyEmailCheck(String token, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.AUTH_FREE);
         EmailVerification emailVerification = emailVerificationRepository.findByVerificationToken(Hasher.hashSHA256(token)).orElseThrow(()

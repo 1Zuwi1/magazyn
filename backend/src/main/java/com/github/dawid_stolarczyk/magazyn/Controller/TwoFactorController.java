@@ -3,6 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Controller;
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
+import com.github.dawid_stolarczyk.magazyn.Exception.TwoFactorNotVerifiedException;
 import com.github.dawid_stolarczyk.magazyn.Services.TwoFactorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -75,7 +76,6 @@ public class TwoFactorController {
         return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateTwoFactorGoogleSecret(request)));
     }
 
-    @PostMapping("/backup-codes/generate")
     @Operation(summary = "Generate new backup codes for the current user.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully generated backup codes",
@@ -83,6 +83,7 @@ public class TwoFactorController {
             @ApiResponse(responseCode = "400", description = "Generation failed",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
+    @PostMapping("/backup-codes/generate")
     public ResponseEntity<ResponseTemplate<List<String>>> generateBackupCodes() {
         try {
             return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateBackupCodes(request)));
@@ -122,8 +123,12 @@ public class TwoFactorController {
         try {
             twoFactorService.removeTwoFactorMethod(removeRequest.getMethod(), request);
             return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (TwoFactorNotVerifiedException e) {
+            log.error("2FA verification required to remove method: {}", removeRequest.getMethod(), e);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ResponseTemplate.error(e.getMessage()));
+
         } catch (AuthenticationException e) {
-            log.error("Failed to remove 2FA method: {}", removeRequest.getMethod());
+            log.error("Failed to remove 2FA method: {}", removeRequest.getMethod(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
         }
     }
