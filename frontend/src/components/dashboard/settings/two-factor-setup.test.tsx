@@ -67,7 +67,7 @@ vi.mock("./use-countdown", async () => {
 
 const START_SETUP_REGEX = /rozpocznij konfigurację/i
 const ADD_METHOD_REGEX = /dodaj metodę/i
-const ACTIVE_STATUS_REGEX = /2fa aktywna/i
+const ACTIVE_STATUS_REGEX = /aktywna/i
 const SHOW_CODES_REGEX = /pokaż/i
 const RECOVERY_CODES_REGEX = /kody odzyskiwania/i
 

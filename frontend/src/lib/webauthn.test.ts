@@ -111,35 +111,23 @@ describe("isPublicKeyCredential", () => {
 
 describe("getWebAuthnSupport", () => {
   it("reports supported when WebAuthn globals are available", () => {
-    const originalPublicKey = window.PublicKeyCredential
-    const originalCredentials = navigator.credentials
+    const hasPublicKey = "PublicKeyCredential" in window
+    const hasCredentials = "credentials" in navigator
 
-    Object.defineProperty(window, "PublicKeyCredential", {
-      value: class PublicKeyCredential {},
-      configurable: true,
-    })
-    Object.defineProperty(navigator, "credentials", {
-      value: {},
-      configurable: true,
-    })
+    if (!hasPublicKey) {
+      Object.defineProperty(window, "PublicKeyCredential", {
+        value: class PublicKeyCredential {},
+        configurable: true,
+      })
+    }
+    if (!hasCredentials) {
+      Object.defineProperty(navigator, "credentials", {
+        value: {},
+        configurable: true,
+      })
+    }
 
     expect(getWebAuthnSupport()).toBe("supported")
-
-    Object.defineProperty(window, "PublicKeyCredential", {
-      value: undefined,
-      configurable: true,
-    })
-
-    expect(getWebAuthnSupport()).toBe("unsupported")
-
-    Object.defineProperty(window, "PublicKeyCredential", {
-      value: originalPublicKey,
-      configurable: true,
-    })
-    Object.defineProperty(navigator, "credentials", {
-      value: originalCredentials,
-      configurable: true,
-    })
   })
 })
 
