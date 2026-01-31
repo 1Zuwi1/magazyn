@@ -4,7 +4,6 @@ import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangeEmailRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangeFullNameRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangePasswordRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserInfoResponse;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.EmailVerification;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
@@ -19,6 +18,7 @@ import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,19 +37,6 @@ public class UserService {
     private final Bucket4jRateLimiter rateLimiter;
     private final EmailService emailService;
     private final SessionManager sessionManager;
-
-
-    public UserInfoResponse getBasicInformation(HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
-        User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
-                .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
-        return new UserInfoResponse(
-                user.getId().intValue(),
-                user.getFullName(),
-                user.getEmail(),
-                user.getRole().name(),
-                user.getStatus().name());
-    }
 
     @Transactional
     public void changeEmail(ChangeEmailRequest changeRequest, HttpServletRequest request) {
@@ -81,7 +68,12 @@ public class UserService {
         emailVerification.setVerificationToken(Hasher.hashSHA256(emailVerificationToken));
         emailVerification.setExpiresAt(Instant.now().plus(15, java.time.temporal.ChronoUnit.MINUTES));
         user.setEmailVerifications(emailVerification);
-        userRepository.save(user);
+
+        try {
+            userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new AuthenticationException(AuthError.EMAIL_TAKEN.name());
+        }
 
         String baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
                 .path("/auth/verify-email")
@@ -124,6 +116,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional
     public void deleteAccount(HttpServletRequest request, HttpServletResponse response) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();

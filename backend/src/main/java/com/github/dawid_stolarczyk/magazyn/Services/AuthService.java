@@ -3,6 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Services;
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.LoginRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RegisterRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserInfoResponse;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.EmailVerification;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
@@ -10,13 +11,14 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
 import com.github.dawid_stolarczyk.magazyn.Repositories.EmailVerificationRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis.SessionService;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,22 +31,25 @@ import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientI
 import static com.github.dawid_stolarczyk.magazyn.Utils.StringUtils.checkPasswordStrength;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     private final Bucket4jRateLimiter rateLimiter;
     private final UserRepository userRepository;
-    private final SessionService sessionService;
     private final SessionManager sessionManager;
     private final EmailVerificationRepository emailVerificationRepository;
     private final EmailService emailService;
 
-    public AuthService(Bucket4jRateLimiter rateLimiter, UserRepository userRepository, SessionService sessionService, SessionManager sessionManager, EmailVerificationRepository emailVerificationRepository, EmailService emailService) {
-        this.rateLimiter = rateLimiter;
-        this.userRepository = userRepository;
-        this.sessionService = sessionService;
-        this.sessionManager = sessionManager;
-        this.emailVerificationRepository = emailVerificationRepository;
-        this.emailService = emailService;
+    public UserInfoResponse getBasicInformation(HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
+        User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
+                .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
+        return new UserInfoResponse(
+                user.getId().intValue(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getRole().name(),
+                user.getStatus().name());
     }
 
     public void logoutUser(HttpServletResponse response, HttpServletRequest request) {

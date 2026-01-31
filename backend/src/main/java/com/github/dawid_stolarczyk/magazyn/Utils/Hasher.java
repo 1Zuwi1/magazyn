@@ -1,9 +1,11 @@
 package com.github.dawid_stolarczyk.magazyn.Utils;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.UUID;
 
 public class Hasher {
     public static String hashSHA256(String input) {
@@ -17,8 +19,10 @@ public class Hasher {
     }
 
     public static String generateRandomBase64Url() {
-        byte[] randomBytes = new byte[32];
-        new java.security.SecureRandom().nextBytes(randomBytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+        UUID uuid = java.util.UUID.randomUUID();
+        ByteBuffer buffer = java.nio.ByteBuffer.allocate(16);
+        buffer.putLong(uuid.getMostSignificantBits());
+        buffer.putLong(uuid.getLeastSignificantBits());
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(buffer.array());
     }
 }
