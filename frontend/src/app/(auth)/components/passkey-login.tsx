@@ -1,13 +1,9 @@
 "use client"
 
-import { InformationCircleIcon, Key02Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { apiFetch } from "@/lib/fetcher"
@@ -28,12 +24,6 @@ const SUPPORT_LABELS = {
   checking: "Sprawdzanie",
   supported: "Obsługiwane",
   unsupported: "Brak wsparcia",
-} as const
-
-const SUPPORT_VARIANTS = {
-  checking: "secondary",
-  supported: "success",
-  unsupported: "warning",
 } as const
 
 type SupportState = keyof typeof SUPPORT_LABELS
@@ -66,7 +56,7 @@ export default function PasskeyLogin({ disabled }: PasskeyLoginProps) {
 
   const handlePasskeyLogin = async () => {
     if (supportState !== "supported") {
-      toast.error("Twoje urządzenie nie obsługuje passkeys.")
+      toast.error("Twoje urządzenie nie obsługuje kluczy bezpieczeństwa.")
       return
     }
 
@@ -90,14 +80,19 @@ export default function PasskeyLogin({ disabled }: PasskeyLoginProps) {
       )
 
       if (startError) {
-        handleApiError(startError, "Nie udało się rozpocząć logowania passkey.")
+        handleApiError(
+          startError,
+          "Nie udało się rozpocząć logowania kluczem bezpieczeństwa."
+        )
         return
       }
 
       const publicKeyOptions = parseAuthenticationOptions(startResponse)
 
       if (!publicKeyOptions) {
-        toast.error("Nie udało się przygotować opcji logowania passkey.")
+        toast.error(
+          "Nie udało się przygotować opcji logowania kluczem bezpieczeństwa."
+        )
         return
       }
 
@@ -111,7 +106,7 @@ export default function PasskeyLogin({ disabled }: PasskeyLoginProps) {
         toast.error(
           getWebAuthnErrorMessage(
             credentialError,
-            "Nie udało się zweryfikować passkey."
+            "Nie udało się zweryfikować klucza bezpieczeństwa."
           )
         )
         return
@@ -120,7 +115,7 @@ export default function PasskeyLogin({ disabled }: PasskeyLoginProps) {
       const publicKeyCredential = credential ?? null
 
       if (!isPublicKeyCredential(publicKeyCredential)) {
-        toast.error("Nie udało się odczytać danych passkey.")
+        toast.error("Nie udało się odczytać danych klucza bezpieczeństwa.")
         return
       }
 
@@ -140,12 +135,12 @@ export default function PasskeyLogin({ disabled }: PasskeyLoginProps) {
       if (finishError) {
         handleApiError(
           finishError,
-          "Nie udało się zakończyć logowania passkey."
+          "Nie udało się zakończyć logowania kluczem bezpieczeństwa."
         )
         return
       }
 
-      toast.success("Zalogowano passkey.")
+      toast.success("Zalogowano kluczem bezpieczeństwa.")
       router.push(
         getRequiresTwoFactor(finishResponse) ? "/login/2fa" : "/dashboard"
       )
@@ -165,44 +160,17 @@ export default function PasskeyLogin({ disabled }: PasskeyLoginProps) {
         </span>
       </div>
 
-      <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className="flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
-              <HugeiconsIcon icon={Key02Icon} size={16} />
-            </div>
-            <div className="space-y-0.5">
-              <p className="font-medium text-sm">Passkey</p>
-              <p className="text-muted-foreground text-xs">
-                Logowanie bez hasła przy użyciu biometrii lub PIN-u.
-              </p>
-            </div>
-          </div>
-          <Badge variant={SUPPORT_VARIANTS[supportState]}>
-            {SUPPORT_LABELS[supportState]}
-          </Badge>
-        </div>
-
-        <Button
-          className="w-full"
-          disabled={isDisabled}
-          isLoading={isLoading}
-          onClick={handlePasskeyLogin}
-          type="button"
-          variant="outline"
-        >
-          Zaloguj passkey
-        </Button>
-
-        <Alert className="border-border/60 bg-background/80">
-          <HugeiconsIcon icon={InformationCircleIcon} />
-          <AlertTitle>Dodane w ustawieniach</AlertTitle>
-          <AlertDescription>
-            Passkey musi być wcześniej dodany w ustawieniach konta po
-            zalogowaniu.
-          </AlertDescription>
-        </Alert>
-      </div>
+      <Button
+        className="w-full"
+        disabled={isDisabled}
+        isLoading={isLoading}
+        onClick={handlePasskeyLogin}
+        size={"lg"}
+        type="button"
+        variant="outline"
+      >
+        Zaloguj kluczem bezpieczeństwa
+      </Button>
     </div>
   )
 }

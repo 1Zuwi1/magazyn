@@ -21,8 +21,8 @@ interface SessionUser {
   email: string
   full_name: string | null
   two_factor_enabled: boolean
-  status: "verified" | "unverified" | "banned"
-  role: "user" | "admin"
+  status: "VERIFIED" | "UNVERIFIED" | "BANNED"
+  role: "USER" | "ADMIN"
 }
 
 const buildUser = (overrides: Partial<SessionUser> = {}): SessionUser => ({
@@ -30,8 +30,8 @@ const buildUser = (overrides: Partial<SessionUser> = {}): SessionUser => ({
   email: "user@example.com",
   full_name: "Test User",
   two_factor_enabled: true,
-  role: "user",
-  status: "verified",
+  role: "USER",
+  status: "VERIFIED",
   ...overrides,
 })
 

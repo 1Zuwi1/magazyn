@@ -50,17 +50,17 @@ function usePasswordVerificationFlow({
   onChallengeChange,
 }: PasswordVerificationFlowHandlers) {
   const requestCode = async (): Promise<void> => {
-    onStageChange("sending")
+    onStageChange("SENDING")
     onErrorChange("")
 
     try {
       const newChallenge = await createPasswordChallenge(method)
       onChallengeChange(newChallenge)
       await sendVerificationCode(newChallenge.sessionId)
-      onStageChange("awaiting")
+      onStageChange("AWAITING")
       onResendCooldownChange(RESEND_COOLDOWN_SECONDS)
     } catch {
-      onStageChange("error")
+      onStageChange("ERROR")
       const message = "Nie udało się wysłać kodu. Spróbuj ponownie."
       onErrorChange(message)
       toast.error(message)
@@ -75,23 +75,23 @@ function usePasswordVerificationFlow({
       return
     }
 
-    onStageChange("verifying")
+    onStageChange("VERIFYING")
     onErrorChange("")
 
     try {
       const isValid = await verifyOneTimeCode(inputCode)
 
       if (isValid) {
-        onStageChange("verified")
+        onStageChange("VERIFIED")
         return
       }
 
-      onStageChange("error")
+      onStageChange("ERROR")
       const message = "Kod jest nieprawidłowy. Spróbuj ponownie."
       onErrorChange(message)
       toast.error(message)
     } catch {
-      onStageChange("error")
+      onStageChange("ERROR")
       const message = "Wystąpił błąd podczas weryfikacji. Spróbuj ponownie."
       onErrorChange(message)
       toast.error(message)
@@ -160,7 +160,7 @@ function CodeInputEntry({
         >
           Zweryfikuj kod
         </Button>
-        {method !== "authenticator" ? (
+        {method !== "AUTHENTICATOR" ? (
           <>
             <Button
               aria-describedby="resend-status"
@@ -198,21 +198,21 @@ export function PasswordVerificationSection({
   code,
 }: PasswordVerificationSectionProps) {
   const [state, setState] = useState<PasswordVerificationState>({
-    stage: "idle",
+    stage: "IDLE",
     error: "",
     challenge: null,
   })
   const [resendCooldown, startTimer] = useCountdown(0)
   const { stage, error, challenge } = state
-  const complete = stage === "verified"
-  const isBusy = stage === "sending" || stage === "verifying"
-  const isSending = stage === "sending"
+  const complete = stage === "VERIFIED"
+  const isBusy = stage === "SENDING" || stage === "VERIFYING"
+  const isSending = stage === "SENDING"
   const canResendCode = resendCooldown === 0 && !isBusy
   const canShowCodeInput =
-    method === "authenticator" ||
-    stage === "awaiting" ||
-    stage === "verifying" ||
-    stage === "error"
+    method === "AUTHENTICATOR" ||
+    stage === "AWAITING" ||
+    stage === "VERIFYING" ||
+    stage === "ERROR"
 
   useEffect(() => {
     if (!method) {
@@ -220,7 +220,7 @@ export function PasswordVerificationSection({
     }
 
     setState({
-      stage: "idle",
+      stage: "IDLE",
       error: "",
       challenge: null,
     })
@@ -243,8 +243,8 @@ export function PasswordVerificationSection({
   })
 
   const handleStartVerification = useCallback(() => {
-    if (method === "authenticator") {
-      setState((current) => ({ ...current, stage: "awaiting" }))
+    if (method === "AUTHENTICATOR") {
+      setState((current) => ({ ...current, stage: "AWAITING" }))
       return
     }
 
@@ -252,7 +252,7 @@ export function PasswordVerificationSection({
   }, [method, requestCode])
 
   const handleResendCode = (): void => {
-    if (method === "authenticator") {
+    if (method === "AUTHENTICATOR") {
       return
     }
 
@@ -264,7 +264,7 @@ export function PasswordVerificationSection({
   }
 
   useEffect(() => {
-    if (stage === "idle") {
+    if (stage === "IDLE") {
       handleStartVerification()
     }
   }, [stage, handleStartVerification])
@@ -275,7 +275,7 @@ export function PasswordVerificationSection({
         <div className="space-y-1">
           <p className="font-semibold text-sm">Potwierdź 2FA przed zmianą</p>
           <p className="text-muted-foreground text-sm">
-            {method === "authenticator"
+            {method === "AUTHENTICATOR"
               ? "Wpisz kod z aplikacji uwierzytelniającej."
               : `Wyślemy kod na ${challenge?.destination ?? "wybraną metodę"}.`}
           </p>

@@ -24,8 +24,8 @@ import { Resend2FASchema, Verify2FASchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
 import { getAnimationStyle } from "@/lib/utils"
 
-export type TwoFactorMethod = "authenticator" | "sms" | "email"
-export type ResendType = Exclude<TwoFactorMethod, "authenticator">
+export type TwoFactorMethod = "AUTHENTICATOR" | "SMS" | "EMAIL"
+export type ResendType = Exclude<TwoFactorMethod, "AUTHENTICATOR">
 
 interface TwoFactorFormProps {
   linkedMethods: TwoFactorMethod[]
@@ -34,7 +34,7 @@ interface TwoFactorFormProps {
   methodSwitchLabels: Record<TwoFactorMethod, string>
   otpLength: number
 }
-const defaultMethod: TwoFactorMethod = "email"
+const defaultMethod: TwoFactorMethod = "EMAIL"
 
 export default function TwoFactorForm({
   linkedMethods,
@@ -58,6 +58,7 @@ export default function TwoFactorForm({
           })
         )
         if (err) {
+          console.error(err)
           toast.error(
             "Nieprawidłowy kod lub błąd weryfikacji. Spróbuj ponownie."
           )
@@ -96,7 +97,7 @@ export default function TwoFactorForm({
     }
 
     toast.success(
-      m === "sms" ? "Wysłano nowy kod SMS." : "Wysłano nowy kod e-mailem."
+      m === "SMS" ? "Wysłano nowy kod SMS." : "Wysłano nowy kod e-mailem."
     )
     return true
   }

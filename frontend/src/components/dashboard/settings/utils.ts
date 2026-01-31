@@ -26,10 +26,10 @@ export const formatCountdown = (seconds: number): string => {
 }
 
 export const getDestinationForMethod = (method: TwoFactorMethod): string => {
-  if (method === "sms") {
+  if (method === "SMS") {
     return MOCK_TWO_FACTOR_DESTINATIONS.sms
   }
-  if (method === "email") {
+  if (method === "EMAIL") {
     return MOCK_TWO_FACTOR_DESTINATIONS.email
   }
   return "Aplikacja uwierzytelniająca"
@@ -45,7 +45,7 @@ export const createTwoFactorChallenge = async (
     minute: "2-digit",
   })
   const destination = getDestinationForMethod(method)
-  const secret = method === "authenticator" ? MOCK_AUTHENTICATOR_SECRET : "—"
+  const secret = method === "AUTHENTICATOR" ? MOCK_AUTHENTICATOR_SECRET : "—"
 
   return {
     sessionId: `setup_${Date.now()}`,

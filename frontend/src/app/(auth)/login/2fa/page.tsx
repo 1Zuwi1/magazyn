@@ -1,4 +1,7 @@
 import { redirect } from "next/navigation"
+import z from "zod"
+import { createApiSchema } from "@/lib/create-api-schema"
+import { apiFetch } from "@/lib/fetcher"
 import { getSession } from "@/lib/session"
 import TwoFactorForm, {
   type ResendType,
@@ -6,20 +9,26 @@ import TwoFactorForm, {
 } from "./two-factor-form"
 
 const METHOD_TITLES: Record<TwoFactorMethod, string> = {
-  authenticator: "Wpisz kod z aplikacji uwierzytelniającej",
-  sms: "Wpisz kod wysłany SMS-em",
-  email: "Wpisz kod wysłany na e-mail",
+  AUTHENTICATOR: "Wpisz kod z aplikacji uwierzytelniającej",
+  SMS: "Wpisz kod wysłany SMS-em",
+  EMAIL: "Wpisz kod wysłany na e-mail",
 }
 
 const METHOD_SWITCH_LABELS: Record<TwoFactorMethod, string> = {
-  authenticator: "Użyj aplikacji uwierzytelniającej",
-  sms: "Wyślij kod SMS-em",
-  email: "Wyślij kod e-mailem",
+  AUTHENTICATOR: "Użyj aplikacji uwierzytelniającej",
+  SMS: "Wyślij kod SMS-em",
+  EMAIL: "Wyślij kod e-mailem",
 }
 
 // TODO: Fetch linked_methods from backend API
-const LINKED_METHODS: TwoFactorMethod[] = ["authenticator", "sms", "email"]
-const RESEND_METHODS: ResendType[] = ["sms", "email"]
+const LINKED_METHODS: TwoFactorMethod[] = ["AUTHENTICATOR", "SMS", "EMAIL"]
+const RESEND_METHODS: ResendType[] = ["SMS", "EMAIL"]
+
+const TfaSchema = createApiSchema({
+  GET: {
+    output: z.string(),
+  },
+})
 
 export default async function TwoFactorPage() {
   const session = await getSession()
@@ -27,6 +36,9 @@ export default async function TwoFactorPage() {
   if (session) {
     redirect("/dashboard")
   }
+
+  const linkedMethods = await apiFetch("/api/2fa", TfaSchema)
+  console.log(linkedMethods)
 
   return (
     <TwoFactorForm

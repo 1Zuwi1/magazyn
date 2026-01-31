@@ -50,7 +50,7 @@ export function PasskeysSection() {
 
   const handleAddPasskey = async () => {
     if (supportState !== "supported") {
-      toast.error("Twoje urządzenie nie obsługuje passkeys.")
+      toast.error("Twoje urządzenie nie obsługuje kluczy bezpieczeństwa.")
       return
     }
 
@@ -75,14 +75,19 @@ export function PasskeysSection() {
       )
 
       if (startError) {
-        handleApiError(startError, "Nie udało się rozpocząć dodawania passkey.")
+        handleApiError(
+          startError,
+          "Nie udało się rozpocząć dodawania klucza bezpieczeństwa."
+        )
         return
       }
 
       const publicKeyOptions = parseRegistrationOptions(startResponse)
 
       if (!publicKeyOptions) {
-        toast.error("Nie udało się przygotować opcji rejestracji passkey.")
+        toast.error(
+          "Nie udało się przygotować opcji rejestracji klucza bezpieczeństwa."
+        )
         return
       }
 
@@ -96,7 +101,7 @@ export function PasskeysSection() {
         toast.error(
           getWebAuthnErrorMessage(
             credentialError,
-            "Nie udało się utworzyć passkey."
+            "Nie udało się utworzyć klucza bezpieczeństwa."
           )
         )
         return
@@ -105,7 +110,7 @@ export function PasskeysSection() {
       const publicKeyCredential = credential ?? null
 
       if (!isPublicKeyCredential(publicKeyCredential)) {
-        toast.error("Nie udało się odczytać danych passkey.")
+        toast.error("Nie udało się odczytać danych klucza bezpieczeństwa.")
         return
       }
 
@@ -125,13 +130,13 @@ export function PasskeysSection() {
       if (finishError) {
         handleApiError(
           finishError,
-          "Nie udało się zakończyć dodawania passkey."
+          "Nie udało się zakończyć dodawania klucza bezpieczeństwa."
         )
         return
       }
 
       setStatus("success")
-      toast.success("Passkey został dodany.")
+      toast.success("Klucz bezpieczeństwa został dodany.")
     } finally {
       setIsLoading(false)
     }
@@ -152,7 +157,7 @@ export function PasskeysSection() {
                   size={16}
                 />
               </div>
-              Passkeys
+              Klucze bezpieczeństwa
             </CardTitle>
             <p className="text-muted-foreground text-sm">
               Dodaj klucz dostępu, aby logować się bez hasła.
@@ -169,15 +174,17 @@ export function PasskeysSection() {
             <HugeiconsIcon icon={InformationCircleIcon} />
             <AlertTitle>Dodawanie tylko po zalogowaniu</AlertTitle>
             <AlertDescription>
-              Passkey dodasz tutaj po zalogowaniu. Po aktywacji możesz użyć go
-              do logowania na ekranie logowania.
+              Klucz bezpieczeństwa dodasz tutaj po zalogowaniu. Po aktywacji
+              możesz użyć go do logowania na ekranie logowania.
             </AlertDescription>
           </Alert>
 
           <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
-                <p className="font-medium text-sm">Dodaj nowy passkey</p>
+                <p className="font-medium text-sm">
+                  Dodaj nowy klucz bezpieczeństwa
+                </p>
                 <p className="text-muted-foreground text-xs">
                   Potwierdź biometrią, kluczem sprzętowym lub PIN-em.
                 </p>
@@ -188,12 +195,13 @@ export function PasskeysSection() {
                 onClick={handleAddPasskey}
                 type="button"
               >
-                Dodaj passkey
+                Dodaj klucz bezpieczeństwa
               </Button>
             </div>
             {status === "success" ? (
               <p className="mt-3 text-muted-foreground text-xs">
-                Passkey został dodany. Możesz teraz logować się bez hasła.
+                Klucz bezpieczeństwa został dodany. Możesz teraz logować się bez
+                hasła.
               </p>
             ) : null}
           </div>

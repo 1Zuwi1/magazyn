@@ -35,7 +35,7 @@ const CONFIRM_REGEX = /zatwierdź/i
 
 describe("PasswordSection", () => {
   it("blocks submission until 2FA verification completes", async () => {
-    render(<PasswordSection twoFactorMethod="email" verificationRequired />)
+    render(<PasswordSection twoFactorMethod="EMAIL" verificationRequired />)
 
     fireEvent.change(screen.getByLabelText(OLD_PASSWORD_REGEX), {
       target: { value: "OldPassword1!" },

@@ -111,13 +111,13 @@ describe("PasswordVerificationSection", () => {
 
     render(
       <PasswordVerificationHarness
-        method="email"
+        method="EMAIL"
         onVerificationChange={vi.fn()}
       />
     )
 
     await waitFor(() => {
-      expect(mockCreatePasswordChallenge).toHaveBeenCalledWith("email")
+      expect(mockCreatePasswordChallenge).toHaveBeenCalledWith("EMAIL")
     })
     await waitFor(() => {
       expect(mockSendVerificationCode).toHaveBeenCalledWith("pwd-1")
@@ -136,7 +136,7 @@ describe("PasswordVerificationSection", () => {
 
     render(
       <PasswordVerificationHarness
-        method="authenticator"
+        method="AUTHENTICATOR"
         onVerificationChange={onVerificationChange}
       />
     )
@@ -167,7 +167,7 @@ describe("PasswordVerificationSection", () => {
 
     render(
       <PasswordVerificationHarness
-        method="authenticator"
+        method="AUTHENTICATOR"
         onVerificationChange={onVerificationChange}
       />
     )

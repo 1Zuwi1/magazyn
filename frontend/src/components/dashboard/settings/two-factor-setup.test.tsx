@@ -22,6 +22,10 @@ vi.mock("sonner", () => ({
   },
 }))
 
+vi.mock("@hugeicons/react", () => ({
+  HugeiconsIcon: () => <span data-testid="hugeicons-icon" />,
+}))
+
 vi.mock("./otp-input", () => ({
   OtpInput: ({
     id,
@@ -86,8 +90,8 @@ const SHOW_CODES_REGEX = /pokaż/i
 const RECOVERY_CODES_REGEX = /kody odzyskiwania/i
 
 function TwoFactorSetupHarness({
-  initialStatus = "disabled",
-  initialMethod = "sms",
+  initialStatus = "DISABLED",
+  initialMethod = "SMS",
 }: {
   initialStatus?: TwoFactorStatus
   initialMethod?: TwoFactorMethod
@@ -126,7 +130,7 @@ describe("TwoFactorSetup", () => {
     fireEvent.click(screen.getByRole("button", { name: START_SETUP_REGEX }))
 
     await waitFor(() => {
-      expect(mockCreateTwoFactorChallenge).toHaveBeenCalledWith("sms", "pl")
+      expect(mockCreateTwoFactorChallenge).toHaveBeenCalledWith("SMS", "pl")
     })
     await waitFor(() => {
       expect(mockSendVerificationCode).toHaveBeenCalledWith("session-1")
@@ -164,7 +168,7 @@ describe("TwoFactorSetup", () => {
   })
 
   it("reveals recovery codes when enabled", () => {
-    render(<TwoFactorSetupHarness initialStatus="enabled" />)
+    render(<TwoFactorSetupHarness initialStatus="ENABLED" />)
 
     fireEvent.click(screen.getByRole("button", { name: SHOW_CODES_REGEX }))
 

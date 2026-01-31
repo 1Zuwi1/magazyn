@@ -18,17 +18,17 @@ interface SecuritySectionProps {
 
 function SecurityStatusIndicator({ status }: { status: TwoFactorStatus }) {
   const config = {
-    enabled: {
+    ENABLED: {
       label: "Chronione",
       variant: "success" as const,
       icon: Shield01Icon,
     },
-    setup: {
+    SETUP: {
       label: "Konfiguracja",
       variant: "warning" as const,
       icon: Key01Icon,
     },
-    disabled: {
+    DISABLED: {
       label: "Podstawowe",
       variant: "secondary" as const,
       icon: LockIcon,
@@ -52,13 +52,13 @@ export function SecuritySection({
   userEmail,
 }: SecuritySectionProps) {
   const [twoFactorStatus, setTwoFactorStatus] = useState<TwoFactorStatus>(
-    initialTwoFactorEnabled ? "enabled" : "disabled"
+    initialTwoFactorEnabled ? "ENABLED" : "DISABLED"
   )
   // FIXME: In production this should be fetched from user settings
   const [twoFactorMethod, setTwoFactorMethod] = useState<TwoFactorMethod>(
     TWO_FACTOR_METHODS[0].value
   )
-  const verificationRequired = twoFactorStatus === "enabled"
+  const verificationRequired = twoFactorStatus === "ENABLED"
 
   return (
     <div className="space-y-6">

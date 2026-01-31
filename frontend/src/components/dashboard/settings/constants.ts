@@ -1,27 +1,27 @@
 export const STATUS_CONFIG = {
-  verified: { label: "Zweryfikowane", variant: "success" },
-  unverified: { label: "Niezweryfikowane", variant: "warning" },
-  banned: { label: "Zablokowane", variant: "destructive" },
+  VERIFIED: { label: "Zweryfikowane", variant: "success" },
+  UNVERIFIED: { label: "Niezweryfikowane", variant: "warning" },
+  BANNED: { label: "Zablokowane", variant: "destructive" },
 } as const
 
 export const ROLE_LABELS = {
-  admin: "Administrator",
-  user: "Użytkownik",
+  ADMIN: "Administrator",
+  USER: "Użytkownik",
 } as const
 
 export const TWO_FACTOR_METHODS = [
   {
-    value: "authenticator",
+    value: "AUTHENTICATOR",
     label: "Aplikacja uwierzytelniająca",
     hint: "Rekomendowana metoda dla kont firmowych.",
   },
   {
-    value: "sms",
+    value: "SMS",
     label: "SMS",
     hint: "Kod wysyłany na numer telefonu.",
   },
   {
-    value: "email",
+    value: "EMAIL",
     label: "E-mail",
     hint: "Kod wysyłany na skrzynkę pocztową.",
   },

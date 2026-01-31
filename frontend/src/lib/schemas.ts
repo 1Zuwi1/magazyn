@@ -118,7 +118,7 @@ export const FormRegisterSchema = RegisterSchema.shape.POST.shape.input
 export const Verify2FASchema = createApiSchema({
   POST: {
     input: z.object({
-      method: z.enum(["authenticator", "sms", "email"]),
+      method: z.enum(["AUTHENTICATOR", "SMS", "EMAIL"]),
       code: z.string().length(6, "Kod musi mieć dokładnie 6 cyfr"),
     }),
     output: z.null(),
@@ -128,7 +128,7 @@ export const Verify2FASchema = createApiSchema({
 export const Resend2FASchema = createApiSchema({
   POST: {
     input: z.object({
-      method: z.enum(["sms", "email"]),
+      method: z.enum(["SMS", "EMAIL"]),
     }),
     output: z.null(),
   },
@@ -141,8 +141,8 @@ export const ApiMeSchema = createApiSchema({
       email: z.email(),
       full_name: z.string().nullish(),
       two_factor_enabled: z.boolean(),
-      status: z.enum(["verified", "unverified", "banned"]),
-      role: z.enum(["user", "admin"]),
+      status: z.enum(["VERIFIED", "UNVERIFIED", "BANNED"]),
+      role: z.enum(["USER", "ADMIN"]),
     }),
   },
 })

@@ -71,7 +71,7 @@ describe("AuthForm", () => {
     })
 
     it("handles successful login", async () => {
-      mockApiFetch.mockResolvedValue({ requiresTwoFactor: false })
+      mockApiFetch.mockResolvedValue({})
       render(<AuthForm mode="login" />)
 
       fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
@@ -95,7 +95,7 @@ describe("AuthForm", () => {
       })
 
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith("/dashboard")
+        expect(mockPush).toHaveBeenCalledWith("/login/2fa")
       })
     })
 

@@ -31,10 +31,10 @@ vi.mock("./two-factor-setup", () => ({
   }) => (
     <div>
       <div data-testid="twofactor-status">{status}</div>
-      <button onClick={() => onStatusChange("enabled")} type="button">
+      <button onClick={() => onStatusChange("ENABLED")} type="button">
         Enable
       </button>
-      <button onClick={() => onMethodChange("email")} type="button">
+      <button onClick={() => onMethodChange("EMAIL")} type="button">
         Switch to email
       </button>
       <span>Method: {method}</span>
@@ -58,20 +58,20 @@ describe("SecuritySection", () => {
 
     expect(screen.getByText(BASIC_STATUS_REGEX)).toBeInTheDocument()
     expect(screen.getByTestId("password-section")).toHaveTextContent(
-      "optional-authenticator"
+      "optional-AUTHENTICATOR"
     )
 
     fireEvent.click(screen.getByRole("button", { name: ENABLE_BUTTON_REGEX }))
 
     expect(screen.getByText(PROTECTED_STATUS_REGEX)).toBeInTheDocument()
     expect(screen.getByTestId("password-section")).toHaveTextContent(
-      "required-authenticator"
+      "required-AUTHENTICATOR"
     )
 
     fireEvent.click(screen.getByRole("button", { name: SWITCH_EMAIL_REGEX }))
 
     expect(screen.getByTestId("password-section")).toHaveTextContent(
-      "required-email"
+      "required-EMAIL"
     )
   })
 })

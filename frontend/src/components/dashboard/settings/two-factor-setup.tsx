@@ -120,7 +120,7 @@ type TwoFactorSetupAction =
   | { type: "set_note"; note: string }
 
 const initialTwoFactorSetupState: TwoFactorSetupState = {
-  stage: "idle",
+  stage: "IDLE",
   challenge: null,
   code: "",
   error: "",
@@ -177,26 +177,26 @@ function useTwoFactorSetupFlow({
   // but if we were in the middle of a flow, we should probably reset or update.
   // The requirement says: "ensure that when a user changes the method, the contact information (destination) updates correctly"
   useEffect(() => {
-    if (status === "disabled") {
+    if (status === "DISABLED") {
       resetFlow()
     }
   }, [status, resetFlow])
 
   const startSetup = async () => {
     dispatch({ type: "set_error", error: "" })
-    dispatch({ type: "set_stage", stage: "requesting" })
-    onStatusChange("setup")
+    dispatch({ type: "set_stage", stage: "REQUESTING" })
+    onStatusChange("SETUP")
 
     try {
       const newChallenge = await createTwoFactorChallenge(method, locale)
       dispatch({ type: "set_challenge", challenge: newChallenge })
-      dispatch({ type: "set_stage", stage: "awaiting" })
+      dispatch({ type: "set_stage", stage: "AWAITING" })
       await sendVerificationCode(newChallenge.sessionId)
     } catch {
       const message =
         "Nie udało się zainicjować konfiguracji. Spróbuj ponownie."
       dispatch({ type: "set_error", error: message })
-      dispatch({ type: "set_stage", stage: "error" })
+      dispatch({ type: "set_stage", stage: "ERROR" })
       toast.error(message)
     }
   }
@@ -207,30 +207,30 @@ function useTwoFactorSetupFlow({
     }
 
     dispatch({ type: "set_error", error: "" })
-    dispatch({ type: "set_stage", stage: "sending" })
+    dispatch({ type: "set_stage", stage: "SENDING" })
 
     try {
       await sendVerificationCode(challenge.sessionId)
       startTimer(TWO_FACTOR_RESEND_SECONDS)
-      dispatch({ type: "set_stage", stage: "awaiting" })
+      dispatch({ type: "set_stage", stage: "AWAITING" })
     } catch {
       const message = "Nie udało się wysłać kodu. Spróbuj ponownie."
       dispatch({ type: "set_error", error: message })
-      dispatch({ type: "set_stage", stage: "error" })
+      dispatch({ type: "set_stage", stage: "ERROR" })
       toast.error(message)
     }
   }
 
   const verifySetup = async () => {
-    dispatch({ type: "set_stage", stage: "verifying" })
+    dispatch({ type: "set_stage", stage: "VERIFYING" })
     dispatch({ type: "set_error", error: "" })
 
     try {
       const isValid = await verifyOneTimeCode(code)
 
       if (isValid) {
-        onStatusChange("enabled")
-        dispatch({ type: "set_stage", stage: "success" })
+        onStatusChange("ENABLED")
+        dispatch({ type: "set_stage", stage: "SUCCESS" })
         dispatch({
           type: "set_note",
           note: `Weryfikacja dwuetapowa została włączona przy użyciu: ${
@@ -242,14 +242,14 @@ function useTwoFactorSetupFlow({
           type: "set_error",
           error: "Nieprawidłowy kod weryfikacyjny. Spróbuj ponownie.",
         })
-        dispatch({ type: "set_stage", stage: "error" })
+        dispatch({ type: "set_stage", stage: "ERROR" })
       }
     } catch {
       dispatch({
         type: "set_error",
         error: "Wystąpił błąd podczas weryfikacji. Spróbuj ponownie.",
       })
-      dispatch({ type: "set_stage", stage: "error" })
+      dispatch({ type: "set_stage", stage: "ERROR" })
     }
   }
 
@@ -373,13 +373,13 @@ function CodeInputEntry({
 }) {
   return (
     <div className="space-y-4">
-      {method === "authenticator" ? (
+      {method === "AUTHENTICATOR" ? (
         <AuthenticatorSetup challenge={challenge} userEmail={userEmail} />
       ) : (
         <div className="space-y-2">
           <p className="font-medium text-sm">Kod jednorazowy</p>
           <p className="text-muted-foreground text-sm">
-            {method === "sms"
+            {method === "SMS"
               ? "SMS z kodem został wysłany."
               : "E-mail z kodem został wysłany."}{" "}
             Kontakt: {challenge?.destination ?? "wybrana metoda"}.
@@ -402,7 +402,7 @@ function CodeInputEntry({
           >
             Zweryfikuj i aktywuj
           </Button>
-          {method !== "authenticator" ? (
+          {method !== "AUTHENTICATOR" ? (
             <>
               <Button
                 aria-describedby="resend-status"
@@ -497,21 +497,21 @@ function TwoFactorConfigurationSection({
 }) {
   // User can only change method in Step 1 (when not in setup phase or fully enabled)
   const canSelectMethod =
-    (status === "disabled" || setupStage === "idle") && status !== "enabled"
+    (status === "DISABLED" || setupStage === "IDLE") && status !== "ENABLED"
 
   // Step 1 is complete when setup has started (method selected)
-  const step1Complete = status === "setup" || status === "enabled"
+  const step1Complete = status === "SETUP" || status === "ENABLED"
 
   // Step 2 is complete when awaiting code entry or beyond
   const step2Complete =
-    status === "enabled" ||
-    (status === "setup" &&
-      (setupStage === "awaiting" ||
-        setupStage === "verifying" ||
-        setupStage === "error"))
+    status === "ENABLED" ||
+    (status === "SETUP" &&
+      (setupStage === "AWAITING" ||
+        setupStage === "VERIFYING" ||
+        setupStage === "ERROR"))
 
   // Step 3 is complete only when fully enabled
-  const step3Complete = status === "enabled"
+  const step3Complete = status === "ENABLED"
 
   return (
     <div className="space-y-4 rounded-xl border bg-muted/30 p-4">
@@ -523,16 +523,16 @@ function TwoFactorConfigurationSection({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {status === "disabled" ? (
+          {status === "DISABLED" ? (
             <Button
-              isLoading={setupStage === "requesting"}
+              isLoading={setupStage === "REQUESTING"}
               onClick={onStartSetup}
               type="button"
             >
               Rozpocznij konfigurację
             </Button>
           ) : null}
-          {status === "setup" ? (
+          {status === "SETUP" ? (
             <Button onClick={onCancelSetup} type="button" variant="outline">
               Anuluj konfigurację
             </Button>
@@ -584,19 +584,19 @@ export function TwoFactorSetup({
     error,
     note: setupNote,
   } = setupState
-  const enabled = status === "enabled"
-  const setupActive = status === "setup"
+  const enabled = status === "ENABLED"
+  const setupActive = status === "SETUP"
   const isBusy =
-    setupStage === "requesting" ||
-    setupStage === "sending" ||
-    setupStage === "verifying"
+    setupStage === "REQUESTING" ||
+    setupStage === "SENDING" ||
+    setupStage === "VERIFYING"
   const showCodeEntry =
-    setupStage === "awaiting" ||
-    setupStage === "verifying" ||
-    setupStage === "error"
+    setupStage === "AWAITING" ||
+    setupStage === "VERIFYING" ||
+    setupStage === "ERROR"
   const canResendCode = resendCooldown === 0 && !isBusy
   const shouldWarnOnNavigate =
-    setupActive && setupStage !== "idle" && setupStage !== "success"
+    setupActive && setupStage !== "IDLE" && setupStage !== "SUCCESS"
 
   useEffect(() => {
     if (!shouldWarnOnNavigate) {
@@ -626,7 +626,7 @@ export function TwoFactorSetup({
     })
 
   const handleCancelSetup = (): void => {
-    onStatusChange("disabled")
+    onStatusChange("DISABLED")
     resetFlow()
   }
 
@@ -651,7 +651,7 @@ export function TwoFactorSetup({
 
       {setupActive ? (
         <div className="space-y-4 rounded-lg border bg-background/80 p-4">
-          {setupStage === "requesting" ? (
+          {setupStage === "REQUESTING" ? (
             <Alert>
               <Spinner className="text-muted-foreground" />
               <AlertTitle>Łączymy się z usługą 2FA</AlertTitle>
@@ -661,7 +661,7 @@ export function TwoFactorSetup({
             </Alert>
           ) : null}
 
-          {setupStage === "sending" ? (
+          {setupStage === "SENDING" ? (
             <Alert>
               <Spinner className="text-muted-foreground" />
               <AlertTitle>Wysyłamy kod</AlertTitle>
@@ -671,7 +671,7 @@ export function TwoFactorSetup({
             </Alert>
           ) : null}
 
-          {setupStage === "error" && error ? (
+          {setupStage === "ERROR" && error ? (
             <Alert variant="destructive">
               <AlertTitle>Nie udało się aktywować 2FA</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
@@ -683,7 +683,7 @@ export function TwoFactorSetup({
               canResend={canResendCode}
               challenge={challenge}
               code={code}
-              isBusy={setupStage === "verifying"}
+              isBusy={setupStage === "VERIFYING"}
               method={method}
               onCodeChange={(nextCode) =>
                 dispatch({ type: "set_code", code: nextCode })
@@ -697,7 +697,7 @@ export function TwoFactorSetup({
         </div>
       ) : null}
 
-      {status === "enabled" ? (
+      {status === "ENABLED" ? (
         <Alert>
           <AlertTitle>2FA aktywna</AlertTitle>
           <AlertDescription>

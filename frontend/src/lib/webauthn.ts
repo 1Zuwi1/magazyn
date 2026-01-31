@@ -314,9 +314,9 @@ export const getWebAuthnErrorMessage = (
       case "NotAllowedError":
         return "Operacja została anulowana lub przekroczono limit czasu."
       case "InvalidStateError":
-        return "Ten passkey jest już dodany na tym urządzeniu."
+        return "Ten klucz bezpieczeństwa jest już dodany na tym urządzeniu."
       case "NotSupportedError":
-        return "To urządzenie lub przeglądarka nie obsługuje passkeys."
+        return "To urządzenie lub przeglądarka nie obsługuje kluczy bezpieczeństwa."
       case "SecurityError":
         return "Operacja zablokowana przez ustawienia bezpieczeństwa."
       default:
