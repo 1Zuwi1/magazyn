@@ -4,6 +4,7 @@ import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangeEmailRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangeFullNameRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangePasswordRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserInfoResponse;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.EmailVerification;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
@@ -38,9 +39,22 @@ public class UserService {
     private final EmailService emailService;
     private final SessionManager sessionManager;
 
+
+    public UserInfoResponse getBasicInformation(HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
+        User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
+                .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
+        return new UserInfoResponse(
+                user.getId().intValue(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getRole().name(),
+                user.getStatus().name());
+    }
+
     @Transactional
     public void changeEmail(ChangeEmailRequest changeRequest, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
 
         if (!authPrincipal.isSudoMode()) {
@@ -82,7 +96,7 @@ public class UserService {
     }
 
     public void changePassword(ChangePasswordRequest changeRequest, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
 
         if (!authPrincipal.isSudoMode()) {
@@ -104,7 +118,7 @@ public class UserService {
     }
 
     public void changeFullName(ChangeFullNameRequest changeRequest, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
         if (!authPrincipal.isSudoMode()) {
             throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
@@ -118,7 +132,7 @@ public class UserService {
 
     @Transactional
     public void deleteAccount(HttpServletRequest request, HttpServletResponse response) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
 
         if (!authPrincipal.isSudoMode()) {

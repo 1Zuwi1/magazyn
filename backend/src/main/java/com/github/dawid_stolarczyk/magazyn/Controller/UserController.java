@@ -1,9 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Controller;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangeEmailRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangeFullNameRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangePasswordRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +25,18 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class UserController {
     private final UserService userService;
+
+    @Operation(summary = "Get basic information about the currently authenticated user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved user information",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request, could not retrieve user information",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @GetMapping("/me")
+    public ResponseEntity<ResponseTemplate<UserInfoResponse>> getBasic(HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(userService.getBasicInformation(request)));
+    }
 
     @Operation(summary = "Change the current user's email address.")
     @ApiResponses(value = {

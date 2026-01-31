@@ -3,7 +3,6 @@ package com.github.dawid_stolarczyk.magazyn.Controller;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.LoginRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RegisterRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserInfoResponse;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Services.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,7 +27,6 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class AuthController {
     private final AuthService authService;
-    private final HttpServletRequest request;
 
     @Operation(summary = "Logout the current user by invalidating their session.")
     @ApiResponses(value = {
@@ -36,7 +34,7 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class)))
     })
     @PostMapping("/logout")
-    public ResponseEntity<ResponseTemplate<Void>> logout(HttpServletResponse response) {
+    public ResponseEntity<ResponseTemplate<Void>> logout(HttpServletResponse response, HttpServletRequest request) {
         authService.logoutUser(response, request);
         return ResponseEntity.ok(ResponseTemplate.success());
     }
@@ -49,7 +47,9 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/login")
-    public ResponseEntity<ResponseTemplate<Void>> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+    public ResponseEntity<ResponseTemplate<Void>> login(@Valid @RequestBody LoginRequest loginRequest,
+                                                        HttpServletResponse response,
+                                                        HttpServletRequest request) {
         try {
             authService.loginUser(loginRequest, response, request);
             return ResponseEntity.ok(ResponseTemplate.success());
@@ -67,7 +67,9 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/register")
-    public ResponseEntity<ResponseTemplate<Void>> register(@Valid @RequestBody RegisterRequest registerRequest, HttpServletResponse response) {
+    public ResponseEntity<ResponseTemplate<Void>> register(@Valid @RequestBody RegisterRequest registerRequest,
+                                                           HttpServletResponse response,
+                                                           HttpServletRequest request) {
         try {
             authService.registerUser(registerRequest, request);
             return ResponseEntity.ok(ResponseTemplate.success());
@@ -75,18 +77,6 @@ public class AuthController {
             log.error("Registration failed for email: {}", registerRequest.getEmail(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
         }
-    }
-
-    @Operation(summary = "Get basic information about the currently authenticated user")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved user information",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Bad request, could not retrieve user information",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
-    })
-    @GetMapping("/me")
-    public ResponseEntity<ResponseTemplate<UserInfoResponse>> getBasic(HttpServletRequest request) {
-        return ResponseEntity.ok(ResponseTemplate.success(authService.getBasicInformation(request)));
     }
 
     @Operation(summary = "Verify user's email using a verification token.")
@@ -97,7 +87,8 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/verify-email")
-    public ResponseEntity<ResponseTemplate<Void>> verifyEmail(@RequestParam("token") String token) {
+    public ResponseEntity<ResponseTemplate<Void>> verifyEmail(@RequestParam("token") String token,
+                                                              HttpServletRequest request) {
         try {
             authService.verifyEmailCheck(token, request);
             return ResponseEntity.ok(ResponseTemplate.success());
