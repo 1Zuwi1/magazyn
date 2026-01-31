@@ -2,7 +2,9 @@ package com.github.dawid_stolarczyk.magazyn.Utils;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+@Component
 public class StringUtils {
     @Value("${auth.password.min-length}")
     private int MIN_PASSWORD_LENGTH;
