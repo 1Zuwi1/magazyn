@@ -16,7 +16,7 @@ interface NavProps {
   isCollapsed: boolean
 }
 
-export function AdminNotificationsNav({ links, isCollapsed }: NavProps) {
+export function NotificationNav({ links, isCollapsed }: NavProps) {
   return (
     <div
       className="flex flex-col data-[collapsed=true]:py-2"

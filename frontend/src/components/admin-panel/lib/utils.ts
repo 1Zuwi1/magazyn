@@ -1,3 +1,5 @@
+import { MOCK_NOTIFICATIONS } from "@/components/dashboard/mock-data"
+
 export function formatBytes(
   bytes: number,
   opts: {
@@ -19,3 +21,7 @@ export function formatBytes(
 
   return `${(bytes / 1024 ** i).toFixed(decimals)} ${size}`
 }
+
+export const unreadAlerts = MOCK_NOTIFICATIONS.filter(
+  (notification) => !notification.read
+).length

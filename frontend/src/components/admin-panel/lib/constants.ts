@@ -20,3 +20,5 @@ export const NOTIFICATIONS_NAV_LINKS = [
     icon: Alert01Icon,
   },
 ]
+
+export const FULL_WAREHOUSE_THRESHOLD = 90

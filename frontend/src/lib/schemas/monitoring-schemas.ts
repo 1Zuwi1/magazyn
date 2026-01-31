@@ -1,10 +1,9 @@
-import { z } from "zod"
+import z from "zod"
 import { createApiSchema } from "../create-api-schema"
 
 export const NotificationTypeSchema = z.enum([
   "UNAUTHORIZED_REMOVAL",
   "RACK_OVERWEIGHT",
-  "SENSOR_OFFLINE",
   "ITEM_EXPIRED",
   "TEMPERATURE_VIOLATION",
 ])
@@ -25,6 +24,7 @@ export const NotificationSchema = z.object({
   rackId: z.string().optional(),
   itemId: z.string().optional(),
   metadata: z.record(z.string(), z.unknown()),
+  createdAt: z.string(),
   date: z.string(),
   read: z.boolean(),
 })

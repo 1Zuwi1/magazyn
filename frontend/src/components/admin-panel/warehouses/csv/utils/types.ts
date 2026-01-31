@@ -1,30 +1,22 @@
 import type z from "zod"
 import type {
-  CsvItemRowSchema,
-  CsvRackRowSchema,
+  ItemSchema,
+  RackCsvSchema,
+  RackSchema,
 } from "@/lib/schemas/admin-schemas"
+
 export interface Column {
   key: string
   label: string
 }
 
-export interface RackFormData {
-  id: string
-  symbol?: string
-  name: string
-  rows: number
-  cols: number
-  minTemp: number
-  maxTemp: number
-  maxWeight: number
-  comment?: string
-}
+export type RackFormData = z.infer<typeof RackCsvSchema>
 
 export type CsvImporterType = "rack" | "item"
 
 export type CsvRowType<T extends CsvImporterType> = T extends "rack"
-  ? z.infer<typeof CsvRackRowSchema>
-  : z.infer<typeof CsvItemRowSchema>
+  ? z.infer<typeof RackSchema>
+  : z.infer<typeof ItemSchema>
 
 export interface CsvParseError {
   row: number

@@ -34,9 +34,7 @@ export function RackDialog({
   const form = useForm({
     defaultValues: formValues,
     onSubmit: ({ value }) => {
-      const id = isEdit ? currentRow.id : `rack-${Date.now()}`
       onSubmit({
-        id,
         symbol: value.symbol || undefined,
         name: value.name,
         rows: value.rows,
@@ -44,6 +42,9 @@ export function RackDialog({
         minTemp: value.minTemp,
         maxTemp: value.maxTemp,
         maxWeight: value.maxWeight,
+        maxItemWidth: value.maxItemWidth,
+        maxItemHeight: value.maxItemHeight,
+        maxItemDepth: value.maxItemDepth,
         comment: value.comment || undefined,
       })
       form.reset()

@@ -1,5 +1,5 @@
 import Papa from "papaparse"
-import { CsvItemRowSchema, CsvRackRowSchema } from "@/lib/schemas/admin-schemas"
+import { ItemSchema, RackCsvSchema } from "@/lib/schemas/admin-schemas"
 import type {
   CsvImporterType,
   CsvParseError,
@@ -26,7 +26,6 @@ const NUMBER_FIELDS = new Set([
 ])
 
 const RACK_HEADER_MAP: Record<string, string> = {
-  id: "id",
   symbol: "symbol",
   name: "name",
   rows: "rows",
@@ -57,11 +56,11 @@ const ITEM_HEADER_MAP: Record<string, string> = {
 
 const CONFIG = {
   rack: {
-    schema: CsvRackRowSchema,
+    schema: RackCsvSchema,
     headerMap: RACK_HEADER_MAP,
   },
   item: {
-    schema: CsvItemRowSchema,
+    schema: ItemSchema,
     headerMap: ITEM_HEADER_MAP,
   },
 }

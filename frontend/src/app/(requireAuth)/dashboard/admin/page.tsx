@@ -3,6 +3,7 @@ import { Search } from "@/components/admin-panel/components/search-bar/search"
 import { SearchProvider } from "@/components/admin-panel/components/search-bar/search-provider"
 import { TopNav } from "@/components/admin-panel/components/top-nav"
 import { ADMIN_NAV_LINKS } from "@/components/admin-panel/lib/constants"
+import { AdminOverview } from "@/components/admin-panel/overview/admin-overview"
 import ProtectedPage from "../../protected-page"
 
 export default function AdminDashboard() {
@@ -14,10 +15,11 @@ export default function AdminDashboard() {
           items: [{ title: link.title, url: link.url }],
         }))}
       >
-        <AdminHeader>
+        <AdminHeader className="mb-4">
           <TopNav />
           <Search placeholder="Szukaj..." />
         </AdminHeader>
+        <AdminOverview />
       </SearchProvider>
     </ProtectedPage>
   )

@@ -35,14 +35,6 @@ interface TableRowContentProps {
   onDelete: (id: string) => void
 }
 
-function formatDimensions(dimensions: {
-  x: number
-  y: number
-  z: number
-}): string {
-  return `${dimensions.x}×${dimensions.y}×${dimensions.z} mm`
-}
-
 export function TableRowContent({
   item,
   expired,
@@ -93,14 +85,17 @@ export function TableRowContent({
       <TableCell className="font-mono text-sm">{item.qrCode}</TableCell>
       <TableCell>{item.weight.toFixed(2)} kg</TableCell>
       <TableCell className="text-sm">
-        {formatDimensions(item.dimensions)}
+        {`${item.width}×${item.height}×${item.depth} mm`}
       </TableCell>
       <TableCell className="text-sm">
         {item.minTemp}°C – {item.maxTemp}°C
       </TableCell>
       <TableCell>
         <span className={expired ? "font-medium text-destructive" : ""}>
-          {formatDate(item.expiryDate)}
+          {formatDate(
+            item.expiryDate ??
+              new Date(Date.now() + item.daysToExpiry * 24 * 60 * 60 * 1000)
+          )}
         </span>
       </TableCell>
       <TableCell>

@@ -8,7 +8,9 @@ export interface Rack {
   maxTemp: number
   maxWeight: number
   currentWeight: number
-  maxItemSize: Dimensions
+  maxItemWidth: number
+  maxItemHeight: number
+  maxItemDepth: number
   comment?: string
   occupancy: number // 0-100
   items: ItemSlot[]
@@ -28,22 +30,19 @@ export interface FilterState {
   showEmpty: boolean
 }
 
-export interface Dimensions {
-  x: number
-  y: number
-  z: number
-}
-
 export interface Item {
   id: string
   name: string
   qrCode: string
-  expiryDate: Date
   weight: number
-  dimensions: Dimensions
+  width: number
+  height: number
+  depth: number
   minTemp: number
   maxTemp: number
   comment?: string
+  daysToExpiry: number
+  expiryDate?: Date
   isDangerous: boolean
   imageUrl?: string | null
 }

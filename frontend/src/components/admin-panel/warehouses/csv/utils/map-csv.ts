@@ -12,11 +12,9 @@ export function mapRackCsv(rows: CsvRowType<"rack">[]): Rack[] {
     maxTemp: row.maxTemp,
     maxWeight: row.maxWeight,
     currentWeight: 0,
-    maxItemSize: {
-      x: row.maxItemWidth,
-      y: row.maxItemHeight,
-      z: row.maxItemDepth,
-    },
+    maxItemWidth: row.maxItemWidth,
+    maxItemHeight: row.maxItemHeight,
+    maxItemDepth: row.maxItemDepth,
     comment: row.comment,
     occupancy: 0,
     items: [],
@@ -27,6 +25,7 @@ export function mapItemCsv(rows: CsvRowType<"item">[]): Item[] {
   return rows.map((row) => ({
     id: row.id,
     name: row.name,
+    qrCode: row.qrCode,
     imageUrl: row.imageUrl,
     minTemp: row.minTemp,
     maxTemp: row.maxTemp,
@@ -34,15 +33,8 @@ export function mapItemCsv(rows: CsvRowType<"item">[]): Item[] {
     width: row.width,
     height: row.height,
     depth: row.depth,
-    comment: row.comment,
     daysToExpiry: row.daysToExpiry,
-    qrCode: "",
-    dimensions: {
-      x: row.width,
-      y: row.height,
-      z: row.depth,
-    },
-    expiryDate: new Date(),
+    comment: row.comment,
     isDangerous: row.isDangerous,
   }))
 }

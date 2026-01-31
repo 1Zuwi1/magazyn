@@ -45,25 +45,17 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
   }
 
   const handleSubmit = (data: RackFormData) => {
-    if (selectedRack) {
-      setRacks((prev) =>
-        prev.map((r) =>
-          r.id === data.id
-            ? {
-                ...r,
-                symbol: data.symbol,
-                name: data.name,
-                rows: data.rows,
-                cols: data.cols,
-                minTemp: data.minTemp,
-                maxTemp: data.maxTemp,
-                maxWeight: data.maxWeight,
-                comment: data.comment,
-              }
-            : r
-        )
-      )
+    if (!selectedRack) {
+      return
     }
+    if (selectedRack === undefined) {
+      return setRacks((prev) => [...prev, data as Rack])
+    }
+    setRacks((prev) =>
+      prev.map((rack) =>
+        rack.id === selectedRack.id ? { ...rack, ...data } : rack
+      )
+    )
   }
 
   const handleCsvImport = (data: CsvRowType<"rack">[]) => {

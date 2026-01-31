@@ -78,7 +78,10 @@ const Virtualized = ({
             if (!item) {
               return null
             }
-            const expired = item.expiryDate < referenceDate
+            const itemExpiryDate =
+              item.expiryDate ??
+              new Date(Date.now() + item.daysToExpiry * 24 * 60 * 60 * 1000)
+            const expired = itemExpiryDate < referenceDate
             return (
               <NormalRow
                 expired={expired}

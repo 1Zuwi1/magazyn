@@ -23,10 +23,11 @@ export function NotificationList({ items }: NotificationListProps) {
       <div className="flex items-center justify-between border-b p-2">
         <span className="font-medium text-sm">Powiadomienia</span>
         <Button
+          className="cursor-pointer"
           disabled={!hasUnread}
           onClick={markAllAsRead}
           size="sm"
-          variant="ghost"
+          variant="outline"
         >
           Oznacz wszystkie jako przeczytane
         </Button>

@@ -37,6 +37,9 @@ export const DEFAULT_RACK = {
   minTemp: 0,
   maxTemp: 25,
   maxWeight: 100,
+  maxItemWidth: 100,
+  maxItemHeight: 100,
+  maxItemDepth: 100,
   comment: "",
 }
 
