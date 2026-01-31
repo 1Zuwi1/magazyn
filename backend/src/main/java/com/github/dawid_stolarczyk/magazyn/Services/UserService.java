@@ -95,6 +95,7 @@ public class UserService {
         emailService.sendVerificationEmail(user.getEmail(), baseUrl + "?token=" + emailVerificationToken);
     }
 
+    @Transactional
     public void changePassword(ChangePasswordRequest changeRequest, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
@@ -117,6 +118,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional
     public void changeFullName(ChangeFullNameRequest changeRequest, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();

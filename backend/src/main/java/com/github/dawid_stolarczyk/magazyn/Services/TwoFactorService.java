@@ -74,6 +74,7 @@ public class TwoFactorService {
         return methods;
     }
 
+    @Transactional
     public void sendTwoFactorCodeViaEmail(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_STRICT);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())

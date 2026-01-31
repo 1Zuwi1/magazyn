@@ -3,7 +3,6 @@ package com.github.dawid_stolarczyk.magazyn.Controller;
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
-import com.github.dawid_stolarczyk.magazyn.Exception.TwoFactorNotVerifiedException;
 import com.github.dawid_stolarczyk.magazyn.Services.TwoFactorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -29,8 +28,6 @@ import java.util.List;
 @Slf4j
 public class TwoFactorController {
     private final TwoFactorService twoFactorService;
-    private final HttpServletRequest request;
-    private final HttpServletResponse response;
 
     @Operation(summary = "Retrieve the current user's two-factor authentication methods.")
     @ApiResponses(value = {
@@ -40,7 +37,7 @@ public class TwoFactorController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping
-    public ResponseEntity<ResponseTemplate<List<String>>> twoFactorMethods() {
+    public ResponseEntity<ResponseTemplate<List<String>>> twoFactorMethods(HttpServletRequest request) {
         return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.getUsersTwoFactorMethods(request)));
     }
 
@@ -52,7 +49,8 @@ public class TwoFactorController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/send")
-    public ResponseEntity<ResponseTemplate<Void>> sendCode(@Valid @RequestBody SendTwoFactorCodeRequest sendRequest) {
+    public ResponseEntity<ResponseTemplate<Void>> sendCode(@Valid @RequestBody SendTwoFactorCodeRequest sendRequest,
+                                                           HttpServletRequest request) {
         try {
             if (!sendRequest.getMethod().equals("EMAIL")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -62,7 +60,7 @@ public class TwoFactorController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Failed to send 2FA code for method: {}", sendRequest.getMethod(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
         }
     }
 
@@ -72,7 +70,7 @@ public class TwoFactorController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
     })
     @PostMapping("/authenticator/start")
-    public ResponseEntity<ResponseTemplate<TwoFactorAuthenticatorResponse>> generateAuthenticatorSecret() {
+    public ResponseEntity<ResponseTemplate<TwoFactorAuthenticatorResponse>> generateAuthenticatorSecret(HttpServletRequest request) {
         return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateTwoFactorGoogleSecret(request)));
     }
 
@@ -84,12 +82,12 @@ public class TwoFactorController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/backup-codes/generate")
-    public ResponseEntity<ResponseTemplate<List<String>>> generateBackupCodes() {
+    public ResponseEntity<ResponseTemplate<List<String>>> generateBackupCodes(HttpServletRequest request) {
         try {
             return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateBackupCodes(request)));
         } catch (AuthenticationException e) {
-            log.error("Failed to generate backup codes");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
+            log.error("Failed to generate backup codes", e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
         }
     }
 
@@ -101,7 +99,9 @@ public class TwoFactorController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/check")
-    public ResponseEntity<ResponseTemplate<Void>> checkCode(@Valid @RequestBody CodeRequest codeRequest) {
+    public ResponseEntity<ResponseTemplate<Void>> checkCode(@Valid @RequestBody CodeRequest codeRequest,
+                                                            HttpServletRequest request,
+                                                            HttpServletResponse response) {
         try {
             twoFactorService.checkCode(codeRequest, request, response);
             return ResponseEntity.ok(ResponseTemplate.success());
@@ -119,17 +119,14 @@ public class TwoFactorController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @DeleteMapping("/methods")
-    public ResponseEntity<ResponseTemplate<Void>> removeTwoFactorMethod(@Valid @RequestBody RemoveTwoFactorMethodRequest removeRequest) {
+    public ResponseEntity<ResponseTemplate<Void>> removeTwoFactorMethod(@Valid @RequestBody RemoveTwoFactorMethodRequest removeRequest,
+                                                                        HttpServletRequest request) {
         try {
             twoFactorService.removeTwoFactorMethod(removeRequest.getMethod(), request);
             return ResponseEntity.ok(ResponseTemplate.success());
-        } catch (TwoFactorNotVerifiedException e) {
-            log.error("2FA verification required to remove method: {}", removeRequest.getMethod(), e);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ResponseTemplate.error(e.getMessage()));
-
         } catch (AuthenticationException e) {
             log.error("Failed to remove 2FA method: {}", removeRequest.getMethod(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
         }
     }
 }
