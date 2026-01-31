@@ -36,8 +36,13 @@ auth:
       duration: PT5M
 
     USER_ACTION_FREE:
-      capacity: 300
+      capacity: 200
       refill: 150
+      duration: PT2M
+
+    USER_ACTION_STRICT:
+      capacity: 5
+      refill: 5
       duration: PT2M
 
     WEBAUTH_REGISTRATION:

@@ -53,7 +53,6 @@ public class CookiesUtils {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                System.out.println("Found cookie: " + cookie.getName() + " = " + cookie.getValue());
                 if (cookie.getName().equals(name)) {
                     return cookie.getValue();
                 }

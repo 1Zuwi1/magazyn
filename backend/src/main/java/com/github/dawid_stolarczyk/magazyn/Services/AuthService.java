@@ -7,73 +7,41 @@ import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.EmailVerification;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
 import com.github.dawid_stolarczyk.magazyn.Repositories.EmailVerificationRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.RememberMeData;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.SessionData;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis.SessionService;
+import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
-import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCrypt;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
+import static com.github.dawid_stolarczyk.magazyn.Utils.StringUtils.checkPasswordStrength;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
-    @Autowired
-    private Bucket4jRateLimiter rateLimiter;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private SessionService sessionService;
-    @Autowired
-    private EmailVerificationRepository emailVerificationRepository;
-    @Autowired
-    private EmailService emailService;
 
-    @Value("${auth.password.min-length}")
-    private int MIN_PASSWORD_LENGTH;
+    private final Bucket4jRateLimiter rateLimiter;
+    private final UserRepository userRepository;
+    private final SessionManager sessionManager;
+    private final EmailVerificationRepository emailVerificationRepository;
+    private final EmailService emailService;
 
-    @Value("${app.domain}")
-    private String domain;
 
     public void logoutUser(HttpServletResponse response, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.AUTH_LOGOUT);
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null) {
-            new SecurityContextLogoutHandler().logout(request, response, auth);
-        }
-
-        String sessionId = CookiesUtils.getCookie(request, "SESSION");
-        String rememberMeId = CookiesUtils.getCookie(request, "REMEMBER_ME");
-
-        if (sessionId != null) {
-            sessionService.deleteSession(sessionId);
-        }
-        if (rememberMeId != null) {
-            sessionService.deleteRemember(rememberMeId);
-        }
-
-        sessionService.deleteSessionsCookies(response);
+        sessionManager.logoutUser(response, request);
     }
 
     public void loginUser(LoginRequest loginRequest, HttpServletResponse response, HttpServletRequest request) {
@@ -89,30 +57,7 @@ public class AuthService {
             throw new AuthenticationException(AuthError.ACCOUNT_LOCKED.name());
         }
 
-        String sessionId = UUID.randomUUID().toString();
-        SessionData sessionData = new SessionData(
-                sessionId,
-                user.getId(),
-                Status2FA.PRE_2FA,
-                getClientIp(request),
-                request.getHeader("User-Agent"));
-
-        CookiesUtils.setCookie(response, "SESSION", sessionService.createSession(sessionData), null);
-
-        if (loginRequest.isRememberMe()) {
-            RememberMeData rememberMeData = new RememberMeData(
-                    UUID.randomUUID().toString(),
-                    user.getId(),
-                    Status2FA.PRE_2FA,
-                    getClientIp(request),
-                    request.getHeader("User-Agent"));
-
-            CookiesUtils.setCookie(
-                    response,
-                    "REMEMBER_ME",
-                    sessionService.createRememberToken(rememberMeData),
-                    Duration.of(14, ChronoUnit.DAYS).getSeconds());
-        }
+        sessionManager.createSuccessLoginSession(user, request, response, loginRequest.isRememberMe());
 
     }
 
@@ -133,6 +78,8 @@ public class AuthService {
         newUser.setRole(UserRole.USER);
         newUser.setStatus(AccountStatus.PENDING_VERIFICATION);
 
+        newUser.setUserHandle(Hasher.generateRandomBase64Url());
+
         EmailVerification emailVerification = new EmailVerification();
         String emailVerificationToken = UUID.randomUUID().toString();
         emailVerification.setVerificationToken(Hasher.hashSHA256(emailVerificationToken));
@@ -140,12 +87,13 @@ public class AuthService {
         newUser.setEmailVerifications(emailVerification);
         userRepository.save(newUser);
 
-        String baseUrl = ServletUriComponentsBuilder.fromRequest(request)
+        String baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
                 .path("/auth/verify-email")
                 .toUriString();
         emailService.sendVerificationEmail(newUser.getEmail(), baseUrl + "?token=" + emailVerificationToken);
     }
 
+    @Transactional
     public void verifyEmailCheck(String token, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.AUTH_FREE);
         EmailVerification emailVerification = emailVerificationRepository.findByVerificationToken(Hasher.hashSHA256(token)).orElseThrow(()
@@ -160,32 +108,4 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    private boolean checkPasswordStrength(String password) {
-        if (password == null)
-            return false;
-
-        password = password.trim();
-
-        if (password.length() < MIN_PASSWORD_LENGTH)
-            return false;
-
-        boolean hasUpper = false;
-        boolean hasLower = false;
-        boolean hasDigit = false;
-        boolean hasSpecial = false;
-
-        for (char c : password.toCharArray()) {
-            if (Character.isUpperCase(c)) {
-                hasUpper = true;
-            } else if (Character.isLowerCase(c)) {
-                hasLower = true;
-            } else if (Character.isDigit(c)) {
-                hasDigit = true;
-            } else if (!Character.isLetterOrDigit(c)) {
-                hasSpecial = true;
-            }
-        }
-
-        return hasUpper && hasLower && hasDigit && hasSpecial;
-    }
 }
