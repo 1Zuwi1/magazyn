@@ -165,8 +165,8 @@ export function NotificationDetail({
 
       {onDismiss && (
         <div className="mt-auto pt-4">
-          <Button onClick={() => onDismiss(notification.id)} variant="ghost">
-            Odrzuć
+          <Button onClick={() => onDismiss(notification.id)} variant="outline">
+            Usuń
           </Button>
         </div>
       )}
