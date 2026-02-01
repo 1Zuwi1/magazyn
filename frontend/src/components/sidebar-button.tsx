@@ -44,7 +44,13 @@ export default function SidebarButton({
           render={({ className, ...props }) => (
             <SidebarMenuButton
               {...props}
-              className={cn("group/collapsible relative w-full p-0", className)}
+              className={cn(
+                "group/collapsible relative w-full p-0",
+                {
+                  "aria-expanded:bg-transparent": !isActive,
+                },
+                className
+              )}
               isActive={isActive}
               render={
                 <Button variant="ghost">

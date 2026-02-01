@@ -1,5 +1,6 @@
 "use client"
 
+import { ArrowRight02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { ComponentProps } from "react"
 import { cn } from "@/lib/utils"
@@ -148,7 +149,7 @@ export function QuickActionCard({
   icon,
 }: QuickActionCardProps) {
   return (
-    <div className="group relative overflow-hidden rounded-xl border bg-card p-4 transition-all hover:border-primary/30 hover:bg-primary/2 hover:shadow-sm">
+    <div className="group relative h-full overflow-hidden rounded-xl border bg-card p-4 transition-all hover:border-primary/30 hover:bg-primary/2 hover:shadow-sm">
       {/* Decorative corner gradient */}
       <div className="pointer-events-none absolute -top-12 -right-12 size-24 rounded-full bg-linear-to-br from-primary/10 to-transparent opacity-0 blur-2xl transition-opacity group-hover:opacity-100" />
 
@@ -165,8 +166,11 @@ export function QuickActionCard({
           </h3>
           <p className="mt-0.5 text-muted-foreground text-xs">{description}</p>
         </div>
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted/50 opacity-0 transition-all group-hover:opacity-100">
-          <span className="text-muted-foreground text-sm">→</span>
+        <div className="absolute top-1/2 right-0 flex size-8 shrink-0 -translate-y-1/2 items-center justify-center rounded-full bg-muted/50 opacity-0 transition-all group-hover:opacity-100">
+          <HugeiconsIcon
+            className="size-4 text-muted-foreground"
+            icon={ArrowRight02Icon}
+          />
         </div>
       </div>
     </div>
