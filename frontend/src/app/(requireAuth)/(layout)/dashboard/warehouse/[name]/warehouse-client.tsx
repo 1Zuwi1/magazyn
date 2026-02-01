@@ -1,15 +1,38 @@
 "use client"
 
-import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
+import {
+  CubeIcon,
+  Layers01Icon,
+  PackageIcon,
+  RulerIcon,
+  ThermometerIcon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useState } from "react"
+import { PageHeader } from "@/components/dashboard/page-header"
 import { RackGridView } from "@/components/dashboard/rack-visualization/rack-grid-view"
 import { RackParametersCard } from "@/components/dashboard/rack-visualization/rack-parameters-card"
 import { RackStatusCard } from "@/components/dashboard/rack-visualization/rack-status-card"
 import type { ItemSlot } from "@/components/dashboard/types"
+import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+
+const OCCUPANCY_WARNING_THRESHOLD = 75
+const OCCUPANCY_CRITICAL_THRESHOLD = 90
+
+function getOccupancyVariant(
+  occupancy: number
+): "default" | "warning" | "destructive" {
+  if (occupancy >= OCCUPANCY_CRITICAL_THRESHOLD) {
+    return "destructive"
+  }
+  if (occupancy >= OCCUPANCY_WARNING_THRESHOLD) {
+    return "warning"
+  }
+  return "default"
+}
 
 export default function WarehouseClient({
   racks,
@@ -38,6 +61,8 @@ export default function WarehouseClient({
   const totalSlots = currentRack.rows * currentRack.cols
   const occupiedSlots = currentRack.items.filter((item) => item !== null).length
   const freeSlots = totalSlots - occupiedSlots
+  const occupancyPercentage =
+    currentRack.occupancy || Math.round((occupiedSlots / totalSlots) * 100)
 
   const handlePreviousRack = () => {
     setCurrentRackIndex((prev) => (prev === 0 ? racks.length - 1 : prev - 1))
@@ -53,34 +78,74 @@ export default function WarehouseClient({
     maxElementSize: { width: 500, height: 400, depth: 300 },
   }
 
+  const headerStats = [
+    {
+      label: "Regałów",
+      value: racks.length,
+      icon: Layers01Icon,
+    },
+    {
+      label: "Obłożenie",
+      value: `${occupancyPercentage}%`,
+      variant: getOccupancyVariant(occupancyPercentage),
+    },
+    {
+      label: "Wolnych",
+      value: freeSlots,
+    },
+  ]
+
   return (
-    <div className="flex-1">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <Link
-            className={cn(
-              buttonVariants({ variant: "outline", size: "icon" }),
-              "size-8 sm:size-10"
-            )}
-            href="/dashboard/warehouse"
-            title="Powrót do listy magazynów"
-          >
-            <HugeiconsIcon icon={ArrowLeft02Icon} />
-          </Link>
-          <div>
-            <h2 className="font-bold text-xl tracking-tight sm:text-2xl lg:text-3xl">
-              {warehouseName}
-            </h2>
-            <p className="text-muted-foreground text-xs sm:text-sm">
-              ID: {warehouseId} • {currentRack.name}
-            </p>
-          </div>
+    <div className="space-y-6">
+      <PageHeader
+        backHref="/dashboard/warehouse"
+        backTitle="Powrót do listy magazynów"
+        stats={headerStats}
+        title={warehouseName}
+        titleBadge={`ID: ${warehouseId}`}
+      >
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <Badge className="gap-1.5" variant="outline">
+            <HugeiconsIcon className="size-3" icon={Layers01Icon} />
+            {currentRack.name}
+          </Badge>
+          <Badge className="gap-1.5 font-mono" variant="outline">
+            <HugeiconsIcon className="size-3" icon={RulerIcon} />
+            {currentRack.rows}×{currentRack.cols}
+          </Badge>
+          <Badge className="gap-1.5 font-mono" variant="outline">
+            <HugeiconsIcon className="size-3" icon={ThermometerIcon} />
+            {currentRack.minTemp}°C – {currentRack.maxTemp}°C
+          </Badge>
         </div>
+      </PageHeader>
+
+      {/* Quick Actions Bar */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Link
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "gap-2"
+          )}
+          href={`/dashboard/warehouse/${encodeURIComponent(warehouseName)}/assortment`}
+        >
+          <HugeiconsIcon className="size-4" icon={PackageIcon} />
+          <span>Asortyment</span>
+        </Link>
+        <Link
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "gap-2"
+          )}
+          href={`/dashboard/warehouse/${encodeURIComponent(warehouseName)}/3d-visualization`}
+        >
+          <HugeiconsIcon className="size-4" icon={CubeIcon} />
+          <span>Widok 3D</span>
+        </Link>
       </div>
 
       {/* Main Content - Two Column Layout */}
-      <div className="grid gap-4 sm:gap-6 xl:grid-cols-3">
+      <div className="grid gap-6 xl:grid-cols-3">
         {/* Left Column - Grid Visualization */}
         <div className="xl:col-span-2">
           <RackGridView
@@ -97,6 +162,12 @@ export default function WarehouseClient({
 
         {/* Right Column - Parameters and Status */}
         <div className="space-y-6">
+          <RackStatusCard
+            freeSlots={freeSlots}
+            occupancyPercentage={occupancyPercentage}
+            occupiedSlots={occupiedSlots}
+            totalCapacity={totalSlots}
+          />
           <RackParametersCard
             gridDimensions={{
               cols: currentRack.cols,
@@ -104,15 +175,6 @@ export default function WarehouseClient({
             }}
             maxElementSize={rackWithMaxSize.maxElementSize}
             tempRange={{ max: currentRack.maxTemp, min: currentRack.minTemp }}
-          />
-          <RackStatusCard
-            freeSlots={freeSlots}
-            occupancyPercentage={
-              currentRack.occupancy ||
-              Math.round((occupiedSlots / totalSlots) * 100)
-            }
-            occupiedSlots={occupiedSlots}
-            totalCapacity={totalSlots}
           />
         </div>
       </div>

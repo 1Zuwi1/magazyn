@@ -1,7 +1,9 @@
 import {
   Analytics01Icon,
+  ChartLineData01Icon,
   Clock01Icon,
   GroupItemsIcon,
+  Home01Icon,
   Package,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -11,6 +13,7 @@ import {
   MOCK_ITEMS,
   MOCK_WAREHOUSES,
 } from "@/components/dashboard/mock-data"
+import { PageHeader } from "@/components/dashboard/page-header"
 import type { Rack, Warehouse } from "@/components/dashboard/types"
 import { formatDate, pluralize } from "@/components/dashboard/utils/helpers"
 import ProtectedPage from "@/components/security/protected-page"
@@ -92,6 +95,18 @@ const getOccupancyBarClassName = (occupancy: number): string => {
     return "bg-orange-500"
   }
   return "bg-primary"
+}
+
+const getOccupancyStatVariant = (
+  occupancy: number
+): "default" | "warning" | "destructive" => {
+  if (occupancy >= OCCUPANCY_CRITICAL_THRESHOLD) {
+    return "destructive"
+  }
+  if (occupancy >= OCCUPANCY_WARNING_THRESHOLD) {
+    return "warning"
+  }
+  return "default"
 }
 
 export default function Page() {
@@ -192,16 +207,29 @@ export default function Page() {
     },
   ] as const
 
+  const headerStats = [
+    {
+      label: "Magazyny",
+      value: totalWarehouses,
+      icon: Package,
+    },
+    {
+      label: "Zajętość",
+      value: `${occupancyPercentage}%`,
+      icon: ChartLineData01Icon,
+      variant: getOccupancyStatVariant(occupancyPercentage),
+    },
+  ]
+
   return (
     <ProtectedPage>
       <div className="space-y-8">
-        <div className="space-y-2">
-          <h1 className="font-bold text-3xl tracking-tight">Panel główny</h1>
-          <p className="text-muted-foreground">
-            Bieżący stan magazynów, alerty operacyjne i szybkie przejścia do
-            kluczowych modułów.
-          </p>
-        </div>
+        <PageHeader
+          description="Bieżący stan magazynów, alerty operacyjne i szybkie przejścia do kluczowych modułów."
+          icon={Home01Icon}
+          stats={headerStats}
+          title="Panel główny"
+        />
 
         <section aria-labelledby="dashboard-stats">
           <h2 className="sr-only" id="dashboard-stats">
@@ -213,7 +241,9 @@ export default function Page() {
                 <CardHeader className="flex flex-row items-center justify-between gap-3">
                   <div>
                     <CardDescription>{stat.label}</CardDescription>
-                    <CardTitle className="text-2xl">{stat.value}</CardTitle>
+                    <CardTitle className="font-mono text-2xl">
+                      {stat.value}
+                    </CardTitle>
                   </div>
                   <div className="flex size-10 items-center justify-center rounded-full bg-muted">
                     <HugeiconsIcon className="size-5" icon={stat.icon} />
@@ -327,7 +357,7 @@ export default function Page() {
                           key={item.definitionId}
                         >
                           <span>{item.definition.name}</span>
-                          <span className="text-muted-foreground text-xs">
+                          <span className="font-mono text-muted-foreground text-xs">
                             {item.daysUntilExpiry ?? "—"} dni
                           </span>
                         </li>
@@ -378,7 +408,7 @@ export default function Page() {
                           </p>
                         </div>
                         <div className="flex flex-col items-end gap-2 text-xs">
-                          <span className="text-muted-foreground">
+                          <span className="font-mono text-muted-foreground">
                             {formatDate(item.addedDate)}
                           </span>
                           <Badge
@@ -430,7 +460,7 @@ export default function Page() {
                         style={{ width: `${warehouse.occupancy}%` }}
                       />
                     </div>
-                    <p className="text-muted-foreground text-xs">
+                    <p className="font-mono text-muted-foreground text-xs">
                       {formatNumber(warehouse.used)} /{" "}
                       {formatNumber(warehouse.capacity)} miejsc
                     </p>

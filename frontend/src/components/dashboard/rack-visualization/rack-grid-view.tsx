@@ -1,8 +1,14 @@
 "use client"
 
-import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
+import {
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  GridViewIcon,
+  ViewIcon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useEffect, useRef, useState } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { VIRTUALIZATION_THRESHOLDS } from "@/config/constants"
 import { RackItemsDialog } from "../items-visualization/rack-items-dialog"
@@ -22,6 +28,19 @@ interface RackGridViewProps {
 }
 
 const VIRTUALIZATION_THRESHOLD = VIRTUALIZATION_THRESHOLDS.GRID
+
+function getOccupancyBadgeVariant(
+  occupancy: number
+): "secondary" | "warning" | "destructive" {
+  if (occupancy >= 90) {
+    return "destructive"
+  }
+  if (occupancy >= 75) {
+    return "warning"
+  }
+  return "secondary"
+}
+
 export function RackGridView({
   rows,
   cols,
@@ -43,6 +62,11 @@ export function RackGridView({
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
   const [containerHeight, setContainerHeight] = useState(0)
+
+  // Calculate occupancy stats
+  const totalSlots = rows * cols
+  const occupiedSlots = items.filter((item) => item !== null).length
+  const occupancyPercentage = Math.round((occupiedSlots / totalSlots) * 100)
 
   useEffect(() => {
     const element = containerRef.current
@@ -77,29 +101,68 @@ export function RackGridView({
   }, [])
 
   return (
-    <div className="flex h-full w-full flex-col gap-4 sm:gap-6">
+    <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border bg-card shadow-sm">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
+            <HugeiconsIcon
+              className="size-4.5 text-primary"
+              icon={GridViewIcon}
+            />
+          </div>
+          <div>
+            <h3 className="font-semibold text-sm">Widok siatki</h3>
+            <p className="text-muted-foreground text-xs">
+              {rows} × {cols} = {totalSlots} miejsc
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Badge
+            className="font-mono"
+            variant={getOccupancyBadgeVariant(occupancyPercentage)}
+          >
+            {occupancyPercentage}% zajęte
+          </Badge>
+          <Button
+            className="gap-1.5"
+            onClick={() => setIsItemsDialogOpen(true)}
+            size="sm"
+            variant="outline"
+          >
+            <HugeiconsIcon className="size-3.5" icon={ViewIcon} />
+            <span className="hidden sm:inline">Lista przedmiotów</span>
+          </Button>
+        </div>
+      </div>
+
       {/* Grid Visualization with Side Navigation */}
-      <div className="flex h-full w-full items-center gap-2 sm:gap-4">
+      <div className="relative flex flex-1 items-center gap-2 p-3 sm:gap-4 sm:p-4">
         {/* Left Navigation Arrow */}
         {showNavigation && onPreviousRack && (
           <Button
-            className="size-8 sm:size-10"
+            className="z-10 size-10 shrink-0 rounded-xl shadow-md"
             onClick={onPreviousRack}
             size="icon"
             type="button"
             variant="outline"
           >
-            <HugeiconsIcon icon={ArrowLeft01Icon} />
+            <HugeiconsIcon className="size-5" icon={ArrowLeft01Icon} />
           </Button>
         )}
 
-        {/* Grid */}
+        {/* Grid Container */}
         <div
-          className="h-full max-h-150 min-h-72 w-full min-w-0 flex-1 rounded-lg border sm:min-h-96"
+          className="relative h-full max-h-125 min-h-72 w-full min-w-0 flex-1 overflow-hidden rounded-xl border bg-gradient-to-br from-background to-muted/20 sm:min-h-96"
           ref={containerRef}
         >
+          {/* Decorative corner accents */}
+          <div className="pointer-events-none absolute top-0 left-0 size-16 rounded-br-3xl border-primary/20 border-r border-b opacity-50" />
+          <div className="pointer-events-none absolute right-0 bottom-0 size-16 rounded-tl-3xl border-primary/20 border-t border-l opacity-50" />
+
           {shouldVirtualize ? (
-            // Virtualized Grid for large racks
             <Virtualized
               cols={cols}
               containerHeight={containerHeight}
@@ -109,7 +172,6 @@ export function RackGridView({
               rows={rows}
             />
           ) : (
-            // Regular CSS Grid for small racks
             <Normal
               cols={cols}
               containerHeight={containerHeight}
@@ -123,31 +185,58 @@ export function RackGridView({
         {/* Right Navigation Arrow */}
         {showNavigation && onNextRack && (
           <Button
-            className="size-8 sm:size-10"
+            className="z-10 size-10 shrink-0 rounded-xl shadow-md"
             onClick={onNextRack}
             size="icon"
             type="button"
             variant="outline"
           >
-            <HugeiconsIcon icon={ArrowRight01Icon} />
+            <HugeiconsIcon className="size-5" icon={ArrowRight01Icon} />
           </Button>
         )}
       </div>
-      {/* Rack Indicator */}
-      {totalRacks > 0 && (
-        <div className="flex flex-col items-center justify-center gap-2">
-          <Button onClick={() => setIsItemsDialogOpen(true)} variant="outline">
-            <span>Przedmioty w regale</span>
-          </Button>
-          <p className="text-muted-foreground text-xs sm:text-sm">
-            Regał:
-            <span className="font-semibold text-xs sm:text-sm">
-              {" "}
-              {currentRackIndex + 1} / {totalRacks}
-            </span>
-          </p>
+
+      {/* Footer Bar - Rack Indicator */}
+      {totalRacks > 1 && (
+        <div className="flex items-center justify-center gap-3 border-t bg-muted/20 px-4 py-3">
+          {/* Rack dots indicator */}
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: totalRacks }).map((_, index) => (
+              <button
+                aria-label={`Regał ${index + 1}`}
+                className={`size-2 rounded-full transition-all ${
+                  index === currentRackIndex
+                    ? "scale-125 bg-primary"
+                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                }`}
+                key={index}
+                onClick={() => {
+                  // Navigate to specific rack
+                  const diff = index - currentRackIndex
+                  if (diff > 0) {
+                    for (let i = 0; i < diff; i++) {
+                      onNextRack?.()
+                    }
+                  } else if (diff < 0) {
+                    for (let i = 0; i < Math.abs(diff); i++) {
+                      onPreviousRack?.()
+                    }
+                  }
+                }}
+                type="button"
+              />
+            ))}
+          </div>
+          <span className="font-mono text-muted-foreground text-xs">
+            Regał{" "}
+            <span className="font-semibold text-foreground">
+              {currentRackIndex + 1}
+            </span>{" "}
+            z {totalRacks}
+          </span>
         </div>
       )}
+
       <RackItemsDialog
         onOpenChange={setIsItemsDialogOpen}
         open={isItemsDialogOpen}
