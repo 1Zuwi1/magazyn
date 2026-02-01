@@ -1,8 +1,8 @@
 import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
-import ProtectedPage from "@/app/(requireAuth)/protected-page"
 import { AssortmentTable } from "@/components/dashboard/items/assortment-table"
 import { MOCK_ITEMS, MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
+import ProtectedPage from "@/components/security/protected-page"
 
 export default async function AssortmentPage() {
   return (

@@ -2,7 +2,7 @@ import "server-only"
 import { redirect } from "next/navigation"
 import type { ReactNode } from "react"
 import { getSession } from "@/lib/session"
-import UnauthorizedComponent from "./components/unauthorized"
+import UnauthorizedComponent from "../../app/(requireAuth)/components/unauthorized"
 
 type Children =
   | ReactNode

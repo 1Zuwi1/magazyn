@@ -41,8 +41,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 function NavMain() {
   return (
     <SidebarMenu className="gap-2 px-2">
-      {navigationItems.map((item, index) => (
-        <SidebarButton item={item} key={index} />
+      {navigationItems.map((item) => (
+        <SidebarButton item={item} key={item.href} />
       ))}
     </SidebarMenu>
   )

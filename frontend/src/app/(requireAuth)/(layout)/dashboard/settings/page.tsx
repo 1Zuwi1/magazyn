@@ -1,5 +1,5 @@
 import { SettingsContent } from "@/components/dashboard/settings/settings-content"
-import ProtectedPage from "../../protected-page"
+import ProtectedPage from "@/components/security/protected-page"
 
 export default function SettingsPage() {
   return (

@@ -1,8 +1,8 @@
 import { AssortmentTable } from "@/components/dashboard/items/assortment-table"
 import { ItemsTable } from "@/components/dashboard/items/items-table"
 import { MOCK_ITEM_STATS, MOCK_ITEMS } from "@/components/dashboard/mock-data"
+import ProtectedPage from "@/components/security/protected-page"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import ProtectedPage from "../../protected-page"
 
 export default function ItemsPage() {
   return (

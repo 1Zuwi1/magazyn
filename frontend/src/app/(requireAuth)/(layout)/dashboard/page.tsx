@@ -13,6 +13,7 @@ import {
 } from "@/components/dashboard/mock-data"
 import type { Rack, Warehouse } from "@/components/dashboard/types"
 import { formatDate, pluralize } from "@/components/dashboard/utils/helpers"
+import ProtectedPage from "@/components/security/protected-page"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -22,7 +23,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import ProtectedPage from "../protected-page"
 
 const NUMBER_FORMATTER = new Intl.NumberFormat("pl-PL")
 const OCCUPANCY_WARNING_THRESHOLD = 75

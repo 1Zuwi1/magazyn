@@ -21,13 +21,12 @@ export const navigationItems = [
         href: "/dashboard/items",
         icon: GroupItemsIcon,
       },
+      {
+        title: "Ustawienia",
+        href: "/dashboard/settings",
+        icon: Settings,
+      },
     ],
-  },
-  {
-    title: "Ustawienia",
-    href: "/dashboard/settings",
-    icon: Settings,
-    items: [],
   },
 ] as const
 

@@ -73,11 +73,20 @@ export default function SidebarButton({
                 <SidebarMenuSubItem key={subItem.title}>
                   <SidebarMenuSubButton
                     className={cn("w-full", {
-                      "bg-transparent! font-semibold":
-                        pathname === subItem.href, // overwrite active styles
+                      "font-semibold": pathname === subItem.href, // overwrite active styles
                     })}
                     isActive={pathname === subItem.href}
-                    render={<Link href={subItem.href}>{subItem.title}</Link>}
+                    render={
+                      <Link href={subItem.href}>
+                        {subItem.icon && (
+                          <HugeiconsIcon
+                            className="size-4"
+                            icon={subItem.icon}
+                          />
+                        )}
+                        {subItem.title}
+                      </Link>
+                    }
                   />
                 </SidebarMenuSubItem>
               ))}

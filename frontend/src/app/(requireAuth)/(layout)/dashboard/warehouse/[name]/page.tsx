@@ -1,7 +1,7 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import ProtectedPage from "@/app/(requireAuth)/protected-page"
 import { MOCK_RACKS } from "@/components/dashboard/mock-data"
+import ProtectedPage from "@/components/security/protected-page"
 import tryCatch from "@/lib/try-catch"
 import WarehouseClient from "./warehouse-client"
 
