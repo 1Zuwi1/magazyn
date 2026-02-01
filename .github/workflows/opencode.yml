@@ -6,6 +6,11 @@ on:
   pull_request_review_comment:
     types: [created]
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   opencode:
     if: |
@@ -21,10 +26,12 @@ jobs:
       issues: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Run opencode
-        uses: sst/opencode/github@latest
+        uses: anomalyco/opencode/github@latest
         env:
           ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
         with:

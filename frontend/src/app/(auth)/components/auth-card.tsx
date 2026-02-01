@@ -33,7 +33,7 @@ export default function AuthCard({ children }: AuthCardProps) {
       <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-linear-to-b from-primary/5 via-transparent to-transparent blur-2xl" />
 
       {/* Card container */}
-      <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/80 p-8 shadow-black/5 shadow-xl backdrop-blur-xl">
+      <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card p-8 shadow-black/5 shadow-xl">
         <AuthCardDecoration />
         {children}
       </div>

@@ -41,10 +41,7 @@ export function SettingsContent({ user }: SettingsContentProps) {
             <HugeiconsIcon icon={Settings01Icon} size={14} />
             <span>Bezpieczeństwo</span>
           </div>
-          <SecuritySection
-            initialTwoFactorEnabled={user.twoFactorEnabled}
-            userEmail={user.email}
-          />
+          <SecuritySection userEmail={user.email} />
         </section>
       </div>
     </div>

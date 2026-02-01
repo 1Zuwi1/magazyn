@@ -1,62 +1,32 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { ChangePasswordFormSchema } from "@/lib/schemas"
-import { PasswordVerificationSection } from "./password-verification-section"
-import type { TwoFactorMethod } from "./types"
+import { ChangePasswordFormSchema, type TwoFactorMethod } from "@/lib/schemas"
+import { TwoFactorVerificationDialog } from "./two-factor-verification-dialog"
 import { wait } from "./utils"
 
 interface PasswordSectionProps {
-  verificationRequired: boolean
   twoFactorMethod: TwoFactorMethod
 }
 
-export function PasswordSection({
-  verificationRequired,
-  twoFactorMethod,
-}: PasswordSectionProps) {
-  const [verificationComplete, setVerificationComplete] = useState(
-    !verificationRequired
-  )
-  const verificationCompleteRef = useRef(verificationComplete)
+export function PasswordSection({ twoFactorMethod }: PasswordSectionProps) {
   const [isVerificationDialogOpen, setIsVerificationDialogOpen] =
     useState(false)
 
-  useEffect(() => {
-    setVerificationComplete(!verificationRequired)
-  }, [verificationRequired])
-
-  useEffect(() => {
-    verificationCompleteRef.current = verificationComplete
-  }, [verificationComplete])
-
-  const isVerificationBlocked = (): boolean =>
-    verificationRequired && !verificationCompleteRef.current
+  const [isVerified, setIsVerified] = useState(false) // FIXME: Only in dev - remove later
 
   const form = useForm({
     defaultValues: {
       oldPassword: "",
       newPassword: "",
       confirmPassword: "",
-      twoFactorCode: null,
-    } as {
-      oldPassword: string
-      newPassword: string
-      confirmPassword: string
-      twoFactorCode: string | null
     },
     onSubmit: async () => {
-      if (isVerificationBlocked()) {
+      if (!isVerified) {
         setIsVerificationDialogOpen(true)
         return
       }
@@ -147,35 +117,15 @@ export function PasswordSection({
           )}
         </form.Subscribe>
       </div>
-      {verificationRequired ? (
-        <Dialog
-          onOpenChange={setIsVerificationDialogOpen}
-          open={isVerificationDialogOpen}
-        >
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Potwierdź 2FA przed zmianą</DialogTitle>
-            </DialogHeader>
-            <form.Field name="twoFactorCode">
-              {(field) => (
-                <PasswordVerificationSection
-                  code={field.state.value || ""}
-                  method={twoFactorMethod}
-                  onInputChange={(code) => field.handleChange(code)}
-                  onVerificationChange={(complete) => {
-                    verificationCompleteRef.current = complete
-                    setVerificationComplete(complete)
-                    if (complete) {
-                      setIsVerificationDialogOpen(false)
-                      form.handleSubmit()
-                    }
-                  }}
-                />
-              )}
-            </form.Field>
-          </DialogContent>
-        </Dialog>
-      ) : null}
+      <TwoFactorVerificationDialog
+        initialMethod={twoFactorMethod}
+        onOpenChange={setIsVerificationDialogOpen}
+        onVerified={() => {
+          setIsVerified(true) // FIXME: Only in dev - remove later
+          form.handleSubmit()
+        }}
+        open={isVerificationDialogOpen}
+      />
     </form>
   )
 }
