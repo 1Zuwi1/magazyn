@@ -3,7 +3,7 @@ import type { CsvRowType } from "./types"
 
 export function mapRackCsv(rows: CsvRowType<"rack">[]): Rack[] {
   return rows.map((row) => ({
-    id: row.id,
+    id: crypto.randomUUID(),
     symbol: row.symbol,
     name: row.name,
     rows: row.rows,

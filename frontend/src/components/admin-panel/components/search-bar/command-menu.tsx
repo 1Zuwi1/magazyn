@@ -4,6 +4,7 @@ import { LaptopIcon, Moon02Icon, Sun03Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 import {
   CommandDialog,
   CommandEmpty,
@@ -41,6 +42,12 @@ export function CommandMenu({
   const { setTheme } = useTheme()
   const router = useRouter()
   const navGroups = navData || []
+  const [query, setQuery] = useState(initialQuery)
+
+  useEffect(() => {
+    setQuery(initialQuery)
+  }, [initialQuery])
+
   function changeTheme(theme: "light" | "dark" | "system") {
     setTheme(theme)
     setOpen(false)
@@ -48,8 +55,9 @@ export function CommandMenu({
   return (
     <CommandDialog onOpenChange={setOpen} open={open}>
       <CommandInput
-        defaultValue={initialQuery}
+        onValueChange={setQuery}
         placeholder="Wyszukuj polecenie"
+        value={query}
       />
       <CommandList>
         <ScrollArea className="h-72 pe-1">

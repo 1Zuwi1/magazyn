@@ -21,22 +21,19 @@ export function useCsvImporter<T extends "rack" | "item">({
   >([])
   const [validatedData, setValidatedData] = useState<CsvRowType<T>[]>([])
   const [parseErrors, setParseErrors] = useState<CsvParseError[]>([])
+  const [previewHeaders, setPreviewHeaders] = useState<string[]>([])
 
   async function processFile(files: File[]) {
     for (const file of files) {
       if (!file) {
         return
       }
-
-      setRawPreviewData([])
-      setValidatedData([])
-      setParseErrors([])
-
+      resetFile()
       const result = await parseCsvFile(file, type)
-
       setRawPreviewData(result.rawRows)
       setValidatedData(result.rows)
       setParseErrors(result.errors)
+      setPreviewHeaders(result.headers)
 
       if (result.errors.length > 0) {
         const displayedErrors = result.errors
@@ -58,6 +55,7 @@ export function useCsvImporter<T extends "rack" | "item">({
     setRawPreviewData([])
     setValidatedData([])
     setParseErrors([])
+    setPreviewHeaders([])
   }
 
   function confirmImport() {
@@ -79,6 +77,7 @@ export function useCsvImporter<T extends "rack" | "item">({
     processFile,
     confirmImport,
     previewRows: rawPreviewData,
+    previewHeaders,
     resetFile,
     errorCount: parseErrors.length,
     validRowCount: validatedData.length,

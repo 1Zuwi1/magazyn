@@ -12,8 +12,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { useCsvImporter } from "../../hooks/use-csv-importer"
 import { FileUploader } from "./file-uploader"
@@ -37,8 +35,7 @@ export function CsvImporter<T extends CsvImporterType>({
   onImport,
   warehouses,
 }: CsvImporterProps<T>) {
-  const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>("")
-  const [itemName, setItemName] = useState<string>("")
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState("")
 
   const handleImport = (data: CsvRowType<T>[]): void => {
     onImport(data, selectedWarehouseId || undefined)
@@ -51,10 +48,16 @@ export function CsvImporter<T extends CsvImporterType>({
     processFile,
     confirmImport,
     previewRows,
+    previewHeaders,
     resetFile,
   } = useCsvImporter<T>({ type, onImport: handleImport })
 
   const columns = type === "rack" ? RACK_COLUMNS : ITEM_COLUMNS
+
+  const previewColumns =
+    previewHeaders.length > 0
+      ? previewHeaders.map((header) => ({ key: header, label: header }))
+      : columns
 
   const needsWarehouseSelection =
     type === "rack" && warehouses && warehouses.length > 0
@@ -64,7 +67,6 @@ export function CsvImporter<T extends CsvImporterType>({
     setOpen(isOpen)
     if (!isOpen) {
       setSelectedWarehouseId("")
-      setItemName("")
     }
   }
 
@@ -75,7 +77,7 @@ export function CsvImporter<T extends CsvImporterType>({
       >
         Importuj CSV
       </DialogTrigger>
-      <DialogContent className="flex max-h-[90vh] max-w-[95vw] flex-col overflow-hidden">
+      <DialogContent className="min-w-fit">
         <DialogHeader>
           <DialogTitle>
             {type === "rack"
@@ -84,25 +86,9 @@ export function CsvImporter<T extends CsvImporterType>({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-2">
-          <Label htmlFor="item-name">
-            {type === "rack" ? "Nazwa regału" : "Nazwa asortymentu"}
-          </Label>
-          <Input
-            id="item-name"
-            onChange={(e) => setItemName(e.target.value)}
-            placeholder={
-              type === "rack"
-                ? "Wprowadź nazwę regału..."
-                : "Wprowadź nazwę asortymentu..."
-            }
-            value={itemName}
-          />
-        </div>
-
         {isPreviewing ? (
           <PreviewTable
-            columns={[...columns]}
+            columns={[...previewColumns]}
             rows={previewRows as Record<string, string>[]}
           />
         ) : (
@@ -126,7 +112,6 @@ export function CsvImporter<T extends CsvImporterType>({
               <Button
                 onClick={() => {
                   resetFile()
-                  setItemName("")
                 }}
                 variant="destructive"
               >

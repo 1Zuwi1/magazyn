@@ -1,6 +1,5 @@
 "use client"
 
-import { useMemo } from "react"
 import {
   Table,
   TableBody,
@@ -24,26 +23,15 @@ function normalizeKey(key: string): string {
 export function PreviewTable({ columns, rows }: PreviewTableProps) {
   const hasMoreRows = rows.length > MAX_PREVIEW_ROWS
 
-  const normalizedRows = useMemo(() => {
-    const displayRows = rows.slice(0, MAX_PREVIEW_ROWS)
-    return displayRows.map((row) => {
-      const normalized: Record<string, string> = {}
-      for (const [key, value] of Object.entries(row)) {
-        normalized[normalizeKey(key)] = value
-      }
-      return normalized
-    })
-  }, [rows])
-
   return (
-    <div className="flex min-w-0 flex-col gap-2">
-      <div className="relative max-h-80 min-w-0 overflow-auto rounded-md border">
-        <Table className="w-full">
-          <TableHeader className="sticky top-0 z-10 bg-muted">
+    <div className="flex flex-col gap-4">
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader className="bg-muted/50">
             <TableRow>
               {columns.map((col) => (
                 <TableHead
-                  className="min-w-32 whitespace-nowrap border-r px-4 py-3 text-center font-semibold last:border-r-0"
+                  className="whitespace-nowrap px-4 py-3 font-semibold"
                   key={col.key}
                 >
                   {col.label}
@@ -52,12 +40,12 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {normalizedRows.length > 0 ? (
-              normalizedRows.map((row, rowIndex) => (
-                <TableRow key={rowIndex}>
+            {rows.length > 0 ? (
+              rows.map((row, i) => (
+                <TableRow key={i}>
                   {columns.map((col) => (
                     <TableCell
-                      className="min-w-32 max-w-56 truncate whitespace-nowrap border-r px-4 py-2 text-center last:border-r-0"
+                      className="whitespace-nowrap px-4 py-3"
                       key={col.key}
                       title={row[normalizeKey(col.key)] || "-"}
                     >
@@ -69,7 +57,7 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
             ) : (
               <TableRow>
                 <TableCell
-                  className="py-8 text-center text-muted-foreground"
+                  className="h-24 text-center text-muted-foreground"
                   colSpan={columns.length}
                 >
                   Brak danych do wyświetlenia
@@ -80,11 +68,11 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
         </Table>
       </div>
 
-      <p className="text-center text-muted-foreground text-sm">
+      <div className="text-center text-muted-foreground text-sm">
         {hasMoreRows
           ? `Wyświetlono ${MAX_PREVIEW_ROWS} z ${rows.length} wierszy`
           : `${rows.length} ${rows.length === 1 ? "wiersz" : "wierszy"}`}
-      </p>
+      </div>
     </div>
   )
 }
