@@ -41,14 +41,18 @@ public class ItemController {
 
     @Operation(summary = "Get item by ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Item details",
+            @ApiResponse(responseCode = "200", description = "Item data",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Item not found",
+            @ApiResponse(responseCode = "404", description = "Item not found",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/{id}")
     public ResponseEntity<ResponseTemplate<ItemDto>> getItemById(@PathVariable Long id) {
-        return ResponseEntity.ok(ResponseTemplate.success(itemService.getItemById(id)));
+        try {
+            return ResponseEntity.ok(ResponseTemplate.success(itemService.getItemById(id)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+        }
     }
 
     @Operation(summary = "Create a new item")
@@ -79,40 +83,41 @@ public class ItemController {
         return ResponseEntity.ok(ResponseTemplate.success());
     }
 
-    @Operation(summary = "Upload item photo (encrypted)")
+    @Operation(summary = "Upload item photo")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Photo uploaded successfully",
+            @ApiResponse(responseCode = "200", description = "Photo uploaded",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
             @ApiResponse(responseCode = "400", description = "Invalid file or item not found",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @PostMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/{id}/photo", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<String>> uploadPhoto(
-            @PathVariable Long id,
-            @RequestPart("file") MultipartFile file) {
+    public ResponseEntity<ResponseTemplate<String>> uploadPhoto(@PathVariable Long id, @RequestPart("file") MultipartFile file) {
         try {
-            String fileName = itemService.uploadPhoto(id, file);
-            return ResponseEntity.ok(ResponseTemplate.success(fileName));
-        } catch (Exception e) {
+            return ResponseEntity.ok(ResponseTemplate.success(itemService.uploadPhoto(id, file)));
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to upload photo for item {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error("PHOTO_UPLOAD_FAILED"));
         }
     }
 
-    @Operation(summary = "Download item photo (decrypted)")
+    @Operation(summary = "Download item photo")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Photo data",
-                    content = @Content(mediaType = "image/*")),
-            @ApiResponse(responseCode = "400", description = "Photo not found or decryption error",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+            @ApiResponse(responseCode = "200", description = "Binary photo data content"),
+            @ApiResponse(responseCode = "404", description = "Photo or item not found")
     })
     @GetMapping(value = "/{id}/photo", produces = MediaType.IMAGE_JPEG_VALUE)
     public ResponseEntity<byte[]> downloadPhoto(@PathVariable Long id) {
         try {
-            byte[] photo = itemService.downloadPhoto(id);
-            return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(photo);
-        } catch (Exception e) {
+            byte[] data = itemService.downloadPhoto(id);
+            return ResponseEntity.ok(data);
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            log.error("Failed to download photo for item {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

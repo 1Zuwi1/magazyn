@@ -82,23 +82,51 @@ public class ItemService {
                     try {
                         pipedIn.close();
                     } catch (IOException ignored) {
-                        // noop
                     }
                 }
             }, "item-photo-encrypt");
 
             encryptThread.start();
 
-            storageService.uploadStream(fileName, pipedIn, file.getContentType());
+            try {
+                storageService.uploadStream(fileName, pipedIn, file.getContentType());
+            } catch (Exception ex) {
+                // Critical: if upload fails, we must first interrupt/stop the thread
+                // and then cleanup the potential partial file.
+                encryptThread.interrupt();
+                try {
+                    pipedIn.close();
+                } catch (IOException ignored) {
+                }
+                try {
+                    storageService.delete(fileName);
+                } catch (Exception ignored) {
+                }
+                throw ex;
+            } finally {
+                encryptThread.join(5000); // Wait for thread to finish
+            }
 
-            encryptThread.join();
             if (encryptionError.get() != null) {
+                try {
+                    storageService.delete(fileName);
+                } catch (Exception ignored) {
+                }
                 throw encryptionError.get();
             }
         }
 
-        item.setPhoto_url(fileName);
-        itemRepository.save(item);
+        try {
+            item.setPhoto_url(fileName);
+            itemRepository.save(item);
+        } catch (Exception ex) {
+            // Compensating transaction: if DB save fails, delete the uploaded file
+            try {
+                storageService.delete(fileName);
+            } catch (Exception ignored) {
+            }
+            throw ex;
+        }
 
         if (previousPhoto != null && !previousPhoto.isBlank() && !previousPhoto.equals(fileName)) {
             storageService.delete(previousPhoto);

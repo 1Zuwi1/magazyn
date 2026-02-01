@@ -107,8 +107,7 @@ public class RackController {
     @PostMapping(value = "/import", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseTemplate<RackImportReport>> importRacks(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("warehouseId") Long warehouseId
+            @RequestParam("file") MultipartFile file
     ) {
         return ResponseEntity.ok(ResponseTemplate.success(rackImportService.importFromCsv(file)));
     }

@@ -37,16 +37,20 @@ public class AssortmentController {
         return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAllAssortments()));
     }
 
-    @Operation(summary = "Get assortment by ID")
+    @Operation(summary = "Retrieve a specific assortment placement by its ID.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Assortment details",
+            @ApiResponse(responseCode = "200", description = "Assortment retrieved successfully",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Assortment not found",
+            @ApiResponse(responseCode = "404", description = "Assortment not found",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/{id}")
     public ResponseEntity<ResponseTemplate<AssortmentDto>> getAssortmentById(@PathVariable Long id) {
-        return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAssortmentById(id)));
+        try {
+            return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAssortmentById(id)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+        }
     }
 
     @Operation(summary = "Create a new assortment placement")
@@ -103,15 +107,19 @@ public class AssortmentController {
         return ResponseEntity.ok(ResponseTemplate.success(assortmentImportService.importFromCsv(file)));
     }
 
-    @Operation(summary = "Get assortment by barcode")
+    @Operation(summary = "Retrieve a specific assortment placement by its barcode.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Assortment details",
+            @ApiResponse(responseCode = "200", description = "Assortment retrieved successfully",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Assortment not found",
+            @ApiResponse(responseCode = "404", description = "Assortment not found",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/barcode/{code}")
     public ResponseEntity<ResponseTemplate<AssortmentDto>> getAssortmentByBarcode(@PathVariable String code) {
-        return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAssortmentByBarcode(code)));
+        try {
+            return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAssortmentByBarcode(code)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+        }
     }
 }

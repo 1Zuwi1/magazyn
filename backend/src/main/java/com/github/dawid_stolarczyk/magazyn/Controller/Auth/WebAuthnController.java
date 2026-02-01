@@ -24,10 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -157,7 +154,7 @@ public class WebAuthnController {
             @ApiResponse(responseCode = "404", description = "Passkey not found",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @org.springframework.web.bind.annotation.DeleteMapping("/credentials/{id}")
+    @DeleteMapping("/credentials/{id}")
     public ResponseEntity<ResponseTemplate<Void>> deletePasskey(@org.springframework.web.bind.annotation.PathVariable Long id) {
         try {
             webAuthnService.deletePasskey(id);

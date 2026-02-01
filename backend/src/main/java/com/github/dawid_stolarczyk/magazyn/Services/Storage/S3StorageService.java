@@ -27,68 +27,69 @@ public class S3StorageService implements StorageService {
 
     @Override
     public void uploadStream(String fileName, InputStream inputStream, String contentType) throws Exception {
+        if (bucketName == null || bucketName.isBlank()) {
+            throw new IllegalStateException("S3 bucket name is not configured");
+        }
+
         String resolvedContentType = contentType == null || contentType.isBlank()
                 ? "application/octet-stream"
                 : contentType;
         String objectKey = buildObjectKey(fileName);
 
-        byte[] firstPartBuffer = new byte[MIN_PART_SIZE];
-        int bytesRead = readFully(inputStream, firstPartBuffer);
+        // Pre-allocate buffer only once per upload or use a smaller initial check
+        // To strictly address "per-upload 5MB buffer allocation", we could use a smaller
+        // check buffer, but multipart upload REQUIRES at least 5MB for all parts except last.
+        byte[] buffer = new byte[MIN_PART_SIZE];
+        int bytesRead = readFully(inputStream, buffer);
 
         if (bytesRead < MIN_PART_SIZE) {
-            // Mały plik: upload jednym żądaniem
-
-            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(objectKey)
-                    .contentType(resolvedContentType)
-                    .build();
-
-            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(Arrays.copyOf(firstPartBuffer, bytesRead)));
+            // Small file: Single-part upload
+            s3Client.putObject(PutObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(objectKey)
+                            .contentType(resolvedContentType)
+                            .build(),
+                    RequestBody.fromBytes(Arrays.copyOf(buffer, bytesRead)));
             return;
         }
 
-        // Duży plik: multipart upload
-        CreateMultipartUploadRequest createRequest = CreateMultipartUploadRequest.builder()
+        // Large file: Multipart upload
+        CreateMultipartUploadResponse createResponse = s3Client.createMultipartUpload(CreateMultipartUploadRequest.builder()
                 .bucket(bucketName)
                 .key(objectKey)
                 .contentType(resolvedContentType)
-                .build();
+                .build());
 
-        CreateMultipartUploadResponse createResponse = s3Client.createMultipartUpload(createRequest);
         String uploadId = createResponse.uploadId();
         List<CompletedPart> completedParts = new ArrayList<>();
 
         try {
             int partNumber = 1;
+            // Upload first part
+            completedParts.add(uploadPart(objectKey, uploadId, partNumber++, buffer, bytesRead));
 
-            // Wrzuć pierwszą część (już pobraną)
-            completedParts.add(uploadPart(objectKey, uploadId, partNumber++, firstPartBuffer, bytesRead));
-
-            // Czytaj i wrzucaj kolejne części
-            byte[] loopBuffer = new byte[MIN_PART_SIZE];
-            int currentRead;
-            while ((currentRead = readFully(inputStream, loopBuffer)) > 0) {
-                completedParts.add(uploadPart(objectKey, uploadId, partNumber++, loopBuffer, currentRead));
+            // Continue with subsequent parts
+            while ((bytesRead = readFully(inputStream, buffer)) > 0) {
+                completedParts.add(uploadPart(objectKey, uploadId, partNumber++, buffer, bytesRead));
             }
-
-            CompletedMultipartUpload completedUpload = CompletedMultipartUpload.builder()
-                    .parts(completedParts)
-                    .build();
 
             s3Client.completeMultipartUpload(CompleteMultipartUploadRequest.builder()
                     .bucket(bucketName)
                     .key(objectKey)
                     .uploadId(uploadId)
-                    .multipartUpload(completedUpload)
+                    .multipartUpload(CompletedMultipartUpload.builder().parts(completedParts).build())
                     .build());
 
         } catch (Exception ex) {
-            s3Client.abortMultipartUpload(AbortMultipartUploadRequest.builder()
-                    .bucket(bucketName)
-                    .key(objectKey)
-                    .uploadId(uploadId)
-                    .build());
+            try {
+                s3Client.abortMultipartUpload(AbortMultipartUploadRequest.builder()
+                        .bucket(bucketName)
+                        .key(objectKey)
+                        .uploadId(uploadId)
+                        .build());
+            } catch (Exception abortEx) {
+                ex.addSuppressed(abortEx);
+            }
             throw ex;
         }
     }
@@ -121,13 +122,19 @@ public class S3StorageService implements StorageService {
         return totalRead;
     }
 
+    /**
+     * Downloads a file from S3.
+     * <p>
+     * IMPORTANT: The caller is responsible for closing the returned InputStream to release the underlying HTTP connection.
+     * Failure to do so may lead to connection pool exhaustion.
+     * </p>
+     */
     @Override
     public InputStream download(String fileName) throws Exception {
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+        return s3Client.getObject(GetObjectRequest.builder()
                 .bucket(bucketName)
                 .key(buildObjectKey(fileName))
-                .build();
-        return s3Client.getObject(getObjectRequest);
+                .build());
     }
 
     @Override
@@ -142,10 +149,13 @@ public class S3StorageService implements StorageService {
     }
 
     private String buildObjectKey(String fileName) {
+        // Sanitize fileName to prevent path traversal (extract only the filename part)
+        String sanitizedFileName = new java.io.File(fileName).getName();
+
         String prefix = itemsPrefix == null ? "" : itemsPrefix.trim();
         if (!prefix.isEmpty() && !prefix.endsWith("/")) {
             prefix = prefix + "/";
         }
-        return prefix + fileName;
+        return prefix + sanitizedFileName;
     }
 }

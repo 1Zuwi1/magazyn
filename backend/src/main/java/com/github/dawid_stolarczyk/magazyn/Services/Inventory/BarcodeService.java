@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter;
 public class BarcodeService {
     private static final DateTimeFormatter GS1_DATE_FORMAT = DateTimeFormatter.ofPattern("yyMMdd");
     private static final int SERIAL_LENGTH = 6;
-    private static final int ITEM_BARCODE_LENGTH = 6;
+    private static final int ITEM_BARCODE_LENGTH = 14;
     private static final int GTIN_14_LENGTH = 14;
     private final ItemRepository itemRepository;
     private final AssortmentRepository assortmentRepository;

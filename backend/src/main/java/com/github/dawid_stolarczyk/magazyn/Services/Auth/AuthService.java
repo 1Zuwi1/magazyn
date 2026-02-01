@@ -56,7 +56,7 @@ public class AuthService {
             throw new AuthenticationException(AuthError.INVALID_CREDENTIALS.name());
         }
 
-        if (!user.getStatus().equals(AccountStatus.ACTIVE)) {
+        if (!user.getStatus().equals(AccountStatus.ACTIVE) && !user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
             throw new AuthenticationException(AuthError.ACCOUNT_LOCKED.name());
         }
 

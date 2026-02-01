@@ -23,6 +23,8 @@ public class S3Config {
     private String secretKey;
 
     @Bean
+    // Standard S3 SDK deprecates some builder methods used for path-style access and checksums
+    // required for compatibility with Cloudflare R2 and MinIO local instances.
     @SuppressWarnings("deprecation")
     public S3Client s3Client() {
         return S3Client.builder()

@@ -60,7 +60,8 @@ public class TwoFactorController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Failed to send 2FA code for method: {}", sendRequest.getMethod(), e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
+            HttpStatus status = AuthError.INSUFFICIENT_PERMISSIONS.name().equals(e.getCode()) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
 
@@ -87,7 +88,8 @@ public class TwoFactorController {
             return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateBackupCodes(request)));
         } catch (AuthenticationException e) {
             log.error("Failed to generate backup codes", e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
+            HttpStatus status = AuthError.INSUFFICIENT_PERMISSIONS.name().equals(e.getCode()) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
 
@@ -126,7 +128,8 @@ public class TwoFactorController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Failed to remove 2FA method: {}", removeRequest.getMethod(), e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
+            HttpStatus status = AuthError.INSUFFICIENT_PERMISSIONS.name().equals(e.getCode()) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
 

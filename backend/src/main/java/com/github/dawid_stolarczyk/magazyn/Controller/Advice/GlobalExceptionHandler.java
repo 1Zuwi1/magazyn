@@ -67,18 +67,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ResponseTemplate<String>> handleDataIntegrity(DataIntegrityViolationException ex) {
-        log.warn("Data integrity violation: {}", ex.getMessage(), ex);
+        log.warn("Data integrity violation: {}", ex.getMostSpecificCause().getMessage());
 
-        // Rozróżnienie typów konfliktów na podstawie komunikatu wyjątku
         String errorCode = "CONFLICT";
-        String message = ex.getMessage();
+        String message = ex.getMostSpecificCause().getMessage();
 
         if (message != null) {
-            if (message.contains("position") || message.contains("rack_id")) {
+            String lowerMessage = message.toLowerCase();
+            if (lowerMessage.contains("position") || lowerMessage.contains("rack_id")) {
                 errorCode = "PLACEMENT_CONFLICT";
-            } else if (message.contains("duplicate") || message.contains("unique")) {
+            } else if (lowerMessage.contains("duplicate") || lowerMessage.contains("unique") || lowerMessage.contains("idx_")) {
                 errorCode = "DUPLICATE_ENTRY";
-            } else if (message.contains("foreign key") || message.contains("constraint")) {
+            } else if (lowerMessage.contains("foreign key") || lowerMessage.contains("constraint")) {
                 errorCode = "CONSTRAINT_VIOLATION";
             }
         }

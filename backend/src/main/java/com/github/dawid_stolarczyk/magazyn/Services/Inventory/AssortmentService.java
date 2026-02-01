@@ -83,11 +83,10 @@ public class AssortmentService {
                 .expires_at(expiresAt)
                 .position_x(dto.getPositionX())
                 .position_y(dto.getPositionY())
+                .barcode(barcodeService.buildPlacementBarcode(item.getBarcode())) // Generate before save
                 .build();
 
-        Assortment saved = assortmentRepository.save(assortment);
-        saved.setBarcode(barcodeService.buildPlacementBarcode(item.getBarcode()));
-        return mapToDto(assortmentRepository.save(saved));
+        return mapToDto(assortmentRepository.save(assortment));
     }
 
     @Transactional

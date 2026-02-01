@@ -8,7 +8,17 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+/**
+ * Utility class for managing authentication context and retrieving authenticated principal information.
+ */
 public class AuthUtil {
+    /**
+     * Retrieves the current authenticated principal from the SecurityContext.
+     *
+     * @return The {@link AuthPrincipal} of the current user.
+     * @throws AuthenticationNotFoundException if no user is authenticated.
+     * @throws AuthenticationException         if the authentication is invalid or incomplete.
+     */
     public static AuthPrincipal getCurrentAuthPrincipal() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 

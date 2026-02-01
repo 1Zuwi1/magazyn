@@ -56,7 +56,13 @@ public final class CsvImportUtils {
         for (int i = 0; i < line.length(); i++) {
             char c = line.charAt(i);
             if (c == '"') {
-                inQuotes = !inQuotes;
+                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    // Escaped quote: "" -> "
+                    current.append('"');
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
                 continue;
             }
             if (c == ',' && !inQuotes) {
