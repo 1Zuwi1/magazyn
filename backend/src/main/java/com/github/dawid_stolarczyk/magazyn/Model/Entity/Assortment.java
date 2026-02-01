@@ -16,6 +16,8 @@ public class Assortment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(unique = true, length = 32)
+    private String barcode;
     @ManyToOne
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;

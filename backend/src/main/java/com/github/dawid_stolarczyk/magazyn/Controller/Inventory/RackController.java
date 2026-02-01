@@ -1,10 +1,10 @@
-package com.github.dawid_stolarczyk.magazyn.Controller;
+package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackImportReport;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.RackImportService;
-import com.github.dawid_stolarczyk.magazyn.Services.RackService;
+import com.github.dawid_stolarczyk.magazyn.Services.Inventory.RackService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

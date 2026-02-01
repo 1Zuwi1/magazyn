@@ -13,4 +13,7 @@ public class WebAuthnFinishRequest {
     @NotBlank
     @Schema(description = "The JSON credential from the browser's WebAuthn API", example = "{\"id\":\"...\",\"rawId\":\"...\",\"type\":\"public-key\",\"response\":{...}}")
     private String credentialJson;
+
+    @Schema(description = "Optional name for the passkey", example = "My MacBook Pro")
+    private String keyName;
 }

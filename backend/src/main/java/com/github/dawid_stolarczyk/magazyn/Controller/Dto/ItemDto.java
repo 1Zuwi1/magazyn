@@ -1,6 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,10 @@ import lombok.NoArgsConstructor;
 public class ItemDto {
     @Schema(description = "Unique identifier of the item", example = "1")
     private Long id;
+
+    @Schema(description = "Unique barcode for the item", example = "123456")
+    @Pattern(regexp = "\\d{6}", message = "BARCODE_MUST_BE_6_DIGITS")
+    private String barcode;
 
     @Schema(description = "Name of the item", example = "Laptop")
     private String name;

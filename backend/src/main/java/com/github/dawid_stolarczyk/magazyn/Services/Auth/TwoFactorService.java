@@ -1,8 +1,9 @@
-package com.github.dawid_stolarczyk.magazyn.Services;
+package com.github.dawid_stolarczyk.magazyn.Services.Auth;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.CodeRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.TwoFactorAuthenticatorResponse;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.TwoFactorMethodsResponse;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Exception.TwoFactorNotVerifiedException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.BackupCode;
@@ -13,15 +14,15 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.TwoFactor;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis.SessionService;
 import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;
+import com.github.dawid_stolarczyk.magazyn.Services.EmailService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.CodeGenerator;
-import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ import java.util.List;
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
 @Service
+@RequiredArgsConstructor
 public class TwoFactorService {
     private static final int BACKUP_CODES_COUNT = 8;
     private static final int BACKUP_CODE_LENGTH = 12;
@@ -45,7 +47,6 @@ public class TwoFactorService {
 
     private final UserRepository userRepository;
     private final EmailService emailService;
-    private final SessionService sessionService;
     private final SessionManager sessionManager;
     private final Bucket4jRateLimiter rateLimiter;
 
@@ -55,23 +56,22 @@ public class TwoFactorService {
     private final GoogleAuthenticator gAuth = new GoogleAuthenticator();
 
 
-    public TwoFactorService(UserRepository userRepository, EmailService emailService, SessionService sessionService, SessionManager sessionManager, Bucket4jRateLimiter rateLimiter) {
-        this.userRepository = userRepository;
-        this.emailService = emailService;
-        this.sessionService = sessionService;
-        this.sessionManager = sessionManager;
-        this.rateLimiter = rateLimiter;
-    }
 
-
-    public List<String> getUsersTwoFactorMethods(HttpServletRequest request) {
+    public TwoFactorMethodsResponse getUsersTwoFactorMethods(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_FREE);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(AuthenticationException::new);
         List<String> methods = new ArrayList<>(user.getTwoFactorMethods().stream().map(method -> method.getMethodName().name()).toList());
         methods.add("EMAIL");
 
-        return methods;
+        if (!user.getWebAuthnCredentials().isEmpty()) {
+            methods.add("PASSKEYS");
+        }
+
+        return TwoFactorMethodsResponse.builder()
+                .methods(methods)
+                .defaultMethod(user.getDefault2faMethod())
+                .build();
     }
 
     @Transactional
@@ -164,11 +164,10 @@ public class TwoFactorService {
                 throw new AuthenticationException(AuthError.CODE_FORMAT_INVALID.name());
             }
         } else if (method.equals(TwoFactor.BACKUP_CODES.name())) {
-            useBackupCode(codeRequest.getCode(), request);
+            useBackupCode(codeRequest.getCode(), request, response);
         } else {
             throw new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name());
         }
-        successfulTwoFactorAuthentication(request);
         sessionManager.create2FASuccessSession(user, request, response);
     }
 
@@ -208,7 +207,7 @@ public class TwoFactorService {
     }
 
 
-    public void useBackupCode(String code, HttpServletRequest request) {
+    public void useBackupCode(String code, HttpServletRequest request, HttpServletResponse response) {
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
 
@@ -230,14 +229,7 @@ public class TwoFactorService {
         }
         userRepository.save(user);
 
-        successfulTwoFactorAuthentication(request);
-    }
-
-
-    private void successfulTwoFactorAuthentication(HttpServletRequest request) {
-        String sessionId = CookiesUtils.getCookie(request, "SESSION");
-        String rememberMeId = CookiesUtils.getCookie(request, "REMEMBER_ME");
-        sessionService.completeSessionTwoFactor(sessionId, rememberMeId);
+        sessionManager.create2FASuccessSession(user, request, response);
     }
 
     public void removeTwoFactorMethod(String stringMethod, HttpServletRequest request) {
@@ -274,6 +266,44 @@ public class TwoFactorService {
         }
 
         user.removeTwoFactorMethod(existing);
+        userRepository.save(user);
+    }
+    @Transactional
+    public void setDefaultTwoFactorMethod(String stringMethod, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_FREE);
+
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        if (!authPrincipal.isSudoMode()) {
+            throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
+        }
+
+        User user = userRepository.findById(authPrincipal.getUserId())
+                .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
+
+        if (stringMethod.equals("EMAIL")) {
+            user.setDefault2faMethod("EMAIL");
+        } else if (stringMethod.equals("PASSKEYS")) {
+            if (user.getWebAuthnCredentials().isEmpty()) {
+                throw new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name());
+            }
+            user.setDefault2faMethod("PASSKEYS");
+        } else {
+            TwoFactor method;
+            try {
+                method = TwoFactor.valueOf(stringMethod);
+            } catch (IllegalArgumentException e) {
+                throw new AuthenticationException(AuthError.UNSUPPORTED_2FA_METHOD.name());
+            }
+
+            boolean hasMethod = user.getTwoFactorMethods().stream()
+                    .anyMatch(m -> m.getMethodName() == method);
+
+            if (!hasMethod) {
+                throw new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name());
+            }
+            user.setDefault2faMethod(stringMethod);
+        }
+
         userRepository.save(user);
     }
 }

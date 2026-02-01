@@ -10,6 +10,7 @@ import com.yubico.webauthn.data.PublicKeyCredentialType;
 import com.yubico.webauthn.data.exception.Base64UrlException;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,12 +27,10 @@ public class WebAuthnCredentialRepository implements CredentialRepository {
     // Used when username IS KNOWN
     @Override
     public Set<PublicKeyCredentialDescriptor> getCredentialIdsForUsername(String username) {
-        String userHandle = repository
-                .findFirstByEmail(username)
-                .orElseThrow(() -> new IllegalStateException("User not found"))
-                .getUserHandle();
-
-        return repository.findByUserHandle(userHandle)
+        return repository.findFirstByEmail(username)
+                .map(WebAuthnCredential::getUserHandle)
+                .map(repository::findByUserHandle)
+                .orElseGet(Collections::emptyList)
                 .stream()
                 .map(c -> {
                     try {

@@ -1,10 +1,10 @@
-package com.github.dawid_stolarczyk.magazyn.Controller;
+package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseImportReport;
-import com.github.dawid_stolarczyk.magazyn.Services.WarehouseImportService;
-import com.github.dawid_stolarczyk.magazyn.Services.WarehouseService;
+import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.WarehouseImportService;
+import com.github.dawid_stolarczyk.magazyn.Services.Inventory.WarehouseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

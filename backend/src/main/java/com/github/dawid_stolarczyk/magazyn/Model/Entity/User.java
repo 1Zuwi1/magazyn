@@ -55,6 +55,9 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BackupCode> backupCodes = new ArrayList<>();
 
+    @Column(name = "default_2fa_method", nullable = false)
+    private String default2faMethod = "EMAIL";
+
     public void addTwoFactorMethod(TwoFactorMethod method) {
         twoFactorMethods.add(method);
         method.setUser(this);

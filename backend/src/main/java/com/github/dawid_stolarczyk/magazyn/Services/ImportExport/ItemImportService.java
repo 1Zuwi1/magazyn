@@ -3,7 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Services.ImportExport;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemImportError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemImportReport;
-import com.github.dawid_stolarczyk.magazyn.Services.ItemService;
+import com.github.dawid_stolarczyk.magazyn.Services.Inventory.ItemService;
 import com.github.dawid_stolarczyk.magazyn.Utils.CsvImportUtils;
 import com.github.dawid_stolarczyk.magazyn.Utils.CsvImportUtils.CsvRow;
 import lombok.RequiredArgsConstructor;

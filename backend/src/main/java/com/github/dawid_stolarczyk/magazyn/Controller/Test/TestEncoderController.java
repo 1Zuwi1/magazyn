@@ -1,4 +1,4 @@
-package com.github.dawid_stolarczyk.magazyn.Controller;
+package com.github.dawid_stolarczyk.magazyn.Controller.Test;
 
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Services.StringCryptoService;

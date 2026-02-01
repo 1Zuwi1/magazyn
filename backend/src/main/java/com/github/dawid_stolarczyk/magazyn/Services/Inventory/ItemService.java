@@ -1,22 +1,20 @@
-package com.github.dawid_stolarczyk.magazyn.Services;
+package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemDto;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
 import com.github.dawid_stolarczyk.magazyn.Repositories.ItemRepository;
+import com.github.dawid_stolarczyk.magazyn.Services.Storage.StorageService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,9 +22,8 @@ import java.util.stream.Collectors;
 public class ItemService {
     private final ItemRepository itemRepository;
     private final FileCryptoService fileCryptoService;
-
-    @Value("${app.upload.dir}")
-    private String uploadDir;
+    private final StorageService storageService;
+    private final BarcodeService barcodeService;
 
     public List<ItemDto> getAllItems() {
         return itemRepository.findAll().stream()
@@ -44,6 +41,7 @@ public class ItemService {
     public ItemDto createItem(ItemDto dto) {
         Item item = new Item();
         updateItemFromDto(item, dto);
+        item.setBarcode(barcodeService.generateUniqueItemBarcode());
         return mapToDto(itemRepository.save(item));
     }
 
@@ -68,21 +66,43 @@ public class ItemService {
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
 
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-
+        String previousPhoto = item.getPhoto_url();
         String fileName = UUID.randomUUID() + ".enc";
-        Path filePath = uploadPath.resolve(fileName);
+        AtomicReference<Exception> encryptionError = new AtomicReference<>();
 
-        try (InputStream is = file.getInputStream();
-             OutputStream os = Files.newOutputStream(filePath)) {
-            fileCryptoService.encrypt(is, os);
+        try (PipedInputStream pipedIn = new PipedInputStream(1024 * 64);
+             PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
+             InputStream rawIn = file.getInputStream()) {
+
+            Thread encryptThread = new Thread(() -> {
+                try (PipedOutputStream out = pipedOut; InputStream in = rawIn) {
+                    fileCryptoService.encrypt(in, out);
+                } catch (Exception ex) {
+                    encryptionError.set(ex);
+                    try {
+                        pipedIn.close();
+                    } catch (IOException ignored) {
+                        // noop
+                    }
+                }
+            }, "item-photo-encrypt");
+
+            encryptThread.start();
+
+            storageService.uploadStream(fileName, pipedIn, file.getContentType());
+
+            encryptThread.join();
+            if (encryptionError.get() != null) {
+                throw encryptionError.get();
+            }
         }
 
         item.setPhoto_url(fileName);
         itemRepository.save(item);
+
+        if (previousPhoto != null && !previousPhoto.isBlank() && !previousPhoto.equals(fileName)) {
+            storageService.delete(previousPhoto);
+        }
 
         return fileName;
     }
@@ -95,12 +115,7 @@ public class ItemService {
             throw new IllegalArgumentException("PHOTO_NOT_FOUND");
         }
 
-        Path filePath = Paths.get(uploadDir).resolve(item.getPhoto_url());
-        if (!Files.exists(filePath)) {
-            throw new FileNotFoundException("Encrypted photo file not found");
-        }
-
-        try (InputStream is = Files.newInputStream(filePath);
+        try (InputStream is = storageService.download(item.getPhoto_url());
              ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             fileCryptoService.decrypt(is, baos);
             return baos.toByteArray();
@@ -123,6 +138,7 @@ public class ItemService {
     private ItemDto mapToDto(Item item) {
         return ItemDto.builder()
                 .id(item.getId())
+                .barcode(item.getBarcode())
                 .photoUrl(item.getPhoto_url() != null ? "/api/items/" + item.getId() + "/photo" : null)
                 .minTemp(item.getMin_temp())
                 .maxTemp(item.getMax_temp())

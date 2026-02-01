@@ -1,4 +1,4 @@
-package com.github.dawid_stolarczyk.magazyn.Services;
+package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentDto;
@@ -28,6 +28,7 @@ public class AssortmentService {
     private final ItemRepository itemRepository;
     private final RackRepository rackRepository;
     private final UserRepository userRepository;
+    private final BarcodeService barcodeService;
 
     private static final double EPS = 1e-6;
 
@@ -39,6 +40,12 @@ public class AssortmentService {
 
     public AssortmentDto getAssortmentById(Long id) {
         Assortment assortment = assortmentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
+        return mapToDto(assortment);
+    }
+
+    public AssortmentDto getAssortmentByBarcode(String barcode) {
+        Assortment assortment = assortmentRepository.findByBarcode(barcode)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
         return mapToDto(assortment);
     }
@@ -66,6 +73,8 @@ public class AssortmentService {
             expiresAt = Timestamp.from(Instant.now().plus(item.getExpireAfterDays(), ChronoUnit.DAYS));
         }
 
+        barcodeService.ensureItemBarcode(item);
+
         Assortment assortment = Assortment.builder()
                 .item(item)
                 .rack(rack)
@@ -76,7 +85,9 @@ public class AssortmentService {
                 .position_y(dto.getPositionY())
                 .build();
 
-        return mapToDto(assortmentRepository.save(assortment));
+        Assortment saved = assortmentRepository.save(assortment);
+        saved.setBarcode(barcodeService.buildPlacementBarcode(item.getBarcode()));
+        return mapToDto(assortmentRepository.save(saved));
     }
 
     @Transactional
@@ -157,6 +168,7 @@ public class AssortmentService {
     private AssortmentDto mapToDto(Assortment assortment) {
         return AssortmentDto.builder()
                 .id(assortment.getId())
+                .barcode(assortment.getBarcode())
                 .itemId(assortment.getItem().getId())
                 .rackId(assortment.getRack().getId())
                 .userId(assortment.getUser() != null ? assortment.getUser().getId() : null)

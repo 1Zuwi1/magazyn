@@ -1,10 +1,10 @@
-package com.github.dawid_stolarczyk.magazyn.Controller;
+package com.github.dawid_stolarczyk.magazyn.Controller.Auth;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.LoginRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RegisterRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
-import com.github.dawid_stolarczyk.magazyn.Services.AuthService;
+import com.github.dawid_stolarczyk.magazyn.Services.Auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

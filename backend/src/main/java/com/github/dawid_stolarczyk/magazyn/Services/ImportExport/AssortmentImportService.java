@@ -3,7 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Services.ImportExport;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentImportError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentImportReport;
-import com.github.dawid_stolarczyk.magazyn.Services.AssortmentService;
+import com.github.dawid_stolarczyk.magazyn.Services.Inventory.AssortmentService;
 import com.github.dawid_stolarczyk.magazyn.Utils.CsvImportUtils;
 import com.github.dawid_stolarczyk.magazyn.Utils.CsvImportUtils.CsvRow;
 import lombok.RequiredArgsConstructor;

@@ -16,6 +16,9 @@ public class WebAuthnCredential {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String name;
+
     // ID credentiala (Base64Url)
     @Column(nullable = false, unique = true)
     private String credentialId;

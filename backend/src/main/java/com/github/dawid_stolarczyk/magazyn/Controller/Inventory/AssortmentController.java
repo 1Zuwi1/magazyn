@@ -1,10 +1,10 @@
-package com.github.dawid_stolarczyk.magazyn.Controller;
+package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentImportReport;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.AssortmentImportService;
-import com.github.dawid_stolarczyk.magazyn.Services.AssortmentService;
+import com.github.dawid_stolarczyk.magazyn.Services.Inventory.AssortmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -101,5 +101,17 @@ public class AssortmentController {
     public ResponseEntity<ResponseTemplate<AssortmentImportReport>> importAssortments(
             @RequestPart("file") MultipartFile file) {
         return ResponseEntity.ok(ResponseTemplate.success(assortmentImportService.importFromCsv(file)));
+    }
+
+    @Operation(summary = "Get assortment by barcode")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Assortment details",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "400", description = "Assortment not found",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @GetMapping("/barcode/{code}")
+    public ResponseEntity<ResponseTemplate<AssortmentDto>> getAssortmentByBarcode(@PathVariable String code) {
+        return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAssortmentByBarcode(code)));
     }
 }

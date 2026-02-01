@@ -3,7 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Services.ImportExport;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackImportError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackImportReport;
-import com.github.dawid_stolarczyk.magazyn.Services.RackService;
+import com.github.dawid_stolarczyk.magazyn.Services.Inventory.RackService;
 import com.github.dawid_stolarczyk.magazyn.Utils.CsvImportUtils;
 import com.github.dawid_stolarczyk.magazyn.Utils.CsvImportUtils.CsvRow;
 import lombok.RequiredArgsConstructor;

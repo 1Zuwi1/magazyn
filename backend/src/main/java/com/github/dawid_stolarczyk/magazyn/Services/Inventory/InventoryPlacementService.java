@@ -1,4 +1,4 @@
-package com.github.dawid_stolarczyk.magazyn.Services;
+package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
@@ -10,7 +10,9 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.AssortmentRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.ItemRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.RackRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.WarehouseRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
+import lombok.AllArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
+@AllArgsConstructor
 public class InventoryPlacementService {
     private static final int MAX_EXPIRE_DAYS = 3650;
     private static final int MAX_RACK_SIDE = 1000;
@@ -32,21 +35,18 @@ public class InventoryPlacementService {
     private final RackRepository rackRepository;
     private final AssortmentRepository assortmentRepository;
     private final UserRepository userRepository;
+    private final WarehouseRepository warehouseRepository;
+    private final BarcodeService barcodeService;
 
-    public InventoryPlacementService(
-            ItemRepository itemRepository,
-            RackRepository rackRepository,
-            AssortmentRepository assortmentRepository,
-            UserRepository userRepository) {
-        this.itemRepository = itemRepository;
-        this.rackRepository = rackRepository;
-        this.assortmentRepository = assortmentRepository;
-        this.userRepository = userRepository;
-    }
 
     public PlacementPlanResult buildPlacementPlan(PlacementPlanRequest request) {
         Item item = itemRepository.findById(request.getItemId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
+
+        if (request.getWarehouseId() != null && !warehouseRepository.existsById(request.getWarehouseId())) {
+            throw new IllegalArgumentException(InventoryError.WAREHOUSE_NOT_FOUND.name());
+        }
+
         List<Rack> racks = request.getWarehouseId() == null
                 ? rackRepository.findAll()
                 : rackRepository.findByWarehouseId(request.getWarehouseId());
@@ -144,6 +144,8 @@ public class InventoryPlacementService {
         Timestamp createdAt = Timestamp.from(Instant.now());
         Timestamp expiresAt = calculateExpiresAt(item.getExpireAfterDays(), createdAt.toInstant());
 
+        barcodeService.ensureItemBarcode(item);
+
         for (Map.Entry<Long, List<PlacementSlotRequest>> entry : placementsByRack.entrySet()) {
             Rack rack = rackRepository.findById(entry.getKey())
                     .orElseThrow(() -> new IllegalArgumentException(InventoryError.PLACEMENT_INVALID.name()));
@@ -192,9 +194,19 @@ public class InventoryPlacementService {
             throw new IllegalArgumentException(InventoryError.PLACEMENT_INVALID.name());
         }
 
+        for (Assortment assortment : newAssortments) {
+            if (assortment.getBarcode() == null || assortment.getBarcode().isBlank()) {
+                assortment.setBarcode(barcodeService.buildPlacementBarcode(item.getBarcode()));
+            }
+        }
+        assortmentRepository.saveAll(newAssortments);
+
         PlacementConfirmationResponse response = new PlacementConfirmationResponse();
         response.setItemId(item.getId());
         response.setStoredQuantity(newAssortments.size());
+        response.setBarcodes(newAssortments.stream()
+                .map(Assortment::getBarcode)
+                .toList());
         return response;
     }
 

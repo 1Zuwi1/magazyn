@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface AssortmentRepository extends JpaRepository<Assortment, Long> {
     List<Assortment> findByRackId(Long rackId);
+    boolean existsByBarcode(String barcode);
+    java.util.Optional<Assortment> findByBarcode(String barcode);
 }

@@ -1,4 +1,4 @@
-package com.github.dawid_stolarczyk.magazyn.Controller;
+package com.github.dawid_stolarczyk.magazyn.Controller.Test;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import io.swagger.v3.oas.annotations.Operation;

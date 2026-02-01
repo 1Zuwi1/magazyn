@@ -1,8 +1,9 @@
-package com.github.dawid_stolarczyk.magazyn.Services;
+package com.github.dawid_stolarczyk.magazyn.Services.ImportExport;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseImportError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseImportReport;
+import com.github.dawid_stolarczyk.magazyn.Services.Inventory.WarehouseService;
 import com.github.dawid_stolarczyk.magazyn.Utils.CsvImportUtils;
 import com.github.dawid_stolarczyk.magazyn.Utils.CsvImportUtils.CsvRow;
 import lombok.RequiredArgsConstructor;

@@ -24,6 +24,7 @@ public interface WebAuthRepository extends JpaRepository<WebAuthnCredential, Lon
 
     Optional<WebAuthnCredential> findFirstByEmail(String email);
 
+    long countByUserHandle(String userHandle);
 
     @Modifying
     @Query("UPDATE WebAuthnCredential c SET c.signatureCount = :newCount WHERE c.credentialId = :credentialId")

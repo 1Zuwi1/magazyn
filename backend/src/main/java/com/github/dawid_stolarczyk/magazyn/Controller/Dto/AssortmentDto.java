@@ -17,6 +17,9 @@ public class AssortmentDto {
     @Schema(description = "Unique identifier of the assortment", example = "1")
     private Long id;
 
+    @Schema(description = "Unique barcode for this placement", example = "P9Q8R7S6T5U4V3W2")
+    private String barcode;
+
     @NotNull
     @Schema(description = "ID of the item", example = "1")
     private Long itemId;

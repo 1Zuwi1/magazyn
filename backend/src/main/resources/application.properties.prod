@@ -30,6 +30,13 @@ spring.redis.host=redis
 spring.redis.port=6379
 spring.redis.password=${REDIS_PASSWORD}
 
-app.upload.dir=uploads
+# S3 / MinIO Configuration
+app.s3.endpoint=${S3_ENDPOINT}
+app.s3.region=${S3_REGION}
+app.s3.bucket=${S3_BUCKET}
+app.s3.access-key=${S3_ACCESS_KEY}
+app.s3.secret-key=${S3_SECRET_KEY}
+
+app.s3.items-prefix=items-photos/
 
 webauthn.allow-untrusted-attestation:false

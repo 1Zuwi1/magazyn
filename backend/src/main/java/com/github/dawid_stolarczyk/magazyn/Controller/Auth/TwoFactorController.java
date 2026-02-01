@@ -1,9 +1,9 @@
-package com.github.dawid_stolarczyk.magazyn.Controller;
+package com.github.dawid_stolarczyk.magazyn.Controller.Auth;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
-import com.github.dawid_stolarczyk.magazyn.Services.TwoFactorService;
+import com.github.dawid_stolarczyk.magazyn.Services.Auth.TwoFactorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -37,7 +37,7 @@ public class TwoFactorController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping
-    public ResponseEntity<ResponseTemplate<List<String>>> twoFactorMethods(HttpServletRequest request) {
+    public ResponseEntity<ResponseTemplate<TwoFactorMethodsResponse>> twoFactorMethods(HttpServletRequest request) {
         return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.getUsersTwoFactorMethods(request)));
     }
 
@@ -127,6 +127,28 @@ public class TwoFactorController {
         } catch (AuthenticationException e) {
             log.error("Failed to remove 2FA method: {}", removeRequest.getMethod(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
+        }
+    }
+
+    @Operation(summary = "Set the default 2FA method for the current user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Default 2FA method updated successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions or not in sudo mode",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "400", description = "Method not enabled or unsupported",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @PatchMapping("/default")
+    public ResponseEntity<ResponseTemplate<Void>> setDefaultMethod(@Valid @RequestBody SetDefault2faMethodRequest setDefaultRequest,
+                                                                   HttpServletRequest request) {
+        try {
+            twoFactorService.setDefaultTwoFactorMethod(setDefaultRequest.getMethod(), request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            log.error("Failed to set default 2FA method: {}", setDefaultRequest.getMethod(), e);
+            HttpStatus status = e.getCode().equals(AuthError.INSUFFICIENT_PERMISSIONS.name()) ? HttpStatus.FORBIDDEN : HttpStatus.BAD_REQUEST;
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
 }
