@@ -25,13 +25,14 @@ export default function SidebarButton({
   item: (typeof navigationItems)[number]
 }) {
   const pathname = usePathname()
-  const defaultActive = pathname.startsWith(item.href)
-  const [isOpen, setIsOpen] = useState(defaultActive)
+  const isActive = pathname.startsWith(item.href)
+  const [isOpen, setIsOpen] = useState(isActive)
   const hasItems = item.items && item.items.length > 0
+
   return (
     <Collapsible
       onOpenChange={(o, e) => {
-        if ((e.event.target as HTMLElement).id.startsWith("link-")) {
+        if ((e.event.target as HTMLElement).id.startsWith("link-") && !o) {
           return
         }
         setIsOpen(o)
@@ -44,7 +45,7 @@ export default function SidebarButton({
             <SidebarMenuButton
               {...props}
               className={cn("group/collapsible relative w-full p-0", className)}
-              isActive={defaultActive}
+              isActive={isActive}
               render={
                 <Button variant="ghost">
                   <Link
