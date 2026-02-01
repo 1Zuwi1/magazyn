@@ -13,5 +13,5 @@ public class TwoFactorMethodsResponse {
     private List<String> methods;
 
     @Schema(description = "The current default 2FA method", example = "EMAIL")
-    private String defaultMethod;
+    private com.github.dawid_stolarczyk.magazyn.Model.Enums.Default2faMethod defaultMethod;
 }

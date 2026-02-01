@@ -9,6 +9,7 @@ import com.github.dawid_stolarczyk.magazyn.Exception.TwoFactorNotVerifiedExcepti
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.BackupCode;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.TwoFactorMethod;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.Default2faMethod;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.TwoFactor;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
@@ -56,16 +57,15 @@ public class TwoFactorService {
     private final GoogleAuthenticator gAuth = new GoogleAuthenticator();
 
 
-
     public TwoFactorMethodsResponse getUsersTwoFactorMethods(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_FREE);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(AuthenticationException::new);
         List<String> methods = new ArrayList<>(user.getTwoFactorMethods().stream().map(method -> method.getMethodName().name()).toList());
-        methods.add("EMAIL");
+        methods.add(Default2faMethod.EMAIL.name());
 
         if (!user.getWebAuthnCredentials().isEmpty()) {
-            methods.add("PASSKEYS");
+            methods.add(Default2faMethod.PASSKEYS.name());
         }
 
         return TwoFactorMethodsResponse.builder()
@@ -268,8 +268,9 @@ public class TwoFactorService {
         user.removeTwoFactorMethod(existing);
         userRepository.save(user);
     }
+
     @Transactional
-    public void setDefaultTwoFactorMethod(String stringMethod, HttpServletRequest request) {
+    public void setDefaultTwoFactorMethod(Default2faMethod method, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_FREE);
 
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
@@ -280,28 +281,25 @@ public class TwoFactorService {
         User user = userRepository.findById(authPrincipal.getUserId())
                 .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
 
-        if (stringMethod.equals("EMAIL")) {
-            user.setDefault2faMethod("EMAIL");
-        } else if (stringMethod.equals("PASSKEYS")) {
+        if (method == Default2faMethod.EMAIL) {
+            user.setDefault2faMethod(Default2faMethod.EMAIL);
+        } else if (method == Default2faMethod.PASSKEYS) {
             if (user.getWebAuthnCredentials().isEmpty()) {
                 throw new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name());
             }
-            user.setDefault2faMethod("PASSKEYS");
+            user.setDefault2faMethod(Default2faMethod.PASSKEYS);
         } else {
-            TwoFactor method;
-            try {
-                method = TwoFactor.valueOf(stringMethod);
-            } catch (IllegalArgumentException e) {
-                throw new AuthenticationException(AuthError.UNSUPPORTED_2FA_METHOD.name());
-            }
+            TwoFactor expected = method == Default2faMethod.AUTHENTICATOR
+                    ? TwoFactor.AUTHENTICATOR
+                    : TwoFactor.BACKUP_CODES;
 
             boolean hasMethod = user.getTwoFactorMethods().stream()
-                    .anyMatch(m -> m.getMethodName() == method);
+                    .anyMatch(m -> m.getMethodName() == expected);
 
             if (!hasMethod) {
                 throw new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name());
             }
-            user.setDefault2faMethod(stringMethod);
+            user.setDefault2faMethod(method);
         }
 
         userRepository.save(user);

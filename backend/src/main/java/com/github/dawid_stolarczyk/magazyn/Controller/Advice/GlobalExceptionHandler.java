@@ -1,7 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Advice;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Exception.RateLimitExceededException;
 import com.github.dawid_stolarczyk.magazyn.Exception.TwoFactorNotVerifiedException;

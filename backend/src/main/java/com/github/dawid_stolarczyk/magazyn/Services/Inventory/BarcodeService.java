@@ -1,8 +1,8 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
-import com.github.dawid_stolarczyk.magazyn.Repositories.ItemRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.AssortmentRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.ItemRepository;
 import com.github.dawid_stolarczyk.magazyn.Utils.CodeGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,19 +16,21 @@ import java.time.format.DateTimeFormatter;
 public class BarcodeService {
     private static final DateTimeFormatter GS1_DATE_FORMAT = DateTimeFormatter.ofPattern("yyMMdd");
     private static final int SERIAL_LENGTH = 6;
+    private static final int ITEM_BARCODE_LENGTH = 6;
+    private static final int GTIN_14_LENGTH = 14;
     private final ItemRepository itemRepository;
     private final AssortmentRepository assortmentRepository;
 
     public String generateUniqueItemBarcode() {
         String barcode;
         do {
-            barcode = CodeGenerator.generateWithNumbers(14);
+            barcode = CodeGenerator.generateWithNumbers(ITEM_BARCODE_LENGTH);
         } while (itemRepository.existsByBarcode(barcode));
         return barcode;
     }
 
     public void ensureItemBarcode(Item item) {
-        if (item.getBarcode() != null && !item.getBarcode().isBlank() && item.getBarcode().length() == 14) {
+        if (item.getBarcode() != null && !item.getBarcode().isBlank() && item.getBarcode().length() == ITEM_BARCODE_LENGTH) {
             return;
         }
         item.setBarcode(generateUniqueItemBarcode());
@@ -39,24 +41,29 @@ public class BarcodeService {
      * Builds a GS1-128 compliant barcode for an assortment.
      * Uses:
      * (11) Production Date - YYMMDD
-     * (01) GTIN - item barcode (original length)
-     * (21) Serial Number - random digits
+     * (01) GTIN-14 - item barcode padded to 14 digits
+     * (21) Serial Number - random digits (variable length, last AI)
      *
-     * @param itemBarcode  the 6-digit item barcode
+     * @param itemBarcode the 6-digit item barcode
      * @return GS1-128 formatted string (digits only)
      */
     public String buildPlacementBarcode(String itemBarcode) {
+        if (itemBarcode == null || !itemBarcode.matches("\\d{" + ITEM_BARCODE_LENGTH + "}")) {
+            throw new IllegalArgumentException("BARCODE_MUST_BE_6_DIGITS");
+        }
+
         String datePart = LocalDate.now(ZoneOffset.UTC).format(GS1_DATE_FORMAT);
 
         // AI 11: Production Date (YYMMDD, 6 digits).
         String ai11 = "11" + datePart;
 
-        // AI 01: GTIN - use original item barcode without padding.
-        String ai01 = "01" + itemBarcode;
+        // AI 01: GTIN-14 padded with leading zeros.
+        String gtin14 = String.format("%0" + GTIN_14_LENGTH + "d", Long.parseLong(itemBarcode));
+        String ai01 = "01" + gtin14;
 
         String barcode;
         do {
-            // AI 21: Serial Number (variable length, random digits).
+            // AI 21: Serial Number (variable length, last AI so no FNC1 separator needed).
             String ai21 = "21" + CodeGenerator.generateWithNumbers(SERIAL_LENGTH);
             barcode = ai11 + ai01 + ai21;
         } while (assortmentRepository.existsByBarcode(barcode));

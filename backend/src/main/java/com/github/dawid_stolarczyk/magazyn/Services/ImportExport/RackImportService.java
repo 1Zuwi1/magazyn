@@ -19,7 +19,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class RackImportService {
-    private static final int EXPECTED_COLUMNS =12;
+    private static final int EXPECTED_COLUMNS = 12;
     private static final String[] REQUIRED_COLUMNS = {
             "marker",
             "warehouse_id",
