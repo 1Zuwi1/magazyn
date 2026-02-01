@@ -89,7 +89,11 @@ describe("AuthForm", () => {
           expect.anything(),
           expect.objectContaining({
             method: "POST",
-            body: { email: "testuser@example.com", password: "Password123!" },
+            body: {
+              email: "testuser@example.com",
+              password: "Password123!",
+              rememberMe: false,
+            },
           })
         )
       })

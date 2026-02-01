@@ -67,6 +67,7 @@ describe("LoginSchema", () => {
     const validInput = {
       email: "testuser@example.com",
       password: "Password123!",
+      rememberMe: true,
     }
 
     const result = LoginSchema.shape.POST.shape.input.safeParse(validInput)
@@ -78,6 +79,7 @@ describe("LoginSchema", () => {
     const invalidInput = {
       email: "testuser@example.com",
       password: "1234567",
+      rememberMe: true,
     }
 
     const result = LoginSchema.shape.POST.shape.input.safeParse(invalidInput)
@@ -108,6 +110,7 @@ describe("LoginSchema", () => {
     const validInput = {
       email: "validEmail@example.com",
       password: "Password123!",
+      rememberMe: true,
     }
 
     const result = LoginSchema.shape.POST.shape.input.safeParse(validInput)
