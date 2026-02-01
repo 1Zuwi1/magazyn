@@ -7,11 +7,7 @@ const USER_VERIFICATION_VALUES = [
   "discouraged",
 ] as const
 
-const ATTESTATION_VALUES = ["none", "indirect", "direct", "enterprise"] as const
-
 type SupportState = "supported" | "unsupported"
-
-type AttestationValue = (typeof ATTESTATION_VALUES)[number]
 
 type UserVerificationValue = (typeof USER_VERIFICATION_VALUES)[number]
 
@@ -51,28 +47,6 @@ const unwrapPublicKeyOptions = (value: unknown): unknown => {
   return value
 }
 
-const isCreationOptionsJSON = (
-  value: unknown
-): value is PublicKeyCredentialCreationOptionsJSON => {
-  if (!isRecord(value)) {
-    return false
-  }
-
-  if (!("challenge" in value) || typeof value.challenge !== "string") {
-    return false
-  }
-
-  if (!("pubKeyCredParams" in value && Array.isArray(value.pubKeyCredParams))) {
-    return false
-  }
-
-  if (!("user" in value && isRecord(value.user))) {
-    return false
-  }
-
-  return typeof value.user.id === "string"
-}
-
 const isRequestOptionsJSON = (
   value: unknown
 ): value is PublicKeyCredentialRequestOptionsJSON => {
@@ -92,20 +66,6 @@ const normalizeUserVerification = (
 
   if (USER_VERIFICATION_VALUES.includes(value as UserVerificationValue)) {
     return value as UserVerificationRequirement
-  }
-
-  return undefined
-}
-
-const normalizeAttestation = (
-  value: string | undefined
-): AttestationConveyancePreference | undefined => {
-  if (!value) {
-    return undefined
-  }
-
-  if (ATTESTATION_VALUES.includes(value as AttestationValue)) {
-    return value as AttestationConveyancePreference
   }
 
   return undefined
@@ -173,22 +133,6 @@ const toDescriptor = (
   }
 }
 
-const toCreationOptions = (
-  options: PublicKeyCredentialCreationOptionsJSON
-): PublicKeyCredentialCreationOptions => ({
-  rp: options.rp,
-  user: {
-    ...options.user,
-    id: toArrayBuffer(options.user.id),
-  },
-  pubKeyCredParams: options.pubKeyCredParams,
-  challenge: toArrayBuffer(options.challenge),
-  timeout: options.timeout,
-  excludeCredentials: options.excludeCredentials?.map(toDescriptor),
-  authenticatorSelection: options.authenticatorSelection,
-  attestation: normalizeAttestation(options.attestation),
-})
-
 const toRequestOptions = (
   options: PublicKeyCredentialRequestOptionsJSON
 ): PublicKeyCredentialRequestOptions => ({
@@ -238,29 +182,6 @@ export const isWebAuthnSupported = (): boolean =>
 
 export const getWebAuthnSupport = (): SupportState =>
   isWebAuthnSupported() ? "supported" : "unsupported"
-
-export const parseRegistrationOptions = (
-  payload: unknown
-): PublicKeyCredentialCreationOptions | null => {
-  const options = getOptionsFromApiPayload(payload)
-
-  if (!isCreationOptionsJSON(options)) {
-    return null
-  }
-
-  if (
-    typeof PublicKeyCredential !== "undefined" &&
-    typeof PublicKeyCredential.parseCreationOptionsFromJSON === "function"
-  ) {
-    try {
-      return PublicKeyCredential.parseCreationOptionsFromJSON(options)
-    } catch {
-      return toCreationOptions(options)
-    }
-  }
-
-  return toCreationOptions(options)
-}
 
 export const parseAuthenticationOptions = (
   payload: unknown

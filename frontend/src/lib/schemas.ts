@@ -92,7 +92,7 @@ export const RegisterSchema = createApiSchema({
 export const WebAuthnStartRegistrationSchema = createApiSchema({
   POST: {
     input: z.null(),
-    output: z.string(),
+    output: z.custom<PublicKeyCredentialCreationOptionsJSON>(),
   },
 })
 

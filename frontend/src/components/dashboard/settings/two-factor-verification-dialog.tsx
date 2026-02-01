@@ -18,7 +18,11 @@ import {
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { apiFetch } from "@/lib/fetcher"
-import { Check2FASchema, type TwoFactorMethod } from "@/lib/schemas"
+import {
+  Check2FASchema,
+  Resend2FASchema,
+  type TwoFactorMethod,
+} from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { TWO_FACTOR_METHODS } from "./constants"
 import {
@@ -63,6 +67,22 @@ export function TwoFactorVerificationDialog({
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationError, setVerificationError] = useState("")
 
+  const defaultDescription: PasswordVerificationCopy["description"] = ({
+    method,
+  }) =>
+    method === "AUTHENTICATOR"
+      ? "Wpisz kod z aplikacji uwierzytelniającej."
+      : "Wyślemy jednorazowy kod na wybraną metodę."
+  const resolvedCopy: PasswordVerificationCopy = (() => {
+    if (!copy) {
+      return { description: defaultDescription }
+    }
+    if (copy.description) {
+      return copy
+    }
+    return { ...copy, description: defaultDescription }
+  })()
+
   const methodOptions = useMemo(
     () =>
       availableMethods?.length
@@ -91,6 +111,17 @@ export function TwoFactorVerificationDialog({
     setIsVerifying(false)
     setVerificationError("")
   }, [defaultMethod, open])
+
+  const handleRequestCode = async (method: TwoFactorMethod): Promise<void> => {
+    if (method === "AUTHENTICATOR") {
+      return
+    }
+
+    await apiFetch("/api/2fa/send", Resend2FASchema, {
+      method: "POST",
+      body: { method },
+    })
+  }
 
   const handleVerify = async (value: string): Promise<void> => {
     if (isVerifying) {
@@ -196,7 +227,7 @@ export function TwoFactorVerificationDialog({
         <PasswordVerificationSection
           autoVerify
           code={code}
-          copy={copy}
+          copy={resolvedCopy}
           isVerified={isVerified}
           isVerifying={isVerifying}
           method={selectedMethod}
@@ -206,6 +237,7 @@ export function TwoFactorVerificationDialog({
               setVerificationError("")
             }
           }}
+          onRequestCode={handleRequestCode}
           onVerify={handleVerify}
           showTitle={false}
           verificationError={verificationError}

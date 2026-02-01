@@ -30,6 +30,7 @@ export interface PasswordVerificationCopy {
 interface PasswordVerificationSectionProps {
   method: TwoFactorMethod
   onVerify: (code: string) => void | Promise<void>
+  onRequestCode?: (method: TwoFactorMethod) => Promise<void>
   onInputChange: (code: string) => void
   code: string
   copy?: PasswordVerificationCopy
@@ -47,6 +48,7 @@ interface PasswordVerificationFlowHandlers {
   onErrorChange: (error: string) => void
   onResendCooldownChange: (cooldown: number) => void
   onChallengeChange: (challenge: PasswordChallenge | null) => void
+  onRequestCode?: (method: TwoFactorMethod) => Promise<void>
 }
 
 interface PasswordVerificationState {
@@ -61,15 +63,21 @@ function usePasswordVerificationFlow({
   onErrorChange,
   onResendCooldownChange,
   onChallengeChange,
+  onRequestCode,
 }: PasswordVerificationFlowHandlers) {
   const requestCode = async (startTimer = true): Promise<void> => {
     onStageChange("SENDING")
     onErrorChange("")
 
     try {
-      const newChallenge = await createPasswordChallenge(method)
-      onChallengeChange(newChallenge)
-      await sendVerificationCode(newChallenge.sessionId)
+      if (onRequestCode) {
+        onChallengeChange(null)
+        await onRequestCode(method)
+      } else {
+        const newChallenge = await createPasswordChallenge(method)
+        onChallengeChange(newChallenge)
+        await sendVerificationCode(newChallenge.sessionId)
+      }
       onStageChange("AWAITING")
       if (startTimer) {
         onResendCooldownChange(RESEND_COOLDOWN_SECONDS)
@@ -172,6 +180,7 @@ function CodeInputEntry({
 export function PasswordVerificationSection({
   method,
   onVerify,
+  onRequestCode,
   onInputChange,
   code,
   copy,
@@ -223,6 +232,7 @@ export function PasswordVerificationSection({
     onResendCooldownChange: startTimer,
     onChallengeChange: (nextChallenge) =>
       setState((current) => ({ ...current, challenge: nextChallenge })),
+    onRequestCode,
   })
 
   const handleStartVerification = useCallback(() => {

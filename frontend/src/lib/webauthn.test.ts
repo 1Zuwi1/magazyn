@@ -4,7 +4,6 @@ import {
   getWebAuthnSupport,
   isPublicKeyCredential,
   parseAuthenticationOptions,
-  parseRegistrationOptions,
   serializeCredential,
 } from "./webauthn"
 
@@ -17,46 +16,6 @@ const encodeBase64Url = (value: string): string => {
 
 const decodeBuffer = (buffer: ArrayBuffer): string =>
   new TextDecoder().decode(new Uint8Array(buffer))
-
-describe("parseRegistrationOptions", () => {
-  it("returns null for invalid payload", () => {
-    expect(parseRegistrationOptions({})).toBeNull()
-  })
-
-  it("parses nested registration options and decodes buffers", () => {
-    const challenge = encodeBase64Url("challenge")
-    const userId = encodeBase64Url("user-id")
-    const credentialId = encodeBase64Url("cred-id")
-
-    const payload = {
-      options: {
-        publicKey: {
-          challenge,
-          rp: { id: "example.com", name: "Example" },
-          user: {
-            id: userId,
-            name: "user@example.com",
-            displayName: "User Example",
-          },
-          pubKeyCredParams: [{ type: "public-key", alg: -7 }],
-          timeout: 30_000,
-          attestation: "none",
-          excludeCredentials: [{ id: credentialId, type: "public-key" }],
-        } satisfies PublicKeyCredentialCreationOptionsJSON,
-      },
-    }
-
-    const options = parseRegistrationOptions(payload)
-    expect(options).not.toBeNull()
-    if (!options) {
-      return
-    }
-
-    expect(decodeBuffer(options.challenge as ArrayBuffer)).toBe("challenge")
-    expect(decodeBuffer(options.user.id as ArrayBuffer)).toBe("user-id")
-    expect(options.excludeCredentials?.[0]?.id).toBeInstanceOf(ArrayBuffer)
-  })
-})
 
 describe("parseAuthenticationOptions", () => {
   it("parses request options and maps user verification", () => {

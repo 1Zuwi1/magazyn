@@ -18,7 +18,6 @@ import {
   getWebAuthnErrorMessage,
   getWebAuthnSupport,
   isPublicKeyCredential,
-  parseRegistrationOptions,
   serializeCredential,
 } from "@/lib/webauthn"
 import { TwoFactorVerificationDialog } from "./two-factor-verification-dialog"
@@ -76,7 +75,7 @@ export function PasskeysSection() {
       )
 
       if (startError) {
-        if (startError.message === "INSUFFICIENT_PERMISSIONS") {
+        if (startError.message === "INVALID_PASSKEY_REGISTRATION") {
           setShowSudoDialog(true)
           return
         }
@@ -87,21 +86,12 @@ export function PasskeysSection() {
         return
       }
 
-      const publicKeyOptions = parseRegistrationOptions(startResponse)
-
-      if (!publicKeyOptions) {
-        toast.error(
-          "Nie udało się przygotować opcji rejestracji klucza bezpieczeństwa."
-        )
-        return
-      }
-
       const [credentialError, credential] = await tryCatch(
         navigator.credentials.create({
-          publicKey: publicKeyOptions,
+          publicKey:
+            PublicKeyCredential.parseCreationOptionsFromJSON(startResponse),
         })
       )
-
       if (credentialError) {
         toast.error(
           getWebAuthnErrorMessage(
