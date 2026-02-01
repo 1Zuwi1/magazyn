@@ -24,7 +24,9 @@ export const WarehouseContent = () => {
           />
           <Input
             className="pl-8"
-            onChange={(e) => setFilters({ ...filters, query: e.target.value })}
+            onChange={(e) => {
+              setFilters((prev) => ({ ...prev, query: e.target.value }))
+            }}
             placeholder="Szukaj magazynu, regału lub ID..."
             value={filters.query}
           />

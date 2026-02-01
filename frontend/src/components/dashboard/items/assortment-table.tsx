@@ -146,7 +146,7 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
               }
             />
           </SelectTrigger>
-          <SelectContent className="p-2">
+          <SelectContent>
             {EXPIRY_FILTER_OPTIONS.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}

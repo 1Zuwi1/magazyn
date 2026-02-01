@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import AuthForm from "./auth-form"
 
 // Constants for regex patterns
-const USERNAME_REGEX = /nazwa użytkownika/i
 const PASSWORD_REGEX = /^hasło$/i
 const EXACT_PASSWORD_REGEX = /^hasło$/i
 const CONFIRM_PASSWORD_REGEX = /potwierdź hasło/i
@@ -63,24 +62,23 @@ describe("AuthForm", () => {
     it("renders login fields correctly", () => {
       render(<AuthForm mode="login" />)
 
-      expect(screen.getByLabelText(USERNAME_REGEX)).toBeInTheDocument()
       expect(screen.getByLabelText(PASSWORD_REGEX)).toBeInTheDocument()
+      expect(screen.queryByLabelText(EMAIL_REGEX)).toBeInTheDocument()
       expect(screen.queryByLabelText(FULLNAME_REGEX)).not.toBeInTheDocument()
-      expect(screen.queryByLabelText(EMAIL_REGEX)).not.toBeInTheDocument()
       expect(
         screen.getByRole("button", { name: LOGIN_BUTTON_REGEX })
       ).toBeInTheDocument()
     })
 
     it("handles successful login", async () => {
-      mockApiFetch.mockResolvedValue({ requiresTwoFactor: false })
+      mockApiFetch.mockResolvedValue({})
       render(<AuthForm mode="login" />)
 
-      fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
-        target: { value: "testuser" },
+      fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
+        target: { value: "testuser@example.com" },
       })
       fireEvent.change(screen.getByLabelText(PASSWORD_REGEX), {
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
 
       fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_REGEX }))
@@ -91,25 +89,29 @@ describe("AuthForm", () => {
           expect.anything(),
           expect.objectContaining({
             method: "POST",
-            body: { username: "testuser", password: "password123" },
+            body: {
+              email: "testuser@example.com",
+              password: "Password123!",
+              rememberMe: false,
+            },
           })
         )
       })
 
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith("/dashboard")
+        expect(mockPush).toHaveBeenCalledWith("/login/2fa")
       })
     })
 
     it("handles successful login with 2FA requirement", async () => {
-      mockApiFetch.mockResolvedValue({ requiresTwoFactor: true })
+      mockApiFetch.mockResolvedValue({})
       render(<AuthForm mode="login" />)
 
-      fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
-        target: { value: "testuser" },
+      fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
+        target: { value: "testuser@example.com" },
       })
       fireEvent.change(screen.getByLabelText(PASSWORD_REGEX), {
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
 
       fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_REGEX }))
@@ -124,11 +126,11 @@ describe("AuthForm", () => {
       mockApiFetch.mockRejectedValue(error)
       render(<AuthForm mode="login" />)
 
-      fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
-        target: { value: "testuser" },
+      fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
+        target: { value: "testuser@example.com" },
       })
       fireEvent.change(screen.getByLabelText(PASSWORD_REGEX), {
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
 
       fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_REGEX }))
@@ -159,7 +161,6 @@ describe("AuthForm", () => {
     it("renders register fields correctly", () => {
       render(<AuthForm mode="register" />)
 
-      expect(screen.getByLabelText(USERNAME_REGEX)).toBeInTheDocument()
       expect(screen.getByLabelText(PASSWORD_REGEX)).toBeInTheDocument()
       expect(screen.getByLabelText(EMAIL_REGEX)).toBeInTheDocument()
       expect(screen.getByLabelText(FULLNAME_REGEX)).toBeInTheDocument()
@@ -178,15 +179,12 @@ describe("AuthForm", () => {
       fireEvent.change(screen.getByLabelText(FULLNAME_REGEX), {
         target: { value: "Test User" },
       })
-      fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
-        target: { value: "testuser" },
-      })
       fireEvent.change(screen.getAllByLabelText(PASSWORD_REGEX)[0], {
         // Password field
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
       fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_REGEX), {
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
 
       fireEvent.click(
@@ -202,9 +200,7 @@ describe("AuthForm", () => {
             body: {
               email: "test@example.com",
               fullName: "Test User",
-              username: "testuser",
-              password: "password123",
-              confirmPassword: "password123",
+              password: "Password123!",
             },
           })
         )
@@ -224,15 +220,12 @@ describe("AuthForm", () => {
       fireEvent.change(screen.getByLabelText(FULLNAME_REGEX), {
         target: { value: "Test User" },
       })
-      fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
-        target: { value: "testuser" },
-      })
 
       fireEvent.change(screen.getByLabelText(EXACT_PASSWORD_REGEX), {
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
       fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_REGEX), {
-        target: { value: "password456" },
+        target: { value: "Password456!" },
       })
 
       fireEvent.click(
@@ -257,14 +250,11 @@ describe("AuthForm", () => {
       fireEvent.change(screen.getByLabelText(FULLNAME_REGEX), {
         target: { value: "Test User" },
       })
-      fireEvent.change(screen.getByLabelText(USERNAME_REGEX), {
-        target: { value: "testuser" },
-      })
       fireEvent.change(screen.getByLabelText(EXACT_PASSWORD_REGEX), {
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
       fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_REGEX), {
-        target: { value: "password123" },
+        target: { value: "Password123!" },
       })
 
       fireEvent.click(

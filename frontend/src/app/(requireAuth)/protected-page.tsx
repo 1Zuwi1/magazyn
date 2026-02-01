@@ -6,7 +6,9 @@ import UnauthorizedComponent from "./components/unauthorized"
 
 type Children =
   | ReactNode
-  | ((session: Awaited<ReturnType<typeof getSession>>) => ReactNode)
+  | ((
+      session: NonNullable<Awaited<ReturnType<typeof getSession>>>
+    ) => ReactNode)
 
 interface Props {
   children: Children
@@ -24,12 +26,12 @@ export default async function ProtectedPage({
     return null
   }
 
-  if (session.status === "unverified") {
+  if (session.account_status === "PENDING_VERIFICATION") {
     redirect("/pending-verification")
   }
 
   // If the user is not an admin and admin privileges are required, return Unauthorized
-  if (needAdminPrivileges && session.role !== "admin") {
+  if (needAdminPrivileges && session.role !== "ADMIN") {
     return <UnauthorizedComponent />
   }
 

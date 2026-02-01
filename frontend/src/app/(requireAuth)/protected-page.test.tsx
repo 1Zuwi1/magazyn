@@ -27,11 +27,9 @@ vi.mock("./components/unauthorized", () => ({
 const MOCK_SESSION = {
   id: 1,
   email: "user@example.com",
-  username: "testuser",
   full_name: "Test User",
-  two_factor_enabled: false,
-  status: "verified",
-  role: "user",
+  account_status: "ACTIVE",
+  role: "USER",
 }
 
 describe("ProtectedPage", () => {
@@ -68,7 +66,7 @@ describe("ProtectedPage", () => {
 
   it("renders children when session exists (admin) and admin privileges required", async () => {
     const mockSession = { ...MOCK_SESSION }
-    mockSession.role = "admin"
+    mockSession.role = "ADMIN"
     mockGetSession.mockResolvedValue(mockSession)
 
     const jsx = await ProtectedPage({
@@ -131,7 +129,7 @@ describe("ProtectedPage", () => {
     })
 
     const mockSession = { ...MOCK_SESSION }
-    mockSession.status = "unverified"
+    mockSession.account_status = "PENDING_VERIFICATION"
     mockGetSession.mockResolvedValue(mockSession)
 
     await expect(

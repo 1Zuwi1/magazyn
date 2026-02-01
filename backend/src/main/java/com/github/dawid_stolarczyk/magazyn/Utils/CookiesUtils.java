@@ -1,0 +1,76 @@
+package com.github.dawid_stolarczyk.magazyn.Utils;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CookiesUtils {
+
+    private static String cookieDomainStatic;
+
+    @Value("${app.domain}")
+    private String cookieDomain;
+
+
+    @PostConstruct
+    public void init() {
+        if (cookieDomain != null && !cookieDomain.isEmpty()) {
+            cookieDomainStatic = cookieDomain;
+        } else {
+            cookieDomainStatic = "localhost";
+        }
+    }
+
+    public static void setCookie(HttpServletResponse response, String name, String value, Long maxAge) {
+        ResponseCookie cookie;
+        if (maxAge == null) {
+            cookie = ResponseCookie.from(name, value)
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .sameSite("Lax")
+                    .domain(cookieDomainStatic)
+                    .build();
+        } else {
+            cookie = ResponseCookie.from(name, value)
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(maxAge)
+                    .sameSite("Lax")
+                    .domain(cookieDomainStatic)
+                    .build();
+        }
+        response.addHeader("Set-Cookie", cookie.toString());
+    }
+
+    public static String getCookie(HttpServletRequest request, String name) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals(name)) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+    public static void deleteCookie(HttpServletResponse response, String name) {
+        ResponseCookie cookie = ResponseCookie.from(name, "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .domain(cookieDomainStatic)
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
+    }
+
+}

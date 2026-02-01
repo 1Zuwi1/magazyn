@@ -4,7 +4,30 @@ spring.datasource.url=${DB_CONNECTION_URL}
 spring.datasource.username=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
 
+spring.mail.host=${MAIL_HOST}
+spring.mail.port=${MAIL_PORT}
+spring.mail.username=${MAIL_USERNAME}
+spring.mail.password=${MAIL_PASSWORD}
+
+server.forward-headers-strategy=framework
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
 server.servlet.context-path=/api
 
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=false
+
+auth.token.expiration-seconds=3600
+
+app.domain=${DOMAIN}
+app.name=${APP_NAME}
+app.url=${APP_URL}
+
+auth.password.min-length=8
+
+spring.redis.host=redis
+spring.redis.port=6379
+spring.redis.password=${REDIS_PASSWORD}
+
+webauthn.allow-untrusted-attestation:false
