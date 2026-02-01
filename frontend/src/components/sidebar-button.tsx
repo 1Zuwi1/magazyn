@@ -27,25 +27,40 @@ export default function SidebarButton({
   const pathname = usePathname()
   const defaultActive = pathname.startsWith(item.href)
   const [isOpen, setIsOpen] = useState(defaultActive)
+  const hasItems = item.items && item.items.length > 0
   return (
-    <Collapsible onOpenChange={setIsOpen} open={isOpen}>
+    <Collapsible
+      onOpenChange={(o, e) => {
+        if ((e.event.target as HTMLElement).id.startsWith("link-")) {
+          return
+        }
+        setIsOpen(o)
+      }}
+      open={hasItems && isOpen}
+    >
       <SidebarMenuItem>
         <CollapsibleTrigger
           render={({ className, ...props }) => (
             <SidebarMenuButton
               {...props}
-              className={cn("group/collapsible w-full", className)}
+              className={cn("group/collapsible relative w-full p-0", className)}
               isActive={defaultActive}
               render={
-                <Button className="flex w-full" variant="ghost">
-                  <Link className="flex" href={item.href}>
+                <Button variant="ghost">
+                  <Link
+                    className="mr-8 flex h-full w-full p-2"
+                    href={item.href}
+                    id={`link-${item.href}`}
+                  >
                     <HugeiconsIcon className="mr-2 size-5" icon={item.icon} />
                     {item.title}
                   </Link>
-                  <HugeiconsIcon
-                    className="ml-auto transition-transform duration-200 group-data-panel-open/collapsible:rotate-90"
-                    icon={ChevronRight}
-                  />
+                  {hasItems && (
+                    <HugeiconsIcon
+                      className="absolute right-2 transition-transform duration-200 group-data-panel-open/collapsible:rotate-90"
+                      icon={ChevronRight}
+                    />
+                  )}
                 </Button>
               }
             />
@@ -53,17 +68,19 @@ export default function SidebarButton({
         />
         <CollapsibleContent>
           <SidebarMenuSub className="pt-2">
-            {item.items?.map((subItem) => (
-              <SidebarMenuSubItem key={subItem.title}>
-                <SidebarMenuSubButton
-                  className={cn("w-full", {
-                    "bg-transparent! font-semibold": pathname === subItem.href, // overwrite active styles
-                  })}
-                  isActive={pathname === subItem.href}
-                  render={<Link href={subItem.href}>{subItem.title}</Link>}
-                />
-              </SidebarMenuSubItem>
-            ))}
+            {hasItems &&
+              item.items?.map((subItem) => (
+                <SidebarMenuSubItem key={subItem.title}>
+                  <SidebarMenuSubButton
+                    className={cn("w-full", {
+                      "bg-transparent! font-semibold":
+                        pathname === subItem.href, // overwrite active styles
+                    })}
+                    isActive={pathname === subItem.href}
+                    render={<Link href={subItem.href}>{subItem.title}</Link>}
+                  />
+                </SidebarMenuSubItem>
+              ))}
           </SidebarMenuSub>
         </CollapsibleContent>
       </SidebarMenuItem>

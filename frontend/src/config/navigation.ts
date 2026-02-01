@@ -2,6 +2,7 @@ import {
   Analytics01Icon,
   GroupItemsIcon,
   Package,
+  Settings,
 } from "@hugeicons/core-free-icons"
 
 export const navigationItems = [
@@ -21,6 +22,12 @@ export const navigationItems = [
         icon: GroupItemsIcon,
       },
     ],
+  },
+  {
+    title: "Ustawienia",
+    href: "/dashboard/settings",
+    icon: Settings,
+    items: [],
   },
 ] as const
 
