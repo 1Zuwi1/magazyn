@@ -30,12 +30,3 @@ export const navigationItems = [
     items: [],
   },
 ] as const
-
-export const dockActions = [
-  {
-    title: "Skaner",
-    href: "#",
-    icon: GroupItemsIcon,
-    pwaOnly: true,
-  },
-]
