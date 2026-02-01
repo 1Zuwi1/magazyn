@@ -67,12 +67,14 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
     accessorKey: "daysUntilExpiry",
     header: "Okres przydatności",
     cell: ({ row }) => {
-      const date = row.original.nearestExpiryDate
-      return date ? (
-        <ExpiryBadge expiryDate={date} />
-      ) : (
-        <Badge variant="outline">Brak daty</Badge>
-      )
+      const { nearestExpiryDate, daysUntilExpiry } = row.original
+      if (nearestExpiryDate) {
+        return <ExpiryBadge expiryDate={nearestExpiryDate} />
+      }
+      if (typeof daysUntilExpiry === "number") {
+        return <Badge variant="secondary">{daysUntilExpiry} dni</Badge>
+      }
+      return <Badge variant="outline">Brak daty</Badge>
     },
   },
   {
