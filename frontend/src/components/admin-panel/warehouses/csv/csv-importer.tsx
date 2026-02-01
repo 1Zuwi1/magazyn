@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -97,18 +97,9 @@ export function CsvImporter<T extends CsvImporterType>({
           </div>
         )}
 
-        <DialogFooter className="flex-row justify-between sm:justify-between">
+        <DialogFooter className="w-full flex-row justify-center gap-3 sm:justify-center">
           {isPreviewing ? (
             <>
-              <Button
-                onClick={() => {
-                  resetFile()
-                }}
-                variant="outline"
-              >
-                <HugeiconsIcon className="mr-2 size-4" icon={ArrowLeft01Icon} />
-                Wróć
-              </Button>
               <Button
                 onClick={() => {
                   resetFile()
@@ -126,11 +117,7 @@ export function CsvImporter<T extends CsvImporterType>({
               </Button>
             </>
           ) : (
-            <Button
-              className="ml-auto"
-              onClick={() => handleOpenChange(false)}
-              variant="outline"
-            >
+            <Button onClick={() => handleOpenChange(false)} variant="outline">
               Anuluj
             </Button>
           )}

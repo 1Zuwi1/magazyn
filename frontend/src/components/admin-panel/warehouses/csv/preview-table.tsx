@@ -8,6 +8,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
 import { MAX_PREVIEW_ROWS } from "./utils/constants"
 import type { Column } from "./utils/types"
 
@@ -22,11 +24,18 @@ function normalizeKey(key: string): string {
 
 export function PreviewTable({ columns, rows }: PreviewTableProps) {
   const hasMoreRows = rows.length > MAX_PREVIEW_ROWS
+  const isMobile = useIsMobile()
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-md border">
-        <Table>
+      <div
+        className={cn(
+          "w-full overflow-x-auto",
+          "rounded-md border",
+          isMobile && "pb-2"
+        )}
+      >
+        <Table className="min-w-max">
           <TableHeader className="bg-muted/50">
             <TableRow>
               {columns.map((col) => (
