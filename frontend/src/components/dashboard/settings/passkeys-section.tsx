@@ -75,7 +75,7 @@ export function PasskeysSection() {
       )
 
       if (startError) {
-        if (startError.message === "INVALID_PASSKEY_REGISTRATION") {
+        if (startError.message === "INSUFFICIENT_PERMISSIONS") {
           setShowSudoDialog(true)
           return
         }
