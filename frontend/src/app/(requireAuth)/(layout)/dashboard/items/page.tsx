@@ -45,17 +45,17 @@ export default function ItemsPage() {
           {/* Tabs Section */}
           <Tabs className="space-y-6" defaultValue="assortment">
             <div className="flex items-center justify-between gap-4">
-              <TabsList className="h-11 p-1">
+              <TabsList className="p-1">
                 <TabsTrigger className="gap-2 px-4" value="assortment">
                   <HugeiconsIcon className="size-4" icon={GridViewIcon} />
-                  <span>Stan Magazynowy</span>
+                  <span>Katalog Produktów</span>
                   <Badge className="ml-1" variant="secondary">
                     {MOCK_ITEM_STATS.length}
                   </Badge>
                 </TabsTrigger>
                 <TabsTrigger className="gap-2 px-4" value="definitions">
                   <HugeiconsIcon className="size-4" icon={BarCode02Icon} />
-                  <span>Katalog Produktów</span>
+                  <span>Stan Magazynowy</span>
                   <Badge className="ml-1" variant="secondary">
                     {MOCK_ITEMS.length}
                   </Badge>

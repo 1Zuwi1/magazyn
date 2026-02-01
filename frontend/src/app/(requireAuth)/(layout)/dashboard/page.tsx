@@ -1,12 +1,13 @@
 import {
+  AlertCircleIcon,
   Analytics01Icon,
   ChartLineData01Icon,
   Clock01Icon,
   GroupItemsIcon,
   Home01Icon,
   Package,
+  PackageReceiveIcon,
 } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import {
   MOCK_ITEM_STATS,
@@ -14,18 +15,17 @@ import {
   MOCK_WAREHOUSES,
 } from "@/components/dashboard/mock-data"
 import { PageHeader } from "@/components/dashboard/page-header"
+import {
+  InsightCard,
+  QuickActionCard,
+  StatCard,
+} from "@/components/dashboard/stat-card"
 import type { Rack, Warehouse } from "@/components/dashboard/types"
 import { formatDate, pluralize } from "@/components/dashboard/utils/helpers"
 import ProtectedPage from "@/components/security/protected-page"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 
 const NUMBER_FORMATTER = new Intl.NumberFormat("pl-PL")
 const OCCUPANCY_WARNING_THRESHOLD = 75
@@ -154,58 +154,15 @@ export default function Page() {
     .sort((a, b) => b.occupancy - a.occupancy)
     .slice(0, TOP_WAREHOUSES_LIMIT)
 
-  const stats = [
-    {
-      id: "warehouses",
-      label: "Magazyny aktywne",
-      value: formatNumber(totalWarehouses),
-      hint: `${formatNumber(totalRacks)} ${pluralize(
-        totalRacks,
-        "regał",
-        "regały",
-        "regałów"
-      )}`,
-      icon: Package,
-    },
-    {
-      id: "capacity",
-      label: "Łączna pojemność",
-      value: formatNumber(totalCapacity),
-      hint: `${formatNumber(totalUsed)} zajęte`,
-      icon: Analytics01Icon,
-    },
-    {
-      id: "occupancy",
-      label: "Zajętość",
-      value: `${occupancyPercentage}%`,
-      hint: `${formatNumber(availableSlots)} wolnych`,
-      icon: Clock01Icon,
-    },
-    {
-      id: "items",
-      label: "Produkty w obiegu",
-      value: formatNumber(MOCK_ITEMS.length),
-      hint: `${formatNumber(dangerousItemsCount)} oznaczonych jako niebezpieczne`,
-      icon: GroupItemsIcon,
-    },
-  ] as const
-
-  const quickActions = [
-    {
-      id: "warehouses",
-      title: "Przegląd magazynów",
-      description: "Zarządzaj lokalizacjami i regałami",
-      href: "/dashboard/warehouse",
-      icon: Package,
-    },
-    {
-      id: "items",
-      title: "Asortyment",
-      description: "Katalog produktów i stany magazynowe",
-      href: "/dashboard/items",
-      icon: GroupItemsIcon,
-    },
-  ] as const
+  const getOccupancyCardVariant = (): "danger" | "warning" | "success" => {
+    if (occupancyPercentage >= OCCUPANCY_CRITICAL_THRESHOLD) {
+      return "danger"
+    }
+    if (occupancyPercentage >= OCCUPANCY_WARNING_THRESHOLD) {
+      return "warning"
+    }
+    return "success"
+  }
 
   const headerStats = [
     {
@@ -231,32 +188,44 @@ export default function Page() {
           title="Panel główny"
         />
 
+        {/* Stats Grid */}
         <section aria-labelledby="dashboard-stats">
           <h2 className="sr-only" id="dashboard-stats">
             Statystyki magazynowe
           </h2>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {stats.map((stat) => (
-              <Card key={stat.id}>
-                <CardHeader className="flex flex-row items-center justify-between gap-3">
-                  <div>
-                    <CardDescription>{stat.label}</CardDescription>
-                    <CardTitle className="font-mono text-2xl">
-                      {stat.value}
-                    </CardTitle>
-                  </div>
-                  <div className="flex size-10 items-center justify-center rounded-full bg-muted">
-                    <HugeiconsIcon className="size-5" icon={stat.icon} />
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-muted-foreground text-sm">{stat.hint}</p>
-                </CardContent>
-              </Card>
-            ))}
+            <StatCard
+              hint={`${formatNumber(totalRacks)} ${pluralize(totalRacks, "regał", "regały", "regałów")}`}
+              icon={Package}
+              label="Magazyny aktywne"
+              value={formatNumber(totalWarehouses)}
+              variant="primary"
+            />
+            <StatCard
+              hint={`${formatNumber(totalUsed)} zajęte`}
+              icon={Analytics01Icon}
+              label="Łączna pojemność"
+              value={formatNumber(totalCapacity)}
+              variant="default"
+            />
+            <StatCard
+              hint={`${formatNumber(availableSlots)} wolnych`}
+              icon={Clock01Icon}
+              label="Zajętość"
+              value={`${occupancyPercentage}%`}
+              variant={getOccupancyCardVariant()}
+            />
+            <StatCard
+              hint={`${formatNumber(dangerousItemsCount)} oznaczonych jako niebezpieczne`}
+              icon={GroupItemsIcon}
+              label="Produkty w obiegu"
+              value={formatNumber(MOCK_ITEMS.length)}
+              variant="default"
+            />
           </div>
         </section>
 
+        {/* Quick Actions */}
         <section aria-labelledby="dashboard-actions" className="space-y-4">
           <div>
             <h2 className="font-semibold text-xl" id="dashboard-actions">
@@ -267,30 +236,26 @@ export default function Page() {
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {quickActions.map((action) => (
-              <Link
-                className={buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-auto w-full items-start justify-start gap-3 p-4 text-left",
-                })}
-                href={action.href}
-                key={action.id}
-              >
-                <span className="flex size-10 items-center justify-center rounded-full bg-muted">
-                  <HugeiconsIcon className="size-5" icon={action.icon} />
-                </span>
-                <span className="space-y-1">
-                  <span className="block font-semibold">{action.title}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {action.description}
-                  </span>
-                </span>
-              </Link>
-            ))}
+            <Link href="/dashboard/warehouse">
+              <QuickActionCard
+                description="Zarządzaj lokalizacjami i regałami"
+                href="/dashboard/warehouse"
+                icon={Package}
+                title="Przegląd magazynów"
+              />
+            </Link>
+            <Link href="/dashboard/items">
+              <QuickActionCard
+                description="Katalog produktów i stany magazynowe"
+                href="/dashboard/items"
+                icon={GroupItemsIcon}
+                title="Asortyment"
+              />
+            </Link>
           </div>
         </section>
 
+        {/* Insights Grid */}
         <section aria-labelledby="dashboard-insights" className="space-y-4">
           <div>
             <h2 className="font-semibold text-xl" id="dashboard-insights">
@@ -301,16 +266,14 @@ export default function Page() {
             </p>
           </div>
           <div className="grid gap-6 lg:grid-cols-3">
-            <Card id="dashboard-alerts">
-              <CardHeader>
-                <CardTitle>Alerty operacyjne</CardTitle>
-                <CardDescription>
-                  Zestawienie ryzyk wymagających uwagi.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <InsightCard
+              description="Zestawienie ryzyk wymagających uwagi."
+              icon={AlertCircleIcon}
+              title="Alerty operacyjne"
+            >
+              <div className="space-y-4">
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
                     <span>
                       Magazyny powyżej {OCCUPANCY_CRITICAL_THRESHOLD}%
                     </span>
@@ -324,7 +287,7 @@ export default function Page() {
                       {formatNumber(criticalWarehouses.length)}
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
                     <span>
                       Produkty z terminem poniżej {EXPIRY_WARNING_DAYS} dni
                     </span>
@@ -336,7 +299,7 @@ export default function Page() {
                       {formatNumber(expiringSoonItems.length)}
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
                     <span>Produkty niebezpieczne</span>
                     <Badge
                       variant={dangerousItemsCount > 0 ? "warning" : "success"}
@@ -347,17 +310,19 @@ export default function Page() {
                 </div>
                 {expiringSoonItemsList.length > 0 ? (
                   <div className="space-y-2">
-                    <p className="text-muted-foreground text-xs uppercase tracking-wide">
+                    <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                       Najbliższe terminy
                     </p>
                     <ul className="space-y-2 text-sm">
                       {expiringSoonItemsList.map((item) => (
                         <li
-                          className="flex items-center justify-between gap-3"
+                          className="flex items-center justify-between gap-3 rounded-lg border bg-card/50 p-2"
                           key={item.definitionId}
                         >
-                          <span>{item.definition.name}</span>
-                          <span className="font-mono text-muted-foreground text-xs">
+                          <span className="truncate">
+                            {item.definition.name}
+                          </span>
+                          <span className="shrink-0 font-mono text-muted-foreground text-xs">
                             {item.daysUntilExpiry ?? "—"} dni
                           </span>
                         </li>
@@ -371,7 +336,7 @@ export default function Page() {
                 )}
                 {criticalWarehouses.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-muted-foreground text-xs uppercase tracking-wide">
+                    <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                       Krytyczne lokalizacje
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -383,80 +348,79 @@ export default function Page() {
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </InsightCard>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Ostatnie przyjęcia</CardTitle>
-                <CardDescription>
-                  Najświeższe dostawy z ostatnich dni.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {recentItems.length > 0 ? (
-                  <ul className="space-y-3">
-                    {recentItems.map((item) => (
-                      <li
-                        className="flex items-start justify-between gap-4"
-                        key={item.id}
-                      >
-                        <div>
-                          <p className="font-medium">{item.definition.name}</p>
-                          <p className="text-muted-foreground text-xs">
-                            {item.warehouseName} • {item.rackName}
-                          </p>
-                        </div>
-                        <div className="flex flex-col items-end gap-2 text-xs">
-                          <span className="font-mono text-muted-foreground">
-                            {formatDate(item.addedDate)}
-                          </span>
-                          <Badge
-                            variant={
-                              item.definition.isDangerous
-                                ? "warning"
-                                : "secondary"
-                            }
-                          >
-                            {item.definition.isDangerous
-                              ? "Niebezpieczny"
-                              : "Standard"}
-                          </Badge>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-muted-foreground text-sm">
-                    Brak ostatnich przyjęć do wyświetlenia.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            <InsightCard
+              description="Najświeższe dostawy z ostatnich dni."
+              icon={PackageReceiveIcon}
+              title="Ostatnie przyjęcia"
+            >
+              {recentItems.length > 0 ? (
+                <ul className="space-y-3">
+                  {recentItems.map((item) => (
+                    <li
+                      className="flex items-start justify-between gap-4 rounded-lg border bg-card/50 p-3"
+                      key={item.id}
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">
+                          {item.definition.name}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          {item.warehouseName} • {item.rackName}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-2 text-xs">
+                        <span className="font-mono text-muted-foreground">
+                          {formatDate(item.addedDate)}
+                        </span>
+                        <Badge
+                          variant={
+                            item.definition.isDangerous
+                              ? "warning"
+                              : "secondary"
+                          }
+                        >
+                          {item.definition.isDangerous
+                            ? "Niebezpieczny"
+                            : "Standard"}
+                        </Badge>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  Brak ostatnich przyjęć do wyświetlenia.
+                </p>
+              )}
+            </InsightCard>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Obłożenie magazynów</CardTitle>
-                <CardDescription>
-                  Najbardziej wypełnione lokalizacje.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <InsightCard
+              description="Najbardziej wypełnione lokalizacje."
+              icon={Package}
+              title="Obłożenie magazynów"
+            >
+              <div className="space-y-4">
                 {topWarehouses.map((warehouse) => (
                   <div className="space-y-2" key={warehouse.id}>
                     <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="font-medium">{warehouse.name}</span>
+                      <span className="truncate font-medium">
+                        {warehouse.name}
+                      </span>
                       <Badge
                         variant={getOccupancyBadgeVariant(warehouse.occupancy)}
                       >
                         {warehouse.occupancy}%
                       </Badge>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-secondary">
+                    <div className="h-2 overflow-hidden rounded-full bg-muted">
                       <div
-                        className={`h-full rounded-full ${getOccupancyBarClassName(
-                          warehouse.occupancy
-                        )}`}
+                        className={cn(
+                          "h-full rounded-full transition-all duration-500",
+                          getOccupancyBarClassName(warehouse.occupancy)
+                        )}
                         style={{ width: `${warehouse.occupancy}%` }}
                       />
                     </div>
@@ -470,14 +434,14 @@ export default function Page() {
                   className={buttonVariants({
                     size: "sm",
                     variant: "outline",
-                    className: "w-full",
+                    className: "mt-2 w-full",
                   })}
                   href="/dashboard/warehouse"
                 >
                   Zobacz wszystkie magazyny
                 </Link>
-              </CardContent>
-            </Card>
+              </div>
+            </InsightCard>
           </div>
         </section>
       </div>

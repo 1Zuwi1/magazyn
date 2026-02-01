@@ -1,11 +1,6 @@
 "use client"
 
-import {
-  ArrowLeft02Icon,
-  ArrowRight02Icon,
-  Cancel01Icon,
-  Search01Icon,
-} from "@hugeicons/core-free-icons"
+import { ArrowLeft02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   type ColumnFiltersState,
@@ -20,7 +15,16 @@ import {
 } from "@tanstack/react-table"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {
+  NoItemsEmptyState,
+  SearchEmptyState,
+} from "@/components/ui/empty-state"
+import {
+  FilterBar,
+  FilterGroup,
+  FilterResults,
+  SearchInput,
+} from "@/components/ui/filter-bar"
 import {
   Table,
   TableBody,
@@ -29,7 +33,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { pluralize } from "../utils/helpers"
 import { itemsColumns } from "./items-columns"
 import type { ItemStats } from "./types"
 
@@ -81,49 +84,32 @@ export function ItemsTable({ items }: ItemsTableProps) {
   const currentPage = table.getState().pagination.pageIndex + 1
   const totalPages = table.getPageCount()
 
+  const itemLabel = {
+    singular: "przedmiot",
+    plural: "przedmioty",
+    genitive: "przedmiotów",
+  }
+
   return (
     <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative max-w-sm flex-1">
-          <HugeiconsIcon
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-            icon={Search01Icon}
-          />
-          <Input
+      {/* Filter Bar */}
+      <FilterBar>
+        <FilterGroup>
+          <SearchInput
             aria-label="Szukaj przedmiotów"
-            className="h-10 pr-9 pl-9"
-            onChange={(event) => setGlobalFilter(event.target.value)}
+            onChange={setGlobalFilter}
             placeholder="Szukaj po nazwie lub kategorii..."
-            value={globalFilter ?? ""}
+            value={globalFilter}
           />
-          {isFiltered && (
-            <button
-              aria-label="Wyczyść wyszukiwanie"
-              className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              onClick={() => setGlobalFilter("")}
-              type="button"
-            >
-              <HugeiconsIcon className="size-3.5" icon={Cancel01Icon} />
-            </button>
-          )}
-        </div>
+        </FilterGroup>
 
-        {/* Results count */}
-        <div className="flex items-center gap-2 text-sm">
-          {isFiltered ? (
-            <span className="rounded-md bg-primary/10 px-2.5 py-1 font-medium text-primary">
-              {filteredCount} z {totalCount}{" "}
-              {pluralize(totalCount, "produktu", "produktów", "produktów")}
-            </span>
-          ) : (
-            <span className="text-muted-foreground">
-              {totalCount}{" "}
-              {pluralize(totalCount, "przedmiot", "przedmioty", "przedmiotów")}
-            </span>
-          )}
-        </div>
-      </div>
+        <FilterResults
+          filteredCount={filteredCount}
+          isFiltered={isFiltered}
+          itemLabel={itemLabel}
+          totalCount={totalCount}
+        />
+      </FilterBar>
 
       {/* Table Card */}
       <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
@@ -170,30 +156,12 @@ export function ItemsTable({ items }: ItemsTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  className="h-32 text-center"
-                  colSpan={itemsColumns.length}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <HugeiconsIcon
-                      className="size-8 text-muted-foreground/50"
-                      icon={Search01Icon}
-                    />
-                    <p className="font-medium text-muted-foreground">
-                      {isFiltered
-                        ? "Brak wyników dla podanej frazy"
-                        : "Brak przedmiotów"}
-                    </p>
-                    {isFiltered && (
-                      <button
-                        className="text-primary text-sm hover:underline"
-                        onClick={() => setGlobalFilter("")}
-                        type="button"
-                      >
-                        Wyczyść filtr
-                      </button>
-                    )}
-                  </div>
+                <TableCell className="p-0" colSpan={itemsColumns.length}>
+                  {isFiltered ? (
+                    <SearchEmptyState onClear={() => setGlobalFilter("")} />
+                  ) : (
+                    <NoItemsEmptyState itemName="przedmiot" />
+                  )}
                 </TableCell>
               </TableRow>
             )}

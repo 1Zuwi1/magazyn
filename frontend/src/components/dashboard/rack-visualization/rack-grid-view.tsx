@@ -155,7 +155,7 @@ export function RackGridView({
 
         {/* Grid Container */}
         <div
-          className="relative h-full max-h-125 min-h-72 w-full min-w-0 flex-1 overflow-hidden rounded-xl border bg-gradient-to-br from-background to-muted/20 sm:min-h-96"
+          className="relative h-full max-h-125 min-h-72 w-full min-w-0 flex-1 overflow-hidden rounded-xl border bg-linear-to-br from-background to-muted/20 sm:min-h-96"
           ref={containerRef}
         >
           {/* Decorative corner accents */}

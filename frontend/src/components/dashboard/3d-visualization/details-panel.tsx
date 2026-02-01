@@ -1,4 +1,16 @@
+import {
+  Analytics01Icon,
+  ArrowLeft02Icon,
+  CheckmarkCircle02Icon,
+  GridViewIcon,
+  InformationCircleIcon,
+  PackageIcon,
+  SquareLock02Icon,
+  Tag01Icon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { useWarehouseStore } from "./store"
 import type { Item3D, Rack3D, Warehouse3D } from "./types"
 import { RACK_ZONE_SIZE } from "./types"
@@ -20,17 +32,104 @@ function getStatusText(status: Item3D["status"]): string {
   return "Niebezpieczny"
 }
 
-function getStatusColor(status: Item3D["status"]): string {
+function getStatusColor(status: Item3D["status"]): {
+  dot: string
+  bg: string
+  text: string
+} {
   if (status === "normal") {
-    return "bg-green-500"
+    return {
+      dot: "bg-emerald-500",
+      bg: "bg-emerald-500/10",
+      text: "text-emerald-600 dark:text-emerald-400",
+    }
   }
   if (status === "expired") {
-    return "bg-amber-500"
+    return {
+      dot: "bg-amber-500",
+      bg: "bg-amber-500/10",
+      text: "text-amber-600 dark:text-amber-400",
+    }
   }
   if (status === "expired-dangerous") {
-    return "bg-red-500 ring-2 ring-amber-400"
+    return {
+      dot: "bg-red-500 ring-2 ring-amber-400",
+      bg: "bg-red-500/10",
+      text: "text-red-600 dark:text-red-400",
+    }
   }
-  return "bg-red-500"
+  return {
+    dot: "bg-red-500",
+    bg: "bg-red-500/10",
+    text: "text-red-600 dark:text-red-400",
+  }
+}
+
+function getOccupancyColor(percentage: number): {
+  text: string
+  bg: string
+  bar: string
+  label: string
+} {
+  if (percentage >= 90) {
+    return {
+      text: "text-destructive",
+      bg: "bg-destructive/10",
+      bar: "bg-destructive",
+      label: "Krytyczne",
+    }
+  }
+  if (percentage >= 75) {
+    return {
+      text: "text-orange-500",
+      bg: "bg-orange-500/10",
+      bar: "bg-orange-500",
+      label: "Wysokie",
+    }
+  }
+  if (percentage >= 50) {
+    return {
+      text: "text-primary",
+      bg: "bg-primary/10",
+      bar: "bg-primary",
+      label: "Umiarkowane",
+    }
+  }
+  return {
+    text: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+    bar: "bg-emerald-500",
+    label: "Niskie",
+  }
+}
+
+function StatCard({
+  icon,
+  label,
+  value,
+  color,
+  bgColor,
+}: {
+  icon: React.ComponentProps<typeof HugeiconsIcon>["icon"]
+  label: string
+  value: number | string
+  color: string
+  bgColor: string
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1 rounded-lg border bg-card/50 px-3 py-3 transition-colors hover:bg-muted/30">
+      <div
+        className={cn(
+          "flex size-8 items-center justify-center rounded-lg",
+          bgColor
+        )}
+      >
+        <HugeiconsIcon className={cn("size-4", color)} icon={icon} />
+      </div>
+      <span className="font-bold font-mono text-lg">{value}</span>
+      <span className="text-center text-muted-foreground text-xs">{label}</span>
+    </div>
+  )
 }
 
 function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
@@ -45,43 +144,103 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
   )
   const occupiedSlots = totalItems
   const freeSlots = totalSlots - occupiedSlots
+  const occupancyPercentage =
+    totalSlots > 0 ? Math.round((occupiedSlots / totalSlots) * 100) : 0
+  const occupancyColors = getOccupancyColor(occupancyPercentage)
 
   return (
-    <div className="flex h-full flex-col border-l bg-background p-4">
-      <h2 className="mb-4 font-bold text-lg">Przegląd Magazynu</h2>
+    <div className="flex h-full flex-col border-l bg-linear-to-b from-background via-background to-muted/20">
+      {/* Header */}
+      <div className="relative overflow-hidden border-b bg-linear-to-br from-primary/5 via-transparent to-transparent px-4 py-5">
+        <div className="mask-[radial-gradient(ellipse_80%_50%_at_50%_0%,black_70%,transparent_100%)] pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] bg-size-[2rem_2rem] opacity-30" />
 
-      <div className="space-y-4">
-        <div className="rounded-lg border p-4">
-          <div className="text-muted-foreground text-sm">Liczba regałów</div>
-          <div className="font-bold text-2xl">{warehouse.racks.length}</div>
-        </div>
-
-        <div className="rounded-lg border p-4">
-          <div className="text-muted-foreground text-sm">Wszystkie miejsca</div>
-          <div className="font-bold text-2xl">{totalSlots}</div>
-        </div>
-
-        <div className="rounded-lg border p-4">
-          <div className="text-muted-foreground text-sm">Zajęte miejsca</div>
-          <div className="font-bold text-2xl text-green-600">
-            {occupiedSlots}
+        <div className="relative flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
+            <HugeiconsIcon
+              className="size-5 text-primary"
+              icon={Analytics01Icon}
+            />
+          </div>
+          <div>
+            <h2 className="font-semibold text-base tracking-tight">
+              Przegląd Magazynu
+            </h2>
+            <p className="text-muted-foreground text-xs">
+              Statystyki i podsumowanie
+            </p>
           </div>
         </div>
+      </div>
 
-        <div className="rounded-lg border p-4">
-          <div className="text-muted-foreground text-sm">Wolne miejsca</div>
-          <div className="font-bold text-2xl text-blue-600">{freeSlots}</div>
-        </div>
-
-        <div className="rounded-lg border p-4">
-          <div className="text-muted-foreground text-sm">Stopień zajętości</div>
-          <div className="font-bold text-2xl">
-            {totalSlots > 0
-              ? Math.round((occupiedSlots / totalSlots) * 100)
-              : 0}
-            %
+      {/* Occupancy Gauge */}
+      <div className="border-b px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-sm">Obłożenie całkowite</span>
+            <span
+              className={cn(
+                "rounded-md px-2 py-0.5 font-medium text-xs",
+                occupancyColors.bg,
+                occupancyColors.text
+              )}
+            >
+              {occupancyColors.label}
+            </span>
           </div>
+          <span
+            className={cn("font-bold font-mono text-2xl", occupancyColors.text)}
+          >
+            {occupancyPercentage}%
+          </span>
         </div>
+
+        <div className="mt-3 h-3 overflow-hidden rounded-full bg-muted">
+          <div
+            className={cn(
+              "h-full rounded-full transition-all duration-500",
+              occupancyColors.bar
+            )}
+            style={{ width: `${occupancyPercentage}%` }}
+          />
+        </div>
+
+        <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+          <span>0%</span>
+          <span>50%</span>
+          <span>100%</span>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-3 p-4">
+        <StatCard
+          bgColor="bg-muted"
+          color="text-muted-foreground"
+          icon={GridViewIcon}
+          label="Regałów"
+          value={warehouse.racks.length}
+        />
+        <StatCard
+          bgColor="bg-primary/10"
+          color="text-primary"
+          icon={PackageIcon}
+          label="Pojemność"
+          value={totalSlots}
+        />
+        <StatCard
+          bgColor="bg-muted"
+          color="text-muted-foreground"
+          icon={SquareLock02Icon}
+          label="Zajętych"
+          value={occupiedSlots}
+        />
+        <StatCard
+          bgColor="bg-emerald-500/10"
+          color="text-emerald-500"
+          icon={CheckmarkCircle02Icon}
+          label="Wolnych"
+          value={freeSlots}
+        />
       </div>
     </div>
   )
@@ -115,120 +274,235 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
     return <OverviewContent warehouse={warehouse} />
   }
 
+  const rackOccupancy = selectedRack
+    ? Math.round(
+        (selectedRack.items.filter((item) => item !== null).length /
+          (selectedRack.grid.rows * selectedRack.grid.cols)) *
+          100
+      )
+    : 0
+  const occupancyColors = getOccupancyColor(rackOccupancy)
+
   return (
-    <div className="flex h-full flex-col border-l bg-background p-4">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-bold text-lg">Szczegóły Regału</h2>
-        <div className="flex w-full flex-col gap-2 *:w-full">
-          {focusWindow && (
-            <Button
-              onClick={() => {
-                setFocusWindow(null)
-              }}
-              variant="outline"
-            >
-              Powrót do bloków
-            </Button>
-          )}
+    <div className="flex h-full flex-col border-l bg-linear-to-b from-background via-background to-muted/20">
+      {/* Header */}
+      <div className="relative overflow-hidden border-b bg-linear-to-br from-primary/5 via-transparent to-transparent px-4 py-4">
+        <div className="mask-[radial-gradient(ellipse_80%_50%_at_50%_0%,black_70%,transparent_100%)] pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] bg-size-[2rem_2rem] opacity-30" />
+
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
+              <HugeiconsIcon
+                className="size-5 text-primary"
+                icon={InformationCircleIcon}
+              />
+            </div>
+            <div>
+              <h2 className="font-semibold text-base tracking-tight">
+                Szczegóły Regału
+              </h2>
+              <p className="text-muted-foreground text-xs">
+                {selectedRack?.name ?? "Wybierz regał"}
+              </p>
+            </div>
+          </div>
         </div>
+
+        {focusWindow && (
+          <Button
+            className="mt-3 w-full gap-2"
+            onClick={() => {
+              setFocusWindow(null)
+            }}
+            size="sm"
+            variant="outline"
+          >
+            <HugeiconsIcon className="size-4" icon={ArrowLeft02Icon} />
+            Powrót do bloków
+          </Button>
+        )}
       </div>
 
+      {/* Rack Info */}
       {selectedRack && (
-        <div className="mb-6 rounded-lg border p-4">
-          <h3 className="mb-2 font-bold text-xl">{selectedRack.name}</h3>
-          <div className="space-y-1 text-muted-foreground text-sm">
-            <div>Kod: {selectedRack.code}</div>
-            <div>
-              Siatka: {selectedRack.grid.rows}×{selectedRack.grid.cols}
-            </div>
-            <div>
-              Wszystkie miejsca:{" "}
-              {selectedRack.grid.rows * selectedRack.grid.cols}
-            </div>
-            <div>
-              Zajęte:{" "}
-              {selectedRack.items.filter((item) => item !== null).length}
-            </div>
-            <div>
-              Maks. rozmiar elementu: {selectedRack.maxElementSize.width}×
-              {selectedRack.maxElementSize.height}×
-              {selectedRack.maxElementSize.depth} mm
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedShelf && (
-        <div className="flex-1">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-bold text-lg">
-              Rząd {selectedShelf.row + 1} półka {selectedShelf.col + 1}
-            </h3>
-            <Button onClick={clearSelection} size="sm" variant="ghost">
-              Wyczyść
-            </Button>
-          </div>
-
-          {selectedItem ? (
-            <div className="rounded-lg border p-4">
-              <div className="mb-4 flex items-center gap-2">
-                <div
-                  className={`h-3 w-3 rounded ${getStatusColor(selectedItem.status)}`}
+        <div className="space-y-4 p-4">
+          {/* Rack Card */}
+          <div className="overflow-hidden rounded-xl border bg-card">
+            <div className="flex items-center gap-3 border-b bg-muted/30 px-4 py-3">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+                <HugeiconsIcon
+                  className="size-4 text-primary"
+                  icon={GridViewIcon}
                 />
-                <span className="font-semibold">
-                  {getStatusText(selectedItem.status)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate font-bold text-sm">
+                  {selectedRack.name}
+                </h3>
+                <p className="font-mono text-muted-foreground text-xs">
+                  {selectedRack.code}
+                </p>
+              </div>
+              <span
+                className={cn(
+                  "rounded-md px-2 py-0.5 font-bold font-mono text-xs",
+                  occupancyColors.bg,
+                  occupancyColors.text
+                )}
+              >
+                {rackOccupancy}%
+              </span>
+            </div>
+
+            <div className="space-y-2 p-3 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Siatka</span>
+                <span className="font-mono font-semibold">
+                  {selectedRack.grid.rows}×{selectedRack.grid.cols}
                 </span>
               </div>
-
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="text-muted-foreground">ID:</span>{" "}
-                  <span className="font-mono">{selectedItem.id}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Etykieta:</span>{" "}
-                  <span>{selectedItem.label}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Typ:</span>{" "}
-                  <span>{selectedItem.type}</span>
-                </div>
-
-                {selectedItem.meta && (
-                  <div className="space-y-1">
-                    <div className="text-muted-foreground">Metadane:</div>
-                    {Object.entries(selectedItem.meta).map(([key, value]) => (
-                      <div className="ml-2 font-mono text-xs" key={key}>
-                        {key}: {String(value)}
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Wszystkie miejsca</span>
+                <span className="font-mono font-semibold">
+                  {selectedRack.grid.rows * selectedRack.grid.cols}
+                </span>
               </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Zajęte</span>
+                <span className="font-mono font-semibold">
+                  {selectedRack.items.filter((item) => item !== null).length}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Max rozmiar</span>
+                <span className="font-mono font-semibold">
+                  {selectedRack.maxElementSize.width}×
+                  {selectedRack.maxElementSize.height}×
+                  {selectedRack.maxElementSize.depth} mm
+                </span>
+              </div>
+            </div>
+          </div>
 
-              <div className="mt-4 space-y-2">
-                <Button className="w-full" size="sm" variant="outline">
-                  Edytuj etykietę
+          {/* Selected Shelf Info */}
+          {selectedShelf && (
+            <div className="overflow-hidden rounded-xl border bg-card">
+              <div className="flex items-center justify-between gap-3 border-b bg-muted/30 px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex size-8 items-center justify-center rounded-lg bg-blue-500/10">
+                    <HugeiconsIcon
+                      className="size-4 text-blue-500"
+                      icon={Tag01Icon}
+                    />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm">
+                      Rząd {selectedShelf.row + 1}, Półka{" "}
+                      {selectedShelf.col + 1}
+                    </h4>
+                  </div>
+                </div>
+                <Button onClick={clearSelection} size="sm" variant="ghost">
+                  Wyczyść
                 </Button>
               </div>
-            </div>
-          ) : (
-            <div className="rounded-lg border p-4 text-center text-muted-foreground">
-              <div className="mb-2 font-bold">Pusta półka</div>
-              <div className="text-sm">
-                Brak elementu na pozycji Rząd {selectedShelf.row + 1} półka{" "}
-                {selectedShelf.col + 1}
-              </div>
+
+              {selectedItem ? (
+                <div className="p-3">
+                  <div className="mb-3 flex items-center gap-2">
+                    <div
+                      className={`size-3 rounded-full ${getStatusColor(selectedItem.status).dot}`}
+                    />
+                    <span
+                      className={cn(
+                        "font-medium text-sm",
+                        getStatusColor(selectedItem.status).text
+                      )}
+                    >
+                      {getStatusText(selectedItem.status)}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">ID</span>
+                      <span className="font-mono">{selectedItem.id}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Etykieta</span>
+                      <span className="font-medium">{selectedItem.label}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Typ</span>
+                      <span className="font-medium">{selectedItem.type}</span>
+                    </div>
+
+                    {selectedItem.meta && (
+                      <div className="mt-3 rounded-lg bg-muted/50 p-2">
+                        <p className="mb-1 font-semibold text-[10px] text-muted-foreground uppercase tracking-wider">
+                          Metadane
+                        </p>
+                        {Object.entries(selectedItem.meta).map(
+                          ([key, value]) => (
+                            <div
+                              className="flex items-center justify-between font-mono text-[10px]"
+                              key={key}
+                            >
+                              <span className="text-muted-foreground">
+                                {key}:
+                              </span>
+                              <span>{String(value)}</span>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <Button className="mt-4 w-full" size="sm" variant="outline">
+                    Edytuj etykietę
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2 p-6 text-center">
+                  <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                    <HugeiconsIcon
+                      className="size-6 text-muted-foreground"
+                      icon={PackageIcon}
+                    />
+                  </div>
+                  <p className="font-medium text-muted-foreground text-sm">
+                    Pusta półka
+                  </p>
+                  <p className="text-muted-foreground/70 text-xs">
+                    Brak elementu na pozycji
+                    <br />
+                    Rząd {selectedShelf.row + 1}, Półka {selectedShelf.col + 1}
+                  </p>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
 
-      {!selectedShelf && (
-        <div className="flex-1 text-center text-muted-foreground">
-          {showBlockHint
-            ? `Kliknij blok ${RACK_ZONE_SIZE}×${RACK_ZONE_SIZE}, aby zobaczyć szczegóły.`
-            : "Kliknij na półkę, aby zobaczyć szczegóły"}
+          {/* Hint when no shelf selected */}
+          {!selectedShelf && (
+            <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed bg-muted/30 p-6 text-center">
+              <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+                <HugeiconsIcon
+                  className="size-6 text-muted-foreground"
+                  icon={InformationCircleIcon}
+                />
+              </div>
+              <p className="font-medium text-muted-foreground text-sm">
+                {showBlockHint
+                  ? `Kliknij blok ${RACK_ZONE_SIZE}×${RACK_ZONE_SIZE}`
+                  : "Kliknij na półkę"}
+              </p>
+              <p className="text-muted-foreground/70 text-xs">
+                aby zobaczyć szczegóły elementu
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
