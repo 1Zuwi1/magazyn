@@ -72,6 +72,7 @@ export const LoginSchema = createApiSchema({
     input: z.object({
       email: z.email("Nieprawidłowy adres email"),
       password: PasswordSchema,
+      rememberMe: z.boolean(),
     }),
     output: z.null(),
   },
@@ -89,10 +90,51 @@ export const RegisterSchema = createApiSchema({
   },
 })
 
+function sanitizeCreationOptionsJSON(
+  optionsJSON: PublicKeyCredentialCreationOptionsJSON
+) {
+  if (!optionsJSON?.excludeCredentials) {
+    return optionsJSON
+  }
+
+  return {
+    ...optionsJSON,
+    excludeCredentials: optionsJSON.excludeCredentials.map((cred) => {
+      const out = { ...cred }
+
+      // WebAuthn JSON parsing hates null here: must be array or absent
+      if (out.transports == null) {
+        out.transports = undefined
+      } else if (!Array.isArray(out.transports)) {
+        // If something weird got in here, force it to a valid type
+        out.transports = []
+      }
+
+      return out
+    }),
+  }
+}
+
 export const WebAuthnStartRegistrationSchema = createApiSchema({
   POST: {
     input: z.null(),
-    output: z.custom<PublicKeyCredentialCreationOptionsJSON>(),
+    output: z
+      .custom<PublicKeyCredentialCreationOptionsJSON>()
+      .transform((data, ctx) => {
+        try {
+          return PublicKeyCredential.parseCreationOptionsFromJSON(
+            sanitizeCreationOptionsJSON(data)
+          )
+        } catch (err) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "Invalid WebAuthn creation options JSON" +
+              (err instanceof Error ? `: ${err.message}` : ""),
+          })
+          return z.NEVER
+        }
+      }),
   },
 })
 

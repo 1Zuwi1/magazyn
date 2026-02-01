@@ -14,7 +14,14 @@ import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { FieldWithState } from "@/components/helpers/field-state"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
-import { Field, FieldDescription, FieldGroup } from "@/components/ui/field"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { apiFetch } from "@/lib/fetcher"
 import { FormRegisterSchema, LoginSchema, RegisterSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -32,6 +39,7 @@ const values = {
   login: {
     email: "",
     password: "",
+    rememberMe: false,
   },
   register: {
     fullName: "",
@@ -188,6 +196,23 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 )}
               </form.Field>
             )}
+
+            <form.Field name="rememberMe">
+              {(field) => (
+                <Field orientation="horizontal">
+                  <Checkbox
+                    checked={field.state.value}
+                    id={field.name}
+                    onCheckedChange={field.handleChange}
+                  />
+                  <FieldContent>
+                    <FieldLabel htmlFor={field.name}>
+                      Zapamiętaj mnie
+                    </FieldLabel>
+                  </FieldContent>
+                </Field>
+              )}
+            </form.Field>
 
             <Field>
               <form.Subscribe

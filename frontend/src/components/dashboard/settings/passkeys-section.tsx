@@ -88,8 +88,7 @@ export function PasskeysSection() {
 
       const [credentialError, credential] = await tryCatch(
         navigator.credentials.create({
-          publicKey:
-            PublicKeyCredential.parseCreationOptionsFromJSON(startResponse),
+          publicKey: startResponse,
         })
       )
       if (credentialError) {
