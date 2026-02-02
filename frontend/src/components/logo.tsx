@@ -12,8 +12,13 @@ export default function Logo({
   const Wrapper = href ? "a" : "div"
   return (
     <Wrapper className={cn("flex items-center gap-2", className)} href={href}>
-      {/* <HugeiconsIcon className="size-6 text-primary" icon={Package} /> */}
-      <Image alt="GdzieToLeży Logo" className="size-6" src={LogoImage} />
+      <Image
+        alt="GdzieToLeży Logo"
+        className="size-6"
+        height={24}
+        src={LogoImage}
+        width={24}
+      />
       <span className="font-bold text-xl">GdzieToLeży</span>
     </Wrapper>
   )
