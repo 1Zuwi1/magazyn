@@ -80,7 +80,7 @@ export function Dock() {
   }, [isInWarehouse, splitted])
 
   return (
-    <div className="pointer-events-none fixed bottom-0 left-0 z-50 standalone:flex hidden w-full justify-center px-4 pb-6">
+    <div className="pointer-events-none fixed bottom-0 left-0 z-50 standalone:flex hidden max-h-96 w-full justify-center px-4 pb-6">
       {/* Ambient glow effect */}
       <div
         aria-hidden="true"
