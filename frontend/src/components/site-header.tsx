@@ -105,10 +105,7 @@ export default function SiteHeader() {
                   <BreadcrumbSeparator />
                 )}
                 {startItem !== endItem && !hasOverflow && (
-                  <>
-                    <BreadcrumbSeparator className="sm:hidden" />
-                    <BreadcrumbSeparator className="hidden sm:inline" />
-                  </>
+                  <BreadcrumbSeparator />
                 )}
               </>
             )}
