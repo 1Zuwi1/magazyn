@@ -157,7 +157,7 @@ jobs:
 
             if [ "${#SERVICES[@]}" -gt 0 ]; then
               docker compose pull "${SERVICES[@]}"
-              docker compose up -d --remove-orphans "${SERVICES[@]}"
+              docker compose up -d --remove-orphans --force-recreate "${SERVICES[@]}"
             fi
             docker image prune -f
 
