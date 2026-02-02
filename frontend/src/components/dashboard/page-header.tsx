@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import type { ComponentProps, ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
-import { buttonVariants } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 type IconComponent = ComponentProps<typeof HugeiconsIcon>["icon"]
@@ -28,6 +28,8 @@ interface PageHeaderProps {
   backHref?: string
   /** Title for the back button */
   backTitle?: string
+  /** Optional click handler for the back button */
+  onBack?: () => void
   /** Additional badge to display next to the title */
   titleBadge?: string
   /** Quick stats to display on the right side */
@@ -77,15 +79,35 @@ export function PageHeader({
   iconBadge,
   backHref,
   backTitle = "Wstecz",
+  onBack,
   titleBadge,
   stats,
   children,
   statsChildren,
 }: PageHeaderProps) {
   const renderIconOrBackButton = () => {
+    if (onBack) {
+      return (
+        <Button
+          aria-label={backTitle}
+          className={cn(
+            "relative flex size-14 shrink-0 items-center justify-center rounded-xl transition-all hover:bg-primary/5 hover:ring-primary/30 sm:size-16"
+          )}
+          onClick={onBack}
+          size="icon"
+          title={backTitle}
+          type="button"
+          variant="outline"
+        >
+          <HugeiconsIcon className="size-6 sm:size-7" icon={ArrowLeft02Icon} />
+        </Button>
+      )
+    }
+
     if (backHref) {
       return (
         <Link
+          aria-label={backTitle}
           className={cn(
             buttonVariants({ variant: "outline", size: "icon" }),
             "relative flex size-14 shrink-0 items-center justify-center rounded-xl transition-all hover:bg-primary/5 hover:ring-primary/30 sm:size-16"

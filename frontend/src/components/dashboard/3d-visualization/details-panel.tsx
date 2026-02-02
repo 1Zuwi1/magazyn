@@ -1,6 +1,5 @@
 import {
   Analytics01Icon,
-  ArrowLeft02Icon,
   CheckmarkCircle02Icon,
   GridViewIcon,
   InformationCircleIcon,
@@ -247,15 +246,8 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
 }
 
 export function DetailsPanel({ warehouse }: DetailsPanelProps) {
-  const {
-    mode,
-    selectedRackId,
-    selectedShelf,
-    clearSelection,
-    focusWindow,
-    setFocusWindow,
-    goToOverview,
-  } = useWarehouseStore()
+  const { mode, selectedRackId, selectedShelf, clearSelection, focusWindow } =
+    useWarehouseStore()
 
   const selectedRack = warehouse.racks.find(
     (rack: Rack3D) => rack.id === selectedRackId
@@ -308,22 +300,6 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
             </div>
           </div>
         </div>
-
-        <Button
-          className="mt-3 w-full gap-2"
-          onClick={() => {
-            if (focusWindow) {
-              setFocusWindow(null)
-              return
-            }
-            goToOverview()
-          }}
-          size="sm"
-          variant="outline"
-        >
-          <HugeiconsIcon className="size-4" icon={ArrowLeft02Icon} />
-          {focusWindow ? "Powrót do bloków" : "Powrót do przeglądu"}
-        </Button>
       </div>
 
       {/* Rack Info */}
