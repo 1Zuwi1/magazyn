@@ -52,51 +52,54 @@ export default function ThreeDVisualizationPage() {
     },
   ]
 
+  const panelButtons = (
+    <div className="flex flex-wrap items-center gap-2 xl:hidden">
+      <Sheet>
+        <SheetTrigger
+          className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+        >
+          Eksplorator
+        </SheetTrigger>
+        <SheetContent className="p-0" side="left">
+          <SheetHeader className="border-b">
+            <SheetTitle>Eksplorator Magazynu</SheetTitle>
+          </SheetHeader>
+          <div className="min-h-0 flex-1">
+            <SidebarPanel racks={warehouse.racks} />
+          </div>
+        </SheetContent>
+      </Sheet>
+      <Sheet>
+        <SheetTrigger
+          className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+        >
+          Szczegóły
+        </SheetTrigger>
+        <SheetContent className="p-0" side="right">
+          <SheetHeader className="border-b">
+            <SheetTitle>Szczegóły Regału</SheetTitle>
+          </SheetHeader>
+          <div className="min-h-0 flex-1">
+            <DetailsPanel warehouse={warehouse} />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
+  )
+
   return (
-    <div className="flex h-[calc(100dvh-4rem)] flex-col gap-4 overflow-hidden">
+    <div
+      className="flex flex-col gap-4 overflow-hidden"
+      style={{
+        height: "calc(100dvh - var(--header-height) - 3.5rem - 1px)",
+      }}
+    >
       <PageHeader
         backHref="./"
         backTitle="Wróć do panelu magazynu"
         description="Interaktywny widok przestrzenny regałów i produktów"
         stats={headerStats}
-        statsChildren={
-          <div className="flex items-center gap-2 xl:hidden">
-            <Sheet>
-              <SheetTrigger
-                className={cn(
-                  buttonVariants({ size: "sm", variant: "outline" })
-                )}
-              >
-                Eksplorator
-              </SheetTrigger>
-              <SheetContent className="p-0" side="left">
-                <SheetHeader className="border-b">
-                  <SheetTitle>Eksplorator Magazynu</SheetTitle>
-                </SheetHeader>
-                <div className="min-h-0 flex-1">
-                  <SidebarPanel racks={warehouse.racks} />
-                </div>
-              </SheetContent>
-            </Sheet>
-            <Sheet>
-              <SheetTrigger
-                className={cn(
-                  buttonVariants({ size: "sm", variant: "outline" })
-                )}
-              >
-                Szczegóły
-              </SheetTrigger>
-              <SheetContent className="p-0" side="right">
-                <SheetHeader className="border-b">
-                  <SheetTitle>Szczegóły Regału</SheetTitle>
-                </SheetHeader>
-                <div className="min-h-0 flex-1">
-                  <DetailsPanel warehouse={warehouse} />
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-        }
+        statsChildren={panelButtons}
         title="Wizualizacja 3D"
       />
 

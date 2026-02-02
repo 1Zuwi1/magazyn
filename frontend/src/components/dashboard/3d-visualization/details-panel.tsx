@@ -254,6 +254,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
     clearSelection,
     focusWindow,
     setFocusWindow,
+    goToOverview,
   } = useWarehouseStore()
 
   const selectedRack = warehouse.racks.find(
@@ -308,19 +309,21 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
           </div>
         </div>
 
-        {focusWindow && (
-          <Button
-            className="mt-3 w-full gap-2"
-            onClick={() => {
+        <Button
+          className="mt-3 w-full gap-2"
+          onClick={() => {
+            if (focusWindow) {
               setFocusWindow(null)
-            }}
-            size="sm"
-            variant="outline"
-          >
-            <HugeiconsIcon className="size-4" icon={ArrowLeft02Icon} />
-            Powrót do bloków
-          </Button>
-        )}
+              return
+            }
+            goToOverview()
+          }}
+          size="sm"
+          variant="outline"
+        >
+          <HugeiconsIcon className="size-4" icon={ArrowLeft02Icon} />
+          {focusWindow ? "Powrót do bloków" : "Powrót do przeglądu"}
+        </Button>
       </div>
 
       {/* Rack Info */}

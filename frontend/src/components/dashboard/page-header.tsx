@@ -100,7 +100,7 @@ export function PageHeader({
 
     if (icon) {
       return (
-        <div className="relative flex size-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20 sm:size-16">
+        <div className="relative flex size-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20 sm:size-16">
           <HugeiconsIcon
             className="size-7 text-primary sm:size-8"
             icon={icon}
@@ -118,9 +118,9 @@ export function PageHeader({
   }
 
   return (
-    <header className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card via-card to-primary/[0.02] p-6 sm:p-8">
+    <header className="relative overflow-hidden rounded-2xl border bg-linear-to-br from-card via-card to-primary/2 p-6 sm:p-8">
       {/* Decorative grid pattern */}
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-30 [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,black_70%,transparent_100%)]" />
+      <div className="mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,black_70%,transparent_100%)] pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] bg-size-[4rem_4rem] opacity-30" />
 
       <div className="relative flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
@@ -149,7 +149,7 @@ export function PageHeader({
 
         {/* Quick Stats */}
         {(stats || statsChildren) && (
-          <div className="flex shrink-0 flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {stats?.map((stat, index) => (
               <StatCard key={stat.label + index} {...stat} />
             ))}
