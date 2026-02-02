@@ -19,7 +19,7 @@ import java.util.Objects;
 
 @Component
 public class TwoFactorFilter extends OncePerRequestFilter {
-    private final List<String> whitelist = List.of("/api/2fa", "/api/auth", "/api/users/me", "/api/health", "/api/webauthn/assertion");
+    private final List<String> whitelist = List.of("/api/2fa", "/api/auth", "/api/health", "/api/webauthn/assertion");
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override

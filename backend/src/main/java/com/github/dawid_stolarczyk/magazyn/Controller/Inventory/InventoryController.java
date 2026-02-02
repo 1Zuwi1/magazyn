@@ -44,11 +44,12 @@ public class InventoryController {
         return ResponseEntity.ok(ResponseTemplate.success(result.response()));
     }
 
-    @Operation(summary = "Confirm placement and store items in inventory")
+    @Operation(summary = "Confirm placement and store items in inventory",
+            description = "Accepts either itemId or barcode (14 digits) to identify the item. Both fields cannot be provided simultaneously.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Placement confirmed and resources created",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid placement or item not found",
+            @ApiResponse(responseCode = "400", description = "Invalid placement, item not found, or validation error",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
             @ApiResponse(responseCode = "409", description = "Placement conflict",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))

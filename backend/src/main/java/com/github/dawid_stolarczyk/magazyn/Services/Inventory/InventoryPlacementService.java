@@ -126,8 +126,19 @@ public class InventoryPlacementService {
      */
     @Transactional
     public PlacementConfirmationResponse confirmPlacement(PlacementConfirmationRequest request) {
-        Item item = itemRepository.findById(request.getItemId())
-                .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
+        // Walidacja żeby tylko itemId lub barcode było podane
+        request.validate();
+
+        // Znajdź item na podstawie itemId lub barcode
+        Item item;
+        if (request.getItemId() != null) {
+            item = itemRepository.findById(request.getItemId())
+                    .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
+        } else {
+            item = itemRepository.findByBarcode(request.getBarcode())
+                    .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
+        }
+
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.USER_NOT_FOUND.name()));
 
