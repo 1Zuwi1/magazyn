@@ -26,11 +26,36 @@ import org.springframework.web.bind.annotation.RestController;
 public class InventoryController {
     private final InventoryPlacementService placementService;
 
-    @Operation(summary = "Generate a scan-driven placement plan for incoming items")
+    @Operation(
+            summary = "Generate an optimal placement plan for incoming items",
+            description = """
+                    Generates a placement plan using intelligent algorithms:
+                    
+                    **Grouping Algorithm:**
+                    - Groups racks by proximity (warehouse → zone → aisle based on marker)
+                    - Fills positions in "snake" pattern (row by row, left to right)
+                    - Minimizes picking time by placing items close together
+                    
+                    **Position Reservation (reserve=true):**
+                    - Each allocated position (rack + x,y coordinate) is reserved for 5 minutes
+                    - Only the requesting user can confirm placement to reserved positions
+                    - Other users will NOT see reserved positions as available
+                    - Reservations automatically expire after 5 minutes
+                    - Response includes `reserved=true`, `reservedUntil` timestamp, and `reservedCount`
+                    
+                    **Without Reservation (reserve=false, default):**
+                    - Returns optimal positions without locking them
+                    - Other users may use the same positions
+                    - Response includes `reserved=false`
+                    
+                    Use `reserve=true` when the user needs guaranteed positions for immediate placement.
+                    """
+    )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Placement plan created successfully",
+            @ApiResponse(responseCode = "200", description = "Placement plan created successfully. " +
+                    "If reserved=true, positions are locked for 5 minutes.",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request or item not found",
+            @ApiResponse(responseCode = "400", description = "Invalid request, item not found, or insufficient space",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/placements/plan")
