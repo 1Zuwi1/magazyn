@@ -34,6 +34,6 @@ spring.data.redis.host=${REDIS_HOST:redis}
 spring.data.redis.port=${REDIS_PORT:6379}
 spring.data.redis.password=${REDIS_PASSWORD}
 
-app.web.port=${PORT:3001}
+app.web.port=${WEB_PORT:3001}
 
 webauthn.allow-untrusted-attestation:false
