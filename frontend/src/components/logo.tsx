@@ -1,5 +1,5 @@
-import { Package } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
+import Image from "next/image"
+import LogoImage from "@/../public/Logo.png"
 import { cn } from "@/lib/utils"
 
 export default function Logo({
@@ -12,7 +12,8 @@ export default function Logo({
   const Wrapper = href ? "a" : "div"
   return (
     <Wrapper className={cn("flex items-center gap-2", className)} href={href}>
-      <HugeiconsIcon className="size-6 text-primary" icon={Package} />
+      {/* <HugeiconsIcon className="size-6 text-primary" icon={Package} /> */}
+      <Image alt="GdzieToLeży Logo" className="size-6" src={LogoImage} />
       <span className="font-bold text-xl">GdzieToLeży</span>
     </Wrapper>
   )
