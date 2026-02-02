@@ -49,3 +49,9 @@ export const handleApiError = (err: unknown, fallback?: string) => {
       : (fallback ?? "Wystąpił nieoczekiwany błąd.")
   )
 }
+export const getOccupancyPercentage = (
+  used: number,
+  capacity: number
+): number => {
+  return capacity > 0 ? (used / capacity) * 100 : 0
+}

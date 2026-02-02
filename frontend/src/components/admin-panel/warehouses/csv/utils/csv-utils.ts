@@ -1,5 +1,5 @@
 import Papa from "papaparse"
-import { ItemSchema, RackCsvSchema } from "@/lib/schemas/admin-schemas"
+import { ItemSchema, RackCsvSchema } from "@/lib/schemas/csv-schemas"
 import type {
   CsvImporterType,
   CsvParseError,

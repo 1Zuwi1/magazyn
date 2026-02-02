@@ -13,6 +13,7 @@ import {
   MOCK_USERS,
   MOCK_WAREHOUSES,
 } from "@/components/dashboard/mock-data"
+import { getOccupancyPercentage } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -23,7 +24,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { FULL_WAREHOUSE_THRESHOLD } from "../lib/constants"
+import { THRESHOLD } from "../lib/constants"
 import { countUnreadNotifications } from "../lib/utils"
 import { StatCard } from "./stat-card"
 
@@ -54,9 +55,11 @@ export function AdminOverview() {
 
   const criticalWarehouses = useMemo(() => {
     return MOCK_WAREHOUSES.filter((warehouse) => {
-      const occupancy =
-        warehouse.capacity > 0 ? (warehouse.used / warehouse.capacity) * 100 : 0
-      return occupancy >= FULL_WAREHOUSE_THRESHOLD
+      const occupancy = getOccupancyPercentage(
+        warehouse.used,
+        warehouse.capacity
+      )
+      return occupancy >= THRESHOLD
     })
   }, [])
 
@@ -111,10 +114,10 @@ export function AdminOverview() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {criticalWarehouses.map((warehouse) => {
-              const occupancy =
-                warehouse.capacity > 0
-                  ? (warehouse.used / warehouse.capacity) * 100
-                  : 0
+              const occupancy = getOccupancyPercentage(
+                warehouse.used,
+                warehouse.capacity
+              )
 
               return (
                 <Card key={warehouse.id}>

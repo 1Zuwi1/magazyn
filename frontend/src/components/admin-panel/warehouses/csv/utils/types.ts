@@ -3,7 +3,7 @@ import type {
   ItemSchema,
   RackCsvSchema,
   RackSchema,
-} from "@/lib/schemas/admin-schemas"
+} from "@/lib/schemas/csv-schemas"
 
 export interface Column {
   key: string

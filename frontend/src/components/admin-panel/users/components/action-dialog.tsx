@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { UserFormSchema } from "@/lib/schemas/admin-schemas"
+import { UserFormSchema } from "@/lib/schemas/csv-schemas"
 
 const roles: { label: string; value: Role }[] = [
   { label: "Użytkownik", value: "user" },

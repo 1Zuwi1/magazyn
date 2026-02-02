@@ -21,8 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-
-const HIGH_OCCUPANCY_THRESHOLD = 80
+import { THRESHOLD } from "../../lib/constants"
 
 interface RackGridProps {
   racks: Rack[]
@@ -63,9 +62,7 @@ export function RackGrid({ racks, onEdit, onDelete }: RackGridProps) {
               <div className="flex items-center gap-2">
                 <Badge
                   variant={
-                    rack.occupancy > HIGH_OCCUPANCY_THRESHOLD
-                      ? "destructive"
-                      : "secondary"
+                    rack.occupancy > THRESHOLD ? "destructive" : "secondary"
                   }
                 >
                   {rack.occupancy}%

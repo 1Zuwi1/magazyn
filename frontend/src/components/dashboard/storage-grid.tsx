@@ -12,16 +12,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { Warehouse } from "./types"
-import { pluralize } from "./utils/helpers"
+import { getOccupancyPercentage, pluralize } from "./utils/helpers"
 
 const FULL_WAREHOUSE_THRESHOLD = 90
 
 interface WarehouseGridProps {
   warehouses: Warehouse[]
-}
-
-const getOccupancyPercentage = (used: number, capacity: number): number => {
-  return capacity > 0 ? (used / capacity) * 100 : 0
 }
 
 export function WarehouseGrid({ warehouses }: WarehouseGridProps) {

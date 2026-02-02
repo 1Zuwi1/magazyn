@@ -2,6 +2,7 @@
 
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useMemo } from "react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Dialog,
@@ -44,24 +45,31 @@ export function CsvImporter<T extends CsvImporterType>({
 
   const columns = type === "rack" ? RACK_COLUMNS : ITEM_COLUMNS
 
-  const labels = Object.fromEntries(
-    columns.map((column) => [column.key.toLowerCase(), column.label])
-  )
+  const labels = useMemo(() => {
+    const map: Record<string, string> = {}
+    for (const column of columns) {
+      map[column.key.toLowerCase()] = column.label
+    }
+    return map
+  }, [columns])
 
-  const previewColumns =
-    previewHeaders.length > 0
-      ? previewHeaders.map((header) => ({
-          key: header,
-          label: labels[header.toLowerCase()] || header,
-        }))
-      : columns
-
-  const handleOpenChange = (isOpen: boolean) => {
-    setOpen(isOpen)
-  }
+  const previewColumns = useMemo(() => {
+    return previewHeaders.map((header) => ({
+      key: header,
+      label: labels[header.toLowerCase()] || header,
+    }))
+  }, [previewHeaders, labels])
 
   return (
-    <Dialog onOpenChange={handleOpenChange} open={open}>
+    <Dialog
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen)
+        if (!isOpen) {
+          resetFile()
+        }
+      }}
+      open={open}
+    >
       <DialogTrigger
         className={cn(buttonVariants({ variant: "default" }), "w-fit gap-2")}
       >
@@ -107,7 +115,7 @@ export function CsvImporter<T extends CsvImporterType>({
               </Button>
             </>
           ) : (
-            <Button onClick={() => handleOpenChange(false)} variant="outline">
+            <Button onClick={() => setOpen(false)} variant="outline">
               Anuluj
             </Button>
           )}

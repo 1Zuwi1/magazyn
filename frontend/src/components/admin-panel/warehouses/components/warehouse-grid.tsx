@@ -9,7 +9,10 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import type { Warehouse } from "@/components/dashboard/types"
-import { pluralize } from "@/components/dashboard/utils/helpers"
+import {
+  getOccupancyPercentage,
+  pluralize,
+} from "@/components/dashboard/utils/helpers"
 import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
@@ -25,17 +28,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-
-const FULL_WAREHOUSE_THRESHOLD = 90
+import { THRESHOLD } from "../../lib/constants"
 
 interface WarehouseGridProps {
   warehouses: Warehouse[]
   onEdit?: (warehouse: Warehouse) => void
   onDelete?: (warehouse: Warehouse) => void
-}
-
-const getOccupancyPercentage = (used: number, capacity: number): number => {
-  return capacity > 0 ? (used / capacity) * 100 : 0
 }
 
 export function WarehouseGrid({
@@ -125,7 +123,7 @@ export function WarehouseGrid({
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-secondary">
                     <div
-                      className={`h-full rounded-full ${occupancyPercentage > FULL_WAREHOUSE_THRESHOLD ? "bg-destructive" : "bg-primary"}`}
+                      className={`h-full rounded-full ${occupancyPercentage > THRESHOLD ? "bg-destructive" : "bg-primary"}`}
                       style={{ width: `${occupancyPercentage}%` }}
                     />
                   </div>
