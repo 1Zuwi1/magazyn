@@ -31,35 +31,58 @@ export function ScannerQuantityStep({
     <ScannerBody>
       <div className="relative flex h-full flex-col">
         <CancelButton onClick={onCancel} />
-        <div className="mb-6 flex-1">
-          <h2 className="mb-2 font-semibold text-xl">
+
+        {/* Header */}
+        <div className="mb-6">
+          <h2 className="font-semibold text-xl tracking-tight">
             Podaj ilość przedmiotów
           </h2>
-          <p className="text-muted-foreground">
+          <p className="mt-1 text-muted-foreground text-sm">
             Ile sztuk chcesz dodać do magazynu?
           </p>
         </div>
-        <div className="h-full">
-          {scannedItem?.imageUrl && (
-            <Image
-              alt={scannedItem.name || "Skanowany przedmiot"}
-              className="mb-4 max-h-40 w-auto rounded-md object-cover"
-              height={160}
-              src={scannedItem.imageUrl}
-              width={160}
-            />
-          )}
-          <div className="mb-4">
-            <h3 className="font-medium text-lg">
-              {scannedItem?.name || "Nieznany przedmiot"}
-            </h3>
-            {scannedItem?.expiresIn !== undefined && (
-              <p className="text-muted-foreground text-sm">
-                Data przeterminowania za około {scannedItem.expiresIn} dni
-              </p>
-            )}
+
+        {/* Item preview card */}
+        <div className="mb-6 flex-1">
+          <div className="overflow-hidden rounded-xl border bg-card/50">
+            <div className="flex gap-4 p-4">
+              {scannedItem?.imageUrl && (
+                <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
+                  <Image
+                    alt={scannedItem.name || "Skanowany przedmiot"}
+                    className="object-cover"
+                    fill
+                    src={scannedItem.imageUrl}
+                  />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate font-medium">
+                  {scannedItem?.name || "Nieznany przedmiot"}
+                </h3>
+                {scannedItem?.expiresIn !== undefined && (
+                  <p className="mt-1 text-muted-foreground text-sm">
+                    Wygasa za{" "}
+                    <span className="font-medium text-foreground">
+                      {scannedItem.expiresIn}
+                    </span>{" "}
+                    dni
+                  </p>
+                )}
+                {scannedItem?.weight !== undefined && (
+                  <p className="text-muted-foreground text-sm">
+                    Waga:{" "}
+                    <span className="font-medium text-foreground">
+                      {scannedItem.weight} kg
+                    </span>
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Quantity controls */}
         <div className="space-y-4">
           <div>
             <label
@@ -68,18 +91,18 @@ export function ScannerQuantityStep({
             >
               Ilość przedmiotów
             </label>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Button
+                className="size-12 rounded-xl text-xl"
                 disabled={quantity <= 1}
                 onClick={onDecrease}
-                size={"icon-lg"}
                 type="button"
-                variant={"outline"}
+                variant="outline"
               >
                 −
               </Button>
               <Input
-                className="no-spinners h-10 w-20 text-center text-lg"
+                className="no-spinners h-12 flex-1 rounded-xl text-center font-mono text-lg"
                 id="quantity"
                 max={SCANNER_ITEM_MAX_QUANTITY}
                 min="1"
@@ -102,18 +125,18 @@ export function ScannerQuantityStep({
                 value={quantity}
               />
               <Button
+                className="size-12 rounded-xl text-xl"
                 disabled={quantity >= SCANNER_ITEM_MAX_QUANTITY}
                 onClick={onIncrease}
-                size={"icon-lg"}
                 type="button"
-                variant={"outline"}
+                variant="outline"
               >
                 +
               </Button>
             </div>
           </div>
           <Button
-            className="w-full"
+            className="h-12 w-full rounded-xl"
             isLoading={isSubmitting}
             onClick={onSubmit}
             type="button"

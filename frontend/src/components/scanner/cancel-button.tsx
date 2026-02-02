@@ -1,4 +1,4 @@
-import { Cancel01Icon } from "@hugeicons/core-free-icons"
+import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "../ui/button"
 
@@ -9,13 +9,14 @@ interface CancelButtonProps {
 export function CancelButton({ onClick }: CancelButtonProps) {
   return (
     <Button
-      className="absolute top-0 right-0"
+      className="absolute top-0 right-0 rounded-xl"
       onClick={onClick}
       size="icon"
       type="button"
-      variant="outline"
+      variant="ghost"
     >
-      <HugeiconsIcon className="size-4" icon={Cancel01Icon} />
+      <HugeiconsIcon className="size-5" icon={ArrowLeft02Icon} />
+      <span className="sr-only">Wróć</span>
     </Button>
   )
 }
