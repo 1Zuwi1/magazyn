@@ -37,14 +37,14 @@ export function RackDialog({
       onSubmit({
         symbol: value.symbol || undefined,
         name: value.name,
-        rows: value.rows,
-        cols: value.cols,
-        minTemp: value.minTemp,
-        maxTemp: value.maxTemp,
-        maxWeight: value.maxWeight,
-        maxItemWidth: value.maxItemWidth,
-        maxItemHeight: value.maxItemHeight,
-        maxItemDepth: value.maxItemDepth,
+        rows: value.rows || 1,
+        cols: value.cols || 1,
+        minTemp: value.minTemp || 0,
+        maxTemp: value.maxTemp || 0,
+        maxWeight: value.maxWeight || 0,
+        maxItemWidth: value.maxItemWidth || DEFAULT_RACK.maxItemWidth,
+        maxItemHeight: value.maxItemHeight || DEFAULT_RACK.maxItemHeight,
+        maxItemDepth: value.maxItemDepth || DEFAULT_RACK.maxItemDepth,
         comment: value.comment || undefined,
       })
       form.reset()
@@ -134,7 +134,7 @@ export function RackDialog({
           </form.Field>
 
           <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-            <span className="col-span-2 text-end font-medium text-sm">
+            <span className="col-span-2 text-left font-medium text-sm">
               Wymiary
             </span>
             <div className="col-span-4 flex gap-2">
@@ -171,7 +171,7 @@ export function RackDialog({
           </div>
 
           <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-            <span className="col-span-2 text-end font-medium text-sm">
+            <span className="col-span-2 text-left font-medium text-sm">
               Temperatura
             </span>
             <div className="col-span-4 flex gap-2">
@@ -231,11 +231,63 @@ export function RackDialog({
             )}
           </form.Field>
 
+          <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
+            <span className="col-span-2 text-left font-medium text-sm">
+              Wymiary asortymentu (mm)
+            </span>
+            <div className="col-span-5 flex gap-2">
+              <form.Field name="maxItemWidth">
+                {(field) => (
+                  <Input
+                    className="w-full"
+                    id={field.name}
+                    min={1}
+                    name={field.name}
+                    onChange={(e) => field.handleChange(Number(e.target.value))}
+                    placeholder="Szer."
+                    type="number"
+                    value={field.state.value}
+                  />
+                )}
+              </form.Field>
+              <span className="flex items-center text-muted-foreground">×</span>
+              <form.Field name="maxItemHeight">
+                {(field) => (
+                  <Input
+                    className="w-full"
+                    id={field.name}
+                    min={1}
+                    name={field.name}
+                    onChange={(e) => field.handleChange(Number(e.target.value))}
+                    placeholder="Wys."
+                    type="number"
+                    value={field.state.value}
+                  />
+                )}
+              </form.Field>
+              <span className="flex items-center text-muted-foreground">×</span>
+              <form.Field name="maxItemDepth">
+                {(field) => (
+                  <Input
+                    className="w-full"
+                    id={field.name}
+                    min={1}
+                    name={field.name}
+                    onChange={(e) => field.handleChange(Number(e.target.value))}
+                    placeholder="Gł."
+                    type="number"
+                    value={field.state.value}
+                  />
+                )}
+              </form.Field>
+            </div>
+          </div>
+
           <form.Field name="comment">
             {(field) => (
               <Field className="grid grid-cols-6 items-start gap-x-4 gap-y-1">
                 <FieldLabel
-                  className="col-span-2 pt-2 text-end"
+                  className="col-span-2 pt-2 text-left"
                   htmlFor={field.name}
                 >
                   Komentarz

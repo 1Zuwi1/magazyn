@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import type { CsvRowType, RackFormData } from "../csv/utils/types"
 import { RackDialog } from "./rack-dialog"
-import { RackGrid } from "./rack-grid"
+import { RackGrid } from "./racks-grid"
 
 interface AdminRacksPageProps {
   warehouse: Warehouse

@@ -32,14 +32,14 @@ export const ITEM_COLUMNS = [
 export const DEFAULT_RACK = {
   symbol: "",
   name: "",
-  rows: 1,
-  cols: 1,
+  rows: 0,
+  cols: 0,
   minTemp: 0,
-  maxTemp: 25,
-  maxWeight: 100,
-  maxItemWidth: 100,
-  maxItemHeight: 100,
-  maxItemDepth: 100,
+  maxTemp: 0,
+  maxWeight: 0,
+  maxItemWidth: 1,
+  maxItemHeight: 1,
+  maxItemDepth: 1,
   comment: "",
 }
 
