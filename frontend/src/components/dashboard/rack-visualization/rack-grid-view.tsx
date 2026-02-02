@@ -7,6 +7,7 @@ import {
   ViewIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type * as React from "react"
 import { useEffect, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -23,6 +24,9 @@ interface RackGridViewProps {
   onPreviousRack: () => void
   onNextRack: () => void
   onSetRack: (index: number) => void
+  onActivateSlot?: (index: number) => void
+  onSelectSlot?: (index: number) => void
+  selectedSlotIndex?: number | null
   rack?: Rack
 }
 
@@ -38,6 +42,34 @@ function getOccupancyBadgeVariant(
   return "secondary"
 }
 
+const ARROW_MOVES = {
+  ArrowRight: { row: 0, col: 1 },
+  ArrowLeft: { row: 0, col: -1 },
+  ArrowDown: { row: 1, col: 0 },
+  ArrowUp: { row: -1, col: 0 },
+} as const
+
+type ArrowKey = keyof typeof ARROW_MOVES
+
+const isArrowKey = (value: string): value is ArrowKey => value in ARROW_MOVES
+
+const clampValue = (value: number, min: number, max: number): number =>
+  Math.min(Math.max(value, min), max)
+
+const getNextIndex = (
+  currentIndex: number,
+  rows: number,
+  cols: number,
+  key: ArrowKey
+): number => {
+  const move = ARROW_MOVES[key]
+  const currentRow = Math.floor(currentIndex / cols)
+  const currentCol = currentIndex % cols
+  const nextRow = clampValue(currentRow + move.row, 0, rows - 1)
+  const nextCol = clampValue(currentCol + move.col, 0, cols - 1)
+  return nextRow * cols + nextCol
+}
+
 export function RackGridView({
   rows,
   cols,
@@ -47,6 +79,9 @@ export function RackGridView({
   onPreviousRack,
   onNextRack,
   onSetRack,
+  onActivateSlot,
+  onSelectSlot,
+  selectedSlotIndex,
   rack,
 }: RackGridViewProps) {
   const [isItemsDialogOpen, setIsItemsDialogOpen] = useState(false)
@@ -62,6 +97,33 @@ export function RackGridView({
   const totalSlots = rows * cols
   const occupiedSlots = items.filter((item) => item !== null).length
   const occupancyPercentage = Math.round((occupiedSlots / totalSlots) * 100)
+
+  const handleSlotKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    index: number
+  ) => {
+    if (!onSelectSlot || rows <= 0 || cols <= 0) {
+      return
+    }
+
+    if (event.key === "Enter") {
+      if (onActivateSlot) {
+        onActivateSlot(index)
+      }
+      event.preventDefault()
+      return
+    }
+
+    if (!isArrowKey(event.key)) {
+      return
+    }
+
+    event.preventDefault()
+    const nextIndex = getNextIndex(index, rows, cols, event.key)
+    if (nextIndex !== index) {
+      onSelectSlot(nextIndex)
+    }
+  }
 
   useEffect(() => {
     const element = containerRef.current
@@ -150,7 +212,7 @@ export function RackGridView({
 
         {/* Grid Container */}
         <div
-          className="relative h-full max-h-125 min-h-72 w-full min-w-0 flex-1 overflow-hidden rounded-xl border bg-linear-to-br from-background to-muted/20 sm:min-h-96"
+          className="relative h-full max-h-125 min-h-72 w-full min-w-0 flex-1 overflow-hidden rounded-xl border bg-linear-to-br from-background to-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:min-h-96"
           ref={containerRef}
         >
           {/* Decorative corner accents */}
@@ -162,8 +224,11 @@ export function RackGridView({
             containerHeight={containerHeight}
             containerWidth={containerWidth}
             items={items}
+            onSelectSlot={onSelectSlot}
+            onSlotKeyDown={handleSlotKeyDown}
             parentRef={parentRef}
             rows={rows}
+            selectedSlotIndex={selectedSlotIndex}
           />
         </div>
 

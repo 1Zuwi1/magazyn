@@ -9,12 +9,15 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { PageHeader } from "@/components/dashboard/page-header"
+import { ItemDetailsDialog } from "@/components/dashboard/rack-visualization/item-details-dialog"
 import { RackGridView } from "@/components/dashboard/rack-visualization/rack-grid-view"
 import { RackParametersCard } from "@/components/dashboard/rack-visualization/rack-parameters-card"
+import { RackShelfDetailsCard } from "@/components/dashboard/rack-visualization/rack-shelf-details-card"
 import { RackStatusCard } from "@/components/dashboard/rack-visualization/rack-status-card"
 import type { ItemSlot } from "@/components/dashboard/types"
+import { getSlotCoordinate } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -55,8 +58,18 @@ export default function WarehouseClient({
   warehouseName: string
 }) {
   const [currentRackIndex, setCurrentRackIndex] = useState(0)
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(
+    null
+  )
+  const [isItemDetailsOpen, setIsItemDetailsOpen] = useState(false)
 
   const currentRack = racks[currentRackIndex]
+  const selectedItem =
+    selectedSlotIndex !== null ? currentRack.items[selectedSlotIndex] : null
+  const selectedCoordinate =
+    selectedSlotIndex !== null
+      ? getSlotCoordinate(selectedSlotIndex, currentRack.cols)
+      : null
 
   const totalSlots = currentRack.rows * currentRack.cols
   const occupiedSlots = currentRack.items.filter((item) => item !== null).length
@@ -71,6 +84,36 @@ export default function WarehouseClient({
   const handleNextRack = () => {
     setCurrentRackIndex((prev) => (prev === racks.length - 1 ? 0 : prev + 1))
   }
+
+  const handleSelectSlot = (index: number) => {
+    setSelectedSlotIndex((prev) => (prev === index ? null : index))
+  }
+
+  const handleActivateSlot = (index: number) => {
+    setSelectedSlotIndex(index)
+    if (currentRack.items[index]) {
+      setIsItemDetailsOpen(true)
+    }
+  }
+
+  const handleOpenDetails = () => {
+    if (selectedItem) {
+      setIsItemDetailsOpen(true)
+    }
+  }
+
+  useEffect(() => {
+    if (currentRackIndex >= 0) {
+      setSelectedSlotIndex(null)
+      setIsItemDetailsOpen(false)
+    }
+  }, [currentRackIndex])
+
+  useEffect(() => {
+    if (!selectedItem) {
+      setIsItemDetailsOpen(false)
+    }
+  }, [selectedItem])
 
   // Extend rack data with maxElementSize
   const rackWithMaxSize = {
@@ -144,25 +187,28 @@ export default function WarehouseClient({
         </Link>
       </div>
 
-      {/* Main Content - Two Column Layout */}
-      <div className="grid gap-6 xl:grid-cols-3">
-        {/* Left Column - Grid Visualization */}
-        <div className="xl:col-span-2">
+      {/* Main Content */}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(240px,320px)]">
+        {/* Grid Visualization */}
+        <div className="order-1">
           <RackGridView
             cols={currentRack.cols}
             currentRackIndex={currentRackIndex}
             items={currentRack.items}
+            onActivateSlot={handleActivateSlot}
             onNextRack={handleNextRack}
             onPreviousRack={handlePreviousRack}
+            onSelectSlot={handleSelectSlot}
             onSetRack={setCurrentRackIndex}
             rack={currentRack}
             rows={currentRack.rows}
+            selectedSlotIndex={selectedSlotIndex}
             totalRacks={racks.length}
           />
         </div>
 
         {/* Right Column - Parameters and Status */}
-        <div className="space-y-6">
+        <div className="order-3 space-y-6 xl:order-2">
           <RackStatusCard
             freeSlots={freeSlots}
             occupancyPercentage={occupancyPercentage}
@@ -178,7 +224,25 @@ export default function WarehouseClient({
             tempRange={{ max: currentRack.maxTemp, min: currentRack.minTemp }}
           />
         </div>
+
+        {/* Shelf Details */}
+        <div className="order-2 xl:order-3 xl:col-span-2">
+          <RackShelfDetailsCard
+            onClearSelection={() => setSelectedSlotIndex(null)}
+            onOpenDetails={handleOpenDetails}
+            rack={currentRack}
+            selectedIndex={selectedSlotIndex}
+          />
+        </div>
       </div>
+
+      <ItemDetailsDialog
+        coordinate={selectedCoordinate}
+        item={selectedItem ?? null}
+        onOpenChange={setIsItemDetailsOpen}
+        open={isItemDetailsOpen}
+        rackName={currentRack.name}
+      />
     </div>
   )
 }

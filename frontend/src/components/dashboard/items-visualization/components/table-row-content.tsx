@@ -26,10 +26,14 @@ import {
 import { cn } from "@/lib/utils"
 import type { Item } from "../../types"
 import { formatDate } from "../../utils/helpers"
+import {
+  getItemStatus,
+  getStatusColors,
+  getStatusText,
+} from "../../utils/item-status"
 
 interface TableRowContentProps {
   item: Item
-  expired: boolean
   onView: (id: string) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
@@ -45,11 +49,16 @@ function formatDimensions(dimensions: {
 
 export function TableRowContent({
   item,
-  expired,
   onView,
   onEdit,
   onDelete,
 }: TableRowContentProps) {
+  const status = getItemStatus(item)
+  const statusColors = getStatusColors(status)
+  const statusText = getStatusText(status)
+  const isExpired = status === "expired" || status === "expired-dangerous"
+  const statusBadgeVariant = status === "expired" ? "warning" : "destructive"
+
   return (
     <>
       <TableCell>
@@ -99,16 +108,20 @@ export function TableRowContent({
         {item.minTemp}°C – {item.maxTemp}°C
       </TableCell>
       <TableCell>
-        <span className={expired ? "font-medium text-destructive" : ""}>
+        <span
+          className={cn(
+            isExpired && "font-medium",
+            isExpired ? statusColors.text : null
+          )}
+        >
           {formatDate(item.expiryDate)}
         </span>
       </TableCell>
       <TableCell>
         <div className="flex flex-wrap gap-1">
-          {item.isDangerous && (
-            <Badge variant="destructive">Niebezpieczny</Badge>
+          {status !== "normal" && (
+            <Badge variant={statusBadgeVariant}>{statusText}</Badge>
           )}
-          {expired && <Badge variant="secondary">Przeterminowany</Badge>}
         </div>
       </TableCell>
       <TableCell className="text-right">

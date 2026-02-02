@@ -1,34 +1,53 @@
-import { Alert01Icon, PackageIcon } from "@hugeicons/core-free-icons"
+import { PackageIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import type { ItemSlot } from "../../types"
+import { getItemStatus, getStatusColors } from "../../utils/item-status"
 
-interface ElementProps extends React.HTMLAttributes<HTMLDivElement> {
+interface ElementProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   isEmpty: boolean
   item: ItemSlot
   coordinate: string
+  isSelected?: boolean
 }
 
 export default function RackElement({
   isEmpty,
   item,
   coordinate,
+  isSelected = false,
   className,
   ...props
 }: ElementProps) {
-  const isDangerous = item?.isDangerous
+  const status = item ? getItemStatus(item) : null
+  const statusColors = status ? getStatusColors(status) : null
+  let statusRing: string | null = null
+  if (status === "expired") {
+    statusRing = "ring-1 ring-amber-400/60"
+  } else if (status === "expired-dangerous") {
+    statusRing = "ring-2 ring-amber-400/70"
+  } else if (status === "dangerous") {
+    statusRing = "ring-2 ring-destructive/50"
+  }
+  const ariaLabel = isEmpty
+    ? `Pusta półka ${coordinate}`
+    : `Półka ${coordinate}, ${item?.name ?? "nieznany element"}`
 
   return (
-    <div
+    <button
+      aria-label={ariaLabel}
+      aria-pressed={isSelected}
       className={cn(
-        "group relative aspect-square overflow-hidden rounded-lg border transition-all duration-200",
+        "group relative aspect-square cursor-pointer overflow-hidden rounded-lg border transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 focus-visible:outline-offset-2",
         isEmpty
           ? "border-muted-foreground/20 border-dashed bg-muted/20 hover:border-muted-foreground/40 hover:bg-muted/40"
           : "border-border bg-card shadow-sm hover:shadow-md hover:ring-2 hover:ring-primary/20",
-        isDangerous && "ring-2 ring-destructive/50",
+        statusRing,
+        isSelected && "outline outline-2 outline-primary/60 outline-offset-2",
         className
       )}
+      type="button"
       {...props}
     >
       {isEmpty || !item ? (
@@ -72,14 +91,14 @@ export default function RackElement({
             </div>
           </div>
 
-          {/* Danger indicator */}
-          {isDangerous && (
-            <div className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-full bg-destructive shadow-sm sm:size-6">
-              <HugeiconsIcon
-                className="size-3 text-white sm:size-3.5"
-                icon={Alert01Icon}
-              />
-            </div>
+          {/* Status indicator */}
+          {status && status !== "normal" && statusColors && (
+            <div
+              className={cn(
+                "absolute top-1 right-1 size-2.5 rounded-full",
+                statusColors.dot
+              )}
+            />
           )}
 
           {/* Slot coordinate badge */}
@@ -88,6 +107,6 @@ export default function RackElement({
           </div>
         </>
       )}
-    </div>
+    </button>
   )
 }
