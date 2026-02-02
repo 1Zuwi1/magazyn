@@ -10,10 +10,8 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useEffect, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { VIRTUALIZATION_THRESHOLDS } from "@/config/constants"
 import { RackItemsDialog } from "../items-visualization/rack-items-dialog"
 import type { ItemSlot, Rack } from "../types"
-import Normal from "./components/normal"
 import Virtualized from "./components/virtualized"
 
 interface RackGridViewProps {
@@ -27,8 +25,6 @@ interface RackGridViewProps {
   onSetRack: (index: number) => void
   rack?: Rack
 }
-
-const VIRTUALIZATION_THRESHOLD = VIRTUALIZATION_THRESHOLDS.GRID
 
 function getOccupancyBadgeVariant(
   occupancy: number
@@ -55,9 +51,6 @@ export function RackGridView({
 }: RackGridViewProps) {
   const [isItemsDialogOpen, setIsItemsDialogOpen] = useState(false)
   const parentRef = useRef<HTMLDivElement>(null)
-
-  const shouldVirtualize =
-    rows > VIRTUALIZATION_THRESHOLD.ROWS || cols > VIRTUALIZATION_THRESHOLD.COLS
 
   const showNavigation = totalRacks > 1 && (onPreviousRack || onNextRack)
 
@@ -164,24 +157,14 @@ export function RackGridView({
           <div className="pointer-events-none absolute top-0 left-0 size-16 rounded-br-3xl border-primary/20 border-r border-b opacity-50" />
           <div className="pointer-events-none absolute right-0 bottom-0 size-16 rounded-tl-3xl border-primary/20 border-t border-l opacity-50" />
 
-          {shouldVirtualize ? (
-            <Virtualized
-              cols={cols}
-              containerHeight={containerHeight}
-              containerWidth={containerWidth}
-              items={items}
-              parentRef={parentRef}
-              rows={rows}
-            />
-          ) : (
-            <Normal
-              cols={cols}
-              containerHeight={containerHeight}
-              containerWidth={containerWidth}
-              items={items}
-              rows={rows}
-            />
-          )}
+          <Virtualized
+            cols={cols}
+            containerHeight={containerHeight}
+            containerWidth={containerWidth}
+            items={items}
+            parentRef={parentRef}
+            rows={rows}
+          />
         </div>
 
         {/* Right Navigation Arrow */}

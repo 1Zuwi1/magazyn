@@ -70,6 +70,7 @@ const Virtualized = ({
       style={{
         width: `${containerWidth}px`,
         maxHeight: `${containerHeight}px`,
+        height: "100%",
         overflow: "auto",
         position: "relative",
       }}
