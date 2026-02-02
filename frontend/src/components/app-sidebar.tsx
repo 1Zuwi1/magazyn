@@ -1,10 +1,6 @@
 "use client"
 
-import {
-  Analytics01Icon,
-  GroupItemsIcon,
-  Notification01Icon,
-} from "@hugeicons/core-free-icons"
+import { Analytics01Icon, GroupItemsIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import type * as React from "react"
@@ -53,11 +49,6 @@ const items = [
     title: "Asortyment",
     href: "/dashboard/items",
     icon: GroupItemsIcon,
-  },
-  {
-    title: "Powiadomienia",
-    href: "/dashboard/notifications",
-    icon: Notification01Icon,
   },
 ]
 

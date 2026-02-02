@@ -22,7 +22,7 @@ import {
 
 interface UsersTableProps {
   data: User[]
-  search: string
+  search?: string
   onEdit?: (user: User) => void
   onDelete?: (user: User) => void
   pageSize?: number
@@ -30,8 +30,8 @@ interface UsersTableProps {
 
 export function UsersTable({
   data,
-  search,
   onEdit,
+  search = "",
   onDelete,
   pageSize = 12,
 }: UsersTableProps) {

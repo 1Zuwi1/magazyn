@@ -2,8 +2,8 @@ import z from "zod"
 import { createApiSchema } from "../create-api-schema"
 
 export const ItemSchema = z.object({
-  id: z.string(),
   name: z.string(),
+  id: z.string(),
   qrCode: z.string(),
   imageUrl: z.string().optional().or(z.literal("")),
   minTemp: z.number(),
@@ -12,8 +12,8 @@ export const ItemSchema = z.object({
   width: z.number().positive(),
   height: z.number().positive(),
   depth: z.number().positive(),
-  daysToExpiry: z.number().nonnegative(),
   comment: z.string().optional(),
+  daysToExpiry: z.number().nonnegative(),
   isDangerous: z.boolean().default(false),
 })
 
@@ -42,6 +42,10 @@ export const RackCsvSchema = RackSchema.omit({
   items: true,
 })
 
+export const ItemCsvSchema = ItemSchema.omit({
+  qrCode: true,
+})
+
 export const ApiRacksSchema = createApiSchema({
   GET: {
     output: z.array(RackSchema),
@@ -61,7 +65,6 @@ export const ApiItemsSchema = createApiSchema({
   },
 })
 
-// Schema dla formularza użytkownika (admin panel)
 const usernameSchema = z
   .string()
   .min(3, "Nazwa użytkownika musi mieć co najmniej 3 znaki")
@@ -73,7 +76,7 @@ const usernameSchema = z
 
 export const UserFormSchema = z.object({
   username: usernameSchema,
-  email: z.email("Nieprawidłowy adres email"),
-  role: z.enum(["user", "admin"], "Wybierz rolę użytkownika"),
-  status: z.enum(["active", "inactive"], "Wybierz status użytkownika"),
+  email: z.email(),
+  role: z.enum(["user", "admin"]),
+  status: z.enum(["active", "inactive"]),
 })

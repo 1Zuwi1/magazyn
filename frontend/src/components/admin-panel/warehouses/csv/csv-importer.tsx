@@ -2,7 +2,6 @@
 
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useState } from "react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Dialog,
@@ -19,26 +18,17 @@ import { PreviewTable } from "./preview-table"
 import { ITEM_COLUMNS, RACK_COLUMNS } from "./utils/constants"
 import type { CsvImporterType, CsvRowType } from "./utils/types"
 
-interface WarehouseOption {
-  id: string
-  name: string
-}
-
 interface CsvImporterProps<T extends CsvImporterType> {
   type: T
-  onImport: (data: CsvRowType<T>[], warehouseId?: string) => void
-  warehouses?: WarehouseOption[]
+  onImport: (data: CsvRowType<T>[]) => void
 }
 
 export function CsvImporter<T extends CsvImporterType>({
   type,
   onImport,
-  warehouses,
 }: CsvImporterProps<T>) {
-  const [selectedWarehouseId, setSelectedWarehouseId] = useState("")
-
   const handleImport = (data: CsvRowType<T>[]): void => {
-    onImport(data, selectedWarehouseId || undefined)
+    onImport(data)
   }
 
   const {
@@ -54,20 +44,20 @@ export function CsvImporter<T extends CsvImporterType>({
 
   const columns = type === "rack" ? RACK_COLUMNS : ITEM_COLUMNS
 
+  const labels = Object.fromEntries(
+    columns.map((column) => [column.key.toLowerCase(), column.label])
+  )
+
   const previewColumns =
     previewHeaders.length > 0
-      ? previewHeaders.map((header) => ({ key: header, label: header }))
+      ? previewHeaders.map((header) => ({
+          key: header,
+          label: labels[header.toLowerCase()] || header,
+        }))
       : columns
-
-  const needsWarehouseSelection =
-    type === "rack" && warehouses && warehouses.length > 0
-  const canProceed = !needsWarehouseSelection || selectedWarehouseId
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen)
-    if (!isOpen) {
-      setSelectedWarehouseId("")
-    }
   }
 
   return (
@@ -92,7 +82,7 @@ export function CsvImporter<T extends CsvImporterType>({
             rows={previewRows as Record<string, string>[]}
           />
         ) : (
-          <div className={cn(!canProceed && "pointer-events-none opacity-50")}>
+          <div>
             <FileUploader onUpload={processFile} />
           </div>
         )}

@@ -1,5 +1,7 @@
 "use client"
 
+import { pluralize } from "@/components/dashboard/utils/helpers"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Table,
   TableBody,
@@ -11,15 +13,12 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { MAX_PREVIEW_ROWS } from "./utils/constants"
+import { normalizeKey } from "./utils/csv-utils"
 import type { Column } from "./utils/types"
 
 interface PreviewTableProps {
   columns: Column[]
   rows: Record<string, string>[]
-}
-
-function normalizeKey(key: string): string {
-  return key.toLowerCase().replace(/\s+/g, "")
 }
 
 export function PreviewTable({ columns, rows }: PreviewTableProps) {
@@ -28,59 +27,56 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div
-        className={cn(
-          "w-full overflow-x-auto",
-          "rounded-md border",
-          isMobile && "pb-2"
-        )}
-      >
-        <Table className="min-w-max">
-          <TableHeader className="bg-muted/50">
-            <TableRow>
-              {columns.map((col) => (
-                <TableHead
-                  className="whitespace-nowrap px-4 py-3 font-semibold"
-                  key={col.key}
-                >
-                  {col.label}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.length > 0 ? (
-              rows.map((row, i) => (
-                <TableRow key={i}>
-                  {columns.map((col) => (
-                    <TableCell
-                      className="whitespace-nowrap px-4 py-3"
-                      key={col.key}
-                      title={row[normalizeKey(col.key)] || "-"}
-                    >
-                      {row[normalizeKey(col.key)] || "-"}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
+      <div className={cn("w-full rounded-md border", isMobile && "pb-2")}>
+        <ScrollArea
+          className={cn("w-full overflow-x-auto", hasMoreRows && "max-h-90")}
+        >
+          <Table className="min-w-max">
+            <TableHeader className="bg-muted/50">
               <TableRow>
-                <TableCell
-                  className="h-24 text-center text-muted-foreground"
-                  colSpan={columns.length}
-                >
-                  Brak danych do wyświetlenia
-                </TableCell>
+                {columns.map((col) => (
+                  <TableHead
+                    className="whitespace-nowrap px-4 py-3 font-semibold"
+                    key={col.key}
+                  >
+                    {col.label}
+                  </TableHead>
+                ))}
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {rows.length > 0 ? (
+                rows.map((row, i) => (
+                  <TableRow key={i}>
+                    {columns.map((col) => (
+                      <TableCell
+                        className="whitespace-nowrap px-4 py-3"
+                        key={col.key}
+                        title={row[normalizeKey(col.key)] || "-"}
+                      >
+                        {row[normalizeKey(col.key)] || "-"}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    className="h-24 text-center text-muted-foreground"
+                    colSpan={columns.length}
+                  >
+                    Brak danych do wyświetlenia
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </ScrollArea>
       </div>
 
       <div className="text-center text-muted-foreground text-sm">
-        {hasMoreRows
-          ? `Wyświetlono ${MAX_PREVIEW_ROWS} z ${rows.length} wierszy`
-          : `${rows.length} ${rows.length === 1 ? "wiersz" : "wierszy"}`}
+        {hasMoreRows &&
+          `Wyświetlono ${rows.length} ${pluralize(rows.length, "wiersz", "wiersze", "wierszy")}`}
       </div>
     </div>
   )

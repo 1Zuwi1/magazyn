@@ -178,3 +178,7 @@ export function parseCsvFile<T extends CsvImporterType>(
     })
   })
 }
+
+export function normalizeKey(key: string): string {
+  return key.toLowerCase().replace(/\s+/g, "")
+}
