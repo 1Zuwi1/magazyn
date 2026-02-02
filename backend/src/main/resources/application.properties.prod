@@ -26,8 +26,14 @@ app.url=${APP_URL}
 
 auth.password.min-length=8
 
-spring.redis.host=redis
-spring.redis.port=6379
+spring.redis.host=${REDIS_HOST:redis}
+spring.redis.port=${REDIS_PORT:6379}
 spring.redis.password=${REDIS_PASSWORD}
+
+spring.data.redis.host=${REDIS_HOST:redis}
+spring.data.redis.port=${REDIS_PORT:6379}
+spring.data.redis.password=${REDIS_PASSWORD}
+
+app.web.port=${PORT:3001}
 
 webauthn.allow-untrusted-attestation:false

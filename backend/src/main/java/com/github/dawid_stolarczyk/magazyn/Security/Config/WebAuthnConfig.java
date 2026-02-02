@@ -22,6 +22,8 @@ public class WebAuthnConfig {
     private String appUrl;
     @Value("${webauthn.allow-untrusted-attestation:false}")
     private boolean allowUntrustedAttestation;
+    @Value("${app.web.port}")
+    private String allowedPort;
 
     public WebAuthnConfig(CredentialRepository credentialRepository) {
         this.credentialRepository = credentialRepository;
@@ -38,7 +40,7 @@ public class WebAuthnConfig {
                 )
                 .credentialRepository(credentialRepository)
                 .origins(Set.of(
-                        appUrl, "http://localhost:3000"
+                        appUrl, "http://localhost:" + allowedPort
                 ))
                 .allowUntrustedAttestation(allowUntrustedAttestation)        // dev/test, produkcja: false
                 .build();

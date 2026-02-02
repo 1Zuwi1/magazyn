@@ -15,11 +15,14 @@ public class CorsConfig {
     @Value("${app.url}")
     private String allowedOrigin;
 
+    @Value("${app.web.port}")
+    private String allowedPort;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                allowedOrigin, "http://localhost:3000"));
+                allowedOrigin, "http://localhost:" + allowedPort));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
