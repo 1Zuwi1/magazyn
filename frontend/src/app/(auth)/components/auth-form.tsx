@@ -14,12 +14,20 @@ import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { FieldWithState } from "@/components/helpers/field-state"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
-import { Field, FieldDescription, FieldGroup } from "@/components/ui/field"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { apiFetch } from "@/lib/fetcher"
 import { FormRegisterSchema, LoginSchema, RegisterSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
 import { getAnimationStyle } from "@/lib/utils"
 import AuthCard from "./auth-card"
+import PasskeyLogin from "./passkey-login"
 
 type AuthMode = "login" | "register"
 
@@ -31,6 +39,7 @@ const values = {
   login: {
     email: "",
     password: "",
+    rememberMe: false,
   },
   register: {
     fullName: "",
@@ -51,7 +60,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
     onSubmit: async ({ value }) => {
       if (isLogin) {
         const loginValue = value as ValueTypes["login"]
-        const [err, res] = await tryCatch(
+        const [err] = await tryCatch(
           apiFetch("/api/auth/login", LoginSchema, {
             method: "POST",
             body: loginValue,
@@ -67,7 +76,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         }
 
         toast.success("Zalogowano pomyślnie!")
-        router.push(res.requiresTwoFactor ? "/login/2fa" : "/dashboard")
+        router.push("/login/2fa")
       } else {
         const { confirmPassword, ...registerValue } =
           value as ValueTypes["register"]
@@ -188,6 +197,23 @@ export default function AuthForm({ mode }: AuthFormProps) {
               </form.Field>
             )}
 
+            <form.Field name="rememberMe">
+              {(field) => (
+                <Field orientation="horizontal">
+                  <Checkbox
+                    checked={field.state.value}
+                    id={field.name}
+                    onCheckedChange={field.handleChange}
+                  />
+                  <FieldContent>
+                    <FieldLabel htmlFor={field.name}>
+                      Zapamiętaj mnie
+                    </FieldLabel>
+                  </FieldContent>
+                </Field>
+              )}
+            </form.Field>
+
             <Field>
               <form.Subscribe
                 selector={(state) => [state.canSubmit, state.isSubmitting]}
@@ -205,6 +231,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 )}
               </form.Subscribe>
             </Field>
+
+            {isLogin ? (
+              <PasskeyLogin disabled={form.state.isSubmitting} />
+            ) : null}
 
             <div className="text-center text-sm">
               {isLogin ? (

@@ -67,6 +67,7 @@ describe("LoginSchema", () => {
     const validInput = {
       email: "testuser@example.com",
       password: "Password123!",
+      rememberMe: true,
     }
 
     const result = LoginSchema.shape.POST.shape.input.safeParse(validInput)
@@ -78,6 +79,7 @@ describe("LoginSchema", () => {
     const invalidInput = {
       email: "testuser@example.com",
       password: "1234567",
+      rememberMe: true,
     }
 
     const result = LoginSchema.shape.POST.shape.input.safeParse(invalidInput)
@@ -108,6 +110,7 @@ describe("LoginSchema", () => {
     const validInput = {
       email: "validEmail@example.com",
       password: "Password123!",
+      rememberMe: true,
     }
 
     const result = LoginSchema.shape.POST.shape.input.safeParse(validInput)
@@ -115,17 +118,13 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(true)
   })
 
-  it("has correct output schema with requiresTwoFactor boolean", () => {
-    const validOutput = {
-      requiresTwoFactor: true,
-    }
-
-    const result = LoginSchema.shape.POST.shape.output.safeParse(validOutput)
+  it("has null output schema", () => {
+    const result = LoginSchema.shape.POST.shape.output.safeParse(null)
 
     expect(result.success).toBe(true)
   })
 
-  it("rejects output without requiresTwoFactor", () => {
+  it("rejects non-null output", () => {
     const invalidOutput = {}
 
     const result = LoginSchema.shape.POST.shape.output.safeParse(invalidOutput)
@@ -205,7 +204,7 @@ describe("RegisterSchema", () => {
 describe("Verify2FASchema", () => {
   it("accepts valid authenticator input", () => {
     const validInput = {
-      method: "authenticator" as const,
+      method: "AUTHENTICATOR" as const,
       code: "123456",
     }
 
@@ -216,7 +215,7 @@ describe("Verify2FASchema", () => {
 
   it("accepts valid SMS input", () => {
     const validInput = {
-      method: "sms" as const,
+      method: "SMS" as const,
       code: "123456",
     }
 
@@ -227,7 +226,7 @@ describe("Verify2FASchema", () => {
 
   it("accepts valid email input", () => {
     const validInput = {
-      method: "email" as const,
+      method: "EMAIL" as const,
       code: "123456",
     }
 
@@ -250,7 +249,7 @@ describe("Verify2FASchema", () => {
 
   it("rejects code that is not 6 characters", () => {
     const invalidInput = {
-      method: "authenticator" as const,
+      method: "AUTHENTICATOR" as const,
       code: "12345",
     }
 
@@ -267,7 +266,7 @@ describe("Verify2FASchema", () => {
 
   it("rejects code longer than 6 characters", () => {
     const invalidInput = {
-      method: "authenticator" as const,
+      method: "AUTHENTICATOR" as const,
       code: "1234567",
     }
 
@@ -287,7 +286,7 @@ describe("Verify2FASchema", () => {
 describe("Resend2FASchema", () => {
   it("accepts valid SMS method", () => {
     const validInput = {
-      method: "sms" as const,
+      method: "SMS" as const,
     }
 
     const result = Resend2FASchema.shape.POST.shape.input.safeParse(validInput)
@@ -297,7 +296,7 @@ describe("Resend2FASchema", () => {
 
   it("accepts valid email method", () => {
     const validInput = {
-      method: "email" as const,
+      method: "EMAIL" as const,
     }
 
     const result = Resend2FASchema.shape.POST.shape.input.safeParse(validInput)
@@ -307,7 +306,7 @@ describe("Resend2FASchema", () => {
 
   it("rejects authenticator method (not valid for resend)", () => {
     const invalidInput = {
-      method: "authenticator",
+      method: "AUTHENTICATOR",
     }
 
     const result =
@@ -340,9 +339,8 @@ describe("ApiMeSchema", () => {
       id: 1,
       email: "user@example.com",
       full_name: "Test User",
-      two_factor_enabled: true,
-      status: "verified",
-      role: "user",
+      account_status: "ACTIVE",
+      role: "USER",
     }
 
     const result = ApiMeSchema.shape.GET.shape.output.safeParse(validOutput)
@@ -355,9 +353,8 @@ describe("ApiMeSchema", () => {
       id: 1,
       email: "user@example.com",
       full_name: null,
-      two_factor_enabled: false,
-      status: "verified",
-      role: "admin",
+      account_status: "ACTIVE",
+      role: "ADMIN",
     }
 
     const result = ApiMeSchema.shape.GET.shape.output.safeParse(validOutput)
@@ -370,9 +367,8 @@ describe("ApiMeSchema", () => {
       id: 1,
       email: "not-an-email",
       full_name: null,
-      two_factor_enabled: false,
-      status: "randomstatus",
-      role: "user",
+      account_status: "ACTIVE",
+      role: "USER",
     }
 
     const result = ApiMeSchema.shape.GET.shape.output.safeParse(invalidOutput)
@@ -385,23 +381,21 @@ describe("ApiMeSchema", () => {
       id: "not-a-number",
       email: "user@example.com",
       full_name: null,
-      two_factor_enabled: false,
-      status: "verified",
-      role: "user",
+      account_status: "ACTIVE",
+      role: "USER",
     }
 
     const result = ApiMeSchema.shape.GET.shape.output.safeParse(invalidOutput)
     expect(result.success).toBe(false)
   })
 
-  it("rejects non-boolean two_factor_enabled", () => {
+  it("rejects invalid account_status", () => {
     const invalidOutput = {
       id: 1,
       email: "user@example.com",
       full_name: null,
-      two_factor_enabled: "true",
-      status: "verified",
-      role: "user",
+      account_status: "VERIFIED",
+      role: "USER",
     }
 
     const result = ApiMeSchema.shape.GET.shape.output.safeParse(invalidOutput)

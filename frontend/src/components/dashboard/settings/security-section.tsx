@@ -5,29 +5,29 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TWO_FACTOR_METHODS } from "./constants"
+import type { TwoFactorMethod } from "@/lib/schemas"
+import { PasskeysSection } from "./passkeys-section"
 import { PasswordSection } from "./password-section"
 import { TwoFactorSetup } from "./two-factor-setup"
-import type { TwoFactorMethod, TwoFactorStatus } from "./types"
+import type { TwoFactorStatus } from "./types"
 
 interface SecuritySectionProps {
-  initialTwoFactorEnabled: boolean
   userEmail: string
 }
 
 function SecurityStatusIndicator({ status }: { status: TwoFactorStatus }) {
   const config = {
-    enabled: {
+    ENABLED: {
       label: "Chronione",
       variant: "success" as const,
       icon: Shield01Icon,
     },
-    setup: {
+    SETUP: {
       label: "Konfiguracja",
       variant: "warning" as const,
       icon: Key01Icon,
     },
-    disabled: {
+    DISABLED: {
       label: "Podstawowe",
       variant: "secondary" as const,
       icon: LockIcon,
@@ -46,19 +46,9 @@ function SecurityStatusIndicator({ status }: { status: TwoFactorStatus }) {
   )
 }
 
-export function SecuritySection({
-  initialTwoFactorEnabled,
-  userEmail,
-}: SecuritySectionProps) {
-  const [twoFactorStatus, setTwoFactorStatus] = useState<TwoFactorStatus>(
-    initialTwoFactorEnabled ? "enabled" : "disabled"
-  )
-  // FIXME: In production this should be fetched from user settings
-  const [twoFactorMethod, setTwoFactorMethod] = useState<TwoFactorMethod>(
-    TWO_FACTOR_METHODS[0].value
-  )
-  const verificationRequired = twoFactorStatus === "enabled"
-
+export function SecuritySection({ userEmail }: SecuritySectionProps) {
+  const [twoFactorMethod, setTwoFactorMethod] =
+    useState<TwoFactorMethod>("EMAIL")
   return (
     <div className="space-y-6">
       <Card>
@@ -79,19 +69,20 @@ export function SecuritySection({
                 Chroń swoje konto dodatkową warstwą zabezpieczeń.
               </p>
             </div>
-            <SecurityStatusIndicator status={twoFactorStatus} />
+            <SecurityStatusIndicator status="ENABLED" />
           </div>
         </CardHeader>
         <CardContent>
           <TwoFactorSetup
             method={twoFactorMethod}
             onMethodChange={setTwoFactorMethod}
-            onStatusChange={setTwoFactorStatus}
-            status={twoFactorStatus}
+            status="ENABLED"
             userEmail={userEmail}
           />
         </CardContent>
       </Card>
+
+      <PasskeysSection />
 
       <Card>
         <CardHeader>
@@ -112,10 +103,7 @@ export function SecuritySection({
           </div>
         </CardHeader>
         <CardContent>
-          <PasswordSection
-            twoFactorMethod={twoFactorMethod}
-            verificationRequired={verificationRequired}
-          />
+          <PasswordSection twoFactorMethod={twoFactorMethod} />
         </CardContent>
       </Card>
 

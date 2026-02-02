@@ -71,7 +71,7 @@ describe("AuthForm", () => {
     })
 
     it("handles successful login", async () => {
-      mockApiFetch.mockResolvedValue({ requiresTwoFactor: false })
+      mockApiFetch.mockResolvedValue({})
       render(<AuthForm mode="login" />)
 
       fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
@@ -89,18 +89,22 @@ describe("AuthForm", () => {
           expect.anything(),
           expect.objectContaining({
             method: "POST",
-            body: { email: "testuser@example.com", password: "Password123!" },
+            body: {
+              email: "testuser@example.com",
+              password: "Password123!",
+              rememberMe: false,
+            },
           })
         )
       })
 
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith("/dashboard")
+        expect(mockPush).toHaveBeenCalledWith("/login/2fa")
       })
     })
 
     it("handles successful login with 2FA requirement", async () => {
-      mockApiFetch.mockResolvedValue({ requiresTwoFactor: true })
+      mockApiFetch.mockResolvedValue({})
       render(<AuthForm mode="login" />)
 
       fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {

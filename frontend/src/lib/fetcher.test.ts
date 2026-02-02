@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { z } from "zod"
 
+vi.mock("next/headers", () => ({
+  headers: vi.fn(() => new Headers()),
+}))
+
 import { apiFetch, FetchError } from "./fetcher"
 
 describe("apiFetch", () => {
@@ -20,6 +24,7 @@ describe("apiFetch", () => {
     it("fetches data with GET method and validates with schema", async () => {
       const schema = z.object({
         GET: z.object({
+          input: z.any().optional(),
           output: z.object({
             id: z.number(),
             name: z.string(),
@@ -35,6 +40,7 @@ describe("apiFetch", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: async () => mockResponse,
       })
 
@@ -42,7 +48,7 @@ describe("apiFetch", () => {
 
       expect(result).toEqual({ id: 1, name: "Test" })
       const fetchCall = mockFetch.mock.calls[0]
-      expect(fetchCall[0]).toBe("/api/test")
+      expect(fetchCall[0]).toContain("/api/test")
       expect(fetchCall[1]?.method).toBe("GET")
 
       const headers = fetchCall[1]?.headers
@@ -54,6 +60,7 @@ describe("apiFetch", () => {
     it("rejects GET with body parameter", async () => {
       const schema = z.object({
         GET: z.object({
+          input: z.any().optional(),
           output: z.object({ id: z.number() }),
         }),
       })
@@ -73,6 +80,7 @@ describe("apiFetch", () => {
     it("rejects GET with formData parameter", async () => {
       const schema = z.object({
         GET: z.object({
+          input: z.any().optional(),
           output: z.object({ id: z.number() }),
         }),
       })
@@ -118,6 +126,7 @@ describe("apiFetch", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 201,
+        headers: new Headers(),
         json: async () => mockResponse,
       })
 
@@ -150,6 +159,7 @@ describe("apiFetch", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: async () => mockResponse,
       })
 
@@ -193,6 +203,7 @@ describe("apiFetch", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: async () => mockResponse,
       })
 
@@ -209,6 +220,7 @@ describe("apiFetch", () => {
     it("sends DELETE request without body", async () => {
       const schema = z.object({
         DELETE: z.object({
+          input: z.any().optional(),
           output: z.object({ deleted: z.boolean() }),
         }),
       })
@@ -221,6 +233,7 @@ describe("apiFetch", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: async () => mockResponse,
       })
 
@@ -247,6 +260,7 @@ describe("apiFetch", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: async () => mockResponse,
       })
 
@@ -263,6 +277,7 @@ describe("apiFetch", () => {
     it("throws FetchError when response is not ok", async () => {
       const schema = z.object({
         GET: z.object({
+          input: z.any().optional(),
           output: z.object({ id: z.number() }),
         }),
       })
@@ -280,6 +295,7 @@ describe("apiFetch", () => {
     it("throws FetchError with custom message from server", async () => {
       const schema = z.object({
         GET: z.object({
+          input: z.any().optional(),
           output: z.object({ id: z.number() }),
         }),
       })
@@ -301,6 +317,7 @@ describe("apiFetch", () => {
     it("throws FetchError when JSON parsing fails", async () => {
       const schema = z.object({
         GET: z.object({
+          input: z.any().optional(),
           output: z.object({ id: z.number() }),
         }),
       })
@@ -319,6 +336,7 @@ describe("apiFetch", () => {
     it("throws FetchError when schema validation fails", async () => {
       const schema = z.object({
         GET: z.object({
+          input: z.any().optional(),
           output: z.object({
             id: z.number(),
             name: z.string(),
@@ -341,6 +359,7 @@ describe("apiFetch", () => {
     it("throws FetchError when server returns success: false", async () => {
       const schema = z.object({
         GET: z.object({
+          input: z.any().optional(),
           output: z.object({ id: z.number() }),
         }),
       })
@@ -362,6 +381,7 @@ describe("apiFetch", () => {
     it("throws FetchError for unsupported HTTP method", async () => {
       const schema = z.object({
         GET: z.object({
+          input: z.any().optional(),
           output: z.object({ id: z.number() }),
         }),
       })
@@ -375,6 +395,7 @@ describe("apiFetch", () => {
     it("throws FetchError when no schema defined for method", async () => {
       const schema = z.object({
         GET: z.object({
+          input: z.any().optional(),
           output: z.object({ id: z.number() }),
         }),
       })
@@ -396,6 +417,7 @@ describe("apiFetch", () => {
     it("passes abort signal to fetch", async () => {
       const schema = z.object({
         GET: z.object({
+          input: z.any().optional(),
           output: z.object({ id: z.number() }),
         }),
       })
@@ -430,6 +452,7 @@ describe("apiFetch", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: async () => mockResponse,
       })
 
@@ -443,7 +466,7 @@ describe("apiFetch", () => {
 
       expect(formDataHandler).toHaveBeenCalled()
       expect(mockFetch).toHaveBeenCalledWith(
-        "/api/upload",
+        expect.stringContaining("/api/upload"),
         expect.not.objectContaining({
           headers: expect.objectContaining({
             "Content-Type": "application/json",
@@ -457,6 +480,7 @@ describe("apiFetch", () => {
     it("merges custom headers with defaults", async () => {
       const schema = z.object({
         GET: z.object({
+          input: z.any().optional(),
           output: z.object({ id: z.number() }),
         }),
       })
@@ -469,6 +493,7 @@ describe("apiFetch", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: async () => mockResponse,
       })
 
@@ -502,6 +527,7 @@ describe("apiFetch", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: async () => mockResponse,
       })
 
@@ -522,6 +548,7 @@ describe("apiFetch", () => {
     it("defaults to include credentials", async () => {
       const schema = z.object({
         GET: z.object({
+          input: z.any().optional(),
           output: z.object({ id: z.number() }),
         }),
       })
@@ -534,6 +561,7 @@ describe("apiFetch", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: async () => mockResponse,
       })
 
@@ -550,6 +578,7 @@ describe("apiFetch", () => {
     it("respects custom credentials setting", async () => {
       const schema = z.object({
         GET: z.object({
+          input: z.any().optional(),
           output: z.object({ id: z.number() }),
         }),
       })
@@ -562,6 +591,7 @@ describe("apiFetch", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: async () => mockResponse,
       })
 
@@ -595,6 +625,7 @@ describe("apiFetch", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: async () => mockResponse,
       })
 
@@ -627,6 +658,7 @@ describe("apiFetch", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: new Headers(),
         json: async () => mockResponse,
       })
 
@@ -638,7 +670,7 @@ describe("apiFetch", () => {
       })
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "/api/test",
+        expect.stringContaining("/api/test"),
         expect.objectContaining({
           body: blob,
         })
