@@ -154,6 +154,7 @@ export default function WarehouseClient({
             items={currentRack.items}
             onNextRack={handleNextRack}
             onPreviousRack={handlePreviousRack}
+            onSetRack={setCurrentRackIndex}
             rack={currentRack}
             rows={currentRack.rows}
             totalRacks={racks.length}

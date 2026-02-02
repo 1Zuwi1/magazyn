@@ -22,8 +22,9 @@ interface RackGridViewProps {
   items: ItemSlot[]
   currentRackIndex?: number
   totalRacks?: number
-  onPreviousRack?: () => void
-  onNextRack?: () => void
+  onPreviousRack: () => void
+  onNextRack: () => void
+  onSetRack: (index: number) => void
   rack?: Rack
 }
 
@@ -49,6 +50,7 @@ export function RackGridView({
   totalRacks = 1,
   onPreviousRack,
   onNextRack,
+  onSetRack,
   rack,
 }: RackGridViewProps) {
   const [isItemsDialogOpen, setIsItemsDialogOpen] = useState(false)
@@ -212,16 +214,7 @@ export function RackGridView({
                 key={index}
                 onClick={() => {
                   // Navigate to specific rack
-                  const diff = index - currentRackIndex
-                  if (diff > 0) {
-                    for (let i = 0; i < diff; i++) {
-                      onNextRack?.()
-                    }
-                  } else if (diff < 0) {
-                    for (let i = 0; i < Math.abs(diff); i++) {
-                      onPreviousRack?.()
-                    }
-                  }
+                  onSetRack(index)
                 }}
                 type="button"
               />
