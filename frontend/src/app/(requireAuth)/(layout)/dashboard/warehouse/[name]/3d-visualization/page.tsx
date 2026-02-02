@@ -104,7 +104,7 @@ export default function ThreeDVisualizationPage() {
       />
 
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">
-        <div className="hidden w-72 shrink-0 overflow-hidden rounded-2xl border xl:block">
+        <div className="hidden w-72 shrink-0 overflow-hidden rounded-2xl border 2xl:block">
           <SidebarPanel racks={warehouse.racks} />
         </div>
 
@@ -121,7 +121,7 @@ export default function ThreeDVisualizationPage() {
           </ErrorBoundary>
         </div>
 
-        <div className="hidden w-80 shrink-0 overflow-hidden rounded-2xl border xl:block">
+        <div className="hidden w-80 shrink-0 overflow-hidden rounded-2xl border 2xl:block">
           <DetailsPanel warehouse={warehouse} />
         </div>
       </div>
