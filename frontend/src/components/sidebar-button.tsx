@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
-import type { navigationItems } from "@/config/navigation"
+import type { NavigationItem } from "@/config/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "./ui/button"
 import {
@@ -19,11 +19,7 @@ import {
   SidebarMenuSubItem,
 } from "./ui/sidebar"
 
-export default function SidebarButton({
-  item,
-}: {
-  item: (typeof navigationItems)[number]
-}) {
+export default function SidebarButton({ item }: { item: NavigationItem }) {
   const pathname = usePathname()
   const isActive = pathname.startsWith(item.href)
   const [isOpen, setIsOpen] = useState(isActive)

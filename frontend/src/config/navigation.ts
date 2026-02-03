@@ -30,3 +30,5 @@ export const navigationItems = [
     items: [],
   },
 ] as const
+
+export type NavigationItem = (typeof navigationItems)[number]
