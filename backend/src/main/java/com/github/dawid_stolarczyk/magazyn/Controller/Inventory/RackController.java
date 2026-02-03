@@ -98,12 +98,85 @@ public class RackController {
         return ResponseEntity.ok(ResponseTemplate.success());
     }
 
-    @Operation(summary = "Import racks from CSV")
+    @Operation(
+            summary = "Import racks from CSV",
+            description = """
+                    Import regałów z pliku CSV ze **stałą kolejnością kolumn** (bez nagłówka).
+                    
+                    **Format CSV:**
+                    - Separator: **średnik (;)**
+                    - Kodowanie: **UTF-8**
+                    - Bez nagłówka (pierwsza linia to już dane)
+                    - Linie zaczynające się od '#' są ignorowane (komentarze)
+                    
+                    **Kolejność kolumn (STAŁA):**
+                    1. **Oznaczenie** (String) - Format: W{warehouse_id}-{marker}
+                       - Przykład: W1-R-01 (warehouse ID=1, marker="R-01")
+                       - WYMAGANE
+                    2. **M** (Integer) - Liczba pozycji w osi X (szerokość regału)
+                       - Min: 1, Max: 1000
+                       - WYMAGANE
+                    3. **N** (Integer) - Liczba pozycji w osi Y (głębokość regału)
+                       - Min: 1, Max: 1000
+                       - WYMAGANE
+                    4. **TempMin** (Float) - Minimalna temperatura w °C
+                       - WYMAGANE
+                    5. **TempMax** (Float) - Maksymalna temperatura w °C
+                       - WYMAGANE
+                    6. **MaxWagaKg** (Float) - Maksymalna waga w kilogramach
+                       - WYMAGANE
+                    7. **MaxSzerokoscMm** (Float) - Maksymalna szerokość przedmiotu w milimetrach
+                       - WYMAGANE
+                    8. **MaxWysokoscMm** (Float) - Maksymalna wysokość przedmiotu w milimetrach
+                       - WYMAGANE
+                    9. **MaxGlebokoscMm** (Float) - Maksymalna głębokość przedmiotu w milimetrach
+                       - WYMAGANE
+                    10. **AcceptsDangerous** (Boolean) - TRUE/FALSE - czy regał akceptuje niebezpieczne produkty
+                        - OPCJONALNE (domyślnie FALSE)
+                    11. **Komentarz** (String) - Dodatkowy opis
+                        - OPCJONALNE
+                    
+                    **Przykład pliku CSV:**
+                    ```
+                    #Oznaczenie;M;N;TempMin;TempMax;MaxWagaKg;MaxSzerokoscMm;MaxWysokoscMm;MaxGlebokoscMm;AcceptsDangerous;Komentarz
+                    W1-R-01;5;10;0;5;1200;200;300;500;FALSE;Regał chłodniczy
+                    W1-R-02;4;8;0;40;800;150;250;400;FALSE;Regał standardowy
+                    W2-R-01;6;12;-20;-5;1500;180;350;600;FALSE;Regał mroźniczy
+                    W2-R-02;3;6;10;60;500;300;400;700;TRUE;Regał na materiały niebezpieczne
+                    ```
+                    
+                    **Uwagi:**
+                    - Oznaczenie musi zawierać prefix warehouse: W{id}- (np. W1-R-01)
+                    - Wartości NULL lub puste dla kolumn opcjonalnych są ignorowane
+                    
+                    **Walidacja pliku:**
+                    - Tylko pliki CSV (rozszerzenia: .csv, .txt)
+                    - Content-Type: text/csv, text/plain, application/csv
+                    - Maksymalny rozmiar: 5MB
+                    - Plik nie może być pusty
+                    
+                    **Odpowiedź:**
+                    - `processedLines` - liczba przetworzonych linii
+                    - `imported` - liczba zaimportowanych regałów
+                    - `errors` - lista błędów (jeśli wystąpiły)
+                    """
+    )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Import report",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessRackImport.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid CSV file",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Import report with statistics",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessRackImport.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid CSV file or validation errors",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Access denied - requires ADMIN role",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
+            )
     })
     @PostMapping(value = "/import", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")

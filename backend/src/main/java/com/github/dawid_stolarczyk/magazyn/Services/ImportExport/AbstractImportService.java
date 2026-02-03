@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Services.ImportExport;
 
+import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
 import com.github.dawid_stolarczyk.magazyn.Utils.CsvImportUtils;
 import com.github.dawid_stolarczyk.magazyn.Utils.CsvImportUtils.CsvRow;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,9 @@ public abstract class AbstractImportService<T, R, E> {
             throw new IllegalArgumentException("EMPTY_FILE");
         }
 
+        // Walidacja: tylko pliki CSV są akceptowane
+        validateCsvFile(file);
+
         List<CsvRow> rows;
         try {
             rows = CsvImportUtils.readRows(file);
@@ -38,23 +42,30 @@ public abstract class AbstractImportService<T, R, E> {
         int processedLines = 0;
         int imported = 0;
 
-        CsvRow headerRow = rows.get(0);
-        Map<String, Integer> headerIndex;
-        try {
-            headerIndex = CsvImportUtils.buildHeaderIndex(headerRow.columns());
-        } catch (IllegalArgumentException ex) {
-            errors.add(createError(headerRow.lineNumber(), ex.getMessage(), headerRow.rawLine()));
-            return createReport(0, 0, errors);
-        }
+        Map<String, Integer> headerIndex = null;
+        int startRow = 0;
 
-        for (String required : getRequiredColumns()) {
-            if (!headerIndex.containsKey(required)) {
-                errors.add(createError(headerRow.lineNumber(), "MISSING_COLUMN " + required, headerRow.rawLine()));
+        // Sprawdź czy CSV ma nagłówek
+        if (hasHeader()) {
+            CsvRow headerRow = rows.get(0);
+            try {
+                headerIndex = CsvImportUtils.buildHeaderIndex(headerRow.columns());
+            } catch (IllegalArgumentException ex) {
+                errors.add(createError(headerRow.lineNumber(), ex.getMessage(), headerRow.rawLine()));
                 return createReport(0, 0, errors);
             }
+
+            for (String required : getRequiredColumns()) {
+                if (!headerIndex.containsKey(required)) {
+                    errors.add(createError(headerRow.lineNumber(), "MISSING_COLUMN " + required, headerRow.rawLine()));
+                    return createReport(0, 0, errors);
+                }
+            }
+            startRow = 1; // Pomiń nagłówek
         }
 
-        for (int i = 1; i < rows.size(); i++) {
+        // Przetwarzanie wierszy danych
+        for (int i = startRow; i < rows.size(); i++) {
             CsvRow row = rows.get(i);
             processedLines++;
 
@@ -71,6 +82,14 @@ public abstract class AbstractImportService<T, R, E> {
     }
 
     protected abstract String[] getRequiredColumns();
+
+    /**
+     * Czy CSV ma nagłówek w pierwszej linii?
+     * Domyślnie true dla kompatybilności wstecznej.
+     */
+    protected boolean hasHeader() {
+        return true;
+    }
 
     protected abstract T mapToDto(String[] columns, Map<String, Integer> headerIndex);
 
@@ -132,6 +151,62 @@ public abstract class AbstractImportService<T, R, E> {
             } catch (DateTimeParseException nested) {
                 throw new IllegalArgumentException(errorCode, nested);
             }
+        }
+    }
+
+    /**
+     * Walidacja pliku CSV - sprawdza czy to rzeczywiście plik CSV
+     */
+    private void validateCsvFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException(InventoryError.FILE_IS_EMPTY.name());
+        }
+
+        // Sprawdź Content-Type
+        String contentType = file.getContentType();
+        if (contentType == null) {
+            throw new IllegalArgumentException(InventoryError.MISSING_CONTENT_TYPE.name());
+        }
+
+        // Lista dozwolonych typów MIME dla CSV
+        List<String> allowedTypes = List.of(
+                "text/csv",
+                "text/plain",
+                "application/csv",
+                "application/vnd.ms-excel", // Excel może wysyłać CSV z tym typem
+                "text/comma-separated-values"
+        );
+
+        if (!allowedTypes.contains(contentType.toLowerCase())) {
+            throw new IllegalArgumentException(InventoryError.INVALID_FILE_TYPE.name());
+        }
+
+        // Sprawdź rozszerzenie pliku
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            throw new IllegalArgumentException(InventoryError.MISSING_FILENAME.name());
+        }
+
+        if (!originalFilename.contains(".")) {
+            throw new IllegalArgumentException(InventoryError.MISSING_FILE_EXTENSION.name());
+        }
+
+        String extension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+        List<String> allowedExtensions = List.of("csv", "txt");
+
+        if (!allowedExtensions.contains(extension)) {
+            throw new IllegalArgumentException(InventoryError.INVALID_FILE_EXTENSION.name());
+        }
+
+        // Sprawdź maksymalny rozmiar (np. 5MB dla CSV)
+        long maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.getSize() > maxSize) {
+            throw new IllegalArgumentException(InventoryError.FILE_TOO_LARGE.name());
+        }
+
+        // Sprawdź minimalny rozmiar (pusty plik)
+        if (file.getSize() == 0) {
+            throw new IllegalArgumentException(InventoryError.FILE_IS_EMPTY.name());
         }
     }
 }

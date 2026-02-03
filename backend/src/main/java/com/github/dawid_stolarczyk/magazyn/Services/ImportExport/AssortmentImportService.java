@@ -11,6 +11,8 @@ import java.util.Map;
 
 @Service
 public class AssortmentImportService extends AbstractImportService<AssortmentDto, AssortmentImportReport, AssortmentImportError> {
+    // Format CSV Z NAGŁÓWKIEM (dowolna kolejność kolumn):
+    // item_id;rack_id;position_x;position_y;expires_at
     private static final String[] REQUIRED_COLUMNS = {
             "item_id",
             "rack_id",
@@ -30,19 +32,34 @@ public class AssortmentImportService extends AbstractImportService<AssortmentDto
     }
 
     @Override
+    protected boolean hasHeader() {
+        return true; // CSV Z NAGŁÓWKIEM
+    }
+
+    @Override
     protected AssortmentDto mapToDto(String[] columns, Map<String, Integer> headerIndex) {
         AssortmentDto dto = new AssortmentDto();
+
+        // Item ID
         dto.setItemId(parseLong(value(columns, headerIndex, "item_id"), "INVALID_ITEM_ID"));
+
+        // Rack ID
         dto.setRackId(parseLong(value(columns, headerIndex, "rack_id"), "INVALID_RACK_ID"));
+
+        // Position X
         dto.setPositionX(parseInt(value(columns, headerIndex, "position_x"), "INVALID_POSITION_X"));
+
+        // Position Y
         dto.setPositionY(parseInt(value(columns, headerIndex, "position_y"), "INVALID_POSITION_Y"));
 
+        // Expires At (opcjonalny)
         if (headerIndex.containsKey("expires_at")) {
             String expiresRaw = value(columns, headerIndex, "expires_at");
             if (expiresRaw != null && !expiresRaw.isBlank()) {
                 dto.setExpiresAt(parseTimestamp(expiresRaw, "INVALID_EXPIRES_AT"));
             }
         }
+
         return dto;
     }
 

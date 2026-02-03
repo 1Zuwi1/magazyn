@@ -11,15 +11,19 @@ import java.util.Map;
 
 @Service
 public class ItemImportService extends AbstractImportService<ItemDto, ItemImportReport, ItemImportError> {
-    private static final String[] REQUIRED_COLUMNS = {
-            "name",
-            "min_temp",
-            "max_temp",
-            "weight",
-            "size_x",
-            "size_y",
-            "size_z"
-    };
+    // Format CSV (stała kolejność kolumn, BEZ nagłówka):
+    // Nazwa;TempMin;TempMax;Waga;SzerokoscMm;WysokoscMm;GlebokoscMm;TerminWaznosciDni;CzyNiebezpieczny;Komentarz
+    private static final int COL_NAZWA = 0;
+    private static final int COL_TEMP_MIN = 1;
+    private static final int COL_TEMP_MAX = 2;
+    private static final int COL_WAGA = 3;
+    private static final int COL_SZEROKOSC_MM = 4;
+    private static final int COL_WYSOKOSC_MM = 5;
+    private static final int COL_GLEBOKOSC_MM = 6;
+    private static final int COL_TERMIN_WAZNOSCI_DNI = 7;
+    private static final int COL_CZY_NIEBEZPIECZNY = 8;
+    private static final int COL_KOMENTARZ = 9;
+    private static final int MIN_COLUMNS = 7; // Minimalna liczba wymaganych kolumn (do GlebokoscMm włącznie)
 
     private final ItemService itemService;
 
@@ -29,36 +33,63 @@ public class ItemImportService extends AbstractImportService<ItemDto, ItemImport
 
     @Override
     protected String[] getRequiredColumns() {
-        return REQUIRED_COLUMNS;
+        return new String[0]; // Nie używamy nagłówków
+    }
+
+    @Override
+    protected boolean hasHeader() {
+        return false; // CSV bez nagłówka
     }
 
     @Override
     protected ItemDto mapToDto(String[] columns, Map<String, Integer> headerIndex) {
-        ItemDto dto = new ItemDto();
-        dto.setName(value(columns, headerIndex, "name"));
-        dto.setMinTemp(parseFloat(value(columns, headerIndex, "min_temp"), "INVALID_MIN_TEMP"));
-        dto.setMaxTemp(parseFloat(value(columns, headerIndex, "max_temp"), "INVALID_MAX_TEMP"));
-        dto.setWeight(parseFloat(value(columns, headerIndex, "weight"), "INVALID_WEIGHT"));
-        dto.setSizeX(parseFloat(value(columns, headerIndex, "size_x"), "INVALID_SIZE_X"));
-        dto.setSizeY(parseFloat(value(columns, headerIndex, "size_y"), "INVALID_SIZE_Y"));
-        dto.setSizeZ(parseFloat(value(columns, headerIndex, "size_z"), "INVALID_SIZE_Z"));
-
-        if (headerIndex.containsKey("comment")) {
-            String comment = value(columns, headerIndex, "comment");
-            dto.setComment(comment == null || comment.isBlank() ? null : comment);
+        if (columns.length < MIN_COLUMNS) {
+            throw new IllegalArgumentException("INSUFFICIENT_COLUMNS: Expected at least " + MIN_COLUMNS + ", got " + columns.length);
         }
-        if (headerIndex.containsKey("expire_after_days")) {
-            String expireRaw = value(columns, headerIndex, "expire_after_days");
-            if (expireRaw != null && !expireRaw.isBlank()) {
+
+        ItemDto dto = new ItemDto();
+
+        // Nazwa produktu (WYMAGANE)
+        dto.setName(getColumn(columns, COL_NAZWA));
+
+        // Temperatury w °C (WYMAGANE)
+        dto.setMinTemp(parseFloat(getColumn(columns, COL_TEMP_MIN), "INVALID_MIN_TEMP"));
+        dto.setMaxTemp(parseFloat(getColumn(columns, COL_TEMP_MAX), "INVALID_MAX_TEMP"));
+
+        // Waga w kg (WYMAGANE)
+        dto.setWeight(parseFloat(getColumn(columns, COL_WAGA), "INVALID_WEIGHT"));
+
+        // Wymiary w mm (WYMAGANE)
+        dto.setSizeX(parseFloat(getColumn(columns, COL_SZEROKOSC_MM), "INVALID_SIZE_X"));
+        dto.setSizeY(parseFloat(getColumn(columns, COL_WYSOKOSC_MM), "INVALID_SIZE_Y"));
+        dto.setSizeZ(parseFloat(getColumn(columns, COL_GLEBOKOSC_MM), "INVALID_SIZE_Z"));
+
+        // Termin ważności w dniach (OPCJONALNE)
+        if (columns.length > COL_TERMIN_WAZNOSCI_DNI) {
+            String expireRaw = getColumn(columns, COL_TERMIN_WAZNOSCI_DNI);
+            if (!expireRaw.isEmpty()) {
                 dto.setExpireAfterDays(parseLong(expireRaw, "INVALID_EXPIRE_DAYS"));
             }
         }
-        if (headerIndex.containsKey("is_dangerous")) {
-            String dangerousRaw = value(columns, headerIndex, "is_dangerous");
-            if (dangerousRaw != null && !dangerousRaw.isBlank()) {
+
+        // Czy niebezpieczny TRUE/FALSE (OPCJONALNE, domyślnie FALSE)
+        if (columns.length > COL_CZY_NIEBEZPIECZNY) {
+            String dangerousRaw = getColumn(columns, COL_CZY_NIEBEZPIECZNY);
+            if (!dangerousRaw.isEmpty()) {
                 dto.setDangerous(parseBoolean(dangerousRaw));
+            } else {
+                dto.setDangerous(false);
             }
+        } else {
+            dto.setDangerous(false);
         }
+
+        // Komentarz (OPCJONALNE)
+        if (columns.length > COL_KOMENTARZ) {
+            String comment = emptyToNull(getColumn(columns, COL_KOMENTARZ));
+            dto.setComment(comment);
+        }
+
         return dto;
     }
 
@@ -83,5 +114,17 @@ public class ItemImportService extends AbstractImportService<ItemDto, ItemImport
                 .imported(imported)
                 .errors(errors)
                 .build();
+    }
+
+    private String getColumn(String[] columns, int index) {
+        if (index < 0 || index >= columns.length) {
+            return "";
+        }
+        String value = columns[index].trim();
+        return value.equalsIgnoreCase("NULL") ? "" : value;
+    }
+
+    private String emptyToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }

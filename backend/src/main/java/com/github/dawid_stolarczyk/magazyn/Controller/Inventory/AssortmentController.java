@@ -94,12 +94,67 @@ public class AssortmentController {
         return ResponseEntity.ok(ResponseTemplate.success());
     }
 
-    @Operation(summary = "Import assortments from CSV")
+    @Operation(
+            summary = "Import assortments (placements) from CSV",
+            description = """
+                    Import przypisań produktów do regałów z pliku CSV **Z NAGŁÓWKIEM** (dowolna kolejność).
+                    
+                    **Format CSV:**
+                    - Separator: **średnik (;)**
+                    - Kodowanie: **UTF-8**
+                    - **Z nagłówkiem** (pierwsza linia to nazwy kolumn)
+                    - Linie zaczynające się od '#' są ignorowane (komentarze)
+                    
+                    **Wymagane kolumny (w dowolnej kolejności):**
+                    - **item_id** (Long) - ID produktu
+                    - **rack_id** (Long) - ID regału
+                    - **position_x** (Integer) - Pozycja X na regale (1-based)
+                    - **position_y** (Integer) - Pozycja Y na regale (1-based)
+                    
+                    **Opcjonalne kolumny:**
+                    - **expires_at** (Timestamp) - Data wygaśnięcia (format: yyyy-MM-dd lub ISO 8601)
+                    
+                    **Przykład pliku CSV:**
+                    ```
+                    item_id;rack_id;position_x;position_y;expires_at
+                    1;1;1;1;2026-12-31
+                    2;1;1;2;2026-06-30
+                    3;2;2;3;
+                    ```
+                    
+                    **Uwagi:**
+                    - Kolejność kolumn może być dowolna (nagłówek określa mapowanie)
+                    - Pusta wartość dla expires_at oznacza brak ograniczenia czasowego
+                    - System automatycznie wygeneruje barcode dla przypisania (GS1-128)
+                    
+                    **Walidacja pliku:**
+                    - Tylko pliki CSV (rozszerzenia: .csv, .txt)
+                    - Content-Type: text/csv, text/plain, application/csv
+                    - Maksymalny rozmiar: 5MB
+                    - Plik nie może być pusty
+                    
+                    **Odpowiedź:**
+                    - `processedLines` - liczba przetworzonych linii
+                    - `imported` - liczba zaimportowanych przypisań
+                    - `errors` - lista błędów (jeśli wystąpiły)
+                    """
+    )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Import report",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessAssortmentImport.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid CSV file",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Import report with statistics",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessAssortmentImport.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid CSV file or validation errors",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Access denied - requires ADMIN role",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
+            )
     })
     @PostMapping(value = "/import", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")

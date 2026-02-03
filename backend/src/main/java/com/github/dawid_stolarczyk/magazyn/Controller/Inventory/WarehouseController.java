@@ -79,12 +79,57 @@ public class WarehouseController {
         return ResponseEntity.ok(ResponseTemplate.success());
     }
 
-    @Operation(summary = "Import warehouses from CSV")
+    @Operation(
+            summary = "Import warehouses from CSV",
+            description = """
+                    Import magazynów z pliku CSV z nagłówkiem.
+                    
+                    **Format CSV:**
+                    - Separator: **średnik (;)**
+                    - Kodowanie: **UTF-8**
+                    - **Z nagłówkiem** (pierwsza linia to nazwy kolumn)
+                    - Linie zaczynające się od '#' są ignorowane (komentarze)
+                    
+                    **Wymagane kolumny (w dowolnej kolejności):**
+                    - **name** (String) - Nazwa magazynu
+                    
+                    **Przykład pliku CSV:**
+                    ```
+                    #Linie zaczynające się od '#' są ignorowane
+                    name
+                    Magazyn Centralny
+                    Magazyn Regionalny Warszawa
+                    Magazyn Chłodniczy
+                    ```
+                    
+                    **Walidacja pliku:**
+                    - Tylko pliki CSV (rozszerzenia: .csv, .txt)
+                    - Content-Type: text/csv, text/plain, application/csv
+                    - Maksymalny rozmiar: 5MB
+                    - Plik nie może być pusty
+                    
+                    **Odpowiedź:**
+                    - `processedLines` - liczba przetworzonych linii
+                    - `imported` - liczba zaimportowanych magazynów
+                    - `errors` - lista błędów (jeśli wystąpiły)
+                    """
+    )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Import report",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessWarehouseImport.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid CSV file",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Import report with statistics",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessWarehouseImport.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid CSV file or validation errors",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Access denied - requires ADMIN role",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
+            )
     })
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")

@@ -199,13 +199,13 @@ public class ItemService {
      */
     private void validateImageFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("FILE_IS_EMPTY");
+            throw new IllegalArgumentException(InventoryError.FILE_IS_EMPTY.name());
         }
 
         // Sprawdź Content-Type
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("INVALID_FILE_TYPE");
+            throw new IllegalArgumentException(InventoryError.INVALID_FILE_TYPE.name());
         }
 
         // Lista dozwolonych typów MIME
@@ -219,7 +219,7 @@ public class ItemService {
         );
 
         if (!allowedTypes.contains(contentType.toLowerCase())) {
-            throw new IllegalArgumentException("UNSUPPORTED_IMAGE_TYPE");
+            throw new IllegalArgumentException(InventoryError.UNSUPPORTED_IMAGE_TYPE.name());
         }
 
         // Sprawdź rozszerzenie pliku
@@ -229,14 +229,14 @@ public class ItemService {
             List<String> allowedExtensions = List.of("jpg", "jpeg", "png", "gif", "webp", "bmp");
 
             if (!allowedExtensions.contains(extension)) {
-                throw new IllegalArgumentException("INVALID_FILE_EXTENSION");
+                throw new IllegalArgumentException(InventoryError.INVALID_FILE_EXTENSION.name());
             }
         }
 
         // Sprawdź maksymalny rozmiar (np. 10MB)
         long maxSize = 10 * 1024 * 1024; // 10MB
         if (file.getSize() > maxSize) {
-            throw new IllegalArgumentException("FILE_TOO_LARGE");
+            throw new IllegalArgumentException(InventoryError.FILE_TOO_LARGE.name());
         }
     }
 

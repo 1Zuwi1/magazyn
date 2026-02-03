@@ -6,7 +6,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public final class CsvImportUtils {
     private CsvImportUtils() {
@@ -45,7 +48,9 @@ public final class CsvImportUtils {
     }
 
     public static String normalize(String value) {
-        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+        // Zachowujemy oryginalną wielkość liter dla zgodności z formatem
+        // (Oznaczenie, TempMin, CzyNiebezpieczny itp.)
+        return value == null ? "" : value.trim();
     }
 
     public static String[] parseCsvLine(String line) {
@@ -65,7 +70,8 @@ public final class CsvImportUtils {
                 }
                 continue;
             }
-            if (c == ',' && !inQuotes) {
+            // Zmiana separatora z ',' na ';'
+            if (c == ';' && !inQuotes) {
                 tokens.add(current.toString());
                 current.setLength(0);
                 continue;
