@@ -4,6 +4,7 @@ import {
   Tag01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { addDays } from "date-fns"
 import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -91,7 +92,7 @@ export function RackShelfDetailsCard({
     ? getDaysUntilExpiry(
         new Date(),
         selectedItem.expiryDate ??
-          new Date(Date.now() + selectedItem.daysToExpiry * 24 * 60 * 60 * 1000)
+          addDays(new Date(), selectedItem.daysToExpiry)
       )
     : null
   const status = selectedItem ? getItemStatus(selectedItem) : null
@@ -235,10 +236,7 @@ export function RackShelfDetailsCard({
                 >
                   {formatDate(
                     selectedItem.expiryDate ??
-                      new Date(
-                        Date.now() +
-                          selectedItem.daysToExpiry * 24 * 60 * 60 * 1000
-                      )
+                      addDays(new Date(), selectedItem.daysToExpiry)
                   )}
                 </span>
               }

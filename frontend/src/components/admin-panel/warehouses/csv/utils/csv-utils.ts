@@ -112,7 +112,7 @@ function coerceValue(value: string, field: string): unknown {
     return Number.isNaN(parsed) ? undefined : parsed
   }
 
-  if (new Set(["isdangerous"]).has(field)) {
+  if (field === "isDangerous") {
     const lower = trimmed.toLowerCase()
     if (lower === "true") {
       return true

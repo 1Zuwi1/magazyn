@@ -11,7 +11,7 @@ export const NotificationSchema = z.object({
     "ITEM_EXPIRED",
     "TEMPERATURE_VIOLATION",
   ]),
-  severity: z.enum(["info", "warning", "critical"]),
+  severity: z.enum(["INFO", "WARNING", "CRITICAL"]),
   warehouseId: z.string().optional(),
   rackId: z.string().optional(),
   itemId: z.string().optional(),

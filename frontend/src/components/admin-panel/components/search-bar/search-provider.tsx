@@ -1,6 +1,12 @@
 "use client"
 
-import { createContext, useContext, useMemo, useState } from "react"
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useMemo,
+  useState,
+} from "react"
 import {
   CommandMenu,
   type NavGroup,
@@ -21,7 +27,7 @@ export function useSearch() {
 }
 
 interface SearchProviderProps {
-  children: React.ReactNode
+  children: ReactNode
   navData?: NavGroup[]
 }
 

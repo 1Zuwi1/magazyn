@@ -2,6 +2,7 @@
 
 import { PackageIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { addDays } from "date-fns"
 import Image from "next/image"
 import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
@@ -92,8 +93,7 @@ export function ItemDetailsDialog({
   const statusText = getStatusText(status)
   const daysUntilExpiry = getDaysUntilExpiry(
     new Date(),
-    item.expiryDate ??
-      new Date(Date.now() + item.daysToExpiry * 24 * 60 * 60 * 1000)
+    item.expiryDate ?? addDays(new Date(), item.daysToExpiry)
   )
   const expiryHint = formatExpiryHint(daysUntilExpiry)
   const badgeVariant = getStatusBadgeVariant(status)
@@ -167,10 +167,7 @@ export function ItemDetailsDialog({
                     className={cn("font-mono font-semibold", statusColors.text)}
                   >
                     {formatDate(
-                      item.expiryDate ??
-                        new Date(
-                          Date.now() + item.daysToExpiry * 24 * 60 * 60 * 1000
-                        )
+                      item.expiryDate ?? addDays(new Date(), item.daysToExpiry)
                     )}
                   </span>
                 }

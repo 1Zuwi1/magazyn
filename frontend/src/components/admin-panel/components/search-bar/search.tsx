@@ -2,7 +2,7 @@
 
 import { Search01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useState } from "react"
+import { type KeyboardEvent, useState } from "react"
 import { useSearch } from "@/components/admin-panel/components/search-bar/search-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,7 +23,7 @@ export function Search({ className, placeholder = "Search" }: SearchProps) {
     setValue("")
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault()
       handleOpenSearch()

@@ -7,6 +7,7 @@ import {
   ViewIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { addDays } from "date-fns"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -96,8 +97,7 @@ export function TableRowContent({
       <TableCell>
         <span className={isExpired ? "font-medium text-destructive" : ""}>
           {formatDate(
-            item.expiryDate ??
-              new Date(Date.now() + item.daysToExpiry * 24 * 60 * 60 * 1000)
+            item.expiryDate ?? addDays(new Date(), item.daysToExpiry)
           )}
         </span>
       </TableCell>

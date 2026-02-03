@@ -1,12 +1,12 @@
 "use client"
 
-import { type AnyFieldApi, useForm } from "@tanstack/react-form"
+import { useForm } from "@tanstack/react-form"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import type { Rack } from "@/components/dashboard/types"
+import { renderError } from "@/components/dashboard/utils/helpers"
 import {
   Field,
   FieldContent,
-  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
@@ -51,17 +51,6 @@ export function RackDialog({
       onOpenChange(false)
     },
   })
-
-  const renderError = (field: AnyFieldApi) => {
-    const error = field.state.meta.errors[0] as { message?: string } | undefined
-    const message = typeof error === "string" ? error : error?.message
-
-    if (!message) {
-      return null
-    }
-
-    return <FieldError className="col-span-4 col-start-3">{message}</FieldError>
-  }
 
   return (
     <FormDialog

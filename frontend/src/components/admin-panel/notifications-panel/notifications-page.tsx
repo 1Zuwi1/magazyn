@@ -15,7 +15,7 @@ import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import { format, formatDistanceToNow } from "date-fns"
 import { pl } from "date-fns/locale"
 import { AnimatePresence, motion } from "framer-motion"
-import { useMemo, useState } from "react"
+import { type ReactNode, useMemo, useState } from "react"
 import { MOCK_NOTIFICATIONS } from "@/components/dashboard/mock-data"
 import type {
   Notification,
@@ -102,7 +102,7 @@ function getTypeConfig(type: NotificationType) {
 // Metadata renderers
 const metadataRenderers: Record<
   NotificationType,
-  (meta: Record<string, unknown>) => React.ReactNode
+  (meta: Record<string, unknown>) => ReactNode
 > = {
   UNAUTHORIZED_REMOVAL: (meta) => {
     const { weightDelta, previousWeight, currentWeight } = meta as {
