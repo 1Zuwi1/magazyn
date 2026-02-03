@@ -3,7 +3,6 @@ package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.InventoryPlacementService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

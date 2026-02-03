@@ -2,6 +2,7 @@ package com.github.dawid_stolarczyk.magazyn.Services.User;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangePasswordRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UpdateUserProfileRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserInfoResponse;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.EmailVerification;
@@ -47,7 +48,10 @@ public class UserService {
                 user.getFullName(),
                 user.getEmail(),
                 user.getRole().name(),
-                user.getStatus().name());
+                user.getStatus().name(),
+                user.getPhone(),
+                user.getLocation(),
+                user.getTeam() != null ? user.getTeam().name() : null);
     }
 
     @Transactional
@@ -88,7 +92,10 @@ public class UserService {
                         user.getFullName(),
                         user.getEmail(),
                         user.getRole().name(),
-                        user.getStatus().name()
+                        user.getStatus().name(),
+                        user.getPhone(),
+                        user.getLocation(),
+                        user.getTeam() != null ? user.getTeam().name() : null
                 ))
                 .toList();
     }
@@ -137,6 +144,46 @@ public class UserService {
                 .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
 
         targetUser.setFullName(newFullName);
+        userRepository.save(targetUser);
+    }
+
+    /**
+     * Admin: Update user profile (phone, location, team, full name)
+     */
+    @Transactional
+    public void adminUpdateUserProfile(Long targetUserId, UpdateUserProfileRequest profileRequest, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        if (profileRequest.getPhone() != null) {
+            // Walidacja formatu telefonu (jeśli niepusty)
+            String phone = profileRequest.getPhone().strip();
+            if (!phone.isEmpty() && !phone.matches("^[+\\d\\s()-]*$")) {
+                throw new IllegalArgumentException("INVALID_PHONE_FORMAT");
+            }
+            targetUser.setPhone(phone.isEmpty() ? null : phone);
+        }
+
+        if (profileRequest.getLocation() != null) {
+            String location = profileRequest.getLocation().strip();
+            targetUser.setLocation(location.isEmpty() ? null : location);
+        }
+
+        if (profileRequest.getTeam() != null) {
+            // Enum jest już walidowany przez Jackson deserializację
+
+            targetUser.setTeam(profileRequest.getTeam());
+        }
+
+        if (profileRequest.getFullName() != null) {
+            String fullName = profileRequest.getFullName().strip();
+            if (fullName.isEmpty() || fullName.length() < 3) {
+                throw new IllegalArgumentException("INVALID_FULL_NAME");
+            }
+            targetUser.setFullName(fullName);
+        }
+
         userRepository.save(targetUser);
     }
 

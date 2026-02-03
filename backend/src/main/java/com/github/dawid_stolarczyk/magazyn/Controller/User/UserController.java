@@ -2,6 +2,7 @@ package com.github.dawid_stolarczyk.magazyn.Controller.User;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserTeam;
 import com.github.dawid_stolarczyk.magazyn.Services.User.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -19,7 +20,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -37,6 +40,22 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<ResponseTemplate<UserInfoResponse>> getBasic(HttpServletRequest request) {
         return ResponseEntity.ok(ResponseTemplate.success(userService.getBasicInformation(request)));
+    }
+
+    @Operation(summary = "[ADMIN] Get available teams", description = "Returns list of all available team options for dropdown/select")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - returns list of available teams with value and label",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TeamOption.class)))),
+            @ApiResponse(responseCode = "403", description = "Error codes: ACCESS_FORBIDDEN (not admin)",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @GetMapping("/teams")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<List<TeamOption>>> getAvailableTeams() {
+        List<TeamOption> teams = Arrays.stream(UserTeam.values())
+                .map(team -> new TeamOption(team.name(), team.getDisplayName()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ResponseTemplate.success(teams));
     }
 
     @Operation(summary = "[ADMIN] Get all users")
@@ -95,26 +114,27 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "[ADMIN] Change user full name")
+    @Operation(summary = "[ADMIN] Update user profile (phone, location, team, full name)",
+            description = "Updates user profile. Team must be one of: OPERATIONS, LOGISTICS, WAREHOUSE, INVENTORY, QUALITY_CONTROL, RECEIVING, SHIPPING, IT_SUPPORT, MANAGEMENT")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success - full name changed",
+            @ApiResponse(responseCode = "200", description = "Success - profile updated",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "Error codes: USER_NOT_FOUND",
+            @ApiResponse(responseCode = "400", description = "Error codes: USER_NOT_FOUND, INVALID_INPUT, INVALID_PHONE_FORMAT, INVALID_FULL_NAME, INVALID_ENUM_VALUE",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
             @ApiResponse(responseCode = "403", description = "Error codes: ACCESS_FORBIDDEN",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @PatchMapping("/{userId}/full-name")
+    @PatchMapping("/{userId}/profile")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<Void>> changeFullName(
+    public ResponseEntity<ResponseTemplate<Void>> updateUserProfile(
             @PathVariable Long userId,
-            @Valid @RequestBody ChangeFullNameRequest changeRequest,
+            @Valid @RequestBody UpdateUserProfileRequest profileRequest,
             HttpServletRequest request) {
         try {
-            userService.adminChangeFullName(userId, changeRequest.getNewFullName(), request);
+            userService.adminUpdateUserProfile(userId, profileRequest, request);
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
-            log.error("Admin full name change failed for user {}", userId, e);
+            log.error("Admin profile update failed for user {}", userId, e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
         }
     }

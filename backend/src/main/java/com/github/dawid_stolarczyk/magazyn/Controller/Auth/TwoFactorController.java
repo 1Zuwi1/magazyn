@@ -1,8 +1,8 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Auth;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Auth.PasskeyRenameRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.WebAuthnCredential;
 import com.github.dawid_stolarczyk.magazyn.Services.Auth.TwoFactorService;
@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
