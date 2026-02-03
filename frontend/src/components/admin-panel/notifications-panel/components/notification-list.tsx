@@ -36,7 +36,7 @@ export function NotificationList({
       <ScrollArea className="flex-1">
         <div>
           {items.map((item) => (
-            <button
+            <Button
               className={cn(
                 "flex w-full flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent"
               )}
@@ -69,7 +69,7 @@ export function NotificationList({
               <div className="line-clamp-2 text-muted-foreground text-xs">
                 {item.description.substring(0, 200)}
               </div>
-            </button>
+            </Button>
           ))}
         </div>
       </ScrollArea>

@@ -24,11 +24,6 @@ export default function UsersMain() {
     }
   }, [users])
 
-  const handleAddUser = () => {
-    setSelectedUser(undefined)
-    setDialogOpen(true)
-  }
-
   const handleEditUser = (user: User) => {
     setSelectedUser(user)
     setDialogOpen(true)
@@ -46,6 +41,16 @@ export default function UsersMain() {
     }
   }
 
+  const handleSubmitUser = (user: User) => {
+    setUsers((prev) => {
+      const exists = prev.find((item) => item.id === user.id)
+      if (exists) {
+        return prev.map((item) => (item.id === user.id ? user : item))
+      }
+      return [user, ...prev]
+    })
+  }
+
   return (
     <section className="flex flex-col gap-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -57,7 +62,14 @@ export default function UsersMain() {
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          <Button onClick={handleAddUser}>Dodaj użytkownika</Button>
+          <Button
+            onClick={() => {
+              setSelectedUser(undefined)
+              setDialogOpen(true)
+            }}
+          >
+            Dodaj użytkownika
+          </Button>
         </div>
       </header>
 
@@ -75,6 +87,7 @@ export default function UsersMain() {
           }
           setDialogOpen(open)
         }}
+        onSubmit={handleSubmitUser}
         open={dialogOpen}
       />
 

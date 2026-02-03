@@ -124,7 +124,9 @@ export function WarehouseGrid({
                   <div className="h-2 overflow-hidden rounded-full bg-secondary">
                     <div
                       className={`h-full rounded-full ${occupancyPercentage > THRESHOLD ? "bg-destructive" : "bg-primary"}`}
-                      style={{ width: `${occupancyPercentage}%` }}
+                      style={{
+                        width: `${Math.min(occupancyPercentage, 100)}%`,
+                      }}
                     />
                   </div>
                 </div>

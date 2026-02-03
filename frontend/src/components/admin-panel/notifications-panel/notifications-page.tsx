@@ -54,7 +54,7 @@ export default function NotificationsMain() {
       ) : (
         <>
           <Separator className="m-2" orientation="vertical" />
-          <div className="w-100">
+          <div className="w-full">
             <NotificationDetail
               notification={selectedNotification}
               onDismiss={dismiss}

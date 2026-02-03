@@ -29,24 +29,29 @@ export function useCsvImporter<T extends "rack" | "item">({
         return
       }
       resetFile()
-      const result = await parseCsvFile(file, type)
-      setRawPreviewData(result.rawRows)
-      setValidatedData(result.rows)
-      setParseErrors(result.errors)
-      setPreviewHeaders(result.headers)
+      try {
+        const result = await parseCsvFile(file, type)
+        setRawPreviewData(result.rawRows)
+        setValidatedData(result.rows)
+        setParseErrors(result.errors)
+        setPreviewHeaders(result.headers)
 
-      if (result.errors.length > 0) {
-        const displayedErrors = result.errors
-          .slice(0, MAX_TOAST_ROWS)
-          .map((e) => `Wiersz ${e.row}: ${e.message}`)
-          .join("\n")
+        if (result.errors.length > 0) {
+          const displayedErrors = result.errors
+            .slice(0, MAX_TOAST_ROWS)
+            .map((e) => `Wiersz ${e.row}: ${e.message}`)
+            .join("\n")
 
-        const remaining = result.errors.length - MAX_TOAST_ROWS
-        const suffix = remaining > 0 ? `\n...i ${remaining} więcej` : ""
+          const remaining = result.errors.length - MAX_TOAST_ROWS
+          const suffix = remaining > 0 ? `\n...i ${remaining} więcej` : ""
 
-        toast.error(`Błędy parsowania CSV (${result.errors.length})`, {
-          description: displayedErrors + suffix,
-        })
+          toast.error(`Błędy parsowania CSV (${result.errors.length})`, {
+            description: displayedErrors + suffix,
+          })
+        }
+      } catch {
+        toast.error("Nie udało się przetworzyć pliku CSV")
+        resetFile()
       }
     }
   }

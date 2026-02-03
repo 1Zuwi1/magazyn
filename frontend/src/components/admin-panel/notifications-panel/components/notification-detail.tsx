@@ -158,7 +158,7 @@ export function NotificationDetail({
 
       <DetailRow
         label="Data"
-        value={format(notification.createdAt, "dd MMM yyyy, HH:mm", {
+        value={format(new Date(notification.createdAt), "dd MMM yyyy, HH:mm", {
           locale: pl,
         })}
       />

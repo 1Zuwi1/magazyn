@@ -28,14 +28,13 @@ export function TopNav() {
     <>
       <div className="lg:hidden">
         <DropdownMenu>
-          <DropdownMenuTrigger>
-            <HugeiconsIcon
-              className={cn(
-                "md:size-7",
-                buttonVariants({ variant: "outline", size: "icon" })
-              )}
-              icon={Menu}
-            />
+          <DropdownMenuTrigger
+            className={cn(
+              "md:size-7",
+              buttonVariants({ variant: "outline", size: "icon" })
+            )}
+          >
+            <HugeiconsIcon icon={Menu} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="bottom">
             {links.map((link) => (
