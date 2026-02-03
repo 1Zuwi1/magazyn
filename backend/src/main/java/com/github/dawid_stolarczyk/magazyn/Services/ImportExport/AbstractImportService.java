@@ -142,14 +142,20 @@ public abstract class AbstractImportService<T, R, E> {
         if (value == null || value.isBlank() || value.equalsIgnoreCase("NULL")) {
             return null;
         }
+
+        String trimmedValue = value.trim();
+
         try {
-            return Timestamp.from(Instant.parse(value));
+            // Najpierw próbuj parsować jako ISO 8601 z timezone (np. "2024-01-01T10:00:00Z")
+            return Timestamp.from(Instant.parse(trimmedValue));
         } catch (DateTimeParseException ex) {
             try {
-                LocalDate date = LocalDate.parse(value);
+                // Jeśli to się nie uda, spróbuj jako lokalną datę (np. "2024-01-01")
+                // UWAGA: Konwertuje na UTC midnight - może być niejednoznaczne dla różnych stref czasowych
+                LocalDate date = LocalDate.parse(trimmedValue);
                 return Timestamp.from(date.atStartOfDay().toInstant(ZoneOffset.UTC));
             } catch (DateTimeParseException nested) {
-                throw new IllegalArgumentException(errorCode, nested);
+                throw new IllegalArgumentException(errorCode + ": Invalid date format '" + trimmedValue + "'. Expected ISO 8601 (yyyy-MM-dd'T'HH:mm:ss'Z') or date only (yyyy-MM-dd)", nested);
             }
         }
     }

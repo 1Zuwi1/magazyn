@@ -10,6 +10,7 @@ import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperati
 import com.github.dawid_stolarczyk.magazyn.Services.Storage.StorageService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ItemService {
@@ -99,30 +101,48 @@ public class ItemService {
         String previousPhoto = item.getPhoto_url();
         String fileName = UUID.randomUUID() + ".enc";
         AtomicReference<Exception> encryptionError = new AtomicReference<>();
+        java.util.concurrent.CountDownLatch encryptionStarted = new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.CountDownLatch encryptionFinished = new java.util.concurrent.CountDownLatch(1);
 
         try (PipedInputStream pipedIn = new PipedInputStream(1024 * 64);
-             PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
-             InputStream rawIn = file.getInputStream()) {
+             PipedOutputStream pipedOut = new PipedOutputStream(pipedIn)) {
 
             Thread encryptThread = new Thread(() -> {
-                try (PipedOutputStream out = pipedOut; InputStream in = rawIn) {
-                    fileCryptoService.encrypt(in, out);
+                try (InputStream rawIn = file.getInputStream()) {
+                    encryptionStarted.countDown();
+                    fileCryptoService.encrypt(rawIn, pipedOut);
                 } catch (Exception ex) {
                     encryptionError.set(ex);
                     try {
                         pipedIn.close();
                     } catch (IOException ignored) {
                     }
+                } finally {
+                    encryptionFinished.countDown();
+                    try {
+                        pipedOut.close();
+                    } catch (IOException ignored) {
+                    }
                 }
             }, "item-photo-encrypt");
 
+            encryptThread.setDaemon(false);
             encryptThread.start();
 
             try {
+                // Czekaj na start szyfrowania (max 5 sekund)
+                if (!encryptionStarted.await(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("Encryption thread failed to start");
+                }
+
+                // Sprawdź czy nie było błędu podczas startu
+                if (encryptionError.get() != null) {
+                    throw encryptionError.get();
+                }
+
                 storageService.uploadStream(fileName, pipedIn, file.getContentType());
             } catch (Exception ex) {
-                // Critical: if upload fails, we must first interrupt/stop the thread
-                // and then cleanup the potential partial file.
+                // Jeśli upload się nie uda, przerwij szyfrowanie i posprzątaj
                 encryptThread.interrupt();
                 try {
                     pipedIn.close();
@@ -134,9 +154,14 @@ public class ItemService {
                 }
                 throw ex;
             } finally {
-                encryptThread.join(5000); // Wait for thread to finish
+                // Poczekaj na zakończenie szyfrowania (max 30 sekund)
+                if (!encryptionFinished.await(30, java.util.concurrent.TimeUnit.SECONDS)) {
+                    log.warn("Encryption thread did not finish within timeout for item {}", id);
+                    encryptThread.interrupt();
+                }
             }
 
+            // Sprawdź czy podczas szyfrowania wystąpił błąd
             if (encryptionError.get() != null) {
                 try {
                     storageService.delete(fileName);

@@ -70,22 +70,73 @@ public class GlobalExceptionHandler {
         log.warn("Data integrity violation: {}", ex.getMostSpecificCause().getMessage());
 
         String errorCode = "CONFLICT";
-        String message = ex.getMostSpecificCause().getMessage();
+        Throwable rootCause = ex.getRootCause();
 
-        if (message != null) {
-            String lowerMessage = message.toLowerCase();
-            if (lowerMessage.contains("position") || lowerMessage.contains("rack_id")) {
-                errorCode = "PLACEMENT_CONFLICT";
-            } else if (lowerMessage.contains("duplicate") || lowerMessage.contains("unique") || lowerMessage.contains("idx_")) {
-                errorCode = "DUPLICATE_ENTRY";
-            } else if (lowerMessage.contains("foreign key") || lowerMessage.contains("constraint")) {
-                errorCode = "CONSTRAINT_VIOLATION";
+        // Najpierw spróbuj użyć kodów błędów SQL (bardziej niezawodne)
+        if (rootCause instanceof java.sql.SQLException sqlEx) {
+            int sqlErrorCode = sqlEx.getErrorCode();
+            String sqlMessage = sqlEx.getMessage();
+
+            // MySQL error codes:
+            // 1062 = Duplicate entry
+            // 1048 = Column cannot be null
+            // 1451 = Cannot delete or update a parent row (foreign key constraint)
+            // 1452 = Cannot add or update a child row (foreign key constraint)
+
+            switch (sqlErrorCode) {
+                case 1062: // Duplicate entry
+                    if (sqlMessage != null) {
+                        if (sqlMessage.contains("position") || sqlMessage.contains("rack_id")) {
+                            errorCode = "PLACEMENT_CONFLICT";
+                        } else if (sqlMessage.contains("barcode")) {
+                            errorCode = "DUPLICATE_BARCODE";
+                        } else if (sqlMessage.contains("email")) {
+                            errorCode = "DUPLICATE_EMAIL";
+                        } else {
+                            errorCode = "DUPLICATE_ENTRY";
+                        }
+                    }
+                    break;
+                case 1048: // Column cannot be null
+                    errorCode = "NULL_NOT_ALLOWED";
+                    break;
+                case 1451: // Cannot delete parent row
+                case 1452: // Cannot add child row
+                    errorCode = "CONSTRAINT_VIOLATION";
+                    break;
+                default:
+                    // Fallback do string matching tylko jeśli kod nie jest rozpoznany
+                    errorCode = parseErrorFromMessage(sqlMessage);
+                    break;
             }
+        } else {
+            // Fallback dla innych baz danych lub gdy rootCause nie jest SQLException
+            String message = ex.getMostSpecificCause().getMessage();
+            errorCode = parseErrorFromMessage(message);
         }
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ResponseTemplate.error(errorCode));
+    }
+
+    /**
+     * Fallback method for parsing error messages when SQL error codes are not available
+     */
+    private String parseErrorFromMessage(String message) {
+        if (message == null) {
+            return "CONFLICT";
+        }
+
+        String lowerMessage = message.toLowerCase();
+        if (lowerMessage.contains("position") || lowerMessage.contains("rack_id")) {
+            return "PLACEMENT_CONFLICT";
+        } else if (lowerMessage.contains("duplicate") || lowerMessage.contains("unique")) {
+            return "DUPLICATE_ENTRY";
+        } else if (lowerMessage.contains("foreign key") || lowerMessage.contains("constraint")) {
+            return "CONSTRAINT_VIOLATION";
+        }
+        return "CONFLICT";
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

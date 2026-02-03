@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 
+import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
 import com.github.dawid_stolarczyk.magazyn.Repositories.AssortmentRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.ItemRepository;
@@ -18,13 +19,19 @@ public class BarcodeService {
     private static final int SERIAL_LENGTH = 6;
     private static final int ITEM_BARCODE_LENGTH = 14;
     private static final int GTIN_14_LENGTH = 14;
+    private static final int MAX_RETRY_ATTEMPTS = 100; // Maksymalna liczba prób generowania unikalnego kodu
     private final ItemRepository itemRepository;
     private final AssortmentRepository assortmentRepository;
 
     public String generateUniqueItemBarcode() {
         String barcode;
+        int attempts = 0;
         do {
+            if (attempts >= MAX_RETRY_ATTEMPTS) {
+                throw new IllegalStateException(InventoryError.BARCODE_GENERATION_FAILED.name() + ": Unable to generate unique barcode after " + MAX_RETRY_ATTEMPTS + " attempts");
+            }
             barcode = CodeGenerator.generateWithNumbers(ITEM_BARCODE_LENGTH);
+            attempts++;
         } while (itemRepository.existsByBarcode(barcode));
         return barcode;
     }
@@ -49,7 +56,7 @@ public class BarcodeService {
      */
     public String buildPlacementBarcode(String itemBarcode) {
         if (itemBarcode == null || !itemBarcode.matches("\\d{" + ITEM_BARCODE_LENGTH + "}")) {
-            throw new IllegalArgumentException("BARCODE_MUST_BE_6_DIGITS");
+            throw new IllegalArgumentException(InventoryError.BARCODE_MUST_BE_6_DIGITS.name());
         }
 
         String datePart = LocalDate.now(ZoneOffset.UTC).format(GS1_DATE_FORMAT);
@@ -62,10 +69,15 @@ public class BarcodeService {
         String ai01 = "01" + gtin14;
 
         String barcode;
+        int attempts = 0;
         do {
+            if (attempts >= MAX_RETRY_ATTEMPTS) {
+                throw new IllegalStateException(InventoryError.PLACEMENT_BARCODE_GENERATION_FAILED.name() + ": Unable to generate unique placement barcode after " + MAX_RETRY_ATTEMPTS + " attempts");
+            }
             // AI 21: Serial Number (variable length, last AI so no FNC1 separator needed).
             String ai21 = "21" + CodeGenerator.generateWithNumbers(SERIAL_LENGTH);
             barcode = ai11 + ai01 + ai21;
+            attempts++;
         } while (assortmentRepository.existsByBarcode(barcode));
 
         return barcode;

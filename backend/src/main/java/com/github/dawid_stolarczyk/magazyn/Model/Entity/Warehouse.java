@@ -23,5 +23,6 @@ public class Warehouse {
     @Size(min = 3, max = 100)
     private String name;
     @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Rack> racks = new ArrayList<>();
 }

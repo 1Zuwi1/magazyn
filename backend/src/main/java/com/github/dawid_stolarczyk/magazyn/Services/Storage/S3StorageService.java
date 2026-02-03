@@ -25,6 +25,12 @@ public class S3StorageService implements StorageService {
     @Value("${app.s3.items-prefix:items-photos/}")
     private String itemsPrefix;
 
+    /**
+     * ThreadLocal buffer pool for high-concurrency scenarios
+     * Reuses buffers per thread instead of allocating new 5MB on each upload
+     */
+    private static final ThreadLocal<byte[]> BUFFER_POOL = ThreadLocal.withInitial(() -> new byte[MIN_PART_SIZE]);
+
     @Override
     public void uploadStream(String fileName, InputStream inputStream, String contentType) throws Exception {
         if (bucketName == null || bucketName.isBlank()) {
@@ -36,10 +42,8 @@ public class S3StorageService implements StorageService {
                 : contentType;
         String objectKey = buildObjectKey(fileName);
 
-        // Pre-allocate buffer only once per upload or use a smaller initial check
-        // To strictly address "per-upload 5MB buffer allocation", we could use a smaller
-        // check buffer, but multipart upload REQUIRES at least 5MB for all parts except last.
-        byte[] buffer = new byte[MIN_PART_SIZE];
+        // Use ThreadLocal buffer pool to avoid allocating 5MB per concurrent upload
+        byte[] buffer = BUFFER_POOL.get();
         int bytesRead = readFully(inputStream, buffer);
 
         if (bytesRead < MIN_PART_SIZE) {

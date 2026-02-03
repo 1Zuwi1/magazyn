@@ -231,9 +231,13 @@ public class ItemController {
         try {
             return ResponseEntity.ok(ResponseTemplate.success(itemService.uploadPhoto(id, file, request)));
         } catch (IllegalArgumentException e) {
+            log.warn("Invalid photo upload request for item {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getMessage()));
+        } catch (IllegalStateException e) {
+            log.error("Storage state error while uploading photo for item {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error("PHOTO_UPLOAD_FAILED"));
         } catch (Exception e) {
-            log.error("Failed to upload photo for item {}", id, e);
+            log.error("Unexpected error uploading photo for item {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error("PHOTO_UPLOAD_FAILED"));
         }
     }
@@ -265,9 +269,13 @@ public class ItemController {
             byte[] data = itemService.downloadPhoto(id, request);
             return ResponseEntity.ok(data);
         } catch (IllegalArgumentException e) {
+            log.warn("Photo not found for item {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (IllegalStateException e) {
+            log.error("Storage state error while downloading photo for item {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (Exception e) {
-            log.error("Failed to download photo for item {}", id, e);
+            log.error("Unexpected error downloading photo for item {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

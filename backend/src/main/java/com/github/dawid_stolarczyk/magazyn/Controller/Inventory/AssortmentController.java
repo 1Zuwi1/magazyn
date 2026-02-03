@@ -84,7 +84,7 @@ public class AssortmentController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Assortment deleted successfully",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "Assortment not found",
+            @ApiResponse(responseCode = "404", description = "Assortment not found",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @DeleteMapping("/{id}")
