@@ -1,6 +1,12 @@
 "use client"
 
 import {
+  ArrowLeft02Icon,
+  ArrowRight02Icon,
+  Calendar03Icon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import {
   type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
@@ -12,7 +18,18 @@ import {
 } from "@tanstack/react-table"
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import {
+  FilterEmptyState,
+  NoItemsEmptyState,
+} from "@/components/ui/empty-state"
+import {
+  ClearFiltersButton,
+  FilterBar,
+  FilterGroup,
+  FilterResults,
+  FilterSelectWrapper,
+  SearchInput,
+} from "@/components/ui/filter-bar"
 import {
   Select,
   SelectContent,
@@ -28,18 +45,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { getDaysUntilExpiry, pluralize } from "../utils/helpers"
+import { cn } from "@/lib/utils"
+import { getDaysUntilExpiry } from "../utils/helpers"
 import { assortmentColumns } from "./assortment-columns"
 import type { ItemInstance } from "./types"
 
 type ExpiryFilters = "14_DAYS" | "7_DAYS" | "3_DAYS" | "EXPIRED" | "ALL"
 
-const EXPIRY_FILTER_OPTIONS: { value: ExpiryFilters; label: string }[] = [
+const EXPIRY_FILTER_OPTIONS: {
+  value: ExpiryFilters
+  label: string
+  icon?: boolean
+}[] = [
   { value: "ALL", label: "Wszystkie" },
-  { value: "EXPIRED", label: "Przeterminowane" },
-  { value: "3_DAYS", label: "3 dni" },
-  { value: "7_DAYS", label: "7 dni" },
-  { value: "14_DAYS", label: "14 dni" },
+  { value: "EXPIRED", label: "Przeterminowane", icon: true },
+  { value: "3_DAYS", label: "Do 3 dni", icon: true },
+  { value: "7_DAYS", label: "Do 7 dni", icon: true },
+  { value: "14_DAYS", label: "Do 14 dni", icon: true },
 ]
 
 function matchesExpiryFilter(
@@ -115,64 +137,109 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
     },
   })
 
+  const filteredCount = table.getFilteredRowModel().rows.length
+  const totalCount = items.length
+  const isSearchFiltered = globalFilter.length > 0
+  const isExpiryFiltered = expiryFilter !== "ALL"
+  const isFiltered = isSearchFiltered || isExpiryFiltered
+  const currentPage = table.getState().pagination.pageIndex + 1
+  const totalPages = table.getPageCount()
+
+  const clearAllFilters = () => {
+    setGlobalFilter("")
+    setExpiryFilter("ALL")
+  }
+
+  const itemLabel = {
+    singular: "przedmiot",
+    plural: "przedmioty",
+    genitive: "przedmiotów",
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <Input
-          aria-label="Filtruj przedmioty po nazwie lub kategorii"
-          className="max-w-sm"
-          onChange={(event) => setGlobalFilter(event.target.value)}
-          placeholder="Szukaj po nazwie lub kategorii..."
-          value={globalFilter ?? ""}
-        />
+      {/* Filter Bar */}
+      <FilterBar>
+        <FilterGroup>
+          <SearchInput
+            aria-label="Filtruj przedmioty po nazwie lub kategorii"
+            onChange={setGlobalFilter}
+            placeholder="Szukaj po nazwie lub kategorii..."
+            value={globalFilter}
+          />
 
-        <Select
-          onValueChange={(value) => setExpiryFilter(value as ExpiryFilters)}
-          value={expiryFilter}
-        >
-          <SelectTrigger
-            aria-label="Filtruj według daty ważności"
-            className="w-44"
+          {/* Expiry Filter */}
+          <FilterSelectWrapper
+            icon={Calendar03Icon}
+            isActive={isExpiryFiltered}
           >
-            <SelectValue
-              render={
-                <span>
-                  {
-                    EXPIRY_FILTER_OPTIONS.find(
-                      (option) => option.value === expiryFilter
-                    )?.label
+            <Select
+              onValueChange={(value) => setExpiryFilter(value as ExpiryFilters)}
+              value={expiryFilter}
+            >
+              <SelectTrigger
+                aria-label="Filtruj według daty ważności"
+                className={cn(
+                  "h-10 w-44 gap-2 pl-9",
+                  isExpiryFiltered &&
+                    "border-primary/50 bg-primary/5 text-primary"
+                )}
+              >
+                <SelectValue
+                  render={
+                    <span className="truncate">
+                      {
+                        EXPIRY_FILTER_OPTIONS.find(
+                          (option) => option.value === expiryFilter
+                        )?.label
+                      }
+                    </span>
                   }
-                </span>
-              }
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {EXPIRY_FILTER_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {EXPIRY_FILTER_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <span
+                      className={cn(
+                        option.value === "EXPIRED" && "text-destructive",
+                        option.value === "3_DAYS" && "text-orange-500"
+                      )}
+                    >
+                      {option.label}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FilterSelectWrapper>
 
-        <div className="ml-auto text-muted-foreground text-sm">
-          {table.getFilteredRowModel().rows.length}{" "}
-          {pluralize(
-            table.getFilteredRowModel().rows.length,
-            "przedmiot",
-            "przedmioty",
-            "przedmiotów"
-          )}
-        </div>
-      </div>
+          {/* Clear all filters */}
+          {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}
+        </FilterGroup>
 
-      <div className="rounded-md border">
+        <FilterResults
+          filteredCount={filteredCount}
+          isFiltered={isFiltered}
+          itemLabel={itemLabel}
+          totalCount={totalCount}
+        />
+      </FilterBar>
+
+      {/* Table Card */}
+      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow
+                className="border-b bg-muted/30 hover:bg-muted/30"
+                key={headerGroup.id}
+              >
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    className="h-11 px-4 font-semibold text-xs uppercase tracking-wider"
+                    key={header.id}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -188,11 +255,12 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
+                  className="transition-colors hover:bg-muted/50"
                   data-state={row.getIsSelected() && "selected"}
                   key={row.id}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell className="px-4 py-3" key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -203,11 +271,12 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  className="h-24 text-center"
-                  colSpan={assortmentColumns.length}
-                >
-                  Brak wyników.
+                <TableCell className="p-0" colSpan={assortmentColumns.length}>
+                  {isFiltered ? (
+                    <FilterEmptyState onClear={clearAllFilters} />
+                  ) : (
+                    <NoItemsEmptyState itemName="przedmiot" />
+                  )}
                 </TableCell>
               </TableRow>
             )}
@@ -215,24 +284,44 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
         </Table>
       </div>
 
-      <div className="flex items-center justify-end gap-2">
-        <Button
-          disabled={!table.getCanPreviousPage()}
-          onClick={() => table.previousPage()}
-          size="sm"
-          variant="outline"
-        >
-          Poprzednia
-        </Button>
-        <Button
-          disabled={!table.getCanNextPage()}
-          onClick={() => table.nextPage()}
-          size="sm"
-          variant="outline"
-        >
-          Następna
-        </Button>
-      </div>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-muted-foreground text-sm">
+            Strona{" "}
+            <span className="font-mono font-semibold text-foreground">
+              {currentPage}
+            </span>{" "}
+            z{" "}
+            <span className="font-mono font-semibold text-foreground">
+              {totalPages}
+            </span>
+          </p>
+
+          <div className="flex items-center gap-1">
+            <Button
+              className="gap-1.5"
+              disabled={!table.getCanPreviousPage()}
+              onClick={() => table.previousPage()}
+              size="sm"
+              variant="outline"
+            >
+              <HugeiconsIcon className="size-3.5" icon={ArrowLeft02Icon} />
+              <span className="hidden sm:inline">Poprzednia</span>
+            </Button>
+            <Button
+              className="gap-1.5"
+              disabled={!table.getCanNextPage()}
+              onClick={() => table.nextPage()}
+              size="sm"
+              variant="outline"
+            >
+              <span className="hidden sm:inline">Następna</span>
+              <HugeiconsIcon className="size-3.5" icon={ArrowRight02Icon} />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

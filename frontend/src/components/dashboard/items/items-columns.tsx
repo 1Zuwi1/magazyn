@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { SortableHeader, StaticHeader } from "./sortable-header"
 import type { ItemStats } from "./types"
 
 function getDaysUntilExpiryBadge(days: number | undefined) {
@@ -35,7 +36,9 @@ function getDaysUntilExpiryBadge(days: number | undefined) {
 export const itemsColumns: ColumnDef<ItemStats>[] = [
   {
     accessorKey: "definition.name",
-    header: "Nazwa",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Nazwa</SortableHeader>
+    ),
     cell: ({ row }) => {
       const definition = row.original.definition
       return (
@@ -60,38 +63,54 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
         </div>
       )
     },
+    enableSorting: true,
   },
   {
     accessorKey: "definition.category",
-    header: "Kategoria",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Kategoria</SortableHeader>
+    ),
     cell: ({ row }) => (
       <Badge variant="secondary">{row.original.definition.category}</Badge>
     ),
+    enableSorting: true,
   },
   {
     accessorKey: "totalQuantity",
-    header: "Ilość",
-    cell: ({ row }) => (
-      <div className="font-medium">{row.original.totalQuantity} szt.</div>
+    header: ({ column }) => (
+      <SortableHeader column={column}>Ilość</SortableHeader>
     ),
+    cell: ({ row }) => (
+      <div className="font-medium font-mono">
+        {row.original.totalQuantity} szt.
+      </div>
+    ),
+    enableSorting: true,
   },
   {
     accessorKey: "daysUntilExpiry",
-    header: "Okres przydatności",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Okres przydatności</SortableHeader>
+    ),
     cell: ({ row }) => getDaysUntilExpiryBadge(row.original.daysUntilExpiry),
+    enableSorting: true,
   },
   {
     accessorKey: "definition.isDangerous",
-    header: "Niebezpieczeństwo",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Niebezpieczeństwo</SortableHeader>
+    ),
     cell: ({ row }) =>
       row.original.definition.isDangerous ? (
         <Badge variant="destructive">Niebezpieczny</Badge>
       ) : (
         <Badge variant="outline">Bezpieczny</Badge>
       ),
+    enableSorting: true,
   },
   {
     id: "actions",
+    header: () => <StaticHeader>Akcje</StaticHeader>,
     cell: ({ row }) => {
       return (
         <DropdownMenu>
@@ -125,5 +144,6 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
         </DropdownMenu>
       )
     },
+    enableSorting: false,
   },
 ]

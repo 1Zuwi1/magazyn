@@ -106,14 +106,6 @@ export function SecuritySection({ userEmail }: SecuritySectionProps) {
           <PasswordSection twoFactorMethod={twoFactorMethod} />
         </CardContent>
       </Card>
-
-      <div className="rounded-lg border border-muted-foreground/30 border-dashed bg-muted/20 px-4 py-3">
-        <p className="text-muted-foreground text-xs">
-          Dla dodatkowego bezpieczeństwa aktywuj weryfikację dwuetapową (2FA).
-          Po włączeniu, każde logowanie i zmiana hasła będą wymagać kodu z
-          aplikacji uwierzytelniającej lub SMS.
-        </p>
-      </div>
     </div>
   )
 }

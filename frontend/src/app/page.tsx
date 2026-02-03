@@ -411,7 +411,7 @@ export default function LandingPage() {
             </div>
             <div className="h-px w-full max-w-xs bg-linear-to-r from-transparent via-border to-transparent" />
             <p className="text-muted-foreground/70 text-sm">
-              © 2025 GdzieToLeży. System wewnętrzny.
+              © {new Date().getFullYear()} GdzieToLeży. System wewnętrzny.
             </p>
           </div>
         </div>

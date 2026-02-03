@@ -28,6 +28,9 @@ interface ScannerProps {
   className?: string
   /** Children to show instead of camera (e.g. scan results) */
   children?: ReactNode
+
+  /** Custom trigger for opening the scanner dialog */
+  dialogTrigger?: ReactNode
 }
 
 export const TAB_TRIGGERS = [
@@ -57,6 +60,7 @@ export function Scanner({
   constraints,
   warehouseName,
   className,
+  dialogTrigger,
   children,
 }: ScannerProps) {
   const isMobile = useIsMobile()
@@ -277,21 +281,25 @@ export function Scanner({
       }}
       open={open}
     >
-      <DialogTrigger
-        aria-label="Skaner kodów"
-        className={buttonVariants({
-          variant: "ghost",
-          size: "icon",
-          className: "mr-1 ml-auto size-8 rounded-xl sm:size-10",
-        })}
-        title="Skaner kodów"
-      >
-        <HugeiconsIcon icon={QrCodeIcon} />
-      </DialogTrigger>
+      {dialogTrigger ? (
+        dialogTrigger
+      ) : (
+        <DialogTrigger
+          aria-label="Skaner kodów"
+          className={buttonVariants({
+            variant: "ghost",
+            size: "icon",
+            className: "mr-1 ml-auto size-8 rounded-xl sm:size-10",
+          })}
+          title="Skaner kodów"
+        >
+          <HugeiconsIcon icon={QrCodeIcon} />
+        </DialogTrigger>
+      )}
       <DialogContent
         className={cn(
           "p-0",
-          isMobile ? "h-screen w-screen max-w-none rounded-none" : ""
+          isMobile ? "h-dvh w-screen max-w-none rounded-none" : ""
         )}
         showCloseButton={false}
       >

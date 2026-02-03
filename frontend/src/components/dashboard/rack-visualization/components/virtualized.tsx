@@ -17,6 +17,9 @@ const Virtualized = ({
   containerWidth,
   containerHeight,
   items,
+  selectedSlotIndex,
+  onSelectSlot,
+  onSlotKeyDown,
 }: {
   rows: number
   cols: number
@@ -24,6 +27,12 @@ const Virtualized = ({
   containerWidth: number
   containerHeight: number
   items: ItemSlot[]
+  selectedSlotIndex?: number | null
+  onSelectSlot?: (index: number) => void
+  onSlotKeyDown?: (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    index: number
+  ) => void
 }) => {
   const isMobile = useIsMobile()
   const minCellSize = isMobile ? MOBILE_CELL_SIZE : BASE_CELL_SIZE
@@ -70,6 +79,7 @@ const Virtualized = ({
       style={{
         width: `${containerWidth}px`,
         maxHeight: `${containerHeight}px`,
+        height: "100%",
         overflow: "auto",
         position: "relative",
       }}
@@ -98,14 +108,22 @@ const Virtualized = ({
               const item = items[index]
               const isEmpty = !item
               const coordinate = getSlotCoordinate(index, cols)
+              const isSelected = selectedSlotIndex === index
 
               return (
                 <RackElement
                   className="absolute origin-center"
                   coordinate={coordinate}
                   isEmpty={isEmpty}
+                  isSelected={isSelected}
                   item={item}
                   key={virtualColumn.key}
+                  onClick={onSelectSlot ? () => onSelectSlot(index) : undefined}
+                  onKeyDown={
+                    onSlotKeyDown
+                      ? (event) => onSlotKeyDown(event, index)
+                      : undefined
+                  }
                   style={{
                     top: 0,
                     left: 0,

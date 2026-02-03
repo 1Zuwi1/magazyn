@@ -1,17 +1,24 @@
 "use client"
 
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Fragment } from "react/jsx-runtime"
-import { cn } from "@/lib/utils"
 import { Scanner } from "./scanner/scanner"
 import {
   Breadcrumb,
+  BreadcrumbEllipsis,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
+  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "./ui/breadcrumb"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu"
 import { Separator } from "./ui/separator"
 import { SidebarTrigger } from "./ui/sidebar"
 
@@ -43,9 +50,30 @@ const sanitizeVisibleText = (value: string): string => {
 
 export default function SiteHeader() {
   const pathname = usePathname()
+  const router = useRouter()
   const splitted = pathname.split("/").filter((part) => part !== "")
   let currPath = "/"
   const paths = useTranslations("breadcrumbs")
+  const breadcrumbItems = splitted.map((path) => {
+    currPath += `${path}/`
+    const splittedPath = path.split("-")
+    const isDynamic = splittedPath.length > 1
+    let displayName: string
+    const key = path as Parameters<typeof paths>[0]
+    if (paths.has(key)) {
+      displayName = paths(key)
+    } else {
+      displayName = isDynamic ? splittedPath[0] : decodeURI(path)
+    }
+    return {
+      href: currPath,
+      label: displayName,
+    }
+  })
+  const hasOverflow = breadcrumbItems.length > 3
+  const middleItems = breadcrumbItems.slice(1, -1)
+  const startItem = breadcrumbItems[0]
+  const endItem = breadcrumbItems.at(-1)
 
   return (
     <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
@@ -57,37 +85,77 @@ export default function SiteHeader() {
         />
         <Breadcrumb>
           <BreadcrumbList>
-            {splitted.map((path, index) => {
-              currPath += `${path}/`
-              const splittedPath = path.split("-")
-              const isDynamic = splittedPath.length > 1
-              let displayName: string
-              const key = path as Parameters<typeof paths>[0]
-              if (paths.has(key)) {
-                displayName = paths(key)
-              } else {
-                displayName = isDynamic ? splittedPath[0] : decodeURI(path)
-              }
-              return (
-                <Fragment key={path + index}>
-                  <BreadcrumbItem
-                    className={cn({
-                      "hidden sm:inline": index !== 0,
-                    })}
-                  >
+            {startItem && (
+              <>
+                <BreadcrumbItem>
+                  {startItem === endItem ? (
+                    <BreadcrumbPage className="capitalize">
+                      {startItem.label}
+                    </BreadcrumbPage>
+                  ) : (
                     <BreadcrumbLink
-                      className={cn("capitalize")}
-                      href={currPath}
+                      className="capitalize"
+                      href={startItem.href}
                     >
-                      {displayName}
+                      {startItem.label}
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
+                {startItem !== endItem && hasOverflow && (
+                  <BreadcrumbSeparator />
+                )}
+                {startItem !== endItem && !hasOverflow && (
+                  <BreadcrumbSeparator />
+                )}
+              </>
+            )}
+            {startItem !== endItem && middleItems.length > 0 && (
+              <>
+                <BreadcrumbItem
+                  className={hasOverflow ? undefined : "sm:hidden"}
+                >
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="flex items-center gap-1">
+                      <BreadcrumbEllipsis className="size-4" />
+                      <span className="sr-only">Toggle menu</span>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {middleItems.map((item) => (
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          key={item.href}
+                          onClick={() => router.push(item.href)}
+                        >
+                          {item.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator
+                  className={hasOverflow ? undefined : "sm:hidden"}
+                />
+              </>
+            )}
+            {startItem !== endItem &&
+              !hasOverflow &&
+              middleItems.map((item) => (
+                <Fragment key={item.href}>
+                  <BreadcrumbItem className="hidden sm:inline">
+                    <BreadcrumbLink className="capitalize" href={item.href}>
+                      {item.label}
                     </BreadcrumbLink>
                   </BreadcrumbItem>
-                  {splitted.length - 1 !== index && (
-                    <BreadcrumbSeparator className="hidden sm:inline" />
-                  )}
+                  <BreadcrumbSeparator className="hidden sm:inline" />
                 </Fragment>
-              )
-            })}
+              ))}
+            {startItem !== endItem && endItem && (
+              <BreadcrumbItem>
+                <BreadcrumbPage className="capitalize">
+                  {endItem.label}
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            )}
           </BreadcrumbList>
         </Breadcrumb>
       </div>

@@ -124,14 +124,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
               <div className="absolute -inset-3 rounded-full bg-primary/10 blur-lg" />
               <Logo className="relative" />
             </div>
-            <FieldDescription className="mt-2 max-w-70 text-muted-foreground/80">
+            <FieldDescription className="mt-2 max-w-70 text-center text-muted-foreground/80">
               {isLogin
                 ? "Wprowadź swój adres email i hasło, aby uzyskać dostęp do konta."
                 : "Utwórz konto, aby korzystać z aplikacji."}
             </FieldDescription>
           </div>
           <div
-            className="fade-in mt-2 animate-in space-y-4 duration-500"
+            className="fade-in animate-in space-y-4 duration-500"
             style={getAnimationStyle("200ms")}
           >
             <form.Field name="email">
@@ -183,7 +183,24 @@ export default function AuthForm({ mode }: AuthFormProps) {
               }}
             </form.Field>
 
-            {!isLogin && (
+            {isLogin ? (
+              <form.Field name="rememberMe">
+                {(field) => (
+                  <Field orientation="horizontal">
+                    <Checkbox
+                      checked={field.state.value}
+                      id={field.name}
+                      onCheckedChange={field.handleChange}
+                    />
+                    <FieldContent>
+                      <FieldLabel htmlFor={field.name}>
+                        Zapamiętaj mnie
+                      </FieldLabel>
+                    </FieldContent>
+                  </Field>
+                )}
+              </form.Field>
+            ) : (
               <form.Field name="confirmPassword">
                 {(field) => (
                   <FieldWithState
@@ -196,23 +213,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 )}
               </form.Field>
             )}
-
-            <form.Field name="rememberMe">
-              {(field) => (
-                <Field orientation="horizontal">
-                  <Checkbox
-                    checked={field.state.value}
-                    id={field.name}
-                    onCheckedChange={field.handleChange}
-                  />
-                  <FieldContent>
-                    <FieldLabel htmlFor={field.name}>
-                      Zapamiętaj mnie
-                    </FieldLabel>
-                  </FieldContent>
-                </Field>
-              )}
-            </form.Field>
 
             <Field>
               <form.Subscribe
