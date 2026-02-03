@@ -113,8 +113,11 @@ public class WebAuthnService {
             throw new AuthenticationException(AuthError.TOO_MANY_PASSKEYS.name());
         }
 
-        // Validate unique name for this user
-        String finalKeyName = keyName != null && !keyName.isBlank() ? keyName : "Passkey " + (currentKeys + 1);
+        // Validate unique name for this user (trim whitespace first)
+        String trimmedKeyName = keyName != null ? keyName.strip() : null;
+        String finalKeyName = trimmedKeyName != null && !trimmedKeyName.isEmpty()
+                ? trimmedKeyName
+                : "Passkey " + (currentKeys + 1);
         if (webAuthRepository.existsByUserHandleAndName(userHandle.getBase64Url(), finalKeyName)) {
             throw new AuthenticationException(AuthError.PASSKEY_NAME_ALREADY_EXISTS.name());
         }

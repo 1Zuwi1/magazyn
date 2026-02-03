@@ -159,28 +159,37 @@ public class UserService {
                 .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
 
         if (profileRequest.getPhone() != null) {
-            // Walidacja formatu telefonu (jeśli niepusty)
             String phone = profileRequest.getPhone().strip();
-            if (!phone.isEmpty() && !phone.matches("^[+\\d\\s()-]*$")) {
-                throw new IllegalArgumentException("INVALID_PHONE_FORMAT");
+            if (!phone.isEmpty()) {
+                // Walidacja długości
+                if (phone.length() > 20) {
+                    throw new IllegalArgumentException("INVALID_PHONE_FORMAT");
+                }
+                // Walidacja formatu
+                if (!phone.matches("^[+\\d\\s()-]*$")) {
+                    throw new IllegalArgumentException("INVALID_PHONE_FORMAT");
+                }
+                targetUser.setPhone(phone);
+            } else {
+                targetUser.setPhone(null);
             }
-            targetUser.setPhone(phone.isEmpty() ? null : phone);
         }
 
         if (profileRequest.getLocation() != null) {
             String location = profileRequest.getLocation().strip();
+            if (location.length() > 100) {
+                throw new IllegalArgumentException("INVALID_INPUT");
+            }
             targetUser.setLocation(location.isEmpty() ? null : location);
         }
 
         if (profileRequest.getTeam() != null) {
-            // Enum jest już walidowany przez Jackson deserializację
-
             targetUser.setTeam(profileRequest.getTeam());
         }
 
         if (profileRequest.getFullName() != null) {
             String fullName = profileRequest.getFullName().strip();
-            if (fullName.isEmpty() || fullName.length() < 3) {
+            if (fullName.isEmpty() || fullName.length() < 3 || fullName.length() > 100) {
                 throw new IllegalArgumentException("INVALID_FULL_NAME");
             }
             targetUser.setFullName(fullName);

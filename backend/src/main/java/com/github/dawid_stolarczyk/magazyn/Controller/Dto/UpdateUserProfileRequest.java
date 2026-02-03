@@ -11,12 +11,11 @@ import lombok.Setter;
 @Schema(description = "Request to update user profile by admin")
 public class UpdateUserProfileRequest {
 
-    @Schema(description = "Phone number (optional)", example = "+48 555 019 203")
-    @Size(max = 20, message = "Phone number too long")
+    @Schema(description = "Phone number (optional, max 20 chars after trimming)", example = "+48 555 019 203")
     private String phone;
 
     @Schema(description = "Full name (optional)", example = "Jan Kowalski")
-    @Size(max = 100, message = "Full name too long")
+    @Size(min = 3, max = 100, message = "Full name must be between 3 and 100 characters")
     private String fullName;
 
     @Schema(description = "Location/city (optional)", example = "Gdańsk, Polska")

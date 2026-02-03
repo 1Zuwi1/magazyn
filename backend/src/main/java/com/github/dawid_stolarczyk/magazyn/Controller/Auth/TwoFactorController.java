@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,15 +29,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/2fa")
 @Tag(name = "Two-Factor Authentication", description = "Endpoints for managing 2FA methods and verification")
+@RequiredArgsConstructor
 @Slf4j
 public class TwoFactorController {
     private final TwoFactorService twoFactorService;
     private final WebAuthnService webAuthnService;
 
-    public TwoFactorController(TwoFactorService twoFactorService, WebAuthnService webAuthnService) {
-        this.twoFactorService = twoFactorService;
-        this.webAuthnService = webAuthnService;
-    }
 
     @Operation(summary = "Get user's 2FA methods and passkeys")
     @ApiResponses(value = {

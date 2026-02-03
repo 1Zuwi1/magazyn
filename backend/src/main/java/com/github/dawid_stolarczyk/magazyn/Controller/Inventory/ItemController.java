@@ -58,7 +58,7 @@ public class ItemController {
         }
     }
 
-    @Operation(summary = "Get item by barcode (6-digit GS1-128)")
+    @Operation(summary = "Get item by barcode (14-digit GS1-128)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - returns item with all details including photoUrl",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),
@@ -74,7 +74,7 @@ public class ItemController {
         }
     }
 
-    @Operation(summary = "Create item [ADMIN] - auto-generates 6-digit barcode")
+    @Operation(summary = "Create item [ADMIN] - auto-generates 14-digit barcode")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Success - returns created item with generated barcode",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),
