@@ -12,4 +12,6 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long> {
     boolean existsByBarcode(String barcode);
 
     Optional<Assortment> findByBarcode(String barcode);
+
+    long countByRack_WarehouseId(Long warehouseId);
 }

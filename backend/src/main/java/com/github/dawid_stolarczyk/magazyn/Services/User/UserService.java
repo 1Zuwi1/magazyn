@@ -82,6 +82,7 @@ public class UserService {
     /**
      * Admin: Get all users
      */
+
     public List<UserInfoResponse> adminGetAllUsers(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();

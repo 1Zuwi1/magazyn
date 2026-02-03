@@ -32,19 +32,21 @@ public class WarehouseController {
     private final WarehouseService warehouseService;
     private final WarehouseImportService warehouseImportService;
 
-    @Operation(summary = "Get all warehouses")
-    @ApiResponse(responseCode = "200", description = "Success - returns list of warehouses (id, name, address)",
+    @Operation(summary = "Get all warehouses",
+            description = "Returns list of all warehouses with statistics: racks count, occupied slots, and free slots")
+    @ApiResponse(responseCode = "200", description = "Success - returns list of warehouses (id, name, racksCount, occupiedSlots, freeSlots)",
             content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = WarehouseDto.class))))
     @GetMapping
     public ResponseEntity<ResponseTemplate<List<WarehouseDto>>> getAllWarehouses(HttpServletRequest request) {
         return ResponseEntity.ok(ResponseTemplate.success(warehouseService.getAllWarehouses(request)));
     }
 
-    @Operation(summary = "Get warehouse by ID")
+    @Operation(summary = "Get warehouse by ID",
+            description = "Returns warehouse details with statistics: racks count, occupied slots, and free slots")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success - returns warehouse details",
+            @ApiResponse(responseCode = "200", description = "Success - returns warehouse details (id, name, racksCount, occupiedSlots, freeSlots)",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = WarehouseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error codes: WAREHOUSE_NOT_FOUND, ACCESS_DENIED",
+            @ApiResponse(responseCode = "400", description = "Error codes: WAREHOUSE_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/{id}")
