@@ -59,10 +59,10 @@ export function RackParametersCard({
 
       {/* Parameters List */}
       <div className="divide-y">
-        {parameters.map((param, index) => (
+        {parameters.map((param) => (
           <div
             className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/20"
-            key={index}
+            key={param.label}
           >
             <div
               className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${param.bgColor}`}

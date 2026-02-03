@@ -140,10 +140,10 @@ export function RackStatusCard({
 
       {/* Stats Grid */}
       <div className="grid grid-cols-3 divide-x">
-        {stats.map((stat, index) => (
+        {stats.map((stat) => (
           <div
             className="flex flex-col items-center gap-1 px-3 py-4 transition-colors hover:bg-muted/20"
-            key={index}
+            key={stat.label}
           >
             <div
               className={cn(
