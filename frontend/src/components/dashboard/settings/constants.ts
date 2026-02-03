@@ -1,3 +1,11 @@
+import {
+  Key01Icon,
+  Mail01Icon,
+  SecurityKeyUsbIcon,
+  SmartPhone01Icon,
+} from "@hugeicons/core-free-icons"
+import type { TwoFactorMethod } from "@/lib/schemas"
+
 export const STATUS_CONFIG = {
   LOCKED: { label: "Zablokowane", variant: "destructive" },
   PENDING_VERIFICATION: { label: "Niezweryfikowane", variant: "warning" },
@@ -32,6 +40,13 @@ export const TWO_FACTOR_METHODS = [
     hint: "Uwierzytelnianie bezhasłowe przy użyciu urządzeń z obsługą kluczy bezpieczeństwa.",
   },
 ] as const
+
+export const METHOD_ICONS: Record<TwoFactorMethod, typeof Key01Icon> = {
+  AUTHENTICATOR: Key01Icon,
+  SMS: SmartPhone01Icon,
+  EMAIL: Mail01Icon,
+  PASSKEYS: SecurityKeyUsbIcon,
+}
 
 export const MOCK_PROFILE_FORM = {
   phone: "+48 555 019 203",

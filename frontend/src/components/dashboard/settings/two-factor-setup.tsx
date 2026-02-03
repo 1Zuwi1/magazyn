@@ -1,9 +1,6 @@
 import {
   Copy01Icon,
   Key01Icon,
-  Mail01Icon,
-  SecurityKeyUsbIcon,
-  SmartPhone01Icon,
   Tick01Icon,
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
@@ -26,6 +23,7 @@ import { TFASchema, type TwoFactorMethod } from "@/lib/schemas"
 import {
   AUTHENTICATOR_QR_SIZE,
   COPY_FEEDBACK_TIMEOUT_MS,
+  METHOD_ICONS,
   MOCK_AUTHENTICATOR_SECRET,
   RECOVERY_CODES,
   TWO_FACTOR_METHODS,
@@ -45,13 +43,6 @@ import {
   sendVerificationCode,
   verifyOneTimeCode,
 } from "./utils"
-
-const TWO_FACTOR_METHOD_ICONS: Record<TwoFactorMethod, typeof Key01Icon> = {
-  AUTHENTICATOR: Key01Icon,
-  SMS: SmartPhone01Icon,
-  EMAIL: Mail01Icon,
-  PASSKEYS: SecurityKeyUsbIcon,
-}
 
 const TWO_FACTOR_METHOD_HINTS: Record<TwoFactorMethod, string> = {
   AUTHENTICATOR: "Najpewniejsza metoda",
@@ -189,7 +180,7 @@ function TwoFactorMethodInput({
       value={method}
     >
       {methodsToShow.map((m) => {
-        const Icon = TWO_FACTOR_METHOD_ICONS[m.value as TwoFactorMethod]
+        const Icon = METHOD_ICONS[m.value as TwoFactorMethod]
         const isSelected = method === m.value
 
         return (
@@ -428,7 +419,7 @@ function ConnectedMethods({
   return (
     <div className="space-y-2">
       {linkedMethods.map((linkedMethod) => {
-        const Icon = TWO_FACTOR_METHOD_ICONS[linkedMethod]
+        const Icon = METHOD_ICONS[linkedMethod]
         const label = TWO_FACTOR_METHOD_LABELS[linkedMethod] ?? linkedMethod
         const hint = TWO_FACTOR_METHOD_HINTS[linkedMethod]
 

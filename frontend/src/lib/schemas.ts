@@ -7,7 +7,7 @@ const txtEncoder = new TextEncoder()
 export const TFAMethods = z.enum(["AUTHENTICATOR", "SMS", "EMAIL", "PASSKEYS"])
 export type TwoFactorMethod = z.infer<typeof TFAMethods>
 
-const ResendMethods = TFAMethods.exclude(["AUTHENTICATOR", "PASSKEYS"])
+export const ResendMethods = TFAMethods.exclude(["AUTHENTICATOR", "PASSKEYS"])
 export type ResendType = z.infer<typeof ResendMethods>
 
 export const PasswordSchema = z

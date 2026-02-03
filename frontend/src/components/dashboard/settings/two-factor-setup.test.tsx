@@ -95,7 +95,10 @@ function TwoFactorSetupHarness({
 describe("TwoFactorSetup", () => {
   beforeEach(() => {
     mockUseQuery.mockReturnValue({
-      data: ["EMAIL"],
+      data: {
+        defaultMethod: "EMAIL",
+        methods: ["EMAIL"],
+      },
       isLoading: false,
       refetch: vi.fn(),
     })

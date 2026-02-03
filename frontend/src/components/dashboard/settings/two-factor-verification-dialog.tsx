@@ -1,10 +1,5 @@
 "use client"
 
-import {
-  Key01Icon,
-  Mail01Icon,
-  SmartPhone01Icon,
-} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
@@ -21,10 +16,11 @@ import { apiFetch } from "@/lib/fetcher"
 import {
   Check2FASchema,
   Resend2FASchema,
+  ResendMethods,
   type TwoFactorMethod,
 } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
-import { TWO_FACTOR_METHODS } from "./constants"
+import { METHOD_ICONS, TWO_FACTOR_METHODS } from "./constants"
 import {
   type PasswordVerificationCopy,
   PasswordVerificationSection,
@@ -40,12 +36,6 @@ interface TwoFactorVerificationDialogProps {
   title?: string
   contentClassName?: string
   copy?: PasswordVerificationCopy
-}
-
-const METHOD_ICONS: Record<TwoFactorMethod, typeof Key01Icon> = {
-  AUTHENTICATOR: Key01Icon,
-  SMS: SmartPhone01Icon,
-  EMAIL: Mail01Icon,
 }
 
 export function TwoFactorVerificationDialog({
@@ -113,13 +103,14 @@ export function TwoFactorVerificationDialog({
   }, [defaultMethod, open])
 
   const handleRequestCode = async (method: TwoFactorMethod): Promise<void> => {
-    if (method === "AUTHENTICATOR") {
+    const validatedMethod = ResendMethods.safeParse(method)
+    if (validatedMethod.success === false) {
       return
     }
 
     await apiFetch("/api/2fa/send", Resend2FASchema, {
       method: "POST",
-      body: { method },
+      body: { method: validatedMethod.data },
     })
   }
 
