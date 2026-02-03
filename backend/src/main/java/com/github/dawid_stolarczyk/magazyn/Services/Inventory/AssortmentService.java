@@ -11,6 +11,9 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.ItemRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.RackRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +24,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
+
 @Service
 @RequiredArgsConstructor
 public class AssortmentService {
@@ -29,29 +34,42 @@ public class AssortmentService {
     private final RackRepository rackRepository;
     private final UserRepository userRepository;
     private final BarcodeService barcodeService;
+    private final Bucket4jRateLimiter rateLimiter;
 
     private static final double EPS = 1e-6;
 
-    public List<AssortmentDto> getAllAssortments() {
+    public List<AssortmentDto> getAllAssortments(HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
         return assortmentRepository.findAll().stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
-    public AssortmentDto getAssortmentById(Long id) {
+    public AssortmentDto getAssortmentById(Long id, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
         Assortment assortment = assortmentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
         return mapToDto(assortment);
     }
 
-    public AssortmentDto getAssortmentByBarcode(String barcode) {
+    public AssortmentDto getAssortmentByBarcode(String barcode, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
         Assortment assortment = assortmentRepository.findByBarcode(barcode)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
         return mapToDto(assortment);
     }
 
     @Transactional
-    public AssortmentDto createAssortment(AssortmentDto dto) {
+    public AssortmentDto createAssortment(AssortmentDto dto, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
+        return createAssortmentInternal(dto);
+    }
+
+    /**
+     * Internal method for bulk import - no rate limiting
+     */
+    @Transactional
+    public AssortmentDto createAssortmentInternal(AssortmentDto dto) {
         Item item = itemRepository.findById(dto.getItemId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
         Rack rack = rackRepository.findById(dto.getRackId())
@@ -90,7 +108,8 @@ public class AssortmentService {
     }
 
     @Transactional
-    public AssortmentDto updateAssortment(Long id, AssortmentDto dto) {
+    public AssortmentDto updateAssortment(Long id, AssortmentDto dto, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
         Assortment assortment = assortmentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
 
@@ -113,7 +132,8 @@ public class AssortmentService {
     }
 
     @Transactional
-    public void deleteAssortment(Long id) {
+    public void deleteAssortment(Long id, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
         Assortment assortment = assortmentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
         assortmentRepository.delete(assortment);

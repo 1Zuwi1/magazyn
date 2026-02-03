@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -33,8 +34,8 @@ public class AssortmentController {
     @ApiResponse(responseCode = "200", description = "List of all assortments",
             content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
     @GetMapping
-    public ResponseEntity<ResponseTemplate<List<AssortmentDto>>> getAllAssortments() {
-        return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAllAssortments()));
+    public ResponseEntity<ResponseTemplate<List<AssortmentDto>>> getAllAssortments(HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAllAssortments(request)));
     }
 
     @Operation(summary = "Retrieve a specific assortment placement by its ID.")
@@ -45,9 +46,9 @@ public class AssortmentController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseTemplate<AssortmentDto>> getAssortmentById(@PathVariable Long id) {
+    public ResponseEntity<ResponseTemplate<AssortmentDto>> getAssortmentById(@PathVariable Long id, HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAssortmentById(id)));
+            return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAssortmentById(id, request)));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
         }
@@ -62,8 +63,8 @@ public class AssortmentController {
     })
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<AssortmentDto>> createAssortment(@Valid @RequestBody AssortmentDto assortmentDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(assortmentService.createAssortment(assortmentDto)));
+    public ResponseEntity<ResponseTemplate<AssortmentDto>> createAssortment(@Valid @RequestBody AssortmentDto assortmentDto, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(assortmentService.createAssortment(assortmentDto, request)));
     }
 
     @Operation(summary = "Update an existing assortment placement")
@@ -75,8 +76,8 @@ public class AssortmentController {
     })
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<AssortmentDto>> updateAssortment(@PathVariable Long id, @Valid @RequestBody AssortmentDto assortmentDto) {
-        return ResponseEntity.ok(ResponseTemplate.success(assortmentService.updateAssortment(id, assortmentDto)));
+    public ResponseEntity<ResponseTemplate<AssortmentDto>> updateAssortment(@PathVariable Long id, @Valid @RequestBody AssortmentDto assortmentDto, HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(assortmentService.updateAssortment(id, assortmentDto, request)));
     }
 
     @Operation(summary = "Delete an assortment placement")
@@ -88,8 +89,8 @@ public class AssortmentController {
     })
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<Void>> deleteAssortment(@PathVariable Long id) {
-        assortmentService.deleteAssortment(id);
+    public ResponseEntity<ResponseTemplate<Void>> deleteAssortment(@PathVariable Long id, HttpServletRequest request) {
+        assortmentService.deleteAssortment(id, request);
         return ResponseEntity.ok(ResponseTemplate.success());
     }
 
@@ -115,9 +116,9 @@ public class AssortmentController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/barcode/{code}")
-    public ResponseEntity<ResponseTemplate<AssortmentDto>> getAssortmentByBarcode(@PathVariable String code) {
+    public ResponseEntity<ResponseTemplate<AssortmentDto>> getAssortmentByBarcode(@PathVariable String code, HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAssortmentByBarcode(code)));
+            return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAssortmentByBarcode(code, request)));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
         }

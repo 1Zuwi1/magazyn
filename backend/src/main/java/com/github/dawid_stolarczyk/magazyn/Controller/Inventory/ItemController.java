@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -35,8 +36,8 @@ public class ItemController {
     @ApiResponse(responseCode = "200", description = "List of all items",
             content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
     @GetMapping
-    public ResponseEntity<ResponseTemplate<List<ItemDto>>> getAllItems() {
-        return ResponseEntity.ok(ResponseTemplate.success(itemService.getAllItems()));
+    public ResponseEntity<ResponseTemplate<List<ItemDto>>> getAllItems(HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(itemService.getAllItems(request)));
     }
 
     @Operation(summary = "Get item by ID")
@@ -47,9 +48,25 @@ public class ItemController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseTemplate<ItemDto>> getItemById(@PathVariable Long id) {
+    public ResponseEntity<ResponseTemplate<ItemDto>> getItemById(@PathVariable Long id, HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(ResponseTemplate.success(itemService.getItemById(id)));
+            return ResponseEntity.ok(ResponseTemplate.success(itemService.getItemById(id, request)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Get item by 14-digit barcode")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Item data with photo URL",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "404", description = "Item not found",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @GetMapping("/barcode/{barcode}")
+    public ResponseEntity<ResponseTemplate<ItemDto>> getItemByBarcode(@PathVariable String barcode, HttpServletRequest request) {
+        try {
+            return ResponseEntity.ok(ResponseTemplate.success(itemService.getItemByBarcode(barcode, request)));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
         }
@@ -60,8 +77,8 @@ public class ItemController {
             content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<ItemDto>> createItem(@RequestBody ItemDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(itemService.createItem(dto)));
+    public ResponseEntity<ResponseTemplate<ItemDto>> createItem(@RequestBody ItemDto dto, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(itemService.createItem(dto, request)));
     }
 
     @Operation(summary = "Update an item")
@@ -69,8 +86,8 @@ public class ItemController {
             content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<ItemDto>> updateItem(@PathVariable Long id, @RequestBody ItemDto dto) {
-        return ResponseEntity.ok(ResponseTemplate.success(itemService.updateItem(id, dto)));
+    public ResponseEntity<ResponseTemplate<ItemDto>> updateItem(@PathVariable Long id, @RequestBody ItemDto dto, HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(itemService.updateItem(id, dto, request)));
     }
 
     @Operation(summary = "Delete an item")
@@ -78,8 +95,8 @@ public class ItemController {
             content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class)))
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<Void>> deleteItem(@PathVariable Long id) {
-        itemService.deleteItem(id);
+    public ResponseEntity<ResponseTemplate<Void>> deleteItem(@PathVariable Long id, HttpServletRequest request) {
+        itemService.deleteItem(id, request);
         return ResponseEntity.ok(ResponseTemplate.success());
     }
 
@@ -92,9 +109,9 @@ public class ItemController {
     })
     @PostMapping(value = "/{id}/photo", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<String>> uploadPhoto(@PathVariable Long id, @RequestPart("file") MultipartFile file) {
+    public ResponseEntity<ResponseTemplate<String>> uploadPhoto(@PathVariable Long id, @RequestPart("file") MultipartFile file, HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(ResponseTemplate.success(itemService.uploadPhoto(id, file)));
+            return ResponseEntity.ok(ResponseTemplate.success(itemService.uploadPhoto(id, file, request)));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getMessage()));
         } catch (Exception e) {
@@ -109,9 +126,9 @@ public class ItemController {
             @ApiResponse(responseCode = "404", description = "Photo or item not found")
     })
     @GetMapping(value = "/{id}/photo", produces = MediaType.IMAGE_JPEG_VALUE)
-    public ResponseEntity<byte[]> downloadPhoto(@PathVariable Long id) {
+    public ResponseEntity<byte[]> downloadPhoto(@PathVariable Long id, HttpServletRequest request) {
         try {
-            byte[] data = itemService.downloadPhoto(id);
+            byte[] data = itemService.downloadPhoto(id, request);
             return ResponseEntity.ok(data);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

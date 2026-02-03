@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,8 +61,9 @@ public class InventoryController {
     })
     @PostMapping("/placements/plan")
     public ResponseEntity<ResponseTemplate<PlacementPlanResponse>> planPlacement(
-            @Valid @RequestBody PlacementPlanRequest request) {
-        InventoryPlacementService.PlacementPlanResult result = placementService.buildPlacementPlan(request);
+            @Valid @RequestBody PlacementPlanRequest request,
+            HttpServletRequest httpRequest) {
+        InventoryPlacementService.PlacementPlanResult result = placementService.buildPlacementPlan(request, httpRequest);
         if (!result.success()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ResponseTemplate.error(result.code() != null ? result.code().name() : "PLACEMENT_INVALID"));
@@ -81,8 +83,9 @@ public class InventoryController {
     })
     @PostMapping("/placements/confirm")
     public ResponseEntity<ResponseTemplate<PlacementConfirmationResponse>> confirmPlacement(
-            @Valid @RequestBody PlacementConfirmationRequest request) {
-        PlacementConfirmationResponse response = placementService.confirmPlacement(request);
+            @Valid @RequestBody PlacementConfirmationRequest request,
+            HttpServletRequest httpRequest) {
+        PlacementConfirmationResponse response = placementService.confirmPlacement(request, httpRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(response));
     }
 }

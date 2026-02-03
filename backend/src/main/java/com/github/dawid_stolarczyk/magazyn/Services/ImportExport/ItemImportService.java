@@ -64,7 +64,7 @@ public class ItemImportService extends AbstractImportService<ItemDto, ItemImport
 
     @Override
     protected void processDto(ItemDto dto) {
-        itemService.createItem(dto);
+        itemService.createItemInternal(dto);
     }
 
     @Override

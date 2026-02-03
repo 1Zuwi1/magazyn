@@ -63,7 +63,7 @@ public class RackImportService extends AbstractImportService<RackDto, RackImport
 
     @Override
     protected void processDto(RackDto dto) {
-        rackService.createRack(dto);
+        rackService.createRackInternal(dto);
     }
 
     @Override

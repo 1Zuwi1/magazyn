@@ -37,7 +37,7 @@ public class WarehouseImportService extends AbstractImportService<WarehouseDto, 
 
     @Override
     protected void processDto(WarehouseDto dto) {
-        warehouseService.createWarehouse(dto);
+        warehouseService.createWarehouseInternal(dto);
     }
 
     @Override

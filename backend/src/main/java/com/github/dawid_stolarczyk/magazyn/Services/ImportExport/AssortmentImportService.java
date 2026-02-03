@@ -48,7 +48,7 @@ public class AssortmentImportService extends AbstractImportService<AssortmentDto
 
     @Override
     protected void processDto(AssortmentDto dto) {
-        assortmentService.createAssortment(dto);
+        assortmentService.createAssortmentInternal(dto);
     }
 
     @Override

@@ -5,6 +5,9 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
 import com.github.dawid_stolarczyk.magazyn.Repositories.*;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -16,6 +19,8 @@ import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+
+import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
 @Service
 @AllArgsConstructor
@@ -34,10 +39,12 @@ public class InventoryPlacementService {
     private final WarehouseRepository warehouseRepository;
     private final BarcodeService barcodeService;
     private final PositionReservationRepository reservationRepository;
+    private final Bucket4jRateLimiter rateLimiter;
 
 
     @Transactional
-    public PlacementPlanResult buildPlacementPlan(PlacementPlanRequest request) {
+    public PlacementPlanResult buildPlacementPlan(PlacementPlanRequest request, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
         Item item = itemRepository.findById(request.getItemId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
 
@@ -195,7 +202,8 @@ public class InventoryPlacementService {
      * @throws IllegalArgumentException if placement is invalid or conflicts occur
      */
     @Transactional
-    public PlacementConfirmationResponse confirmPlacement(PlacementConfirmationRequest request) {
+    public PlacementConfirmationResponse confirmPlacement(PlacementConfirmationRequest request, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
         // Walidacja żeby tylko itemId lub barcode było podane
         request.validate();
 

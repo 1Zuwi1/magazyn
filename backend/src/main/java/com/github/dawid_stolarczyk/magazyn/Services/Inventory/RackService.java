@@ -6,6 +6,9 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.Rack;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Warehouse;
 import com.github.dawid_stolarczyk.magazyn.Repositories.RackRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.WarehouseRepository;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,19 +16,24 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
+
 @Service
 @RequiredArgsConstructor
 public class RackService {
     private final RackRepository rackRepository;
     private final WarehouseRepository warehouseRepository;
+    private final Bucket4jRateLimiter rateLimiter;
 
-    public List<RackDto> getAllRacks() {
+    public List<RackDto> getAllRacks(HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
         return rackRepository.findAll().stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
-    public List<RackDto> getRacksByWarehouse(Long warehouseId) {
+    public List<RackDto> getRacksByWarehouse(Long warehouseId, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
         if (!warehouseRepository.existsById(warehouseId)) {
             throw new IllegalArgumentException(InventoryError.WAREHOUSE_NOT_FOUND.name());
         }
@@ -34,14 +42,24 @@ public class RackService {
                 .collect(Collectors.toList());
     }
 
-    public RackDto getRackById(Long id) {
+    public RackDto getRackById(Long id, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
         Rack rack = rackRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.RACK_NOT_FOUND.name()));
         return mapToDto(rack);
     }
 
     @Transactional
-    public RackDto createRack(RackDto rackDto) {
+    public RackDto createRack(RackDto rackDto, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
+        return createRackInternal(rackDto);
+    }
+
+    /**
+     * Internal method for bulk import - no rate limiting
+     */
+    @Transactional
+    public RackDto createRackInternal(RackDto rackDto) {
         validateRackDto(rackDto);
         Warehouse warehouse = warehouseRepository.findById(rackDto.getWarehouseId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.WAREHOUSE_NOT_FOUND.name()));
@@ -54,7 +72,8 @@ public class RackService {
     }
 
     @Transactional
-    public RackDto updateRack(Long id, RackDto rackDto) {
+    public RackDto updateRack(Long id, RackDto rackDto, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
         validateRackDto(rackDto);
         Rack rack = rackRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.RACK_NOT_FOUND.name()));
@@ -69,7 +88,8 @@ public class RackService {
     }
 
     @Transactional
-    public void deleteRack(Long id) {
+    public void deleteRack(Long id, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
         Rack rack = rackRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.RACK_NOT_FOUND.name()));
         rackRepository.delete(rack);

@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,8 +35,8 @@ public class WarehouseController {
     @ApiResponse(responseCode = "200", description = "List of all user warehouses",
             content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
     @GetMapping
-    public ResponseEntity<ResponseTemplate<List<WarehouseDto>>> getAllWarehouses() {
-        return ResponseEntity.ok(ResponseTemplate.success(warehouseService.getAllWarehouses()));
+    public ResponseEntity<ResponseTemplate<List<WarehouseDto>>> getAllWarehouses(HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(warehouseService.getAllWarehouses(request)));
     }
 
     @Operation(summary = "Get warehouse by ID")
@@ -46,8 +47,8 @@ public class WarehouseController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseTemplate<WarehouseDto>> getWarehouseById(@PathVariable Long id) {
-        return ResponseEntity.ok(ResponseTemplate.success(warehouseService.getWarehouseById(id)));
+    public ResponseEntity<ResponseTemplate<WarehouseDto>> getWarehouseById(@PathVariable Long id, HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(warehouseService.getWarehouseById(id, request)));
     }
 
     @Operation(summary = "Create a new warehouse")
@@ -55,8 +56,8 @@ public class WarehouseController {
             content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<WarehouseDto>> createWarehouse(@Valid @RequestBody WarehouseDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(warehouseService.createWarehouse(dto)));
+    public ResponseEntity<ResponseTemplate<WarehouseDto>> createWarehouse(@Valid @RequestBody WarehouseDto dto, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(warehouseService.createWarehouse(dto, request)));
     }
 
     @Operation(summary = "Update a warehouse")
@@ -64,8 +65,8 @@ public class WarehouseController {
             content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<WarehouseDto>> updateWarehouse(@PathVariable Long id, @Valid @RequestBody WarehouseDto dto) {
-        return ResponseEntity.ok(ResponseTemplate.success(warehouseService.updateWarehouse(id, dto)));
+    public ResponseEntity<ResponseTemplate<WarehouseDto>> updateWarehouse(@PathVariable Long id, @Valid @RequestBody WarehouseDto dto, HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(warehouseService.updateWarehouse(id, dto, request)));
     }
 
     @Operation(summary = "Delete a warehouse")
@@ -73,8 +74,8 @@ public class WarehouseController {
             content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class)))
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<Void>> deleteWarehouse(@PathVariable Long id) {
-        warehouseService.deleteWarehouse(id);
+    public ResponseEntity<ResponseTemplate<Void>> deleteWarehouse(@PathVariable Long id, HttpServletRequest request) {
+        warehouseService.deleteWarehouse(id, request);
         return ResponseEntity.ok(ResponseTemplate.success());
     }
 

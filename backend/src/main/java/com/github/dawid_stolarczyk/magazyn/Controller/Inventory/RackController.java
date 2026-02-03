@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -33,16 +34,16 @@ public class RackController {
     @ApiResponse(responseCode = "200", description = "List of all racks",
             content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
     @GetMapping
-    public ResponseEntity<ResponseTemplate<List<RackDto>>> getAllRacks() {
-        return ResponseEntity.ok(ResponseTemplate.success(rackService.getAllRacks()));
+    public ResponseEntity<ResponseTemplate<List<RackDto>>> getAllRacks(HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(rackService.getAllRacks(request)));
     }
 
     @Operation(summary = "Get racks by warehouse ID")
     @ApiResponse(responseCode = "200", description = "List of racks in a warehouse",
             content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
     @GetMapping("/warehouse/{warehouseId}")
-    public ResponseEntity<ResponseTemplate<List<RackDto>>> getRacksByWarehouse(@PathVariable Long warehouseId) {
-        return ResponseEntity.ok(ResponseTemplate.success(rackService.getRacksByWarehouse(warehouseId)));
+    public ResponseEntity<ResponseTemplate<List<RackDto>>> getRacksByWarehouse(@PathVariable Long warehouseId, HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(rackService.getRacksByWarehouse(warehouseId, request)));
     }
 
     @Operation(summary = "Get rack by ID")
@@ -53,8 +54,8 @@ public class RackController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseTemplate<RackDto>> getRackById(@PathVariable Long id) {
-        return ResponseEntity.ok(ResponseTemplate.success(rackService.getRackById(id)));
+    public ResponseEntity<ResponseTemplate<RackDto>> getRackById(@PathVariable Long id, HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(rackService.getRackById(id, request)));
     }
 
     @Operation(summary = "Create a new rack")
@@ -66,8 +67,8 @@ public class RackController {
     })
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<RackDto>> createRack(@Valid @RequestBody RackDto rackDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(rackService.createRack(rackDto)));
+    public ResponseEntity<ResponseTemplate<RackDto>> createRack(@Valid @RequestBody RackDto rackDto, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(rackService.createRack(rackDto, request)));
     }
 
     @Operation(summary = "Update an existing rack")
@@ -79,8 +80,8 @@ public class RackController {
     })
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<RackDto>> updateRack(@PathVariable Long id, @Valid @RequestBody RackDto rackDto) {
-        return ResponseEntity.ok(ResponseTemplate.success(rackService.updateRack(id, rackDto)));
+    public ResponseEntity<ResponseTemplate<RackDto>> updateRack(@PathVariable Long id, @Valid @RequestBody RackDto rackDto, HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(rackService.updateRack(id, rackDto, request)));
     }
 
     @Operation(summary = "Delete a rack")
@@ -92,8 +93,8 @@ public class RackController {
     })
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<Void>> deleteRack(@PathVariable Long id) {
-        rackService.deleteRack(id);
+    public ResponseEntity<ResponseTemplate<Void>> deleteRack(@PathVariable Long id, HttpServletRequest request) {
+        rackService.deleteRack(id, request);
         return ResponseEntity.ok(ResponseTemplate.success());
     }
 
