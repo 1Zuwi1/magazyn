@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.User;
 
+import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserTeam;
@@ -91,7 +92,8 @@ public class UserController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Admin email change failed for user {}", userId, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
+            HttpStatus status = getHttpStatusForAuthError(e.getCode());
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
 
@@ -135,7 +137,8 @@ public class UserController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Admin profile update failed for user {}", userId, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
+            HttpStatus status = getHttpStatusForAuthError(e.getCode());
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
 
@@ -158,7 +161,26 @@ public class UserController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Admin account deletion failed for user {}", userId, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
+            HttpStatus status = getHttpStatusForAuthError(e.getCode());
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
+    }
+
+    /**
+     * Helper method to map authentication error codes to appropriate HTTP status
+     */
+    private HttpStatus getHttpStatusForAuthError(String errorCode) {
+        if (AuthError.RESOURCE_NOT_FOUND.name().equals(errorCode)) {
+            return HttpStatus.NOT_FOUND;
+        } else if (AuthError.ACCESS_FORBIDDEN.name().equals(errorCode) ||
+                AuthError.INSUFFICIENT_PERMISSIONS.name().equals(errorCode)) {
+            return HttpStatus.FORBIDDEN;
+        } else if (AuthError.EMAIL_TAKEN.name().equals(errorCode) ||
+                "INVALID_INPUT".equals(errorCode) ||
+                "INVALID_PHONE_FORMAT".equals(errorCode) ||
+                "INVALID_FULL_NAME".equals(errorCode)) {
+            return HttpStatus.BAD_REQUEST;
+        }
+        return HttpStatus.UNAUTHORIZED;
     }
 }

@@ -2,7 +2,6 @@ package com.github.dawid_stolarczyk.magazyn.Controller.Dto;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserTeam;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +13,6 @@ public class UpdateUserProfileRequest {
 
     @Schema(description = "Phone number (optional)", example = "+48 555 019 203")
     @Size(max = 20, message = "Phone number too long")
-    @Pattern(regexp = "^[+\\d\\s()-]*$", message = "Invalid phone number format")
     private String phone;
 
     @Schema(description = "Full name (optional)", example = "Jan Kowalski")
@@ -26,6 +24,6 @@ public class UpdateUserProfileRequest {
     private String location;
 
     @Schema(description = "Team/department (optional)", example = "OPERATIONS",
-            allowableValues = {"OPERATIONS", "LOGISTICS", "WAREHOUSE", "INVENTORY", "QUALITY_CONTROL", "RECEIVING", "SHIPPING", "ADMINISTRATION", "IT_SUPPORT", "MANAGEMENT"})
+            allowableValues = {"OPERATIONS", "LOGISTICS", "WAREHOUSE", "INVENTORY", "QUALITY_CONTROL", "RECEIVING", "SHIPPING", "IT_SUPPORT", "MANAGEMENT"})
     private UserTeam team;
 }

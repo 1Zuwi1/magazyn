@@ -102,6 +102,7 @@ public class UserService {
 
     /**
      * Admin: Change email for any user
+     * Note: Database UNIQUE constraint on email column provides additional protection against race conditions
      */
     @Transactional
     public void adminChangeEmail(Long targetUserId, String newEmail, HttpServletRequest request) {
@@ -110,6 +111,7 @@ public class UserService {
                 .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
 
         // Sprawdź czy email nie jest już zajęty przez innego użytkownika
+        // Database UNIQUE constraint zapewnia dodatkową ochronę przed race condition
         userRepository.findByEmail(newEmail).ifPresent(existingUser -> {
             if (!existingUser.getId().equals(targetUserId)) {
                 throw new AuthenticationException(AuthError.EMAIL_TAKEN.name());

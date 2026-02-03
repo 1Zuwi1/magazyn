@@ -5,6 +5,7 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Auth.PasskeyRenameRequ
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.WebAuthnCredential;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.Default2faMethod;
 import com.github.dawid_stolarczyk.magazyn.Services.Auth.TwoFactorService;
 import com.github.dawid_stolarczyk.magazyn.Services.Auth.WebAuthnService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -64,7 +65,7 @@ public class TwoFactorController {
     public ResponseEntity<ResponseTemplate<Void>> sendCode(@Valid @RequestBody SendTwoFactorCodeRequest sendRequest,
                                                            HttpServletRequest request) {
         try {
-            if (!sendRequest.getMethod().equals("EMAIL")) {
+            if (sendRequest.getMethod() != Default2faMethod.EMAIL) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ResponseTemplate.error(AuthError.UNSUPPORTED_2FA_METHOD.name()));
             }
@@ -72,7 +73,7 @@ public class TwoFactorController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Failed to send 2FA code for method: {}", sendRequest.getMethod(), e);
-            HttpStatus status = AuthError.INSUFFICIENT_PERMISSIONS.name().equals(e.getCode()) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+            HttpStatus status = getHttpStatusForAuthError(e.getCode());
             return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
@@ -102,7 +103,7 @@ public class TwoFactorController {
             return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateBackupCodes(request)));
         } catch (AuthenticationException e) {
             log.error("Failed to generate backup codes", e);
-            HttpStatus status = AuthError.INSUFFICIENT_PERMISSIONS.name().equals(e.getCode()) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+            HttpStatus status = getHttpStatusForAuthError(e.getCode());
             return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
@@ -144,7 +145,7 @@ public class TwoFactorController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Failed to remove 2FA method: {}", removeRequest.getMethod(), e);
-            HttpStatus status = AuthError.INSUFFICIENT_PERMISSIONS.name().equals(e.getCode()) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+            HttpStatus status = getHttpStatusForAuthError(e.getCode());
             return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
@@ -272,5 +273,15 @@ public class TwoFactorController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ResponseTemplate.error(AuthError.INTERNAL_ERROR.name()));
         }
+    }
+
+    /**
+     * Helper method to map authentication error codes to appropriate HTTP status
+     */
+    private HttpStatus getHttpStatusForAuthError(String errorCode) {
+        if (AuthError.INSUFFICIENT_PERMISSIONS.name().equals(errorCode)) {
+            return HttpStatus.FORBIDDEN;
+        }
+        return HttpStatus.UNAUTHORIZED;
     }
 }
