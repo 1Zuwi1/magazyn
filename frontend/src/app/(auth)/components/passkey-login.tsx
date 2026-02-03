@@ -30,9 +30,15 @@ type SupportState = keyof typeof SUPPORT_LABELS
 
 interface PasskeyLoginProps {
   disabled?: boolean
+  label?: string
+  showSeparator?: boolean
 }
 
-export default function PasskeyLogin({ disabled }: PasskeyLoginProps) {
+export default function PasskeyLogin({
+  disabled,
+  label = "Zaloguj kluczem bezpieczeństwa",
+  showSeparator = true,
+}: PasskeyLoginProps) {
   const router = useRouter()
   const [supportState, setSupportState] = useState<SupportState>("checking")
   const [isLoading, setIsLoading] = useState(false)
@@ -136,12 +142,14 @@ export default function PasskeyLogin({ disabled }: PasskeyLoginProps) {
 
   return (
     <div className="space-y-3">
-      <div className="relative">
-        <Separator className="bg-border/60" />
-        <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-card px-2 text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
-          lub
-        </span>
-      </div>
+      {showSeparator ? (
+        <div className="relative">
+          <Separator className="bg-border/60" />
+          <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-card px-2 text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
+            lub
+          </span>
+        </div>
+      ) : null}
 
       <Button
         className="w-full"
@@ -152,7 +160,7 @@ export default function PasskeyLogin({ disabled }: PasskeyLoginProps) {
         type="button"
         variant="outline"
       >
-        Zaloguj kluczem bezpieczeństwa
+        {label}
       </Button>
     </div>
   )

@@ -4,18 +4,18 @@ import tryCatch from "./try-catch"
 
 // ----------------- API response schema helpers -----------------
 
-const createApiSchemas = <S extends z.ZodTypeAny>(dataSchema: S) =>
+const createApiSchemas = <S extends z.ZodType>(dataSchema: S) =>
   z.discriminatedUnion("success", [
     z.object({ success: z.literal(true), data: dataSchema }),
     z.object({ success: z.literal(false), message: z.string() }),
   ])
 
 const cachedSchemas = new WeakMap<
-  z.ZodTypeAny,
+  z.ZodType,
   ReturnType<typeof createApiSchemas>
 >()
 
-const getCachedSchema = <S extends z.ZodTypeAny>(dataSchema: S) => {
+const getCachedSchema = <S extends z.ZodType>(dataSchema: S) => {
   if (!cachedSchemas.has(dataSchema)) {
     cachedSchemas.set(dataSchema, createApiSchemas(dataSchema))
   }
@@ -36,8 +36,8 @@ export class FetchError extends Error {
 }
 
 export type ApiMethodSchema = z.ZodObject<{
-  input?: z.ZodTypeAny
-  output: z.ZodTypeAny
+  input?: z.ZodType
+  output: z.ZodType
 }>
 
 export type ApiSchema = z.ZodObject<Partial<Record<ApiMethod, ApiMethodSchema>>>
@@ -52,7 +52,7 @@ export type InferApiInput<
   S extends ApiSchema,
   M extends ApiMethod,
 > = S["shape"][M] extends ApiMethodSchema
-  ? S["shape"][M]["shape"]["input"] extends z.ZodTypeAny
+  ? S["shape"][M]["shape"]["input"] extends z.ZodType
     ? output<S["shape"][M]["shape"]["input"]>
     : never
   : never
@@ -345,7 +345,7 @@ async function throwFetchErrorFromResponse(res: Response): Promise<never> {
 function resolveOutputSchema<S extends ApiSchema>(
   dataSchema: S,
   method: ApiMethod
-): z.ZodTypeAny {
+): z.ZodType {
   const methodSchema = dataSchema.shape[method]
   if (!methodSchema) {
     throw new FetchError(`No schema defined for HTTP method: ${method}`, 500)

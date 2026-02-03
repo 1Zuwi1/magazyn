@@ -7,7 +7,8 @@ const txtEncoder = new TextEncoder()
 export const TFAMethods = z.enum(["AUTHENTICATOR", "SMS", "EMAIL", "PASSKEYS"])
 export type TwoFactorMethod = z.infer<typeof TFAMethods>
 
-export type ResendType = Exclude<TwoFactorMethod, "AUTHENTICATOR">
+const ResendMethods = TFAMethods.exclude(["AUTHENTICATOR", "PASSKEYS"])
+export type ResendType = z.infer<typeof ResendMethods>
 
 export const PasswordSchema = z
   .string()
@@ -187,7 +188,7 @@ export const Verify2FASchema = createApiSchema({
 export const Resend2FASchema = createApiSchema({
   POST: {
     input: z.object({
-      method: TFAMethods.exclude(["AUTHENTICATOR", "PASSKEYS"]),
+      method: ResendMethods,
     }),
     output: z.null(),
   },

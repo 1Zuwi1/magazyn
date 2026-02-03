@@ -29,7 +29,6 @@ export default async function TwoFactorPage() {
   }
 
   const [err, linkedMethods] = await tryCatch(apiFetch("/api/2fa", TFASchema))
-  
 
   if (err) {
     redirect("/login")

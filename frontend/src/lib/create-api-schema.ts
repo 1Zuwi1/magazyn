@@ -8,18 +8,18 @@ import type { ApiMethod, ApiMethodSchema, ApiSchema } from "./fetcher"
 // })
 
 type MethodConfig =
-  | { output: z.ZodTypeAny }
-  | { input: z.ZodTypeAny; output: z.ZodTypeAny }
+  | { output: z.ZodType }
+  | { input: z.ZodType; output: z.ZodType }
 
 type ApiSchemaConfig = Partial<Record<ApiMethod, MethodConfig>>
 
 type ShapeFromConfig<C extends ApiSchemaConfig> = {
   [K in keyof C]-?: C[K] extends {
-    input: infer I extends z.ZodTypeAny
-    output: infer O extends z.ZodTypeAny
+    input: infer I extends z.ZodType
+    output: infer O extends z.ZodType
   }
     ? z.ZodObject<{ input: I; output: O }>
-    : C[K] extends { output: infer O extends z.ZodTypeAny }
+    : C[K] extends { output: infer O extends z.ZodType }
       ? z.ZodObject<{ output: O }>
       : never
 }

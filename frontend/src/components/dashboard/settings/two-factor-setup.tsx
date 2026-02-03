@@ -2,6 +2,7 @@ import {
   Copy01Icon,
   Key01Icon,
   Mail01Icon,
+  SecurityKeyUsbIcon,
   SmartPhone01Icon,
   Tick01Icon,
   Tick02Icon,
@@ -49,12 +50,14 @@ const TWO_FACTOR_METHOD_ICONS: Record<TwoFactorMethod, typeof Key01Icon> = {
   AUTHENTICATOR: Key01Icon,
   SMS: SmartPhone01Icon,
   EMAIL: Mail01Icon,
+  PASSKEYS: SecurityKeyUsbIcon,
 }
 
 const TWO_FACTOR_METHOD_HINTS: Record<TwoFactorMethod, string> = {
   AUTHENTICATOR: "Najpewniejsza metoda",
   SMS: "Kod SMS",
   EMAIL: "Kod e-mail",
+  PASSKEYS: "Uwierzytelnianie kluczem dostępu",
 }
 
 const TWO_FACTOR_METHOD_LABELS: Record<TwoFactorMethod, string> =
@@ -874,9 +877,9 @@ export function TwoFactorSetup({
     if (!linkedMethods) {
       return
     }
-    if (linkedMethods.includes(method)) {
+    if (linkedMethods.methods.includes(method)) {
       const available = TWO_FACTOR_METHODS.find(
-        (m) => !linkedMethods.includes(m.value)
+        (m) => !linkedMethods.methods.includes(m.value)
       )?.value
       if (available) {
         onMethodChange(available)
@@ -956,7 +959,7 @@ export function TwoFactorSetup({
     <div className="space-y-6">
       <TwoFactorConfigurationSection
         isLinkedMethodsLoading={isLinkedMethodsLoading}
-        linkedMethods={linkedMethods}
+        linkedMethods={linkedMethods?.methods}
         method={method}
         onCancelSetup={handleCancelSetup}
         onMethodChange={onMethodChange}
