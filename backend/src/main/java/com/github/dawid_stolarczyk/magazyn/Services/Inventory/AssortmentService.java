@@ -118,9 +118,23 @@ public class AssortmentService {
                 return mapToDto(assortmentRepository.save(assortment));
 
             } catch (DataIntegrityViolationException ex) {
-                // Check if it's a barcode collision
+                // Check if it's a barcode collision (unique constraint violation)
                 String message = ex.getMostSpecificCause().getMessage();
-                if (message != null && message.toLowerCase().contains("barcode")) {
+                boolean isBarcodeCollision = false;
+
+                if (message != null) {
+                    String lowerMessage = message.toLowerCase();
+                    // Check for barcode-specific unique constraint violation
+                    // MySQL: "Duplicate entry ... for key 'barcode'" or "for key 'UK_barcode'"
+                    // PostgreSQL: "duplicate key value violates unique constraint"
+                    isBarcodeCollision = (lowerMessage.contains("barcode") &&
+                                         (lowerMessage.contains("duplicate") ||
+                                          lowerMessage.contains("unique"))) ||
+                                         lowerMessage.contains("uk_barcode") ||
+                                         lowerMessage.contains("idx_barcode");
+                }
+
+                if (isBarcodeCollision) {
                     if (attempt < maxRetries) {
                         log.warn("Barcode collision detected on attempt {}/{}, retrying...", attempt, maxRetries);
                         // Small delay before retry to reduce collision probability
