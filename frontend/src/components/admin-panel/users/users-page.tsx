@@ -55,7 +55,7 @@ export default function UsersMain() {
   }, [search])
 
   const stats = useMemo(() => {
-    const activeCount = users.filter((user) => user.status === "active").length
+    const activeCount = users.filter((user) => user.status === "ACTIVE").length
     return {
       total: users.length,
       active: activeCount,
@@ -212,16 +212,16 @@ export default function UsersMain() {
                       <Badge
                         className="capitalize"
                         variant={
-                          user.status === "active" ? "success" : "secondary"
+                          user.status === "ACTIVE" ? "success" : "secondary"
                         }
                       >
-                        {user.status === "active" ? "Aktywny" : "Nieaktywny"}
+                        {user.status === "ACTIVE" ? "Aktywny" : "Nieaktywny"}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
                         className="capitalize"
-                        variant={user.role === "admin" ? "default" : "outline"}
+                        variant={user.role === "ADMIN" ? "default" : "outline"}
                       >
                         {user.role}
                       </Badge>

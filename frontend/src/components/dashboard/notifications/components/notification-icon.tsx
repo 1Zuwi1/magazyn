@@ -46,13 +46,13 @@ function getNotificationIcon(type: NotificationType): IconSvgElement {
 
 function getSeverityConfig(severity: NotificationSeverity) {
   switch (severity) {
-    case "critical":
+    case "CRITICAL":
       return {
         bg: "bg-destructive/10",
         text: "text-destructive",
         border: "border-destructive/20",
       }
-    case "warning":
+    case "WARNING":
       return {
         bg: "bg-orange-500/10",
         text: "text-orange-600 dark:text-orange-400",

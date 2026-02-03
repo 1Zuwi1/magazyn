@@ -53,7 +53,7 @@ const NOTIFICATION_FILTERS: {
 // Utility functions
 function getSeverityConfig(severity: NotificationSeverity) {
   switch (severity) {
-    case "critical":
+    case "CRITICAL":
       return {
         variant: "destructive" as const,
         label: "Krytyczne",
@@ -61,7 +61,7 @@ function getSeverityConfig(severity: NotificationSeverity) {
         textColor: "text-destructive",
         borderColor: "border-destructive/30",
       }
-    case "warning":
+    case "WARNING":
       return {
         variant: "warning" as const,
         label: "Ostrzeżenie",

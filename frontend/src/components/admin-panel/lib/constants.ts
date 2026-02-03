@@ -44,8 +44,8 @@ export const DEFAULT_USER: User = {
   username: "",
   email: "",
   team: "",
-  status: "active" as Status,
-  role: "user" as Role,
+  status: "ACTIVE" as Status,
+  role: "USER" as Role,
 }
 
 export const THRESHOLD = 90

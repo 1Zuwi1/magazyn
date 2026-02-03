@@ -28,7 +28,7 @@ import { AdminStatCard } from "./stat-card"
 export function AdminOverview() {
   const stats = useMemo(() => {
     const activeUsers = MOCK_USERS.filter(
-      (user) => user.status === "active"
+      (user) => user.status === "ACTIVE"
     ).length
     const totalItems = MOCK_WAREHOUSES.reduce(
       (sum, warehouse) =>

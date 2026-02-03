@@ -24,13 +24,13 @@ import { UserFormSchema } from "@/lib/schemas/csv-schemas"
 import { DEFAULT_USER } from "../../lib/constants"
 
 const roles: { label: string; value: Role }[] = [
-  { label: "Użytkownik", value: "user" },
-  { label: "Administrator", value: "admin" },
+  { label: "Użytkownik", value: "USER" },
+  { label: "Administrator", value: "ADMIN" },
 ]
 
 const statuses: { label: string; value: Status }[] = [
-  { label: "Aktywny", value: "active" },
-  { label: "Nieaktywny", value: "inactive" },
+  { label: "Aktywny", value: "ACTIVE" },
+  { label: "Nieaktywny", value: "INACTIVE" },
 ]
 
 interface ActionDialogProps {
