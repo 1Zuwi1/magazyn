@@ -1,27 +1,31 @@
 "use client"
 
+import { Add01Icon, Package, Warehouse } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
-import type { Warehouse } from "@/components/dashboard/types"
+import type { Warehouse as WarehouseType } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import { AdminPageHeader } from "../components/admin-page-header"
+import { ADMIN_NAV_LINKS } from "../lib/constants"
+import { WarehouseCard } from "./components/warehouse-card"
 import {
   WarehouseDialog,
   type WarehouseFormData,
 } from "./components/warehouse-dialog"
-import { WarehouseGrid } from "./components/warehouse-grid"
+
 export default function WarehousesMain() {
-  const [warehouses, setWarehouses] = useState<Warehouse[]>(
-    MOCK_WAREHOUSES as Warehouse[]
+  const [warehouses, setWarehouses] = useState<WarehouseType[]>(
+    MOCK_WAREHOUSES as WarehouseType[]
   )
   const [open, setOpen] = useState(false)
   const [selectedWarehouse, setSelectedWarehouse] = useState<
-    Warehouse | undefined
+    WarehouseType | undefined
   >(undefined)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [warehouseToDelete, setWarehouseToDelete] = useState<
-    Warehouse | undefined
+    WarehouseType | undefined
   >(undefined)
 
   const handleAddWarehouse = () => {
@@ -29,12 +33,12 @@ export default function WarehousesMain() {
     setOpen(true)
   }
 
-  const handleEditWarehouse = (warehouse: Warehouse) => {
+  const handleEditWarehouse = (warehouse: WarehouseType) => {
     setSelectedWarehouse(warehouse)
     setOpen(true)
   }
 
-  const handleDeleteWarehouse = (warehouse: Warehouse) => {
+  const handleDeleteWarehouse = (warehouse: WarehouseType) => {
     setWarehouseToDelete(warehouse)
     setDeleteDialogOpen(true)
   }
@@ -52,7 +56,7 @@ export default function WarehousesMain() {
         prev.map((w) => (w.id === data.id ? { ...w, name: data.name } : w))
       )
     } else {
-      const newWarehouse: Warehouse = {
+      const newWarehouse: WarehouseType = {
         id: data.id,
         name: data.name,
         capacity: 0,
@@ -63,25 +67,89 @@ export default function WarehousesMain() {
     }
   }
 
+  // Calculate stats
+  const totalCapacity = warehouses.reduce((acc, w) => acc + w.capacity, 0)
+  const totalUsed = warehouses.reduce((acc, w) => acc + w.used, 0)
+  const totalRacks = warehouses.reduce((acc, w) => acc + w.racks.length, 0)
+
   return (
-    <section className="flex flex-col gap-6 p-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-semibold text-2xl">Zarządzaj magazynami</h1>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <AdminPageHeader
+        actions={
+          <Button onClick={handleAddWarehouse}>
+            <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
+            Dodaj magazyn
+          </Button>
+        }
+        description="Zarządzaj magazynami i ich regałami"
+        icon={Warehouse}
+        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+          title: link.title,
+          url: link.url,
+        }))}
+        title="Magazyny"
+      >
+        {/* Quick Stats */}
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
+            <span className="font-mono font-semibold text-primary">
+              {warehouses.length}
+            </span>
+            <span className="text-muted-foreground text-xs">magazynów</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
+            <HugeiconsIcon
+              className="size-3.5 text-muted-foreground"
+              icon={Package}
+            />
+            <span className="font-mono font-semibold">{totalRacks}</span>
+            <span className="text-muted-foreground text-xs">regałów</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
+            <span className="text-muted-foreground text-xs">Zajętość:</span>
+            <span className="font-mono font-semibold">
+              {totalCapacity > 0
+                ? Math.round((totalUsed / totalCapacity) * 100)
+                : 0}
+              %
+            </span>
+          </div>
         </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          <Button onClick={handleAddWarehouse}>Dodaj magazyn</Button>
+      </AdminPageHeader>
+
+      {/* Warehouse Grid */}
+      {warehouses.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/20 py-16">
+          <div className="flex size-14 items-center justify-center rounded-full bg-muted">
+            <HugeiconsIcon
+              className="size-7 text-muted-foreground"
+              icon={Warehouse}
+            />
+          </div>
+          <p className="mt-4 font-medium text-foreground">Brak magazynów</p>
+          <p className="mt-1 text-muted-foreground text-sm">
+            Dodaj pierwszy magazyn, aby rozpocząć
+          </p>
+          <Button className="mt-4" onClick={handleAddWarehouse}>
+            <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
+            Dodaj magazyn
+          </Button>
         </div>
-      </header>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {warehouses.map((warehouse) => (
+            <WarehouseCard
+              key={warehouse.id}
+              onDelete={handleDeleteWarehouse}
+              onEdit={handleEditWarehouse}
+              warehouse={warehouse}
+            />
+          ))}
+        </div>
+      )}
 
-      <Separator />
-
-      <WarehouseGrid
-        onDelete={handleDeleteWarehouse}
-        onEdit={handleEditWarehouse}
-        warehouses={warehouses}
-      />
-
+      {/* Dialogs */}
       <WarehouseDialog
         currentRow={
           selectedWarehouse
@@ -101,6 +169,6 @@ export default function WarehousesMain() {
         open={deleteDialogOpen}
         title="Usuń magazyn"
       />
-    </section>
+    </div>
   )
 }

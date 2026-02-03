@@ -1,18 +1,31 @@
 "use client"
 
+import {
+  Add01Icon,
+  ArrowLeft02Icon,
+  GridIcon,
+  Package,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import Link from "next/link"
 import { useState } from "react"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
 import { mapRackCsv } from "@/components/admin-panel/warehouses/csv/utils/map-csv"
-import type { Rack, Warehouse } from "@/components/dashboard/types"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import type {
+  Rack,
+  Warehouse as WarehouseType,
+} from "@/components/dashboard/types"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import { AdminPageHeader } from "../../components/admin-page-header"
+import { ADMIN_NAV_LINKS } from "../../lib/constants"
 import type { CsvRowType, RackFormData } from "../csv/utils/types"
 import { RackDialog } from "./rack-dialog"
 import { RackGrid } from "./racks-grid"
 
 interface AdminRacksPageProps {
-  warehouse: Warehouse
+  warehouse: WarehouseType
 }
 
 export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
@@ -67,31 +80,76 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     setRacks((prev) => [...prev, ...newRacks])
   }
 
+  // Calculate stats
+  const totalWeight = racks.reduce((acc, r) => acc + r.currentWeight, 0)
+  const totalItems = racks.reduce((acc, r) => acc + r.items.length, 0)
+
   return (
-    <section className="flex flex-col gap-6 p-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-semibold text-2xl">
-            Regały w magazynie: {warehouse.name}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {racks.length} regałów
-          </p>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <AdminPageHeader
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <CsvImporter onImport={handleCsvImport} type="rack" />
+            <Button onClick={handleAddRack}>
+              <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
+              Dodaj regał
+            </Button>
+          </div>
+        }
+        description={`Zarządzaj regałami w magazynie ${warehouse.name}`}
+        icon={GridIcon}
+        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+          title: link.title,
+          url: link.url,
+        }))}
+        title="Regały"
+      >
+        {/* Quick Stats & Back Link */}
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <Link
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "gap-2"
+            )}
+            href="/admin/warehouses"
+          >
+            <HugeiconsIcon className="size-4" icon={ArrowLeft02Icon} />
+            Wróć do magazynów
+          </Link>
+          <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
+            <HugeiconsIcon
+              className="size-3.5 text-muted-foreground"
+              icon={GridIcon}
+            />
+            <span className="font-mono font-semibold text-primary">
+              {racks.length}
+            </span>
+            <span className="text-muted-foreground text-xs">regałów</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
+            <HugeiconsIcon
+              className="size-3.5 text-muted-foreground"
+              icon={Package}
+            />
+            <span className="font-mono font-semibold">{totalItems}</span>
+            <span className="text-muted-foreground text-xs">przedmiotów</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
+            <span className="text-muted-foreground text-xs">Łączna waga:</span>
+            <span className="font-mono font-semibold">{totalWeight} kg</span>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <CsvImporter onImport={handleCsvImport} type="rack" />
-          <Button onClick={handleAddRack}>Dodaj regał</Button>
-        </div>
-      </header>
+      </AdminPageHeader>
 
-      <Separator />
-
+      {/* Rack Grid */}
       <RackGrid
         onDelete={handleDeleteRack}
         onEdit={handleEditRack}
         racks={racks}
       />
 
+      {/* Dialogs */}
       <RackDialog
         currentRow={selectedRack}
         onOpenChange={setDialogOpen}
@@ -106,6 +164,6 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
         open={deleteDialogOpen}
         title="Usuń regał"
       />
-    </section>
+    </div>
   )
 }

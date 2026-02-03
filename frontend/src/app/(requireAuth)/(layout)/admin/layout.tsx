@@ -5,5 +5,5 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  return <main className="flex flex-col gap-4">{children}</main>
+  return <main className="flex flex-col gap-6">{children}</main>
 }
