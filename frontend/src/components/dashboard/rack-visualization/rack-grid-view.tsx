@@ -250,10 +250,11 @@ export function RackGridView({
       {totalRacks > 1 && (
         <div className="flex items-center justify-center gap-3 border-t bg-muted/20 px-4 py-3">
           {/* Rack dots indicator */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5" role="tablist">
             {Array.from({ length: totalRacks }).map((_, index) => (
               <button
                 aria-label={`Regał ${index + 1}`}
+                aria-selected={index === currentRackIndex}
                 className={`size-2 rounded-full transition-all ${
                   index === currentRackIndex
                     ? "scale-125 bg-primary"
@@ -264,6 +265,7 @@ export function RackGridView({
                   // Navigate to specific rack
                   onSetRack(index)
                 }}
+                role="tab"
                 type="button"
               />
             ))}

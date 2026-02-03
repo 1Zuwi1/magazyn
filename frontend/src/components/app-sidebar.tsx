@@ -6,8 +6,8 @@ import {
   SidebarContent,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
+  sidebarMenuButtonVariants,
 } from "@/components/ui/sidebar"
 import { navigationItems } from "@/config/navigation"
 import Logo from "./logo"
@@ -19,9 +19,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="data-[slot=sidebar-menu-button]:p-2.5!">
-              <Logo href="/" />
-            </SidebarMenuButton>
+            <Logo
+              className={sidebarMenuButtonVariants({
+                className: "data-[slot=sidebar-menu-button]:p-2.5!",
+              })}
+              href="/dashboard"
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

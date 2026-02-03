@@ -49,19 +49,38 @@ export default function SidebarButton({ item }: { item: NavigationItem }) {
               )}
               isActive={isActive}
               render={
-                <Button variant="ghost">
+                <Button
+                  aria-label={`Wybierz kategorię ${item.title}`}
+                  id={`button-${item.href}`}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === "Enter" &&
+                      (event.target as HTMLElement).id === `button-${item.href}`
+                    ) {
+                      document.getElementById(`link-${item.href}`)?.click()
+                    }
+                  }}
+                  tabIndex={0}
+                  variant="ghost"
+                >
                   <Link
                     className="mr-8 flex h-full w-full p-2"
                     href={item.href}
                     id={`link-${item.href}`}
+                    tabIndex={-1}
                   >
-                    <HugeiconsIcon className="mr-2 size-5" icon={item.icon} />
+                    <HugeiconsIcon
+                      className="mr-2 size-5"
+                      icon={item.icon}
+                      tabIndex={-1}
+                    />
                     {item.title}
                   </Link>
                   {hasItems && (
                     <HugeiconsIcon
                       className="absolute right-2 transition-transform duration-200 group-data-panel-open/collapsible:rotate-90"
                       icon={ChevronRight}
+                      tabIndex={0}
                     />
                   )}
                 </Button>

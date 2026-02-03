@@ -44,9 +44,10 @@ export default function RackElement({
           ? "border-muted-foreground/20 border-dashed bg-muted/20 hover:border-muted-foreground/40 hover:bg-muted/40"
           : "border-border bg-card shadow-sm hover:shadow-md hover:ring-2 hover:ring-primary/20",
         statusRing,
-        isSelected && "outline outline-2 outline-primary/60 outline-offset-2",
+        isSelected && "outline-2 outline-primary/60 outline-offset-2",
         className
       )}
+      tabIndex={isEmpty ? -1 : 0}
       type="button"
       {...props}
     >

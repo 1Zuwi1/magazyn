@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
     remotePatterns:
       process.env.NODE_ENV !== "production"
         ? [new URL("https://placehold.co/**")]
-        : [],
+        : undefined,
     dangerouslyAllowSVG: process.env.NODE_ENV !== "production",
   },
   experimental: {
