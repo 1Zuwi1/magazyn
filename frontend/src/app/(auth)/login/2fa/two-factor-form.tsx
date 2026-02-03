@@ -6,17 +6,13 @@ import { useForm } from "@tanstack/react-form"
 import { REGEXP_ONLY_DIGITS } from "input-otp"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import AuthCard from "@/app/(auth)/components/auth-card"
+import { FieldWithState } from "@/components/helpers/field-state"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
+import { FieldDescription, FieldGroup } from "@/components/ui/field"
 import {
   InputOTP,
   InputOTPGroup,
@@ -24,12 +20,14 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { apiFetch } from "@/lib/fetcher"
-import { Resend2FASchema, Verify2FASchema } from "@/lib/schemas"
+import {
+  Resend2FASchema,
+  type ResendType,
+  type TwoFactorMethod,
+  Verify2FASchema,
+} from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
-import { getAnimationStyle } from "@/lib/utils"
-
-export type TwoFactorMethod = "authenticator" | "sms" | "email"
-export type ResendType = Exclude<TwoFactorMethod, "authenticator">
+import { cn, getAnimationStyle } from "@/lib/utils"
 
 interface TwoFactorFormProps {
   linkedMethods: TwoFactorMethod[]
@@ -46,23 +44,26 @@ export default function TwoFactorForm({
   methodSwitchLabels,
   otpLength,
 }: TwoFactorFormProps) {
-  const defaultMethod = linkedMethods[0] ?? "email"
-  const [method, setMethod] = useState<TwoFactorMethod>(defaultMethod)
+  if (linkedMethods.length === 0) {
+    throw new Error("TwoFactorForm requires at least one linked 2FA method.")
+  }
+  const [defaultMethod] = useState(() => linkedMethods[0])
   const [isResending, setIsResending] = useState(false)
   const autoSubmittedRef = useRef(false)
   const router = useRouter()
 
   const form = useForm({
-    defaultValues: { code: "" },
+    defaultValues: { code: "", method: defaultMethod },
     onSubmit: async ({ value }) => {
       try {
         const [err] = await tryCatch(
-          apiFetch("/api/auth/login/2fa/check", Verify2FASchema, {
+          apiFetch("/api/2fa/check", Verify2FASchema, {
             method: "POST",
-            body: { method, code: value.code },
+            body: { method: value.method, code: value.code },
           })
         )
         if (err) {
+          console.error(err)
           toast.error(
             "Nieprawidłowy kod lub błąd weryfikacji. Spróbuj ponownie."
           )
@@ -70,6 +71,8 @@ export default function TwoFactorForm({
         }
         toast.success("Zweryfikowano!")
         router.push("/dashboard")
+      } catch (e) {
+        console.error(e)
       } finally {
         autoSubmittedRef.current = false
       }
@@ -79,40 +82,38 @@ export default function TwoFactorForm({
     },
   })
 
-  const alternatives = useMemo(
-    () => linkedMethods.filter((m) => m !== method),
-    [method, linkedMethods]
+  const resendCode = useCallback(
+    async (m: ResendType, showNotSupportedError = true) => {
+      if (!resendMethods.includes(m)) {
+        if (showNotSupportedError) {
+          toast.error("Nieobsługiwana metoda ponownego wysyłania kodu.")
+        }
+        return false
+      }
+      setIsResending(true)
+      const [err] = await tryCatch(
+        apiFetch("/api/2fa/send", Resend2FASchema, {
+          method: "POST",
+          body: { method: m },
+        })
+      )
+      setIsResending(false)
+
+      if (err) {
+        toast.error("Nie udało się wysłać kodu ponownie. Spróbuj za chwilę.")
+        return false
+      }
+
+      toast.success(
+        m === "SMS" ? "Wysłano nowy kod SMS." : "Wysłano nowy kod e-mailem."
+      )
+      return true
+    },
+    [resendMethods]
   )
 
-  const canResend = resendMethods.includes(method as ResendType)
-
-  async function resendCode(m: ResendType) {
-    if (!resendMethods.includes(m)) {
-      toast.error("Nieobsługiwana metoda ponownego wysyłania kodu.")
-      return false
-    }
-    setIsResending(true)
-    const [err] = await tryCatch(
-      apiFetch("/api/auth/login/2fa/resend", Resend2FASchema, {
-        method: "POST",
-        body: { method: m },
-      })
-    )
-    setIsResending(false)
-
-    if (err) {
-      toast.error("Nie udało się wysłać kodu ponownie. Spróbuj za chwilę.")
-      return false
-    }
-
-    toast.success(
-      m === "sms" ? "Wysłano nowy kod SMS." : "Wysłano nowy kod e-mailem."
-    )
-    return true
-  }
-
   async function handleSwitchMethod(next: TwoFactorMethod) {
-    setMethod(next)
+    form.setFieldValue("method", next)
     form.resetField("code")
 
     autoSubmittedRef.current = false
@@ -121,6 +122,10 @@ export default function TwoFactorForm({
       await resendCode(next as ResendType)
     }
   }
+
+  useEffect(() => {
+    resendCode(defaultMethod as ResendType, false)
+  }, [defaultMethod, resendCode])
 
   return (
     <AuthCard>
@@ -143,128 +148,162 @@ export default function TwoFactorForm({
               Cofnij do logowania
             </Link>
           </div>
-          <div
-            className="fade-in flex animate-in flex-col items-center gap-3 text-center duration-500"
-            style={getAnimationStyle("100ms")}
+          <form.Subscribe
+            selector={(state) => ({
+              method: state.values.method,
+              isSubmitting: state.isSubmitting,
+            })}
           >
-            <div className="relative">
-              <div className="absolute -inset-3 rounded-full bg-primary/10 blur-lg" />
-              <Logo className="relative" />
-            </div>
-            <FieldDescription className="mt-2 text-muted-foreground/80">
-              {methodTitles[method]}
-            </FieldDescription>
-          </div>
+            {({ method, isSubmitting }) => {
+              const alternatives = linkedMethods.filter((m) => m !== method)
+              const canResend = resendMethods.includes(method as ResendType)
+              const slotClassName =
+                "gap-2.5 *:data-[slot=input-otp-slot]:h-16 *:data-[slot=input-otp-slot]:w-12 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-xl"
 
-          <div
-            className="fade-in mt-2 animate-in space-y-4 duration-500"
-            style={getAnimationStyle("200ms")}
-          >
-            <form.Field name="code">
-              {(field) => (
-                <Field disabled={form.state.isSubmitting || isResending}>
-                  <FieldLabel className="sr-only" htmlFor={field.name}>
-                    Kod weryfikacyjny
-                  </FieldLabel>
-
-                  <InputOTP
-                    autoComplete="one-time-code"
-                    containerClassName="gap-4 items-center justify-center"
-                    id={field.name}
-                    inputMode="numeric"
-                    maxLength={otpLength}
-                    onChange={(raw) => {
-                      const code = raw.replace(/\D/g, "").slice(0, otpLength)
-                      field.handleChange(code)
-
-                      if (code.length < otpLength) {
-                        autoSubmittedRef.current = false
-                        return
-                      }
-
-                      if (
-                        code.length === otpLength &&
-                        !autoSubmittedRef.current &&
-                        !form.state.isSubmitting
-                      ) {
-                        autoSubmittedRef.current = true
-                        queueMicrotask(() => {
-                          form.handleSubmit()
-                        })
-                      }
-                    }}
-                    pattern={REGEXP_ONLY_DIGITS}
-                    required
-                    spellCheck={false}
-                    value={field.state.value}
+              return (
+                <>
+                  <div
+                    className="fade-in flex animate-in flex-col items-center gap-3 text-center duration-500"
+                    style={getAnimationStyle("100ms")}
                   >
-                    <InputOTPGroup className="gap-2.5 *:data-[slot=input-otp-slot]:h-16 *:data-[slot=input-otp-slot]:w-12 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-xl">
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                    </InputOTPGroup>
-
-                    <InputOTPSeparator />
-
-                    <InputOTPGroup className="gap-2.5 *:data-[slot=input-otp-slot]:h-16 *:data-[slot=input-otp-slot]:w-12 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-xl">
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-
-                  {canResend ? (
-                    <FieldDescription className="text-center">
-                      Nie dotarło?{" "}
-                      <Button
-                        className="h-auto p-0 align-baseline"
-                        isLoading={isResending}
-                        onClick={() => resendCode(method as ResendType)}
-                        type="button"
-                        variant="link"
-                      >
-                        Wyślij ponownie
-                      </Button>
-                    </FieldDescription>
-                  ) : null}
-
-                  {alternatives.length ? (
-                    <div className="mt-3">
-                      <p className="text-center text-muted-foreground text-sm">
-                        Użyj innej metody
-                      </p>
-                      <div className="mt-2 flex flex-col gap-1">
-                        {alternatives.map((m) => (
-                          <Button
-                            className="h-9 justify-start px-2"
-                            isLoading={isResending || form.state.isSubmitting}
-                            key={m}
-                            onClick={() => handleSwitchMethod(m)}
-                            showSpinner={false}
-                            size="sm"
-                            type="button"
-                            variant="link"
-                          >
-                            {methodSwitchLabels[m]}
-                          </Button>
-                        ))}
-                      </div>
+                    <div className="relative">
+                      <div className="absolute -inset-3 rounded-full bg-primary/10 blur-lg" />
+                      <Logo className="relative" />
                     </div>
-                  ) : null}
-                </Field>
-              )}
-            </form.Field>
-            <Field>
+                    <FieldDescription className="mt-2 text-muted-foreground/80">
+                      {methodTitles[method]}
+                    </FieldDescription>
+                  </div>
+                  <div
+                    className="fade-in mt-2 animate-in space-y-4 duration-500"
+                    style={getAnimationStyle("200ms")}
+                  >
+                    <form.Field name="code">
+                      {(field) => (
+                        <FieldWithState
+                          field={field}
+                          label="Kod weryfikacyjny"
+                          labelClassName="sr-only"
+                          renderInput={({ id, isInvalid }) => (
+                            <InputOTP
+                              aria-invalid={isInvalid}
+                              autoComplete="one-time-code"
+                              containerClassName="items-center justify-center gap-4"
+                              disabled={isSubmitting || isResending}
+                              id={id}
+                              inputMode="numeric"
+                              maxLength={otpLength}
+                              onChange={(raw) => {
+                                const code = raw
+                                  .replace(/\D/g, "")
+                                  .slice(0, otpLength)
+                                field.handleChange(code)
+
+                                if (code.length < otpLength) {
+                                  autoSubmittedRef.current = false
+                                  return
+                                }
+
+                                if (
+                                  code.length === otpLength &&
+                                  !autoSubmittedRef.current &&
+                                  !form.state.isSubmitting
+                                ) {
+                                  autoSubmittedRef.current = true
+                                  queueMicrotask(() => {
+                                    form.handleSubmit()
+                                  })
+                                }
+                              }}
+                              pattern={REGEXP_ONLY_DIGITS}
+                              required
+                              spellCheck={false}
+                              value={field.state.value}
+                            >
+                              <InputOTPGroup
+                                className={cn(slotClassName, {
+                                  "*:data-[slot=input-otp-slot]:border-destructive":
+                                    isInvalid,
+                                })}
+                              >
+                                <InputOTPSlot index={0} />
+                                <InputOTPSlot index={1} />
+                                <InputOTPSlot index={2} />
+                              </InputOTPGroup>
+
+                              <InputOTPSeparator />
+
+                              <InputOTPGroup
+                                className={cn(slotClassName, {
+                                  "*:data-[slot=input-otp-slot]:border-destructive":
+                                    isInvalid,
+                                })}
+                              >
+                                <InputOTPSlot index={3} />
+                                <InputOTPSlot index={4} />
+                                <InputOTPSlot index={5} />
+                              </InputOTPGroup>
+                            </InputOTP>
+                          )}
+                        />
+                      )}
+                    </form.Field>
+
+                    {canResend ? (
+                      <FieldDescription className="text-center">
+                        Nie dotarło?{" "}
+                        <Button
+                          className="h-auto p-0 align-baseline"
+                          isLoading={isResending}
+                          onClick={() => resendCode(method as ResendType)}
+                          type="button"
+                          variant="link"
+                        >
+                          Wyślij ponownie
+                        </Button>
+                      </FieldDescription>
+                    ) : null}
+
+                    {alternatives.length ? (
+                      <div className="mt-3">
+                        <p className="text-center text-muted-foreground text-sm">
+                          Użyj innej metody
+                        </p>
+                        <div className="mt-2 flex flex-col gap-1">
+                          {alternatives.map((m) => (
+                            <Button
+                              className="h-9 justify-start px-2"
+                              isLoading={isResending || form.state.isSubmitting}
+                              key={m}
+                              onClick={() => handleSwitchMethod(m)}
+                              showSpinner={false}
+                              size="sm"
+                              type="button"
+                              variant="link"
+                            >
+                              {methodSwitchLabels[m]}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                </>
+              )
+            }}
+          </form.Subscribe>
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
               <Button
                 className="w-full"
-                isLoading={form.state.isSubmitting}
-                size="lg"
+                disabled={isSubmitting}
+                isLoading={isSubmitting}
                 type="submit"
               >
-                Zweryfikuj
+                Zweryfikuj kod
               </Button>
-            </Field>
-          </div>
+            )}
+          </form.Subscribe>
         </FieldGroup>
       </form>
     </AuthCard>

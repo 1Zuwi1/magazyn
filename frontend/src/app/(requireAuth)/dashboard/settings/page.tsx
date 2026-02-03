@@ -12,8 +12,7 @@ export default function SettingsPage() {
               fullName: session.full_name,
               id: session.id,
               role: session.role,
-              status: session.status,
-              twoFactorEnabled: session.two_factor_enabled,
+              status: session.account_status,
             }}
           />
         )

@@ -1,22 +1,25 @@
-export type AccountRole = "admin" | "user"
-export type AccountStatus = "verified" | "unverified" | "banned"
-export type TwoFactorMethod = "authenticator" | "sms" | "email"
-export type TwoFactorStatus = "disabled" | "setup" | "enabled"
+export type AccountRole = "ADMIN" | "USER"
+export type AccountStatus =
+  | "ACTIVE"
+  | "PENDING_VERIFICATION"
+  | "DISABLED"
+  | "LOCKED"
+export type TwoFactorStatus = "DISABLED" | "SETUP" | "ENABLED"
 export type TwoFactorSetupStage =
-  | "idle"
-  | "requesting"
-  | "sending"
-  | "awaiting"
-  | "verifying"
-  | "success"
-  | "error"
+  | "IDLE"
+  | "REQUESTING"
+  | "SENDING"
+  | "AWAITING"
+  | "VERIFYING"
+  | "SUCCESS"
+  | "ERROR"
 export type PasswordVerificationStage =
-  | "idle"
-  | "sending"
-  | "awaiting"
-  | "verifying"
-  | "verified"
-  | "error"
+  | "IDLE"
+  | "SENDING"
+  | "AWAITING"
+  | "VERIFYING"
+  | "VERIFIED"
+  | "ERROR"
 
 export interface SettingsUser {
   id: number
@@ -24,7 +27,6 @@ export interface SettingsUser {
   fullName?: string | null
   role: AccountRole
   status: AccountStatus
-  twoFactorEnabled: boolean
 }
 
 export interface SettingsContentProps {

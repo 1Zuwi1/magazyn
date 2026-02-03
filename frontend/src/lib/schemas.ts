@@ -4,6 +4,11 @@ import { createApiSchema } from "./create-api-schema"
 
 const txtEncoder = new TextEncoder()
 
+export const TFAMethods = z.enum(["AUTHENTICATOR", "SMS", "EMAIL"])
+export type TwoFactorMethod = z.infer<typeof TFAMethods>
+
+export type ResendType = Exclude<TwoFactorMethod, "AUTHENTICATOR">
+
 export const PasswordSchema = z
   .string()
   .min(8, "Hasło musi mieć co najmniej 8 znaków")
@@ -29,9 +34,20 @@ const OTPSchema = z
     return val.length === OTP_LENGTH
   }, `Kod 2FA musi mieć dokładnie ${OTP_LENGTH} znaków`)
 
+export const Check2FASchema = createApiSchema({
+  POST: {
+    input: z.object({
+      code: OTPSchema,
+      method: TFAMethods,
+    }),
+    output: z.object({
+      success: z.literal(true),
+    }),
+  },
+})
+
 export const ChangePasswordFormSchema = z
   .object({
-    twoFactorCode: OTPSchema,
     newPassword: PasswordSchema,
     oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
     confirmPassword: z.string().min(1, "Potwierdzenie hasła jest wymagane"),
@@ -46,7 +62,6 @@ export const ChangePasswordSchema = createApiSchema({
     input: z.object({
       newPassword: PasswordSchema,
       oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
-      twoFactorCode: OTPSchema,
     }),
     output: z.null(),
   },
@@ -57,10 +72,9 @@ export const LoginSchema = createApiSchema({
     input: z.object({
       email: z.email("Nieprawidłowy adres email"),
       password: PasswordSchema,
+      rememberMe: z.boolean(),
     }),
-    output: z.object({
-      requiresTwoFactor: z.boolean(),
-    }),
+    output: z.null(),
   },
 })
 export const RegisterSchema = createApiSchema({
@@ -71,6 +85,81 @@ export const RegisterSchema = createApiSchema({
         .min(2, "Imię i nazwisko musi mieć co najmniej 2 znaki"),
       email: z.email("Nieprawidłowy adres email"),
       password: PasswordSchema,
+    }),
+    output: z.null(),
+  },
+})
+
+function sanitizeCreationOptionsJSON(
+  optionsJSON: PublicKeyCredentialCreationOptionsJSON
+) {
+  if (!optionsJSON?.excludeCredentials) {
+    return optionsJSON
+  }
+
+  return {
+    ...optionsJSON,
+    excludeCredentials: optionsJSON.excludeCredentials.map((cred) => {
+      const out = { ...cred }
+
+      // WebAuthn JSON parsing hates null here: must be array or absent
+      if (out.transports == null) {
+        out.transports = undefined
+      } else if (!Array.isArray(out.transports)) {
+        // If something weird got in here, force it to a valid type
+        out.transports = []
+      }
+
+      return out
+    }),
+  }
+}
+
+export const WebAuthnStartRegistrationSchema = createApiSchema({
+  POST: {
+    input: z.null(),
+    output: z
+      .custom<PublicKeyCredentialCreationOptionsJSON>()
+      .transform((data, ctx) => {
+        try {
+          return PublicKeyCredential.parseCreationOptionsFromJSON(
+            sanitizeCreationOptionsJSON(data)
+          )
+        } catch (err) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "Invalid WebAuthn creation options JSON" +
+              (err instanceof Error ? `: ${err.message}` : ""),
+          })
+          return z.NEVER
+        }
+      }),
+  },
+})
+
+export const WebAuthnFinishRegistrationSchema = createApiSchema({
+  POST: {
+    input: z.object({
+      credentialJson: z.string().min(1, "Credential JSON jest wymagany"),
+    }),
+    output: z.null(),
+  },
+})
+
+export const WebAuthnStartAssertionSchema = createApiSchema({
+  POST: {
+    input: z.object({}),
+    output: z.object({
+      challenge: z.string(),
+    }),
+  },
+})
+
+export const WebAuthnFinishAssertionSchema = createApiSchema({
+  POST: {
+    input: z.object({
+      credentialJson: z.string().min(1, "Credential JSON jest wymagany"),
     }),
     output: z.null(),
   },
@@ -88,7 +177,7 @@ export const FormRegisterSchema = RegisterSchema.shape.POST.shape.input
 export const Verify2FASchema = createApiSchema({
   POST: {
     input: z.object({
-      method: z.enum(["authenticator", "sms", "email"]),
+      method: TFAMethods,
       code: z.string().length(6, "Kod musi mieć dokładnie 6 cyfr"),
     }),
     output: z.null(),
@@ -98,7 +187,7 @@ export const Verify2FASchema = createApiSchema({
 export const Resend2FASchema = createApiSchema({
   POST: {
     input: z.object({
-      method: z.enum(["sms", "email"]),
+      method: z.enum(["SMS", "EMAIL"]),
     }),
     output: z.null(),
   },
@@ -110,9 +199,19 @@ export const ApiMeSchema = createApiSchema({
       id: z.number(),
       email: z.email(),
       full_name: z.string().nullish(),
-      two_factor_enabled: z.boolean(),
-      status: z.enum(["verified", "unverified", "banned"]),
-      role: z.enum(["user", "admin"]),
+      account_status: z.enum([
+        "ACTIVE",
+        "PENDING_VERIFICATION",
+        "DISABLED",
+        "LOCKED",
+      ]),
+      role: z.enum(["USER", "ADMIN"]),
     }),
+  },
+})
+
+export const TFASchema = createApiSchema({
+  GET: {
+    output: z.array(TFAMethods),
   },
 })
