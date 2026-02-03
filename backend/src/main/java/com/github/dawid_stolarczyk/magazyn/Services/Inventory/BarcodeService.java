@@ -56,7 +56,7 @@ public class BarcodeService {
      */
     public String buildPlacementBarcode(String itemBarcode) {
         if (itemBarcode == null || !itemBarcode.matches("\\d{" + ITEM_BARCODE_LENGTH + "}")) {
-            throw new IllegalArgumentException(InventoryError.BARCODE_MUST_BE_6_DIGITS.name());
+            throw new IllegalArgumentException(InventoryError.BARCODE_MUST_BE_14_DIGITS.name());
         }
 
         String datePart = LocalDate.now(ZoneOffset.UTC).format(GS1_DATE_FORMAT);

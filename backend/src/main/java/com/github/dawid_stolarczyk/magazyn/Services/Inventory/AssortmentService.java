@@ -15,7 +15,10 @@ import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimi
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
@@ -26,6 +29,7 @@ import java.util.stream.Collectors;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AssortmentService {
@@ -67,8 +71,9 @@ public class AssortmentService {
 
     /**
      * Internal method for bulk import - no rate limiting
+     * Uses SERIALIZABLE isolation to prevent race conditions in barcode generation
      */
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public AssortmentDto createAssortmentInternal(AssortmentDto dto) {
         Item item = itemRepository.findById(dto.getItemId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
@@ -93,18 +98,52 @@ public class AssortmentService {
 
         barcodeService.ensureItemBarcode(item);
 
-        Assortment assortment = Assortment.builder()
-                .item(item)
-                .rack(rack)
-                .user(user)
-                .created_at(createdAt)
-                .expires_at(expiresAt)
-                .position_x(dto.getPositionX())
-                .position_y(dto.getPositionY())
-                .barcode(barcodeService.buildPlacementBarcode(item.getBarcode())) // Generate before save
-                .build();
+        // Retry logic for race condition in barcode generation
+        int maxRetries = 3;
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                String placementBarcode = barcodeService.buildPlacementBarcode(item.getBarcode());
 
-        return mapToDto(assortmentRepository.save(assortment));
+                Assortment assortment = Assortment.builder()
+                        .item(item)
+                        .rack(rack)
+                        .user(user)
+                        .created_at(createdAt)
+                        .expires_at(expiresAt)
+                        .position_x(dto.getPositionX())
+                        .position_y(dto.getPositionY())
+                        .barcode(placementBarcode)
+                        .build();
+
+                return mapToDto(assortmentRepository.save(assortment));
+
+            } catch (DataIntegrityViolationException ex) {
+                // Check if it's a barcode collision
+                String message = ex.getMostSpecificCause().getMessage();
+                if (message != null && message.toLowerCase().contains("barcode")) {
+                    if (attempt < maxRetries) {
+                        log.warn("Barcode collision detected on attempt {}/{}, retrying...", attempt, maxRetries);
+                        // Small delay before retry to reduce collision probability
+                        try {
+                            Thread.sleep((long) 10 * attempt); // 10ms, 20ms, 30ms
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            throw new IllegalStateException("Interrupted during barcode retry", ie);
+                        }
+                        continue; // Retry
+                    } else {
+                        log.error("Failed to generate unique placement barcode after {} attempts", maxRetries);
+                        throw new IllegalStateException(InventoryError.PLACEMENT_BARCODE_GENERATION_FAILED.name()
+                                + ": Unable to generate unique barcode after " + maxRetries + " attempts");
+                    }
+                }
+                // If it's not a barcode issue, re-throw immediately
+                throw ex;
+            }
+        }
+
+        // Should never reach here due to loop structure, but added for safety
+        throw new IllegalStateException("Unexpected state in barcode generation");
     }
 
     @Transactional

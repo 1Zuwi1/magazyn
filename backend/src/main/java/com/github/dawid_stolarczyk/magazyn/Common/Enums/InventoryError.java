@@ -32,5 +32,5 @@ public enum InventoryError {
     // Barcode generation errors
     BARCODE_GENERATION_FAILED,
     PLACEMENT_BARCODE_GENERATION_FAILED,
-    BARCODE_MUST_BE_6_DIGITS
+    BARCODE_MUST_BE_14_DIGITS
 }

@@ -71,6 +71,6 @@ public class PositionReservation {
      * Sprawdza czy rezerwacja należy do danego użytkownika.
      */
     public boolean belongsTo(Long userId) {
-        return reservedBy != null && reservedBy.equals(userId);
+        return reservedBy != null && reservedBy.getId().equals(userId);
     }
 }
