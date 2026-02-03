@@ -2,6 +2,7 @@ import { differenceInCalendarDays, format } from "date-fns"
 import { pl } from "date-fns/locale"
 import { toast } from "sonner"
 import { FetchError } from "@/lib/fetcher"
+import type { Item } from "../types"
 
 // Helper function to convert index to coordinate (R01-P01, R02-P03, etc.)
 export function getSlotCoordinate(index: number, cols: number): string {
@@ -14,6 +15,10 @@ export function getSlotCoordinate(index: number, cols: number): string {
 
 export function formatDate(date: Date): string {
   return format(date, "dd.MM.yyyy", { locale: pl })
+}
+
+export function formatDimensions(item: Item): string {
+  return `${item.width}×${item.height}×${item.depth} mm`
 }
 
 export function getDaysUntilExpiry(today: Date, expiryDate: Date): number {

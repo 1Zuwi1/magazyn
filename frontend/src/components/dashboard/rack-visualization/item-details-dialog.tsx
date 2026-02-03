@@ -14,7 +14,12 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import type { Item } from "../types"
-import { formatDate, getDaysUntilExpiry, pluralize } from "../utils/helpers"
+import {
+  formatDate,
+  formatDimensions,
+  getDaysUntilExpiry,
+  pluralize,
+} from "../utils/helpers"
 import {
   getItemStatus,
   getStatusColors,
@@ -31,10 +36,6 @@ interface ItemDetailsDialogProps {
 }
 
 type BadgeVariant = NonNullable<React.ComponentProps<typeof Badge>["variant"]>
-
-function formatDimensions(dimensions: Item["dimensions"]): string {
-  return `${dimensions.x}×${dimensions.y}×${dimensions.z} mm`
-}
 
 function formatExpiryHint(daysUntilExpiry: number): string {
   if (daysUntilExpiry === 0) {
@@ -89,7 +90,11 @@ export function ItemDetailsDialog({
   const status = getItemStatus(item)
   const statusColors = getStatusColors(status)
   const statusText = getStatusText(status)
-  const daysUntilExpiry = getDaysUntilExpiry(new Date(), item.expiryDate)
+  const daysUntilExpiry = getDaysUntilExpiry(
+    new Date(),
+    item.expiryDate ??
+      new Date(Date.now() + item.daysToExpiry * 24 * 60 * 60 * 1000)
+  )
   const expiryHint = formatExpiryHint(daysUntilExpiry)
   const badgeVariant = getStatusBadgeVariant(status)
 
@@ -150,10 +155,7 @@ export function ItemDetailsDialog({
               <DetailRow label="ID" value={item.id} />
               <DetailRow label="Kod QR" value={item.qrCode} />
               <DetailRow label="Waga" value={`${item.weight.toFixed(2)} kg`} />
-              <DetailRow
-                label="Wymiary"
-                value={formatDimensions(item.dimensions)}
-              />
+              <DetailRow label="Wymiary" value={formatDimensions(item)} />
               <DetailRow
                 label="Temperatura"
                 value={`${item.minTemp}°C – ${item.maxTemp}°C`}
@@ -164,7 +166,12 @@ export function ItemDetailsDialog({
                   <span
                     className={cn("font-mono font-semibold", statusColors.text)}
                   >
-                    {formatDate(item.expiryDate)}
+                    {formatDate(
+                      item.expiryDate ??
+                        new Date(
+                          Date.now() + item.daysToExpiry * 24 * 60 * 60 * 1000
+                        )
+                    )}
                   </span>
                 }
               />

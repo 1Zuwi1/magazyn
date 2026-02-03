@@ -8,7 +8,11 @@ export type ItemStatus =
   | "dangerous"
 
 export function getItemStatus(item: Item): ItemStatus {
-  const daysUntilExpiry = getDaysUntilExpiry(new Date(), item.expiryDate)
+  const daysUntilExpiry = getDaysUntilExpiry(
+    new Date(),
+    item.expiryDate ??
+      new Date(Date.now() + item.daysToExpiry * 24 * 60 * 60 * 1000)
+  )
   const isExpired = daysUntilExpiry < 0
 
   if (isExpired && item.isDangerous) {

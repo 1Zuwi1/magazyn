@@ -8,9 +8,10 @@ import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import type { Item, Rack } from "../types"
+import type { Rack } from "../types"
 import {
   formatDate,
+  formatDimensions,
   getDaysUntilExpiry,
   getSlotCoordinate,
   pluralize,
@@ -30,10 +31,6 @@ interface RackShelfDetailsCardProps {
 }
 
 type BadgeVariant = NonNullable<React.ComponentProps<typeof Badge>["variant"]>
-
-function formatDimensions(dimensions: Item["dimensions"]): string {
-  return `${dimensions.x}×${dimensions.y}×${dimensions.z} mm`
-}
 
 function getStatusBadgeVariant(status: ItemStatus): BadgeVariant {
   if (status === "normal") {
@@ -91,7 +88,11 @@ export function RackShelfDetailsCard({
   const coordinate =
     selectedIndex !== null ? getSlotCoordinate(selectedIndex, rack.cols) : null
   const daysUntilExpiry = selectedItem
-    ? getDaysUntilExpiry(new Date(), selectedItem.expiryDate)
+    ? getDaysUntilExpiry(
+        new Date(),
+        selectedItem.expiryDate ??
+          new Date(Date.now() + selectedItem.daysToExpiry * 24 * 60 * 60 * 1000)
+      )
     : null
   const status = selectedItem ? getItemStatus(selectedItem) : null
   const statusColors = status ? getStatusColors(status) : null
@@ -214,7 +215,7 @@ export function RackShelfDetailsCard({
               label="Wymiary"
               value={
                 <span className="font-mono font-semibold">
-                  {formatDimensions(selectedItem.dimensions)}
+                  {formatDimensions(selectedItem)}
                 </span>
               }
             />
@@ -232,7 +233,13 @@ export function RackShelfDetailsCard({
                 <span
                   className={cn("font-mono font-semibold", statusColors.text)}
                 >
-                  {formatDate(selectedItem.expiryDate)}
+                  {formatDate(
+                    selectedItem.expiryDate ??
+                      new Date(
+                        Date.now() +
+                          selectedItem.daysToExpiry * 24 * 60 * 60 * 1000
+                      )
+                  )}
                 </span>
               }
             />

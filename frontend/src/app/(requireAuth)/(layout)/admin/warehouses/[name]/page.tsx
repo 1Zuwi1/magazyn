@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
-import ProtectedPage from "@/app/(requireAuth)/protected-page"
 import AdminRacksPage from "@/components/admin-panel/warehouses/racks-view/racks-page"
 import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
+import ProtectedPage from "@/components/security/protected-page"
 
 interface WarehouseDetailPageProps {
   params: Promise<{ name: string }>

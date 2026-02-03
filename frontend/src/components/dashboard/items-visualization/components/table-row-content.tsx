@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import type { Item } from "../../types"
-import { formatDate } from "../../utils/helpers"
+import { formatDate, formatDimensions } from "../../utils/helpers"
 import { getItemStatus, getStatusText } from "../../utils/item-status"
 
 interface TableRowContentProps {
@@ -89,9 +89,7 @@ export function TableRowContent({
       </TableCell>
       <TableCell className="font-mono text-sm">{item.qrCode}</TableCell>
       <TableCell>{item.weight.toFixed(2)} kg</TableCell>
-      <TableCell className="text-sm">
-        {`${item.width}×${item.height}×${item.depth} mm`}
-      </TableCell>
+      <TableCell className="text-sm">{formatDimensions(item)}</TableCell>
       <TableCell className="text-sm">
         {item.minTemp}°C – {item.maxTemp}°C
       </TableCell>

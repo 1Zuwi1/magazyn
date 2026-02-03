@@ -4,7 +4,7 @@ import { SearchProvider } from "@/components/admin-panel/components/search-bar/s
 import { TopNav } from "@/components/admin-panel/components/top-nav"
 import { ADMIN_NAV_LINKS } from "@/components/admin-panel/lib/constants"
 import { AdminOverview } from "@/components/admin-panel/overview/admin-overview"
-import ProtectedPage from "../../protected-page"
+import ProtectedPage from "@/components/security/protected-page"
 
 export default function AdminDashboard() {
   return (
