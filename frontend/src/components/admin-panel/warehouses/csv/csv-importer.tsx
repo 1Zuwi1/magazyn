@@ -75,7 +75,7 @@ export function CsvImporter<T extends CsvImporterType>({
       >
         Importuj CSV
       </DialogTrigger>
-      <DialogContent className="min-w-fit">
+      <DialogContent className="max-h-[90vh] min-w-fit overflow-auto sm:min-w-125">
         <DialogHeader>
           <DialogTitle>
             {type === "rack"

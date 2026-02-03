@@ -1,22 +1,34 @@
 import type z from "zod"
-import type {
-  ItemSchema,
-  RackCsvSchema,
-  RackSchema,
-} from "@/lib/schemas/csv-schemas"
+import type { ItemCsvSchema, RackCsvSchema } from "@/lib/schemas/csv-schemas"
 
 export interface Column {
   key: string
   label: string
 }
 
-export type RackFormData = z.infer<typeof RackCsvSchema>
+export type RackCsvData = z.infer<typeof RackCsvSchema>
+
+export interface RackFormData {
+  symbol?: string
+  name: string
+  rows: number
+  cols: number
+  minTemp: number
+  maxTemp: number
+  maxWeight: number
+  maxItemWidth: number
+  maxItemHeight: number
+  maxItemDepth: number
+  comment?: string
+}
+
+export type ItemCsvData = z.infer<typeof ItemCsvSchema>
 
 export type CsvImporterType = "rack" | "item"
 
 export type CsvRowType<T extends CsvImporterType> = T extends "rack"
-  ? z.infer<typeof RackSchema>
-  : z.infer<typeof ItemSchema>
+  ? RackCsvData
+  : ItemCsvData
 
 export interface CsvParseError {
   row: number

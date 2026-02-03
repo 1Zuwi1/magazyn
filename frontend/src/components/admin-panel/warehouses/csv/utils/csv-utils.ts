@@ -1,5 +1,5 @@
 import Papa from "papaparse"
-import { ItemSchema, RackCsvSchema } from "@/lib/schemas/csv-schemas"
+import { ItemCsvSchema, RackCsvSchema } from "@/lib/schemas/csv-schemas"
 import type {
   CsvImporterType,
   CsvParseError,
@@ -26,6 +26,19 @@ const NUMBER_FIELDS = new Set([
 ])
 
 const RACK_HEADER_MAP: Record<string, string> = {
+  // Polish headers
+  "#oznaczenie": "symbol",
+  oznaczenie: "symbol",
+  m: "rows",
+  n: "cols",
+  tempmin: "minTemp",
+  tempmax: "maxTemp",
+  maxwagakg: "maxWeight",
+  maxszerokoscmm: "maxItemWidth",
+  maxwysokoscmm: "maxItemHeight",
+  maxglebokoscmm: "maxItemDepth",
+  komentarz: "comment",
+  // English fallbacks
   symbol: "symbol",
   name: "name",
   rows: "rows",
@@ -40,8 +53,22 @@ const RACK_HEADER_MAP: Record<string, string> = {
 }
 
 const ITEM_HEADER_MAP: Record<string, string> = {
-  name: "name",
+  // Polish headers
+  "#nazwa": "name",
+  nazwa: "name",
   id: "id",
+  zdjecie: "imageUrl",
+  tempmin: "minTemp",
+  tempmax: "maxTemp",
+  waga: "weight",
+  szerokoscmm: "width",
+  wysokoscmm: "height",
+  glebokoscmm: "depth",
+  komentarz: "comment",
+  terminwaznoscidni: "daysToExpiry",
+  czyniebezpieczny: "isDangerous",
+  // English fallbacks
+  name: "name",
   imageurl: "imageUrl",
   mintemp: "minTemp",
   maxtemp: "maxTemp",
@@ -60,7 +87,7 @@ const CONFIG = {
     headerMap: RACK_HEADER_MAP,
   },
   item: {
-    schema: ItemSchema,
+    schema: ItemCsvSchema,
     headerMap: ITEM_HEADER_MAP,
   },
 }

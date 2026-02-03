@@ -1,0 +1,4 @@
+#Nazwa;Id;Zdjecie;TempMin;TempMax;Waga;SzerokoscMm;WysokoscMm;GlebokoscMm;Komentarz;TerminWaznosciDni;CzyNiebezpieczny
+Mleko 3,2%;5901234567890;mleko.jpg;2;6;1.0;20;7;7;Przechowywać w lodówce;14;FALSE
+Lody waniliowe;5909876543210;lody.jpg;-18;-12;0.5;15;10;8;Produkt mrożony;180;FALSE
+Aceton techniczny;QR-ACETON-001;;10;25;2.5;30;20;15;Substancja łatwopalna;365;TRUE 

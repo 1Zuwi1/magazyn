@@ -14,7 +14,15 @@ export const ItemSchema = z.object({
   depth: z.number().positive(),
   comment: z.string().optional(),
   daysToExpiry: z.number().nonnegative(),
-  isDangerous: z.boolean().default(false),
+  isDangerous: z
+    .string()
+    .refine(
+      (val) => val.toLowerCase() === "true" || val.toLowerCase() === "false",
+      {
+        message: "isDangerous must be 'true' or 'false'",
+      }
+    )
+    .transform((val) => val.toLowerCase() === "true"),
 })
 
 export const RackSchema = z.object({
@@ -40,6 +48,10 @@ export const RackCsvSchema = RackSchema.omit({
   currentWeight: true,
   occupancy: true,
   items: true,
+  name: true,
+}).extend({
+  name: z.string().optional(),
+  symbol: z.string(),
 })
 
 export const ItemCsvSchema = ItemSchema.omit({
