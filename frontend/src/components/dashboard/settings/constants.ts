@@ -26,6 +26,11 @@ export const TWO_FACTOR_METHODS = [
     label: "E-mail",
     hint: "Kod wysyłany na skrzynkę pocztową.",
   },
+  {
+    value: "PASSKEYS",
+    label: "Klucze bezpieczeństwa",
+    hint: "Uwierzytelnianie bezhasłowe przy użyciu urządzeń z obsługą kluczy bezpieczeństwa.",
+  },
 ] as const
 
 export const MOCK_PROFILE_FORM = {
