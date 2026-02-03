@@ -7,7 +7,6 @@ import { TableRowContent } from "./table-row-content"
 
 interface NormalRowProps {
   item: Item
-  expired: boolean
   onView: (id: string) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
@@ -15,13 +14,12 @@ interface NormalRowProps {
 }
 
 export const NormalRow = memo(
-  ({ item, expired, onView, onEdit, onDelete, rowHeight }: NormalRowProps) => {
+  ({ item, onView, onEdit, onDelete, rowHeight }: NormalRowProps) => {
     const rowStyle = rowHeight ? { height: rowHeight } : undefined
 
     return (
       <TableRow key={item.id} style={rowStyle}>
         <TableRowContent
-          expired={expired}
           item={item}
           onDelete={onDelete}
           onEdit={onEdit}

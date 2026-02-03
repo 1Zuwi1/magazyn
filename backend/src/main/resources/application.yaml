@@ -1,0 +1,72 @@
+auth:
+  limits:
+    # === Autentykacja ===
+    AUTH_LOGIN:
+      capacity: 10          # max 10 prób logowania
+      refill: 5             # odnawia 5 na minutę
+      duration: PT1M
+
+    AUTH_REGISTER:
+      capacity: 3           # max 3 rejestracje
+      refill: 1             # odnawia 1 na 10 minut
+      duration: PT10M
+
+    AUTH_LOGOUT:
+      capacity: 10          # max 10 wylogowań
+      refill: 10
+      duration: PT1M
+
+    AUTH_FREE:
+      capacity: 60          # ogólne operacje auth
+      refill: 30
+      duration: PT1M
+
+    # === 2FA ===
+    TWO_FACTOR_FREE:
+      capacity: 20          # sprawdzanie statusu 2FA
+      refill: 10
+      duration: PT1M
+
+    TWO_FACTOR_VERIFY:
+      capacity: 5           # weryfikacja kodu 2FA (ważne!)
+      refill: 3
+      duration: PT1M
+
+    TWO_FACTOR_STRICT:
+      capacity: 3           # generowanie backup codes
+      refill: 1
+      duration: PT5M
+
+    # === Akcje użytkownika ===
+    USER_ACTION_FREE:
+      capacity: 60          # odczyt danych profilu
+      refill: 30
+      duration: PT1M
+
+    USER_ACTION_STRICT:
+      capacity: 5           # zmiana hasła/email/usunięcie konta
+      refill: 2
+      duration: PT5M
+
+    # === WebAuthn / Passkeys ===
+    WEBAUTH_REGISTRATION:
+      capacity: 5           # rejestracja passkey
+      refill: 2
+      duration: PT10M
+
+    WEBAUTH_ASSERTION:
+      capacity: 10          # logowanie passkey
+      refill: 5
+      duration: PT1M
+
+    # === Inventory / Magazyn ===
+    INVENTORY_READ:
+      capacity: 120         # odczyt produktów/regałów
+      refill: 60
+      duration: PT1M
+
+    INVENTORY_WRITE:
+      capacity: 30          # dodawanie/edycja/usuwanie
+      refill: 15
+      duration: PT1M
+

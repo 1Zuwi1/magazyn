@@ -1,26 +1,25 @@
 package com.github.dawid_stolarczyk.magazyn;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.DTOs.ResponseTemplate;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class MagazynApplicationTests {
 
-	@Test
-	void responseTemplateStoresPayloadAndSuccessFlag() {
-		ResponseTemplate response = new ResponseTemplate(true, "ok");
+    @Test
+    void responseTemplateStoresPayloadAndSuccessFlag() {
+        ResponseTemplate<String> response = ResponseTemplate.success("ok");
 
-		assertTrue(response.isSuccess());
-		assertEquals("ok", response.getData());
+        assertTrue(response.isSuccess());
+        assertEquals("ok", response.getData());
+        assertNull(response.getMessage());
 
-		response.setSuccess(false);
-		response.setData(42);
+        ResponseTemplate<String> error = ResponseTemplate.error("ERROR_CODE");
 
-		assertFalse(response.isSuccess());
-		assertEquals(42, response.getData());
-	}
+        assertFalse(error.isSuccess());
+        assertEquals("ERROR_CODE", error.getMessage());
+        assertNull(error.getData());
+    }
 
 }

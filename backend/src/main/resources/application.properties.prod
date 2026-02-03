@@ -4,7 +4,43 @@ spring.datasource.url=${DB_CONNECTION_URL}
 spring.datasource.username=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
 
+spring.mail.host=${MAIL_HOST}
+spring.mail.port=${MAIL_PORT}
+spring.mail.username=${MAIL_USERNAME}
+spring.mail.password=${MAIL_PASSWORD}
+
+server.forward-headers-strategy=framework
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
 server.servlet.context-path=/api
 
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=false
+
+auth.token.expiration-seconds=3600
+
+app.domain=${DOMAIN}
+app.name=${APP_NAME}
+app.url=${APP_URL}
+
+auth.password.min-length=8
+
+spring.redis.host=${REDIS_HOST:redis}
+spring.redis.port=${REDIS_PORT:6379}
+spring.redis.password=${REDIS_PASSWORD}
+spring.data.redis.host=${REDIS_HOST:redis}
+spring.data.redis.port=${REDIS_PORT:6379}
+spring.data.redis.password=${REDIS_PASSWORD}
+
+# S3 / MinIO Configuration
+app.s3.endpoint=${S3_ENDPOINT}
+app.s3.region=${S3_REGION}
+app.s3.bucket=${S3_BUCKET}
+app.s3.access-key=${S3_ACCESS_KEY}
+app.s3.secret-key=${S3_SECRET_KEY}
+
+app.s3.items-prefix=items-photos/
+
+
+webauthn.allow-untrusted-attestation:false

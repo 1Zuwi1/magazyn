@@ -2,113 +2,132 @@ import { describe, expect, it } from "vitest"
 
 import {
   ApiMeSchema,
+  FormRegisterSchema,
   LoginSchema,
+  PasswordSchema,
   RegisterSchema,
   Resend2FASchema,
   Verify2FASchema,
 } from "./schemas"
 
+describe("PasswordSchema", () => {
+  it("accepts a strong password", () => {
+    const result = PasswordSchema.safeParse("Password123!")
+
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects passwords missing an uppercase letter", () => {
+    const result = PasswordSchema.safeParse("password123!")
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Hasło musi zawierać co najmniej jedną wielką literę"
+      )
+    }
+  })
+
+  it("rejects passwords missing a lowercase letter", () => {
+    const result = PasswordSchema.safeParse("PASSWORD123!")
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Hasło musi zawierać co najmniej jedną małą literę"
+      )
+    }
+  })
+
+  it("rejects passwords missing a digit", () => {
+    const result = PasswordSchema.safeParse("Password!!!")
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Hasło musi zawierać co najmniej jedną cyfrę"
+      )
+    }
+  })
+
+  it("rejects passwords missing a special character", () => {
+    const result = PasswordSchema.safeParse("Password123")
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe(
+        "Hasło musi zawierać co najmniej jeden znak specjalny"
+      )
+    }
+  })
+})
+
 describe("LoginSchema", () => {
   it("accepts valid login input", () => {
     const validInput = {
-      username: "testuser",
-      password: "password123",
+      email: "testuser@example.com",
+      password: "Password123!",
+      rememberMe: true,
     }
 
-    const result = LoginSchema.shape.POST?.shape.input.safeParse(validInput)
+    const result = LoginSchema.shape.POST.shape.input.safeParse(validInput)
 
     expect(result.success).toBe(true)
   })
 
-  it("rejects password shorter than 6 characters", () => {
+  it("rejects password shorter than 8 characters", () => {
     const invalidInput = {
-      username: "testuser",
-      password: "12345",
+      email: "testuser@example.com",
+      password: "1234567",
+      rememberMe: true,
     }
 
-    const result = LoginSchema.shape.POST?.shape.input.safeParse(invalidInput)
+    const result = LoginSchema.shape.POST.shape.input.safeParse(invalidInput)
 
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi mieć co najmniej 6 znaków"
+        "Hasło musi mieć co najmniej 8 znaków"
       )
     }
   })
 
-  it("rejects username shorter than 3 characters", () => {
+  it("rejects invalid emails", () => {
     const invalidInput = {
-      username: "ab",
-      password: "password123",
+      email: "invalid@email",
+      password: "Password123!",
     }
 
-    const result = LoginSchema.shape.POST?.shape.input.safeParse(invalidInput)
+    const result = LoginSchema.shape.POST.shape.input.safeParse(invalidInput)
 
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
-        "Nazwa użytkownika musi mieć co najmniej 3 znaki"
-      )
+      expect(result.error.issues[0].message).toBe("Nieprawidłowy adres email")
     }
   })
 
-  it("rejects username longer than 20 characters", () => {
-    const invalidInput = {
-      username: "a".repeat(21),
-      password: "password123",
-    }
-
-    const result = LoginSchema.shape.POST?.shape.input.safeParse(invalidInput)
-
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
-        "Nazwa użytkownika może mieć maksymalnie 20 znaków"
-      )
-    }
-  })
-
-  it("rejects invalid characters in username", () => {
-    const invalidInput = {
-      username: "invalid@user",
-      password: "password123",
-    }
-
-    const result = LoginSchema.shape.POST?.shape.input.safeParse(invalidInput)
-
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues[0].message).toBe(
-        "Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślenia"
-      )
-    }
-  })
-
-  it("accepts valid username with underscores and numbers", () => {
+  it("accepts valid email", () => {
     const validInput = {
-      username: "valid_user_123",
-      password: "password123",
+      email: "validEmail@example.com",
+      password: "Password123!",
+      rememberMe: true,
     }
 
-    const result = LoginSchema.shape.POST?.shape.input.safeParse(validInput)
+    const result = LoginSchema.shape.POST.shape.input.safeParse(validInput)
 
     expect(result.success).toBe(true)
   })
 
-  it("has correct output schema with requiresTwoFactor boolean", () => {
-    const validOutput = {
-      requiresTwoFactor: true,
-    }
-
-    const result = LoginSchema.shape.POST?.shape.output.safeParse(validOutput)
+  it("has null output schema", () => {
+    const result = LoginSchema.shape.POST.shape.output.safeParse(null)
 
     expect(result.success).toBe(true)
   })
 
-  it("rejects output without requiresTwoFactor", () => {
+  it("rejects non-null output", () => {
     const invalidOutput = {}
 
-    const result = LoginSchema.shape.POST?.shape.output.safeParse(invalidOutput)
+    const result = LoginSchema.shape.POST.shape.output.safeParse(invalidOutput)
 
     expect(result.success).toBe(false)
   })
@@ -118,13 +137,12 @@ describe("RegisterSchema", () => {
   it("accepts valid registration input", () => {
     const validInput = {
       fullName: "Test User",
-      username: "test_user",
       email: "user@example.com",
-      password: "password123",
-      confirmPassword: "password123",
+      password: "Password123!",
+      confirmPassword: "Password123!",
     }
 
-    const result = RegisterSchema.shape.POST?.shape.input.safeParse(validInput)
+    const result = FormRegisterSchema.safeParse(validInput)
 
     expect(result.success).toBe(true)
   })
@@ -132,14 +150,12 @@ describe("RegisterSchema", () => {
   it("rejects mismatched confirmPassword", () => {
     const invalidInput = {
       fullName: "Test User",
-      username: "test_user",
       email: "user@example.com",
-      password: "password123",
-      confirmPassword: "different123",
+      password: "Password123!",
+      confirmPassword: "Different123!",
     }
 
-    const result =
-      RegisterSchema.shape.POST?.shape.input.safeParse(invalidInput)
+    const result = FormRegisterSchema.safeParse(invalidInput)
 
     expect(result.success).toBe(false)
     if (!result.success) {
@@ -150,14 +166,12 @@ describe("RegisterSchema", () => {
   it("rejects invalid email format", () => {
     const invalidInput = {
       fullName: "Test User",
-      username: "test_user",
       email: "not-an-email",
-      password: "password123",
-      confirmPassword: "password123",
+      password: "Password123!",
+      confirmPassword: "Password123!",
     }
 
-    const result =
-      RegisterSchema.shape.POST?.shape.input.safeParse(invalidInput)
+    const result = FormRegisterSchema.safeParse(invalidInput)
 
     expect(result.success).toBe(false)
   })
@@ -165,14 +179,12 @@ describe("RegisterSchema", () => {
   it("rejects short fullName", () => {
     const invalidInput = {
       fullName: "A",
-      username: "test_user",
       email: "user@example.com",
-      password: "password123",
-      confirmPassword: "password123",
+      password: "Password123!",
+      confirmPassword: "Password123!",
     }
 
-    const result =
-      RegisterSchema.shape.POST?.shape.input.safeParse(invalidInput)
+    const result = FormRegisterSchema.safeParse(invalidInput)
 
     expect(result.success).toBe(false)
     if (!result.success) {
@@ -183,7 +195,7 @@ describe("RegisterSchema", () => {
   })
 
   it("has null output schema", () => {
-    const result = RegisterSchema.shape.POST?.shape.output.safeParse(null)
+    const result = RegisterSchema.shape.POST.shape.output.safeParse(null)
 
     expect(result.success).toBe(true)
   })
@@ -192,33 +204,33 @@ describe("RegisterSchema", () => {
 describe("Verify2FASchema", () => {
   it("accepts valid authenticator input", () => {
     const validInput = {
-      method: "authenticator" as const,
+      method: "AUTHENTICATOR" as const,
       code: "123456",
     }
 
-    const result = Verify2FASchema.shape.POST?.shape.input.safeParse(validInput)
+    const result = Verify2FASchema.shape.POST.shape.input.safeParse(validInput)
 
     expect(result.success).toBe(true)
   })
 
   it("accepts valid SMS input", () => {
     const validInput = {
-      method: "sms" as const,
+      method: "SMS" as const,
       code: "123456",
     }
 
-    const result = Verify2FASchema.shape.POST?.shape.input.safeParse(validInput)
+    const result = Verify2FASchema.shape.POST.shape.input.safeParse(validInput)
 
     expect(result.success).toBe(true)
   })
 
   it("accepts valid email input", () => {
     const validInput = {
-      method: "email" as const,
+      method: "EMAIL" as const,
       code: "123456",
     }
 
-    const result = Verify2FASchema.shape.POST?.shape.input.safeParse(validInput)
+    const result = Verify2FASchema.shape.POST.shape.input.safeParse(validInput)
 
     expect(result.success).toBe(true)
   })
@@ -230,19 +242,19 @@ describe("Verify2FASchema", () => {
     }
 
     const result =
-      Verify2FASchema.shape.POST?.shape.input.safeParse(invalidInput)
+      Verify2FASchema.shape.POST.shape.input.safeParse(invalidInput)
 
     expect(result.success).toBe(false)
   })
 
   it("rejects code that is not 6 characters", () => {
     const invalidInput = {
-      method: "authenticator" as const,
+      method: "AUTHENTICATOR" as const,
       code: "12345",
     }
 
     const result =
-      Verify2FASchema.shape.POST?.shape.input.safeParse(invalidInput)
+      Verify2FASchema.shape.POST.shape.input.safeParse(invalidInput)
 
     expect(result.success).toBe(false)
     if (!result.success) {
@@ -254,18 +266,18 @@ describe("Verify2FASchema", () => {
 
   it("rejects code longer than 6 characters", () => {
     const invalidInput = {
-      method: "authenticator" as const,
+      method: "AUTHENTICATOR" as const,
       code: "1234567",
     }
 
     const result =
-      Verify2FASchema.shape.POST?.shape.input.safeParse(invalidInput)
+      Verify2FASchema.shape.POST.shape.input.safeParse(invalidInput)
 
     expect(result.success).toBe(false)
   })
 
   it("has null output schema", () => {
-    const result = Verify2FASchema.shape.POST?.shape.output.safeParse(null)
+    const result = Verify2FASchema.shape.POST.shape.output.safeParse(null)
 
     expect(result.success).toBe(true)
   })
@@ -274,31 +286,31 @@ describe("Verify2FASchema", () => {
 describe("Resend2FASchema", () => {
   it("accepts valid SMS method", () => {
     const validInput = {
-      method: "sms" as const,
+      method: "SMS" as const,
     }
 
-    const result = Resend2FASchema.shape.POST?.shape.input.safeParse(validInput)
+    const result = Resend2FASchema.shape.POST.shape.input.safeParse(validInput)
 
     expect(result.success).toBe(true)
   })
 
   it("accepts valid email method", () => {
     const validInput = {
-      method: "email" as const,
+      method: "EMAIL" as const,
     }
 
-    const result = Resend2FASchema.shape.POST?.shape.input.safeParse(validInput)
+    const result = Resend2FASchema.shape.POST.shape.input.safeParse(validInput)
 
     expect(result.success).toBe(true)
   })
 
   it("rejects authenticator method (not valid for resend)", () => {
     const invalidInput = {
-      method: "authenticator",
+      method: "AUTHENTICATOR",
     }
 
     const result =
-      Resend2FASchema.shape.POST?.shape.input.safeParse(invalidInput)
+      Resend2FASchema.shape.POST.shape.input.safeParse(invalidInput)
 
     expect(result.success).toBe(false)
   })
@@ -309,13 +321,13 @@ describe("Resend2FASchema", () => {
     }
 
     const result =
-      Resend2FASchema.shape.POST?.shape.input.safeParse(invalidInput)
+      Resend2FASchema.shape.POST.shape.input.safeParse(invalidInput)
 
     expect(result.success).toBe(false)
   })
 
   it("has null output schema", () => {
-    const result = Resend2FASchema.shape.POST?.shape.output.safeParse(null)
+    const result = Resend2FASchema.shape.POST.shape.output.safeParse(null)
 
     expect(result.success).toBe(true)
   })
@@ -326,14 +338,12 @@ describe("ApiMeSchema", () => {
     const validOutput = {
       id: 1,
       email: "user@example.com",
-      username: "testuser",
       full_name: "Test User",
-      two_factor_enabled: true,
-      status: "verified",
-      role: "user",
+      account_status: "ACTIVE",
+      role: "USER",
     }
 
-    const result = ApiMeSchema.shape.GET?.shape.output.safeParse(validOutput)
+    const result = ApiMeSchema.shape.GET.shape.output.safeParse(validOutput)
 
     expect(result.success).toBe(true)
   })
@@ -342,14 +352,12 @@ describe("ApiMeSchema", () => {
     const validOutput = {
       id: 1,
       email: "user@example.com",
-      username: "testuser",
       full_name: null,
-      two_factor_enabled: false,
-      status: "verified",
-      role: "admin",
+      account_status: "ACTIVE",
+      role: "ADMIN",
     }
 
-    const result = ApiMeSchema.shape.GET?.shape.output.safeParse(validOutput)
+    const result = ApiMeSchema.shape.GET.shape.output.safeParse(validOutput)
 
     expect(result.success).toBe(true)
   })
@@ -358,14 +366,12 @@ describe("ApiMeSchema", () => {
     const invalidOutput = {
       id: 1,
       email: "not-an-email",
-      username: "testuser",
       full_name: null,
-      two_factor_enabled: false,
-      status: "randomstatus",
-      role: "user",
+      account_status: "ACTIVE",
+      role: "USER",
     }
 
-    const result = ApiMeSchema.shape.GET?.shape.output.safeParse(invalidOutput)
+    const result = ApiMeSchema.shape.GET.shape.output.safeParse(invalidOutput)
 
     expect(result.success).toBe(false)
   })
@@ -374,29 +380,25 @@ describe("ApiMeSchema", () => {
     const invalidOutput = {
       id: "not-a-number",
       email: "user@example.com",
-      username: "testuser",
       full_name: null,
-      two_factor_enabled: false,
-      status: "verified",
-      role: "user",
+      account_status: "ACTIVE",
+      role: "USER",
     }
 
-    const result = ApiMeSchema.shape.GET?.shape.output.safeParse(invalidOutput)
+    const result = ApiMeSchema.shape.GET.shape.output.safeParse(invalidOutput)
     expect(result.success).toBe(false)
   })
 
-  it("rejects non-boolean two_factor_enabled", () => {
+  it("rejects invalid account_status", () => {
     const invalidOutput = {
       id: 1,
       email: "user@example.com",
-      username: "testuser",
       full_name: null,
-      two_factor_enabled: "true",
-      status: "verified",
-      role: "user",
+      account_status: "VERIFIED",
+      role: "USER",
     }
 
-    const result = ApiMeSchema.shape.GET?.shape.output.safeParse(invalidOutput)
+    const result = ApiMeSchema.shape.GET.shape.output.safeParse(invalidOutput)
 
     expect(result.success).toBe(false)
   })
@@ -407,7 +409,7 @@ describe("ApiMeSchema", () => {
       email: "user@example.com",
     }
 
-    const result = ApiMeSchema.shape.GET?.shape.output.safeParse(invalidOutput)
+    const result = ApiMeSchema.shape.GET.shape.output.safeParse(invalidOutput)
 
     expect(result.success).toBe(false)
   })

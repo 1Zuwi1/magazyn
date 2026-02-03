@@ -1,6 +1,10 @@
 "use client"
 
-import { Cancel01Icon, Loading03Icon } from "@hugeicons/core-free-icons"
+import {
+  AlertCircleIcon,
+  Cancel01Icon,
+  Loading03Icon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser"
 import {
@@ -200,7 +204,7 @@ export function ScannerCamera({
   return (
     <>
       <Button
-        className={cn("absolute top-12 right-2 z-10", {
+        className={cn("absolute top-12 right-2 z-10 rounded-xl", {
           "top-4 right-4": !isMobile,
         })}
         onClick={onRequestClose}
@@ -212,27 +216,59 @@ export function ScannerCamera({
       </Button>
 
       {errorMsg ? (
-        <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2">
-          <p className="m-4 text-center text-red-600">
-            Wystąpił błąd. Upewnij się że Twoja kamera jest podłączona i
-            dostępna oraz że udzieliłeś/aś pozwolenia na jej użycie.
-            <br />
-            <br />
-            Szczegóły: {errorMsg}
-          </p>
+        <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
+          {/* Decorative background gradient */}
+          <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-destructive/5 via-transparent to-transparent opacity-50" />
 
-          <Button
-            className="mx-auto mt-4 block"
-            onClick={() => {
-              setErrorMsg(null)
-              if (videoElement) {
-                start(videoElement)
-              }
-            }}
-            type="button"
-          >
-            Spróbuj ponownie
-          </Button>
+          {/* Decorative blur circle */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/2 left-1/2 size-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-destructive/10 opacity-30 blur-3xl" />
+          </div>
+
+          <div className="relative flex flex-col items-center gap-4">
+            {/* Icon */}
+            <div className="flex size-16 items-center justify-center rounded-2xl bg-destructive/10 ring-1 ring-destructive/20">
+              <HugeiconsIcon
+                className="size-8 text-destructive"
+                icon={AlertCircleIcon}
+              />
+            </div>
+
+            {/* Text content */}
+            <div className="max-w-sm space-y-2">
+              <h2 className="font-semibold text-foreground text-xl">
+                Problem z kamerą
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Upewnij się że Twoja kamera jest podłączona i dostępna oraz że
+                udzieliłeś/aś pozwolenia na jej użycie.
+              </p>
+              <details className="mt-3">
+                <summary className="cursor-pointer text-muted-foreground text-xs hover:text-foreground">
+                  Szczegóły techniczne
+                </summary>
+                <p className="mt-2 rounded-lg bg-muted/50 p-2 font-mono text-muted-foreground text-xs">
+                  {errorMsg}
+                </p>
+              </details>
+            </div>
+
+            {/* Action button */}
+            <div className="pt-2">
+              <Button
+                onClick={() => {
+                  setErrorMsg(null)
+                  if (videoElement) {
+                    start(videoElement)
+                  }
+                }}
+                type="button"
+                variant="outline"
+              >
+                Spróbuj ponownie
+              </Button>
+            </div>
+          </div>
         </div>
       ) : (
         <>

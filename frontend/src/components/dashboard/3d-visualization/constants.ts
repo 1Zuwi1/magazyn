@@ -18,8 +18,6 @@ export const VISUALIZATION_CONSTANTS = {
   },
   COLORS: {
     floor: "#111827",
-    gridCell: "#1f2937",
-    gridSection: "#334155",
     aisleLine: "#fbbf24",
     fog: "#0f172a",
     hover: "#60a5fa",

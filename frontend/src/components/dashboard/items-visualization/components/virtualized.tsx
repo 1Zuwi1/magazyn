@@ -1,7 +1,7 @@
 "use client"
 
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { memo, useMemo, useRef } from "react"
+import { memo, useRef } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import type { Item } from "../../types"
@@ -43,7 +43,6 @@ const Virtualized = ({
   const paddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0
   const paddingBottom =
     virtualItems.length > 0 ? totalSize - (virtualItems.at(-1)?.end || 0) : 0
-  const referenceDate = useMemo(() => new Date(), [])
   const containerStyle = {
     width: `${containerWidth}px`,
     height: `${containerHeight}px`,
@@ -78,13 +77,9 @@ const Virtualized = ({
             if (!item) {
               return null
             }
-            const itemExpiryDate =
-              item.expiryDate ??
-              new Date(Date.now() + item.daysToExpiry * 24 * 60 * 60 * 1000)
-            const expired = itemExpiryDate < referenceDate
+
             return (
               <NormalRow
-                expired={expired}
                 item={item}
                 key={item.id}
                 onDelete={onDelete}

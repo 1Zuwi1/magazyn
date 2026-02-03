@@ -1,0 +1,157 @@
+package com.github.dawid_stolarczyk.magazyn.Controller.Auth;
+
+import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
+import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
+import com.github.dawid_stolarczyk.magazyn.Services.Auth.TwoFactorService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/2fa")
+@Tag(name = "Two-Factor Authentication", description = "Endpoints for managing 2FA methods and verification")
+@RequiredArgsConstructor
+@Slf4j
+public class TwoFactorController {
+    private final TwoFactorService twoFactorService;
+
+    @Operation(summary = "Retrieve the current user's two-factor authentication methods.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved two-factor methods",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @GetMapping
+    public ResponseEntity<ResponseTemplate<TwoFactorMethodsResponse>> twoFactorMethods(HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.getUsersTwoFactorMethods(request)));
+    }
+
+    @Operation(summary = "Send a two-factor authentication code via the selected method for the current user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "2FA code sent successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @PostMapping("/send")
+    public ResponseEntity<ResponseTemplate<Void>> sendCode(@Valid @RequestBody SendTwoFactorCodeRequest sendRequest,
+                                                           HttpServletRequest request) {
+        try {
+            if (!sendRequest.getMethod().equals("EMAIL")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ResponseTemplate.error(AuthError.UNSUPPORTED_2FA_METHOD.name()));
+            }
+            twoFactorService.sendTwoFactorCodeViaEmail(request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            log.error("Failed to send 2FA code for method: {}", sendRequest.getMethod(), e);
+            HttpStatus status = AuthError.INSUFFICIENT_PERMISSIONS.name().equals(e.getCode()) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
+        }
+    }
+
+    @Operation(summary = "Generate a new Google Authenticator secret for the current user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully generated authenticator secret",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
+    })
+    @PostMapping("/authenticator/start")
+    public ResponseEntity<ResponseTemplate<TwoFactorAuthenticatorResponse>> generateAuthenticatorSecret(HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateTwoFactorGoogleSecret(request)));
+    }
+
+    @Operation(summary = "Generate new backup codes for the current user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully generated backup codes",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "400", description = "Generation failed",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @PostMapping("/backup-codes/generate")
+    public ResponseEntity<ResponseTemplate<List<String>>> generateBackupCodes(HttpServletRequest request) {
+        try {
+            return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateBackupCodes(request)));
+        } catch (AuthenticationException e) {
+            log.error("Failed to generate backup codes", e);
+            HttpStatus status = AuthError.INSUFFICIENT_PERMISSIONS.name().equals(e.getCode()) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
+        }
+    }
+
+    @Operation(summary = "Check the provided two-factor authentication code for the current user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "2FA code verified successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or expired code",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @PostMapping("/check")
+    public ResponseEntity<ResponseTemplate<Void>> checkCode(@Valid @RequestBody CodeRequest codeRequest,
+                                                            HttpServletRequest request,
+                                                            HttpServletResponse response) {
+        try {
+            twoFactorService.checkCode(codeRequest, request, response);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            log.error("2FA check failed for user session", e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
+        }
+    }
+
+    @Operation(summary = "Remove a 2FA method for the current user (EMAIL cannot be removed).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "2FA method removed successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @DeleteMapping("/methods")
+    public ResponseEntity<ResponseTemplate<Void>> removeTwoFactorMethod(@Valid @RequestBody RemoveTwoFactorMethodRequest removeRequest,
+                                                                        HttpServletRequest request) {
+        try {
+            twoFactorService.removeTwoFactorMethod(removeRequest.getMethod(), request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            log.error("Failed to remove 2FA method: {}", removeRequest.getMethod(), e);
+            HttpStatus status = AuthError.INSUFFICIENT_PERMISSIONS.name().equals(e.getCode()) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
+        }
+    }
+
+    @Operation(summary = "Set the default 2FA method for the current user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Default 2FA method updated successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions or not in sudo mode",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "400", description = "Method not enabled or unsupported",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @PatchMapping("/default")
+    public ResponseEntity<ResponseTemplate<Void>> setDefaultMethod(@Valid @RequestBody SetDefault2faMethodRequest setDefaultRequest,
+                                                                   HttpServletRequest request) {
+        try {
+            twoFactorService.setDefaultTwoFactorMethod(setDefaultRequest.getMethod(), request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            log.error("Failed to set default 2FA method: {}", setDefaultRequest.getMethod(), e);
+            HttpStatus status = e.getCode().equals(AuthError.INSUFFICIENT_PERMISSIONS.name()) ? HttpStatus.FORBIDDEN : HttpStatus.BAD_REQUEST;
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
+        }
+    }
+}

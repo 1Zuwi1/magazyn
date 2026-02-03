@@ -22,21 +22,27 @@ import {
 import { cn } from "@/lib/utils"
 import { formatDate } from "../utils/helpers"
 import { ExpiryBadge } from "./components/expiry-badge"
+import { SortableHeader, StaticHeader } from "./sortable-header"
 import type { ItemInstance } from "./types"
 
 export const assortmentColumns: ColumnDef<ItemInstance>[] = [
   {
     id: "category",
     accessorKey: "definition.category",
-    header: "Kategoria",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Kategoria</SortableHeader>
+    ),
     enableHiding: true,
     cell: ({ row }) => (
       <Badge variant="secondary">{row.original.definition.category}</Badge>
     ),
+    enableSorting: true,
   },
   {
     accessorKey: "definition.name",
-    header: "Nazwa przedmiotu",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Nazwa przedmiotu</SortableHeader>
+    ),
     cell: ({ row }) => {
       const definition = row.original.definition
       return (
@@ -56,22 +62,29 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
         </div>
       )
     },
+    enableSorting: true,
   },
   {
     accessorKey: "rackName",
-    header: "Regał",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Regał</SortableHeader>
+    ),
     cell: ({ row }) => (
       <div>
         <div className="font-medium">{row.original.rackName}</div>
         <div className="text-muted-foreground text-sm">
-          Rząd {row.original.position.row}, Kol. {row.original.position.col}
+          Rząd {row.original.position.row + 1}, Kol.{" "}
+          {row.original.position.col + 1}
         </div>
       </div>
     ),
+    enableSorting: true,
   },
   {
     accessorKey: "qrCode",
-    header: "QR Code",
+    header: ({ column }) => (
+      <SortableHeader column={column}>QR Code</SortableHeader>
+    ),
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <HugeiconsIcon
@@ -81,30 +94,44 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
         <span className="font-mono text-sm">{row.original.qrCode}</span>
       </div>
     ),
+    enableSorting: true,
   },
   {
     accessorKey: "addedDate",
-    header: "Data dodania",
-    cell: ({ row }) => formatDate(row.original.addedDate),
+    header: ({ column }) => (
+      <SortableHeader column={column}>Data dodania</SortableHeader>
+    ),
+    cell: ({ row }) => (
+      <span className="font-mono text-sm">
+        {formatDate(row.original.addedDate)}
+      </span>
+    ),
+    enableSorting: true,
   },
   {
     accessorKey: "expiryDate",
-    header: "Przeterminowanie",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Przeterminowanie</SortableHeader>
+    ),
     cell: ({ row }) => {
       const expiryBadge = useMemo(() => {
         return <ExpiryBadge expiryDate={row.original.expiryDate} />
       }, [row.original.expiryDate])
       return (
         <div className="space-y-1">
-          <div className="text-sm">{formatDate(row.original.expiryDate)}</div>
+          <div className="font-mono text-sm">
+            {formatDate(row.original.expiryDate)}
+          </div>
           {expiryBadge}
         </div>
       )
     },
+    enableSorting: true,
   },
 
   {
     id: "actions",
+    header: () => <StaticHeader>Akcje</StaticHeader>,
     cell: ({ row }) => {
       const item = row.original
 
@@ -144,5 +171,6 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
         </DropdownMenu>
       )
     },
+    enableSorting: false,
   },
 ]
