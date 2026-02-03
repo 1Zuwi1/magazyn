@@ -112,6 +112,12 @@ public class WebAuthnService {
             throw new AuthenticationException(AuthError.TOO_MANY_PASSKEYS.name());
         }
 
+        // Validate unique name for this user
+        String finalKeyName = keyName != null && !keyName.isBlank() ? keyName : "Passkey " + (currentKeys + 1);
+        if (webAuthRepository.existsByUserHandleAndName(userHandle.getBase64Url(), finalKeyName)) {
+            throw new AuthenticationException(AuthError.PASSKEY_NAME_ALREADY_EXISTS.name());
+        }
+
         // Pobieramy zapisany request z Redis
         PublicKeyCredentialCreationOptions request =
                 redisService.getRegistrationRequest(userHandle.getBase64Url());
@@ -129,7 +135,7 @@ public class WebAuthnService {
 
         // Zapis credentiala w DB
         WebAuthnCredential entity = WebAuthnCredential.builder()
-                .name(keyName != null && !keyName.isBlank() ? keyName : "Passkey " + (currentKeys + 1))
+                .name(finalKeyName)
                 .credentialId(result.getKeyId().getId().getBase64Url())
                 .publicKeyCose(result.getPublicKeyCose().getBase64Url())
                 .signatureCount(result.getSignatureCount())
@@ -171,6 +177,38 @@ public class WebAuthnService {
         }
 
         webAuthRepository.delete(credential);
+    }
+
+    @Transactional
+    public void renamePasskey(Long id, String newName) {
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        if (!authPrincipal.isSudoMode()) {
+            throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
+        }
+
+        User userEntity = userRepository.findById(authPrincipal.getUserId()).orElseThrow();
+
+        WebAuthnCredential credential = webAuthRepository.findById(id)
+                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        // Verify ownership
+        if (!credential.getUserHandle().equals(userEntity.getUserHandle())) {
+            throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
+        }
+
+        // Validate new name is not empty
+        if (newName == null || newName.isBlank()) {
+            throw new AuthenticationException(AuthError.INVALID_INPUT.name());
+        }
+
+        // Validate unique name for this user (excluding current credential)
+        if (webAuthRepository.existsByUserHandleAndNameAndIdNot(
+                userEntity.getUserHandle(), newName, id)) {
+            throw new AuthenticationException(AuthError.PASSKEY_NAME_ALREADY_EXISTS.name());
+        }
+
+        credential.setName(newName);
+        webAuthRepository.save(credential);
     }
 
     /* ===================== ASSERTION ===================== */

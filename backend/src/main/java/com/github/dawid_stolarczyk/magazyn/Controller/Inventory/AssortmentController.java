@@ -6,6 +6,7 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.AssortmentImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.AssortmentService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -31,18 +32,19 @@ public class AssortmentController {
     private final AssortmentImportService assortmentImportService;
 
     @Operation(summary = "Get all assortments")
-    @ApiResponse(responseCode = "200", description = "List of all assortments",
-            content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
+    @ApiResponse(responseCode = "200", description = "Success - returns list of assortments (id, itemId, rackId, userId, barcode, positionX, positionY, createdAt, expiresAt)",
+            content = @Content(mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = AssortmentDto.class))))
     @GetMapping
     public ResponseEntity<ResponseTemplate<List<AssortmentDto>>> getAllAssortments(HttpServletRequest request) {
         return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAllAssortments(request)));
     }
 
-    @Operation(summary = "Retrieve a specific assortment placement by its ID.")
+    @Operation(summary = "Get assortment by ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Assortment retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "404", description = "Assortment not found",
+            @ApiResponse(responseCode = "200", description = "Success - returns assortment (id, itemId, rackId, userId, barcode, positionX, positionY, createdAt, expiresAt)",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssortmentDto.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: ASSORTMENT_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/{id}")
@@ -54,11 +56,11 @@ public class AssortmentController {
         }
     }
 
-    @Operation(summary = "Create a new assortment placement")
+    @Operation(summary = "Create assortment [ADMIN]")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Assortment created successfully",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input or placement constraints violated",
+            @ApiResponse(responseCode = "201", description = "Success - returns created assortment with generated barcode (GS1-128)",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssortmentDto.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: ITEM_NOT_FOUND, RACK_NOT_FOUND, INVALID_POSITION, POSITION_OCCUPIED, PLACEMENT_INVALID",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping
@@ -67,11 +69,11 @@ public class AssortmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(assortmentService.createAssortment(assortmentDto, request)));
     }
 
-    @Operation(summary = "Update an existing assortment placement")
+    @Operation(summary = "Update assortment [ADMIN]")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Assortment updated successfully",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input or assortment/rack/item not found",
+            @ApiResponse(responseCode = "200", description = "Success - returns updated assortment",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssortmentDto.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: ASSORTMENT_NOT_FOUND, ITEM_NOT_FOUND, RACK_NOT_FOUND, INVALID_POSITION",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PutMapping("/{id}")
@@ -80,11 +82,11 @@ public class AssortmentController {
         return ResponseEntity.ok(ResponseTemplate.success(assortmentService.updateAssortment(id, assortmentDto, request)));
     }
 
-    @Operation(summary = "Delete an assortment placement")
+    @Operation(summary = "Delete assortment [ADMIN]")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Assortment deleted successfully",
+            @ApiResponse(responseCode = "200", description = "Success - assortment deleted",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "404", description = "Assortment not found",
+            @ApiResponse(responseCode = "404", description = "Error codes: ASSORTMENT_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @DeleteMapping("/{id}")
@@ -163,11 +165,11 @@ public class AssortmentController {
         return ResponseEntity.ok(ResponseTemplate.success(assortmentImportService.importFromCsv(file)));
     }
 
-    @Operation(summary = "Retrieve a specific assortment placement by its barcode.")
+    @Operation(summary = "Get assortment by barcode (GS1-128)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Assortment retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "404", description = "Assortment not found",
+            @ApiResponse(responseCode = "200", description = "Success - returns assortment by barcode",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssortmentDto.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: ASSORTMENT_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/barcode/{code}")

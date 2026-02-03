@@ -4,7 +4,6 @@ import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WebAuthnFinishRequest;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
-import com.github.dawid_stolarczyk.magazyn.Model.Entity.WebAuthnCredential;
 import com.github.dawid_stolarczyk.magazyn.Services.Auth.WebAuthnService;
 import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
 import com.yubico.webauthn.data.PublicKeyCredentialRequestOptions;
@@ -12,6 +11,7 @@ import com.yubico.webauthn.data.exception.Base64UrlException;
 import com.yubico.webauthn.exception.AssertionFailedException;
 import com.yubico.webauthn.exception.RegistrationFailedException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -27,7 +27,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 @RequestMapping("/webauthn")
@@ -40,11 +39,11 @@ public class WebAuthnController {
 
     /* ===================== REGISTRATION ===================== */
 
-    @Operation(summary = "Initiate passkey registration for the current user.")
+    @Operation(summary = "Start passkey registration (requires sudo mode)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Registration options generated successfully",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "500", description = "Registration initiation failed",
+            @ApiResponse(responseCode = "200", description = "Success - returns PublicKeyCredentialCreationOptions",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PublicKeyCredentialCreationOptions.class))),
+            @ApiResponse(responseCode = "500", description = "Error codes: INVALID_PASSKEY_REGISTRATION",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/register/start")
@@ -58,14 +57,11 @@ public class WebAuthnController {
         }
     }
 
-    // Finish registration → przyjmuje JSON credential z frontendu
-    @Operation(summary = "Complete passkey registration with the credential received from the browser.")
+    @Operation(summary = "Finish passkey registration")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Registration completed successfully",
+            @ApiResponse(responseCode = "200", description = "Success - passkey registered",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "Registration verification failed",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
-            @ApiResponse(responseCode = "500", description = "Unexpected error during registration",
+            @ApiResponse(responseCode = "400", description = "Error codes: INVALID_PASSKEY_REGISTRATION, PASSKEY_NAME_ALREADY_EXISTS, TOO_MANY_PASSKEYS",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/register/finish")
@@ -84,14 +80,11 @@ public class WebAuthnController {
 
     /* ===================== ASSERTION / LOGIN ===================== */
 
-    // Start assertion → zwraca PublicKeyCredentialRequestOptions
-    @Operation(summary = "Initiate passkey authentication (login).")
+    @Operation(summary = "Start passkey authentication")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Authentication options generated successfully",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Authentication initiation failed",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
-            @ApiResponse(responseCode = "500", description = "Unexpected error during authentication initiation",
+            @ApiResponse(responseCode = "200", description = "Success - returns PublicKeyCredentialRequestOptions",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PublicKeyCredentialRequestOptions.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: INVALID_PASSKEY_ASSERTION",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/assertion/start")
@@ -106,16 +99,11 @@ public class WebAuthnController {
     }
 
 
-    // Finish assertion → przyjmuje credential JSON z frontendu
-    @Operation(summary = "Complete passkey authentication and log in the user.")
+    @Operation(summary = "Finish passkey authentication")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Authentication successful and user logged in",
+            @ApiResponse(responseCode = "200", description = "Success - user logged in",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication verification failed",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
-            @ApiResponse(responseCode = "400", description = "Bad request - invalid format",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
-            @ApiResponse(responseCode = "500", description = "Unexpected error during authentication completion",
+            @ApiResponse(responseCode = "401", description = "Error codes: INVALID_PASSKEY_ASSERTION",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/assertion/finish")
@@ -135,39 +123,5 @@ public class WebAuthnController {
         }
     }
 
-    @Operation(summary = "Get list of registered passkeys for the current user.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "List of passkeys retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
-    })
-    @org.springframework.web.bind.annotation.GetMapping("/credentials")
-    public ResponseEntity<ResponseTemplate<List<WebAuthnCredential>>> getMyPasskeys() {
-        return ResponseEntity.ok(ResponseTemplate.success(webAuthnService.getMyPasskeys()));
-    }
-
-    @Operation(summary = "Delete a specific passkey.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Passkey deleted successfully",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "403", description = "Insufficient permissions or not in sudo mode",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
-            @ApiResponse(responseCode = "404", description = "Passkey not found",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
-    })
-    @DeleteMapping("/credentials/{id}")
-    public ResponseEntity<ResponseTemplate<Void>> deletePasskey(@org.springframework.web.bind.annotation.PathVariable Long id) {
-        try {
-            webAuthnService.deletePasskey(id);
-            return ResponseEntity.ok(ResponseTemplate.success());
-        } catch (AuthenticationException e) {
-            // Use getCode() instead of getMessage() to avoid NullPointerException
-            // AuthenticationException is typically constructed with only code parameter
-            String errorCode = e.getCode();
-            HttpStatus status = AuthError.RESOURCE_NOT_FOUND.name().equals(errorCode)
-                    ? HttpStatus.NOT_FOUND
-                    : HttpStatus.FORBIDDEN;
-            return ResponseEntity.status(status).body(ResponseTemplate.error(errorCode));
-        }
-    }
 
 }

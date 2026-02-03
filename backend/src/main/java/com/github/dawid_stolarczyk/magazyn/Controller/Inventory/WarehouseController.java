@@ -6,6 +6,7 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseImportReport;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.WarehouseImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.WarehouseService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -31,9 +32,9 @@ public class WarehouseController {
     private final WarehouseService warehouseService;
     private final WarehouseImportService warehouseImportService;
 
-    @Operation(summary = "Get all user warehouses")
-    @ApiResponse(responseCode = "200", description = "List of all user warehouses",
-            content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
+    @Operation(summary = "Get all warehouses")
+    @ApiResponse(responseCode = "200", description = "Success - returns list of warehouses (id, name, address)",
+            content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = WarehouseDto.class))))
     @GetMapping
     public ResponseEntity<ResponseTemplate<List<WarehouseDto>>> getAllWarehouses(HttpServletRequest request) {
         return ResponseEntity.ok(ResponseTemplate.success(warehouseService.getAllWarehouses(request)));
@@ -41,9 +42,9 @@ public class WarehouseController {
 
     @Operation(summary = "Get warehouse by ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Warehouse details",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Warehouse not found or access denied",
+            @ApiResponse(responseCode = "200", description = "Success - returns warehouse details",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = WarehouseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: WAREHOUSE_NOT_FOUND, ACCESS_DENIED",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/{id}")
@@ -51,9 +52,9 @@ public class WarehouseController {
         return ResponseEntity.ok(ResponseTemplate.success(warehouseService.getWarehouseById(id, request)));
     }
 
-    @Operation(summary = "Create a new warehouse")
-    @ApiResponse(responseCode = "201", description = "Warehouse created successfully",
-            content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
+    @Operation(summary = "Create warehouse [ADMIN]")
+    @ApiResponse(responseCode = "201", description = "Success - returns created warehouse",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = WarehouseDto.class)))
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseTemplate<WarehouseDto>> createWarehouse(@Valid @RequestBody WarehouseDto dto, HttpServletRequest request) {

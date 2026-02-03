@@ -2,9 +2,13 @@ package com.github.dawid_stolarczyk.magazyn.Controller.Auth;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Auth.PasskeyRenameRequest;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.WebAuthnCredential;
 import com.github.dawid_stolarczyk.magazyn.Services.Auth.TwoFactorService;
+import com.github.dawid_stolarczyk.magazyn.Services.Auth.WebAuthnService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,16 +28,21 @@ import java.util.List;
 @RestController
 @RequestMapping("/2fa")
 @Tag(name = "Two-Factor Authentication", description = "Endpoints for managing 2FA methods and verification")
-@RequiredArgsConstructor
 @Slf4j
 public class TwoFactorController {
     private final TwoFactorService twoFactorService;
+    private final WebAuthnService webAuthnService;
 
-    @Operation(summary = "Retrieve the current user's two-factor authentication methods.")
+    public TwoFactorController(TwoFactorService twoFactorService, WebAuthnService webAuthnService) {
+        this.twoFactorService = twoFactorService;
+        this.webAuthnService = webAuthnService;
+    }
+
+    @Operation(summary = "Get user's 2FA methods and passkeys")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved two-factor methods",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Bad request",
+            @ApiResponse(responseCode = "200", description = "Success - returns enabled 2FA methods and passkey list",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TwoFactorMethodsResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: BAD_REQUEST",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping
@@ -41,11 +50,15 @@ public class TwoFactorController {
         return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.getUsersTwoFactorMethods(request)));
     }
 
-    @Operation(summary = "Send a two-factor authentication code via the selected method for the current user.")
+    @Operation(summary = "Send 2FA code via email")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "2FA code sent successfully",
+            @ApiResponse(responseCode = "200", description = "Success - code sent to email",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request",
+            @ApiResponse(responseCode = "400", description = "Error codes: UNSUPPORTED_2FA_METHOD",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "401", description = "Error codes: NOT_AUTHENTICATED",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "Error codes: INSUFFICIENT_PERMISSIONS",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/send")
@@ -65,21 +78,23 @@ public class TwoFactorController {
         }
     }
 
-    @Operation(summary = "Generate a new Google Authenticator secret for the current user.")
+    @Operation(summary = "Generate Google Authenticator secret")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully generated authenticator secret",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
+            @ApiResponse(responseCode = "200", description = "Success - returns secret and QR code URL",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TwoFactorAuthenticatorResponse.class)))
     })
     @PostMapping("/authenticator/start")
     public ResponseEntity<ResponseTemplate<TwoFactorAuthenticatorResponse>> generateAuthenticatorSecret(HttpServletRequest request) {
         return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateTwoFactorGoogleSecret(request)));
     }
 
-    @Operation(summary = "Generate new backup codes for the current user.")
+    @Operation(summary = "Generate backup codes")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully generated backup codes",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Generation failed",
+            @ApiResponse(responseCode = "200", description = "Success - returns list of backup codes",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = String.class, example = "7DFK-93NX")))),
+            @ApiResponse(responseCode = "401", description = "Error codes: NOT_AUTHENTICATED",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "Error codes: INSUFFICIENT_PERMISSIONS",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/backup-codes/generate")
@@ -93,11 +108,11 @@ public class TwoFactorController {
         }
     }
 
-    @Operation(summary = "Check the provided two-factor authentication code for the current user.")
+    @Operation(summary = "Verify 2FA code")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "2FA code verified successfully",
+            @ApiResponse(responseCode = "200", description = "Success - code verified",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or expired code",
+            @ApiResponse(responseCode = "401", description = "Error codes: INVALID_OR_EXPIRED_CODE, CODE_FORMAT_INVALID",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/check")
@@ -113,11 +128,13 @@ public class TwoFactorController {
         }
     }
 
-    @Operation(summary = "Remove a 2FA method for the current user (EMAIL cannot be removed).")
+    @Operation(summary = "Remove 2FA method (EMAIL cannot be removed)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "2FA method removed successfully",
+            @ApiResponse(responseCode = "200", description = "Success - method removed",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request",
+            @ApiResponse(responseCode = "400", description = "Error codes: INVALID_INPUT, UNSUPPORTED_2FA_METHOD",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "Error codes: INSUFFICIENT_PERMISSIONS",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @DeleteMapping("/methods")
@@ -133,13 +150,13 @@ public class TwoFactorController {
         }
     }
 
-    @Operation(summary = "Set the default 2FA method for the current user.")
+    @Operation(summary = "Set default 2FA method")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Default 2FA method updated successfully",
+            @ApiResponse(responseCode = "200", description = "Success - default method updated",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "403", description = "Insufficient permissions or not in sudo mode",
+            @ApiResponse(responseCode = "400", description = "Error codes: METHOD_NOT_ENABLED, UNSUPPORTED_2FA_METHOD",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
-            @ApiResponse(responseCode = "400", description = "Method not enabled or unsupported",
+            @ApiResponse(responseCode = "403", description = "Error codes: INSUFFICIENT_PERMISSIONS",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PatchMapping("/default")
@@ -152,6 +169,109 @@ public class TwoFactorController {
             log.error("Failed to set default 2FA method: {}", setDefaultRequest.getMethod(), e);
             HttpStatus status = e.getCode().equals(AuthError.INSUFFICIENT_PERMISSIONS.name()) ? HttpStatus.FORBIDDEN : HttpStatus.BAD_REQUEST;
             return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
+        }
+    }
+
+    // ===================== PASSKEY ENDPOINTS =====================
+
+    @Operation(summary = "Get user's passkeys")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - returns list of passkeys (id, name, credentialId, email, signatureCount, isDiscoverable)",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = WebAuthnCredential.class)))),
+            @ApiResponse(responseCode = "401", description = "Error codes: NOT_AUTHENTICATED",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "500", description = "Error codes: INTERNAL_ERROR",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @GetMapping("/passkeys")
+    public ResponseEntity<ResponseTemplate<List<WebAuthnCredential>>> getPasskeys() {
+        try {
+            List<WebAuthnCredential> passkeys = webAuthnService.getMyPasskeys();
+            return ResponseEntity.ok(ResponseTemplate.success(passkeys));
+        } catch (AuthenticationException e) {
+            String errorCode = e.getCode();
+            log.warn("Failed to get passkeys: {}", errorCode);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ResponseTemplate.error(errorCode));
+        } catch (Exception e) {
+            log.error("Unexpected error while getting passkeys", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseTemplate.error(AuthError.INTERNAL_ERROR.name()));
+        }
+    }
+
+    @Operation(summary = "Delete passkey (requires sudo mode)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - passkey deleted",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "403", description = "Error codes: INSUFFICIENT_PERMISSIONS (sudo mode required)",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "500", description = "Error codes: INTERNAL_ERROR",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @DeleteMapping("/passkeys/{id}")
+    public ResponseEntity<ResponseTemplate<Void>> deletePasskey(@PathVariable Long id) {
+        try {
+            webAuthnService.deletePasskey(id);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            String errorCode = e.getCode();
+            log.warn("Failed to delete passkey {}: {}", id, errorCode);
+
+            // Use getCode() instead of getMessage() to avoid NullPointerException
+            HttpStatus status = AuthError.RESOURCE_NOT_FOUND.name().equals(errorCode)
+                    ? HttpStatus.NOT_FOUND
+                    : HttpStatus.FORBIDDEN;
+
+            return ResponseEntity.status(status).body(ResponseTemplate.error(errorCode));
+        } catch (Exception e) {
+            log.error("Unexpected error while deleting passkey {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseTemplate.error(AuthError.INTERNAL_ERROR.name()));
+        }
+    }
+
+    @Operation(summary = "Rename passkey (requires sudo mode, name must be unique per user)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - passkey renamed",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: PASSKEY_NAME_ALREADY_EXISTS, INVALID_INPUT",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "Error codes: INSUFFICIENT_PERMISSIONS (sudo mode required)",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "500", description = "Error codes: INTERNAL_ERROR",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @PutMapping("/passkeys/{id}/rename")
+    public ResponseEntity<ResponseTemplate<Void>> renamePasskey(
+            @PathVariable Long id,
+            @Valid @RequestBody PasskeyRenameRequest request) {
+        try {
+            webAuthnService.renamePasskey(id, request.getName());
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            String errorCode = e.getCode();
+            log.warn("Failed to rename passkey {}: {}", id, errorCode);
+
+            HttpStatus status;
+            if (AuthError.RESOURCE_NOT_FOUND.name().equals(errorCode)) {
+                status = HttpStatus.NOT_FOUND;
+            } else if (AuthError.PASSKEY_NAME_ALREADY_EXISTS.name().equals(errorCode) ||
+                    AuthError.INVALID_INPUT.name().equals(errorCode)) {
+                status = HttpStatus.BAD_REQUEST;
+            } else {
+                status = HttpStatus.FORBIDDEN;
+            }
+
+            return ResponseEntity.status(status).body(ResponseTemplate.error(errorCode));
+        } catch (Exception e) {
+            log.error("Unexpected error while renaming passkey {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseTemplate.error(AuthError.INTERNAL_ERROR.name()));
         }
     }
 }

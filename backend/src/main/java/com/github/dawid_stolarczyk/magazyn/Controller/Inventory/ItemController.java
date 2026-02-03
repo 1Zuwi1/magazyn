@@ -6,6 +6,7 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.ItemImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.ItemService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -32,35 +33,21 @@ public class ItemController {
     private final ItemService itemService;
     private final ItemImportService itemImportService;
 
-    @Operation(
-            summary = "Get all items",
-            description = "Returns list of all products available in the system"
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "Successfully retrieved list of items",
-            content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))
-    )
+    @Operation(summary = "Get all items")
+    @ApiResponse(responseCode = "200", description = "Success - returns list of items (id, name, barcode, weight, sizeX, sizeY, sizeZ, minTemp, maxTemp, expireAfterDays, dangerous, photoUrl)",
+            content = @Content(mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = ItemDto.class))))
     @GetMapping
     public ResponseEntity<ResponseTemplate<List<ItemDto>>> getAllItems(HttpServletRequest request) {
         return ResponseEntity.ok(ResponseTemplate.success(itemService.getAllItems(request)));
     }
 
-    @Operation(
-            summary = "Get item by ID",
-            description = "Returns detailed information about a specific product by its database ID"
-    )
+    @Operation(summary = "Get item by ID")
     @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Successfully retrieved item data",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Item with specified ID not found",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
-            )
+            @ApiResponse(responseCode = "200", description = "Success - returns item details",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/{id}")
     public ResponseEntity<ResponseTemplate<ItemDto>> getItemById(@PathVariable Long id, HttpServletRequest request) {
@@ -71,24 +58,12 @@ public class ItemController {
         }
     }
 
-    @Operation(
-            summary = "Get item by barcode",
-            description = """
-                    Returns detailed product information by its 6-digit barcode (GS1-128 compatible).
-                    This endpoint is useful for barcode scanning operations.
-                    """
-    )
+    @Operation(summary = "Get item by barcode (6-digit GS1-128)")
     @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Successfully retrieved item data with photo URL if available",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Item with specified barcode not found",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
-            )
+            @ApiResponse(responseCode = "200", description = "Success - returns item with all details including photoUrl",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/barcode/{barcode}")
     public ResponseEntity<ResponseTemplate<ItemDto>> getItemByBarcode(@PathVariable String barcode, HttpServletRequest request) {
@@ -99,29 +74,12 @@ public class ItemController {
         }
     }
 
-    @Operation(
-            summary = "Create a new item",
-            description = """
-                    Creates a new product in the system. Requires ADMIN role.
-                    Barcode is generated automatically (6-digit code compatible with GS1-128).
-                    """
-    )
+    @Operation(summary = "Create item [ADMIN] - auto-generates 6-digit barcode")
     @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "Item created successfully",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid input data (validation failed)",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "Access denied - requires ADMIN role",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
-            )
+            @ApiResponse(responseCode = "201", description = "Success - returns created item with generated barcode",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: INVALID_INPUT",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -140,7 +98,7 @@ public class ItemController {
             @ApiResponse(
                     responseCode = "200",
                     description = "Item updated successfully",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -207,7 +165,7 @@ public class ItemController {
             @ApiResponse(
                     responseCode = "200",
                     description = "Photo uploaded successfully - returns S3 file path",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class, example = "items-photos/encrypted-photo.bin"))
             ),
             @ApiResponse(
                     responseCode = "400",

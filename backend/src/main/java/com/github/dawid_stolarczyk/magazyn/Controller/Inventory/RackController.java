@@ -6,6 +6,7 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.RackImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.RackService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -31,16 +32,16 @@ public class RackController {
     private final RackImportService rackImportService;
 
     @Operation(summary = "Get all racks")
-    @ApiResponse(responseCode = "200", description = "List of all racks",
-            content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
+    @ApiResponse(responseCode = "200", description = "Success - returns list of racks (id, marker, sizeX, sizeY, maxSizeX/Y/Z, minTemp, maxTemp, maxWeight, acceptsDangerous, warehouseId, comment)",
+            content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = RackDto.class))))
     @GetMapping
     public ResponseEntity<ResponseTemplate<List<RackDto>>> getAllRacks(HttpServletRequest request) {
         return ResponseEntity.ok(ResponseTemplate.success(rackService.getAllRacks(request)));
     }
 
     @Operation(summary = "Get racks by warehouse ID")
-    @ApiResponse(responseCode = "200", description = "List of racks in a warehouse",
-            content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
+    @ApiResponse(responseCode = "200", description = "Success - returns list of racks in warehouse",
+            content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = RackDto.class))))
     @GetMapping("/warehouse/{warehouseId}")
     public ResponseEntity<ResponseTemplate<List<RackDto>>> getRacksByWarehouse(@PathVariable Long warehouseId, HttpServletRequest request) {
         return ResponseEntity.ok(ResponseTemplate.success(rackService.getRacksByWarehouse(warehouseId, request)));
@@ -48,9 +49,9 @@ public class RackController {
 
     @Operation(summary = "Get rack by ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Rack details",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Rack not found",
+            @ApiResponse(responseCode = "200", description = "Success - returns rack details",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = RackDto.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: RACK_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/{id}")
@@ -58,11 +59,11 @@ public class RackController {
         return ResponseEntity.ok(ResponseTemplate.success(rackService.getRackById(id, request)));
     }
 
-    @Operation(summary = "Create a new rack")
+    @Operation(summary = "Create rack [ADMIN]")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Rack created successfully",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input or warehouse not found",
+            @ApiResponse(responseCode = "201", description = "Success - returns created rack",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = RackDto.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: INVALID_INPUT, WAREHOUSE_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping
@@ -71,11 +72,11 @@ public class RackController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(rackService.createRack(rackDto, request)));
     }
 
-    @Operation(summary = "Update an existing rack")
+    @Operation(summary = "Update rack [ADMIN]")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Rack updated successfully",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input or rack/warehouse not found",
+            @ApiResponse(responseCode = "200", description = "Success - returns updated rack",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = RackDto.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: RACK_NOT_FOUND, WAREHOUSE_NOT_FOUND, INVALID_INPUT",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PutMapping("/{id}")
