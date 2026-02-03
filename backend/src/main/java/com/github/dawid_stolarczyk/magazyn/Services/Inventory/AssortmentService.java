@@ -128,10 +128,10 @@ public class AssortmentService {
                     // MySQL: "Duplicate entry ... for key 'barcode'" or "for key 'UK_barcode'"
                     // PostgreSQL: "duplicate key value violates unique constraint"
                     isBarcodeCollision = (lowerMessage.contains("barcode") &&
-                                         (lowerMessage.contains("duplicate") ||
-                                          lowerMessage.contains("unique"))) ||
-                                         lowerMessage.contains("uk_barcode") ||
-                                         lowerMessage.contains("idx_barcode");
+                            (lowerMessage.contains("duplicate") ||
+                                    lowerMessage.contains("unique"))) ||
+                            lowerMessage.contains("uk_barcode") ||
+                            lowerMessage.contains("idx_barcode");
                 }
 
                 if (isBarcodeCollision) {

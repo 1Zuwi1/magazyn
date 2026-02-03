@@ -160,8 +160,13 @@ public class WebAuthnController {
             webAuthnService.deletePasskey(id);
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
-            HttpStatus status = e.getMessage().equals(AuthError.RESOURCE_NOT_FOUND.name()) ? HttpStatus.NOT_FOUND : HttpStatus.FORBIDDEN;
-            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getMessage()));
+            // Use getCode() instead of getMessage() to avoid NullPointerException
+            // AuthenticationException is typically constructed with only code parameter
+            String errorCode = e.getCode();
+            HttpStatus status = AuthError.RESOURCE_NOT_FOUND.name().equals(errorCode)
+                    ? HttpStatus.NOT_FOUND
+                    : HttpStatus.FORBIDDEN;
+            return ResponseEntity.status(status).body(ResponseTemplate.error(errorCode));
         }
     }
 
