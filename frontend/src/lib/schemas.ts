@@ -4,7 +4,7 @@ import { createApiSchema } from "./create-api-schema"
 
 const txtEncoder = new TextEncoder()
 
-export const TFAMethods = z.enum(["AUTHENTICATOR", "SMS", "EMAIL"])
+export const TFAMethods = z.enum(["AUTHENTICATOR", "SMS", "EMAIL", "PASSKEYS"])
 export type TwoFactorMethod = z.infer<typeof TFAMethods>
 
 export type ResendType = Exclude<TwoFactorMethod, "AUTHENTICATOR">
@@ -187,7 +187,7 @@ export const Verify2FASchema = createApiSchema({
 export const Resend2FASchema = createApiSchema({
   POST: {
     input: z.object({
-      method: z.enum(["SMS", "EMAIL"]),
+      method: TFAMethods.exclude(["AUTHENTICATOR", "PASSKEYS"]),
     }),
     output: z.null(),
   },
@@ -212,6 +212,9 @@ export const ApiMeSchema = createApiSchema({
 
 export const TFASchema = createApiSchema({
   GET: {
-    output: z.array(TFAMethods),
+    output: z.object({
+      defaultMethod: TFAMethods,
+      methods: z.array(TFAMethods),
+    }),
   },
 })

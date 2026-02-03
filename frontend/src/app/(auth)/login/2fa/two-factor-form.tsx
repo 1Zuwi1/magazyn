@@ -34,6 +34,7 @@ interface TwoFactorFormProps {
   resendMethods: ResendType[]
   methodTitles: Record<TwoFactorMethod, string>
   methodSwitchLabels: Record<TwoFactorMethod, string>
+  defaultLinkedMethod: TwoFactorMethod
   otpLength: number
 }
 
@@ -42,12 +43,13 @@ export default function TwoFactorForm({
   resendMethods,
   methodTitles,
   methodSwitchLabels,
+  defaultLinkedMethod,
   otpLength,
 }: TwoFactorFormProps) {
   if (linkedMethods.length === 0) {
     throw new Error("TwoFactorForm requires at least one linked 2FA method.")
   }
-  const [defaultMethod] = useState(() => linkedMethods[0])
+  const [defaultMethod] = useState(() => defaultLinkedMethod)
   const [isResending, setIsResending] = useState(false)
   const autoSubmittedRef = useRef(false)
   const router = useRouter()
