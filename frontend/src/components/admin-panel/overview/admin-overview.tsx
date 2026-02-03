@@ -68,13 +68,13 @@ export function AdminOverview() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           description={`${stats.users.active} aktywnych`}
-          href="/dashboard/admin/users"
+          href="/admin/users"
           icon={UserMultiple02Icon}
           title="Użytkownicy"
           value={stats.users.total}
         />
         <StatCard
-          href="/dashboard/admin/warehouses"
+          href="/admin/warehouses"
           icon={Warehouse}
           title="Magazyny"
           value={stats.warehouses.total}
@@ -88,7 +88,7 @@ export function AdminOverview() {
         />
         <StatCard
           description={`${stats.alerts.total} łącznie`}
-          href="/dashboard/admin/notifications"
+          href="/admin/notifications"
           icon={Alert01Icon}
           title="Nieprzeczytane alerty"
           value={stats.alerts.unread}
@@ -101,7 +101,7 @@ export function AdminOverview() {
           <h2 className="font-semibold text-xl">Magazyny wymagające uwagi</h2>
           <Link
             className={buttonVariants({ variant: "ghost", size: "sm" })}
-            href="/dashboard/admin/warehouses"
+            href="/admin/warehouses"
           >
             Zobacz wszystkie
           </Link>

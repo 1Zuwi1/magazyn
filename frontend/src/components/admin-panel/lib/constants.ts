@@ -6,10 +6,10 @@ import {
 import type { Role, Status, User } from "@/components/dashboard/types"
 
 export const ADMIN_NAV_LINKS = [
-  { title: "Przegląd", url: "/dashboard/admin" },
-  { title: "Użytkownicy", url: "/dashboard/admin/users" },
-  { title: "Magazyny", url: "/dashboard/admin/warehouses" },
-  { title: "Powiadomienia", url: "/dashboard/admin/notifications" },
+  { title: "Przegląd", url: "/admin" },
+  { title: "Użytkownicy", url: "/admin/users" },
+  { title: "Magazyny", url: "/admin/warehouses" },
+  { title: "Powiadomienia", url: "/admin/notifications" },
 ] as const
 
 export const NOTIFICATIONS_NAV_LINKS = [

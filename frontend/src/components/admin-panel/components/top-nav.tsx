@@ -22,7 +22,7 @@ export function TopNav() {
     href: link.url,
     isActive:
       pathname === link.url ||
-      (link.url === "/dashboard/admin" && pathname === "/dashboard/admin/"),
+      (link.url === "/admin" && pathname === "/admin/"),
   }))
   return (
     <>

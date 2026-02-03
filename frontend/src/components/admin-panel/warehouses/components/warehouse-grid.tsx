@@ -151,7 +151,7 @@ export function WarehouseGrid({
                   variant: "outline",
                   className: "w-full",
                 })}
-                href={`/dashboard/admin/warehouses/${encodeURIComponent(warehouse.name)}`}
+                href={`/admin/warehouses/${encodeURIComponent(warehouse.name)}`}
               >
                 Zarządzaj regałami
               </Link>
