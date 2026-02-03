@@ -39,3 +39,7 @@ build/
 
 
 *.env
+
+# Temporary files
+tmp_*.txt
+

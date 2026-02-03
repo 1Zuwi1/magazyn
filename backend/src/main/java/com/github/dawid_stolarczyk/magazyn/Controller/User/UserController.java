@@ -1,8 +1,8 @@
-package com.github.dawid_stolarczyk.magazyn.Controller;
+package com.github.dawid_stolarczyk.magazyn.Controller.User;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
-import com.github.dawid_stolarczyk.magazyn.Services.UserService;
+import com.github.dawid_stolarczyk.magazyn.Services.User.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,13 +10,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -38,22 +40,40 @@ public class UserController {
         return ResponseEntity.ok(ResponseTemplate.success(userService.getBasicInformation(request)));
     }
 
-    @Operation(summary = "Change the current user's email address.")
+    @Operation(summary = "[ADMIN] Get all users")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Email change initiated",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "Email already in use",
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved all users",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden - not admin",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @PatchMapping("/email")
-    public ResponseEntity<ResponseTemplate<Void>> changeEmail(@Valid @RequestBody ChangeEmailRequest changeRequest,
-                                                              HttpServletRequest request) {
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<List<UserInfoResponse>>> getAllUsers(HttpServletRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(userService.adminGetAllUsers(request)));
+    }
+
+    @Operation(summary = "[ADMIN] Change email for any user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Email changed successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "400", description = "Email already in use or user not found",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden - not admin",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @PatchMapping("/{userId}/email")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<Void>> changeEmail(
+            @PathVariable Long userId,
+            @Valid @RequestBody ChangeEmailRequest changeRequest,
+            HttpServletRequest request) {
         try {
-            userService.changeEmail(changeRequest, request);
+            userService.adminChangeEmail(userId, changeRequest.getNewEmail(), request);
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
-            log.error("Email change failed", e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
+            log.error("Admin email change failed for user {}", userId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
         }
     }
 
@@ -76,40 +96,50 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "Change the current user's full name.")
+    @Operation(summary = "[ADMIN] Change full name for any user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Full name changed successfully",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request",
+            @ApiResponse(responseCode = "400", description = "User not found",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden - not admin",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @PatchMapping("/full-name")
-    public ResponseEntity<ResponseTemplate<Void>> changeFullName(@Valid @RequestBody ChangeFullNameRequest changeRequest,
-                                                                 HttpServletRequest request) {
+    @PatchMapping("/{userId}/full-name")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<Void>> changeFullName(
+            @PathVariable Long userId,
+            @Valid @RequestBody ChangeFullNameRequest changeRequest,
+            HttpServletRequest request) {
         try {
-            userService.changeFullName(changeRequest, request);
+            userService.adminChangeFullName(userId, changeRequest.getNewFullName(), request);
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
-            log.error("Full name change failed", e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
+            log.error("Admin full name change failed for user {}", userId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
         }
     }
 
-    @Operation(summary = "Delete the current user's account.")
+    @Operation(summary = "[ADMIN] Delete any user account")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Account deleted successfully",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request",
+            @ApiResponse(responseCode = "400", description = "User not found",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "Forbidden - not admin",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @DeleteMapping("/me")
-    public ResponseEntity<ResponseTemplate<Void>> deleteAccount(HttpServletResponse response, HttpServletRequest request) {
+    @DeleteMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<Void>> deleteAccount(
+            @PathVariable Long userId,
+            HttpServletRequest request) {
         try {
-            userService.deleteAccount(request, response);
+            userService.adminDeleteAccount(userId, request);
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
-            log.error("Account deletion failed", e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
+            log.error("Admin account deletion failed for user {}", userId, e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
         }
     }
 }

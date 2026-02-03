@@ -1,6 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Entity;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.Default2faMethod;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -53,34 +54,11 @@ public class User {
     private List<TwoFactorMethod> twoFactorMethods = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Warehouse> warehouses = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Assortment> assortments = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BackupCode> backupCodes = new ArrayList<>();
 
-
-    public void addWarehouse(Warehouse warehouse) {
-        warehouses.add(warehouse);
-        warehouse.setUser(this);
-    }
-
-    public void removeWarehouse(Warehouse warehouse) {
-        warehouses.remove(warehouse);
-        warehouse.setUser(null);
-    }
-
-    public void addAssortment(Assortment assortment) {
-        assortments.add(assortment);
-        assortment.setUser(this);
-    }
-
-    public void removeAssortment(Assortment assortment) {
-        assortments.remove(assortment);
-        assortment.setUser(null);
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "default_2fa_method", nullable = false)
+    private Default2faMethod default2faMethod = Default2faMethod.EMAIL;
 
     public void addTwoFactorMethod(TwoFactorMethod method) {
         twoFactorMethods.add(method);

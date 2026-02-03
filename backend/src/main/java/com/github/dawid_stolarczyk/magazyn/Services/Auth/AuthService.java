@@ -1,4 +1,5 @@
-package com.github.dawid_stolarczyk.magazyn.Services;
+package com.github.dawid_stolarczyk.magazyn.Services.Auth;
+
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.LoginRequest;
@@ -11,8 +12,10 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
 import com.github.dawid_stolarczyk.magazyn.Repositories.EmailVerificationRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;
+import com.github.dawid_stolarczyk.magazyn.Services.EmailService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
+import com.github.dawid_stolarczyk.magazyn.Utils.CodeGenerator;
 import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -53,11 +56,11 @@ public class AuthService {
             throw new AuthenticationException(AuthError.INVALID_CREDENTIALS.name());
         }
 
-        if (!user.getStatus().equals(AccountStatus.ACTIVE)) {
+        if (!user.getStatus().equals(AccountStatus.ACTIVE) && !user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
             throw new AuthenticationException(AuthError.ACCOUNT_LOCKED.name());
         }
 
-        sessionManager.createSuccessLoginSession(user, request, response, loginRequest.isRememberMe());
+        sessionManager.createSuccessLoginSession(user, request, response, loginRequest.isRememberMe(), false);
 
     }
 
@@ -78,7 +81,7 @@ public class AuthService {
         newUser.setRole(UserRole.USER);
         newUser.setStatus(AccountStatus.PENDING_VERIFICATION);
 
-        newUser.setUserHandle(Hasher.generateRandomBase64Url());
+        newUser.setUserHandle(CodeGenerator.generateRandomBase64Url());
 
         EmailVerification emailVerification = new EmailVerification();
         String emailVerificationToken = UUID.randomUUID().toString();

@@ -1,9 +1,11 @@
-package com.github.dawid_stolarczyk.magazyn.Controller;
+package com.github.dawid_stolarczyk.magazyn.Controller.Auth;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WebAuthnFinishRequest;
-import com.github.dawid_stolarczyk.magazyn.Services.WebAuthnService;
+import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.WebAuthnCredential;
+import com.github.dawid_stolarczyk.magazyn.Services.Auth.WebAuthnService;
 import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
 import com.yubico.webauthn.data.PublicKeyCredentialRequestOptions;
 import com.yubico.webauthn.data.exception.Base64UrlException;
@@ -22,12 +24,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/webauthn")
@@ -52,7 +52,7 @@ public class WebAuthnController {
         try {
             PublicKeyCredentialCreationOptions options = webAuthnService.startRegistration(httpServletRequest);
             return ResponseEntity.ok(ResponseTemplate.success(options));
-        } catch (Exception e) {
+        } catch (Base64UrlException e) {
             log.error("Failed to start WebAuthn registration", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_REGISTRATION.name()));
         }
@@ -74,14 +74,11 @@ public class WebAuthnController {
             HttpServletRequest httpServletRequest
     ) {
         try {
-            webAuthnService.finishRegistration(finishRequest.getCredentialJson(), httpServletRequest);
+            webAuthnService.finishRegistration(finishRequest.getCredentialJson(), finishRequest.getKeyName(), httpServletRequest);
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (IOException | RegistrationFailedException | Base64UrlException e) {
             log.error("Failed to verify WebAuthn registration", e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_REGISTRATION.name()));
-        } catch (Exception e) {
-            log.error("Unexpected error finishing WebAuthn registration", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_REGISTRATION.name()));
         }
     }
 
@@ -105,9 +102,6 @@ public class WebAuthnController {
         } catch (Base64UrlException e) {
             log.error("Base64 decoding error during WebAuthn assertion start", e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_ASSERTION.name()));
-        } catch (Exception e) {
-            log.error("Unexpected error starting WebAuthn assertion", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_ASSERTION.name()));
         }
     }
 
@@ -137,10 +131,43 @@ public class WebAuthnController {
             }
         } catch (IOException | AssertionFailedException e) {
             log.error("WebAuthn assertion verification failed", e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_ASSERTION.name()));
-        } catch (Exception e) {
-            log.error("Unexpected error finishing WebAuthn assertion", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_ASSERTION.name()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(AuthError.INVALID_PASSKEY_ASSERTION.name()));
         }
     }
+
+    @Operation(summary = "Get list of registered passkeys for the current user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of passkeys retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
+    })
+    @org.springframework.web.bind.annotation.GetMapping("/credentials")
+    public ResponseEntity<ResponseTemplate<List<WebAuthnCredential>>> getMyPasskeys() {
+        return ResponseEntity.ok(ResponseTemplate.success(webAuthnService.getMyPasskeys()));
+    }
+
+    @Operation(summary = "Delete a specific passkey.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Passkey deleted successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions or not in sudo mode",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "Passkey not found",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @DeleteMapping("/credentials/{id}")
+    public ResponseEntity<ResponseTemplate<Void>> deletePasskey(@org.springframework.web.bind.annotation.PathVariable Long id) {
+        try {
+            webAuthnService.deletePasskey(id);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            // Use getCode() instead of getMessage() to avoid NullPointerException
+            // AuthenticationException is typically constructed with only code parameter
+            String errorCode = e.getCode();
+            HttpStatus status = AuthError.RESOURCE_NOT_FOUND.name().equals(errorCode)
+                    ? HttpStatus.NOT_FOUND
+                    : HttpStatus.FORBIDDEN;
+            return ResponseEntity.status(status).body(ResponseTemplate.error(errorCode));
+        }
+    }
+
 }

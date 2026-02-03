@@ -2,12 +2,17 @@ package com.github.dawid_stolarczyk.magazyn.Model.Entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "racks")
+@Getter
+@Setter
 public class Rack {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,8 +21,11 @@ public class Rack {
     @ManyToOne
     @JoinColumn(name = "warehouse_id")
     private Warehouse warehouse;
+
     private String comment;
+    @Min(1)
     private int size_x;
+    @Min(1)
     private int size_y;
     @DecimalMin("-273.15")
     private float max_temp;
@@ -25,114 +33,15 @@ public class Rack {
     private float min_temp;
     @DecimalMin("0.0")
     private float max_weight;
+    @DecimalMin("0.0")
     private float max_size_x;
+    @DecimalMin("0.0")
     private float max_size_y;
+    @DecimalMin("0.0")
     private float max_size_z;
+
+    private boolean acceptsDangerous;
 
     @OneToMany(mappedBy = "rack", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Assortment> assortments = new ArrayList<>();
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getMarker() {
-        return marker;
-    }
-
-    public void setMarker(String marker) {
-        this.marker = marker;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
-    public int getSize_x() {
-        return size_x;
-    }
-
-    public void setSize_x(int size_x) {
-        this.size_x = size_x;
-    }
-
-    public int getSize_y() {
-        return size_y;
-    }
-
-    public void setSize_y(int size_y) {
-        this.size_y = size_y;
-    }
-
-    public float getMax_temp() {
-        return max_temp;
-    }
-
-    public void setMax_temp(float max_temp) {
-        this.max_temp = max_temp;
-    }
-
-    public float getMin_temp() {
-        return min_temp;
-    }
-
-    public void setMin_temp(float min_temp) {
-        this.min_temp = min_temp;
-    }
-
-    public float getMax_weight() {
-        return max_weight;
-    }
-
-    public void setMax_weight(float max_weight) {
-        this.max_weight = max_weight;
-    }
-
-    public float getMax_size_x() {
-        return max_size_x;
-    }
-
-    public void setMax_size_x(float max_size_x) {
-        this.max_size_x = max_size_x;
-    }
-
-    public float getMax_size_y() {
-        return max_size_y;
-    }
-
-    public void setMax_size_y(float max_size_y) {
-        this.max_size_y = max_size_y;
-    }
-
-    public float getMax_size_z() {
-        return max_size_z;
-    }
-
-    public void setMax_size_z(float max_size_z) {
-        this.max_size_z = max_size_z;
-    }
-
-    public List<Assortment> getAssortments() {
-        return assortments;
-    }
-
-    public void setAssortments(List<Assortment> assortments) {
-        this.assortments = assortments;
-    }
-
-    public Warehouse getWarehouse() {
-        return warehouse;
-    }
-
-    public void setWarehouse(Warehouse warehouse) {
-        this.warehouse = warehouse;
-    }
 }

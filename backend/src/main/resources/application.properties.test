@@ -16,4 +16,13 @@ auth.password.min-length=8
 spring.redis.host=redis
 spring.redis.port=6379
 spring.redis.password=${REDIS_PASSWORD}
+
+app.s3.endpoint=http://localhost:9000
+app.s3.region=us-east-1
+app.s3.bucket=items-photos
+app.s3.access-key=minioadmin
+app.s3.secret-key=minioadmin
+
+app.s3.items-prefix=items-photos/
+
 webauthn.allow-untrusted-attestation:true

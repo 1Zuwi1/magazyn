@@ -15,6 +15,9 @@ public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private String name;
+    @Column(unique = true, length = 32)
+    private String barcode;
     private String photo_url;
     private float min_temp;
     private float max_temp;

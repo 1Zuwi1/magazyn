@@ -26,12 +26,19 @@ import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientI
 public class SessionManager {
     private final SessionService sessionService;
 
-    public void createSuccessLoginSession(User user, HttpServletRequest request, HttpServletResponse response, boolean rememberMe) {
+    public void createSuccessLoginSession(User user,
+                                          HttpServletRequest request,
+                                          HttpServletResponse response,
+                                          boolean rememberMe,
+                                          boolean isPasskeyLogin) {
+        logoutUser(response, request);
         String sessionId = UUID.randomUUID().toString();
+        Status2FA status = isPasskeyLogin ? Status2FA.VERIFIED : Status2FA.PRE_2FA;
+
         SessionData sessionData = new SessionData(
                 sessionId,
                 user.getId(),
-                Status2FA.PRE_2FA,
+                status,
                 getClientIp(request),
                 request.getHeader("User-Agent"));
 
@@ -41,7 +48,7 @@ public class SessionManager {
             RememberMeData rememberMeData = new RememberMeData(
                     UUID.randomUUID().toString(),
                     user.getId(),
-                    Status2FA.PRE_2FA,
+                    status,
                     getClientIp(request),
                     request.getHeader("User-Agent"));
 
@@ -50,6 +57,16 @@ public class SessionManager {
                     "REMEMBER_ME",
                     sessionService.createRememberToken(rememberMeData),
                     Duration.of(14, ChronoUnit.DAYS).getSeconds());
+        }
+
+        if (isPasskeyLogin) {
+            // Also create pseudo 2FA auth cookie for sudo mode consistency
+            TwoFactorAuth twoFactorAuth = new TwoFactorAuth(
+                    UUID.randomUUID().toString(),
+                    user.getId(),
+                    getClientIp(request),
+                    request.getHeader("User-Agent"));
+            CookiesUtils.setCookie(response, "2FA_AUTH", sessionService.create2faAuth(twoFactorAuth), Duration.ofMinutes(5).toSeconds());
         }
     }
 
@@ -60,6 +77,10 @@ public class SessionManager {
                 getClientIp(request),
                 request.getHeader("User-Agent"));
         CookiesUtils.setCookie(response, "2FA_AUTH", sessionService.create2faAuth(twoFactorAuth), Duration.ofMinutes(5).toSeconds());
+
+        String sessionId = CookiesUtils.getCookie(request, "SESSION");
+        String rememberMeId = CookiesUtils.getCookie(request, "REMEMBER_ME");
+        sessionService.completeSessionTwoFactor(sessionId, rememberMeId);
     }
 
     public void logoutUser(HttpServletResponse response, HttpServletRequest request) {

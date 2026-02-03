@@ -1,4 +1,4 @@
-package com.github.dawid_stolarczyk.magazyn.Services;
+package com.github.dawid_stolarczyk.magazyn.Services.Auth;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
@@ -24,12 +24,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.List;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
 @Service
 public class WebAuthnService {
 
+    private static final int MAX_PASSKEYS_PER_USER = 10;
     private final RelyingParty relyingParty;
     private final WebAuthRepository webAuthRepository;
     private final UserRepository userRepository;
@@ -89,7 +91,7 @@ public class WebAuthnService {
     }
 
     @Transactional
-    public void finishRegistration(String json, HttpServletRequest httpServletRequest)
+    public void finishRegistration(String json, String keyName, HttpServletRequest httpServletRequest)
             throws IOException, RegistrationFailedException, Base64UrlException {
         rateLimiter.consumeOrThrow(getClientIp(httpServletRequest), RateLimitOperation.WEBAUTH_REGISTRATION);
 
@@ -99,7 +101,16 @@ public class WebAuthnService {
         }
         User userEntity = userRepository.findById(authPrincipal.getUserId()).orElseThrow();
 
+        if (!userEntity.getStatus().equals(AccountStatus.ACTIVE))
+            throw new AuthenticationException(AuthError.ACCOUNT_LOCKED.name());
+
         ByteArray userHandle = ByteArray.fromBase64Url(userEntity.getUserHandle());
+
+        // Limit check
+        long currentKeys = webAuthRepository.countByUserHandle(userHandle.getBase64Url());
+        if (currentKeys >= MAX_PASSKEYS_PER_USER) {
+            throw new AuthenticationException(AuthError.TOO_MANY_PASSKEYS.name());
+        }
 
         // Pobieramy zapisany request z Redis
         PublicKeyCredentialCreationOptions request =
@@ -118,6 +129,7 @@ public class WebAuthnService {
 
         // Zapis credentiala w DB
         WebAuthnCredential entity = WebAuthnCredential.builder()
+                .name(keyName != null && !keyName.isBlank() ? keyName : "Passkey " + (currentKeys + 1))
                 .credentialId(result.getKeyId().getId().getBase64Url())
                 .publicKeyCose(result.getPublicKeyCose().getBase64Url())
                 .signatureCount(result.getSignatureCount())
@@ -134,6 +146,31 @@ public class WebAuthnService {
 
         // Usuwamy challenge z Redis
         redisService.delete(userHandle.getBase64Url());
+    }
+
+    public List<WebAuthnCredential> getMyPasskeys() {
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        User userEntity = userRepository.findById(authPrincipal.getUserId()).orElseThrow();
+        return webAuthRepository.findByUserHandle(userEntity.getUserHandle());
+    }
+
+    @Transactional
+    public void deletePasskey(Long id) {
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        if (!authPrincipal.isSudoMode()) {
+            throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
+        }
+
+        WebAuthnCredential credential = webAuthRepository.findById(id)
+                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        User userEntity = userRepository.findById(authPrincipal.getUserId()).orElseThrow();
+
+        if (!credential.getUserHandle().equals(userEntity.getUserHandle())) {
+            throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
+        }
+
+        webAuthRepository.delete(credential);
     }
 
     /* ===================== ASSERTION ===================== */
@@ -218,8 +255,7 @@ public class WebAuthnService {
         if (!user.getStatus().equals(AccountStatus.ACTIVE) && !user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
             throw new AuthenticationException(AuthError.ACCOUNT_LOCKED.name());
         }
-        sessionManager.createSuccessLoginSession(user, httpServletRequest, httpServletResponse, true);
-        sessionManager.create2FASuccessSession(user, httpServletRequest, httpServletResponse);
+        sessionManager.createSuccessLoginSession(user, httpServletRequest, httpServletResponse, true, true);
     }
 
 }

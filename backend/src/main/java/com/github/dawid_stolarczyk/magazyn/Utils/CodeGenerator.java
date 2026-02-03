@@ -1,6 +1,9 @@
 package com.github.dawid_stolarczyk.magazyn.Utils;
 
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.UUID;
 
 public class CodeGenerator {
     private static final String BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -31,5 +34,13 @@ public class CodeGenerator {
             sb.append(RANDOM.nextInt(10));
         }
         return sb.toString();
+    }
+
+    public static String generateRandomBase64Url() {
+        UUID uuid = java.util.UUID.randomUUID();
+        ByteBuffer buffer = java.nio.ByteBuffer.allocate(16);
+        buffer.putLong(uuid.getMostSignificantBits());
+        buffer.putLong(uuid.getLeastSignificantBits());
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(buffer.array());
     }
 }
