@@ -17,7 +17,7 @@ export const NotificationSchema = z.object({
   itemId: z.string().optional(),
   metadata: z.record(z.string(), z.unknown()),
   createdAt: z.string(),
-  date: z.string(),
+  date: z.date(),
   read: z.boolean(),
 })
 

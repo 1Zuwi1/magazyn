@@ -55,7 +55,7 @@ export type NotificationType =
   | "ITEM_EXPIRED"
   | "TEMPERATURE_VIOLATION"
 
-export type NotificationSeverity = "info" | "warning" | "critical"
+export type NotificationSeverity = "INFO" | "WARNING" | "CRITICAL"
 
 export interface Notification {
   id: string
@@ -72,8 +72,8 @@ export interface Notification {
   createdAt: Date
 }
 
-export type Role = "user" | "admin"
-export type Status = "active" | "inactive"
+export type Role = "USER" | "ADMIN"
+export type Status = "ACTIVE" | "INACTIVE"
 
 export interface User {
   id: string
