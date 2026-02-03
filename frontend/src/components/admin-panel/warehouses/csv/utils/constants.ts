@@ -1,5 +1,3 @@
-import type { User } from "@/components/dashboard/types"
-
 export const RACK_COLUMNS = [
   { key: "symbol", label: "Symbol" },
   { key: "name", label: "Nazwa" },
@@ -28,28 +26,6 @@ export const ITEM_COLUMNS = [
   { key: "daystoexpiry", label: "Dni do wygaśnięcia" },
   { key: "isdangerous", label: "Niebezpieczny" },
 ] as const
-
-export const DEFAULT_RACK = {
-  symbol: "",
-  name: "",
-  rows: 0,
-  cols: 0,
-  minTemp: 0,
-  maxTemp: 0,
-  maxWeight: 0,
-  maxItemWidth: 1,
-  maxItemHeight: 1,
-  maxItemDepth: 1,
-  comment: "",
-}
-
-export const DEFAULT_USER: User = {
-  id: "",
-  username: "",
-  email: "",
-  status: "active",
-  role: "user",
-}
 
 export const DEFAULT_CONFIG = {
   accept: { "text/csv": [".csv"] },

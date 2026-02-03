@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { DEFAULT_RACK } from "../csv/utils/constants"
+import { DEFAULT_RACK } from "../../lib/constants"
 import type { RackFormData } from "../csv/utils/types"
 
 interface RackDialogProps {
@@ -235,7 +235,7 @@ export function RackDialog({
             <span className="col-span-2 text-left font-medium text-sm">
               Wymiary asortymentu (mm)
             </span>
-            <div className="col-span-5 flex gap-2">
+            <div className="col-span-4 flex gap-2">
               <form.Field name="maxItemWidth">
                 {(field) => (
                   <Input

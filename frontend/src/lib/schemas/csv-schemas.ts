@@ -78,5 +78,6 @@ export const UserFormSchema = z.object({
   username: usernameSchema,
   email: z.email(),
   role: z.enum(["user", "admin"]),
+  team: z.string(),
   status: z.enum(["active", "inactive"]),
 })

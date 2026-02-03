@@ -79,9 +79,10 @@ export function UsersTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Username</TableHead>
+            <TableHead>Nazwa użytkownika</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Zespół</TableHead>
             {actions && <TableHead />}
           </TableRow>
         </TableHeader>
@@ -92,6 +93,7 @@ export function UsersTable({
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell className="capitalize">{user.status}</TableCell>
+                <TableCell>{user.team}</TableCell>
                 {actions && (
                   <TableCell>
                     <DropdownMenu>
@@ -131,7 +133,7 @@ export function UsersTable({
             <TableRow>
               <TableCell
                 className="py-8 text-center text-muted-foreground"
-                colSpan={actions ? 4 : 3}
+                colSpan={actions ? 5 : 4}
               >
                 Brak użytkowników do wyświetlenia.
               </TableCell>

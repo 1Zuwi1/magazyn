@@ -1,7 +1,7 @@
 "use client"
 
 import { type AnyFieldApi, useForm } from "@tanstack/react-form"
-import { useEffect } from "react"
+import { useCallback, useEffect } from "react"
 import type { ZodError } from "zod"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import type { Role, Status, User } from "@/components/dashboard/types"
@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { UserFormSchema } from "@/lib/schemas/csv-schemas"
+import { DEFAULT_USER } from "../../lib/constants"
 
 const roles: { label: string; value: Role }[] = [
   { label: "Użytkownik", value: "user" },
@@ -31,13 +32,6 @@ const statuses: { label: string; value: Status }[] = [
   { label: "Aktywny", value: "active" },
   { label: "Nieaktywny", value: "inactive" },
 ]
-
-const DEFAULT_FORM_VALUES = {
-  username: "",
-  email: "",
-  status: "active" as Status,
-  role: "user" as Role,
-}
 
 interface ActionDialogProps {
   currentRow?: User
@@ -56,12 +50,16 @@ export function ActionDialog({
 }: ActionDialogProps) {
   const isEdit = !!currentRow
 
-  const getFormValues = () => ({
-    username: currentRow?.username ?? DEFAULT_FORM_VALUES.username,
-    email: currentRow?.email ?? DEFAULT_FORM_VALUES.email,
-    role: currentRow?.role ?? DEFAULT_FORM_VALUES.role,
-    status: currentRow?.status ?? DEFAULT_FORM_VALUES.status,
-  })
+  const getFormValues = useCallback(
+    () => ({
+      username: currentRow?.username ?? DEFAULT_USER.username,
+      email: currentRow?.email ?? DEFAULT_USER.email,
+      role: currentRow?.role ?? DEFAULT_USER.role,
+      status: currentRow?.status ?? DEFAULT_USER.status,
+      team: currentRow?.team ?? DEFAULT_USER.team,
+    }),
+    [currentRow]
+  )
 
   const form = useForm({
     defaultValues: getFormValues(),
@@ -82,14 +80,9 @@ export function ActionDialog({
 
   useEffect(() => {
     if (open) {
-      form.reset({
-        username: currentRow?.username ?? DEFAULT_FORM_VALUES.username,
-        email: currentRow?.email ?? DEFAULT_FORM_VALUES.email,
-        role: currentRow?.role ?? DEFAULT_FORM_VALUES.role,
-        status: currentRow?.status ?? DEFAULT_FORM_VALUES.status,
-      })
+      form.reset(getFormValues())
     }
-  }, [open, currentRow, form])
+  }, [open, getFormValues, form])
 
   const renderError = (field: AnyFieldApi) => {
     const error = field.state.meta.errors[0] as ZodError | string | undefined

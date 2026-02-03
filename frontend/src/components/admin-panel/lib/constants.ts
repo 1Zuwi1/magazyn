@@ -3,6 +3,7 @@ import {
   InboxIcon,
   WeightScale01Icon,
 } from "@hugeicons/core-free-icons"
+import type { Role, Status, User } from "@/components/dashboard/types"
 
 export const ADMIN_NAV_LINKS = [
   { title: "Przegląd", url: "/dashboard/admin" },
@@ -24,6 +25,28 @@ export const NOTIFICATIONS_NAV_LINKS = [
     filterValue: "UNAUTHORIZED_REMOVAL" as const,
   },
 ]
+export const DEFAULT_RACK = {
+  symbol: "",
+  name: "",
+  rows: 0,
+  cols: 0,
+  minTemp: 0,
+  maxTemp: 0,
+  maxWeight: 0,
+  maxItemWidth: 1,
+  maxItemHeight: 1,
+  maxItemDepth: 1,
+  comment: "",
+}
+
+export const DEFAULT_USER: User = {
+  id: "",
+  username: "",
+  email: "",
+  team: "",
+  status: "active" as Status,
+  role: "user" as Role,
+}
 
 export const THRESHOLD = 90
 export const MAX_TOAST_ROWS = 7

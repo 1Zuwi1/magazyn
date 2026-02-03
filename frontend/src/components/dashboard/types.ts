@@ -80,5 +80,6 @@ export interface User {
   username: string
   email: string
   role: Role
+  team: string
   status: Status
 }
