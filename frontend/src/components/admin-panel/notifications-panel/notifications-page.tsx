@@ -304,7 +304,7 @@ export default function NotificationsMain() {
             <div className="border-b bg-muted/30 px-4 py-3">
               <h3 className="font-medium text-sm">Filtruj według typu</h3>
             </div>
-            <div className="p-2">
+            <div className="space-y-1 p-2">
               {NOTIFICATION_FILTERS.map((filter) => {
                 const count = filter.value
                   ? notifications.filter((n) => n.type === filter.value).length
@@ -354,7 +354,7 @@ export default function NotificationsMain() {
               </h3>
             </div>
             <ScrollArea className="h-100">
-              <div className="p-2">
+              <div className="p-2 pr-4">
                 <AnimatePresence mode="popLayout">
                   {filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12">

@@ -1,8 +1,10 @@
 import {
   Analytics01Icon,
+  Bell,
   GroupItemsIcon,
   Package,
   Settings,
+  UserIcon,
   WaveTriangleIcon,
 } from "@hugeicons/core-free-icons"
 
@@ -47,6 +49,22 @@ export const navigationItems: NavigationItem[] = [
     href: "/admin",
     icon: WaveTriangleIcon,
     adminOnly: true,
-    items: [],
+    items: [
+      {
+        title: "Użytkownicy",
+        href: "/admin/users",
+        icon: UserIcon,
+      },
+      {
+        title: "Magazyny",
+        href: "/admin/warehouses",
+        icon: Package,
+      },
+      {
+        title: "Powiadomienia",
+        href: "/admin/notifications",
+        icon: Bell,
+      },
+    ],
   },
 ] as const
