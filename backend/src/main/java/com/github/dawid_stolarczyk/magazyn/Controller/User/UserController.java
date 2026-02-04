@@ -6,6 +6,7 @@ import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserTeam;
 import com.github.dawid_stolarczyk.magazyn.Services.User.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,6 +17,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -59,17 +62,25 @@ public class UserController {
         return ResponseEntity.ok(ResponseTemplate.success(teams));
     }
 
-    @Operation(summary = "[ADMIN] Get all users")
+    @Operation(summary = "[ADMIN] Get all users with pagination")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success - returns list of all users",
-                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = UserInfoResponse.class)))),
+            @ApiResponse(responseCode = "200", description = "Success - returns paginated list of all users",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
             @ApiResponse(responseCode = "403", description = "Error codes: ACCESS_FORBIDDEN (not admin)",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<List<UserInfoResponse>>> getAllUsers(HttpServletRequest request) {
-        return ResponseEntity.ok(ResponseTemplate.success(userService.adminGetAllUsers(request)));
+    public ResponseEntity<ResponseTemplate<PagedResponse<UserInfoResponse>>> getAllUsers(
+            HttpServletRequest request,
+            @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), sort);
+        return ResponseEntity.ok(ResponseTemplate.success(
+                PagedResponse.from(userService.adminGetAllUsersPaged(request, pageable))));
     }
 
     @Operation(summary = "[ADMIN] Change user email")

@@ -1,6 +1,8 @@
 package com.github.dawid_stolarczyk.magazyn.Repositories;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Assortment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -14,4 +16,6 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long> {
     Optional<Assortment> findByBarcode(String barcode);
 
     long countByRack_WarehouseId(Long warehouseId);
+
+    Page<Assortment> findAll(Pageable pageable);
 }

@@ -18,6 +18,8 @@ import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperati
 import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,25 +82,38 @@ public class UserService {
     // ===== Admin methods =====
 
     /**
-     * Admin: Get all users
+     * Admin: Get all users (non-paginated - deprecated, use paginated version)
      */
-
     public List<UserInfoResponse> adminGetAllUsers(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
         return userRepository.findAll().stream()
                 .filter(u -> !u.getId().equals(authPrincipal.getUserId()))
-                .map(user -> new UserInfoResponse(
-                        user.getId().intValue(),
-                        user.getFullName(),
-                        user.getEmail(),
-                        user.getRole().name(),
-                        user.getStatus().name(),
-                        user.getPhone(),
-                        user.getLocation(),
-                        user.getTeam() != null ? user.getTeam().name() : null
-                ))
+                .map(this::mapToUserInfoResponse)
                 .toList();
+    }
+
+    /**
+     * Admin: Get all users with pagination
+     */
+    public Page<UserInfoResponse> adminGetAllUsersPaged(HttpServletRequest request, Pageable pageable) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        return userRepository.findByIdNot(authPrincipal.getUserId(), pageable)
+                .map(this::mapToUserInfoResponse);
+    }
+
+    private UserInfoResponse mapToUserInfoResponse(User user) {
+        return new UserInfoResponse(
+                user.getId().intValue(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getRole().name(),
+                user.getStatus().name(),
+                user.getPhone(),
+                user.getLocation(),
+                user.getTeam() != null ? user.getTeam().name() : null
+        );
     }
 
     /**

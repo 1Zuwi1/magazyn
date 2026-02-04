@@ -2,10 +2,12 @@ package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentImportReport;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.AssortmentImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.AssortmentService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,6 +17,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,13 +35,21 @@ public class AssortmentController {
     private final AssortmentService assortmentService;
     private final AssortmentImportService assortmentImportService;
 
-    @Operation(summary = "Get all assortments")
-    @ApiResponse(responseCode = "200", description = "Success - returns list of assortments (id, itemId, rackId, userId, barcode, positionX, positionY, createdAt, expiresAt)",
+    @Operation(summary = "Get all assortments with pagination")
+    @ApiResponse(responseCode = "200", description = "Success - returns paginated list of assortments",
             content = @Content(mediaType = "application/json",
-                    array = @ArraySchema(schema = @Schema(implementation = AssortmentDto.class))))
+                    schema = @Schema(implementation = PagedResponse.class)))
     @GetMapping
-    public ResponseEntity<ResponseTemplate<List<AssortmentDto>>> getAllAssortments(HttpServletRequest request) {
-        return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAllAssortments(request)));
+    public ResponseEntity<ResponseTemplate<PagedResponse<AssortmentDto>>> getAllAssortments(
+            HttpServletRequest request,
+            @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), sort);
+        return ResponseEntity.ok(ResponseTemplate.success(
+                PagedResponse.from(assortmentService.getAllAssortmentsPaged(request, pageable))));
     }
 
     @Operation(summary = "Get assortment by ID")

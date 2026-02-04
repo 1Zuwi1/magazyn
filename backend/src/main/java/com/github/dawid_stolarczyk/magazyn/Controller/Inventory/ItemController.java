@@ -2,10 +2,12 @@ package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemImportReport;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.ItemImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.ItemService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,6 +17,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,13 +37,21 @@ public class ItemController {
     private final ItemService itemService;
     private final ItemImportService itemImportService;
 
-    @Operation(summary = "Get all items")
-    @ApiResponse(responseCode = "200", description = "Success - returns list of items (id, name, barcode, weight, sizeX, sizeY, sizeZ, minTemp, maxTemp, expireAfterDays, dangerous, photoUrl)",
+    @Operation(summary = "Get all items with pagination")
+    @ApiResponse(responseCode = "200", description = "Success - returns paginated list of items",
             content = @Content(mediaType = "application/json",
-                    array = @ArraySchema(schema = @Schema(implementation = ItemDto.class))))
+                    schema = @Schema(implementation = PagedResponse.class)))
     @GetMapping
-    public ResponseEntity<ResponseTemplate<List<ItemDto>>> getAllItems(HttpServletRequest request) {
-        return ResponseEntity.ok(ResponseTemplate.success(itemService.getAllItems(request)));
+    public ResponseEntity<ResponseTemplate<PagedResponse<ItemDto>>> getAllItems(
+            HttpServletRequest request,
+            @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), sort);
+        return ResponseEntity.ok(ResponseTemplate.success(
+                PagedResponse.from(itemService.getAllItemsPaged(request, pageable))));
     }
 
     @Operation(summary = "Get item by ID")

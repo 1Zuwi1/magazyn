@@ -86,6 +86,14 @@ public class ResponseTemplate<T> {
         private WarehouseImportReport data;
     }
 
+    @Schema(name = "ApiSuccessPaged", description = "Paginated response")
+    @Getter
+    public static class ApiSuccessPaged<T> {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private PagedResponse<T> data;
+    }
+
     @Schema(name = "ApiError")
     @Getter
     public static class ApiError {

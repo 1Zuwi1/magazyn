@@ -1,11 +1,13 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseImportReport;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.WarehouseImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.WarehouseService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,6 +17,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,13 +36,21 @@ public class WarehouseController {
     private final WarehouseService warehouseService;
     private final WarehouseImportService warehouseImportService;
 
-    @Operation(summary = "Get all warehouses",
-            description = "Returns list of all warehouses with statistics: racks count, occupied slots, and free slots")
-    @ApiResponse(responseCode = "200", description = "Success - returns list of warehouses (id, name, racksCount, occupiedSlots, freeSlots)",
-            content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = WarehouseDto.class))))
+    @Operation(summary = "Get all warehouses with pagination",
+            description = "Returns paginated list of all warehouses with statistics: racks count, occupied slots, and free slots")
+    @ApiResponse(responseCode = "200", description = "Success - returns paginated list of warehouses",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
     @GetMapping
-    public ResponseEntity<ResponseTemplate<List<WarehouseDto>>> getAllWarehouses(HttpServletRequest request) {
-        return ResponseEntity.ok(ResponseTemplate.success(warehouseService.getAllWarehouses(request)));
+    public ResponseEntity<ResponseTemplate<PagedResponse<WarehouseDto>>> getAllWarehouses(
+            HttpServletRequest request,
+            @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), sort);
+        return ResponseEntity.ok(ResponseTemplate.success(
+                PagedResponse.from(warehouseService.getAllWarehousesPaged(request, pageable))));
     }
 
     @Operation(summary = "Get warehouse by ID",

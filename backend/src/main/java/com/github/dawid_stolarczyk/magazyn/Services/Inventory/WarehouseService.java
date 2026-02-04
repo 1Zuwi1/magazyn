@@ -9,6 +9,8 @@ import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimi
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,12 @@ public class WarehouseService {
         return warehouseRepository.findAll().stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
+    }
+
+    public Page<WarehouseDto> getAllWarehousesPaged(HttpServletRequest request, Pageable pageable) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
+        return warehouseRepository.findAll(pageable)
+                .map(this::mapToDto);
     }
 
     public WarehouseDto getWarehouseById(Long id, HttpServletRequest request) {
