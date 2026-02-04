@@ -1,10 +1,10 @@
 import {
   Analytics01Icon,
   Bell,
-  GroupItemsIcon,
   Package,
   Settings,
   UserIcon,
+  WarehouseIcon,
   WaveTriangleIcon,
 } from "@hugeicons/core-free-icons"
 
@@ -29,12 +29,12 @@ export const navigationItems: NavigationItem[] = [
       {
         title: "Magazyny",
         href: "/dashboard/warehouse",
-        icon: Package,
+        icon: WarehouseIcon,
       },
       {
         title: "Asortyment",
         href: "/dashboard/items",
-        icon: GroupItemsIcon,
+        icon: Package,
       },
     ],
   },
@@ -58,6 +58,11 @@ export const navigationItems: NavigationItem[] = [
       {
         title: "Magazyny",
         href: "/admin/warehouses",
+        icon: WarehouseIcon,
+      },
+      {
+        title: "Asortyment",
+        href: "/admin/assortment",
         icon: Package,
       },
       {
