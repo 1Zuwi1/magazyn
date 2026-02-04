@@ -10,6 +10,8 @@ import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimi
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,12 @@ public class RackService {
                 .collect(Collectors.toList());
     }
 
+    public Page<RackDto> getAllRacksPaged(HttpServletRequest request, Pageable pageable) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
+        return rackRepository.findAll(pageable)
+                .map(this::mapToDto);
+    }
+
     public List<RackDto> getRacksByWarehouse(Long warehouseId, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
         if (!warehouseRepository.existsById(warehouseId)) {
@@ -40,6 +48,15 @@ public class RackService {
         return rackRepository.findByWarehouseId(warehouseId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
+    }
+
+    public Page<RackDto> getRacksByWarehousePaged(Long warehouseId, HttpServletRequest request, Pageable pageable) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
+        if (!warehouseRepository.existsById(warehouseId)) {
+            throw new IllegalArgumentException(InventoryError.WAREHOUSE_NOT_FOUND.name());
+        }
+        return rackRepository.findByWarehouseId(warehouseId, pageable)
+                .map(this::mapToDto);
     }
 
     public RackDto getRackById(Long id, HttpServletRequest request) {
