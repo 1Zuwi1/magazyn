@@ -141,6 +141,10 @@ export const WebAuthnFinishRegistrationSchema = createApiSchema({
   POST: {
     input: z.object({
       credentialJson: z.string().min(1, "Credential JSON jest wymagany"),
+      keyName: z
+        .string()
+        .min(1, "Nazwa klucza jest wymagana")
+        .max(50, "Nazwa jest za długa"),
     }),
     output: z.null(),
   },
@@ -249,8 +253,35 @@ export const TFARemoveMethodSchema = createApiSchema({
   },
 })
 
+// Passkeys API schemas
+const PasskeySchema = z.object({
+  id: z.number(),
+  name: z.string(),
+})
+
+export type Passkey = z.infer<typeof PasskeySchema>
+
 export const PasskeysSchema = createApiSchema({
   GET: {
-    output: z.any(),
+    output: z.array(PasskeySchema),
+  },
+})
+
+export const PasskeyDeleteSchema = createApiSchema({
+  DELETE: {
+    input: z.null(),
+    output: z.null(),
+  },
+})
+
+export const PasskeyRenameSchema = createApiSchema({
+  PUT: {
+    input: z.object({
+      name: z
+        .string()
+        .min(1, "Nazwa jest wymagana")
+        .max(50, "Nazwa jest za długa"),
+    }),
+    output: z.null(),
   },
 })
