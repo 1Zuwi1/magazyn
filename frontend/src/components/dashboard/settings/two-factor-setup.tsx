@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -497,21 +498,6 @@ function ConnectedMethods({
               <p className="text-muted-foreground text-xs">{hint}</p>
             </div>
             <div className="flex items-center gap-2">
-              {hasMultipleMethods && !isDefault ? (
-                <Button
-                  aria-label={`Ustaw ${label} jako domyślną metodę`}
-                  disabled={isSettingDefault}
-                  onClick={() => onDefaultMethodChange(linkedMethod)}
-                  size="sm"
-                  variant="ghost"
-                >
-                  {isSettingDefault ? (
-                    <Spinner className="size-3" />
-                  ) : (
-                    "Ustaw domyślną"
-                  )}
-                </Button>
-              ) : null}
               <div className="flex items-center gap-1.5 rounded-full bg-green-500/10 px-2 py-1 text-green-600 dark:text-green-500">
                 <HugeiconsIcon icon={Tick01Icon} size={14} />
                 <span className="font-medium text-xs">Aktywna</span>
@@ -546,29 +532,31 @@ function ConnectedMethods({
               {isSettingDefault ? <Spinner className="mr-1.5 size-3" /> : null}
               Zmień
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Wybierz domyślną metodę</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup
-                onValueChange={(value) =>
-                  onDefaultMethodChange(value as TwoFactorMethod)
-                }
-                value={defaultMethod}
-              >
-                {linkedMethods.map((method) => {
-                  const MethodIcon = METHOD_ICONS[method]
-                  return (
-                    <DropdownMenuRadioItem key={method} value={method}>
-                      <HugeiconsIcon
-                        className="mr-2 text-muted-foreground"
-                        icon={MethodIcon}
-                        size={16}
-                      />
-                      {TWO_FACTOR_METHOD_LABELS[method] ?? method}
-                    </DropdownMenuRadioItem>
-                  )
-                })}
-              </DropdownMenuRadioGroup>
+            <DropdownMenuContent align="end" className="w-fit">
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Wybierz domyślną metodę</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup
+                  onValueChange={(value) =>
+                    onDefaultMethodChange(value as TwoFactorMethod)
+                  }
+                  value={defaultMethod}
+                >
+                  {linkedMethods.map((method) => {
+                    const MethodIcon = METHOD_ICONS[method]
+                    return (
+                      <DropdownMenuRadioItem key={method} value={method}>
+                        <HugeiconsIcon
+                          className="mr-2 text-muted-foreground"
+                          icon={MethodIcon}
+                          size={16}
+                        />
+                        {TWO_FACTOR_METHOD_LABELS[method] ?? method}
+                      </DropdownMenuRadioItem>
+                    )
+                  })}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

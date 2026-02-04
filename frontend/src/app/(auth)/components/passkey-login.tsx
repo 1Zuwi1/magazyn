@@ -32,12 +32,20 @@ interface PasskeyLoginProps {
   disabled?: boolean
   label?: string
   showSeparator?: boolean
+  onSuccess?: () => void
+  redirectTo?: string | null
+  successMessage?: string
+  showSuccessToast?: boolean
 }
 
 export default function PasskeyLogin({
   disabled,
   label = "Zaloguj kluczem bezpieczeństwa",
   showSeparator = true,
+  onSuccess,
+  redirectTo = "/dashboard",
+  successMessage = "Zalogowano kluczem bezpieczeństwa.",
+  showSuccessToast = true,
 }: PasskeyLoginProps) {
   const router = useRouter()
   const [supportState, setSupportState] = useState<SupportState>("checking")
@@ -131,8 +139,13 @@ export default function PasskeyLogin({
         return
       }
 
-      toast.success("Zalogowano kluczem bezpieczeństwa.")
-      router.push("/dashboard")
+      if (showSuccessToast) {
+        toast.success(successMessage)
+      }
+      onSuccess?.()
+      if (redirectTo) {
+        router.push(redirectTo)
+      }
     } finally {
       setIsLoading(false)
     }

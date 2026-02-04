@@ -3,6 +3,9 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
+import PasskeyLogin from "@/app/(auth)/components/passkey-login"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
   DialogContent,
@@ -57,10 +60,16 @@ export function TwoFactorVerificationDialog({
 
   const defaultDescription: PasswordVerificationCopy["description"] = ({
     method,
-  }) =>
-    method === "AUTHENTICATOR"
-      ? "Wpisz kod z aplikacji uwierzytelniającej."
-      : "Wyślemy jednorazowy kod na wybraną metodę."
+  }) => {
+    if (method === "AUTHENTICATOR") {
+      return "Wpisz kod z aplikacji uwierzytelniającej."
+    }
+    if (method === "PASSKEYS") {
+      return "Potwierdź przy użyciu klucza bezpieczeństwa."
+    }
+    return "Wyślemy jednorazowy kod na wybraną metodę."
+  }
+
   const resolvedCopy: PasswordVerificationCopy = (() => {
     if (!copy) {
       return { description: defaultDescription }
@@ -143,7 +152,22 @@ export function TwoFactorVerificationDialog({
 
   const resolvedTitle = title ?? copy?.title ?? "Potwierdź 2FA przed zmianą"
   const resolvedDescription =
-    "To dodatkowy krok bezpieczeństwa. Wpisz kod, aby kontynuować."
+    "To dodatkowy krok bezpieczeństwa. Potwierdź swoją tożsamość, aby kontynuować."
+  const passkeyDescription =
+    typeof resolvedCopy.description === "function"
+      ? resolvedCopy.description({ method: "PASSKEYS" })
+      : resolvedCopy.description
+  const passkeyVerifiedTitle = copy?.verifiedTitle ?? "Zweryfikowano"
+  const passkeyVerifiedDescription =
+    copy?.verifiedDescription ?? "Możesz bezpiecznie kontynuować."
+
+  const handlePasskeyVerified = () => {
+    setIsVerified(true)
+    if (autoClose) {
+      onOpenChange(false)
+    }
+    onVerified?.()
+  }
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -213,24 +237,55 @@ export function TwoFactorVerificationDialog({
             })}
           </RadioGroup>
         </div>
-        <PasswordVerificationSection
-          autoVerify
-          code={code}
-          copy={resolvedCopy}
-          isVerified={isVerified}
-          isVerifying={isVerifying}
-          method={selectedMethod}
-          onInputChange={(value) => {
-            setCode(value)
-            if (verificationError) {
-              setVerificationError("")
-            }
-          }}
-          onRequestCode={handleRequestCode}
-          onVerify={handleVerify}
-          showTitle={false}
-          verificationError={verificationError}
-        />
+        {selectedMethod === "PASSKEYS" ? (
+          <div className="space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-sm">
+                  {passkeyDescription}
+                </p>
+              </div>
+              <Badge variant={isVerified ? "success" : "warning"}>
+                {isVerified ? "Zweryfikowano" : "Wymagane"}
+              </Badge>
+            </div>
+            {isVerified ? (
+              <Alert>
+                <AlertTitle>{passkeyVerifiedTitle}</AlertTitle>
+                <AlertDescription>
+                  {passkeyVerifiedDescription}
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <PasskeyLogin
+                label="Zweryfikuj kluczem bezpieczeństwa"
+                onSuccess={handlePasskeyVerified}
+                redirectTo={null}
+                showSeparator={false}
+                showSuccessToast={false}
+              />
+            )}
+          </div>
+        ) : (
+          <PasswordVerificationSection
+            autoVerify
+            code={code}
+            copy={resolvedCopy}
+            isVerified={isVerified}
+            isVerifying={isVerifying}
+            method={selectedMethod}
+            onInputChange={(value) => {
+              setCode(value)
+              if (verificationError) {
+                setVerificationError("")
+              }
+            }}
+            onRequestCode={handleRequestCode}
+            onVerify={handleVerify}
+            showTitle={false}
+            verificationError={verificationError}
+          />
+        )}
       </DialogContent>
     </Dialog>
   )
