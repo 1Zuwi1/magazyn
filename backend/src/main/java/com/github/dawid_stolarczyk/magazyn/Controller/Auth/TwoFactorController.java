@@ -1,10 +1,10 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Auth;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Auth.PasskeyDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Auth.PasskeyRenameRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
-import com.github.dawid_stolarczyk.magazyn.Model.Entity.WebAuthnCredential;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Default2faMethod;
 import com.github.dawid_stolarczyk.magazyn.Services.Auth.TwoFactorService;
 import com.github.dawid_stolarczyk.magazyn.Services.Auth.WebAuthnService;
@@ -174,17 +174,17 @@ public class TwoFactorController {
 
     @Operation(summary = "Get user's passkeys")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success - returns list of passkeys (id, name, credentialId, email, signatureCount, isDiscoverable)",
-                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = WebAuthnCredential.class)))),
+            @ApiResponse(responseCode = "200", description = "Success - returns list of passkeys (id, name)",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PasskeyDto.class)))),
             @ApiResponse(responseCode = "401", description = "Error codes: NOT_AUTHENTICATED",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
             @ApiResponse(responseCode = "500", description = "Error codes: INTERNAL_ERROR",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/passkeys")
-    public ResponseEntity<ResponseTemplate<List<WebAuthnCredential>>> getPasskeys() {
+    public ResponseEntity<ResponseTemplate<List<PasskeyDto>>> getPasskeys() {
         try {
-            List<WebAuthnCredential> passkeys = webAuthnService.getMyPasskeys();
+            List<PasskeyDto> passkeys = webAuthnService.getMyPasskeys();
             return ResponseEntity.ok(ResponseTemplate.success(passkeys));
         } catch (AuthenticationException e) {
             String errorCode = e.getCode();

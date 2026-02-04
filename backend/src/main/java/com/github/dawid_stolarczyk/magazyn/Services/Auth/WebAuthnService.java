@@ -1,6 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Auth;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Auth.PasskeyDto;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.WebAuthnCredential;
@@ -158,10 +159,15 @@ public class WebAuthnService {
         redisService.delete(userHandle.getBase64Url());
     }
 
-    public List<WebAuthnCredential> getMyPasskeys() {
+    public List<PasskeyDto> getMyPasskeys() {
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
         User userEntity = userRepository.findById(authPrincipal.getUserId()).orElseThrow();
-        return webAuthRepository.findByUserHandle(userEntity.getUserHandle());
+        return webAuthRepository.findByUserId(userEntity.getId()).stream()
+                .map(credential -> PasskeyDto.builder()
+                        .id(credential.getId())
+                        .name(credential.getName())
+                        .build())
+                .toList();
     }
 
     @Transactional
