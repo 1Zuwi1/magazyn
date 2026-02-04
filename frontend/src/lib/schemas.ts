@@ -219,3 +219,12 @@ export const TFASchema = createApiSchema({
     }),
   },
 })
+
+export const TFADefaultMethodSchema = createApiSchema({
+  PATCH: {
+    input: z.object({
+      method: TFAMethods,
+    }),
+    output: z.null(),
+  },
+})

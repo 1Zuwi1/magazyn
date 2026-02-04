@@ -1,25 +1,41 @@
 import {
   Copy01Icon,
   Key01Icon,
+  StarIcon,
   Tick01Icon,
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useQuery } from "@tanstack/react-query"
 import { useLocale } from "next-intl"
 import { useCallback, useEffect, useReducer, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { OTP_LENGTH } from "@/config/constants"
-import { apiFetch } from "@/lib/fetcher"
-import { TFASchema, type TwoFactorMethod } from "@/lib/schemas"
+import useLinkedMethods from "@/hooks/use-linked-methods"
+import useSetDefaultMethod from "@/hooks/use-set-default-method"
+import { FetchError } from "@/lib/fetcher"
+import type { TwoFactorMethod } from "@/lib/schemas"
 import {
   AUTHENTICATOR_QR_SIZE,
   COPY_FEEDBACK_TIMEOUT_MS,
@@ -31,6 +47,7 @@ import {
 } from "./constants"
 import { OtpInput } from "./otp-input"
 import { generateTotpUri, QRCodeDisplay } from "./qr-code"
+import { TwoFactorVerificationDialog } from "./two-factor-verification-dialog"
 import type {
   TwoFactorChallenge,
   TwoFactorSetupStage,
@@ -378,10 +395,16 @@ interface TwoFactorSetupProps {
 
 function ConnectedMethods({
   linkedMethods,
+  defaultMethod,
   isLoading,
+  onDefaultMethodChange,
+  isSettingDefault,
 }: {
   linkedMethods?: TwoFactorMethod[]
+  defaultMethod?: TwoFactorMethod
   isLoading: boolean
+  onDefaultMethodChange: (method: TwoFactorMethod) => void
+  isSettingDefault: boolean
 }) {
   if (isLoading) {
     return (
@@ -416,36 +439,140 @@ function ConnectedMethods({
     )
   }
 
+  const hasMultipleMethods = linkedMethods.length > 1
+
   return (
     <div className="space-y-2">
       {linkedMethods.map((linkedMethod) => {
         const Icon = METHOD_ICONS[linkedMethod]
         const label = TWO_FACTOR_METHOD_LABELS[linkedMethod] ?? linkedMethod
         const hint = TWO_FACTOR_METHOD_HINTS[linkedMethod]
+        const isDefault = linkedMethod === defaultMethod
 
         return (
           <div
-            className="group flex items-center gap-3 rounded-lg border border-green-500/20 bg-linear-to-r from-green-500/5 to-transparent px-4 py-3 transition-all hover:border-green-500/30 hover:from-green-500/10"
+            className={`group relative flex items-center gap-3 rounded-lg border px-4 py-3 transition-all ${
+              isDefault
+                ? "border-amber-500/30 bg-linear-to-r from-amber-500/5 via-green-500/5 to-transparent hover:border-amber-500/40"
+                : "border-green-500/20 bg-linear-to-r from-green-500/5 to-transparent hover:border-green-500/30 hover:from-green-500/10"
+            }`}
             key={linkedMethod}
           >
-            <div className="flex size-9 items-center justify-center rounded-full bg-green-500/10 ring-1 ring-green-500/20">
+            <div
+              className={`flex size-9 items-center justify-center rounded-full ring-1 ${
+                isDefault
+                  ? "bg-amber-500/10 ring-amber-500/30"
+                  : "bg-green-500/10 ring-green-500/20"
+              }`}
+            >
               <HugeiconsIcon
-                className="text-green-600 dark:text-green-500"
+                className={
+                  isDefault
+                    ? "text-amber-600 dark:text-amber-500"
+                    : "text-green-600 dark:text-green-500"
+                }
                 icon={Icon}
                 size={18}
               />
             </div>
             <div className="flex-1">
-              <p className="font-medium text-sm">{label}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-medium text-sm">{label}</p>
+                {isDefault ? (
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <span className="inline-flex cursor-help items-center gap-1 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-amber-600 dark:text-amber-500">
+                        <HugeiconsIcon icon={StarIcon} size={12} />
+                        <span className="font-medium text-[10px] uppercase tracking-wide">
+                          Domyślna
+                        </span>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Ta metoda będzie używana jako pierwsza podczas logowania
+                    </TooltipContent>
+                  </Tooltip>
+                ) : null}
+              </div>
               <p className="text-muted-foreground text-xs">{hint}</p>
             </div>
-            <div className="flex items-center gap-1.5 rounded-full bg-green-500/10 px-2 py-1 text-green-600 dark:text-green-500">
-              <HugeiconsIcon icon={Tick01Icon} size={14} />
-              <span className="font-medium text-xs">Aktywna</span>
+            <div className="flex items-center gap-2">
+              {hasMultipleMethods && !isDefault ? (
+                <Button
+                  aria-label={`Ustaw ${label} jako domyślną metodę`}
+                  disabled={isSettingDefault}
+                  onClick={() => onDefaultMethodChange(linkedMethod)}
+                  size="sm"
+                  variant="ghost"
+                >
+                  {isSettingDefault ? (
+                    <Spinner className="size-3" />
+                  ) : (
+                    "Ustaw domyślną"
+                  )}
+                </Button>
+              ) : null}
+              <div className="flex items-center gap-1.5 rounded-full bg-green-500/10 px-2 py-1 text-green-600 dark:text-green-500">
+                <HugeiconsIcon icon={Tick01Icon} size={14} />
+                <span className="font-medium text-xs">Aktywna</span>
+              </div>
             </div>
           </div>
         )
       })}
+
+      {hasMultipleMethods ? (
+        <div className="mt-3 flex items-center justify-between rounded-lg border border-muted-foreground/20 border-dashed bg-muted/10 px-4 py-2.5">
+          <div className="flex items-center gap-2">
+            <HugeiconsIcon
+              className="text-muted-foreground"
+              icon={StarIcon}
+              size={14}
+            />
+            <span className="text-muted-foreground text-xs">
+              Domyślna metoda:{" "}
+              <span className="font-medium text-foreground">
+                {defaultMethod
+                  ? (TWO_FACTOR_METHOD_LABELS[defaultMethod] ?? defaultMethod)
+                  : "Nie ustawiono"}
+              </span>
+            </span>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-3 font-medium text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+              disabled={isSettingDefault}
+            >
+              {isSettingDefault ? <Spinner className="mr-1.5 size-3" /> : null}
+              Zmień
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Wybierz domyślną metodę</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup
+                onValueChange={(value) =>
+                  onDefaultMethodChange(value as TwoFactorMethod)
+                }
+                value={defaultMethod}
+              >
+                {linkedMethods.map((method) => {
+                  const MethodIcon = METHOD_ICONS[method]
+                  return (
+                    <DropdownMenuRadioItem key={method} value={method}>
+                      <HugeiconsIcon
+                        className="mr-2 text-muted-foreground"
+                        icon={MethodIcon}
+                        size={16}
+                      />
+                      {TWO_FACTOR_METHOD_LABELS[method] ?? method}
+                    </DropdownMenuRadioItem>
+                  )
+                })}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -744,7 +871,10 @@ function TwoFactorConfigurationSection({
   onStartSetup,
   onCancelSetup,
   linkedMethods,
+  defaultMethod,
   isLinkedMethodsLoading,
+  onDefaultMethodChange,
+  isSettingDefault,
 }: {
   status: TwoFactorStatus
   setupStage: TwoFactorSetupStage
@@ -753,7 +883,10 @@ function TwoFactorConfigurationSection({
   onStartSetup: () => void
   onCancelSetup: () => void
   linkedMethods?: TwoFactorMethod[]
+  defaultMethod?: TwoFactorMethod
   isLinkedMethodsLoading: boolean
+  onDefaultMethodChange: (method: TwoFactorMethod) => void
+  isSettingDefault: boolean
 }) {
   const isIdleStage = isIdleSetupStage(setupStage)
   const isSetupInProgress = !isIdleStage
@@ -779,8 +912,11 @@ function TwoFactorConfigurationSection({
       <div className="space-y-2">
         <p className="font-medium text-sm">Połączone metody</p>
         <ConnectedMethods
+          defaultMethod={defaultMethod}
           isLoading={isLinkedMethodsLoading}
+          isSettingDefault={isSettingDefault}
           linkedMethods={linkedMethods}
+          onDefaultMethodChange={onDefaultMethodChange}
         />
       </div>
       {hasAvailableMethods && !isLinkedMethodsLoading ? (
@@ -859,10 +995,41 @@ export function TwoFactorSetup({
     data: linkedMethods,
     isLoading: isLinkedMethodsLoading,
     refetch: refetchLinkedMethods,
-  } = useQuery({
-    queryKey: ["linked-2fa-methods"],
-    queryFn: () => apiFetch("/api/2fa", TFASchema),
-  })
+  } = useLinkedMethods()
+
+  const setDefaultMethodMutation = useSetDefaultMethod()
+  const [showSudoDialog, setShowSudoDialog] = useState(false)
+  const [pendingDefaultMethod, setPendingDefaultMethod] =
+    useState<TwoFactorMethod | null>(null)
+
+  const handleDefaultMethodChange = (newDefaultMethod: TwoFactorMethod) => {
+    setDefaultMethodMutation.mutate(newDefaultMethod, {
+      onSuccess: () => {
+        toast.success(
+          `Metoda ${TWO_FACTOR_METHOD_LABELS[newDefaultMethod]} została ustawiona jako domyślna`
+        )
+        setPendingDefaultMethod(null)
+      },
+      onError: (error) => {
+        if (
+          error instanceof FetchError &&
+          error.message === "INSUFFICIENT_PERMISSIONS"
+        ) {
+          setPendingDefaultMethod(newDefaultMethod)
+          setShowSudoDialog(true)
+          return
+        }
+        toast.error("Nie udało się zmienić domyślnej metody. Spróbuj ponownie.")
+      },
+    })
+  }
+
+  const handleSudoVerified = () => {
+    setShowSudoDialog(false)
+    if (pendingDefaultMethod) {
+      handleDefaultMethodChange(pendingDefaultMethod)
+    }
+  }
 
   useEffect(() => {
     if (!linkedMethods) {
@@ -947,73 +1114,83 @@ export function TwoFactorSetup({
   }
 
   return (
-    <div className="space-y-6">
-      <TwoFactorConfigurationSection
-        isLinkedMethodsLoading={isLinkedMethodsLoading}
-        linkedMethods={linkedMethods?.methods}
-        method={method}
-        onCancelSetup={handleCancelSetup}
-        onMethodChange={onMethodChange}
-        onStartSetup={startSetup}
-        setupStage={setupStage}
-        status={status}
+    <>
+      <TwoFactorVerificationDialog
+        onOpenChange={setShowSudoDialog}
+        onVerified={handleSudoVerified}
+        open={showSudoDialog}
       />
+      <div className="space-y-6">
+        <TwoFactorConfigurationSection
+          defaultMethod={linkedMethods?.defaultMethod}
+          isLinkedMethodsLoading={isLinkedMethodsLoading}
+          isSettingDefault={setDefaultMethodMutation.isPending}
+          linkedMethods={linkedMethods?.methods}
+          method={method}
+          onCancelSetup={handleCancelSetup}
+          onDefaultMethodChange={handleDefaultMethodChange}
+          onMethodChange={onMethodChange}
+          onStartSetup={startSetup}
+          setupStage={setupStage}
+          status={status}
+        />
 
-      {setupActive ? (
-        <div className="space-y-4 rounded-lg border bg-background/80 p-4">
-          {setupStage === "REQUESTING" ? (
-            <Alert>
-              <Spinner className="text-muted-foreground" />
-              <AlertTitle>Łączymy się z usługą 2FA</AlertTitle>
-              <AlertDescription>
-                Generujemy klucz i przygotowujemy kolejne kroki.
-              </AlertDescription>
-            </Alert>
-          ) : null}
+        {setupActive ? (
+          <div className="space-y-4 rounded-lg border bg-background/80 p-4">
+            {setupStage === "REQUESTING" ? (
+              <Alert>
+                <Spinner className="text-muted-foreground" />
+                <AlertTitle>Łączymy się z usługą 2FA</AlertTitle>
+                <AlertDescription>
+                  Generujemy klucz i przygotowujemy kolejne kroki.
+                </AlertDescription>
+              </Alert>
+            ) : null}
 
-          {setupStage === "SENDING" ? (
-            <Alert>
-              <Spinner className="text-muted-foreground" />
-              <AlertTitle>Wysyłamy kod</AlertTitle>
-              <AlertDescription>
-                Kod trafia na {challenge?.destination ?? "wybraną metodę"}.
-              </AlertDescription>
-            </Alert>
-          ) : null}
+            {setupStage === "SENDING" ? (
+              <Alert>
+                <Spinner className="text-muted-foreground" />
+                <AlertTitle>Wysyłamy kod</AlertTitle>
+                <AlertDescription>
+                  Kod trafia na {challenge?.destination ?? "wybraną metodę"}.
+                </AlertDescription>
+              </Alert>
+            ) : null}
 
-          {setupStage === "ERROR" && error ? (
-            <Alert variant="destructive">
-              <AlertTitle>Nie udało się aktywować 2FA</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          ) : null}
+            {setupStage === "ERROR" && error ? (
+              <Alert variant="destructive">
+                <AlertTitle>Nie udało się aktywować 2FA</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
 
-          {showCodeEntry ? (
-            <CodeInputEntry
-              canResend={canResendCode}
-              challenge={challenge}
-              code={code}
-              isBusy={setupStage === "VERIFYING"}
-              method={method}
-              onCodeChange={(nextCode) =>
-                dispatch({ type: "set_code", code: nextCode })
-              }
-              onResend={handleResendCode}
-              onVerify={handleVerifyCode}
-              resendCooldown={resendCooldown}
-              userEmail={userEmail}
-            />
-          ) : null}
-        </div>
-      ) : null}
+            {showCodeEntry ? (
+              <CodeInputEntry
+                canResend={canResendCode}
+                challenge={challenge}
+                code={code}
+                isBusy={setupStage === "VERIFYING"}
+                method={method}
+                onCodeChange={(nextCode) =>
+                  dispatch({ type: "set_code", code: nextCode })
+                }
+                onResend={handleResendCode}
+                onVerify={handleVerifyCode}
+                resendCooldown={resendCooldown}
+                userEmail={userEmail}
+              />
+            ) : null}
+          </div>
+        ) : null}
 
-      <div className="h-px bg-border" />
+        <div className="h-px bg-border" />
 
-      <RecoveryCodesSection
-        enabled={enabled}
-        onToggle={() => setShowRecoveryCodes((current) => !current)}
-        showRecoveryCodes={showRecoveryCodes}
-      />
-    </div>
+        <RecoveryCodesSection
+          enabled={enabled}
+          onToggle={() => setShowRecoveryCodes((current) => !current)}
+          showRecoveryCodes={showRecoveryCodes}
+        />
+      </div>
+    </>
   )
 }

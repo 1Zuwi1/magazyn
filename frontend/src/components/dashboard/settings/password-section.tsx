@@ -5,15 +5,11 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { Button } from "@/components/ui/button"
-import { ChangePasswordFormSchema, type TwoFactorMethod } from "@/lib/schemas"
+import { ChangePasswordFormSchema } from "@/lib/schemas"
 import { TwoFactorVerificationDialog } from "./two-factor-verification-dialog"
 import { wait } from "./utils"
 
-interface PasswordSectionProps {
-  twoFactorMethod: TwoFactorMethod
-}
-
-export function PasswordSection({ twoFactorMethod }: PasswordSectionProps) {
+export function PasswordSection() {
   const [isVerificationDialogOpen, setIsVerificationDialogOpen] =
     useState(false)
 
@@ -118,7 +114,6 @@ export function PasswordSection({ twoFactorMethod }: PasswordSectionProps) {
         </form.Subscribe>
       </div>
       <TwoFactorVerificationDialog
-        initialMethod={twoFactorMethod}
         onOpenChange={setIsVerificationDialogOpen}
         onVerified={() => {
           setIsVerified(true) // FIXME: Only in dev - remove later

@@ -49,6 +49,7 @@ function SecurityStatusIndicator({ status }: { status: TwoFactorStatus }) {
 export function SecuritySection({ userEmail }: SecuritySectionProps) {
   const [twoFactorMethod, setTwoFactorMethod] =
     useState<TwoFactorMethod>("EMAIL")
+
   return (
     <div className="space-y-6">
       <Card>
@@ -103,7 +104,7 @@ export function SecuritySection({ userEmail }: SecuritySectionProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <PasswordSection twoFactorMethod={twoFactorMethod} />
+          <PasswordSection />
         </CardContent>
       </Card>
     </div>

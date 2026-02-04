@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import useLinkedMethods from "@/hooks/use-linked-methods"
 import { apiFetch } from "@/lib/fetcher"
 import {
   Check2FASchema,
@@ -29,8 +30,6 @@ import {
 interface TwoFactorVerificationDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  initialMethod?: TwoFactorMethod
-  availableMethods?: TwoFactorMethod[]
   onVerified?: () => void
   autoClose?: boolean
   title?: string
@@ -41,8 +40,6 @@ interface TwoFactorVerificationDialogProps {
 export function TwoFactorVerificationDialog({
   open,
   onOpenChange,
-  initialMethod,
-  availableMethods,
   onVerified,
   autoClose = true,
   title,
@@ -50,8 +47,9 @@ export function TwoFactorVerificationDialog({
   copy,
 }: TwoFactorVerificationDialogProps) {
   const [code, setCode] = useState("")
+  const { data: methods } = useLinkedMethods()
   const [selectedMethod, setSelectedMethod] = useState<TwoFactorMethod>(
-    initialMethod ?? "AUTHENTICATOR"
+    methods?.defaultMethod ?? "AUTHENTICATOR"
   )
   const [isVerified, setIsVerified] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
@@ -75,18 +73,18 @@ export function TwoFactorVerificationDialog({
 
   const methodOptions = useMemo(
     () =>
-      availableMethods?.length
+      methods?.methods?.length
         ? TWO_FACTOR_METHODS.filter((method) =>
-            availableMethods.includes(method.value as TwoFactorMethod)
+            methods?.methods.includes(method.value as TwoFactorMethod)
           )
         : TWO_FACTOR_METHODS,
-    [availableMethods]
+    [methods?.methods]
   )
-  const hasInitialMethod = initialMethod
-    ? methodOptions.some((method) => method.value === initialMethod)
+  const hasInitialMethod = methods?.defaultMethod
+    ? methodOptions.some((method) => method.value === methods?.defaultMethod)
     : false
   const defaultMethod =
-    (hasInitialMethod ? initialMethod : undefined) ??
+    (hasInitialMethod ? methods?.defaultMethod : undefined) ??
     (methodOptions[0]?.value as TwoFactorMethod | undefined) ??
     "AUTHENTICATOR"
 

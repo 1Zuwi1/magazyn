@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import AuthCard from "@/app/(auth)/components/auth-card"
 import PasskeyLogin from "@/app/(auth)/components/passkey-login"
+import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { FieldWithState } from "@/components/helpers/field-state"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
@@ -20,7 +21,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { apiFetch } from "@/lib/fetcher"
+import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   Resend2FASchema,
   type ResendType,
@@ -75,6 +76,9 @@ export default function TwoFactorForm({
         toast.success("Zweryfikowano!")
         router.push("/dashboard")
       } catch (e) {
+        if (e instanceof FetchError) {
+          handleApiError(e)
+        }
         console.error(e)
       } finally {
         autoSubmittedRef.current = false
