@@ -1,9 +1,9 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.User;
 
-import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserTeam;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Services.User.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -38,7 +38,7 @@ public class UserController {
 
     @Operation(summary = "Get current user info")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success - returns user info (id, email, fullName, role, status, default2faMethod)",
+            @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserInfoResponse.class)))
     })
     @GetMapping("/me")
@@ -87,9 +87,11 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - email changed, verification email sent",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "Error codes: EMAIL_TAKEN, USER_NOT_FOUND",
+            @ApiResponse(responseCode = "400", description = "Error codes: EMAIL_TAKEN",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
             @ApiResponse(responseCode = "403", description = "Error codes: ACCESS_FORBIDDEN",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PatchMapping("/{userId}/email")
@@ -103,7 +105,7 @@ public class UserController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Admin email change failed for user {}", userId, e);
-            HttpStatus status = getHttpStatusForAuthError(e.getCode());
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
             return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
@@ -132,9 +134,11 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - profile updated",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "Error codes: USER_NOT_FOUND, INVALID_INPUT, INVALID_PHONE_FORMAT, INVALID_FULL_NAME, INVALID_ENUM_VALUE",
+            @ApiResponse(responseCode = "400", description = "Error codes: INVALID_INPUT, INVALID_PHONE_FORMAT, INVALID_FULL_NAME",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
             @ApiResponse(responseCode = "403", description = "Error codes: ACCESS_FORBIDDEN",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PatchMapping("/{userId}/profile")
@@ -148,7 +152,7 @@ public class UserController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Admin profile update failed for user {}", userId, e);
-            HttpStatus status = getHttpStatusForAuthError(e.getCode());
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
             return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
@@ -157,9 +161,9 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - account deleted",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "Error codes: USER_NOT_FOUND",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
             @ApiResponse(responseCode = "403", description = "Error codes: ACCESS_FORBIDDEN",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @DeleteMapping("/{userId}")
@@ -172,26 +176,8 @@ public class UserController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Admin account deletion failed for user {}", userId, e);
-            HttpStatus status = getHttpStatusForAuthError(e.getCode());
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
             return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
-    }
-
-    /**
-     * Helper method to map authentication error codes to appropriate HTTP status
-     */
-    private HttpStatus getHttpStatusForAuthError(String errorCode) {
-        if (AuthError.RESOURCE_NOT_FOUND.name().equals(errorCode)) {
-            return HttpStatus.NOT_FOUND;
-        } else if (AuthError.ACCESS_FORBIDDEN.name().equals(errorCode) ||
-                AuthError.INSUFFICIENT_PERMISSIONS.name().equals(errorCode)) {
-            return HttpStatus.FORBIDDEN;
-        } else if (AuthError.EMAIL_TAKEN.name().equals(errorCode) ||
-                "INVALID_INPUT".equals(errorCode) ||
-                "INVALID_PHONE_FORMAT".equals(errorCode) ||
-                "INVALID_FULL_NAME".equals(errorCode)) {
-            return HttpStatus.BAD_REQUEST;
-        }
-        return HttpStatus.UNAUTHORIZED;
     }
 }

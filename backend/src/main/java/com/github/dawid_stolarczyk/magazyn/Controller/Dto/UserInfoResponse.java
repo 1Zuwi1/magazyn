@@ -2,6 +2,7 @@ package com.github.dawid_stolarczyk.magazyn.Controller.Dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,6 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Schema(description = "User information response")
+@AllArgsConstructor
 public class UserInfoResponse {
     @Schema(description = "User ID", example = "1")
     private int id;
@@ -37,23 +39,4 @@ public class UserInfoResponse {
     public UserInfoResponse() {
     }
 
-    public UserInfoResponse(int id, String full_name, String email, String role, String account_status) {
-        this.id = id;
-        this.full_name = full_name;
-        this.email = email;
-        this.role = role;
-        this.account_status = account_status;
-    }
-
-    public UserInfoResponse(int id, String full_name, String email, String role, String account_status,
-                            String phone, String location, String team) {
-        this.id = id;
-        this.full_name = full_name;
-        this.email = email;
-        this.role = role;
-        this.account_status = account_status;
-        this.phone = phone;
-        this.location = location;
-        this.team = team;
-    }
 }

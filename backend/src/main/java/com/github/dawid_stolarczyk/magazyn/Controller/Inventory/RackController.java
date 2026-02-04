@@ -33,7 +33,7 @@ public class RackController {
     private final RackImportService rackImportService;
 
     @Operation(summary = "Get all racks with pagination")
-    @ApiResponse(responseCode = "200", description = "Success - returns paginated list of racks",
+    @ApiResponse(responseCode = "200", description = "Success",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
     @GetMapping
     public ResponseEntity<ResponseTemplate<PagedResponse<RackDto>>> getAllRacks(
@@ -49,7 +49,7 @@ public class RackController {
     }
 
     @Operation(summary = "Get racks by warehouse ID with pagination")
-    @ApiResponse(responseCode = "200", description = "Success - returns paginated list of racks in warehouse",
+    @ApiResponse(responseCode = "200", description = "Success",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
     @GetMapping("/warehouse/{warehouseId}")
     public ResponseEntity<ResponseTemplate<PagedResponse<RackDto>>> getRacksByWarehouse(
@@ -67,7 +67,7 @@ public class RackController {
 
     @Operation(summary = "Get rack by ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success - returns rack details",
+            @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = RackDto.class))),
             @ApiResponse(responseCode = "400", description = "Error codes: RACK_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))

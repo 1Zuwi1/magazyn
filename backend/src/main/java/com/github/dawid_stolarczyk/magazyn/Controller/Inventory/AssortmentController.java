@@ -33,7 +33,7 @@ public class AssortmentController {
     private final AssortmentImportService assortmentImportService;
 
     @Operation(summary = "Get all assortments with pagination")
-    @ApiResponse(responseCode = "200", description = "Success - returns paginated list of assortments",
+    @ApiResponse(responseCode = "200", description = "Success",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = PagedResponse.class)))
     @GetMapping
@@ -51,7 +51,7 @@ public class AssortmentController {
 
     @Operation(summary = "Get assortment by ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success - returns assortment (id, itemId, rackId, userId, barcode, positionX, positionY, createdAt, expiresAt)",
+            @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssortmentDto.class))),
             @ApiResponse(responseCode = "404", description = "Error codes: ASSORTMENT_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))

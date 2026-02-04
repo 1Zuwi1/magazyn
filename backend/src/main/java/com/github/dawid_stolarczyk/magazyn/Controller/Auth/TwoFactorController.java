@@ -6,6 +6,7 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Auth.PasskeyRenameRequ
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Default2faMethod;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Services.Auth.TwoFactorService;
 import com.github.dawid_stolarczyk.magazyn.Services.Auth.WebAuthnService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -71,7 +72,7 @@ public class TwoFactorController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Failed to send 2FA code for method: {}", sendRequest.getMethod(), e);
-            HttpStatus status = getHttpStatusForAuthError(e.getCode());
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
             return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
@@ -101,7 +102,7 @@ public class TwoFactorController {
             return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateBackupCodes(request)));
         } catch (AuthenticationException e) {
             log.error("Failed to generate backup codes", e);
-            HttpStatus status = getHttpStatusForAuthError(e.getCode());
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
             return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
@@ -143,7 +144,7 @@ public class TwoFactorController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Failed to remove 2FA method: {}", removeRequest.getMethod(), e);
-            HttpStatus status = getHttpStatusForAuthError(e.getCode());
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
             return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
@@ -152,7 +153,7 @@ public class TwoFactorController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - default method updated",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "Error codes: METHOD_NOT_ENABLED, UNSUPPORTED_2FA_METHOD",
+            @ApiResponse(responseCode = "400", description = "Error codes: TWO_FA_NOT_ENABLED, UNSUPPORTED_2FA_METHOD",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
             @ApiResponse(responseCode = "403", description = "Error codes: INSUFFICIENT_PERMISSIONS",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
@@ -165,7 +166,7 @@ public class TwoFactorController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Failed to set default 2FA method: {}", setDefaultRequest.getMethod(), e);
-            HttpStatus status = e.getCode().equals(AuthError.INSUFFICIENT_PERMISSIONS.name()) ? HttpStatus.FORBIDDEN : HttpStatus.BAD_REQUEST;
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
             return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
@@ -217,12 +218,7 @@ public class TwoFactorController {
         } catch (AuthenticationException e) {
             String errorCode = e.getCode();
             log.warn("Failed to delete passkey {}: {}", id, errorCode);
-
-            // Use getCode() instead of getMessage() to avoid NullPointerException
-            HttpStatus status = AuthError.RESOURCE_NOT_FOUND.name().equals(errorCode)
-                    ? HttpStatus.NOT_FOUND
-                    : HttpStatus.FORBIDDEN;
-
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(errorCode);
             return ResponseEntity.status(status).body(ResponseTemplate.error(errorCode));
         } catch (Exception e) {
             log.error("Unexpected error while deleting passkey {}", id, e);
@@ -254,32 +250,12 @@ public class TwoFactorController {
         } catch (AuthenticationException e) {
             String errorCode = e.getCode();
             log.warn("Failed to rename passkey {}: {}", id, errorCode);
-
-            HttpStatus status;
-            if (AuthError.RESOURCE_NOT_FOUND.name().equals(errorCode)) {
-                status = HttpStatus.NOT_FOUND;
-            } else if (AuthError.PASSKEY_NAME_ALREADY_EXISTS.name().equals(errorCode) ||
-                    AuthError.INVALID_INPUT.name().equals(errorCode)) {
-                status = HttpStatus.BAD_REQUEST;
-            } else {
-                status = HttpStatus.FORBIDDEN;
-            }
-
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(errorCode);
             return ResponseEntity.status(status).body(ResponseTemplate.error(errorCode));
         } catch (Exception e) {
             log.error("Unexpected error while renaming passkey {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ResponseTemplate.error(AuthError.INTERNAL_ERROR.name()));
         }
-    }
-
-    /**
-     * Helper method to map authentication error codes to appropriate HTTP status
-     */
-    private HttpStatus getHttpStatusForAuthError(String errorCode) {
-        if (AuthError.INSUFFICIENT_PERMISSIONS.name().equals(errorCode)) {
-            return HttpStatus.FORBIDDEN;
-        }
-        return HttpStatus.UNAUTHORIZED;
     }
 }

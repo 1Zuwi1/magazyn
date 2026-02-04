@@ -35,7 +35,7 @@ public class ItemController {
     private final ItemImportService itemImportService;
 
     @Operation(summary = "Get all items with pagination")
-    @ApiResponse(responseCode = "200", description = "Success - returns paginated list of items",
+    @ApiResponse(responseCode = "200", description = "Success",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = PagedResponse.class)))
     @GetMapping
@@ -53,7 +53,7 @@ public class ItemController {
 
     @Operation(summary = "Get item by ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success - returns item details",
+            @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),
             @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
@@ -69,7 +69,7 @@ public class ItemController {
 
     @Operation(summary = "Get item by barcode (14-digit GS1-128)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success - returns item with all details including photoUrl",
+            @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),
             @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))

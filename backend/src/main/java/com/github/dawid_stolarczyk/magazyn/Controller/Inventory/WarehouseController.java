@@ -35,7 +35,7 @@ public class WarehouseController {
 
     @Operation(summary = "Get all warehouses with pagination",
             description = "Returns paginated list of all warehouses with statistics: racks count, occupied slots, and free slots")
-    @ApiResponse(responseCode = "200", description = "Success - returns paginated list of warehouses",
+    @ApiResponse(responseCode = "200", description = "Success",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
     @GetMapping
     public ResponseEntity<ResponseTemplate<PagedResponse<WarehouseDto>>> getAllWarehouses(
@@ -53,7 +53,7 @@ public class WarehouseController {
     @Operation(summary = "Get warehouse by ID",
             description = "Returns warehouse details with statistics: racks count, occupied slots, and free slots")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success - returns warehouse details (id, name, racksCount, occupiedSlots, freeSlots)",
+            @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = WarehouseDto.class))),
             @ApiResponse(responseCode = "400", description = "Error codes: WAREHOUSE_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))

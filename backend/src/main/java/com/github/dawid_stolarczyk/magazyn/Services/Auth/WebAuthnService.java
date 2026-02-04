@@ -6,6 +6,7 @@ import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.WebAuthnCredential;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.Default2faMethod;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.WebAuthRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
@@ -92,7 +93,7 @@ public class WebAuthnService {
         return request;
     }
 
-    @Transactional(isolation = Isolation.SERIALIZABLE)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void finishRegistration(String json, String keyName, HttpServletRequest httpServletRequest)
             throws IOException, RegistrationFailedException, Base64UrlException {
         rateLimiter.consumeOrThrow(getClientIp(httpServletRequest), RateLimitOperation.WEBAUTH_REGISTRATION);
@@ -119,7 +120,7 @@ public class WebAuthnService {
         String finalKeyName = trimmedKeyName != null && !trimmedKeyName.isEmpty()
                 ? trimmedKeyName
                 : "Passkey " + (currentKeys + 1);
-        if (webAuthRepository.existsByUserHandleAndName(userHandle.getBase64Url(), finalKeyName)) {
+        if (webAuthRepository.existsByUserHandleAndNameIgnoreCase(userHandle.getBase64Url(), finalKeyName)) {
             throw new AuthenticationException(AuthError.PASSKEY_NAME_ALREADY_EXISTS.name());
         }
 
@@ -182,11 +183,16 @@ public class WebAuthnService {
 
         User userEntity = userRepository.findById(authPrincipal.getUserId()).orElseThrow();
 
-        if (!credential.getUserHandle().equals(userEntity.getUserHandle())) {
+        if (!credential.getUser().getId().equals(userEntity.getId())) {
             throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
         }
 
         webAuthRepository.delete(credential);
+
+        if (!webAuthRepository.existsByUserId(userEntity.getId())) {
+            userEntity.setDefault2faMethod(Default2faMethod.EMAIL);
+            userRepository.save(userEntity);
+        }
     }
 
     @Transactional
@@ -211,8 +217,8 @@ public class WebAuthnService {
             throw new AuthenticationException(AuthError.INVALID_INPUT.name());
         }
 
-        // Validate unique name for this user (excluding current credential)
-        if (webAuthRepository.existsByUserHandleAndNameAndIdNot(
+        // Validate unique name for this user (excluding current credential) (case-insensitive)
+        if (webAuthRepository.existsByUserHandleAndNameIgnoreCaseAndIdNot(
                 userEntity.getUserHandle(), newName, id)) {
             throw new AuthenticationException(AuthError.PASSKEY_NAME_ALREADY_EXISTS.name());
         }

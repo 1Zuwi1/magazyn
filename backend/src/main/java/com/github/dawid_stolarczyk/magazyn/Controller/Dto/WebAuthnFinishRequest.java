@@ -15,7 +15,7 @@ public class WebAuthnFinishRequest {
     @Schema(description = "The JSON credential from the browser's WebAuthn API", example = "{\"id\":\"...\",\"rawId\":\"...\",\"type\":\"public-key\",\"response\":{...}}")
     private String credentialJson;
 
-    @Size(min = 1, max = 100, message = "Passkey name must be between 1 and 100 characters")
+    @Size(max = 100, message = "Passkey name must be at most 100 characters")
     @Schema(description = "Optional name for the passkey (max 100 chars)", example = "My MacBook Pro")
     private String keyName;
 }
