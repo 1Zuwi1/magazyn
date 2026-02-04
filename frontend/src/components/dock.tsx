@@ -3,6 +3,7 @@
 import {
   GroupItemsIcon,
   Home01Icon,
+  Mic01Icon,
   Package,
   QrCodeIcon,
   Settings01Icon,
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils"
 import { Scanner } from "./scanner/scanner"
 import { DialogTrigger } from "./ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
+import { VoiceAssistant } from "./voice-assistant/voice-assistant"
 
 const dockNavItems = [
   {
@@ -143,6 +145,33 @@ export function Dock() {
           className="mx-1 h-8 w-px bg-gradient-to-b from-transparent via-border to-transparent"
         />
 
+        <VoiceAssistant
+          dialogTrigger={
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <DialogTrigger
+                    aria-label="Asystent głosowy"
+                    className={cn(
+                      "group relative flex size-12 flex-col items-center justify-center rounded-xl transition-all duration-200",
+                      "hover:bg-muted/80 active:scale-95"
+                    )}
+                  />
+                }
+              >
+                <HugeiconsIcon
+                  className="size-5 text-muted-foreground transition-transform duration-200 group-hover:scale-110 group-hover:text-foreground"
+                  icon={Mic01Icon}
+                  strokeWidth={2}
+                />
+              </TooltipTrigger>
+              <TooltipContent side="top" sideOffset={12}>
+                Asystent głosowy
+              </TooltipContent>
+            </Tooltip>
+          }
+        />
+
         {/* Scanner button */}
         <Scanner
           dialogTrigger={
@@ -162,7 +191,6 @@ export function Dock() {
                   />
                 }
               >
-                {/* Shine effect for active scanner */}
                 {isInWarehouse && (
                   <span
                     aria-hidden="true"

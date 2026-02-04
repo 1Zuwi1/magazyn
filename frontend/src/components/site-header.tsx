@@ -22,6 +22,7 @@ import {
 } from "./ui/dropdown-menu"
 import { Separator } from "./ui/separator"
 import { SidebarTrigger } from "./ui/sidebar"
+import { VoiceAssistant } from "./voice-assistant/voice-assistant"
 
 // biome-ignore lint/suspicious/noControlCharactersInRegex: This is needed to strip control characters from decoded text
 const CONTROL_CHAR_REGEX = /[\u0000-\u001f\u007f]/g
@@ -161,14 +162,19 @@ export default function SiteHeader() {
         </Breadcrumb>
       </div>
 
-      <NotificationInbox />
       {pathname.includes("/dashboard/warehouse/") && (
-        <Scanner
-          warehouseName={decodeURIComponent(
-            sanitizeVisibleText(safeDecodeURIComponent(splitted[2] ?? ""))
-          )}
-        />
+        <div className="standalone:hidden">
+          <Scanner
+            warehouseName={decodeURIComponent(
+              sanitizeVisibleText(safeDecodeURIComponent(splitted[2] ?? ""))
+            )}
+          />
+        </div>
       )}
+      <div className="standalone:hidden">
+        <VoiceAssistant />
+      </div>
+      <NotificationInbox />
     </header>
   )
 }
