@@ -2,6 +2,7 @@ package com.github.dawid_stolarczyk.magazyn.Services.Auth;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.CodeRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.FinishTwoFactorAuthenticatorRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.TwoFactorAuthenticatorResponse;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.TwoFactorMethodsResponse;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
@@ -61,7 +62,9 @@ public class TwoFactorService {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_FREE);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(AuthenticationException::new);
-        List<String> methods = new ArrayList<>(user.getTwoFactorMethods().stream().map(method -> method.getMethodName().name()).toList());
+        List<String> methods = new ArrayList<>(user.getTwoFactorMethods().stream()
+                .filter(TwoFactorMethod::isFinished)
+                .map(method -> method.getMethodName().name()).toList());
         methods.add(Default2faMethod.EMAIL.name());
 
         if (!user.getWebAuthnCredentials().isEmpty()) {
@@ -114,6 +117,7 @@ public class TwoFactorService {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_STRICT);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
+
         TwoFactorMethod method = user.getTwoFactorMethods().stream()
                 .filter(m -> m.getMethodName() == TwoFactor.AUTHENTICATOR)
                 .findFirst()
@@ -124,6 +128,7 @@ public class TwoFactorService {
                     return newMethod;
                 });
 
+        method.setFinished(false);
         String secret = gAuth.createCredentials().getKey();
         method.setAuthenticatorSecret(secret);
         userRepository.save(user);
@@ -131,9 +136,32 @@ public class TwoFactorService {
         return new TwoFactorAuthenticatorResponse(secret, user.getEmail(), appName);
     }
 
-    public void checkTwoFactorGoogleCode(int code, User user) {
+    public void finishTwoFactorGoogleSecret(FinishTwoFactorAuthenticatorRequest finishTwoFactorAuthenticatorRequest, HttpServletRequest request) throws AuthenticationException {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_VERIFY);
+        int code;
+        try {
+            code = Integer.parseInt(finishTwoFactorAuthenticatorRequest.getCode());
+        } catch (NumberFormatException e) {
+            throw new AuthenticationException(AuthError.CODE_FORMAT_INVALID.name());
+        }
+
+        User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
+                .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
+
         TwoFactorMethod method = user.getTwoFactorMethods().stream()
                 .filter(m -> m.getMethodName() == TwoFactor.AUTHENTICATOR)
+                .findFirst().orElseThrow(() -> new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name()));
+
+        if (checkTwoFactorGoogleCode(code, user, true)) {
+            method.setFinished(true);
+            userRepository.save(user);
+        }
+    }
+
+
+    public boolean checkTwoFactorGoogleCode(int code, User user, boolean finishSetup) {
+        TwoFactorMethod method = user.getTwoFactorMethods().stream()
+                .filter(m -> m.getMethodName() == TwoFactor.AUTHENTICATOR && (m.isFinished() || finishSetup))
                 .findFirst()
                 .orElseThrow(() -> new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name()));
 
@@ -146,6 +174,7 @@ public class TwoFactorService {
             throw new AuthenticationException(AuthError.INVALID_OR_EXPIRED_CODE.name());
         }
 
+        return true;
     }
 
     public void checkCode(CodeRequest codeRequest, HttpServletRequest request, HttpServletResponse response) {
@@ -159,7 +188,7 @@ public class TwoFactorService {
             checkTwoFactorEmailCode(codeRequest.getCode(), user);
         } else if (method.equals(TwoFactor.AUTHENTICATOR.name())) {
             try {
-                checkTwoFactorGoogleCode(Integer.parseInt(codeRequest.getCode()), user);
+                checkTwoFactorGoogleCode(Integer.parseInt(codeRequest.getCode()), user, false);
             } catch (NumberFormatException e) {
                 throw new AuthenticationException(AuthError.CODE_FORMAT_INVALID.name());
             }
@@ -212,7 +241,7 @@ public class TwoFactorService {
                 .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
 
         user.getTwoFactorMethods().stream()
-                .filter(m -> TwoFactor.BACKUP_CODES.equals(m.getMethodName()))
+                .filter(m -> TwoFactor.BACKUP_CODES.equals(m.getMethodName()) && m.isFinished())
                 .findFirst()
                 .orElseThrow(() -> new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name()));
 
@@ -256,16 +285,18 @@ public class TwoFactorService {
         User user = userRepository.findById(authPrincipal.getUserId())
                 .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
 
-        TwoFactorMethod existing = user.getTwoFactorMethods().stream()
-                .filter(m -> m.getMethodName() == method)
-                .findFirst()
-                .orElseThrow(() -> new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name()));
+        List<TwoFactorMethod> methods = user.getTwoFactorMethods().stream()
+                .filter(m -> m.getMethodName() == method).toList();
+
+        if (methods.isEmpty()) {
+            throw new AuthenticationException(AuthError.TWO_FA_NOT_ENABLED.name());
+        }
 
         if (method == TwoFactor.BACKUP_CODES) {
             user.getBackupCodes().clear();
         }
 
-        user.removeTwoFactorMethod(existing);
+        methods.forEach(user::removeTwoFactorMethod);
         userRepository.save(user);
     }
 
