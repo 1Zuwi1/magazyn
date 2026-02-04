@@ -26,12 +26,19 @@ const getCachedSchema = <S extends z.ZodType>(dataSchema: S) => {
 
 // ----------------- Public types -----------------
 
+const ERROR_CODE_PATTERN = /^[A-Z0-9_]+$/
+
+const getErrorCodeFromMessage = (message: string): string | undefined =>
+  ERROR_CODE_PATTERN.test(message) ? message : undefined
+
 export class FetchError extends Error {
   status?: number
-  constructor(message: string, status?: number) {
+  code?: string
+  constructor(message: string, status?: number, code?: string) {
     super(message)
     this.name = "FetchError"
     this.status = status
+    this.code = code ?? getErrorCodeFromMessage(message)
   }
 }
 

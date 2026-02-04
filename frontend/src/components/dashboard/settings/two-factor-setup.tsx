@@ -48,7 +48,7 @@ import {
 } from "./constants"
 import { OtpInput } from "./otp-input"
 import { generateTotpUri, QRCodeDisplay } from "./qr-code"
-import { TwoFactorVerificationDialog } from "./two-factor-verification-dialog"
+import { useTwoFactorVerificationDialog } from "./two-factor-verification-dialog-store"
 import type {
   TwoFactorChallenge,
   TwoFactorSetupStage,
@@ -177,20 +177,9 @@ function TwoFactorMethodInput({
       )
     : TWO_FACTOR_METHODS
 
-  // Determine grid columns based on number of methods
-  const getGridClass = (count: number): string => {
-    if (count === 1) {
-      return "grid gap-3 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1"
-    }
-    if (count === 2) {
-      return "grid gap-3 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2"
-    }
-    return "grid gap-3 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3"
-  }
-
   return (
     <RadioGroup
-      className={getGridClass(methodsToShow.length)}
+      className={"grid grid-cols-1 gap-3"}
       disabled={disabled}
       onValueChange={(value) => {
         onMethodChange(value as TwoFactorMethod)
@@ -986,9 +975,9 @@ export function TwoFactorSetup({
   } = useLinkedMethods()
 
   const setDefaultMethodMutation = useSetDefaultMethod()
-  const [showSudoDialog, setShowSudoDialog] = useState(false)
   const [pendingDefaultMethod, setPendingDefaultMethod] =
     useState<TwoFactorMethod | null>(null)
+  const { open } = useTwoFactorVerificationDialog()
 
   const handleDefaultMethodChange = (newDefaultMethod: TwoFactorMethod) => {
     setDefaultMethodMutation.mutate(newDefaultMethod, {
@@ -1001,10 +990,10 @@ export function TwoFactorSetup({
       onError: (error) => {
         if (
           error instanceof FetchError &&
-          error.message === "INSUFFICIENT_PERMISSIONS"
+          error.code === "INSUFFICIENT_PERMISSIONS"
         ) {
           setPendingDefaultMethod(newDefaultMethod)
-          setShowSudoDialog(true)
+          open({ onVerified: handleSudoVerified })
           return
         }
         toast.error("Nie udało się zmienić domyślnej metody. Spróbuj ponownie.")
@@ -1013,7 +1002,6 @@ export function TwoFactorSetup({
   }
 
   const handleSudoVerified = () => {
-    setShowSudoDialog(false)
     if (pendingDefaultMethod) {
       handleDefaultMethodChange(pendingDefaultMethod)
     }
@@ -1102,83 +1090,76 @@ export function TwoFactorSetup({
   }
 
   return (
-    <>
-      <TwoFactorVerificationDialog
-        onOpenChange={setShowSudoDialog}
-        onVerified={handleSudoVerified}
-        open={showSudoDialog}
+    <div className="space-y-6">
+      <TwoFactorConfigurationSection
+        defaultMethod={linkedMethods?.defaultMethod}
+        isLinkedMethodsLoading={isLinkedMethodsLoading}
+        isSettingDefault={setDefaultMethodMutation.isPending}
+        linkedMethods={linkedMethods?.methods}
+        method={method}
+        onCancelSetup={handleCancelSetup}
+        onDefaultMethodChange={handleDefaultMethodChange}
+        onMethodChange={onMethodChange}
+        onStartSetup={startSetup}
+        setupStage={setupStage}
+        status={status}
       />
-      <div className="space-y-6">
-        <TwoFactorConfigurationSection
-          defaultMethod={linkedMethods?.defaultMethod}
-          isLinkedMethodsLoading={isLinkedMethodsLoading}
-          isSettingDefault={setDefaultMethodMutation.isPending}
-          linkedMethods={linkedMethods?.methods}
-          method={method}
-          onCancelSetup={handleCancelSetup}
-          onDefaultMethodChange={handleDefaultMethodChange}
-          onMethodChange={onMethodChange}
-          onStartSetup={startSetup}
-          setupStage={setupStage}
-          status={status}
-        />
 
-        {setupActive ? (
-          <div className="space-y-4 rounded-lg border bg-background/80 p-4">
-            {setupStage === "REQUESTING" ? (
-              <Alert>
-                <Spinner className="text-muted-foreground" />
-                <AlertTitle>Łączymy się z usługą 2FA</AlertTitle>
-                <AlertDescription>
-                  Generujemy klucz i przygotowujemy kolejne kroki.
-                </AlertDescription>
-              </Alert>
-            ) : null}
+      {setupActive ? (
+        <div className="space-y-4 rounded-lg border bg-background/80 p-4">
+          {setupStage === "REQUESTING" ? (
+            <Alert>
+              <Spinner className="text-muted-foreground" />
+              <AlertTitle>Łączymy się z usługą 2FA</AlertTitle>
+              <AlertDescription>
+                Generujemy klucz i przygotowujemy kolejne kroki.
+              </AlertDescription>
+            </Alert>
+          ) : null}
 
-            {setupStage === "SENDING" ? (
-              <Alert>
-                <Spinner className="text-muted-foreground" />
-                <AlertTitle>Wysyłamy kod</AlertTitle>
-                <AlertDescription>
-                  Kod trafia na {challenge?.destination ?? "wybraną metodę"}.
-                </AlertDescription>
-              </Alert>
-            ) : null}
+          {setupStage === "SENDING" ? (
+            <Alert>
+              <Spinner className="text-muted-foreground" />
+              <AlertTitle>Wysyłamy kod</AlertTitle>
+              <AlertDescription>
+                Kod trafia na {challenge?.destination ?? "wybraną metodę"}.
+              </AlertDescription>
+            </Alert>
+          ) : null}
 
-            {setupStage === "ERROR" && error ? (
-              <Alert variant="destructive">
-                <AlertTitle>Nie udało się aktywować 2FA</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            ) : null}
+          {setupStage === "ERROR" && error ? (
+            <Alert variant="destructive">
+              <AlertTitle>Nie udało się aktywować 2FA</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
 
-            {showCodeEntry ? (
-              <CodeInputEntry
-                canResend={canResendCode}
-                challenge={challenge}
-                code={code}
-                isBusy={setupStage === "VERIFYING"}
-                method={method}
-                onCodeChange={(nextCode) =>
-                  dispatch({ type: "set_code", code: nextCode })
-                }
-                onResend={handleResendCode}
-                onVerify={handleVerifyCode}
-                resendCooldown={resendCooldown}
-                userEmail={userEmail}
-              />
-            ) : null}
-          </div>
-        ) : null}
+          {showCodeEntry ? (
+            <CodeInputEntry
+              canResend={canResendCode}
+              challenge={challenge}
+              code={code}
+              isBusy={setupStage === "VERIFYING"}
+              method={method}
+              onCodeChange={(nextCode) =>
+                dispatch({ type: "set_code", code: nextCode })
+              }
+              onResend={handleResendCode}
+              onVerify={handleVerifyCode}
+              resendCooldown={resendCooldown}
+              userEmail={userEmail}
+            />
+          ) : null}
+        </div>
+      ) : null}
 
-        <div className="h-px bg-border" />
+      <div className="h-px bg-border" />
 
-        <RecoveryCodesSection
-          enabled={enabled}
-          onToggle={() => setShowRecoveryCodes((current) => !current)}
-          showRecoveryCodes={showRecoveryCodes}
-        />
-      </div>
-    </>
+      <RecoveryCodesSection
+        enabled={enabled}
+        onToggle={() => setShowRecoveryCodes((current) => !current)}
+        showRecoveryCodes={showRecoveryCodes}
+      />
+    </div>
   )
 }

@@ -3,16 +3,14 @@
 import { useForm } from "@tanstack/react-form"
 import { useState } from "react"
 import { toast } from "sonner"
+import { useTwoFactorVerificationDialog } from "@/components/dashboard/settings/two-factor-verification-dialog-store"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { Button } from "@/components/ui/button"
 import { ChangePasswordFormSchema } from "@/lib/schemas"
-import { TwoFactorVerificationDialog } from "./two-factor-verification-dialog"
 import { wait } from "./utils"
 
 export function PasswordSection() {
-  const [isVerificationDialogOpen, setIsVerificationDialogOpen] =
-    useState(false)
-
+  const { open } = useTwoFactorVerificationDialog()
   const [isVerified, setIsVerified] = useState(false) // FIXME: Only in dev - remove later
 
   const form = useForm({
@@ -23,7 +21,12 @@ export function PasswordSection() {
     },
     onSubmit: async () => {
       if (!isVerified) {
-        setIsVerificationDialogOpen(true)
+        open({
+          onVerified: () => {
+            setIsVerified(true) // FIXME: Only in dev - remove later
+            form.handleSubmit()
+          },
+        })
         return
       }
 
@@ -113,14 +116,6 @@ export function PasswordSection() {
           )}
         </form.Subscribe>
       </div>
-      <TwoFactorVerificationDialog
-        onOpenChange={setIsVerificationDialogOpen}
-        onVerified={() => {
-          setIsVerified(true) // FIXME: Only in dev - remove later
-          form.handleSubmit()
-        }}
-        open={isVerificationDialogOpen}
-      />
     </form>
   )
 }

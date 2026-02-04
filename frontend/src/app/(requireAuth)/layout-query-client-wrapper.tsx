@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { type ReactNode, useState } from "react"
+import { TwoFactorVerificationDialogRoot } from "@/components/dashboard/settings/two-factor-verification-dialog-root"
 
 export default function LayoutQueryClientWrapper({
   children,
@@ -22,6 +23,9 @@ export default function LayoutQueryClientWrapper({
   )
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      {children}
+      <TwoFactorVerificationDialogRoot />
+    </QueryClientProvider>
   )
 }

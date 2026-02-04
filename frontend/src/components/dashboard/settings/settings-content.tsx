@@ -14,8 +14,8 @@ export function SettingsContent({ user }: SettingsContentProps) {
         title="Ustawienia konta"
       />
 
-      <div className="grid gap-8 xl:grid-cols-5">
-        <section className="space-y-6 xl:col-span-3">
+      <div className="grid gap-8 2xl:grid-cols-5">
+        <section className="space-y-6 2xl:col-span-3">
           <div className="flex items-center gap-2 font-medium text-muted-foreground text-xs uppercase tracking-wider">
             <HugeiconsIcon icon={UserIcon} size={14} />
             <span>Dane profilu</span>
@@ -23,7 +23,7 @@ export function SettingsContent({ user }: SettingsContentProps) {
           <ProfileSection user={user} />
         </section>
 
-        <section className="space-y-6 xl:col-span-2">
+        <section className="space-y-6 2xl:col-span-2">
           <div className="flex items-center gap-2 font-medium text-muted-foreground text-xs uppercase tracking-wider">
             <HugeiconsIcon icon={Settings01Icon} size={14} />
             <span>Bezpieczeństwo</span>
