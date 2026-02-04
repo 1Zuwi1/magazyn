@@ -1,9 +1,6 @@
-import type { AnyFieldApi } from "@tanstack/react-form"
 import { differenceInCalendarDays, format } from "date-fns"
 import { pl } from "date-fns/locale"
 import { toast } from "sonner"
-import type { ZodError } from "zod"
-import { FieldError } from "@/components/ui/field"
 import { FetchError } from "@/lib/fetcher"
 import type { Item } from "../types"
 
@@ -22,17 +19,6 @@ export function formatDate(date: Date): string {
 
 export function formatDimensions(item: Item): string {
   return `${item.width}×${item.height}×${item.depth} mm`
-}
-
-export const renderError = (field: AnyFieldApi) => {
-  const error = field.state.meta.errors[0] as ZodError | string | undefined
-  const message = typeof error === "string" ? error : error?.message
-
-  if (!message) {
-    return null
-  }
-
-  return <FieldError className="col-span-4 col-start-3">{message}</FieldError>
 }
 
 export function getDaysUntilExpiry(today: Date, expiryDate: Date): number {

@@ -89,7 +89,7 @@ export function NotificationInbox() {
 
   return (
     <Popover onOpenChange={setOpen} open={open}>
-      <PopoverTrigger className="group relative mr-3 flex size-11 cursor-pointer items-center justify-center rounded-xl bg-background transition-all hover:bg-accent hover:shadow-sm">
+      <PopoverTrigger className="group relative mr-3 flex size-8 cursor-pointer items-center justify-center rounded-xl bg-background transition-all hover:bg-accent hover:shadow-sm">
         <HugeiconsIcon
           className="size-5 text-muted-foreground transition-colors group-hover:text-foreground"
           icon={Notification01Icon}
@@ -98,7 +98,7 @@ export function NotificationInbox() {
           {unreadCount > 0 && (
             <motion.span
               animate={{ scale: 1, opacity: 1 }}
-              className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 font-bold text-[10px] text-primary-foreground ring-2 ring-background"
+              className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary px-1.5 font-bold text-[10px] text-primary-foreground ring-2 ring-background"
               exit={{ scale: 0, opacity: 0 }}
               initial={{ scale: 0, opacity: 0 }}
             >

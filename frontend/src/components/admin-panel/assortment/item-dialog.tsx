@@ -3,17 +3,13 @@
 import { useForm } from "@tanstack/react-form"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import type { Item } from "@/components/dashboard/types"
-import { renderError } from "@/components/dashboard/utils/helpers"
+import { FieldWithState } from "@/components/helpers/field-state"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Field,
-  FieldContent,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
+import { Field, FieldContent, FieldGroup } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { cn } from "@/lib/utils"
 
 export interface ItemFormData {
   id: string
@@ -122,77 +118,47 @@ export function ItemDialog({
         <FieldGroup className="gap-4">
           <form.Field name="name">
             {(field) => (
-              <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-                <FieldLabel
-                  className="col-span-2 text-end"
-                  htmlFor={field.name}
-                >
-                  Nazwa
-                </FieldLabel>
-                <FieldContent className="col-span-4">
-                  <Input
-                    autoComplete="off"
-                    className="w-full"
-                    id={field.name}
-                    name={field.name}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="Mleko 3,2%"
-                    value={field.state.value}
-                  />
-                </FieldContent>
-                {renderError(field)}
-              </Field>
+              <FieldWithState
+                autoComplete="off"
+                field={field}
+                label="Nazwa"
+                layout="grid"
+                placeholder="Mleko 3,2%"
+              />
             )}
           </form.Field>
 
           <form.Field name="id">
             {(field) => (
-              <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-                <FieldLabel
-                  className="col-span-2 text-end"
-                  htmlFor={field.name}
-                >
-                  ID / Kod
-                </FieldLabel>
-                <FieldContent className="col-span-4">
-                  <Input
-                    autoComplete="off"
-                    className="w-full"
-                    disabled={isEdit}
-                    id={field.name}
-                    name={field.name}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="5901234567890"
-                    value={field.state.value}
-                  />
-                </FieldContent>
-                {renderError(field)}
-              </Field>
+              <FieldWithState
+                autoComplete="off"
+                disabled={isEdit}
+                field={field}
+                label="ID / Kod"
+                layout="grid"
+                placeholder="5901234567890"
+              />
             )}
           </form.Field>
 
           <form.Field name="imageUrl">
             {(field) => (
-              <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-                <FieldLabel
-                  className="col-span-2 text-end"
-                  htmlFor={field.name}
-                >
-                  URL zdjęcia
-                </FieldLabel>
-                <FieldContent className="col-span-4">
+              <FieldWithState
+                field={field}
+                label="URL zdjęcia"
+                layout="grid"
+                renderInput={({ id, isInvalid }) => (
                   <Input
                     autoComplete="off"
-                    className="w-full"
-                    id={field.name}
+                    className={isInvalid ? "border-destructive" : ""}
+                    id={id}
                     name={field.name}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="/images/produkt.jpg"
-                    value={field.state.value || ""}
+                    value={field.state.value ?? ""}
                   />
-                </FieldContent>
-                {renderError(field)}
-              </Field>
+                )}
+              />
             )}
           </form.Field>
 
@@ -233,17 +199,14 @@ export function ItemDialog({
 
           <form.Field name="weight">
             {(field) => (
-              <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-                <FieldLabel
-                  className="col-span-2 text-end"
-                  htmlFor={field.name}
-                >
-                  Waga (kg)
-                </FieldLabel>
-                <FieldContent className="col-span-4">
+              <FieldWithState
+                field={field}
+                label="Waga (kg)"
+                layout="grid"
+                renderInput={({ id, isInvalid }) => (
                   <Input
-                    className="w-full"
-                    id={field.name}
+                    className={isInvalid ? "border-destructive" : ""}
+                    id={id}
                     min={0}
                     name={field.name}
                     onChange={(e) => field.handleChange(Number(e.target.value))}
@@ -252,9 +215,8 @@ export function ItemDialog({
                     type="number"
                     value={field.state.value}
                   />
-                </FieldContent>
-                {renderError(field)}
-              </Field>
+                )}
+              />
             )}
           </form.Field>
 
@@ -312,17 +274,14 @@ export function ItemDialog({
 
           <form.Field name="daysToExpiry">
             {(field) => (
-              <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-                <FieldLabel
-                  className="col-span-2 text-end"
-                  htmlFor={field.name}
-                >
-                  Ważność (dni)
-                </FieldLabel>
-                <FieldContent className="col-span-4">
+              <FieldWithState
+                field={field}
+                label="Ważność (dni)"
+                layout="grid"
+                renderInput={({ id, isInvalid }) => (
                   <Input
-                    className="w-full"
-                    id={field.name}
+                    className={isInvalid ? "border-destructive" : ""}
+                    id={id}
                     min={1}
                     name={field.name}
                     onChange={(e) => field.handleChange(Number(e.target.value))}
@@ -330,9 +289,8 @@ export function ItemDialog({
                     type="number"
                     value={field.state.value}
                   />
-                </FieldContent>
-                {renderError(field)}
-              </Field>
+                )}
+              />
             )}
           </form.Field>
 
@@ -358,26 +316,26 @@ export function ItemDialog({
 
           <form.Field name="comment">
             {(field) => (
-              <Field className="grid grid-cols-6 items-start gap-x-4 gap-y-1">
-                <FieldLabel
-                  className="col-span-2 pt-2 text-left"
-                  htmlFor={field.name}
-                >
-                  Komentarz
-                </FieldLabel>
-                <FieldContent className="col-span-4">
+              <FieldWithState
+                field={field}
+                fieldClassName="items-start"
+                label="Komentarz"
+                labelClassName="pt-2 text-left"
+                layout="grid"
+                renderInput={({ id, isInvalid }) => (
                   <Textarea
-                    className="w-full resize-none"
-                    id={field.name}
+                    className={cn("w-full resize-none", {
+                      "border-destructive": isInvalid,
+                    })}
+                    id={id}
                     name={field.name}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Opcjonalny komentarz..."
                     rows={3}
-                    value={field.state.value || ""}
+                    value={field.state.value ?? ""}
                   />
-                </FieldContent>
-                {renderError(field)}
-              </Field>
+                )}
+              />
             )}
           </form.Field>
         </FieldGroup>

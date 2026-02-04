@@ -1,17 +1,11 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
-import { useCallback, useEffect, useId } from "react"
+import { useCallback, useEffect } from "react"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import type { Role, Status, User } from "@/components/dashboard/types"
-import { renderError } from "@/components/dashboard/utils/helpers"
-import {
-  Field,
-  FieldContent,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { FieldWithState } from "@/components/helpers/field-state"
+import { FieldGroup } from "@/components/ui/field"
 import {
   Select,
   SelectContent,
@@ -47,7 +41,7 @@ export function ActionDialog({
 }: ActionDialogProps) {
   const isEdit = !!currentRow
 
-  const formId = useId()
+  const formId = isEdit ? "edit-form" : "add-form"
 
   const getFormValues = useCallback(
     () => ({
@@ -107,70 +101,35 @@ export function ActionDialog({
         <FieldGroup className="gap-4">
           <form.Field name="username">
             {(field) => (
-              <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-                <FieldLabel
-                  className="col-span-2 text-end"
-                  htmlFor={field.name}
-                >
-                  Nazwa użytkownika
-                </FieldLabel>
-                <FieldContent className="col-span-4">
-                  <Input
-                    autoComplete="off"
-                    className={
-                      field.state.meta.errors.length ? "border-red-500" : ""
-                    }
-                    id={field.name}
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    placeholder="jan_kowalski"
-                    value={field.state.value}
-                  />
-                </FieldContent>
-                {renderError(field)}
-              </Field>
+              <FieldWithState
+                autoComplete="off"
+                field={field}
+                label="Nazwa użytkownika"
+                layout="grid"
+                placeholder="jan_kowalski"
+              />
             )}
           </form.Field>
 
           <form.Field name="email">
             {(field) => (
-              <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-                <FieldLabel
-                  className="col-span-2 text-end"
-                  htmlFor={field.name}
-                >
-                  Email
-                </FieldLabel>
-                <FieldContent className="col-span-4">
-                  <Input
-                    className={
-                      field.state.meta.errors.length ? "border-red-500" : ""
-                    }
-                    id={field.name}
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="jan.kowalski@example.com"
-                    type="email"
-                    value={field.state.value}
-                  />
-                </FieldContent>
-                {renderError(field)}
-              </Field>
+              <FieldWithState
+                field={field}
+                label="Email"
+                layout="grid"
+                placeholder="jan.kowalski@example.com"
+                type="email"
+              />
             )}
           </form.Field>
 
           <form.Field name="role">
             {(field) => (
-              <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-                <FieldLabel
-                  className="col-span-2 text-end"
-                  htmlFor={field.name}
-                >
-                  Rola
-                </FieldLabel>
-                <FieldContent className="col-span-4">
+              <FieldWithState
+                field={field}
+                label="Rola"
+                layout="grid"
+                renderInput={({ id, isInvalid }) => (
                   <Select
                     onValueChange={(value) => {
                       if (value) {
@@ -180,9 +139,8 @@ export function ActionDialog({
                     value={field.state.value}
                   >
                     <SelectTrigger
-                      className={
-                        field.state.meta.errors.length ? "border-red-500" : ""
-                      }
+                      className={isInvalid ? "border-destructive" : ""}
+                      id={id}
                     >
                       <SelectValue>
                         {roles.find((r) => r.value === field.state.value)
@@ -197,22 +155,18 @@ export function ActionDialog({
                       ))}
                     </SelectContent>
                   </Select>
-                </FieldContent>
-                {renderError(field)}
-              </Field>
+                )}
+              />
             )}
           </form.Field>
 
           <form.Field name="status">
             {(field) => (
-              <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-                <FieldLabel
-                  className="col-span-2 text-end"
-                  htmlFor={field.name}
-                >
-                  Status
-                </FieldLabel>
-                <FieldContent className="col-span-4">
+              <FieldWithState
+                field={field}
+                label="Status"
+                layout="grid"
+                renderInput={({ id, isInvalid }) => (
                   <Select
                     onValueChange={(value) => {
                       if (value) {
@@ -222,9 +176,8 @@ export function ActionDialog({
                     value={field.state.value}
                   >
                     <SelectTrigger
-                      className={
-                        field.state.meta.errors.length ? "border-red-500" : ""
-                      }
+                      className={isInvalid ? "border-destructive" : ""}
+                      id={id}
                     >
                       <SelectValue>
                         {statuses.find((s) => s.value === field.state.value)
@@ -239,9 +192,8 @@ export function ActionDialog({
                       ))}
                     </SelectContent>
                   </Select>
-                </FieldContent>
-                {renderError(field)}
-              </Field>
+                )}
+              />
             )}
           </form.Field>
         </FieldGroup>

@@ -3,15 +3,11 @@
 import { useForm } from "@tanstack/react-form"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import type { Rack } from "@/components/dashboard/types"
-import { renderError } from "@/components/dashboard/utils/helpers"
-import {
-  Field,
-  FieldContent,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
+import { FieldWithState } from "@/components/helpers/field-state"
+import { FieldGroup } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { cn } from "@/lib/utils"
 import { DEFAULT_RACK } from "../../lib/constants"
 import type { RackFormData } from "../csv/utils/types"
 
@@ -74,51 +70,25 @@ export function RackDialog({
         <FieldGroup className="gap-4">
           <form.Field name="name">
             {(field) => (
-              <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-                <FieldLabel
-                  className="col-span-2 text-end"
-                  htmlFor={field.name}
-                >
-                  Nazwa
-                </FieldLabel>
-                <FieldContent className="col-span-4">
-                  <Input
-                    autoComplete="off"
-                    className="w-full"
-                    id={field.name}
-                    name={field.name}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="Regał A1"
-                    value={field.state.value}
-                  />
-                </FieldContent>
-                {renderError(field)}
-              </Field>
+              <FieldWithState
+                autoComplete="off"
+                field={field}
+                label="Nazwa"
+                layout="grid"
+                placeholder="Regał A1"
+              />
             )}
           </form.Field>
 
           <form.Field name="symbol">
             {(field) => (
-              <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-                <FieldLabel
-                  className="col-span-2 text-end"
-                  htmlFor={field.name}
-                >
-                  Symbol
-                </FieldLabel>
-                <FieldContent className="col-span-4">
-                  <Input
-                    autoComplete="off"
-                    className="w-full"
-                    id={field.name}
-                    name={field.name}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="A1-01"
-                    value={field.state.value}
-                  />
-                </FieldContent>
-                {renderError(field)}
-              </Field>
+              <FieldWithState
+                autoComplete="off"
+                field={field}
+                label="Symbol"
+                layout="grid"
+                placeholder="A1-01"
+              />
             )}
           </form.Field>
 
@@ -196,17 +166,14 @@ export function RackDialog({
 
           <form.Field name="maxWeight">
             {(field) => (
-              <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-                <FieldLabel
-                  className="col-span-2 text-end"
-                  htmlFor={field.name}
-                >
-                  Max waga (kg)
-                </FieldLabel>
-                <FieldContent className="col-span-4">
+              <FieldWithState
+                field={field}
+                label="Max waga (kg)"
+                layout="grid"
+                renderInput={({ id, isInvalid }) => (
                   <Input
-                    className="w-full"
-                    id={field.name}
+                    className={isInvalid ? "border-destructive" : ""}
+                    id={id}
                     min={1}
                     name={field.name}
                     onChange={(e) => field.handleChange(Number(e.target.value))}
@@ -214,9 +181,8 @@ export function RackDialog({
                     type="number"
                     value={field.state.value}
                   />
-                </FieldContent>
-                {renderError(field)}
-              </Field>
+                )}
+              />
             )}
           </form.Field>
 
@@ -274,26 +240,26 @@ export function RackDialog({
 
           <form.Field name="comment">
             {(field) => (
-              <Field className="grid grid-cols-6 items-start gap-x-4 gap-y-1">
-                <FieldLabel
-                  className="col-span-2 pt-2 text-left"
-                  htmlFor={field.name}
-                >
-                  Komentarz
-                </FieldLabel>
-                <FieldContent className="col-span-4">
+              <FieldWithState
+                field={field}
+                fieldClassName="items-start"
+                label="Komentarz"
+                labelClassName="pt-2 text-left"
+                layout="grid"
+                renderInput={({ id, isInvalid }) => (
                   <Textarea
-                    className="w-full resize-none"
-                    id={field.name}
+                    className={cn("w-full resize-none", {
+                      "border-destructive": isInvalid,
+                    })}
+                    id={id}
                     name={field.name}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Opcjonalny komentarz..."
                     rows={3}
-                    value={field.state.value}
+                    value={field.state.value ?? ""}
                   />
-                </FieldContent>
-                {renderError(field)}
-              </Field>
+                )}
+              />
             )}
           </form.Field>
         </FieldGroup>
