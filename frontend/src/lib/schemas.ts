@@ -229,6 +229,15 @@ export const TFADefaultMethodSchema = createApiSchema({
   },
 })
 
+export const TFARemoveMethodSchema = createApiSchema({
+  DELETE: {
+    input: z.object({
+      method: TFAMethods,
+    }),
+    output: z.null(),
+  },
+})
+
 export const PasskeysSchema = createApiSchema({
   GET: {
     output: z.any(),

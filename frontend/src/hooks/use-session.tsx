@@ -1,12 +1,9 @@
 "use client"
 
-import {
-  type UseQueryOptions,
-  type UseQueryResult,
-  useQuery,
-} from "@tanstack/react-query"
+import type { UseQueryOptions, UseQueryResult } from "@tanstack/react-query"
 import { apiFetch, FetchError, type InferApiOutput } from "@/lib/fetcher"
 import { ApiMeSchema } from "@/lib/schemas"
+import { useApiQuery } from "./use-api-query"
 
 export type Session = InferApiOutput<typeof ApiMeSchema, "GET">
 export type SessionResult = Session | null
@@ -34,7 +31,7 @@ export const useSession = (
     "queryKey" | "queryFn"
   >
 ): UseQueryResult<SessionResult, FetchError> =>
-  useQuery({
+  useApiQuery({
     queryKey: SESSION_QUERY_KEY,
     queryFn: fetchSession,
     ...options,

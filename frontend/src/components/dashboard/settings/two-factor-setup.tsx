@@ -1,4 +1,5 @@
 import {
+  Cancel01Icon,
   Copy01Icon,
   Key01Icon,
   StarIcon,
@@ -34,6 +35,7 @@ import {
 } from "@/components/ui/tooltip"
 import { OTP_LENGTH } from "@/config/constants"
 import useLinkedMethods from "@/hooks/use-linked-methods"
+import useRemoveMethod from "@/hooks/use-remove-method"
 import useSetDefaultMethod from "@/hooks/use-set-default-method"
 import { FetchError } from "@/lib/fetcher"
 import type { TwoFactorMethod } from "@/lib/schemas"
@@ -389,12 +391,16 @@ function ConnectedMethods({
   isLoading,
   onDefaultMethodChange,
   isSettingDefault,
+  onRemoveMethod,
+  removingMethod,
 }: {
   linkedMethods?: TwoFactorMethod[]
   defaultMethod?: TwoFactorMethod
   isLoading: boolean
   onDefaultMethodChange: (method: TwoFactorMethod) => void
   isSettingDefault: boolean
+  onRemoveMethod: (method: TwoFactorMethod) => void
+  removingMethod: TwoFactorMethod | null
 }) {
   if (isLoading) {
     return (
@@ -448,6 +454,27 @@ function ConnectedMethods({
             }`}
             key={linkedMethod}
           >
+            {linkedMethod !== "EMAIL" && linkedMethod !== "PASSKEYS" ? (
+              <Tooltip>
+                <TooltipTrigger
+                  aria-label={`Usuń metodę ${label}`}
+                  className="absolute top-1.5 right-1.5 inline-flex size-5 cursor-pointer items-center justify-center rounded-full text-muted-foreground/50 opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive disabled:pointer-events-none disabled:opacity-50 group-hover:opacity-100"
+                  disabled={removingMethod === linkedMethod}
+                  onClick={() => onRemoveMethod(linkedMethod)}
+                >
+                  {removingMethod === linkedMethod ? (
+                    <Spinner className="size-3" />
+                  ) : (
+                    <HugeiconsIcon
+                      icon={Cancel01Icon}
+                      size={12}
+                      strokeWidth={2}
+                    />
+                  )}
+                </TooltipTrigger>
+                <TooltipContent>Usuń</TooltipContent>
+              </Tooltip>
+            ) : null}
             <div
               className={`flex size-9 items-center justify-center rounded-full ring-1 ${
                 isDefault
@@ -486,11 +513,9 @@ function ConnectedMethods({
               </div>
               <p className="text-muted-foreground text-xs">{hint}</p>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 rounded-full bg-green-500/10 px-2 py-1 text-green-600 dark:text-green-500">
-                <HugeiconsIcon icon={Tick01Icon} size={14} />
-                <span className="font-medium text-xs">Aktywna</span>
-              </div>
+            <div className="mr-2 flex items-center gap-1.5 rounded-full bg-green-500/10 px-2 py-1 text-green-600 dark:text-green-500">
+              <HugeiconsIcon icon={Tick01Icon} size={14} />
+              <span className="font-medium text-xs">Aktywna</span>
             </div>
           </div>
         )
@@ -852,6 +877,8 @@ function TwoFactorConfigurationSection({
   isLinkedMethodsLoading,
   onDefaultMethodChange,
   isSettingDefault,
+  onRemoveMethod,
+  removingMethod,
 }: {
   status: TwoFactorStatus
   setupStage: TwoFactorSetupStage
@@ -864,6 +891,8 @@ function TwoFactorConfigurationSection({
   isLinkedMethodsLoading: boolean
   onDefaultMethodChange: (method: TwoFactorMethod) => void
   isSettingDefault: boolean
+  onRemoveMethod: (method: TwoFactorMethod) => void
+  removingMethod: TwoFactorMethod | null
 }) {
   const isIdleStage = isIdleSetupStage(setupStage)
   const isSetupInProgress = !isIdleStage
@@ -894,6 +923,8 @@ function TwoFactorConfigurationSection({
           isSettingDefault={isSettingDefault}
           linkedMethods={linkedMethods}
           onDefaultMethodChange={onDefaultMethodChange}
+          onRemoveMethod={onRemoveMethod}
+          removingMethod={removingMethod}
         />
       </div>
       {hasAvailableMethods && !isLinkedMethodsLoading ? (
@@ -975,8 +1006,12 @@ export function TwoFactorSetup({
   } = useLinkedMethods()
 
   const setDefaultMethodMutation = useSetDefaultMethod()
+  const removeMethodMutation = useRemoveMethod()
   const [pendingDefaultMethod, setPendingDefaultMethod] =
     useState<TwoFactorMethod | null>(null)
+  const [removingMethod, setRemovingMethod] = useState<TwoFactorMethod | null>(
+    null
+  )
   const { open } = useTwoFactorVerificationDialog()
 
   const handleDefaultMethodChange = (newDefaultMethod: TwoFactorMethod) => {
@@ -1005,6 +1040,32 @@ export function TwoFactorSetup({
     if (pendingDefaultMethod) {
       handleDefaultMethodChange(pendingDefaultMethod)
     }
+  }
+
+  const handleRemoveMethod = (methodToRemove: TwoFactorMethod) => {
+    setRemovingMethod(methodToRemove)
+    removeMethodMutation.mutate(methodToRemove, {
+      onSuccess: () => {
+        toast.success(
+          `Metoda ${TWO_FACTOR_METHOD_LABELS[methodToRemove]} została usunięta`
+        )
+        setRemovingMethod(null)
+      },
+      onError: (mutationError) => {
+        if (
+          mutationError instanceof FetchError &&
+          mutationError.code === "INSUFFICIENT_PERMISSIONS"
+        ) {
+          open({
+            onVerified: () => handleRemoveMethod(methodToRemove),
+          })
+          setRemovingMethod(null)
+          return
+        }
+        toast.error("Nie udało się usunąć metody. Spróbuj ponownie.")
+        setRemovingMethod(null)
+      },
+    })
   }
 
   useEffect(() => {
@@ -1100,7 +1161,9 @@ export function TwoFactorSetup({
         onCancelSetup={handleCancelSetup}
         onDefaultMethodChange={handleDefaultMethodChange}
         onMethodChange={onMethodChange}
+        onRemoveMethod={handleRemoveMethod}
         onStartSetup={startSetup}
+        removingMethod={removingMethod}
         setupStage={setupStage}
         status={status}
       />
