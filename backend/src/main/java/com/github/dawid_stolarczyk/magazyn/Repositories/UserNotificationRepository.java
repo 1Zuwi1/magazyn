@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,8 +55,8 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
      * Mark all notifications as read for a user
      */
     @Modifying
-    @Query("UPDATE UserNotification n SET n.isRead = true, n.readAt = CURRENT_TIMESTAMP WHERE n.user.id = :userId AND n.isRead = false")
-    int markAllAsReadForUser(@Param("userId") Long userId);
+    @Query("UPDATE UserNotification n SET n.isRead = true, n.readAt = :now WHERE n.user.id = :userId AND n.isRead = false")
+    int markAllAsReadForUser(@Param("userId") Long userId, @Param("now") Instant now);
 
     /**
      * Find all notifications for a specific alert

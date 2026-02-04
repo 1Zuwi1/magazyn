@@ -20,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
 /**
@@ -124,7 +126,7 @@ public class UserNotificationService {
         rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
 
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
-        int updated = notificationRepository.markAllAsReadForUser(authPrincipal.getUserId());
+        int updated = notificationRepository.markAllAsReadForUser(authPrincipal.getUserId(), Instant.now());
 
         log.info("Marked {} notifications as read for user {}", updated, authPrincipal.getUserId());
 
