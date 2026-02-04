@@ -1,9 +1,9 @@
-import { useMutation } from "@tanstack/react-query"
 import { apiFetch } from "@/lib/fetcher"
 import { TFARemoveMethodSchema, type TwoFactorMethod } from "@/lib/schemas"
+import { useApiMutation } from "./use-api-mutation"
 
 export default function useRemoveMethod() {
-  return useMutation({
+  return useApiMutation({
     mutationFn: (method: TwoFactorMethod) =>
       apiFetch("/api/2fa/methods", TFARemoveMethodSchema, {
         method: "DELETE",

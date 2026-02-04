@@ -37,7 +37,6 @@ import { OTP_LENGTH } from "@/config/constants"
 import useLinkedMethods from "@/hooks/use-linked-methods"
 import useRemoveMethod from "@/hooks/use-remove-method"
 import useSetDefaultMethod from "@/hooks/use-set-default-method"
-import { FetchError } from "@/lib/fetcher"
 import {
   ResendMethods,
   type ResendType,
@@ -54,7 +53,6 @@ import {
 } from "./constants"
 import { OtpInput } from "./otp-input"
 import { generateTotpUri, QRCodeDisplay } from "./qr-code"
-import { useTwoFactorVerificationDialog } from "./two-factor-verification-dialog-store"
 import type {
   TwoFactorChallenge,
   TwoFactorSetupStage,
@@ -1041,12 +1039,9 @@ export function TwoFactorSetup({
 
   const setDefaultMethodMutation = useSetDefaultMethod()
   const removeMethodMutation = useRemoveMethod()
-  const [pendingDefaultMethod, setPendingDefaultMethod] =
-    useState<TwoFactorMethod | null>(null)
   const [removingMethod, setRemovingMethod] = useState<TwoFactorMethod | null>(
     null
   )
-  const { open } = useTwoFactorVerificationDialog()
 
   const handleDefaultMethodChange = (newDefaultMethod: TwoFactorMethod) => {
     setDefaultMethodMutation.mutate(newDefaultMethod, {
@@ -1054,26 +1049,8 @@ export function TwoFactorSetup({
         toast.success(
           `Metoda ${TWO_FACTOR_METHOD_LABELS[newDefaultMethod]} została ustawiona jako domyślna`
         )
-        setPendingDefaultMethod(null)
-      },
-      onError: (error) => {
-        if (
-          error instanceof FetchError &&
-          error.code === "INSUFFICIENT_PERMISSIONS"
-        ) {
-          setPendingDefaultMethod(newDefaultMethod)
-          open({ onVerified: handleSudoVerified })
-          return
-        }
-        toast.error("Nie udało się zmienić domyślnej metody. Spróbuj ponownie.")
       },
     })
-  }
-
-  const handleSudoVerified = () => {
-    if (pendingDefaultMethod) {
-      handleDefaultMethodChange(pendingDefaultMethod)
-    }
   }
 
   const handleRemoveMethod = (methodToRemove: TwoFactorMethod) => {
@@ -1083,20 +1060,6 @@ export function TwoFactorSetup({
         toast.success(
           `Metoda ${TWO_FACTOR_METHOD_LABELS[methodToRemove]} została usunięta`
         )
-        setRemovingMethod(null)
-      },
-      onError: (mutationError) => {
-        if (
-          mutationError instanceof FetchError &&
-          mutationError.code === "INSUFFICIENT_PERMISSIONS"
-        ) {
-          open({
-            onVerified: () => handleRemoveMethod(methodToRemove),
-          })
-          setRemovingMethod(null)
-          return
-        }
-        toast.error("Nie udało się usunąć metody. Spróbuj ponownie.")
         setRemovingMethod(null)
       },
     })
