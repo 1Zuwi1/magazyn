@@ -149,7 +149,7 @@ public class AlertController {
         }
     }
 
-    @Operation(summary = "Update alert status [ADMIN]",
+    @Operation(summary = "Update alert status (ADMIN only)",
             description = "Update the status of an alert (resolve, dismiss, etc.)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Alert updated successfully",

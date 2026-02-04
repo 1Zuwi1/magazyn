@@ -39,6 +39,7 @@ public class InventoryPlacementService {
     private final WarehouseRepository warehouseRepository;
     private final BarcodeService barcodeService;
     private final PositionReservationRepository reservationRepository;
+    private final InboundOperationRepository inboundOperationRepository;
     private final Bucket4jRateLimiter rateLimiter;
 
 
@@ -307,6 +308,25 @@ public class InventoryPlacementService {
             }
         }
         assortmentRepository.saveAll(newAssortments);
+
+        // Tworzenie wpisów audytowych dla każdego przyjęcia
+        List<InboundOperation> inboundOperations = new ArrayList<>();
+        for (Assortment assortment : newAssortments) {
+            InboundOperation operation = new InboundOperation();
+            operation.setItem(assortment.getItem());
+            operation.setRack(assortment.getRack());
+            operation.setAssortment(assortment);
+            operation.setReceivedBy(user);
+            operation.setOperationTimestamp(createdAt);
+            operation.setPositionX(assortment.getPosition_x());
+            operation.setPositionY(assortment.getPosition_y());
+            operation.setQuantity(1);
+            inboundOperations.add(operation);
+        }
+        inboundOperationRepository.saveAll(inboundOperations);
+
+        log.info("[AUDIT] ✓ Created {} inbound operation audit records | User: {} | Item: {}",
+                inboundOperations.size(), user.getId(), item.getId());
 
         // Usuń rezerwacje po udanym umieszczeniu
         if (!reservationsToDelete.isEmpty()) {

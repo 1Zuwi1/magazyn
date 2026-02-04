@@ -77,7 +77,7 @@ public class RackController {
         return ResponseEntity.ok(ResponseTemplate.success(rackService.getRackById(id, request)));
     }
 
-    @Operation(summary = "Create rack [ADMIN]")
+    @Operation(summary = "Create rack (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Success - returns created rack",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = RackDto.class))),
@@ -90,7 +90,7 @@ public class RackController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(rackService.createRack(rackDto, request)));
     }
 
-    @Operation(summary = "Update rack [ADMIN]")
+    @Operation(summary = "Update rack (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - returns updated rack",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = RackDto.class))),
@@ -103,7 +103,7 @@ public class RackController {
         return ResponseEntity.ok(ResponseTemplate.success(rackService.updateRack(id, rackDto, request)));
     }
 
-    @Operation(summary = "Delete a rack")
+    @Operation(summary = "Delete a rack (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Rack deleted successfully",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
@@ -118,7 +118,7 @@ public class RackController {
     }
 
     @Operation(
-            summary = "Import racks from CSV",
+            summary = "Import racks from CSV (ADMIN only)",
             description = """
                     Import regałów z pliku CSV ze **stałą kolejnością kolumn** (bez nagłówka).
                     

@@ -72,6 +72,10 @@ public class User {
     @Column(length = 50)
     private UserTeam team;
 
+    // Audyt - data ostatniego logowania
+    @Column(name = "last_login")
+    private Timestamp lastLogin;
+
     public void addTwoFactorMethod(TwoFactorMethod method) {
         twoFactorMethods.add(method);
         method.setUser(this);

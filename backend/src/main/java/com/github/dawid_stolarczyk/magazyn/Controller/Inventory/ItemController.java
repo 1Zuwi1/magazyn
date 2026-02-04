@@ -83,7 +83,7 @@ public class ItemController {
         }
     }
 
-    @Operation(summary = "Create item [ADMIN] - auto-generates 14-digit barcode")
+    @Operation(summary = "Create item (ADMIN only) - auto-generates 14-digit barcode")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Success - returns created item with generated barcode",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),
@@ -97,7 +97,7 @@ public class ItemController {
     }
 
     @Operation(
-            summary = "Update an existing item",
+            summary = "Update an existing item (ADMIN only)",
             description = """
                     Updates product information. Requires ADMIN role.
                     Barcode cannot be changed through this endpoint.
@@ -132,7 +132,7 @@ public class ItemController {
     }
 
     @Operation(
-            summary = "Delete an item",
+            summary = "Delete an item (ADMIN only)",
             description = """
                     Permanently deletes a product from the system. Requires ADMIN role.
                     Associated photo will also be deleted from storage.
@@ -163,7 +163,7 @@ public class ItemController {
     }
 
     @Operation(
-            summary = "Upload item photo",
+            summary = "Upload item photo (ADMIN only)",
             description = """
                     Uploads an encrypted photo for a product to S3-compatible storage. Requires ADMIN role.
                     Only image files (JPEG, PNG, WebP) are accepted.
@@ -248,7 +248,7 @@ public class ItemController {
     }
 
     @Operation(
-            summary = "Import items (products) from CSV",
+            summary = "Import items (products) from CSV (ADMIN only)",
             description = """
                     Import produktów z pliku CSV ze **stałą kolejnością kolumn** (bez nagłówka).
                     

@@ -46,7 +46,7 @@ public class UserController {
         return ResponseEntity.ok(ResponseTemplate.success(userService.getBasicInformation(request)));
     }
 
-    @Operation(summary = "[ADMIN] Get available teams", description = "Returns list of all available team options for dropdown/select")
+    @Operation(summary = "Get available teams (ADMIN only)", description = "Returns list of all available team options for dropdown/select")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - returns list of available teams with value and label",
                     content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TeamOption.class)))),
@@ -62,7 +62,7 @@ public class UserController {
         return ResponseEntity.ok(ResponseTemplate.success(teams));
     }
 
-    @Operation(summary = "[ADMIN] Get all users with pagination")
+    @Operation(summary = "Get all users with pagination (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - returns paginated list of all users",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
@@ -83,7 +83,7 @@ public class UserController {
                 PagedResponse.from(userService.adminGetAllUsersPaged(request, pageable))));
     }
 
-    @Operation(summary = "[ADMIN] Change user email")
+    @Operation(summary = "Change user email (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - email changed, verification email sent",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
@@ -129,7 +129,7 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "[ADMIN] Update user profile (phone, location, team, full name)",
+    @Operation(summary = "Update user profile (phone, location, team, full name) (ADMIN only)",
             description = "Updates user profile. Team must be one of: OPERATIONS, LOGISTICS, WAREHOUSE, INVENTORY, QUALITY_CONTROL, RECEIVING, SHIPPING, IT_SUPPORT, MANAGEMENT")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - profile updated",
@@ -157,7 +157,7 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "[ADMIN] Delete user account")
+    @Operation(summary = "Delete user account (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - account deleted",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),

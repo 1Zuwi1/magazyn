@@ -36,6 +36,9 @@ public class UserInfoResponse {
     @Schema(description = "Team/department name", example = "Operacje magazynowe")
     private String team;
 
+    @Schema(description = "Last login timestamp", example = "2026-02-05T14:30:00Z")
+    private String last_login;
+
     public UserInfoResponse() {
     }
 

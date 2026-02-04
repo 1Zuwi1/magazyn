@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -59,6 +60,10 @@ public class AuthService {
         if (!user.getStatus().equals(AccountStatus.ACTIVE) && !user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
             throw new AuthenticationException(AuthError.ACCOUNT_LOCKED.name());
         }
+
+        // Aktualizacja lastLogin przy każdym udanym uwierzytelnieniu
+        user.setLastLogin(Timestamp.from(Instant.now()));
+        userRepository.save(user);
 
         sessionManager.createSuccessLoginSession(user, request, response, loginRequest.isRememberMe(), false);
 

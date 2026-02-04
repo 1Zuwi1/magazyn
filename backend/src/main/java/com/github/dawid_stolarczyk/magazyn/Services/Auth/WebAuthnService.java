@@ -158,6 +158,7 @@ public class WebAuthnService {
                 .signatureCount(result.getSignatureCount())
                 .userHandle(userHandle.getBase64Url())
                 .email(userEntity.getEmail())
+                .user(userEntity)
                 .isDiscoverable(result.isDiscoverable().orElse(false))
                 .build();
 

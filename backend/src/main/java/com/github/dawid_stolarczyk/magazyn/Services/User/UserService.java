@@ -53,7 +53,8 @@ public class UserService {
                 user.getStatus().name(),
                 user.getPhone(),
                 user.getLocation(),
-                user.getTeam() != null ? user.getTeam().name() : null);
+                user.getTeam() != null ? user.getTeam().name() : null,
+                user.getLastLogin() != null ? user.getLastLogin().toInstant().toString() : null);
     }
 
     @Transactional
@@ -112,7 +113,8 @@ public class UserService {
                 user.getStatus().name(),
                 user.getPhone(),
                 user.getLocation(),
-                user.getTeam() != null ? user.getTeam().name() : null
+                user.getTeam() != null ? user.getTeam().name() : null,
+                user.getLastLogin() != null ? user.getLastLogin().toInstant().toString() : null
         );
     }
 

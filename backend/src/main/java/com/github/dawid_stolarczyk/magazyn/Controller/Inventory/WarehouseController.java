@@ -63,7 +63,7 @@ public class WarehouseController {
         return ResponseEntity.ok(ResponseTemplate.success(warehouseService.getWarehouseById(id, request)));
     }
 
-    @Operation(summary = "Create warehouse [ADMIN]")
+    @Operation(summary = "Create warehouse (ADMIN only)")
     @ApiResponse(responseCode = "201", description = "Success - returns created warehouse",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = WarehouseDto.class)))
     @PostMapping
@@ -72,7 +72,7 @@ public class WarehouseController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(warehouseService.createWarehouse(dto, request)));
     }
 
-    @Operation(summary = "Update a warehouse")
+    @Operation(summary = "Update a warehouse (ADMIN only)")
     @ApiResponse(responseCode = "200", description = "Warehouse updated successfully",
             content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
     @PutMapping("/{id}")
@@ -81,7 +81,7 @@ public class WarehouseController {
         return ResponseEntity.ok(ResponseTemplate.success(warehouseService.updateWarehouse(id, dto, request)));
     }
 
-    @Operation(summary = "Delete a warehouse")
+    @Operation(summary = "Delete a warehouse (ADMIN only)")
     @ApiResponse(responseCode = "200", description = "Warehouse deleted successfully",
             content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class)))
     @DeleteMapping("/{id}")
@@ -92,7 +92,7 @@ public class WarehouseController {
     }
 
     @Operation(
-            summary = "Import warehouses from CSV",
+            summary = "Import warehouses from CSV (ADMIN only)",
             description = """
                     Import magazynów z pliku CSV z nagłówkiem.
                     

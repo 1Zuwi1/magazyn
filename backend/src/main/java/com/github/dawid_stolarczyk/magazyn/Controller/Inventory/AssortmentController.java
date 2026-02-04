@@ -65,7 +65,7 @@ public class AssortmentController {
         }
     }
 
-    @Operation(summary = "Create assortment [ADMIN]")
+    @Operation(summary = "Create assortment (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Success - returns created assortment with generated barcode (GS1-128)",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssortmentDto.class))),
@@ -78,7 +78,7 @@ public class AssortmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(assortmentService.createAssortment(assortmentDto, request)));
     }
 
-    @Operation(summary = "Update assortment [ADMIN]")
+    @Operation(summary = "Update assortment (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - returns updated assortment",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssortmentDto.class))),
@@ -91,7 +91,7 @@ public class AssortmentController {
         return ResponseEntity.ok(ResponseTemplate.success(assortmentService.updateAssortment(id, assortmentDto, request)));
     }
 
-    @Operation(summary = "Delete assortment [ADMIN]")
+    @Operation(summary = "Delete assortment (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - assortment deleted",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
@@ -106,7 +106,7 @@ public class AssortmentController {
     }
 
     @Operation(
-            summary = "Import assortments (placements) from CSV",
+            summary = "Import assortments (placements) from CSV (ADMIN only)",
             description = """
                     Import przypisań produktów do regałów z pliku CSV **Z NAGŁÓWKIEM** (dowolna kolejność).
                     
