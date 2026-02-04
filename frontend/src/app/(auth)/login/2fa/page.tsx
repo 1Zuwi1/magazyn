@@ -9,12 +9,14 @@ const METHOD_TITLES: Record<TwoFactorMethod, string> = {
   AUTHENTICATOR: "Wpisz kod z aplikacji uwierzytelniającej",
   SMS: "Wpisz kod wysłany SMS-em",
   EMAIL: "Wpisz kod wysłany na e-mail",
+  PASSKEYS: "Uwierzytelnij się za pomocą kluczy dostępu",
 }
 
 const METHOD_SWITCH_LABELS: Record<TwoFactorMethod, string> = {
   AUTHENTICATOR: "Użyj aplikacji uwierzytelniającej",
   SMS: "Wyślij kod SMS-em",
   EMAIL: "Wyślij kod e-mailem",
+  PASSKEYS: "Użyj kluczy dostępu",
 }
 
 const RESEND_METHODS: ResendType[] = ["SMS", "EMAIL"]
@@ -34,7 +36,8 @@ export default async function TwoFactorPage() {
 
   return (
     <TwoFactorForm
-      linkedMethods={linkedMethods}
+      defaultLinkedMethod={linkedMethods.defaultMethod}
+      linkedMethods={linkedMethods.methods}
       methodSwitchLabels={METHOD_SWITCH_LABELS}
       methodTitles={METHOD_TITLES}
       otpLength={6}

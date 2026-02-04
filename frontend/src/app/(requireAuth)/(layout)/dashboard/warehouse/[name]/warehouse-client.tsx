@@ -50,6 +50,9 @@ export default function WarehouseClient({
     minTemp: number
     maxTemp: number
     maxWeight: number
+    maxItemWidth: number
+    maxItemHeight: number
+    maxItemDepth: number
     currentWeight: number
     occupancy: number
     items: ItemSlot[]

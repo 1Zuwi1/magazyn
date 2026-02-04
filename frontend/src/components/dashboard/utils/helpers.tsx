@@ -1,5 +1,8 @@
+import { differenceInCalendarDays, format } from "date-fns"
+import { pl } from "date-fns/locale"
 import { toast } from "sonner"
 import { FetchError } from "@/lib/fetcher"
+import type { Item } from "../types"
 
 // Helper function to convert index to coordinate (R01-P01, R02-P03, etc.)
 export function getSlotCoordinate(index: number, cols: number): string {
@@ -11,22 +14,15 @@ export function getSlotCoordinate(index: number, cols: number): string {
 }
 
 export function formatDate(date: Date): string {
-  // TODO: Use date-fns here
-  return new Intl.DateTimeFormat("pl-PL", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date)
+  return format(date, "dd.MM.yyyy", { locale: pl })
+}
+
+export function formatDimensions(item: Item): string {
+  return `${item.width}×${item.height}×${item.depth} mm`
 }
 
 export function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
-  // TODO: use date-fns differenceInCalendarDays
-  const todayDate = new Date(today)
-  todayDate.setHours(0, 0, 0, 0)
-  const expiry = new Date(expiryDate)
-  expiry.setHours(0, 0, 0, 0)
-  const diffTime = expiry.getTime() - todayDate.getTime()
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return differenceInCalendarDays(expiryDate, today)
 }
 
 export function pluralize(
@@ -57,4 +53,10 @@ export const handleApiError = (err: unknown, fallback?: string) => {
       ? err.message
       : (fallback ?? "Wystąpił nieoczekiwany błąd.")
   )
+}
+export const getOccupancyPercentage = (
+  used: number,
+  capacity: number
+): number => {
+  return capacity > 0 ? (used / capacity) * 100 : 0
 }

@@ -77,6 +77,7 @@ const Virtualized = ({
             if (!item) {
               return null
             }
+
             return (
               <NormalRow
                 item={item}

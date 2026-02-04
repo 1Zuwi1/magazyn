@@ -1,3 +1,4 @@
+import { addDays } from "date-fns"
 import type { Item } from "../types"
 import { getDaysUntilExpiry } from "./helpers"
 
@@ -8,7 +9,10 @@ export type ItemStatus =
   | "dangerous"
 
 export function getItemStatus(item: Item): ItemStatus {
-  const daysUntilExpiry = getDaysUntilExpiry(new Date(), item.expiryDate)
+  const daysUntilExpiry = getDaysUntilExpiry(
+    new Date(),
+    item.expiryDate ?? addDays(new Date(), item.daysToExpiry)
+  )
   const isExpired = daysUntilExpiry < 0
 
   if (isExpired && item.isDangerous) {

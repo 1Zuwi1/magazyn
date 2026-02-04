@@ -7,6 +7,7 @@ import {
   ViewIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { addDays } from "date-fns"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -25,26 +26,14 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import type { Item } from "../../types"
-import { formatDate } from "../../utils/helpers"
-import {
-  getItemStatus,
-  getStatusColors,
-  getStatusText,
-} from "../../utils/item-status"
+import { formatDate, formatDimensions } from "../../utils/helpers"
+import { getItemStatus, getStatusText } from "../../utils/item-status"
 
 interface TableRowContentProps {
   item: Item
   onView: (id: string) => void
   onEdit: (id: string) => void
   onDelete: (id: string) => void
-}
-
-function formatDimensions(dimensions: {
-  x: number
-  y: number
-  z: number
-}): string {
-  return `${dimensions.x}×${dimensions.y}×${dimensions.z} mm`
 }
 
 export function TableRowContent({
@@ -54,7 +43,7 @@ export function TableRowContent({
   onDelete,
 }: TableRowContentProps) {
   const status = getItemStatus(item)
-  const statusColors = getStatusColors(status)
+  // const statusColors = getStatusColors(status)
   const statusText = getStatusText(status)
   const isExpired = status === "expired" || status === "expired-dangerous"
   const statusBadgeVariant = status === "expired" ? "warning" : "destructive"
@@ -101,20 +90,15 @@ export function TableRowContent({
       </TableCell>
       <TableCell className="font-mono text-sm">{item.qrCode}</TableCell>
       <TableCell>{item.weight.toFixed(2)} kg</TableCell>
-      <TableCell className="text-sm">
-        {formatDimensions(item.dimensions)}
-      </TableCell>
+      <TableCell className="text-sm">{formatDimensions(item)}</TableCell>
       <TableCell className="text-sm">
         {item.minTemp}°C – {item.maxTemp}°C
       </TableCell>
       <TableCell>
-        <span
-          className={cn(
-            isExpired && "font-medium",
-            isExpired ? statusColors.text : null
+        <span className={isExpired ? "font-medium text-destructive" : ""}>
+          {formatDate(
+            item.expiryDate ?? addDays(new Date(), item.daysToExpiry)
           )}
-        >
-          {formatDate(item.expiryDate)}
         </span>
       </TableCell>
       <TableCell>

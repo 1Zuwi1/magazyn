@@ -1,0 +1,5 @@
+#Oznaczenie;M;N;TempMin;TempMax;MaxWagaKg;MaxSzerokoscMm;MaxWysokoscMm;MaxGlebokoscMm;Komentarz
+R-01;5;10;0;5;1200;200;300;500;Regał chłodniczy
+R-02;4;8;0;40;800;150;250;400;Regał standardowy
+R-03;6;12;-20;-5;1500;180;350;600;Regał mroźniczy
+R-04;3;6;10;60;500;300;400;700;Regał na gabaryty 

@@ -1,11 +1,26 @@
 import {
   Analytics01Icon,
-  GroupItemsIcon,
+  Bell,
   Package,
   Settings,
+  UserIcon,
+  WarehouseIcon,
+  WaveTriangleIcon,
 } from "@hugeicons/core-free-icons"
 
-export const navigationItems = [
+export interface NavigationItem {
+  title: string
+  href: string
+  icon: typeof Analytics01Icon
+  items?: {
+    title: string
+    href: string
+    icon: typeof Analytics01Icon
+  }[]
+  adminOnly?: boolean
+}
+
+export const navigationItems: NavigationItem[] = [
   {
     title: "Panel główny",
     href: "/dashboard",
@@ -14,12 +29,12 @@ export const navigationItems = [
       {
         title: "Magazyny",
         href: "/dashboard/warehouse",
-        icon: Package,
+        icon: WarehouseIcon,
       },
       {
         title: "Asortyment",
         href: "/dashboard/items",
-        icon: GroupItemsIcon,
+        icon: Package,
       },
     ],
   },
@@ -29,6 +44,32 @@ export const navigationItems = [
     icon: Settings,
     items: [],
   },
+  {
+    title: "Panel administracyjny",
+    href: "/admin",
+    icon: WaveTriangleIcon,
+    adminOnly: true,
+    items: [
+      {
+        title: "Użytkownicy",
+        href: "/admin/users",
+        icon: UserIcon,
+      },
+      {
+        title: "Magazyny",
+        href: "/admin/warehouses",
+        icon: WarehouseIcon,
+      },
+      {
+        title: "Asortyment",
+        href: "/admin/assortment",
+        icon: Package,
+      },
+      {
+        title: "Powiadomienia",
+        href: "/admin/notifications",
+        icon: Bell,
+      },
+    ],
+  },
 ] as const
-
-export type NavigationItem = (typeof navigationItems)[number]

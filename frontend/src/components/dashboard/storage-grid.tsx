@@ -16,17 +16,13 @@ import {
 } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { Warehouse } from "./types"
-import { pluralize } from "./utils/helpers"
+import { getOccupancyPercentage, pluralize } from "./utils/helpers"
 
 const OCCUPANCY_WARNING_THRESHOLD = 75
 const OCCUPANCY_CRITICAL_THRESHOLD = 90
 
 interface WarehouseGridProps {
   warehouses: Warehouse[]
-}
-
-const getOccupancyPercentage = (used: number, capacity: number): number => {
-  return capacity > 0 ? (used / capacity) * 100 : 0
 }
 
 const getOccupancyColor = (percentage: number): string => {
@@ -50,7 +46,6 @@ const getOccupancyBadgeVariant = (
   }
   return "secondary"
 }
-
 export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
   if (warehouses.length === 0) {
     return (
@@ -96,7 +91,7 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/10">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-primary/15 to-primary/5 ring-1 ring-primary/10">
                     <span className="font-bold font-mono text-primary text-sm">
                       {warehouse.id}
                     </span>
