@@ -16,6 +16,8 @@ public class WebAuthnFinishRequest {
     private String credentialJson;
 
     @Size(max = 100, message = "Passkey name must be at most 100 characters")
-    @Schema(description = "Optional name for the passkey (max 100 chars)", example = "My MacBook Pro")
+    @Schema(description = "Optional name for the passkey (max 100 chars). If empty or null, will auto-generate name like 'Passkey 1'",
+            example = "My MacBook Pro",
+            nullable = true)
     private String keyName;
 }

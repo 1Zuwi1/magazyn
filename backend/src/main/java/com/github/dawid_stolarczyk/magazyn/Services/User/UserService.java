@@ -124,8 +124,8 @@ public class UserService {
      * 2. Database UNIQUE constraint on email column (User.java:26) provides ultimate protection
      * - If two concurrent requests pass check #1, the second save() will fail with DataIntegrityViolationException
      * - GlobalExceptionHandler converts this to appropriate error response
-     *
-     * @Transactional ensures atomicity of email change and verification setup
+     * <p>
+     * Note: Method is transactional to ensure atomicity of email change and verification setup
      */
     @Transactional
     public void adminChangeEmail(Long targetUserId, String newEmail, HttpServletRequest request) {
@@ -174,6 +174,7 @@ public class UserService {
 
     /**
      * Admin: Update user profile (phone, location, team, full name)
+     * Note: DTO validation (@Pattern, @Size) handles format and length constraints
      */
     @Transactional
     public void adminUpdateUserProfile(Long targetUserId, UpdateUserProfileRequest profileRequest, HttpServletRequest request) {
@@ -183,13 +184,11 @@ public class UserService {
 
         if (profileRequest.getPhone() != null) {
             String phone = profileRequest.getPhone().strip();
-            // Note: Validation (@Pattern and @Size) is already done at DTO level
             targetUser.setPhone(phone.isEmpty() ? null : phone);
         }
 
         if (profileRequest.getLocation() != null) {
             String location = profileRequest.getLocation().strip();
-            // Note: @Size validation is already done at DTO level
             targetUser.setLocation(location.isEmpty() ? null : location);
         }
 
@@ -199,7 +198,6 @@ public class UserService {
 
         if (profileRequest.getFullName() != null) {
             String fullName = profileRequest.getFullName().strip();
-            // Note: @Size validation is already done at DTO level
             if (fullName.isEmpty()) {
                 throw new IllegalArgumentException("INVALID_FULL_NAME");
             }

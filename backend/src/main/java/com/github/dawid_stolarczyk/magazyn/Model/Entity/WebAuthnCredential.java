@@ -4,7 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "webauthn_credential")
+@Table(name = "webauthn_credential",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"userHandle", "name"})
+        })
 @Getter
 @Setter
 @NoArgsConstructor

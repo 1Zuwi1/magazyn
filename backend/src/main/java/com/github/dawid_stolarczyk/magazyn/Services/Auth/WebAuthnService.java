@@ -126,6 +126,11 @@ public class WebAuthnService {
         String finalKeyName = trimmedKeyName != null && !trimmedKeyName.isEmpty()
                 ? trimmedKeyName
                 : "Passkey " + (currentKeys + 1);
+
+        // Race condition protection:
+        // 1. Application-level check (existsByUserHandleAndNameIgnoreCase) provides early validation
+        // 2. Database UNIQUE constraint on (userHandle, name) provides ultimate protection
+        //    - If two concurrent requests pass check #1, the second save() will fail with DataIntegrityViolationException
         if (webAuthRepository.existsByUserHandleAndNameIgnoreCase(userHandle.getBase64Url(), finalKeyName)) {
             throw new AuthenticationException(AuthError.PASSKEY_NAME_ALREADY_EXISTS.name());
         }
@@ -218,23 +223,27 @@ public class WebAuthnService {
             throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
         }
 
-        // Validate new name is not empty
-        if (newName == null || newName.isBlank()) {
+        // Trim whitespace and validate new name
+        String trimmedName = newName != null ? newName.strip() : null;
+
+        if (trimmedName == null || trimmedName.isEmpty()) {
             throw new AuthenticationException(AuthError.INVALID_INPUT.name());
         }
 
         // Validate length (max 100 characters, consistent with PasskeyRenameRequest)
-        if (newName.length() > 100) {
+        if (trimmedName.length() > 100) {
             throw new AuthenticationException(AuthError.INVALID_INPUT.name());
         }
 
-        // Validate unique name for this user (excluding current credential) (case-insensitive)
+        // Race condition protection:
+        // 1. Application-level check provides early validation
+        // 2. Database UNIQUE constraint on (userHandle, name) provides ultimate protection
         if (webAuthRepository.existsByUserHandleAndNameIgnoreCaseAndIdNot(
-                userEntity.getUserHandle(), newName, id)) {
+                userEntity.getUserHandle(), trimmedName, id)) {
             throw new AuthenticationException(AuthError.PASSKEY_NAME_ALREADY_EXISTS.name());
         }
 
-        credential.setName(newName);
+        credential.setName(trimmedName);
         webAuthRepository.save(credential);
     }
 

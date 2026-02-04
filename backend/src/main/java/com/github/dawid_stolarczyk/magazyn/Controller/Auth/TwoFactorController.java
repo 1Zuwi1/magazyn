@@ -64,7 +64,7 @@ public class TwoFactorController {
     public ResponseEntity<ResponseTemplate<Void>> sendCode(@Valid @RequestBody SendTwoFactorCodeRequest sendRequest,
                                                            HttpServletRequest request) {
         try {
-            if (sendRequest.getMethod() != Default2faMethod.EMAIL) {
+            if (!Default2faMethod.EMAIL.equals(sendRequest.getMethod())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ResponseTemplate.error(AuthError.UNSUPPORTED_2FA_METHOD.name()));
             }
