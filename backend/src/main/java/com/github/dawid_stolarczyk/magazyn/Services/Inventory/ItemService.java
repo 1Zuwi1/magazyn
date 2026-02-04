@@ -11,6 +11,8 @@ import com.github.dawid_stolarczyk.magazyn.Services.Storage.StorageService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,6 +40,12 @@ public class ItemService {
         return itemRepository.findAll().stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
+    }
+
+    public Page<ItemDto> getAllItemsPaged(HttpServletRequest request, Pageable pageable) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
+        return itemRepository.findAll(pageable)
+                .map(this::mapToDto);
     }
 
     public ItemDto getItemById(Long id, HttpServletRequest request) {

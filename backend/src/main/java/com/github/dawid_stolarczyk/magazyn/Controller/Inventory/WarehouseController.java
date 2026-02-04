@@ -1,11 +1,13 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseImportReport;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.WarehouseImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.WarehouseService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -14,14 +16,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/warehouses")
@@ -31,19 +33,29 @@ public class WarehouseController {
     private final WarehouseService warehouseService;
     private final WarehouseImportService warehouseImportService;
 
-    @Operation(summary = "Get all user warehouses")
-    @ApiResponse(responseCode = "200", description = "List of all user warehouses",
-            content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
+    @Operation(summary = "Get all warehouses with pagination",
+            description = "Returns paginated list of all warehouses with statistics: racks count, occupied slots, and free slots")
+    @ApiResponse(responseCode = "200", description = "Success",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
     @GetMapping
-    public ResponseEntity<ResponseTemplate<List<WarehouseDto>>> getAllWarehouses(HttpServletRequest request) {
-        return ResponseEntity.ok(ResponseTemplate.success(warehouseService.getAllWarehouses(request)));
+    public ResponseEntity<ResponseTemplate<PagedResponse<WarehouseDto>>> getAllWarehouses(
+            HttpServletRequest request,
+            @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), sort);
+        return ResponseEntity.ok(ResponseTemplate.success(
+                PagedResponse.from(warehouseService.getAllWarehousesPaged(request, pageable))));
     }
 
-    @Operation(summary = "Get warehouse by ID")
+    @Operation(summary = "Get warehouse by ID",
+            description = "Returns warehouse details with statistics: racks count, occupied slots, and free slots")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Warehouse details",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Warehouse not found or access denied",
+            @ApiResponse(responseCode = "200", description = "Success",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = WarehouseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: WAREHOUSE_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/{id}")
@@ -51,9 +63,9 @@ public class WarehouseController {
         return ResponseEntity.ok(ResponseTemplate.success(warehouseService.getWarehouseById(id, request)));
     }
 
-    @Operation(summary = "Create a new warehouse")
-    @ApiResponse(responseCode = "201", description = "Warehouse created successfully",
-            content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
+    @Operation(summary = "Create warehouse [ADMIN]")
+    @ApiResponse(responseCode = "201", description = "Success - returns created warehouse",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = WarehouseDto.class)))
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseTemplate<WarehouseDto>> createWarehouse(@Valid @RequestBody WarehouseDto dto, HttpServletRequest request) {

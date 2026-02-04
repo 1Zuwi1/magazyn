@@ -20,11 +20,21 @@ public interface WebAuthRepository extends JpaRepository<WebAuthnCredential, Lon
 
     List<WebAuthnCredential> findByUserHandle(String userHandle);
 
+    List<WebAuthnCredential> findByUserId(Long userId);
+
     Optional<WebAuthnCredential> findFirstByUserHandle(String userHandle);
 
     Optional<WebAuthnCredential> findFirstByEmail(String email);
 
     long countByUserHandle(String userHandle);
+
+    // Check if passkey name exists for user (case-insensitive)
+    boolean existsByUserHandleAndNameIgnoreCase(String userHandle, String name);
+
+    // Check if passkey name exists for user, excluding specific passkey ID (case-insensitive)
+    boolean existsByUserHandleAndNameIgnoreCaseAndIdNot(String userHandle, String name, Long id);
+
+    boolean existsByUserId(Long userId);
 
     @Modifying
     @Query("UPDATE WebAuthnCredential c SET c.signatureCount = :newCount WHERE c.credentialId = :credentialId")

@@ -53,10 +53,9 @@ public class InventoryController {
                     """
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Placement plan created successfully. " +
-                    "If reserved=true, positions are locked for 5 minutes.",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request, item not found, or insufficient space",
+            @ApiResponse(responseCode = "200", description = "Success - returns placement plan (slots with rackId, positionX, positionY, reserved, reservedUntil)",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PlacementPlanResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: ITEM_NOT_FOUND, INSUFFICIENT_SPACE, INVALID_INPUT",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/placements/plan")
@@ -71,14 +70,14 @@ public class InventoryController {
         return ResponseEntity.ok(ResponseTemplate.success(result.response()));
     }
 
-    @Operation(summary = "Confirm placement and store items in inventory",
-            description = "Accepts either itemId or barcode (14 digits) to identify the item. Both fields cannot be provided simultaneously.")
+    @Operation(summary = "Confirm placement and create assortments",
+            description = "Accepts either itemId or barcode (14 digits) to identify the item. Creates assortments with generated GS1-128 barcodes.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Placement confirmed and resources created",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid placement, item not found, or validation error",
+            @ApiResponse(responseCode = "201", description = "Success - returns created assortments list",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PlacementConfirmationResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: ITEM_NOT_FOUND, INVALID_INPUT, PLACEMENT_INVALID",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
-            @ApiResponse(responseCode = "409", description = "Placement conflict",
+            @ApiResponse(responseCode = "409", description = "Error codes: PLACEMENT_CONFLICT (position already occupied)",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/placements/confirm")
