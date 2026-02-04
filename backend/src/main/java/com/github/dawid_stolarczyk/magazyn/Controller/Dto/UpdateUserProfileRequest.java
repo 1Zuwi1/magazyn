@@ -2,6 +2,7 @@ package com.github.dawid_stolarczyk.magazyn.Controller.Dto;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserTeam;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,6 +13,8 @@ import lombok.Setter;
 public class UpdateUserProfileRequest {
 
     @Schema(description = "Phone number (optional, max 20 chars after trimming)", example = "+48 555 019 203")
+    @Pattern(regexp = "^[+\\d\\s()-]*$", message = "Invalid phone format")
+    @Size(max = 20, message = "Phone number too long")
     private String phone;
 
     @Schema(description = "Full name (optional)", example = "Jan Kowalski")

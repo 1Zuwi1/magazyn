@@ -117,6 +117,12 @@ public class WebAuthnService {
 
         // Validate unique name for this user (trim whitespace first)
         String trimmedKeyName = keyName != null ? keyName.strip() : null;
+
+        // Validate length (max 100 characters, consistent with PasskeyRenameRequest)
+        if (trimmedKeyName != null && trimmedKeyName.length() > 100) {
+            throw new AuthenticationException(AuthError.INVALID_INPUT.name());
+        }
+
         String finalKeyName = trimmedKeyName != null && !trimmedKeyName.isEmpty()
                 ? trimmedKeyName
                 : "Passkey " + (currentKeys + 1);
@@ -214,6 +220,11 @@ public class WebAuthnService {
 
         // Validate new name is not empty
         if (newName == null || newName.isBlank()) {
+            throw new AuthenticationException(AuthError.INVALID_INPUT.name());
+        }
+
+        // Validate length (max 100 characters, consistent with PasskeyRenameRequest)
+        if (newName.length() > 100) {
             throw new AuthenticationException(AuthError.INVALID_INPUT.name());
         }
 

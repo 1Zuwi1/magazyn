@@ -189,6 +189,7 @@ public class TwoFactorController {
             return ResponseEntity.ok(ResponseTemplate.success(passkeys));
         } catch (AuthenticationException e) {
             String errorCode = e.getCode();
+            // Note: Only error codes are logged, no sensitive data (emails, tokens, user handles)
             log.warn("Failed to get passkeys: {}", errorCode);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ResponseTemplate.error(errorCode));

@@ -118,7 +118,14 @@ public class UserService {
 
     /**
      * Admin: Change email for any user
-     * Note: Database UNIQUE constraint on email column provides additional protection against race conditions
+     * <p>
+     * Race condition protection:
+     * 1. Application-level check (findByEmail) provides early validation
+     * 2. Database UNIQUE constraint on email column (User.java:26) provides ultimate protection
+     * - If two concurrent requests pass check #1, the second save() will fail with DataIntegrityViolationException
+     * - GlobalExceptionHandler converts this to appropriate error response
+     *
+     * @Transactional ensures atomicity of email change and verification setup
      */
     @Transactional
     public void adminChangeEmail(Long targetUserId, String newEmail, HttpServletRequest request) {
@@ -126,8 +133,8 @@ public class UserService {
         User targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
 
-        // Sprawdź czy email nie jest już zajęty przez innego użytkownika
-        // Database UNIQUE constraint zapewnia dodatkową ochronę przed race condition
+        // Application-level check: provides early validation and better error messages
+        // Note: Race condition possible here, but DB constraint provides final protection
         userRepository.findByEmail(newEmail).ifPresent(existingUser -> {
             if (!existingUser.getId().equals(targetUserId)) {
                 throw new AuthenticationException(AuthError.EMAIL_TAKEN.name());
@@ -176,26 +183,13 @@ public class UserService {
 
         if (profileRequest.getPhone() != null) {
             String phone = profileRequest.getPhone().strip();
-            if (!phone.isEmpty()) {
-                // Walidacja długości
-                if (phone.length() > 20) {
-                    throw new IllegalArgumentException("INVALID_PHONE_FORMAT");
-                }
-                // Walidacja formatu
-                if (!phone.matches("^[+\\d\\s()-]*$")) {
-                    throw new IllegalArgumentException("INVALID_PHONE_FORMAT");
-                }
-                targetUser.setPhone(phone);
-            } else {
-                targetUser.setPhone(null);
-            }
+            // Note: Validation (@Pattern and @Size) is already done at DTO level
+            targetUser.setPhone(phone.isEmpty() ? null : phone);
         }
 
         if (profileRequest.getLocation() != null) {
             String location = profileRequest.getLocation().strip();
-            if (location.length() > 100) {
-                throw new IllegalArgumentException("INVALID_INPUT");
-            }
+            // Note: @Size validation is already done at DTO level
             targetUser.setLocation(location.isEmpty() ? null : location);
         }
 
@@ -205,7 +199,8 @@ public class UserService {
 
         if (profileRequest.getFullName() != null) {
             String fullName = profileRequest.getFullName().strip();
-            if (fullName.isEmpty() || fullName.length() < 3 || fullName.length() > 100) {
+            // Note: @Size validation is already done at DTO level
+            if (fullName.isEmpty()) {
                 throw new IllegalArgumentException("INVALID_FULL_NAME");
             }
             targetUser.setFullName(fullName);
