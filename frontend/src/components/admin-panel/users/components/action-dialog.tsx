@@ -1,7 +1,7 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
-import { useCallback, useEffect } from "react"
+import { useCallback, useEffect, useId } from "react"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import type { Role, Status, User } from "@/components/dashboard/types"
 import { renderError } from "@/components/dashboard/utils/helpers"
@@ -36,7 +36,6 @@ interface ActionDialogProps {
   currentRow?: User
   open: boolean
   onOpenChange: (open: boolean) => void
-  formId?: string
   onSubmit?: (user: User) => void
 }
 
@@ -44,10 +43,11 @@ export function ActionDialog({
   currentRow,
   open,
   onOpenChange,
-  formId,
   onSubmit,
 }: ActionDialogProps) {
   const isEdit = !!currentRow
+
+  const formId = useId()
 
   const getFormValues = useCallback(
     () => ({

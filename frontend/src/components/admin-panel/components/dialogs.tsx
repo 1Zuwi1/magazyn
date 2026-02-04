@@ -51,7 +51,7 @@ export function ConfirmDialog({
             <DialogDescription>{description}</DialogDescription>
           </div>
         </DialogHeader>
-        <DialogFooter className="mt-4 gap-2 sm:gap-0">
+        <DialogFooter className="mt-4 gap-1">
           <Button onClick={() => onOpenChange(false)} variant="outline">
             Anuluj
           </Button>

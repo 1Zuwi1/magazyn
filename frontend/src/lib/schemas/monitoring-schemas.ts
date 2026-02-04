@@ -16,8 +16,8 @@ export const NotificationSchema = z.object({
   rackId: z.string().optional(),
   itemId: z.string().optional(),
   metadata: z.record(z.string(), z.unknown()),
-  createdAt: z.string(),
-  date: z.date(),
+  createdAt: z.coerce.date(),
+  date: z.coerce.date(),
   read: z.boolean(),
 })
 
