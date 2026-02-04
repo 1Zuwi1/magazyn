@@ -8,6 +8,7 @@ import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import usePasskeys from "@/hooks/use-passkeys"
 import { apiFetch } from "@/lib/fetcher"
 import {
   WebAuthnFinishRegistrationSchema,
@@ -43,6 +44,8 @@ export function PasskeysSection() {
   const [status, setStatus] = useState<PasskeyStatus>("idle")
   const [isLoading, setIsLoading] = useState(false)
   const [showSudoDialog, setShowSudoDialog] = useState(false)
+  const { data: passkeys } = usePasskeys()
+  console.log(passkeys)
 
   useEffect(() => {
     setSupportState(getWebAuthnSupport())

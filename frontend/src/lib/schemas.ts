@@ -228,3 +228,9 @@ export const TFADefaultMethodSchema = createApiSchema({
     output: z.null(),
   },
 })
+
+export const PasskeysSchema = createApiSchema({
+  GET: {
+    output: z.any(),
+  },
+})
