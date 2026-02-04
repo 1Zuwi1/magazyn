@@ -12,12 +12,12 @@ import java.time.Instant;
 @Entity
 @Table(name = "user_notifications",
         uniqueConstraints = {
-            @UniqueConstraint(columnNames = {"user_id", "alert_id"})
+                @UniqueConstraint(columnNames = {"user_id", "alert_id"})
         },
         indexes = {
-            @Index(name = "idx_user_notifications_user_id", columnList = "user_id"),
-            @Index(name = "idx_user_notifications_alert_id", columnList = "alert_id"),
-            @Index(name = "idx_user_notifications_read", columnList = "user_id, isRead")
+                @Index(name = "idx_user_notifications_user_id", columnList = "user_id"),
+                @Index(name = "idx_user_notifications_alert_id", columnList = "alert_id"),
+                @Index(name = "idx_user_notifications_read", columnList = "user_id, isRead")
         })
 @Getter
 @Setter

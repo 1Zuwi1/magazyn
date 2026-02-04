@@ -1,12 +1,12 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Alerts;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackReportDto;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackReportRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackReportResponse;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertType;
 import com.github.dawid_stolarczyk.magazyn.Repositories.*;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
-import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,7 +44,7 @@ public class RackReportService {
 
     /**
      * Process a new rack report and generate alerts if anomalies are detected.
-     *
+     * <p>
      * Algorithm:
      * 1. Validate rack exists
      * 2. Create and save the report
@@ -52,7 +52,7 @@ public class RackReportService {
      * 4. For each anomaly, check if an active alert already exists
      * 5. If no active alert exists, create new alert and distribute notifications
      *
-     * @param request The rack report request
+     * @param request     The rack report request
      * @param httpRequest HTTP request for rate limiting
      * @return Response with report details and any triggered alerts
      */

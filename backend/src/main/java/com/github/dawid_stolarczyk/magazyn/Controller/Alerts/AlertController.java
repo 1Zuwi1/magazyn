@@ -1,6 +1,9 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Alerts;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AlertDto;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AlertStatusUpdateRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertType;
 import com.github.dawid_stolarczyk.magazyn.Services.Alerts.AlertService;

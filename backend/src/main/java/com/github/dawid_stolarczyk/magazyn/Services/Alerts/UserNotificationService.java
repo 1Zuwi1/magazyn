@@ -5,7 +5,6 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AlertDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserNotificationDto;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Alert;
-import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.UserNotification;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserNotificationRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;

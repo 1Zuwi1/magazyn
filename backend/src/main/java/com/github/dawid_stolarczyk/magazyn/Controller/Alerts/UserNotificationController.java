@@ -1,6 +1,8 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Alerts;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserNotificationDto;
 import com.github.dawid_stolarczyk.magazyn.Services.Alerts.UserNotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
