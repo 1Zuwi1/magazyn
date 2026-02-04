@@ -33,7 +33,6 @@ export function WarehouseDialog({
     onSubmit: ({ value }) => {
       const id = isEdit ? currentRow.id : `warehouse-${Date.now()}`
       onSubmit({ id, name: value.name })
-      form.reset()
       onOpenChange(false)
     },
   })
