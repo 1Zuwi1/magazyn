@@ -41,9 +41,7 @@ export const Check2FASchema = createApiSchema({
       code: OTPSchema,
       method: TFAMethods,
     }),
-    output: z.object({
-      success: z.literal(true),
-    }),
+    output: z.null(),
   },
 })
 
@@ -191,6 +189,19 @@ export const Resend2FASchema = createApiSchema({
       method: ResendMethods,
     }),
     output: z.null(),
+  },
+})
+
+const TFAAuthenticatorStartOutputSchema = z.object({
+  secretKey: z.string(),
+  email: z.email(),
+  issuer: z.string(),
+})
+
+export const TFAAuthenticatorStartSchema = createApiSchema({
+  POST: {
+    input: z.null(),
+    output: TFAAuthenticatorStartOutputSchema,
   },
 })
 

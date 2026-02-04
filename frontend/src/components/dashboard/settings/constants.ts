@@ -23,21 +23,25 @@ export const TWO_FACTOR_METHODS = [
     value: "AUTHENTICATOR",
     label: "Aplikacja uwierzytelniająca",
     hint: "Rekomendowana metoda dla kont firmowych.",
+    addable: true,
   },
   {
     value: "SMS",
     label: "SMS",
     hint: "Kod wysyłany na numer telefonu.",
+    addable: true,
   },
   {
     value: "EMAIL",
     label: "E-mail",
     hint: "Kod wysyłany na skrzynkę pocztową.",
+    addable: true,
   },
   {
     value: "PASSKEYS",
     label: "Klucze bezpieczeństwa",
     hint: "Uwierzytelnianie bezhasłowe przy użyciu urządzeń z obsługą kluczy bezpieczeństwa.",
+    addable: false,
   },
 ] as const
 

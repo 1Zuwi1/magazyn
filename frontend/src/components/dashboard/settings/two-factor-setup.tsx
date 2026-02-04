@@ -38,7 +38,11 @@ import useLinkedMethods from "@/hooks/use-linked-methods"
 import useRemoveMethod from "@/hooks/use-remove-method"
 import useSetDefaultMethod from "@/hooks/use-set-default-method"
 import { FetchError } from "@/lib/fetcher"
-import type { TwoFactorMethod } from "@/lib/schemas"
+import {
+  ResendMethods,
+  type ResendType,
+  type TwoFactorMethod,
+} from "@/lib/schemas"
 import {
   AUTHENTICATOR_QR_SIZE,
   COPY_FEEDBACK_TIMEOUT_MS,
@@ -60,7 +64,7 @@ import { useCountdown } from "./use-countdown"
 import {
   createTwoFactorChallenge,
   formatCountdown,
-  sendVerificationCode,
+  sendTwoFactorCode,
   verifyOneTimeCode,
 } from "./utils"
 
@@ -90,6 +94,7 @@ const getLinkedMethodsState = (
   const safeLinkedMethods = linkedMethods ?? []
   const availableMethods = TWO_FACTOR_METHODS.filter(
     (candidate) =>
+      candidate.addable &&
       !safeLinkedMethods.includes(candidate.value as TwoFactorMethod)
   )
   const hasAvailableMethods = availableMethods.length > 0
@@ -159,6 +164,11 @@ const getLinkedMethodsHint = ({
   }
 
   return "Wybierz metodę, którą chcesz dodać."
+}
+
+const getResendMethod = (method: TwoFactorMethod): ResendType | null => {
+  const parsed = ResendMethods.safeParse(method)
+  return parsed.success ? parsed.data : null
 }
 
 function TwoFactorMethodInput({
@@ -278,6 +288,7 @@ interface TwoFactorSetupFlowParams {
   dispatch: (action: TwoFactorSetupAction) => void
   startTimer: (cooldown?: number) => void
   onSuccess?: () => void
+  userEmail?: string
 }
 
 function useTwoFactorSetupFlow({
@@ -287,6 +298,7 @@ function useTwoFactorSetupFlow({
   dispatch,
   startTimer,
   onSuccess,
+  userEmail,
 }: TwoFactorSetupFlowParams) {
   const { challenge, code } = setupState
   const resetFlow = useCallback(() => {
@@ -305,15 +317,31 @@ function useTwoFactorSetupFlow({
   }, [status, resetFlow])
 
   const startSetup = async () => {
+    if (method === "PASSKEYS") {
+      toast.error("Dodaj klucz bezpieczeństwa w sekcji poniżej.")
+      return
+    }
+
     dispatch({ type: "set_error", error: "" })
     dispatch({ type: "set_code", code: "" })
     dispatch({ type: "set_stage", stage: "REQUESTING" })
 
     try {
-      const newChallenge = await createTwoFactorChallenge(method, locale)
+      const newChallenge = await createTwoFactorChallenge(
+        method,
+        locale,
+        userEmail
+      )
       dispatch({ type: "set_challenge", challenge: newChallenge })
+      const resendMethod = getResendMethod(method)
+
+      if (resendMethod) {
+        dispatch({ type: "set_stage", stage: "SENDING" })
+        await sendTwoFactorCode(resendMethod)
+        startTimer(TWO_FACTOR_RESEND_SECONDS)
+      }
+
       dispatch({ type: "set_stage", stage: "AWAITING" })
-      await sendVerificationCode(newChallenge.sessionId)
     } catch {
       const message =
         "Nie udało się zainicjować konfiguracji. Spróbuj ponownie."
@@ -324,7 +352,8 @@ function useTwoFactorSetupFlow({
   }
 
   const resendCode = async () => {
-    if (!challenge) {
+    const resendMethod = getResendMethod(method)
+    if (!(challenge && resendMethod)) {
       return
     }
 
@@ -332,7 +361,7 @@ function useTwoFactorSetupFlow({
     dispatch({ type: "set_stage", stage: "SENDING" })
 
     try {
-      await sendVerificationCode(challenge.sessionId)
+      await sendTwoFactorCode(resendMethod)
       startTimer(TWO_FACTOR_RESEND_SECONDS)
       dispatch({ type: "set_stage", stage: "AWAITING" })
     } catch {
@@ -348,7 +377,7 @@ function useTwoFactorSetupFlow({
     dispatch({ type: "set_error", error: "" })
 
     try {
-      const isValid = await verifyOneTimeCode(code)
+      const isValid = await verifyOneTimeCode(code, method)
 
       if (isValid) {
         dispatch({ type: "set_stage", stage: "SUCCESS" })
@@ -588,7 +617,10 @@ function AuthenticatorSetup({
 }) {
   const [copied, setCopied] = useState(false)
   const secret = challenge?.secret ?? MOCK_AUTHENTICATOR_SECRET
-  const totpUri = generateTotpUri(secret, userEmail ?? "user@magazynpro.pl")
+  const accountName =
+    challenge?.accountName ?? userEmail ?? "user@magazynpro.pl"
+  const issuer = challenge?.issuer ?? "MagazynPro"
+  const totpUri = generateTotpUri(secret, accountName, issuer)
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const locale = useLocale()
 
@@ -686,6 +718,8 @@ function CodeInputEntry({
   onVerify: () => void
   userEmail?: string
 }) {
+  const canSendCode = getResendMethod(method) !== null
+
   return (
     <div className="space-y-4">
       {method === "AUTHENTICATOR" ? (
@@ -717,7 +751,7 @@ function CodeInputEntry({
           >
             Zweryfikuj i aktywuj
           </Button>
-          {method !== "AUTHENTICATOR" ? (
+          {canSendCode ? (
             <>
               <Button
                 aria-describedby="resend-status"
@@ -1136,6 +1170,7 @@ export function TwoFactorSetup({
         })
         resetFlow()
       },
+      userEmail,
     })
 
   const handleCancelSetup = (): void => {

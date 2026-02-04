@@ -43,6 +43,8 @@ export interface TwoFactorChallenge {
   secret: string
   destination: string
   issuedAt: string
+  accountName?: string
+  issuer?: string
 }
 
 export interface PasswordChallenge {

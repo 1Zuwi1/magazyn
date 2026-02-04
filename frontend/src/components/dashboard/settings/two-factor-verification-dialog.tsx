@@ -16,7 +16,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import useLinkedMethods from "@/hooks/use-linked-methods"
-import { apiFetch } from "@/lib/fetcher"
+import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   Check2FASchema,
   Resend2FASchema,
@@ -140,8 +140,11 @@ export function TwoFactorVerificationDialog({
       }
 
       onVerified?.()
-    } catch {
-      const message = "Kod jest nieprawidłowy. Spróbuj ponownie."
+    } catch (e) {
+      const message =
+        e instanceof FetchError
+          ? e.message
+          : "Kod jest nieprawidłowy. Spróbuj ponownie."
       setIsVerified(false)
       setVerificationError(message)
       toast.error(message)

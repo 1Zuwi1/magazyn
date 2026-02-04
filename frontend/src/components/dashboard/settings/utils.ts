@@ -1,11 +1,14 @@
 import type { Locale } from "next-intl"
 import { OTP_LENGTH } from "@/config/constants"
-import type { TwoFactorMethod } from "@/lib/schemas"
+import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
-  MOCK_AUTHENTICATOR_SECRET,
-  MOCK_TWO_FACTOR_DESTINATIONS,
-  NON_DIGIT_REGEX,
-} from "./constants"
+  Check2FASchema,
+  Resend2FASchema,
+  type ResendType,
+  TFAAuthenticatorStartSchema,
+  type TwoFactorMethod,
+} from "@/lib/schemas"
+import { MOCK_TWO_FACTOR_DESTINATIONS, NON_DIGIT_REGEX } from "./constants"
 import type { PasswordChallenge, TwoFactorChallenge } from "./types"
 
 export const wait = async (durationMs: number): Promise<void> =>
@@ -22,31 +25,66 @@ export const formatCountdown = (seconds: number): string => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`
 }
 
-export const getDestinationForMethod = (method: TwoFactorMethod): string => {
+const maskEmail = (email: string): string => {
+  const [local, domain] = email.split("@")
+  if (!(local && domain)) {
+    return email
+  }
+  const visible = local.trim().slice(0, 1)
+  return `${visible}***@${domain}`
+}
+
+export const getDestinationForMethod = (
+  method: TwoFactorMethod,
+  userEmail?: string
+): string => {
   if (method === "SMS") {
     return MOCK_TWO_FACTOR_DESTINATIONS.sms
   }
   if (method === "EMAIL") {
-    return MOCK_TWO_FACTOR_DESTINATIONS.email
+    return userEmail ? maskEmail(userEmail) : MOCK_TWO_FACTOR_DESTINATIONS.email
+  }
+  if (method === "PASSKEYS") {
+    return "Klucze bezpieczeństwa"
   }
   return "Aplikacja uwierzytelniająca"
 }
 
 export const createTwoFactorChallenge = async (
   method: TwoFactorMethod,
-  locale: Locale
+  locale: Locale,
+  userEmail?: string
 ): Promise<TwoFactorChallenge> => {
-  await wait(900)
   const issuedAt = new Date().toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
   })
-  const destination = getDestinationForMethod(method)
-  const secret = method === "AUTHENTICATOR" ? MOCK_AUTHENTICATOR_SECRET : "—"
+  const destination = getDestinationForMethod(method, userEmail)
+  const sessionId = `setup_${Date.now()}`
+
+  if (method === "AUTHENTICATOR") {
+    const response = await apiFetch(
+      "/api/2fa/authenticator/start",
+      TFAAuthenticatorStartSchema,
+      {
+        method: "POST",
+        body: null,
+      }
+    )
+
+    return {
+      sessionId,
+      secret: response.secretKey,
+      destination: maskEmail(response.email),
+      issuedAt,
+      accountName: response.email,
+      issuer: response.issuer,
+    }
+  }
 
   return {
-    sessionId: `setup_${Date.now()}`,
-    secret,
+    sessionId,
+    secret: "—",
     destination,
     issuedAt,
   }
@@ -71,7 +109,27 @@ export const sendVerificationCode = async (
   await wait(1100 + jitter)
 }
 
-export const verifyOneTimeCode = async (code: string): Promise<boolean> => {
-  await wait(900)
-  return code.length === OTP_LENGTH
+export const sendTwoFactorCode = async (method: ResendType): Promise<void> => {
+  await apiFetch("/api/2fa/send", Resend2FASchema, {
+    method: "POST",
+    body: { method },
+  })
+}
+
+export const verifyOneTimeCode = async (
+  code: string,
+  method: TwoFactorMethod
+): Promise<boolean> => {
+  try {
+    await apiFetch("/api/2fa/check", Check2FASchema, {
+      method: "POST",
+      body: { code, method },
+    })
+    return true
+  } catch (error) {
+    if (error instanceof FetchError && error.status === 401) {
+      return false
+    }
+    throw error
+  }
 }
