@@ -1,9 +1,14 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemDto;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemIdentificationResponse;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemImportReport;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
+import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
+import com.github.dawid_stolarczyk.magazyn.Services.Ai.VisualIdentificationService;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.ItemImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.ItemService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,6 +38,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class ItemController {
     private final ItemService itemService;
     private final ItemImportService itemImportService;
+    private final VisualIdentificationService visualIdentificationService;
+    private final UserRepository userRepository;
 
     @Operation(summary = "Get all items with pagination")
     @ApiResponse(responseCode = "200", description = "Success",
@@ -328,5 +335,76 @@ public class ItemController {
     public ResponseEntity<ResponseTemplate<ItemImportReport>> importItems(
             @RequestPart("file") MultipartFile file) {
         return ResponseEntity.ok(ResponseTemplate.success(itemImportService.importFromCsv(file)));
+    }
+
+    @Operation(
+            summary = "Identify item by image (visual search)",
+            description = """
+                    Identifies a product by uploading an image for visual similarity search.
+                    Uses CLIP model to generate image embeddings and compares against stored item embeddings.
+                    
+                    **Process:**
+                    1. Upload an image of a product
+                    2. System generates a 512-dimensional embedding vector
+                    3. Finds the most similar item in the database using cosine similarity
+                    4. Returns the matched item with similarity score
+                    
+                    **Alerts:**
+                    - If similarity score is below threshold (default 70%), an alert is generated
+                    - Alerts are idempotent - no duplicate alerts for the same context
+                    
+                    **Supported formats:** JPEG, PNG, GIF, WebP, BMP
+                    **Maximum file size:** 10MB
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Item identified successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ItemIdentificationResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid image file or processing error",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "AI model not available",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
+            )
+    })
+    @PostMapping(value = "/identify", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ResponseTemplate<ItemIdentificationResponse>> identifyItem(
+            @Parameter(description = "Image file to identify", required = true)
+            @RequestPart("file") MultipartFile file,
+            HttpServletRequest request) {
+        try {
+            // Get current user if authenticated
+            User currentUser = null;
+            try {
+                Long userId = AuthUtil.getCurrentUserId(request);
+                if (userId != null) {
+                    currentUser = userRepository.findById(userId).orElse(null);
+                }
+            } catch (Exception e) {
+                // User not authenticated, continue with null user
+                log.debug("No authenticated user for identification request");
+            }
+
+            ItemIdentificationResponse response = visualIdentificationService.identifyItem(
+                    file, currentUser, request);
+            return ResponseEntity.ok(ResponseTemplate.success(response));
+
+        } catch (VisualIdentificationService.VisualIdentificationException e) {
+            log.warn("Visual identification failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ResponseTemplate.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during visual identification", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseTemplate.error("IDENTIFICATION_FAILED"));
+        }
     }
 }

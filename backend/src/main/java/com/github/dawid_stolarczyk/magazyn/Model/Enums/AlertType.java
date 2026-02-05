@@ -8,7 +8,8 @@ public enum AlertType {
     TEMPERATURE_TOO_HIGH("Temperatura przekracza maksymalną dopuszczalną"),
     TEMPERATURE_TOO_LOW("Temperatura poniżej minimalnej dopuszczalnej"),
     DANGEROUS_ITEM_NOT_ALLOWED("Niebezpieczny przedmiot w niedozwolonym regale"),
-    ITEM_TOO_LARGE("Przedmiot przekracza dopuszczalne wymiary");
+    ITEM_TOO_LARGE("Przedmiot przekracza dopuszczalne wymiary"),
+    LOW_VISUAL_SIMILARITY("Niski wynik podobieństwa wizualnego - produkt może być błędnie zidentyfikowany");
 
     private final String description;
 

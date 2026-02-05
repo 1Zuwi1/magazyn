@@ -213,6 +213,9 @@ public class RackReportService {
             case ITEM_TOO_LARGE -> String.format(
                     "%s - Wykryto przedmiot przekraczający dopuszczalne wymiary regału",
                     rackInfo);
+            case LOW_VISUAL_SIMILARITY -> String.format(
+                    "%s - Niski wynik podobieństwa wizualnego. Próg: %.1f%%, Aktualny: %.1f%%",
+                    rackInfo, threshold * 100, actual * 100);
         };
     }
 

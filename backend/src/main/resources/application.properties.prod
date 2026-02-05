@@ -3,6 +3,8 @@ spring.application.name=magazyn
 spring.datasource.url=${DB_CONNECTION_URL}
 spring.datasource.username=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 
 spring.mail.host=${MAIL_HOST}
 spring.mail.port=${MAIL_PORT}
