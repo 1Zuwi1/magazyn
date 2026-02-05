@@ -2,6 +2,7 @@ package com.github.dawid_stolarczyk.magazyn.Services.User;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangePasswordRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UpdateUserProfileRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserInfoResponse;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.EmailVerification;
@@ -17,6 +18,8 @@ import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperati
 import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +50,10 @@ public class UserService {
                 user.getFullName(),
                 user.getEmail(),
                 user.getRole().name(),
-                user.getStatus().name());
+                user.getStatus().name(),
+                user.getPhone(),
+                user.getLocation(),
+                user.getTeam() != null ? user.getTeam().name() : null);
     }
 
     @Transactional
@@ -76,25 +82,50 @@ public class UserService {
     // ===== Admin methods =====
 
     /**
-     * Admin: Get all users
+     * Admin: Get all users (non-paginated - deprecated, use paginated version)
      */
     public List<UserInfoResponse> adminGetAllUsers(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
         return userRepository.findAll().stream()
                 .filter(u -> !u.getId().equals(authPrincipal.getUserId()))
-                .map(user -> new UserInfoResponse(
-                        user.getId().intValue(),
-                        user.getFullName(),
-                        user.getEmail(),
-                        user.getRole().name(),
-                        user.getStatus().name()
-                ))
+                .map(this::mapToUserInfoResponse)
                 .toList();
     }
 
     /**
+     * Admin: Get all users with pagination
+     */
+    public Page<UserInfoResponse> adminGetAllUsersPaged(HttpServletRequest request, Pageable pageable) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        return userRepository.findByIdNot(authPrincipal.getUserId(), pageable)
+                .map(this::mapToUserInfoResponse);
+    }
+
+    private UserInfoResponse mapToUserInfoResponse(User user) {
+        return new UserInfoResponse(
+                user.getId().intValue(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getRole().name(),
+                user.getStatus().name(),
+                user.getPhone(),
+                user.getLocation(),
+                user.getTeam() != null ? user.getTeam().name() : null
+        );
+    }
+
+    /**
      * Admin: Change email for any user
+     * <p>
+     * Race condition protection:
+     * 1. Application-level check (findByEmail) provides early validation
+     * 2. Database UNIQUE constraint on email column (User.java:26) provides ultimate protection
+     * - If two concurrent requests pass check #1, the second save() will fail with DataIntegrityViolationException
+     * - GlobalExceptionHandler converts this to appropriate error response
+     * <p>
+     * Note: Method is transactional to ensure atomicity of email change and verification setup
      */
     @Transactional
     public void adminChangeEmail(Long targetUserId, String newEmail, HttpServletRequest request) {
@@ -102,7 +133,8 @@ public class UserService {
         User targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
 
-        // Sprawdź czy email nie jest już zajęty przez innego użytkownika
+        // Application-level check: provides early validation and better error messages
+        // Note: Race condition possible here, but DB constraint provides final protection
         userRepository.findByEmail(newEmail).ifPresent(existingUser -> {
             if (!existingUser.getId().equals(targetUserId)) {
                 throw new AuthenticationException(AuthError.EMAIL_TAKEN.name());
@@ -137,6 +169,41 @@ public class UserService {
                 .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
 
         targetUser.setFullName(newFullName);
+        userRepository.save(targetUser);
+    }
+
+    /**
+     * Admin: Update user profile (phone, location, team, full name)
+     * Note: DTO validation (@Pattern, @Size) handles format and length constraints
+     */
+    @Transactional
+    public void adminUpdateUserProfile(Long targetUserId, UpdateUserProfileRequest profileRequest, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        if (profileRequest.getPhone() != null) {
+            String phone = profileRequest.getPhone().strip();
+            targetUser.setPhone(phone.isEmpty() ? null : phone);
+        }
+
+        if (profileRequest.getLocation() != null) {
+            String location = profileRequest.getLocation().strip();
+            targetUser.setLocation(location.isEmpty() ? null : location);
+        }
+
+        if (profileRequest.getTeam() != null) {
+            targetUser.setTeam(profileRequest.getTeam());
+        }
+
+        if (profileRequest.getFullName() != null) {
+            String fullName = profileRequest.getFullName().strip();
+            if (fullName.isEmpty()) {
+                throw new IllegalArgumentException("INVALID_FULL_NAME");
+            }
+            targetUser.setFullName(fullName);
+        }
+
         userRepository.save(targetUser);
     }
 

@@ -156,10 +156,21 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ResponseTemplate<String>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
-        log.debug("Malformed JSON request", ex);
+        log.debug("JSON parsing error", ex);
+
+        String errorCode = "MALFORMED_JSON_REQUEST";
+        String message = ex.getMessage();
+
+        // Wykryj błąd deserializacji enuma
+        if (message != null && (message.contains("Cannot deserialize value") ||
+                message.contains("not one of the values accepted for Enum"))) {
+            errorCode = "INVALID_ENUM_VALUE";
+            log.debug("Invalid enum value provided in request");
+        }
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ResponseTemplate.error("MALFORMED_JSON_REQUEST"));
+                .body(ResponseTemplate.error(errorCode));
     }
 
 }

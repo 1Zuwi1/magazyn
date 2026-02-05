@@ -28,9 +28,9 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     private final AuthService authService;
 
-    @Operation(summary = "Logout the current user by invalidating their session.")
+    @Operation(summary = "Logout current user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully logged out",
+            @ApiResponse(responseCode = "200", description = "Success - session invalidated",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class)))
     })
     @PostMapping("/logout")
@@ -39,11 +39,11 @@ public class AuthController {
         return ResponseEntity.ok(ResponseTemplate.success());
     }
 
-    @Operation(summary = "Login a user with provided credentials.")
+    @Operation(summary = "Login user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully logged in",
+            @ApiResponse(responseCode = "200", description = "Success - logged in (may require 2FA)",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid credentials or account locked",
+            @ApiResponse(responseCode = "401", description = "Error codes: INVALID_CREDENTIALS, ACCOUNT_LOCKED, EMAIL_NOT_VERIFIED",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/login")
@@ -59,11 +59,11 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "Register a new user with provided credentials.")
+    @Operation(summary = "Register new user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully registered",
+            @ApiResponse(responseCode = "200", description = "Success - registered, verification email sent",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "401", description = "Registration failed due to invalid data or email conflict",
+            @ApiResponse(responseCode = "401", description = "Error codes: EMAIL_TAKEN, WEAK_PASSWORD, INVALID_INPUT",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/register")
@@ -79,11 +79,11 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "Verify user's email using a verification token.")
+    @Operation(summary = "Verify email address")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Email verified successfully",
+            @ApiResponse(responseCode = "200", description = "Success - email verified",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "401", description = "Invalid or expired token",
+            @ApiResponse(responseCode = "401", description = "Error codes: TOKEN_INVALID, TOKEN_EXPIRED, EMAIL_NOT_VERIFIED",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/verify-email")

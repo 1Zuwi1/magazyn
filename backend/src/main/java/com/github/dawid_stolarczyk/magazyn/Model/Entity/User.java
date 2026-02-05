@@ -3,6 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Model.Entity;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Default2faMethod;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserTeam;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -59,6 +60,17 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "default_2fa_method", nullable = false)
     private Default2faMethod default2faMethod = Default2faMethod.EMAIL;
+
+    // Dodatkowe informacje użytkownika (edytowalne przez admina)
+    @Column(length = 20)
+    private String phone;
+
+    @Column(length = 100)
+    private String location;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 50)
+    private UserTeam team;
 
     public void addTwoFactorMethod(TwoFactorMethod method) {
         twoFactorMethods.add(method);

@@ -1,10 +1,12 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Auth;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Auth.PasskeyDto;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.WebAuthnCredential;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.Default2faMethod;
 import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.WebAuthRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
@@ -21,6 +23,7 @@ import com.yubico.webauthn.exception.RegistrationFailedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
@@ -90,7 +93,7 @@ public class WebAuthnService {
         return request;
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void finishRegistration(String json, String keyName, HttpServletRequest httpServletRequest)
             throws IOException, RegistrationFailedException, Base64UrlException {
         rateLimiter.consumeOrThrow(getClientIp(httpServletRequest), RateLimitOperation.WEBAUTH_REGISTRATION);
@@ -112,6 +115,26 @@ public class WebAuthnService {
             throw new AuthenticationException(AuthError.TOO_MANY_PASSKEYS.name());
         }
 
+        // Validate unique name for this user (trim whitespace first)
+        String trimmedKeyName = keyName != null ? keyName.strip() : null;
+
+        // Validate length (max 100 characters, consistent with PasskeyRenameRequest)
+        if (trimmedKeyName != null && trimmedKeyName.length() > 100) {
+            throw new AuthenticationException(AuthError.INVALID_INPUT.name());
+        }
+
+        String finalKeyName = trimmedKeyName != null && !trimmedKeyName.isEmpty()
+                ? trimmedKeyName
+                : "Passkey " + (currentKeys + 1);
+
+        // Race condition protection:
+        // 1. Application-level check (existsByUserHandleAndNameIgnoreCase) provides early validation
+        // 2. Database UNIQUE constraint on (userHandle, name) provides ultimate protection
+        //    - If two concurrent requests pass check #1, the second save() will fail with DataIntegrityViolationException
+        if (webAuthRepository.existsByUserHandleAndNameIgnoreCase(userHandle.getBase64Url(), finalKeyName)) {
+            throw new AuthenticationException(AuthError.PASSKEY_NAME_ALREADY_EXISTS.name());
+        }
+
         // Pobieramy zapisany request z Redis
         PublicKeyCredentialCreationOptions request =
                 redisService.getRegistrationRequest(userHandle.getBase64Url());
@@ -129,7 +152,7 @@ public class WebAuthnService {
 
         // Zapis credentiala w DB
         WebAuthnCredential entity = WebAuthnCredential.builder()
-                .name(keyName != null && !keyName.isBlank() ? keyName : "Passkey " + (currentKeys + 1))
+                .name(finalKeyName)
                 .credentialId(result.getKeyId().getId().getBase64Url())
                 .publicKeyCose(result.getPublicKeyCose().getBase64Url())
                 .signatureCount(result.getSignatureCount())
@@ -148,10 +171,15 @@ public class WebAuthnService {
         redisService.delete(userHandle.getBase64Url());
     }
 
-    public List<WebAuthnCredential> getMyPasskeys() {
+    public List<PasskeyDto> getMyPasskeys() {
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
         User userEntity = userRepository.findById(authPrincipal.getUserId()).orElseThrow();
-        return webAuthRepository.findByUserHandle(userEntity.getUserHandle());
+        return webAuthRepository.findByUserId(userEntity.getId()).stream()
+                .map(credential -> PasskeyDto.builder()
+                        .id(credential.getId())
+                        .name(credential.getName())
+                        .build())
+                .toList();
     }
 
     @Transactional
@@ -166,11 +194,57 @@ public class WebAuthnService {
 
         User userEntity = userRepository.findById(authPrincipal.getUserId()).orElseThrow();
 
-        if (!credential.getUserHandle().equals(userEntity.getUserHandle())) {
+        if (!credential.getUser().getId().equals(userEntity.getId())) {
             throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
         }
 
         webAuthRepository.delete(credential);
+
+        if (!webAuthRepository.existsByUserId(userEntity.getId())) {
+            userEntity.setDefault2faMethod(Default2faMethod.EMAIL);
+            userRepository.save(userEntity);
+        }
+    }
+
+    @Transactional
+    public void renamePasskey(Long id, String newName) {
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        if (!authPrincipal.isSudoMode()) {
+            throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
+        }
+
+        User userEntity = userRepository.findById(authPrincipal.getUserId()).orElseThrow();
+
+        WebAuthnCredential credential = webAuthRepository.findById(id)
+                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        // Verify ownership
+        if (!credential.getUserHandle().equals(userEntity.getUserHandle())) {
+            throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
+        }
+
+        // Trim whitespace and validate new name
+        String trimmedName = newName != null ? newName.strip() : null;
+
+        if (trimmedName == null || trimmedName.isEmpty()) {
+            throw new AuthenticationException(AuthError.INVALID_INPUT.name());
+        }
+
+        // Validate length (max 100 characters, consistent with PasskeyRenameRequest)
+        if (trimmedName.length() > 100) {
+            throw new AuthenticationException(AuthError.INVALID_INPUT.name());
+        }
+
+        // Race condition protection:
+        // 1. Application-level check provides early validation
+        // 2. Database UNIQUE constraint on (userHandle, name) provides ultimate protection
+        if (webAuthRepository.existsByUserHandleAndNameIgnoreCaseAndIdNot(
+                userEntity.getUserHandle(), trimmedName, id)) {
+            throw new AuthenticationException(AuthError.PASSKEY_NAME_ALREADY_EXISTS.name());
+        }
+
+        credential.setName(trimmedName);
+        webAuthRepository.save(credential);
     }
 
     /* ===================== ASSERTION ===================== */

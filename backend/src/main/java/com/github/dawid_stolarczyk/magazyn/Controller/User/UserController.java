@@ -2,8 +2,12 @@ package com.github.dawid_stolarczyk.magazyn.Controller.User;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserTeam;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Services.User.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,12 +17,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -28,38 +36,62 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
 
-    @Operation(summary = "Get basic information about the currently authenticated user")
+    @Operation(summary = "Get current user info")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved user information",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "400", description = "Bad request, could not retrieve user information",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+            @ApiResponse(responseCode = "200", description = "Success",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserInfoResponse.class)))
     })
     @GetMapping("/me")
     public ResponseEntity<ResponseTemplate<UserInfoResponse>> getBasic(HttpServletRequest request) {
         return ResponseEntity.ok(ResponseTemplate.success(userService.getBasicInformation(request)));
     }
 
-    @Operation(summary = "[ADMIN] Get all users")
+    @Operation(summary = "[ADMIN] Get available teams", description = "Returns list of all available team options for dropdown/select")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved all users",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
-            @ApiResponse(responseCode = "403", description = "Forbidden - not admin",
+            @ApiResponse(responseCode = "200", description = "Success - returns list of available teams with value and label",
+                    content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TeamOption.class)))),
+            @ApiResponse(responseCode = "403", description = "Error codes: ACCESS_FORBIDDEN (not admin)",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @GetMapping("/teams")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<List<TeamOption>>> getAvailableTeams() {
+        List<TeamOption> teams = Arrays.stream(UserTeam.values())
+                .map(team -> new TeamOption(team.name(), team.getDisplayName()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ResponseTemplate.success(teams));
+    }
+
+    @Operation(summary = "[ADMIN] Get all users with pagination")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - returns paginated list of all users",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Error codes: ACCESS_FORBIDDEN (not admin)",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<List<UserInfoResponse>>> getAllUsers(HttpServletRequest request) {
-        return ResponseEntity.ok(ResponseTemplate.success(userService.adminGetAllUsers(request)));
+    public ResponseEntity<ResponseTemplate<PagedResponse<UserInfoResponse>>> getAllUsers(
+            HttpServletRequest request,
+            @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), sort);
+        return ResponseEntity.ok(ResponseTemplate.success(
+                PagedResponse.from(userService.adminGetAllUsersPaged(request, pageable))));
     }
 
-    @Operation(summary = "[ADMIN] Change email for any user")
+    @Operation(summary = "[ADMIN] Change user email")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Email changed successfully",
+            @ApiResponse(responseCode = "200", description = "Success - email changed, verification email sent",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "Email already in use or user not found",
+            @ApiResponse(responseCode = "400", description = "Error codes: EMAIL_TAKEN",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
-            @ApiResponse(responseCode = "403", description = "Forbidden - not admin",
+            @ApiResponse(responseCode = "403", description = "Error codes: ACCESS_FORBIDDEN",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PatchMapping("/{userId}/email")
@@ -73,15 +105,16 @@ public class UserController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Admin email change failed for user {}", userId, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
 
-    @Operation(summary = "Change the current user's password.")
+    @Operation(summary = "Change current user password (requires sudo mode)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Password changed successfully",
+            @ApiResponse(responseCode = "200", description = "Success - password changed",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid current password or weak new password",
+            @ApiResponse(responseCode = "400", description = "Error codes: INVALID_CREDENTIALS, WEAK_PASSWORD, INSUFFICIENT_PERMISSIONS",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PatchMapping("/password")
@@ -96,37 +129,41 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "[ADMIN] Change full name for any user")
+    @Operation(summary = "[ADMIN] Update user profile (phone, location, team, full name)",
+            description = "Updates user profile. Team must be one of: OPERATIONS, LOGISTICS, WAREHOUSE, INVENTORY, QUALITY_CONTROL, RECEIVING, SHIPPING, IT_SUPPORT, MANAGEMENT")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Full name changed successfully",
+            @ApiResponse(responseCode = "200", description = "Success - profile updated",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "User not found",
+            @ApiResponse(responseCode = "400", description = "Error codes: INVALID_INPUT, INVALID_PHONE_FORMAT, INVALID_FULL_NAME",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
-            @ApiResponse(responseCode = "403", description = "Forbidden - not admin",
+            @ApiResponse(responseCode = "403", description = "Error codes: ACCESS_FORBIDDEN",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @PatchMapping("/{userId}/full-name")
+    @PatchMapping("/{userId}/profile")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<Void>> changeFullName(
+    public ResponseEntity<ResponseTemplate<Void>> updateUserProfile(
             @PathVariable Long userId,
-            @Valid @RequestBody ChangeFullNameRequest changeRequest,
+            @Valid @RequestBody UpdateUserProfileRequest profileRequest,
             HttpServletRequest request) {
         try {
-            userService.adminChangeFullName(userId, changeRequest.getNewFullName(), request);
+            userService.adminUpdateUserProfile(userId, profileRequest, request);
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
-            log.error("Admin full name change failed for user {}", userId, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
+            log.error("Admin profile update failed for user {}", userId, e);
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
 
-    @Operation(summary = "[ADMIN] Delete any user account")
+    @Operation(summary = "[ADMIN] Delete user account")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Account deleted successfully",
+            @ApiResponse(responseCode = "200", description = "Success - account deleted",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "400", description = "User not found",
+            @ApiResponse(responseCode = "403", description = "Error codes: ACCESS_FORBIDDEN",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
-            @ApiResponse(responseCode = "403", description = "Forbidden - not admin",
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @DeleteMapping("/{userId}")
@@ -139,7 +176,8 @@ public class UserController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Admin account deletion failed for user {}", userId, e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
 }
