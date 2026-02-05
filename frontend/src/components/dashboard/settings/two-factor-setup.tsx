@@ -68,7 +68,6 @@ import {
 
 const TWO_FACTOR_METHOD_HINTS: Record<TwoFactorMethod, string> = {
   AUTHENTICATOR: "Najpewniejsza metoda",
-  SMS: "Kod SMS",
   EMAIL: "Kod e-mail",
   PASSKEYS: "Uwierzytelnianie kluczem dostępu",
 }
@@ -726,10 +725,8 @@ function CodeInputEntry({
         <div className="space-y-2">
           <p className="font-medium text-sm">Kod jednorazowy</p>
           <p className="text-muted-foreground text-sm">
-            {method === "SMS"
-              ? "SMS z kodem został wysłany."
-              : "E-mail z kodem został wysłany."}{" "}
-            Kontakt: {challenge?.destination ?? "wybrana metoda"}.
+            E-mail z kodem został wysłany. Kontakt:{" "}
+            {challenge?.destination ?? "wybrana metoda"}.
           </p>
           <p className="text-muted-foreground text-xs">
             Możesz poprosić o ponowną wysyłkę, jeśli kod nie dotarł.

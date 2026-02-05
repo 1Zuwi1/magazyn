@@ -74,7 +74,7 @@ const RECOVERY_CODES_REGEX = /kody odzyskiwania/i
 
 function TwoFactorSetupHarness({
   initialStatus = "ENABLED",
-  initialMethod = "SMS",
+  initialMethod = "AUTHENTICATOR",
 }: {
   initialStatus?: TwoFactorStatus
   initialMethod?: TwoFactorMethod

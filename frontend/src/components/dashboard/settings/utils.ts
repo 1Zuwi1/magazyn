@@ -38,9 +38,6 @@ export const getDestinationForMethod = (
   method: TwoFactorMethod,
   userEmail?: string
 ): string => {
-  if (method === "SMS") {
-    return MOCK_TWO_FACTOR_DESTINATIONS.sms
-  }
   if (method === "EMAIL") {
     return userEmail ? maskEmail(userEmail) : MOCK_TWO_FACTOR_DESTINATIONS.email
   }

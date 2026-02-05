@@ -111,9 +111,7 @@ export default function TwoFactorForm({
         return false
       }
 
-      toast.success(
-        m === "SMS" ? "Wysłano nowy kod SMS." : "Wysłano nowy kod e-mailem."
-      )
+      toast.success("Wysłano nowy kod e-mailem.")
       return true
     },
     [resendMethods]

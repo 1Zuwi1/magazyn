@@ -213,17 +213,6 @@ describe("Verify2FASchema", () => {
     expect(result.success).toBe(true)
   })
 
-  it("accepts valid SMS input", () => {
-    const validInput = {
-      method: "SMS" as const,
-      code: "123456",
-    }
-
-    const result = Verify2FASchema.shape.POST.shape.input.safeParse(validInput)
-
-    expect(result.success).toBe(true)
-  })
-
   it("accepts valid email input", () => {
     const validInput = {
       method: "EMAIL" as const,
@@ -284,16 +273,6 @@ describe("Verify2FASchema", () => {
 })
 
 describe("Resend2FASchema", () => {
-  it("accepts valid SMS method", () => {
-    const validInput = {
-      method: "SMS" as const,
-    }
-
-    const result = Resend2FASchema.shape.POST.shape.input.safeParse(validInput)
-
-    expect(result.success).toBe(true)
-  })
-
   it("accepts valid email method", () => {
     const validInput = {
       method: "EMAIL" as const,

@@ -2,7 +2,6 @@ import {
   Key01Icon,
   Mail01Icon,
   SecurityKeyUsbIcon,
-  SmartPhone01Icon,
 } from "@hugeicons/core-free-icons"
 import type { TwoFactorMethod } from "@/lib/schemas"
 
@@ -26,12 +25,6 @@ export const TWO_FACTOR_METHODS = [
     addable: true,
   },
   {
-    value: "SMS",
-    label: "SMS",
-    hint: "Kod wysyłany na numer telefonu.",
-    addable: true,
-  },
-  {
     value: "EMAIL",
     label: "E-mail",
     hint: "Kod wysyłany na skrzynkę pocztową.",
@@ -47,7 +40,6 @@ export const TWO_FACTOR_METHODS = [
 
 export const METHOD_ICONS: Record<TwoFactorMethod, typeof Key01Icon> = {
   AUTHENTICATOR: Key01Icon,
-  SMS: SmartPhone01Icon,
   EMAIL: Mail01Icon,
   PASSKEYS: SecurityKeyUsbIcon,
 }
