@@ -19,22 +19,11 @@ import { Button } from "../ui/button"
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 import { TAB_TRIGGERS } from "./scanner"
 
-const CODE_FORMATS = [
-  BarcodeFormat.QR_CODE,
-  BarcodeFormat.CODE_128,
-  BarcodeFormat.CODE_39,
-  BarcodeFormat.EAN_13,
-  BarcodeFormat.EAN_8,
-  BarcodeFormat.UPC_A,
-  BarcodeFormat.UPC_E,
-  BarcodeFormat.DATA_MATRIX,
-  BarcodeFormat.PDF_417,
-  BarcodeFormat.AZTEC,
-  BarcodeFormat.ITF,
-] as const
+const CODE_FORMATS = [BarcodeFormat.QR_CODE, BarcodeFormat.CODE_128] as const
 
 const DECODE_HINTS = new Map<DecodeHintType, unknown>([
   [DecodeHintType.POSSIBLE_FORMATS, CODE_FORMATS],
+  [DecodeHintType.ASSUME_GS1, true],
 ])
 
 interface ScannerCameraProps {
@@ -156,8 +145,13 @@ export function ScannerCamera({
       try {
         // iOS Safari friendliness
         currentVideo.setAttribute("playsinline", "true")
+        currentVideo.setAttribute("webkit-playsinline", "true")
+        currentVideo.autoplay = true
+        currentVideo.muted = true
 
-        const reader = new BrowserMultiFormatReader(DECODE_HINTS)
+        const reader = new BrowserMultiFormatReader(DECODE_HINTS, {
+          delayBetweenScanAttempts: 300,
+        })
         readerRef.current = reader
 
         const mediaConstraints: MediaStreamConstraints =
@@ -165,6 +159,9 @@ export function ScannerCamera({
           ({
             video: {
               facingMode: { ideal: "environment" },
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+              frameRate: { ideal: 30, max: 60 },
             },
             audio: false,
           } satisfies MediaStreamConstraints)
@@ -347,8 +344,10 @@ export function ScannerCamera({
           )}
 
           <video
+            autoPlay
             className={cn("h-full w-full object-cover")}
             muted
+            playsInline
             ref={setVideoRef}
           />
         </>
