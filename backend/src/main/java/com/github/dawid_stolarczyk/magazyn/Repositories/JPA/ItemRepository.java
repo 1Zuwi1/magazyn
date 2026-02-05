@@ -1,6 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Repositories.JPA;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
+import com.github.dawid_stolarczyk.magazyn.Repositories.Projection.ItemSimilarityProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,7 +25,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      *
      * @param embedding the query embedding as a formatted vector string "[0.1, 0.2, ...]"
      * @param limit     maximum number of results to return
-     * @return list of Object arrays containing [itemId (Long), distance (Double)]
+     * @return list of ItemSimilarityProjection containing id and distance
      */
     @Query(value = "SELECT id, (image_embedding <=> CAST(:embedding AS vector)) as distance "
             + "FROM items "
@@ -32,14 +33,14 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             + "ORDER BY distance ASC "
             + "LIMIT :limit",
             nativeQuery = true)
-    List<Object[]> findMostSimilarByEmbedding(@Param("embedding") String embedding,
-                                              @Param("limit") int limit);
+    List<ItemSimilarityProjection> findMostSimilarByEmbedding(@Param("embedding") String embedding,
+                                                              @Param("limit") int limit);
 
     /**
      * Finds the single most similar item to the provided embedding.
      *
      * @param embedding the query embedding as a formatted vector string "[0.1, 0.2, ...]"
-     * @return List containing single Object array with [itemId (Long), distance (Double)], or empty list if no items
+     * @return List containing single ItemSimilarityProjection, or empty list if no items
      */
     @Query(value = "SELECT id, (image_embedding <=> CAST(:embedding AS vector)) as distance "
             + "FROM items "
@@ -47,7 +48,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             + "ORDER BY distance ASC "
             + "LIMIT 1",
             nativeQuery = true)
-    List<Object[]> findMostSimilar(@Param("embedding") String embedding);
+    List<ItemSimilarityProjection> findMostSimilar(@Param("embedding") String embedding);
 
     /**
      * Finds items most similar to the provided embedding, excluding specific item IDs.
@@ -56,7 +57,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      * @param embedding   the query embedding as a formatted vector string "[0.1, 0.2, ...]"
      * @param excludedIds list of item IDs to exclude from results
      * @param limit       maximum number of results to return
-     * @return list of Object arrays containing [itemId (Long), distance (Double)]
+     * @return list of ItemSimilarityProjection containing id and distance
      */
     @Query(value = "SELECT id, (image_embedding <=> CAST(:embedding AS vector)) as distance "
             + "FROM items "
@@ -65,7 +66,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             + "ORDER BY distance ASC "
             + "LIMIT :limit",
             nativeQuery = true)
-    List<Object[]> findMostSimilarExcluding(@Param("embedding") String embedding,
-                                            @Param("excludedIds") List<Long> excludedIds,
-                                            @Param("limit") int limit);
+    List<ItemSimilarityProjection> findMostSimilarExcluding(@Param("embedding") String embedding,
+                                                            @Param("excludedIds") List<Long> excludedIds,
+                                                            @Param("limit") int limit);
 }

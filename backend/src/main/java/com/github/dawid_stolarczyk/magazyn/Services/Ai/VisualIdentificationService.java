@@ -10,6 +10,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.ConfidenceLevel;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AuditLogRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.Projection.ItemSimilarityProjection;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import jakarta.annotation.PostConstruct;
@@ -17,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -72,7 +74,25 @@ public class VisualIdentificationService {
         sessionCache = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofMinutes(embeddingCacheTtlMinutes))
                 .maximumSize(1000)
+                .recordStats()
                 .build();
+        log.info("Initialized identification session cache with {}min TTL", embeddingCacheTtlMinutes);
+    }
+
+    /**
+     * Scheduled task to log cache statistics for monitoring.
+     * Runs every hour to track cache hit rates and evictions.
+     */
+    @Scheduled(fixedRate = 3600000) // Every 1 hour
+    public void logCacheStatistics() {
+        if (sessionCache != null) {
+            var stats = sessionCache.stats();
+            log.info("Visual identification cache stats: size={}, hitRate={:.2f}%, evictions={}, loadSuccesses={}",
+                    sessionCache.estimatedSize(),
+                    stats.hitRate() * 100,
+                    stats.evictionCount(),
+                    stats.loadSuccessCount());
+        }
     }
 
     /**
@@ -123,27 +143,27 @@ public class VisualIdentificationService {
             sessionCache.put(identificationId, new IdentificationSession(embeddingStr));
 
             // Fetch Top-N candidates from database
-            List<Object[]> results = itemRepository.findMostSimilarByEmbedding(
+            List<ItemSimilarityProjection> results = itemRepository.findMostSimilarByEmbedding(
                     embeddingStr, lowConfidenceCandidateCount);
 
-            if (results.isEmpty()) {
+            if (results == null || results.isEmpty()) {
                 return handleNoItemsFound(identificationId, currentUser,
                         originalFilename, ipAddress, userAgent);
             }
 
             // Compute similarity score for the best result
-            double bestDistance = ((Number) results.get(0)[1]).doubleValue();
+            double bestDistance = results.get(0).getDistance();
             double bestScore = imageEmbeddingService.distanceToSimilarityScore(bestDistance);
 
             // Determine confidence tier
             ConfidenceLevel confidenceLevel = determineConfidence(bestScore);
 
             // Build candidate list based on confidence tier
-            List<Object[]> candidateRows;
+            List<ItemSimilarityProjection> candidateRows;
             if (confidenceLevel == ConfidenceLevel.LOW_CONFIDENCE) {
                 candidateRows = results; // all Top-N
             } else {
-                candidateRows = List.<Object[]>of(results.get(0)); // best match only
+                candidateRows = List.of(results.get(0)); // best match only
             }
 
             List<IdentificationCandidate> candidates = buildCandidates(candidateRows);
@@ -158,7 +178,7 @@ public class VisualIdentificationService {
             boolean alertGenerated = false;
             if (confidenceLevel == ConfidenceLevel.LOW_CONFIDENCE && bestItem == null) {
                 // For LOW_CONFIDENCE, fetch the best item for alert purposes
-                Long bestItemId = ((Number) results.get(0)[0]).longValue();
+                Long bestItemId = results.get(0).getId();
                 bestItem = itemRepository.findById(bestItemId).orElse(null);
             }
 
@@ -173,7 +193,7 @@ public class VisualIdentificationService {
 
             // Audit log
             logIdentification(currentUser,
-                    bestItem != null ? bestItem : findItemForAudit(results.get(0)),
+                    bestItem != null ? bestItem : itemRepository.findById(results.get(0).getId()).orElse(null),
                     bestScore, true, null, originalFilename, ipAddress, userAgent);
 
             // Build response
@@ -220,6 +240,14 @@ public class VisualIdentificationService {
                                                      Long rejectedItemId,
                                                      User currentUser,
                                                      HttpServletRequest request) {
+        // Validate input parameters
+        if (identificationId == null || identificationId.isBlank()) {
+            throw new VisualIdentificationException("Identification ID cannot be null or empty");
+        }
+        if (rejectedItemId == null || rejectedItemId <= 0) {
+            throw new VisualIdentificationException("Rejected item ID must be a positive number");
+        }
+
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
 
         String ipAddress = getClientIp(request);
@@ -233,6 +261,12 @@ public class VisualIdentificationService {
                             + embeddingCacheTtlMinutes + " minutes.");
         }
 
+        // Verify that the rejected item exists
+        if (!itemRepository.existsById(rejectedItemId)) {
+            throw new VisualIdentificationException(
+                    "Rejected item with ID " + rejectedItemId + " does not exist");
+        }
+
         // Add newly rejected item to cumulative exclusion list
         session.addExcludedId(rejectedItemId);
         List<Long> allExcluded = session.getExcludedIdList();
@@ -241,10 +275,10 @@ public class VisualIdentificationService {
         logMismatch(currentUser, rejectedItemId, allExcluded, identificationId, ipAddress, userAgent);
 
         // Query excluding ALL previously rejected items
-        List<Object[]> results = itemRepository.findMostSimilarExcluding(
+        List<ItemSimilarityProjection> results = itemRepository.findMostSimilarExcluding(
                 session.embeddingStr, allExcluded, mismatchAlternativeCount);
 
-        if (results.isEmpty()) {
+        if (results == null || results.isEmpty()) {
             return ItemIdentificationResponse.builder()
                     .identificationId(identificationId)
                     .itemId(null)
@@ -296,10 +330,21 @@ public class VisualIdentificationService {
         return ConfidenceLevel.LOW_CONFIDENCE;
     }
 
-    private List<IdentificationCandidate> buildCandidates(List<Object[]> queryResults) {
+    /**
+     * Builds a list of identification candidates from database query results.
+     * Performs batch fetching of item details for efficiency.
+     *
+     * @param queryResults list of similarity projections from database
+     * @return list of fully populated candidate DTOs
+     */
+    private List<IdentificationCandidate> buildCandidates(List<ItemSimilarityProjection> queryResults) {
+        if (queryResults == null || queryResults.isEmpty()) {
+            return List.of();
+        }
+
         // Extract all item IDs
         List<Long> itemIds = queryResults.stream()
-                .map(row -> ((Number) row[0]).longValue())
+                .map(ItemSimilarityProjection::getId)
                 .toList();
 
         // Batch fetch all items
@@ -309,9 +354,9 @@ public class VisualIdentificationService {
         // Build candidate list preserving order
         List<IdentificationCandidate> candidates = new ArrayList<>();
         for (int i = 0; i < queryResults.size(); i++) {
-            Object[] row = queryResults.get(i);
-            Long itemId = ((Number) row[0]).longValue();
-            double distance = ((Number) row[1]).doubleValue();
+            ItemSimilarityProjection projection = queryResults.get(i);
+            Long itemId = projection.getId();
+            double distance = projection.getDistance();
             double score = imageEmbeddingService.distanceToSimilarityScore(distance);
             Item item = itemMap.get(itemId);
 
@@ -338,11 +383,6 @@ public class VisualIdentificationService {
             case NEEDS_VERIFICATION -> "Item identified - manual verification recommended";
             case LOW_CONFIDENCE -> "Low confidence - please select from candidates or verify manually";
         };
-    }
-
-    private Item findItemForAudit(Object[] row) {
-        Long itemId = ((Number) row[0]).longValue();
-        return itemRepository.findById(itemId).orElse(null);
     }
 
     private ItemIdentificationResponse handleNoItemsFound(String identificationId,

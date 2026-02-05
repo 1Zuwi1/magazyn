@@ -33,10 +33,11 @@ public class Item {
     private boolean isDangerous;
 
     /**
-     * 512-dimensional vector embedding from CLIP model for image similarity search.
+     * 1000-dimensional vector embedding from ResNet model for image similarity search.
      * Stored as PostgreSQL vector type using pgvector extension.
+     * ResNet models output 1000-dimensional vectors corresponding to ImageNet classes.
      */
-    @Column(name = "image_embedding", columnDefinition = "vector(512)")
+    @Column(name = "image_embedding", columnDefinition = "vector(1000)")
     @Type(PgVectorType.class)
     private float[] imageEmbedding;
 
