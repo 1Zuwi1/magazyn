@@ -156,6 +156,9 @@ export function ScannerCamera({
       try {
         // iOS Safari friendliness
         currentVideo.setAttribute("playsinline", "true")
+        currentVideo.setAttribute("webkit-playsinline", "true")
+        currentVideo.autoplay = true
+        currentVideo.muted = true
 
         const reader = new BrowserMultiFormatReader(DECODE_HINTS)
         readerRef.current = reader
@@ -347,8 +350,10 @@ export function ScannerCamera({
           )}
 
           <video
+            autoPlay
             className={cn("h-full w-full object-cover")}
             muted
+            playsInline
             ref={setVideoRef}
           />
         </>
