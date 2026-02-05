@@ -14,6 +14,7 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.Projection.ItemSimilarit
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,6 +93,21 @@ public class VisualIdentificationService {
                     stats.hitRate() * 100,
                     stats.evictionCount(),
                     stats.loadSuccessCount());
+        }
+    }
+
+    /**
+     * Cleanup method invoked on application shutdown.
+     * Clears the session cache to prevent memory leaks and ensure graceful shutdown.
+     * This is critical for preventing memory leaks in containerized environments.
+     */
+    @PreDestroy
+    public void cleanup() {
+        if (sessionCache != null) {
+            long size = sessionCache.estimatedSize();
+            sessionCache.invalidateAll();
+            sessionCache.cleanUp();
+            log.info("Visual identification session cache cleared: {} entries removed", size);
         }
     }
 
