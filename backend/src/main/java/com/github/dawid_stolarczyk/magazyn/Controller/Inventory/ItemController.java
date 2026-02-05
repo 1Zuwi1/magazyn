@@ -384,7 +384,7 @@ public class ItemController {
             // Get current user if authenticated
             User currentUser = null;
             try {
-                Long userId = AuthUtil.getCurrentUserId(request);
+                Long userId = AuthUtil.getCurrentUserId();
                 if (userId != null) {
                     currentUser = userRepository.findById(userId).orElse(null);
                 }

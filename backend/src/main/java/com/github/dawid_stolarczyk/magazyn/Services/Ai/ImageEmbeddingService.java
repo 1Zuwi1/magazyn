@@ -19,8 +19,14 @@ import java.io.InputStream;
 import java.util.List;
 
 /**
- * Service for generating image embeddings using CLIP-like models.
+ * Service for generating image embeddings using deep learning models.
  * Converts images to 512-dimensional float vectors for similarity search.
+ *
+ * <p>Note: This implementation uses ResNet50 as the default embedding model
+ * for broad compatibility. For production use cases requiring semantic understanding
+ * (e.g., "product looks similar"), consider integrating a CLIP model instead.
+ * ResNet50 embeddings capture visual features but may not provide the same
+ * semantic similarity as CLIP for diverse product catalogs.</p>
  */
 @Slf4j
 @Service
@@ -36,16 +42,19 @@ public class ImageEmbeddingService {
     private boolean modelLoaded = false;
 
     /**
-     * Initializes the CLIP model on application startup.
-     * Uses DJL's model zoo to load a pretrained image embedding model.
+     * Initializes the image embedding model on application startup.
+     * Uses DJL's model zoo to load a pretrained ResNet50 embedding model.
+     *
+     * <p>For production environments requiring CLIP-based semantic search,
+     * configure the model URL to point to a CLIP model endpoint or local ONNX model.</p>
      */
     @PostConstruct
     public void init() {
         try {
             log.info("Loading image embedding model...");
 
-            // Use ResNet50 as a fallback embedding model since CLIP requires special setup
-            // In production, you would configure a proper CLIP model endpoint or local model
+            // Using ResNet50 for visual feature extraction
+            // For semantic similarity (CLIP-like behavior), replace with CLIP model
             Criteria<Image, float[]> criteria = Criteria.builder()
                     .setTypes(Image.class, float[].class)
                     .optModelUrls("djl://ai.djl.pytorch/resnet50_embedding")
@@ -144,32 +153,35 @@ public class ImageEmbeddingService {
     }
 
     /**
-     * Normalizes embedding to exactly 512 dimensions.
+     * Normalizes embedding to exactly 512 dimensions and applies L2 normalization.
      * Pads with zeros if shorter, truncates if longer.
+     * Always applies L2 normalization to ensure consistent vector comparison.
      */
     private float[] normalizeEmbedding(float[] embedding) {
+        float[] result;
         if (embedding.length == EMBEDDING_DIMENSION) {
-            return embedding;
+            // Copy to avoid modifying input array during normalization
+            result = embedding.clone();
+        } else {
+            result = new float[EMBEDDING_DIMENSION];
+            int copyLength = Math.min(embedding.length, EMBEDDING_DIMENSION);
+            System.arraycopy(embedding, 0, result, 0, copyLength);
         }
 
-        float[] normalized = new float[EMBEDDING_DIMENSION];
-        int copyLength = Math.min(embedding.length, EMBEDDING_DIMENSION);
-        System.arraycopy(embedding, 0, normalized, 0, copyLength);
-
-        // L2 normalize the embedding
+        // L2 normalize the embedding for consistent similarity comparison
         float norm = 0f;
-        for (float v : normalized) {
+        for (float v : result) {
             norm += v * v;
         }
         norm = (float) Math.sqrt(norm);
 
         if (norm > 0) {
-            for (int i = 0; i < normalized.length; i++) {
-                normalized[i] /= norm;
+            for (int i = 0; i < result.length; i++) {
+                result[i] /= norm;
             }
         }
 
-        return normalized;
+        return result;
     }
 
     /**

@@ -48,7 +48,10 @@ public class VisualIdentificationAlertService {
             return false;
         }
 
-        // Get the first rack assignment to use for the alert
+        // Use the first (primary) rack assignment for alert generation.
+        // For items with multiple rack placements, the alert is associated with
+        // the primary storage location. In most WMS scenarios, the first assortment
+        // represents the primary storage position.
         var assortment = item.getAssortments().get(0);
         if (assortment.getRack() == null) {
             log.debug("Item assortment has no rack, skipping alert creation");

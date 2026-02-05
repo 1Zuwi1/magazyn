@@ -4,7 +4,6 @@ import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationNotFoundException;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -51,10 +50,9 @@ public class AuthUtil {
     /**
      * Gets the current user's ID from the SecurityContext.
      *
-     * @param request the HTTP request (not used, kept for API consistency)
      * @return the user ID, or null if not authenticated
      */
-    public static Long getCurrentUserId(HttpServletRequest request) {
+    public static Long getCurrentUserId() {
         try {
             AuthPrincipal principal = getCurrentAuthPrincipal();
             return principal != null ? principal.getUserId() : null;

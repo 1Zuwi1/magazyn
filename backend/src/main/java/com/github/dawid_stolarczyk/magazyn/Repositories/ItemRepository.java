@@ -19,7 +19,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     /**
      * Finds items with embeddings that are most similar to the provided vector.
-     * Uses PostgreSQL pgvector's cosine distance operator (&lt;=&gt;).
+     * Uses PostgreSQL pgvector's cosine distance operator (the {@code <=>} operator).
      * Returns the item ID and cosine distance (0 = identical, 2 = opposite).
      *
      * @param embedding the query embedding as a formatted vector string "[0.1, 0.2, ...]"
