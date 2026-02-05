@@ -106,4 +106,9 @@ public class AuditLog {
      * Constant for image identification action type
      */
     public static final String ACTION_IMAGE_IDENTIFICATION = "IMAGE_IDENTIFICATION";
+
+    /**
+     * Constant for mismatch feedback action type (user rejected a match)
+     */
+    public static final String ACTION_IMAGE_MISMATCH_FEEDBACK = "IMAGE_MISMATCH_FEEDBACK";
 }

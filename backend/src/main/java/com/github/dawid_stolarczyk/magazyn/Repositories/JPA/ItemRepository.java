@@ -48,4 +48,24 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             + "LIMIT 1",
             nativeQuery = true)
     List<Object[]> findMostSimilar(@Param("embedding") String embedding);
+
+    /**
+     * Finds items most similar to the provided embedding, excluding specific item IDs.
+     * Used by the mismatch/feedback flow to return alternatives after a rejected match.
+     *
+     * @param embedding   the query embedding as a formatted vector string "[0.1, 0.2, ...]"
+     * @param excludedIds list of item IDs to exclude from results
+     * @param limit       maximum number of results to return
+     * @return list of Object arrays containing [itemId (Long), distance (Double)]
+     */
+    @Query(value = "SELECT id, (image_embedding <=> CAST(:embedding AS vector)) as distance "
+            + "FROM items "
+            + "WHERE image_embedding IS NOT NULL "
+            + "AND id NOT IN (:excludedIds) "
+            + "ORDER BY distance ASC "
+            + "LIMIT :limit",
+            nativeQuery = true)
+    List<Object[]> findMostSimilarExcluding(@Param("embedding") String embedding,
+                                            @Param("excludedIds") List<Long> excludedIds,
+                                            @Param("limit") int limit);
 }
