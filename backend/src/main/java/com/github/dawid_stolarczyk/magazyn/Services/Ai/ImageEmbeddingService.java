@@ -4,10 +4,18 @@ import ai.djl.MalformedModelException;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
+import ai.djl.modality.cv.transform.Normalize;
+import ai.djl.modality.cv.transform.ToTensor;
+import ai.djl.ndarray.NDArray;
+import ai.djl.ndarray.NDList;
+import ai.djl.ndarray.NDManager;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
+import ai.djl.translate.Batchifier;
 import ai.djl.translate.TranslateException;
+import ai.djl.translate.Translator;
+import ai.djl.translate.TranslatorContext;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -53,12 +61,13 @@ public class ImageEmbeddingService {
         try {
             log.info("Loading image embedding model...");
 
-            // Using ResNet50 for visual feature extraction
-            // For semantic similarity (CLIP-like behavior), replace with CLIP model
+            // Use PyTorch ResNet18 model from model zoo
             Criteria<Image, float[]> criteria = Criteria.builder()
                     .setTypes(Image.class, float[].class)
-                    .optModelUrls("djl://ai.djl.pytorch/resnet50_embedding")
+                    .optApplication(ai.djl.Application.CV.IMAGE_CLASSIFICATION)
+                    .optArtifactId("resnet")
                     .optEngine("PyTorch")
+                    .optTranslator(new ImageNetTranslator())
                     .optProgress(new ai.djl.training.util.ProgressBar())
                     .build();
 
@@ -68,9 +77,62 @@ public class ImageEmbeddingService {
 
             log.info("Image embedding model loaded successfully");
         } catch (ModelNotFoundException | MalformedModelException | IOException e) {
-            log.warn("Failed to load image embedding model. Visual identification will not be available: {}",
-                    e.getMessage());
+            log.error("Failed to load image embedding model. Visual identification will not be available: {}",
+                    e.getMessage(), e);
             modelLoaded = false;
+        } catch (Exception e) {
+            log.error("Unexpected error loading image embedding model: {}", e.getMessage(), e);
+            modelLoaded = false;
+        }
+    }
+
+    /**
+     * Custom Translator for ImageNet-based models (ResNet).
+     * Properly handles image preprocessing to avoid tensor dimension errors.
+     */
+    private static class ImageNetTranslator implements Translator<Image, float[]> {
+
+        private static final int IMAGE_SIZE = 224;
+        private static final float[] MEAN = {0.485f, 0.456f, 0.406f};
+        private static final float[] STD = {0.229f, 0.224f, 0.225f};
+
+        @Override
+        public NDList processInput(TranslatorContext ctx, Image input) {
+            NDManager manager = ctx.getNDManager();
+
+            // Resize image to 224x224
+            Image resized = input.resize(IMAGE_SIZE, IMAGE_SIZE, false);
+
+            // Convert to NDArray [H, W, C]
+            NDArray array = resized.toNDArray(manager);
+
+            // Apply ToTensor: [H, W, C] -> [C, H, W] and scale to [0, 1]
+            array = new ToTensor().transform(array);
+
+            // Apply ImageNet normalization
+            array = new Normalize(MEAN, STD).transform(array);
+
+            // Add batch dimension: [C, H, W] -> [1, C, H, W]
+            array = array.expandDims(0);
+
+            return new NDList(array);
+        }
+
+        @Override
+        public float[] processOutput(TranslatorContext ctx, NDList list) {
+            NDArray output = list.singletonOrThrow();
+
+            // Remove batch dimension if present
+            if (output.getShape().dimension() > 1 && output.getShape().get(0) == 1) {
+                output = output.squeeze(0);
+            }
+
+            return output.toFloatArray();
+        }
+
+        @Override
+        public Batchifier getBatchifier() {
+            return null; // We handle batching manually
         }
     }
 

@@ -5,7 +5,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertType;
-import com.github.dawid_stolarczyk.magazyn.Repositories.AlertRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AlertRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,10 +34,10 @@ public class VisualIdentificationAlertService {
      * Creates a low similarity alert if no open alert exists for the same context.
      * Implements idempotent behavior by checking for existing open alerts.
      *
-     * @param item the matched item
+     * @param item            the matched item
      * @param similarityScore the actual similarity score
-     * @param threshold the configured threshold
-     * @param user the user who triggered the identification (may be null)
+     * @param threshold       the configured threshold
+     * @param user            the user who triggered the identification (may be null)
      * @return true if a new alert was created, false if an existing alert was found
      */
     @Transactional

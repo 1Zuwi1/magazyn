@@ -84,7 +84,7 @@
             <artifactId>pgvector</artifactId>
             <version>0.1.6</version>
         </dependency>
-        <!-- Deep Java Library (DJL) for CLIP model inference -->
+        <!-- Deep Java Library (DJL) for image embedding inference -->
         <dependency>
             <groupId>ai.djl</groupId>
             <artifactId>api</artifactId>
@@ -100,6 +100,12 @@
             <groupId>ai.djl.pytorch</groupId>
             <artifactId>pytorch-model-zoo</artifactId>
             <version>0.31.1</version>
+        </dependency>
+        <dependency>
+            <groupId>ai.djl.pytorch</groupId>
+            <artifactId>pytorch-jni</artifactId>
+            <version>2.5.1-0.31.1</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>ai.djl.huggingface</groupId>
@@ -229,5 +235,81 @@
 
         </plugins>
     </build>
+
+    <!-- Platform-specific profiles for DJL PyTorch native libraries -->
+    <profiles>
+        <profile>
+            <id>win-x86_64</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>ai.djl.pytorch</groupId>
+                    <artifactId>pytorch-native-cpu</artifactId>
+                    <classifier>win-x86_64</classifier>
+                    <version>2.5.1</version>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>linux-x86_64</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>ai.djl.pytorch</groupId>
+                    <artifactId>pytorch-native-cpu</artifactId>
+                    <classifier>linux-x86_64</classifier>
+                    <version>2.5.1</version>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>osx-x86_64</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>x86_64</arch>
+                </os>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>ai.djl.pytorch</groupId>
+                    <artifactId>pytorch-native-cpu</artifactId>
+                    <classifier>osx-x86_64</classifier>
+                    <version>2.5.1</version>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>osx-aarch64</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>ai.djl.pytorch</groupId>
+                    <artifactId>pytorch-native-cpu</artifactId>
+                    <classifier>osx-aarch64</classifier>
+                    <version>2.5.1</version>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
 </project>

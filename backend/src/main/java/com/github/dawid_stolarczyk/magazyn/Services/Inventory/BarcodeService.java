@@ -2,8 +2,8 @@ package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
-import com.github.dawid_stolarczyk.magazyn.Repositories.AssortmentRepository;
-import com.github.dawid_stolarczyk.magazyn.Repositories.ItemRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AssortmentRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
 import com.github.dawid_stolarczyk.magazyn.Utils.CodeGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

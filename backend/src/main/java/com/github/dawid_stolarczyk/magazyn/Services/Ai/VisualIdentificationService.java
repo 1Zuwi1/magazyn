@@ -4,8 +4,8 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemIdentificationResp
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.AuditLog;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
-import com.github.dawid_stolarczyk.magazyn.Repositories.AuditLogRepository;
-import com.github.dawid_stolarczyk.magazyn.Repositories.ItemRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AuditLogRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Optional;
+import java.util.List;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -45,9 +45,9 @@ public class VisualIdentificationService {
     /**
      * Identifies an item from an uploaded image.
      *
-     * @param file the image file to identify
+     * @param file        the image file to identify
      * @param currentUser the user performing the identification (may be null)
-     * @param request the HTTP request for rate limiting and audit logging
+     * @param request     the HTTP request for rate limiting and audit logging
      * @return identification result with item details and similarity score
      */
     @Transactional
@@ -65,13 +65,13 @@ public class VisualIdentificationService {
             String embeddingStr = imageEmbeddingService.embeddingToVectorString(embedding);
 
             // Find the most similar item
-            Optional<Object[]> result = itemRepository.findMostSimilar(embeddingStr);
+            List<Object[]> result = itemRepository.findMostSimilar(embeddingStr);
 
             if (result.isEmpty()) {
                 return handleNoItemsFound(currentUser, originalFilename, ipAddress, userAgent);
             }
 
-            Object[] row = result.get();
+            Object[] row = result.get(0);
             Long itemId = ((Number) row[0]).longValue();
             double distance = ((Number) row[1]).doubleValue();
             double similarityScore = imageEmbeddingService.distanceToSimilarityScore(distance);
@@ -81,11 +81,21 @@ public class VisualIdentificationService {
                 return handleNoItemsFound(currentUser, originalFilename, ipAddress, userAgent);
             }
 
+            log.info("Visual identification result: item='{}' (id={}), confidence={}%, distance={}, threshold={}%",
+                    matchedItem.getName(), matchedItem.getId(),
+                    String.format("%.2f", similarityScore * 100),
+                    String.format("%.4f", distance),
+                    String.format("%.2f", similarityThreshold * 100));
+
             boolean confidentMatch = similarityScore >= similarityThreshold;
             boolean alertGenerated = false;
 
             // Generate alert if similarity is below threshold
             if (!confidentMatch) {
+                log.warn("Low confidence match for item '{}' (id={}): {}% < {}% threshold",
+                        matchedItem.getName(), matchedItem.getId(),
+                        String.format("%.2f", similarityScore * 100),
+                        String.format("%.2f", similarityThreshold * 100));
                 alertGenerated = alertService.createLowSimilarityAlertIfNeeded(
                         matchedItem, similarityScore, similarityThreshold, currentUser);
             }

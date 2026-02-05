@@ -1,4 +1,4 @@
-package com.github.dawid_stolarczyk.magazyn.Security.Config;
+package com.github.dawid_stolarczyk.magazyn.Config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

@@ -1,4 +1,4 @@
-package com.github.dawid_stolarczyk.magazyn.Repositories;
+package com.github.dawid_stolarczyk.magazyn.Repositories.JPA;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
 import org.springframework.data.domain.Page;
@@ -23,7 +23,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      * Returns the item ID and cosine distance (0 = identical, 2 = opposite).
      *
      * @param embedding the query embedding as a formatted vector string "[0.1, 0.2, ...]"
-     * @param limit maximum number of results to return
+     * @param limit     maximum number of results to return
      * @return list of Object arrays containing [itemId (Long), distance (Double)]
      */
     @Query(value = "SELECT id, (image_embedding <=> CAST(:embedding AS vector)) as distance "
@@ -33,13 +33,13 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             + "LIMIT :limit",
             nativeQuery = true)
     List<Object[]> findMostSimilarByEmbedding(@Param("embedding") String embedding,
-                                               @Param("limit") int limit);
+                                              @Param("limit") int limit);
 
     /**
      * Finds the single most similar item to the provided embedding.
      *
      * @param embedding the query embedding as a formatted vector string "[0.1, 0.2, ...]"
-     * @return Object array containing [itemId (Long), distance (Double)], or empty if no items
+     * @return List containing single Object array with [itemId (Long), distance (Double)], or empty list if no items
      */
     @Query(value = "SELECT id, (image_embedding <=> CAST(:embedding AS vector)) as distance "
             + "FROM items "
@@ -47,5 +47,5 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             + "ORDER BY distance ASC "
             + "LIMIT 1",
             nativeQuery = true)
-    Optional<Object[]> findMostSimilar(@Param("embedding") String embedding);
+    List<Object[]> findMostSimilar(@Param("embedding") String embedding);
 }

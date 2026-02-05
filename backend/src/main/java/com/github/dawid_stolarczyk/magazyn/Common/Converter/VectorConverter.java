@@ -12,7 +12,7 @@ import jakarta.persistence.Converter;
 public class VectorConverter implements AttributeConverter<float[], Object> {
 
     @Override
-    public Object convertToDatabaseColumn(float[] attribute) {
+    public String convertToDatabaseColumn(float[] attribute) {
         if (attribute == null) {
             return null;
         }
@@ -30,17 +30,12 @@ public class VectorConverter implements AttributeConverter<float[], Object> {
 
     @Override
     public float[] convertToEntityAttribute(Object dbData) {
-        if (dbData == null) {
+        if (dbData == null || ((String) dbData).isEmpty()) {
             return null;
         }
 
         String str;
-        if (dbData instanceof String) {
-            str = (String) dbData;
-        } else {
-            // Handle PGobject or other types by calling toString()
-            str = dbData.toString();
-        }
+        str = (String) dbData;
 
         // Handle string representation like "[0.1,0.2,0.3]"
         str = str.trim();
@@ -59,4 +54,6 @@ public class VectorConverter implements AttributeConverter<float[], Object> {
 
         throw new IllegalArgumentException("Cannot convert '" + str + "' to float[]");
     }
+
+
 }

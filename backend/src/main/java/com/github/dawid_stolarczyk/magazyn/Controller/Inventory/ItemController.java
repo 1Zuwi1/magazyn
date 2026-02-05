@@ -1,12 +1,8 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemDto;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemIdentificationResponse;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemImportReport;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
-import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Services.Ai.VisualIdentificationService;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.ItemImportService;
