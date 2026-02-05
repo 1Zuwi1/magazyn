@@ -24,7 +24,7 @@ import type {
   NotificationType,
 } from "@/components/dashboard/types"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Popover,
   PopoverContent,
@@ -89,7 +89,12 @@ export function NotificationInbox() {
 
   return (
     <Popover onOpenChange={setOpen} open={open}>
-      <PopoverTrigger className="group relative mr-3 flex size-8 cursor-pointer items-center justify-center rounded-xl bg-background transition-all hover:bg-accent hover:shadow-sm">
+      <PopoverTrigger
+        className={cn(
+          buttonVariants({ variant: "ghost", size: "icon" }),
+          "relative mr-2"
+        )}
+      >
         <HugeiconsIcon
           className="size-5 text-muted-foreground transition-colors group-hover:text-foreground"
           icon={Notification01Icon}

@@ -6,6 +6,7 @@ import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 import { SCAN_DELAY_MS, SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
+import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
 import { buttonVariants } from "../ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog"
 import { ErrorBoundary } from "../ui/error-boundary"
@@ -68,6 +69,7 @@ export function Scanner({
     TAB_TRIGGERS[0].action
   )
   const [open, setOpen] = useState<boolean>(false)
+  const { scannerOpen, closeScanner } = useVoiceCommandStore()
   const armedRef = useRef<boolean>(false)
   const [scannerState, setScannerState] = useState<ScannerState>({
     step: "camera",
@@ -79,6 +81,12 @@ export function Scanner({
   const [scannedItem, setScannedItem] = useState<ScanItem | null>(null)
   const [error, setError] = useState<string | null>(null)
   const { step, locations, isLoading, isSubmitting } = scannerState
+
+  useEffect(() => {
+    if (scannerOpen && !open) {
+      setOpen(true)
+    }
+  }, [scannerOpen, open])
 
   useEffect(() => {
     if (!open) {
@@ -124,8 +132,9 @@ export function Scanner({
       armedRef.current = false
       window.history.back()
     }
+    closeScanner()
     handleReset()
-  }, [open, handleReset])
+  }, [open, handleReset, closeScanner])
 
   const onScan = useCallback(async (text: string) => {
     setScannerState((current) => ({ ...current, isLoading: true }))

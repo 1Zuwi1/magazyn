@@ -6,13 +6,7 @@ interface VoiceAssistantIdleStepProps {
   onStartListening: () => void
 }
 
-const SUGGESTIONS = [
-  "Pokaż magazyn A",
-  "Znajdź produkt",
-  "Dodaj przedmiot",
-] as const
-
-export function VoiceAssistantIdleStep({
+export function VoiceAssistantNormalView({
   onStartListening,
 }: VoiceAssistantIdleStepProps) {
   return (
@@ -31,7 +25,7 @@ export function VoiceAssistantIdleStep({
             size="icon"
           >
             <HugeiconsIcon
-              className="size-9"
+              className="size-10"
               icon={Mic01Icon}
               strokeWidth={2}
             />
@@ -52,14 +46,16 @@ export function VoiceAssistantIdleStep({
             Przykładowe polecenia:
           </p>
           <div className="flex flex-wrap justify-center gap-2">
-            {SUGGESTIONS.map((suggestion) => (
-              <span
-                className="rounded-full bg-muted px-3 py-1.5 text-xs transition-colors hover:bg-muted/80"
-                key={suggestion}
-              >
-                {suggestion}
-              </span>
-            ))}
+            {["Pokaż magazyn A", "Znajdź produkt", "Dodaj przedmiot"].map(
+              (suggestion) => (
+                <span
+                  className="rounded-full bg-muted px-3 py-1.5 text-xs transition-colors hover:bg-muted/80"
+                  key={suggestion}
+                >
+                  {suggestion}
+                </span>
+              )
+            )}
           </div>
         </div>
       </div>

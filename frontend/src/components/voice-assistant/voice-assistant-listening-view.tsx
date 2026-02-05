@@ -1,14 +1,21 @@
 import { StopIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
-interface VoiceAssistantListeningStepProps {
+interface VoiceAssistantListeningViewProps {
   onStopListening: () => void
+  transcript?: string
+  detectedCommandLabel?: string | null
+  isCommandDetected?: boolean
 }
 
-export function VoiceAssistantListeningStep({
+export function VoiceAssistantListeningView({
   onStopListening,
-}: VoiceAssistantListeningStepProps) {
+  transcript,
+  detectedCommandLabel,
+  isCommandDetected = false,
+}: VoiceAssistantListeningViewProps) {
   return (
     <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
       <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent opacity-50" />
@@ -43,6 +50,38 @@ export function VoiceAssistantListeningStep({
           <p className="text-muted-foreground text-sm">
             Powiedz polecenie, a następnie naciśnij stop
           </p>
+        </div>
+
+        <div
+          aria-live="polite"
+          className="mt-2 flex max-w-sm flex-col items-center gap-2 text-center"
+        >
+          {transcript ? (
+            <p className="text-foreground/80 text-sm">„{transcript}”</p>
+          ) : (
+            <p className="text-muted-foreground text-xs">
+              Nasłuchuję Twojego polecenia...
+            </p>
+          )}
+          {detectedCommandLabel && (
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Badge
+                className="gap-1"
+                variant={isCommandDetected ? "default" : "secondary"}
+              >
+                <span
+                  aria-hidden="true"
+                  className="inline-flex size-2 rounded-full bg-emerald-400 shadow-[0_0_8px] shadow-emerald-400/60"
+                />
+                Wykryto: {detectedCommandLabel}
+              </Badge>
+              {isCommandDetected && (
+                <span className="text-emerald-500 text-xs">
+                  Możesz zakończyć nagrywanie
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex h-16 items-center justify-center gap-1">

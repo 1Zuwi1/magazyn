@@ -162,19 +162,17 @@ export default function SiteHeader() {
         </Breadcrumb>
       </div>
 
-      {pathname.includes("/dashboard/warehouse/") && (
-        <div className="standalone:hidden">
+      <div className="flex standalone:hidden items-center gap-2 pr-3 sm:gap-3 sm:pr-4">
+        {pathname.includes("/dashboard/warehouse/") && (
           <Scanner
             warehouseName={decodeURIComponent(
               sanitizeVisibleText(safeDecodeURIComponent(splitted[2] ?? ""))
             )}
           />
-        </div>
-      )}
-      <div className="standalone:hidden">
+        )}
         <VoiceAssistant />
+        <NotificationInbox />
       </div>
-      <NotificationInbox />
     </header>
   )
 }

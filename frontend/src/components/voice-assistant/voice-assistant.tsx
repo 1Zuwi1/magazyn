@@ -2,53 +2,55 @@
 
 import { Cancel01Icon, Mic01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useRouter } from "next/navigation"
 import type { ReactNode } from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useSpeechRecognition } from "@/hooks/use-speech-recognition"
 import { cn } from "@/lib/utils"
-import { VoiceAssistantIdleStep } from "./voice-assistant-idle-step"
-import { VoiceAssistantListeningStep } from "./voice-assistant-listening-step"
+import { matchVoiceCommand } from "@/lib/voice/commands"
+import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
+import { VoiceAssistantConfirmView } from "./voice-assistant-confirm-view"
+import { VoiceAssistantListeningView } from "./voice-assistant-listening-view"
+import { VoiceAssistantNormalView } from "./voice-assistant-normal-view"
 
-export type VoiceAssistantStep = "idle" | "listening" | "processing" | "success"
+export type VoiceAssistantViews =
+  | "idle"
+  | "listening"
+  | "processing"
+  | "confirm"
+  | "success"
+  | "error"
 
 interface VoiceAssistantProps {
   className?: string
   dialogTrigger?: ReactNode
 }
 
-export function VoiceAssistantProcessingStep() {
-  return (
-    <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent opacity-50" />
-
-      <div className="relative flex flex-col items-center gap-6">
-        <div className="relative">
-          <div className="size-20 animate-spin rounded-full border-4 border-muted border-t-primary" />
-        </div>
-
-        <div className="max-w-sm space-y-2">
-          <h2 className="font-semibold text-foreground text-xl">
-            Przetwarzam...
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Analizuję Twoje polecenie
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export function VoiceAssistant({
   className,
   dialogTrigger,
 }: VoiceAssistantProps) {
+  const autoStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isMobile = useIsMobile()
+  const router = useRouter()
+  const { openAddItemDialog, openScanner } = useVoiceCommandStore()
   const [open, setOpen] = useState(false)
   const armedRef = useRef(false)
-  const [step, setStep] = useState<VoiceAssistantStep>("idle")
+  const [view, setView] = useState<VoiceAssistantViews>("idle")
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [matchedCommand, setMatchedCommand] =
+    useState<ReturnType<typeof matchVoiceCommand>>(null)
+  const {
+    finalTranscript,
+    interimTranscript,
+    reset,
+    start,
+    stop,
+    isSupported,
+  } = useSpeechRecognition()
 
   useEffect(() => {
     if (!open) {
@@ -72,8 +74,12 @@ export function VoiceAssistant({
   }, [open])
 
   const handleReset = useCallback(() => {
-    setStep("idle")
-  }, [])
+    setView("idle")
+    setErrorMessage(null)
+    setMatchedCommand(null)
+    reset()
+    stop()
+  }, [reset, stop])
 
   const closeDialog = useCallback(() => {
     if (!open) {
@@ -90,38 +96,163 @@ export function VoiceAssistant({
   }, [open, handleReset])
 
   const handleStartListening = useCallback(() => {
-    setStep("listening")
-    // TODO: Start actual voice recognition
-  }, [])
+    if (!isSupported) {
+      setErrorMessage("Przeglądarka nie obsługuje rozpoznawania mowy.")
+      setView("error")
+      return
+    }
+
+    reset()
+    start()
+    setView("listening")
+  }, [isSupported, reset, start])
 
   const handleStopListening = useCallback(() => {
-    setStep("processing")
-    // TODO: Stop voice recognition and process
+    stop()
+    setView("processing")
+  }, [stop])
 
-    // Simulate processing
-    setTimeout(() => {
-      setStep("success")
-    }, 1500)
-  }, [])
+  const handleConfirmCommand = useCallback(() => {
+    if (!matchedCommand) {
+      setErrorMessage("Brak komendy do wykonania.")
+      setView("error")
+      return
+    }
+
+    switch (matchedCommand.id) {
+      case "dashboard":
+        router.push("/dashboard")
+        break
+      case "warehouses":
+        router.push("/dashboard/warehouse")
+        break
+      case "items":
+        router.push("/dashboard/items")
+        break
+      case "settings":
+        router.push("/settings")
+        break
+      case "open-scanner":
+        openScanner()
+        break
+      case "add-item":
+        openAddItemDialog()
+        break
+      default:
+        setErrorMessage("Nieobsługiwana komenda")
+        setView("error")
+        return
+    }
+
+    setView("success")
+    closeDialog()
+  }, [matchedCommand, openAddItemDialog, openScanner, router, closeDialog])
+
+  useEffect(() => {
+    if (view !== "processing") {
+      return
+    }
+
+    const finalText = finalTranscript.trim()
+    const interimText = interimTranscript.trim()
+    const resolvedText = finalText || interimText
+    if (!resolvedText) {
+      setErrorMessage("Nie rozpoznano polecenia.")
+      setView("error")
+      return
+    }
+
+    const match = matchVoiceCommand(resolvedText)
+    if (!match) {
+      setErrorMessage("Nie znam tego polecenia.")
+      setView("error")
+      return
+    }
+
+    setMatchedCommand(match)
+    setView("confirm")
+  }, [view, finalTranscript, interimTranscript])
+
+  useEffect(() => {
+    if (view !== "listening") {
+      if (autoStopTimeoutRef.current) {
+        clearTimeout(autoStopTimeoutRef.current)
+        autoStopTimeoutRef.current = null
+      }
+      return
+    }
+
+    const liveTranscript = finalTranscript || interimTranscript
+    const liveCommand = liveTranscript
+      ? matchVoiceCommand(liveTranscript)
+      : null
+
+    if (!liveCommand) {
+      if (autoStopTimeoutRef.current) {
+        clearTimeout(autoStopTimeoutRef.current)
+        autoStopTimeoutRef.current = null
+      }
+      return
+    }
+
+    if (autoStopTimeoutRef.current) {
+      return
+    }
+
+    autoStopTimeoutRef.current = setTimeout(() => {
+      autoStopTimeoutRef.current = null
+      handleStopListening()
+    }, 600)
+  }, [view, finalTranscript, interimTranscript, handleStopListening])
 
   let content: ReactNode
 
-  switch (step) {
+  switch (view) {
     case "idle":
       content = (
-        <VoiceAssistantIdleStep onStartListening={handleStartListening} />
+        <VoiceAssistantNormalView onStartListening={handleStartListening} />
       )
       break
     case "listening":
-      content = (
-        <VoiceAssistantListeningStep onStopListening={handleStopListening} />
-      )
+      {
+        const liveTranscript = finalTranscript || interimTranscript
+        const liveCommand = liveTranscript
+          ? matchVoiceCommand(liveTranscript)
+          : null
+        const liveLabel = liveCommand?.description ?? null
+        content = (
+          <VoiceAssistantListeningView
+            detectedCommandLabel={liveLabel}
+            isCommandDetected={Boolean(liveCommand)}
+            onStopListening={handleStopListening}
+            transcript={liveTranscript}
+          />
+        )
+      }
       break
     case "processing":
-      content = <VoiceAssistantProcessingStep />
+      content = <VoiceAssistantProcessingView />
+      break
+    case "confirm":
+      content = matchedCommand ? (
+        <VoiceAssistantConfirmView
+          commandLabel={matchedCommand.description}
+          onCancel={handleReset}
+          onConfirm={handleConfirmCommand}
+          transcript={finalTranscript || interimTranscript}
+        />
+      ) : null
       break
     case "success":
-      content = <VoiceAssistantSuccessStep onReset={handleReset} />
+      content = <VoiceAssistantSuccessView onReset={handleReset} />
+      break
+    case "error":
+      content = (
+        <VoiceAssistantErrorView
+          message={errorMessage ?? "Nie udało się przetworzyć polecenia."}
+          onReset={handleReset}
+        />
+      )
       break
     default:
       content = null
@@ -188,13 +319,13 @@ export function VoiceAssistant({
   )
 }
 
-interface VoiceAssistantSuccessStepProps {
+interface VoiceAssistantSuccessViewProps {
   onReset: () => void
 }
 
-function VoiceAssistantSuccessStep({
+function VoiceAssistantSuccessView({
   onReset,
-}: VoiceAssistantSuccessStepProps) {
+}: VoiceAssistantSuccessViewProps) {
   return (
     <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
       <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-emerald-500/5 via-transparent to-transparent opacity-50" />
@@ -227,6 +358,52 @@ function VoiceAssistantSuccessStep({
           <Button onClick={onReset} type="button">
             Nowe polecenie
           </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface VoiceAssistantErrorViewProps {
+  message: string
+  onReset: () => void
+}
+
+export function VoiceAssistantErrorView({
+  message,
+  onReset,
+}: VoiceAssistantErrorViewProps) {
+  return (
+    <div className="relative flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
+      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-destructive/5 via-transparent to-transparent opacity-50" />
+      <div className="max-w-sm space-y-2">
+        <h2 className="font-semibold text-foreground text-xl">Nie udało się</h2>
+        <p className="text-muted-foreground text-sm">{message}</p>
+      </div>
+      <Button onClick={onReset} type="button">
+        Spróbuj ponownie
+      </Button>
+    </div>
+  )
+}
+
+export function VoiceAssistantProcessingView() {
+  return (
+    <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
+      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent opacity-50" />
+
+      <div className="relative flex flex-col items-center gap-6">
+        <div className="relative">
+          <div className="size-20 animate-spin rounded-full border-4 border-muted border-t-primary" />
+        </div>
+
+        <div className="max-w-sm space-y-2">
+          <h2 className="font-semibold text-foreground text-xl">
+            Przetwarzam...
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Analizuję Twoje polecenie
+          </p>
         </div>
       </div>
     </div>
