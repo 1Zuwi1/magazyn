@@ -1,5 +1,40 @@
 #  docker-compose up -d
 services:
+  postgres:
+    image: ankane/pgvector:latest
+    container_name: magazyn-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-magazyn}
+      POSTGRES_USER: ${POSTGRES_USER:-magazyn}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-magazyn}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-magazyn} -d ${POSTGRES_DB:-magazyn}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    ports:
+      - "5055:8080"
+    depends_on:
+      - postgres
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: magazyn-pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
   redis:
     image: redis:7.0
     container_name: items-redis
@@ -27,11 +62,12 @@ services:
       - minio
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin};
       /usr/bin/mc mb --ignore-existing local/items-photos;
       /usr/bin/mc anonymous set public local/items-photos;
       exit 0;
       "
 
 volumes:
+  postgres_data:
   minio_data:

@@ -4,7 +4,8 @@ import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemDto;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
-import com.github.dawid_stolarczyk.magazyn.Repositories.ItemRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
+import com.github.dawid_stolarczyk.magazyn.Services.Ai.ImageEmbeddingService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Services.Storage.StorageService;
@@ -34,6 +35,7 @@ public class ItemService {
     private final StorageService storageService;
     private final BarcodeService barcodeService;
     private final Bucket4jRateLimiter rateLimiter;
+    private final ImageEmbeddingService imageEmbeddingService;
 
     public List<ItemDto> getAllItems(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
@@ -181,6 +183,17 @@ public class ItemService {
 
         try {
             item.setPhoto_url(fileName);
+            // Image embedding is optional - if model isn't available, photo upload still works
+            if (imageEmbeddingService.isModelLoaded()) {
+                try {
+                    item.setImageEmbedding(imageEmbeddingService.getEmbedding(file));
+                } catch (ImageEmbeddingService.ImageEmbeddingException e) {
+                    log.warn("Failed to generate image embedding, visual search will not work for this item: {}",
+                            e.getMessage());
+                }
+            } else {
+                log.debug("Image embedding model not available, skipping embedding generation");
+            }
             itemRepository.save(item);
         } catch (Exception ex) {
             // Compensating transaction: if DB save fails, delete the uploaded file

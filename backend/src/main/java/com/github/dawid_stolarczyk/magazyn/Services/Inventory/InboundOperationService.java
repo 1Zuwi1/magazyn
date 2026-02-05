@@ -3,7 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.InboundOperationDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.InboundOperation;
-import com.github.dawid_stolarczyk.magazyn.Repositories.InboundOperationRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.InboundOperationRepository;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import jakarta.servlet.http.HttpServletRequest;

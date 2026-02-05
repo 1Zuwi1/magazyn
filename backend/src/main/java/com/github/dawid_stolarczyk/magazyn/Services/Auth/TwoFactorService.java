@@ -13,7 +13,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Default2faMethod;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.TwoFactor;
-import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;

@@ -48,6 +48,20 @@ public class AuthUtil {
     }
 
     /**
+     * Gets the current user's ID from the SecurityContext.
+     *
+     * @return the user ID, or null if not authenticated
+     */
+    public static Long getCurrentUserId() {
+        try {
+            AuthPrincipal principal = getCurrentAuthPrincipal();
+            return principal != null ? principal.getUserId() : null;
+        } catch (AuthenticationNotFoundException | AuthenticationException e) {
+            return null;
+        }
+    }
+
+    /**
      * Helper method to map authentication error codes to appropriate HTTP status.
      * Centralizes error mapping logic to ensure consistency across all controllers.
      *
