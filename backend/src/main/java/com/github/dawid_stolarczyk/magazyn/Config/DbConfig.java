@@ -39,35 +39,36 @@ public class DbConfig {
     @PostConstruct
     public void initializePgVector() {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-
         try {
-            // Enable pgvector extension (idempotent)
-            log.info("Initializing pgvector extension...");
-            jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS vector");
-            log.info("pgvector extension initialized successfully");
+            String dbName = dataSource.getConnection().getMetaData().getDatabaseProductName();
+            if ("PostgreSQL".equalsIgnoreCase(dbName)) {
+                // Enable pgvector extension
+                log.info("Initializing pgvector extension...");
+                jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS vector");
+                log.info("pgvector extension initialized successfully");
 
-            // Create IVFFlat index for fast similarity search (idempotent)
-            log.info("Creating IVFFlat index on items.image_embedding...");
-            jdbcTemplate.execute(
-                    "CREATE INDEX IF NOT EXISTS idx_items_image_embedding_cosine " +
-                            "ON items USING ivfflat (image_embedding vector_cosine_ops) " +
-                            "WITH (lists = 100)"
-            );
-            log.info("IVFFlat index created successfully");
+                // Create IVFFlat index
+                log.info("Creating IVFFlat index on items.image_embedding...");
+                jdbcTemplate.execute(
+                        "CREATE INDEX IF NOT EXISTS idx_items_image_embedding_cosine " +
+                                "ON items USING ivfflat (image_embedding vector_cosine_ops) " +
+                                "WITH (lists = 100)"
+                );
+                log.info("IVFFlat index created successfully");
 
-            // Create unique partial index for alert idempotency (prevents duplicate open alerts)
-            log.info("Creating unique partial index for alert idempotency...");
-            jdbcTemplate.execute(
-                    "CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_open_alert " +
-                            "ON alerts (rack_id, alert_type, status) " +
-                            "WHERE status IN ('OPEN', 'ACTIVE')"
-            );
-            log.info("Alert idempotency index created successfully");
-
+                // Create unique partial index
+                log.info("Creating unique partial index for alert idempotency...");
+                jdbcTemplate.execute(
+                        "CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_open_alert " +
+                                "ON alerts (rack_id, alert_type, status) " +
+                                "WHERE status IN ('OPEN', 'ACTIVE')"
+                );
+                log.info("Alert idempotency index created successfully");
+            } else {
+                log.info("Skipping PostgreSQL-specific initialization for database: {}", dbName);
+            }
         } catch (Exception e) {
-            log.error("Failed to initialize database: {}. " +
-                            "Ensure the database user has SUPERUSER or CREATE EXTENSION privileges.",
-                    e.getMessage(), e);
+            log.error("Failed to initialize database: {}. Ensure the database user has SUPERUSER or CREATE EXTENSION privileges.", e.getMessage(), e);
             throw new RuntimeException("Database initialization failed. Check database privileges.", e);
         }
     }
