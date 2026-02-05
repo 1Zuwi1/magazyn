@@ -5,16 +5,21 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
 import type { ReactNode } from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition"
 import { cn } from "@/lib/utils"
-import { matchVoiceCommand } from "@/lib/voice/commands"
+import { matchVoiceCommand, normalizeTranscript } from "@/lib/voice/commands"
 import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
 import { VoiceAssistantConfirmView } from "./voice-assistant-confirm-view"
 import { VoiceAssistantListeningView } from "./voice-assistant-listening-view"
 import { VoiceAssistantNormalView } from "./voice-assistant-normal-view"
+import {
+  VoiceAssistantErrorView,
+  VoiceAssistantProcessingView,
+} from "./voice-assistant-other-views"
 
 export type VoiceAssistantViews =
   | "idle"
@@ -81,19 +86,32 @@ export function VoiceAssistant({
     stop()
   }, [reset, stop])
 
-  const closeDialog = useCallback(() => {
-    if (!open) {
-      return
-    }
+  const closeDialog = useCallback(
+    (options?: { shouldPopHistory?: boolean }) => {
+      if (!open) {
+        return
+      }
 
-    setOpen(false)
+      const shouldPopHistory = options?.shouldPopHistory ?? true
+      setOpen(false)
 
-    if (armedRef.current) {
-      armedRef.current = false
-      window.history.back()
-    }
-    handleReset()
-  }, [open, handleReset])
+      if (armedRef.current && shouldPopHistory) {
+        armedRef.current = false
+        window.history.back()
+      }
+      handleReset()
+    },
+    [open, handleReset]
+  )
+
+  const navigateAndClose = useCallback(
+    (href: string) => {
+      router.push(href)
+      setView("success")
+      closeDialog({ shouldPopHistory: false })
+    },
+    [router, closeDialog]
+  )
 
   const handleStartListening = useCallback(() => {
     if (!isSupported) {
@@ -119,19 +137,37 @@ export function VoiceAssistant({
       return
     }
 
-    switch (matchedCommand.id) {
+    switch (matchedCommand.command.id) {
       case "dashboard":
-        router.push("/dashboard")
-        break
+        navigateAndClose("/dashboard")
+        return
+      case "warehouses:id":
+        {
+          const warehouseName = matchedCommand.params.warehouseName
+          if (!warehouseName) {
+            setErrorMessage("Brak nazwy magazynu w komendzie.")
+            setView("error")
+            return
+          }
+          const warehouse = findWarehouseByName(warehouseName)
+          if (!warehouse) {
+            setErrorMessage("Nie znaleziono magazynu o takiej nazwie.")
+            setView("error")
+            return
+          }
+          const encodedName = encodeURIComponent(warehouse.name)
+          navigateAndClose(`/dashboard/warehouse/${encodedName}`)
+        }
+        return
       case "warehouses":
-        router.push("/dashboard/warehouse")
-        break
+        navigateAndClose("/dashboard/warehouse")
+        return
       case "items":
-        router.push("/dashboard/items")
-        break
+        navigateAndClose("/dashboard/items")
+        return
       case "settings":
-        router.push("/settings")
-        break
+        navigateAndClose("/settings")
+        return
       case "open-scanner":
         openScanner()
         break
@@ -146,7 +182,13 @@ export function VoiceAssistant({
 
     setView("success")
     closeDialog()
-  }, [matchedCommand, openAddItemDialog, openScanner, router, closeDialog])
+  }, [
+    matchedCommand,
+    navigateAndClose,
+    openAddItemDialog,
+    openScanner,
+    closeDialog,
+  ])
 
   useEffect(() => {
     if (view !== "processing") {
@@ -163,7 +205,7 @@ export function VoiceAssistant({
     }
 
     const match = matchVoiceCommand(resolvedText)
-    if (!match) {
+    if (!(match && isCommandMatchValid(match))) {
       setErrorMessage("Nie znam tego polecenia.")
       setView("error")
       return
@@ -186,8 +228,10 @@ export function VoiceAssistant({
     const liveCommand = liveTranscript
       ? matchVoiceCommand(liveTranscript)
       : null
+    const validatedLiveCommand =
+      liveCommand && isCommandMatchValid(liveCommand) ? liveCommand : null
 
-    if (!liveCommand) {
+    if (!validatedLiveCommand) {
       if (autoStopTimeoutRef.current) {
         clearTimeout(autoStopTimeoutRef.current)
         autoStopTimeoutRef.current = null
@@ -219,11 +263,15 @@ export function VoiceAssistant({
         const liveCommand = liveTranscript
           ? matchVoiceCommand(liveTranscript)
           : null
-        const liveLabel = liveCommand?.description ?? null
+        const validatedLiveCommand =
+          liveCommand && isCommandMatchValid(liveCommand) ? liveCommand : null
+        const liveLabel = validatedLiveCommand
+          ? getCommandLabel(validatedLiveCommand)
+          : null
         content = (
           <VoiceAssistantListeningView
             detectedCommandLabel={liveLabel}
-            isCommandDetected={Boolean(liveCommand)}
+            isCommandDetected={Boolean(validatedLiveCommand)}
             onStopListening={handleStopListening}
             transcript={liveTranscript}
           />
@@ -236,7 +284,7 @@ export function VoiceAssistant({
     case "confirm":
       content = matchedCommand ? (
         <VoiceAssistantConfirmView
-          commandLabel={matchedCommand.description}
+          commandLabel={getCommandLabel(matchedCommand)}
           onCancel={handleReset}
           onConfirm={handleConfirmCommand}
           transcript={finalTranscript || interimTranscript}
@@ -304,7 +352,7 @@ export function VoiceAssistant({
             className={cn("absolute top-12 right-2 z-10 rounded-xl", {
               "top-4 right-4": !isMobile,
             })}
-            onClick={closeDialog}
+            onClick={() => closeDialog()}
             size="icon-sm"
             variant="ghost"
           >
@@ -317,6 +365,48 @@ export function VoiceAssistant({
       </DialogContent>
     </Dialog>
   )
+}
+
+const getCommandLabel = (
+  match: NonNullable<ReturnType<typeof matchVoiceCommand>>
+): string => {
+  if (match.command.id === "warehouses:id") {
+    const warehouseName = match.params.warehouseName
+    if (warehouseName) {
+      const warehouse = findWarehouseByName(warehouseName)
+      const label = warehouse?.name ?? warehouseName
+      return `Otwórz magazyn ${label}`
+    }
+  }
+
+  return match.command.description
+}
+
+const findWarehouseByName = (inputName: string) => {
+  const normalizedInput = normalizeTranscript(inputName, { toLowerCase: true })
+  return (
+    MOCK_WAREHOUSES.find((warehouse) => {
+      const normalizedName = normalizeTranscript(warehouse.name, {
+        toLowerCase: true,
+      })
+      return normalizedName === normalizedInput
+    }) ?? null
+  )
+}
+
+const isCommandMatchValid = (
+  match: NonNullable<ReturnType<typeof matchVoiceCommand>>
+): boolean => {
+  if (match.command.id !== "warehouses:id") {
+    return true
+  }
+
+  const warehouseName = match.params.warehouseName
+  if (!warehouseName) {
+    return false
+  }
+
+  return Boolean(findWarehouseByName(warehouseName))
 }
 
 interface VoiceAssistantSuccessViewProps {
@@ -358,52 +448,6 @@ function VoiceAssistantSuccessView({
           <Button onClick={onReset} type="button">
             Nowe polecenie
           </Button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-interface VoiceAssistantErrorViewProps {
-  message: string
-  onReset: () => void
-}
-
-export function VoiceAssistantErrorView({
-  message,
-  onReset,
-}: VoiceAssistantErrorViewProps) {
-  return (
-    <div className="relative flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-destructive/5 via-transparent to-transparent opacity-50" />
-      <div className="max-w-sm space-y-2">
-        <h2 className="font-semibold text-foreground text-xl">Nie udało się</h2>
-        <p className="text-muted-foreground text-sm">{message}</p>
-      </div>
-      <Button onClick={onReset} type="button">
-        Spróbuj ponownie
-      </Button>
-    </div>
-  )
-}
-
-export function VoiceAssistantProcessingView() {
-  return (
-    <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent opacity-50" />
-
-      <div className="relative flex flex-col items-center gap-6">
-        <div className="relative">
-          <div className="size-20 animate-spin rounded-full border-4 border-muted border-t-primary" />
-        </div>
-
-        <div className="max-w-sm space-y-2">
-          <h2 className="font-semibold text-foreground text-xl">
-            Przetwarzam...
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Analizuję Twoje polecenie
-          </p>
         </div>
       </div>
     </div>

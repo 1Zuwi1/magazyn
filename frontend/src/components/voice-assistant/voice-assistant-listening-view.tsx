@@ -75,11 +75,6 @@ export function VoiceAssistantListeningView({
                 />
                 Wykryto: {detectedCommandLabel}
               </Badge>
-              {isCommandDetected && (
-                <span className="text-emerald-500 text-xs">
-                  Możesz zakończyć nagrywanie
-                </span>
-              )}
             </div>
           )}
         </div>
