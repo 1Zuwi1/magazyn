@@ -16,6 +16,21 @@ export function VoiceAssistantListeningView({
   detectedCommandLabel,
   isCommandDetected = false,
 }: VoiceAssistantListeningViewProps) {
+  const bars = [
+    { height: 24, delay: 0, duration: 0.6 },
+    { height: 42, delay: 0.1, duration: 0.7 },
+    { height: 30, delay: 0.2, duration: 0.55 },
+    { height: 52, delay: 0.3, duration: 0.8 },
+    { height: 36, delay: 0.4, duration: 0.65 },
+    { height: 48, delay: 0.5, duration: 0.75 },
+    { height: 28, delay: 0.6, duration: 0.6 },
+    { height: 44, delay: 0.7, duration: 0.7 },
+    { height: 34, delay: 0.8, duration: 0.55 },
+    { height: 50, delay: 0.9, duration: 0.8 },
+    { height: 32, delay: 1, duration: 0.65 },
+    { height: 46, delay: 1.1, duration: 0.75 },
+  ]
+
   return (
     <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
       <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent opacity-50" />
@@ -80,14 +95,14 @@ export function VoiceAssistantListeningView({
         </div>
 
         <div className="flex h-16 items-center justify-center gap-1">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {bars.map((bar, i) => (
             <div
               className="w-1 animate-pulse rounded-full bg-primary/60"
               key={i}
               style={{
-                height: `${Math.random() * 40 + 20}px`,
-                animationDelay: `${i * 0.1}s`,
-                animationDuration: `${0.5 + Math.random() * 0.5}s`,
+                height: `${bar.height}px`,
+                animationDelay: `${bar.delay}s`,
+                animationDuration: `${bar.duration}s`,
               }}
             />
           ))}

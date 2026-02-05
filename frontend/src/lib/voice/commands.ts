@@ -44,6 +44,7 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       { regex: /^przejdz do dashboard$/ },
       { regex: /^pokaz dashboard$/ },
       { regex: /^pokaz strone glowna$/ },
+      { regex: /^strona glowna$/ },
     ],
   },
   {
@@ -61,6 +62,10 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       },
       {
         regex: /^pokaz magazyn ([a-z0-9 ]+)$/,
+        paramNames: ["warehouseName"],
+      },
+      {
+        regex: /^magazyn ([a-z0-9 ]+)$/,
         paramNames: ["warehouseName"],
       },
     ],
@@ -97,10 +102,10 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
 export const matchVoiceCommand = (
   transcript: string
 ): VoiceCommandMatch | null => {
-  const normalized = normalizeTranscript(transcript)
+  const normalized = normalizeTranscript(transcript, { toLowerCase: true })
   for (const command of VOICE_COMMANDS) {
     for (const pattern of command.patterns) {
-      const match = normalized.match(toCaseInsensitive(pattern.regex))
+      const match = normalized.match(pattern.regex)
       if (!match) {
         continue
       }
@@ -119,9 +124,4 @@ export const matchVoiceCommand = (
     }
   }
   return null
-}
-
-const toCaseInsensitive = (regex: RegExp): RegExp => {
-  const flags = regex.flags.includes("i") ? regex.flags : `${regex.flags}i`
-  return new RegExp(regex.source, flags)
 }

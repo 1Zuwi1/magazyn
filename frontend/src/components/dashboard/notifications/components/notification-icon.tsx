@@ -94,6 +94,7 @@ export function NotificationInbox() {
           buttonVariants({ variant: "ghost", size: "icon" }),
           "relative mr-2"
         )}
+        title="Powiadomienia"
       >
         <HugeiconsIcon
           className="size-5 text-muted-foreground transition-colors group-hover:text-foreground"
@@ -118,9 +119,7 @@ export function NotificationInbox() {
         className="w-96 gap-0 overflow-hidden p-0"
         sideOffset={8}
       >
-        {/* Header */}
         <div className="relative overflow-hidden border-b bg-linear-to-br from-card via-card to-primary/2 px-4 py-3">
-          {/* Decorative grid pattern */}
           <div className="mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,black_70%,transparent_100%)] pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] bg-size-[2rem_2rem] opacity-20" />
 
           <div className="relative flex items-center justify-between">
@@ -145,7 +144,6 @@ export function NotificationInbox() {
           </div>
         </div>
 
-        {/* Notification List */}
         <ScrollArea className="h-80">
           <AnimatePresence mode="popLayout">
             {notifications.length === 0 ? (
@@ -189,7 +187,6 @@ export function NotificationInbox() {
                       onClick={() => handleMarkAsRead(notification.id)}
                       type="button"
                     >
-                      {/* Icon */}
                       <div
                         className={cn(
                           "flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform group-hover/item:scale-105",
@@ -202,7 +199,6 @@ export function NotificationInbox() {
                         />
                       </div>
 
-                      {/* Content */}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-1.5">
@@ -231,7 +227,6 @@ export function NotificationInbox() {
                           {notification.description}
                         </p>
 
-                        {/* Location tags */}
                         <div className="mt-1.5 flex flex-wrap items-center gap-1">
                           {notification.warehouseId && (
                             <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">

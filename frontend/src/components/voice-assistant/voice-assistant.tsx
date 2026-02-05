@@ -4,8 +4,8 @@ import { Cancel01Icon, Mic01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
 import type { ReactNode } from "react"
-import { useCallback, useEffect, useRef, useState } from "react"
-import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import type { Warehouse } from "@/components/dashboard/types"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -13,12 +13,14 @@ import { useSpeechRecognition } from "@/hooks/use-speech-recognition"
 import { cn } from "@/lib/utils"
 import { matchVoiceCommand, normalizeTranscript } from "@/lib/voice/commands"
 import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
+import { MOCK_WAREHOUSES } from "../dashboard/mock-data"
 import { VoiceAssistantConfirmView } from "./voice-assistant-confirm-view"
 import { VoiceAssistantListeningView } from "./voice-assistant-listening-view"
 import { VoiceAssistantNormalView } from "./voice-assistant-normal-view"
 import {
   VoiceAssistantErrorView,
   VoiceAssistantProcessingView,
+  VoiceAssistantSuccessView,
 } from "./voice-assistant-other-views"
 
 export type VoiceAssistantViews =
@@ -48,6 +50,8 @@ export function VoiceAssistant({
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [matchedCommand, setMatchedCommand] =
     useState<ReturnType<typeof matchVoiceCommand>>(null)
+
+  const warehouses = MOCK_WAREHOUSES.map(({ id, name }) => ({ id, name }))
   const {
     finalTranscript,
     interimTranscript,
@@ -149,7 +153,7 @@ export function VoiceAssistant({
             setView("error")
             return
           }
-          const warehouse = findWarehouseByName(warehouseName)
+          const warehouse = findWarehouseByName(warehouseName, warehouses)
           if (!warehouse) {
             setErrorMessage("Nie znaleziono magazynu o takiej nazwie.")
             setView("error")
@@ -188,6 +192,7 @@ export function VoiceAssistant({
     openAddItemDialog,
     openScanner,
     closeDialog,
+    warehouses,
   ])
 
   useEffect(() => {
@@ -205,7 +210,7 @@ export function VoiceAssistant({
     }
 
     const match = matchVoiceCommand(resolvedText)
-    if (!(match && isCommandMatchValid(match))) {
+    if (!(match && isCommandMatchValid(match, warehouses))) {
       setErrorMessage("Nie znam tego polecenia.")
       setView("error")
       return
@@ -213,7 +218,17 @@ export function VoiceAssistant({
 
     setMatchedCommand(match)
     setView("confirm")
-  }, [view, finalTranscript, interimTranscript])
+  }, [view, finalTranscript, interimTranscript, warehouses])
+
+  const liveTranscript = finalTranscript || interimTranscript
+  const liveCommand = useMemo(() => {
+    if (!liveTranscript) {
+      return null
+    }
+
+    const match = matchVoiceCommand(liveTranscript)
+    return match && isCommandMatchValid(match, warehouses) ? match : null
+  }, [liveTranscript, warehouses])
 
   useEffect(() => {
     if (view !== "listening") {
@@ -224,14 +239,7 @@ export function VoiceAssistant({
       return
     }
 
-    const liveTranscript = finalTranscript || interimTranscript
-    const liveCommand = liveTranscript
-      ? matchVoiceCommand(liveTranscript)
-      : null
-    const validatedLiveCommand =
-      liveCommand && isCommandMatchValid(liveCommand) ? liveCommand : null
-
-    if (!validatedLiveCommand) {
+    if (!liveCommand) {
       if (autoStopTimeoutRef.current) {
         clearTimeout(autoStopTimeoutRef.current)
         autoStopTimeoutRef.current = null
@@ -247,7 +255,7 @@ export function VoiceAssistant({
       autoStopTimeoutRef.current = null
       handleStopListening()
     }, 600)
-  }, [view, finalTranscript, interimTranscript, handleStopListening])
+  }, [view, liveCommand, handleStopListening])
 
   let content: ReactNode
 
@@ -259,19 +267,13 @@ export function VoiceAssistant({
       break
     case "listening":
       {
-        const liveTranscript = finalTranscript || interimTranscript
-        const liveCommand = liveTranscript
-          ? matchVoiceCommand(liveTranscript)
-          : null
-        const validatedLiveCommand =
-          liveCommand && isCommandMatchValid(liveCommand) ? liveCommand : null
-        const liveLabel = validatedLiveCommand
-          ? getCommandLabel(validatedLiveCommand)
+        const liveLabel = liveCommand
+          ? getCommandLabel(liveCommand, warehouses)
           : null
         content = (
           <VoiceAssistantListeningView
             detectedCommandLabel={liveLabel}
-            isCommandDetected={Boolean(validatedLiveCommand)}
+            isCommandDetected={Boolean(liveCommand)}
             onStopListening={handleStopListening}
             transcript={liveTranscript}
           />
@@ -284,7 +286,7 @@ export function VoiceAssistant({
     case "confirm":
       content = matchedCommand ? (
         <VoiceAssistantConfirmView
-          commandLabel={getCommandLabel(matchedCommand)}
+          commandLabel={getCommandLabel(matchedCommand, warehouses)}
           onCancel={handleReset}
           onConfirm={handleConfirmCommand}
           transcript={finalTranscript || interimTranscript}
@@ -368,12 +370,13 @@ export function VoiceAssistant({
 }
 
 const getCommandLabel = (
-  match: NonNullable<ReturnType<typeof matchVoiceCommand>>
+  match: NonNullable<ReturnType<typeof matchVoiceCommand>>,
+  warehouses: Pick<Warehouse, "id" | "name">[]
 ): string => {
   if (match.command.id === "warehouses:id") {
     const warehouseName = match.params.warehouseName
     if (warehouseName) {
-      const warehouse = findWarehouseByName(warehouseName)
+      const warehouse = findWarehouseByName(warehouseName, warehouses)
       const label = warehouse?.name ?? warehouseName
       return `Otwórz magazyn ${label}`
     }
@@ -382,10 +385,13 @@ const getCommandLabel = (
   return match.command.description
 }
 
-const findWarehouseByName = (inputName: string) => {
+const findWarehouseByName = (
+  inputName: string,
+  warehouses: Pick<Warehouse, "id" | "name">[]
+) => {
   const normalizedInput = normalizeTranscript(inputName, { toLowerCase: true })
   return (
-    MOCK_WAREHOUSES.find((warehouse) => {
+    warehouses.find((warehouse) => {
       const normalizedName = normalizeTranscript(warehouse.name, {
         toLowerCase: true,
       })
@@ -400,7 +406,8 @@ const findWarehouseByName = (inputName: string) => {
 }
 
 const isCommandMatchValid = (
-  match: NonNullable<ReturnType<typeof matchVoiceCommand>>
+  match: NonNullable<ReturnType<typeof matchVoiceCommand>>,
+  warehouses: Pick<Warehouse, "id" | "name">[]
 ): boolean => {
   if (match.command.id !== "warehouses:id") {
     return true
@@ -411,50 +418,5 @@ const isCommandMatchValid = (
     return false
   }
 
-  return Boolean(findWarehouseByName(warehouseName))
-}
-
-interface VoiceAssistantSuccessViewProps {
-  onReset: () => void
-}
-
-function VoiceAssistantSuccessView({
-  onReset,
-}: VoiceAssistantSuccessViewProps) {
-  return (
-    <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-emerald-500/5 via-transparent to-transparent opacity-50" />
-
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 size-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/10 opacity-30 blur-3xl" />
-      </div>
-
-      <div className="relative flex flex-col items-center gap-4">
-        <div className="relative">
-          <div className="absolute inset-0 animate-ping rounded-2xl bg-emerald-500/20" />
-          <div className="relative flex size-16 items-center justify-center rounded-2xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
-            <HugeiconsIcon
-              className="size-8 text-emerald-500"
-              icon={Mic01Icon}
-            />
-          </div>
-        </div>
-
-        <div className="max-w-sm space-y-2">
-          <h2 className="font-semibold text-foreground text-xl">
-            Polecenie wykonane
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Twoje polecenie zostało przetworzone
-          </p>
-        </div>
-
-        <div className="pt-2">
-          <Button onClick={onReset} type="button">
-            Nowe polecenie
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
+  return Boolean(findWarehouseByName(warehouseName, warehouses))
 }
