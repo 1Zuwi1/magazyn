@@ -1,0 +1,89 @@
+volumes:
+  mysql_data_public: {}
+
+networks:
+  proxy:
+    external: true
+  app_front:
+    driver: bridge
+  app_back:
+    driver: bridge
+  magazyn-baza:
+    external: true
+    name: magazyn-baza
+  dbnet_2:
+
+services:
+  web:
+    image: ghcr.io/1zuwi1/magazyn-web:latest
+    restart: unless-stopped
+    env_file:
+      - ./env/.env.web
+    expose:
+      - "3001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks: [proxy, app_front]
+
+  api:
+    image: ghcr.io/1zuwi1/magazyn-api:latest
+    restart: unless-stopped
+    env_file:
+      - ./env/.env.api
+      - ./env/.env.redis
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - VIRTUAL_HOST=magazyn.ordermaster.pl
+      - VIRTUAL_PORT=8080
+      - VIRTUAL_PATH=/api
+    expose:
+      - "8080"
+    networks: [proxy, app_back, app_front, magazyn-baza]
+
+  mysql:
+    image: mysql:8.4
+    container_name: mysql_magazyn
+    restart: unless-stopped
+    env_file:
+      - ./env/.env.mysql
+    volumes:
+      - mysql_data_public:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [dbnet_2, magazyn-baza]
+    ports:
+      - "3307:3306"
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: pma_magazyn
+    restart: unless-stopped
+    env_file:
+      - ./env/.env.pma
+    volumes:
+      - ./themes/boodark:/var/www/html/themes/boodark
+    depends_on:
+      - mysql
+    networks: [dbnet_2, magazyn-baza]
+    ports:
+      - "8081:80"
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    env_file:
+      - ./env/.env.redis
+    
+    command: >
+      sh -lc "exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""
+
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 2s
+      timeout: 1s
+      retries: 20
+      start_period: 2s 
+    networks: [app_back]
