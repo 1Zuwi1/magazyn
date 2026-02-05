@@ -5,7 +5,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
+// import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
@@ -14,38 +14,39 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
-import type { Warehouse } from "./types"
-import { getOccupancyPercentage, pluralize } from "./utils/helpers"
 
-const OCCUPANCY_WARNING_THRESHOLD = 75
-const OCCUPANCY_CRITICAL_THRESHOLD = 90
+// import { getOccupancyPercentage, pluralize } from "./utils/helpers"
+
+// const OCCUPANCY_WARNING_THRESHOLD = 75
+// const OCCUPANCY_CRITICAL_THRESHOLD = 90
 
 interface WarehouseGridProps {
   warehouses: Warehouse[]
 }
 
-const getOccupancyColor = (percentage: number): string => {
-  if (percentage >= OCCUPANCY_CRITICAL_THRESHOLD) {
-    return "bg-destructive"
-  }
-  if (percentage >= OCCUPANCY_WARNING_THRESHOLD) {
-    return "bg-orange-500"
-  }
-  return "bg-primary"
-}
+// const getOccupancyColor = (percentage: number): string => {
+//   if (percentage >= OCCUPANCY_CRITICAL_THRESHOLD) {
+//     return "bg-destructive"
+//   }
+//   if (percentage >= OCCUPANCY_WARNING_THRESHOLD) {
+//     return "bg-orange-500"
+//   }
+//   return "bg-primary"
+// }
 
-const getOccupancyBadgeVariant = (
-  percentage: number
-): "destructive" | "warning" | "secondary" => {
-  if (percentage >= OCCUPANCY_CRITICAL_THRESHOLD) {
-    return "destructive"
-  }
-  if (percentage >= OCCUPANCY_WARNING_THRESHOLD) {
-    return "warning"
-  }
-  return "secondary"
-}
+// const getOccupancyBadgeVariant = (
+//   percentage: number
+// ): "destructive" | "warning" | "secondary" => {
+//   if (percentage >= OCCUPANCY_CRITICAL_THRESHOLD) {
+//     return "destructive"
+//   }
+//   if (percentage >= OCCUPANCY_WARNING_THRESHOLD) {
+//     return "warning"
+//   }
+//   return "secondary"
+// }
 export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
   if (warehouses.length === 0) {
     return (
@@ -69,11 +70,11 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
   return (
     <div className="grid gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
       {warehouses.map((warehouse) => {
-        const occupancyPercentage = getOccupancyPercentage(
-          warehouse.used,
-          warehouse.capacity
-        )
-        const roundedOccupancy = Math.round(occupancyPercentage)
+        // const occupancyPercentage = getOccupancyPercentage(
+        //   warehouse.used,
+        //   warehouse.capacity
+        // )
+        // const roundedOccupancy = Math.round(occupancyPercentage)
 
         return (
           <Card
@@ -83,8 +84,8 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
             {/* Decorative corner accent */}
             <div
               className={cn(
-                "absolute top-0 right-0 size-24 translate-x-12 -translate-y-12 rounded-full opacity-10 blur-2xl transition-opacity group-hover:opacity-20",
-                getOccupancyColor(occupancyPercentage)
+                "absolute top-0 right-0 size-24 translate-x-12 -translate-y-12 rounded-full opacity-10 blur-2xl transition-opacity group-hover:opacity-20"
+                // getOccupancyColor(occupancyPercentage)
               )}
             />
 
@@ -98,7 +99,7 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                   </div>
                   <div>
                     <CardTitle className="text-lg">{warehouse.name}</CardTitle>
-                    <p className="mt-0.5 flex items-center gap-1 text-muted-foreground text-xs">
+                    {/* <p className="mt-0.5 flex items-center gap-1 text-muted-foreground text-xs">
                       <HugeiconsIcon className="size-3" icon={Layers01Icon} />
                       {warehouse.racks.length}{" "}
                       {pluralize(
@@ -107,12 +108,12 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
                         "regały",
                         "regałów"
                       )}
-                    </p>
+                    </p> */}
                   </div>
                 </div>
-                <Badge variant={getOccupancyBadgeVariant(occupancyPercentage)}>
+                {/* <Badge variant={getOccupancyBadgeVariant(occupancyPercentage)}>
                   {roundedOccupancy}%
-                </Badge>
+                </Badge> */}
               </div>
             </CardHeader>
 
@@ -121,46 +122,46 @@ export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
               <div className="space-y-2">
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Zapełnienie</span>
-                  <span className="font-medium font-mono">
+                  {/* <span className="font-medium font-mono">
                     {warehouse.used.toLocaleString("pl-PL")} /{" "}
                     {warehouse.capacity.toLocaleString("pl-PL")}
-                  </span>
+                  </span> */}
                 </div>
                 <div className="relative h-2 overflow-hidden rounded-full bg-secondary">
-                  <div
+                  {/* <div
                     className={cn(
                       "h-full rounded-full transition-all duration-500",
                       getOccupancyColor(occupancyPercentage)
                     )}
                     style={{ width: `${occupancyPercentage}%` }}
-                  />
+                  /> */}
                 </div>
               </div>
 
               {/* Quick Stats Row */}
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="rounded-md bg-muted/50 px-2 py-1.5">
-                  <span className="block font-mono font-semibold text-sm">
+                  {/* <span className="block font-mono font-semibold text-sm">
                     {warehouse.used.toLocaleString("pl-PL")}
-                  </span>
+                  </span> */}
                   <span className="text-[10px] text-muted-foreground">
                     Zajęte
                   </span>
                 </div>
                 <div className="rounded-md bg-muted/50 px-2 py-1.5">
-                  <span className="block font-mono font-semibold text-sm">
+                  {/* <span className="block font-mono font-semibold text-sm">
                     {(warehouse.capacity - warehouse.used).toLocaleString(
                       "pl-PL"
                     )}
-                  </span>
+                  </span> */}
                   <span className="text-[10px] text-muted-foreground">
                     Wolne
                   </span>
                 </div>
                 <div className="rounded-md bg-muted/50 px-2 py-1.5">
-                  <span className="block font-mono font-semibold text-sm">
+                  {/* <span className="block font-mono font-semibold text-sm">
                     {warehouse.racks.length}
-                  </span>
+                  </span> */}
                   <span className="text-[10px] text-muted-foreground">
                     Regałów
                   </span>

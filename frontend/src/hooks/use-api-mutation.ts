@@ -36,7 +36,7 @@ export function useApiMutation<
           try {
             return await mutationFn(variables, context)
           } catch (error) {
-            if (error instanceof FetchError) {
+            if (FetchError.isError(error)) {
               if (error.code === "INSUFFICIENT_PERMISSIONS") {
                 const mutateOptions = pendingMutateOptionsRef.current
                 open({

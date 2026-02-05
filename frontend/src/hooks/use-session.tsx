@@ -16,7 +16,7 @@ const fetchSession = async (): Promise<SessionResult> => {
     return await apiFetch("/api/users/me", ApiMeSchema, { method: "GET" })
   } catch (error) {
     if (
-      error instanceof FetchError &&
+      FetchError.isError(error) &&
       (error.status === 401 || error.status === 403)
     ) {
       return null

@@ -16,13 +16,6 @@ export interface Rack {
   items: ItemSlot[]
 }
 
-export interface Warehouse {
-  id: string
-  name: string
-  capacity: number
-  used: number
-  racks: Rack[]
-}
 export interface FilterState {
   query: string
   minOccupancy: number

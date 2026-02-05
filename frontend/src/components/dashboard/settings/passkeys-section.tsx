@@ -295,7 +295,7 @@ export function PasskeysSection() {
 
       if (startError) {
         if (
-          startError instanceof FetchError &&
+          FetchError.isError(startError) &&
           startError.message === "INSUFFICIENT_PERMISSIONS"
         ) {
           open({
@@ -366,7 +366,7 @@ export function PasskeysSection() {
 
     if (finishError) {
       if (
-        finishError instanceof FetchError &&
+        FetchError.isError(finishError) &&
         finishError.code === "INSUFFICIENT_PERMISSIONS"
       ) {
         // Keep the dialog open, 2FA dialog will open

@@ -285,3 +285,35 @@ export const PasskeyRenameSchema = createApiSchema({
     output: z.null(),
   },
 })
+
+const createPaginatedSchema = <T extends z.ZodTypeAny>(itemSchema: T) => {
+  return z.object({
+    content: z.array(itemSchema),
+    page: z.number().int(),
+    size: z.number().int(),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+  })
+}
+
+const WarehouseSchema = z.object({
+  freeSlots: z.number().int().nonnegative(),
+  id: z.number().int().nonnegative(),
+  name: z.string(),
+  occupiedSlots: z.number().int().nonnegative(),
+  racksCount: z.number().int().nonnegative(),
+})
+
+export type Warehouse = z.infer<typeof WarehouseSchema>
+
+export const WarehousesSchema = createApiSchema({
+  GET: {
+    input: z.object({
+      page: z.number().int().nonnegative().optional(),
+      size: z.number().int().nonnegative().optional(),
+    }),
+    output: createPaginatedSchema(WarehouseSchema),
+  },
+})

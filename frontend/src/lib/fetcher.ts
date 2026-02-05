@@ -40,6 +40,10 @@ export class FetchError extends Error {
     this.status = status
     this.code = code ?? getErrorCodeFromMessage(message)
   }
+
+  static isError(err: unknown): err is FetchError {
+    return err instanceof FetchError
+  }
 }
 
 export type ApiMethodSchema = z.ZodObject<{
@@ -77,10 +81,14 @@ type MethodWithBodyRequired = Exclude<
 
 type FormDataHandler<T> = (formData: FormData, data: T) => void
 
-type InitGet = Omit<RequestInit, "body"> & {
+type InitGet<S extends ApiSchema, M extends MethodsWithoutBody> = Omit<
+  RequestInit,
+  "body"
+> & {
   method?: MethodsWithoutBody | undefined
   body?: never
   formData?: never
+  queryParams?: InferApiInput<S, M>
 }
 
 type InitWithBodyRequired<
@@ -116,7 +124,7 @@ type InitWithBodyOptional<
 export async function apiFetch<S extends ApiSchema>(
   path: string,
   dataSchema: S,
-  init?: InitGet
+  init?: InitGet<S, "GET">
 ): Promise<InferApiOutput<S, "GET">>
 
 export async function apiFetch<
@@ -150,68 +158,13 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
   // Abort after 15s. Yes, the server should be faster. No, it usually isn't.
   const abortController = new AbortController()
   const timeoutId = setTimeout(
-    () => abortController.abort("Request timed out"),
-    15_000
+    abortController.abort,
+    15_000,
+    "Request timed out"
   )
 
   try {
-    const method = normalizeMethod(init)
-    const payloadFlags = getPayloadFlags(init)
-    validatePayloadRules(method, payloadFlags)
-    const bodyToSend = buildRequestBody(init, payloadFlags)
-    const restInit = stripExtendedInit(init)
-
-    const headersInit: HeadersInit = mergeHeaders(
-      restInit.headers,
-      bodyToSend instanceof FormData
-        ? undefined
-        : { "Content-Type": "application/json", Accept: "application/json" }
-    )
-
-    const baseUrl =
-      typeof window === "undefined"
-        ? process.env.INTERNAL_API_URL
-        : (process.env.NEXT_PUBLIC_API_URL ?? "")
-
-    const res = await fetch(resolveRequestUrl(path, baseUrl), {
-      ...restInit,
-      method,
-      signal: abortController.signal,
-      headers:
-        typeof window === "undefined"
-          ? mergeHeaders(
-              await (await import("next/headers")).headers(),
-              headersInit
-            )
-          : headersInit,
-      credentials: restInit.credentials ?? "include",
-      body: bodyToSend,
-    })
-
-    // Network/HTTP error handling
-    if (!res.ok) {
-      await throwFetchErrorFromResponse(res)
-    }
-
-    // Parse JSON
-    const [err, json] = await tryCatch(res.json())
-    if (err) {
-      throw new FetchError(
-        `Failed to parse response from server: ${err.message}`,
-        500
-      )
-    }
-
-    // Resolve schema for the chosen method
-    const outputSchema = resolveOutputSchema(dataSchema, method)
-    const parsed = getCachedSchema(outputSchema).parse(json)
-
-    if (parsed.success) {
-      // Narrow return by method. The overloads ensure this maps to InferApiOutput<S, M>
-      return parsed.data as InferApiOutput<S, M>
-    }
-
-    throw new FetchError(parsed.message, res.status)
+    return await performApiFetch(path, dataSchema, init, abortController.signal)
   } catch (e) {
     if (e instanceof FetchError) {
       throw e
@@ -246,6 +199,7 @@ type ExtendedInit = Omit<RequestInit, "body"> & {
   method?: string | undefined
   body?: unknown
   formData?: unknown
+  queryParams?: Record<string, unknown>
 }
 
 function normalizeMethod(init?: ExtendedInit): ApiMethod {
@@ -398,4 +352,102 @@ function resolveRequestUrl(path: string, baseUrl?: string): string {
     return new URL(path, baseUrl).toString()
   }
   return path
+}
+
+async function performApiFetch<S extends ApiSchema, M extends ApiMethod>(
+  path: string,
+  dataSchema: S,
+  init: ExtendedInit | undefined,
+  signal: AbortSignal
+): Promise<InferApiOutput<S, M>> {
+  const method = normalizeMethod(init)
+  const payloadFlags = getPayloadFlags(init)
+  validatePayloadRules(method, payloadFlags)
+  const bodyToSend = buildRequestBody(init, payloadFlags)
+  const restInit = stripExtendedInit(init)
+
+  const headersInit: HeadersInit = mergeHeaders(
+    restInit.headers,
+    bodyToSend instanceof FormData
+      ? undefined
+      : { "Content-Type": "application/json", Accept: "application/json" }
+  )
+
+  const url = buildRequestUrl(path, resolveBaseUrl(), method, init?.queryParams)
+
+  const res = await fetch(url, {
+    ...restInit,
+    method,
+    signal,
+    headers: await resolveHeaders(headersInit),
+    credentials: restInit.credentials ?? "include",
+    body: bodyToSend,
+  })
+
+  return (await parseResponse(res, dataSchema, method)) as InferApiOutput<S, M>
+}
+
+function resolveBaseUrl(): string | undefined {
+  return typeof window === "undefined"
+    ? process.env.INTERNAL_API_URL
+    : (process.env.NEXT_PUBLIC_API_URL ?? "")
+}
+
+function buildRequestUrl(
+  path: string,
+  baseUrl: string | undefined,
+  method: ApiMethod,
+  queryParams?: Record<string, unknown>
+): URL {
+  const url = new URL(resolveRequestUrl(path, baseUrl))
+
+  if (method !== "GET" || !queryParams) {
+    return url
+  }
+
+  for (const [key, value] of Object.entries(queryParams)) {
+    if (value !== undefined) {
+      url.searchParams.append(key, String(value))
+    }
+  }
+
+  return url
+}
+
+async function resolveHeaders(headersInit: HeadersInit): Promise<HeadersInit> {
+  if (typeof window !== "undefined") {
+    return headersInit
+  }
+
+  return mergeHeaders(
+    await (await import("next/headers")).headers(),
+    headersInit
+  )
+}
+
+async function parseResponse<S extends ApiSchema>(
+  res: Response,
+  dataSchema: S,
+  method: ApiMethod
+): Promise<InferApiOutput<S, ApiMethod>> {
+  if (!res.ok) {
+    await throwFetchErrorFromResponse(res)
+  }
+
+  const [err, json] = await tryCatch(res.json())
+  if (err) {
+    throw new FetchError(
+      `Failed to parse response from server: ${err.message}`,
+      500
+    )
+  }
+
+  const outputSchema = resolveOutputSchema(dataSchema, method)
+  const parsed = getCachedSchema(outputSchema).parse(json)
+
+  if (parsed.success) {
+    return parsed.data as InferApiOutput<S, ApiMethod>
+  }
+
+  throw new FetchError(parsed.message, res.status)
 }

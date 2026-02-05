@@ -634,8 +634,9 @@ function AuthenticatorSetup({
         clearTimeout(copyTimeoutRef.current)
       }
       copyTimeoutRef.current = setTimeout(
-        () => setCopied(false),
-        COPY_FEEDBACK_TIMEOUT_MS
+        setCopied,
+        COPY_FEEDBACK_TIMEOUT_MS,
+        false
       )
     } catch {
       toast.error("Nie udało się skopiować klucza. Skopiuj ręcznie.")

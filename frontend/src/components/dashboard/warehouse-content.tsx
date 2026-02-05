@@ -5,16 +5,23 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { MOCK_WAREHOUSES } from "./mock-data"
+import useWarehouses from "@/hooks/use-warehouses"
+import type { Warehouse } from "@/lib/schemas"
 import { DEFAULT_FILTERS, WarehouseFilters } from "./storage-filters"
 import { WarehouseGrid } from "./storage-grid"
 import type { FilterState } from "./types"
 import { filterWarehouses } from "./utils/filters"
 import { pluralize } from "./utils/helpers"
 
+const EMPTY_ARRAY: Warehouse[] = []
+
 export const WarehouseContent = () => {
+  const { data: warehouses } = useWarehouses()
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
-  const filteredWarehouses = filterWarehouses(MOCK_WAREHOUSES, filters)
+  const filteredWarehouses = filterWarehouses(
+    warehouses?.content ?? EMPTY_ARRAY,
+    filters
+  )
 
   const hasActiveFilters =
     filters.query !== "" ||

@@ -76,7 +76,7 @@ export default function TwoFactorForm({
         toast.success("Zweryfikowano!")
         router.push("/dashboard")
       } catch (e) {
-        if (e instanceof FetchError) {
+        if (FetchError.isError(e)) {
           handleApiError(e)
         }
         console.error(e)

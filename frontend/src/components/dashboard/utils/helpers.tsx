@@ -49,7 +49,7 @@ export function pluralize(
 
 export const handleApiError = (err: unknown, fallback?: string) => {
   toast.error(
-    err instanceof FetchError
+    FetchError.isError(err)
       ? err.message
       : (fallback ?? "Wystąpił nieoczekiwany błąd.")
   )

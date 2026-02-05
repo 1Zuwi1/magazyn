@@ -28,7 +28,7 @@ export function useApiQuery<
           try {
             return await queryFn(context)
           } catch (error) {
-            if (error instanceof FetchError) {
+            if (FetchError.isError(error)) {
               if (error.code === "INSUFFICIENT_PERMISSIONS") {
                 open({
                   onVerified: query.refetch,

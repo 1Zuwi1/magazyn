@@ -124,7 +124,7 @@ export const verifyOneTimeCode = async (
     })
     return true
   } catch (error) {
-    if (error instanceof FetchError && error.status === 401) {
+    if (FetchError.isError(error) && error.status === 401) {
       return false
     }
     throw error

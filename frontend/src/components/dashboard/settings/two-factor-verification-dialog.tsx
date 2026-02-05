@@ -141,10 +141,9 @@ export function TwoFactorVerificationDialog({
 
       onVerified?.()
     } catch (e) {
-      const message =
-        e instanceof FetchError
-          ? e.message
-          : "Kod jest nieprawidłowy. Spróbuj ponownie."
+      const message = FetchError.isError(e)
+        ? e.message
+        : "Kod jest nieprawidłowy. Spróbuj ponownie."
       setIsVerified(false)
       setVerificationError(message)
       toast.error(message)
