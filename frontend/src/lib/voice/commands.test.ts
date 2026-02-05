@@ -25,6 +25,14 @@ describe("voice commands", () => {
     expect(match?.params.warehouseName).toBe("Magazyn A1")
   })
 
+  it("matches warehouse command with ID instead of full name", () => {
+    const match = matchVoiceCommand("pokaż magazyn A2")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("warehouses:id")
+    expect(match?.params.warehouseName).toBe("A2")
+  })
+
   it("matches items command synonyms", () => {
     const match = matchVoiceCommand("Otwórz przedmioty")
 

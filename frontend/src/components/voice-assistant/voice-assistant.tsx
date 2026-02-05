@@ -389,7 +389,12 @@ const findWarehouseByName = (inputName: string) => {
       const normalizedName = normalizeTranscript(warehouse.name, {
         toLowerCase: true,
       })
-      return normalizedName === normalizedInput
+      const normalizedId = normalizeTranscript(warehouse.id, {
+        toLowerCase: true,
+      })
+      return (
+        normalizedName === normalizedInput || normalizedId === normalizedInput
+      )
     }) ?? null
   )
 }
