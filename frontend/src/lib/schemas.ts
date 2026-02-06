@@ -247,7 +247,7 @@ export const TFADefaultMethodSchema = createApiSchema({
 export const TFARemoveMethodSchema = createApiSchema({
   DELETE: {
     input: z.object({
-      method: TFAMethods,
+      method: TFAMethods.exclude(["EMAIL"], "Cannot remove email 2FA method"),
     }),
     output: z.null(),
   },
@@ -446,26 +446,32 @@ export const UpdateWarehouseSchema = createApiSchema({
   },
 })
 
-export const AssortmentSchema = createApiSchema({
+const AssortmentSchema = z.object({
+  id: z.number().int().nonnegative(),
+  barcode: z.string(),
+  itemId: z.number().int().nonnegative(),
+  rackId: z.number().int().nonnegative(),
+  userId: z.number().int().nonnegative(),
+  createdAt: z.string(),
+  expiresAt: z.string(),
+  positionX: z.number().int().nonnegative(),
+  positionY: z.number().int().nonnegative(),
+})
+
+export const AssortmentsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput(
       z.object({
         search: z.string(),
       })
     ),
-    output: createPaginatedSchema(
-      z.object({
-        id: z.number().int().nonnegative(),
-        barcode: z.string(),
-        itemId: z.number().int().nonnegative(),
-        rackId: z.number().int().nonnegative(),
-        userId: z.number().int().nonnegative(),
-        createdAt: z.string(),
-        expiresAt: z.string(),
-        positionX: z.number().int().nonnegative(),
-        positionY: z.number().int().nonnegative(),
-      })
-    ),
+    output: createPaginatedSchema(AssortmentSchema),
+  },
+})
+
+export const AssortmentDetailsSchema = createApiSchema({
+  GET: {
+    output: AssortmentSchema,
   },
 })
 

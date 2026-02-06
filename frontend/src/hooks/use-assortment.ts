@@ -1,23 +1,70 @@
-import { apiFetch } from "@/lib/fetcher"
-import { AssortmentSchema, type PaginatedRequest } from "@/lib/schemas"
+import type { UseQueryResult } from "@tanstack/react-query"
+import { apiFetch, type FetchError, type InferApiOutput } from "@/lib/fetcher"
+import { AssortmentDetailsSchema, AssortmentsSchema } from "@/lib/schemas"
 import { useApiQuery } from "./use-api-query"
 
 const ASSORTMENT_QUERY_KEY = ["assortments"] as const
 
-export default function useAssortment(
-  { page, size }: PaginatedRequest = {
+export type AssortmentsList = InferApiOutput<typeof AssortmentsSchema, "GET">
+export type AssortmentDetails = InferApiOutput<
+  typeof AssortmentDetailsSchema,
+  "GET"
+>
+
+interface AssortmentsListParams {
+  page?: number
+  size?: number
+}
+
+interface AssortmentsDetailsParams {
+  assortmentId: number
+}
+
+export default function useAssortments(
+  params?: AssortmentsListParams
+): UseQueryResult<AssortmentsList, FetchError>
+
+export default function useAssortments(
+  params: AssortmentsDetailsParams
+): UseQueryResult<AssortmentDetails, FetchError>
+
+export default function useAssortments(
+  {
+    page,
+    size,
+    assortmentId,
+  }: {
+    page?: number
+    size?: number
+    assortmentId?: number
+  } = {
     page: 0,
-    size: 100,
+    size: 20,
   }
 ) {
   return useApiQuery({
     queryKey: [...ASSORTMENT_QUERY_KEY, { page, size }],
-    queryFn: () =>
-      apiFetch("/api/assortments", AssortmentSchema, {
+    queryFn: async () => {
+      if (assortmentId !== undefined) {
+        if (assortmentId === -1) {
+          // This is a workaround to prevent the query from running when assortmentId is not yet available.
+          return null
+        }
+        return await apiFetch(
+          `/api/assortments/${assortmentId}`,
+          AssortmentDetailsSchema,
+          {
+            method: "GET",
+          }
+        )
+      }
+
+      return await apiFetch("/api/assortments", AssortmentsSchema, {
         queryParams: {
           page,
           size,
         },
-      }),
+      })
+    },
   })
 }
