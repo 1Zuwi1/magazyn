@@ -289,7 +289,7 @@ export function LocationCard({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor={`${baseId}-x`}>Kolumna</Label>
+          <Label htmlFor={`${baseId}-x`}>Półka</Label>
           <Input
             id={`${baseId}-x`}
             max={maxColumn}
