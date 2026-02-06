@@ -10,27 +10,27 @@ interface VoiceAssistantListeningViewProps {
   isCommandDetected?: boolean
 }
 
+const bars = [
+  { height: 24, delay: 0, duration: 0.6 },
+  { height: 42, delay: 0.1, duration: 0.7 },
+  { height: 30, delay: 0.2, duration: 0.55 },
+  { height: 52, delay: 0.3, duration: 0.8 },
+  { height: 36, delay: 0.4, duration: 0.65 },
+  { height: 48, delay: 0.5, duration: 0.75 },
+  { height: 28, delay: 0.6, duration: 0.6 },
+  { height: 44, delay: 0.7, duration: 0.7 },
+  { height: 34, delay: 0.8, duration: 0.55 },
+  { height: 50, delay: 0.9, duration: 0.8 },
+  { height: 32, delay: 1, duration: 0.65 },
+  { height: 46, delay: 1.1, duration: 0.75 },
+]
+
 export function VoiceAssistantListeningView({
   onStopListening,
   transcript,
   detectedCommandLabel,
   isCommandDetected = false,
 }: VoiceAssistantListeningViewProps) {
-  const bars = [
-    { height: 24, delay: 0, duration: 0.6 },
-    { height: 42, delay: 0.1, duration: 0.7 },
-    { height: 30, delay: 0.2, duration: 0.55 },
-    { height: 52, delay: 0.3, duration: 0.8 },
-    { height: 36, delay: 0.4, duration: 0.65 },
-    { height: 48, delay: 0.5, duration: 0.75 },
-    { height: 28, delay: 0.6, duration: 0.6 },
-    { height: 44, delay: 0.7, duration: 0.7 },
-    { height: 34, delay: 0.8, duration: 0.55 },
-    { height: 50, delay: 0.9, duration: 0.8 },
-    { height: 32, delay: 1, duration: 0.65 },
-    { height: 46, delay: 1.1, duration: 0.75 },
-  ]
-
   return (
     <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
       <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent opacity-50" />
@@ -95,10 +95,10 @@ export function VoiceAssistantListeningView({
         </div>
 
         <div className="flex h-16 items-center justify-center gap-1">
-          {bars.map((bar, i) => (
+          {bars.map((bar) => (
             <div
               className="w-1 animate-pulse rounded-full bg-primary/60"
-              key={i}
+              key={bar.delay}
               style={{
                 height: `${bar.height}px`,
                 animationDelay: `${bar.delay}s`,

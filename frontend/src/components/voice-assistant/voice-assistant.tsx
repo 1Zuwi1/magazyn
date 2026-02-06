@@ -10,9 +10,10 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition"
 import { cn } from "@/lib/utils"
+import type { VoiceCommandMatch } from "@/lib/voice/commands"
 import { matchVoiceCommand } from "@/lib/voice/commands"
 import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
-import { MOCK_WAREHOUSES } from "../dashboard/mock-data"
+import type { Warehouse } from "../dashboard/types"
 import {
   getCommandLabel,
   handleConfirmCommandAction,
@@ -34,15 +35,16 @@ export type VoiceAssistantViews =
   | "error"
 
 interface VoiceAssistantProps {
-  className?: string
   dialogTrigger?: ReactNode
+  warehouses?: Pick<Warehouse, "id" | "name">[]
 }
 
 export function VoiceAssistant({
-  className,
   dialogTrigger,
+  warehouses = [],
 }: VoiceAssistantProps) {
   const autoStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isMobile = useIsMobile()
   const router = useRouter()
   const { openAddItemDialog, openScanner } = useVoiceCommandStore()
@@ -51,10 +53,9 @@ export function VoiceAssistant({
   const [view, setView] = useState<VoiceAssistantViews>("idle")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [matchedCommand, setMatchedCommand] =
-    useState<ReturnType<typeof matchVoiceCommand>>(null)
+    useState<VoiceCommandMatch | null>(null)
+  const [manualTranscript, setManualTranscript] = useState<string | null>(null)
 
-  const warehouses = MOCK_WAREHOUSES.map(({ id, name }) => ({ id, name }))
-  let content: ReactNode
   const {
     finalTranscript,
     interimTranscript,
@@ -120,6 +121,7 @@ export function VoiceAssistant({
     setView("idle")
     setErrorMessage(null)
     setMatchedCommand(null)
+    setManualTranscript(null)
     reset()
     stop()
   }, [reset, stop])
@@ -145,6 +147,7 @@ export function VoiceAssistant({
   )
 
   const liveTranscript = finalTranscript || interimTranscript
+  const silenceTranscript = `${finalTranscript}${interimTranscript}`.trim()
   const liveCommand = useMemo(() => {
     if (!liveTranscript) {
       return null
@@ -164,6 +167,10 @@ export function VoiceAssistant({
       if (autoStopTimeoutRef.current) {
         clearTimeout(autoStopTimeoutRef.current)
         autoStopTimeoutRef.current = null
+      }
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current)
+        silenceTimeoutRef.current = null
       }
       return
     }
@@ -186,6 +193,31 @@ export function VoiceAssistant({
     }, 600)
   }, [view, liveCommand, handleStopListening])
 
+  const TIMEOUT_DURATION = 3000
+
+  useEffect(() => {
+    if (view !== "listening") {
+      return
+    }
+
+    if (!silenceTranscript || liveCommand) {
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current)
+        silenceTimeoutRef.current = null
+      }
+      return
+    }
+
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current)
+    }
+
+    silenceTimeoutRef.current = setTimeout(() => {
+      silenceTimeoutRef.current = null
+      handleStopListening()
+    }, TIMEOUT_DURATION)
+  }, [view, silenceTranscript, liveCommand, handleStopListening])
+
   const navigateAndClose = useCallback(
     (href: string) => {
       router.push(href)
@@ -201,10 +233,30 @@ export function VoiceAssistant({
       return
     }
 
+    setManualTranscript(null)
     reset()
     start()
     setView("listening")
   }, [isSupported, reset, start])
+
+  const handleSuggestionSelect = useCallback(
+    (suggestion: string) => {
+      const match = matchVoiceCommand(suggestion)
+      if (!(match && isCommandMatchValid(match, warehouses))) {
+        setErrorMessage("Nie znam tego polecenia.")
+        setView("error")
+        return
+      }
+
+      setErrorMessage(null)
+      setMatchedCommand(match)
+      setManualTranscript(suggestion)
+      setView("confirm")
+    },
+    [warehouses]
+  )
+
+  let content: ReactNode
 
   const handleConfirmCommand = useCallback(() => {
     handleConfirmCommandAction(matchedCommand, warehouses, {
@@ -227,7 +279,10 @@ export function VoiceAssistant({
   switch (view) {
     case "idle":
       content = (
-        <VoiceAssistantNormalView onStartListening={handleStartListening} />
+        <VoiceAssistantNormalView
+          onStartListening={handleStartListening}
+          onSuggestionSelect={handleSuggestionSelect}
+        />
       )
       break
     case "listening":
@@ -254,7 +309,9 @@ export function VoiceAssistant({
           commandLabel={getCommandLabel(matchedCommand, warehouses)}
           onCancel={handleReset}
           onConfirm={handleConfirmCommand}
-          transcript={finalTranscript || interimTranscript}
+          transcript={
+            manualTranscript ?? (finalTranscript || interimTranscript)
+          }
         />
       ) : null
       break
@@ -308,8 +365,7 @@ export function VoiceAssistant({
             "relative overflow-hidden",
             isMobile
               ? "h-full w-full py-8"
-              : "aspect-3/4 w-full rounded-lg border",
-            className
+              : "aspect-3/4 w-full rounded-lg border"
           )}
         >
           <Button

@@ -13,6 +13,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useMemo } from "react"
 import { cn } from "@/lib/utils"
+import { MOCK_WAREHOUSES } from "./dashboard/mock-data"
 import { Scanner } from "./scanner/scanner"
 import { DialogTrigger } from "./ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
@@ -170,6 +171,7 @@ export function Dock() {
               </TooltipContent>
             </Tooltip>
           }
+          warehouses={MOCK_WAREHOUSES}
         />
 
         {/* Scanner button */}

@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 
 interface VoiceAssistantConfirmViewProps {
@@ -15,13 +15,21 @@ export function VoiceAssistantConfirmView({
   commandLabel,
   onConfirm,
   onCancel,
-  autoExecuteDelay = 3000,
+  autoExecuteDelay = 5000,
 }: VoiceAssistantConfirmViewProps) {
   const [timeLeft, setTimeLeft] = useState(autoExecuteDelay)
+  const hasConfirmedRef = useRef(false)
+  const handleConfirm = useCallback(() => {
+    if (hasConfirmedRef.current) {
+      return
+    }
+    hasConfirmedRef.current = true
+    onConfirm()
+  }, [onConfirm])
 
   useEffect(() => {
     if (timeLeft <= 0) {
-      onConfirm()
+      handleConfirm()
       return
     }
 
@@ -30,7 +38,7 @@ export function VoiceAssistantConfirmView({
     }, 100)
 
     return () => clearInterval(interval)
-  }, [timeLeft, onConfirm])
+  }, [timeLeft, handleConfirm])
 
   const progress = (timeLeft / autoExecuteDelay) * 100
   const secondsLeft = Math.ceil(timeLeft / 1000)
@@ -73,7 +81,7 @@ export function VoiceAssistantConfirmView({
       </div>
 
       <div className="flex flex-wrap justify-center gap-2">
-        <Button onClick={onConfirm} type="button">
+        <Button onClick={handleConfirm} type="button">
           Wykonaj teraz
         </Button>
         <Button onClick={onCancel} type="button" variant="ghost">

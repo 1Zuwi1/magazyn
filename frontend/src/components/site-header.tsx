@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Fragment } from "react/jsx-runtime"
+import { MOCK_WAREHOUSES } from "./dashboard/mock-data"
 import { NotificationInbox } from "./dashboard/notifications/components/notification-icon"
 import { Scanner } from "./scanner/scanner"
 import {
@@ -170,7 +171,7 @@ export default function SiteHeader() {
             )}
           />
         )}
-        <VoiceAssistant />
+        <VoiceAssistant warehouses={MOCK_WAREHOUSES} />
         <NotificationInbox />
       </div>
     </header>

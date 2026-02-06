@@ -43,34 +43,34 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
     id: "dashboard",
     description: "Otwórz dashboard",
     patterns: [
-      { regex: /^otworz dashboard$/ },
-      { regex: /^przejdz do dashboard$/ },
-      { regex: /^pokaz dashboard$/ },
-      { regex: /^pokaz strone glowna$/ },
-      { regex: /^przejdz do strony glownej$/ },
-      { regex: /^strona glowna$/ },
-      { regex: /^dashboard$/ },
+      { regex: /^otworz dashboard$/i },
+      { regex: /^przejdz do dashboard$/i },
+      { regex: /^pokaz dashboard$/i },
+      { regex: /^pokaz strone glowna$/i },
+      { regex: /^przejdz do strony glownej$/i },
+      { regex: /^strona glowna$/i },
+      { regex: /^dashboard$/i },
     ],
   },
   {
     id: "warehouses",
     description: "Pokaż magazyny",
-    patterns: [{ regex: /^pokaz magazyny$/ }, { regex: /^otworz magazyny$/ }],
+    patterns: [{ regex: /^pokaz magazyny$/i }, { regex: /^otworz magazyny$/i }],
   },
   {
     id: "warehouses:id",
     description: "Otwórz magazyn o podanej nazwie",
     patterns: [
       {
-        regex: /^otworz magazyn ([a-z0-9 ]+)$/,
+        regex: /^otworz magazyn ([a-z0-9 ]+)$/i,
         paramNames: ["warehouseName"],
       },
       {
-        regex: /^pokaz magazyn ([a-z0-9 ]+)$/,
+        regex: /^pokaz magazyn ([a-z0-9 ]+)$/i,
         paramNames: ["warehouseName"],
       },
       {
-        regex: /^magazyn ([a-z0-9 ]+)$/,
+        regex: /^magazyn ([a-z0-9 ]+)$/i,
         paramNames: ["warehouseName"],
       },
     ],
@@ -79,50 +79,50 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
     id: "items",
     description: "Pokaż produkty",
     patterns: [
-      { regex: /^pokaz produkty$/ },
-      { regex: /^pokaz asortyment$/ },
-      { regex: /^otworz produkty$/ },
-      { regex: /^otworz asortyment$/ },
-      { regex: /^pokaz przedmioty$/ },
-      { regex: /^otworz przedmioty$/ },
-      { regex: /^produkty$/ },
-      { regex: /^asortyment$/ },
-      { regex: /^przedmioty$/ },
+      { regex: /^pokaz produkty$/i },
+      { regex: /^pokaz asortyment$/i },
+      { regex: /^otworz produkty$/i },
+      { regex: /^otworz asortyment$/i },
+      { regex: /^pokaz przedmioty$/i },
+      { regex: /^otworz przedmioty$/i },
+      { regex: /^produkty$/i },
+      { regex: /^asortyment$/i },
+      { regex: /^przedmioty$/i },
     ],
   },
   {
     id: "settings",
     description: "Ustawienia",
-    patterns: [{ regex: /^ustawienia$/ }, { regex: /^otworz ustawienia$/ }],
+    patterns: [{ regex: /^ustawienia$/i }, { regex: /^otworz ustawienia$/i }],
   },
   {
     id: "open-scanner",
     description: "Uruchom skaner",
     patterns: [
-      { regex: /^uruchom skaner$/ },
-      { regex: /^otworz skaner$/ },
-      { regex: /^odpal skaner$/ },
-      { regex: /^skaner$/ },
+      { regex: /^uruchom skaner$/i },
+      { regex: /^otworz skaner$/i },
+      { regex: /^odpal skaner$/i },
+      { regex: /^skaner$/i },
     ],
   },
   {
     id: "add-item",
     description: "Dodaj produkt",
     patterns: [
-      { regex: /^dodaj produkt$/ },
-      { regex: /^dodaj przedmiot$/ },
-      { regex: /^dodaj asortyment$/ },
-      { regex: /^nowy produkt$/ },
-      { regex: /^nowy przedmiot$/ },
+      { regex: /^dodaj produkt$/i },
+      { regex: /^dodaj przedmiot$/i },
+      { regex: /^dodaj asortyment$/i },
+      { regex: /^nowy produkt$/i },
+      { regex: /^nowy przedmiot$/i },
     ],
   },
   {
     id: "delete-item",
     description: "Usuń produkt",
     patterns: [
-      { regex: /^usun produkt ([a-z0-9]+)$/ },
-      { regex: /^usun przedmiot ([a-z0-9]+)$/ },
-      { regex: /^usun asortyment ([a-z0-9]+)$/ },
+      { regex: /^usun produkt ([a-z0-9]+)$/i },
+      { regex: /^usun przedmiot ([a-z0-9]+)$/i },
+      { regex: /^usun asortyment ([a-z0-9]+)$/i },
     ],
   },
 ]
@@ -130,7 +130,7 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
 export const matchVoiceCommand = (
   transcript: string
 ): VoiceCommandMatch | null => {
-  const normalized = normalizeTranscript(transcript, { toLowerCase: true })
+  const normalized = normalizeTranscript(transcript)
   for (const command of VOICE_COMMANDS) {
     for (const pattern of command.patterns) {
       const match = normalized.match(pattern.regex)

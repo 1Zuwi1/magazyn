@@ -2,13 +2,17 @@ import { Mic01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
 
-interface VoiceAssistantIdleStepProps {
+interface VoiceAssistantIdleViewProps {
+  buttonId?: string
   onStartListening: () => void
+  onSuggestionSelect: (suggestion: string) => void
 }
 
 export function VoiceAssistantNormalView({
+  buttonId,
   onStartListening,
-}: VoiceAssistantIdleStepProps) {
+  onSuggestionSelect,
+}: VoiceAssistantIdleViewProps) {
   return (
     <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
       <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent opacity-50" />
@@ -20,12 +24,13 @@ export function VoiceAssistantNormalView({
       <div className="relative flex flex-col items-center gap-6">
         <div className="relative">
           <Button
-            className="relative size-20 rounded-full transition-all hover:scale-105"
+            className="relative size-25 rounded-full transition-all hover:scale-105"
+            id={buttonId}
             onClick={onStartListening}
             size="icon"
           >
             <HugeiconsIcon
-              className="size-10"
+              className="size-14"
               icon={Mic01Icon}
               strokeWidth={2}
             />
@@ -46,16 +51,16 @@ export function VoiceAssistantNormalView({
             Przykładowe polecenia:
           </p>
           <div className="flex flex-wrap justify-center gap-2">
-            {["Pokaż magazyn A", "Znajdź produkt", "Dodaj przedmiot"].map(
-              (suggestion) => (
-                <span
-                  className="rounded-full bg-muted px-3 py-1.5 text-xs transition-colors hover:bg-muted/80"
-                  key={suggestion}
-                >
-                  {suggestion}
-                </span>
-              )
-            )}
+            {["Pokaż magazyn A1", "Dodaj przedmiot"].map((suggestion) => (
+              <Button
+                key={suggestion}
+                onClick={() => onSuggestionSelect(suggestion)}
+                type="button"
+                variant="outline"
+              >
+                {suggestion}
+              </Button>
+            ))}
           </div>
         </div>
       </div>

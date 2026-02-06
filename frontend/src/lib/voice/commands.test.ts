@@ -53,4 +53,10 @@ describe("voice commands", () => {
 
     expect(match).toBeNull()
   })
+
+  it("matches scanner open command", () => {
+    const match = matchVoiceCommand("Uruchom skaner")
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("open-scanner")
+  })
 })

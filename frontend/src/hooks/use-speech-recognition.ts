@@ -60,7 +60,7 @@ export function useSpeechRecognition() {
       let interimText = ""
       let finalText = ""
 
-      for (const result of event.results) {
+      for (const result of Array.from(event.results)) {
         const transcript = result[0]?.transcript ?? ""
         if (result.isFinal) {
           finalText += transcript
