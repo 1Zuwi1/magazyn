@@ -3,6 +3,7 @@ import { useState } from "react"
 import { useWarehouseStore } from "../store"
 import type { Rack3D } from "../types"
 import { RACK_ZONE_SIZE } from "../types"
+import { useClickGuard } from "../use-click-guard"
 import type { RackRender } from "../warehouse-layout"
 import { BlocksInstanced, getBlockLayout } from "./blocks-instanced"
 import { getRackMetrics } from "./rack-metrics"
@@ -45,6 +46,7 @@ function RackInstance({
   onFocus,
 }: RackInstanceProps) {
   const [hovered, setHovered] = useState(false)
+  const { onPointerDown, shouldIgnoreClick } = useClickGuard()
   const occupiedCount = rack.items.filter((item) => item !== null).length
   const occupancy = (occupiedCount / (rack.grid.rows * rack.grid.cols)) * 100
   const metrics = getRackMetrics(rack)
@@ -108,9 +110,13 @@ function RackInstance({
       )}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Three.js mesh */}
       <mesh
-        onClick={() => {
+        onClick={(e) => {
+          if (shouldIgnoreClick(e)) {
+            return
+          }
           onFocus(rack.id)
         }}
+        onPointerDown={onPointerDown}
         onPointerOut={() => {
           setHovered(false)
         }}

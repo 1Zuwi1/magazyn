@@ -14,6 +14,7 @@ import {
 import { useWarehouseStore } from "../store"
 import type { ItemStatus, Rack3D } from "../types"
 import { getItemVisuals, getWorstStatus, RACK_ZONE_SIZE } from "../types"
+import { useClickGuard } from "../use-click-guard"
 import { getRackMetrics, type RackMetrics } from "./rack-metrics"
 import {
   STRIPE_EMISSIVE_INTENSITY,
@@ -188,6 +189,7 @@ export function BlocksInstanced({
 }: BlocksInstancedProps) {
   const { setFocusWindow } = useWarehouseStore()
   const [hoveredBlockKey, setHoveredBlockKey] = useState<string | null>(null)
+  const { onPointerDown, shouldIgnoreClick } = useClickGuard()
   const resolvedMetrics = metrics ?? getRackMetrics(rack)
   const stripeTexture = useStripeTexture()
   const isInteractive = hoverable || clickable
@@ -280,6 +282,9 @@ export function BlocksInstanced({
                 clickable
                   ? (event) => {
                       event.stopPropagation()
+                      if (shouldIgnoreClick(event)) {
+                        return
+                      }
                       setFocusWindow({
                         rackId: rack.id,
                         startRow: block.startRow,
@@ -290,6 +295,7 @@ export function BlocksInstanced({
                     }
                   : undefined
               }
+              onPointerDown={clickable ? onPointerDown : undefined}
               onPointerOut={
                 hoverable
                   ? (event) => {
