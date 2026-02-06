@@ -57,7 +57,7 @@ export const ChangePasswordFormSchema = z
   })
 
 export const ChangePasswordSchema = createApiSchema({
-  POST: {
+  PATCH: {
     input: z.object({
       newPassword: PasswordSchema,
       oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
@@ -286,7 +286,10 @@ export const PasskeyRenameSchema = createApiSchema({
   },
 })
 
-const createPaginatedSchema = <T extends z.ZodType>(itemSchema: T) => {
+const createPaginatedSchema = <T extends z.ZodType>(
+  itemSchema: T,
+  additionalSchemas?: Record<string, z.ZodType>
+) => {
   return z.object({
     content: z.array(itemSchema),
     page: z.number().int(),
@@ -295,6 +298,7 @@ const createPaginatedSchema = <T extends z.ZodType>(itemSchema: T) => {
     totalPages: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    ...additionalSchemas,
   })
 }
 
@@ -336,6 +340,30 @@ export const WarehousesSchema = createApiSchema({
 export const WarehouseDetailsSchema = createApiSchema({
   GET: {
     output: WarehouseSchema,
+  },
+})
+
+export const CreateWarehouseSchema = createApiSchema({
+  POST: {
+    input: z.object({
+      name: z.string().min(1),
+    }),
+    output: WarehouseDetailsSchema,
+  },
+})
+
+export const DeleteWarehouseSchema = createApiSchema({
+  DELETE: {
+    output: z.null(),
+  },
+})
+
+export const UpdateWarehouseSchema = createApiSchema({
+  PUT: {
+    input: z.object({
+      name: z.string().min(1),
+    }),
+    output: WarehouseDetailsSchema,
   },
 })
 
@@ -404,12 +432,29 @@ const RackSchema = z.object({
 export const RacksSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput(),
-    output: createPaginatedSchema(RackSchema),
+    output: createPaginatedSchema(RackSchema, {
+      summary: z.object({
+        totalCapacity: z.number().int().nonnegative(),
+        freeSlots: z.number().int().nonnegative(),
+        occupiedSlots: z.number().int().nonnegative(),
+        totalWarehouses: z.number().int().nonnegative(),
+        totalRacks: z.number().int().nonnegative(),
+      }),
+    }),
   },
 })
 
 export const RackDetailsSchema = createApiSchema({
   GET: {
     output: RackSchema,
+  },
+})
+
+export const VerifyMailSchema = createApiSchema({
+  POST: {
+    input: z.object({
+      token: z.string().min(1, "Token jest wymagany"),
+    }),
+    output: z.null(),
   },
 })

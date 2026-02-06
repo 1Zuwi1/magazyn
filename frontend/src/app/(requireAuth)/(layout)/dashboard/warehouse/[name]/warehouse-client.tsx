@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  Alert01Icon,
   CubeIcon,
   Layers01Icon,
   PackageIcon,
@@ -9,7 +10,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { ItemDetailsDialog } from "@/components/dashboard/rack-visualization/item-details-dialog"
@@ -19,8 +20,19 @@ import { RackShelfDetailsCard } from "@/components/dashboard/rack-visualization/
 import { RackStatusCard } from "@/components/dashboard/rack-visualization/rack-status-card"
 import type { ItemSlot, Rack } from "@/components/dashboard/types"
 import { getSlotCoordinate } from "@/components/dashboard/utils/helpers"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
-import { buttonVariants } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import useRacks, { type RacksList } from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
@@ -69,7 +81,6 @@ function mapRackToVisualization(
   return {
     id: String(rack.id),
     marker: rack.marker,
-    name: rack.marker || `Regał ${rack.id}`,
     rows,
     cols,
     minTemp: rack.minTemp,
@@ -404,6 +415,7 @@ export default function WarehouseClient() {
       .map((rack) => mapRackToVisualization(rack))
   }, [racksData?.content, warehouse])
 
+  const router = useRouter()
   const hasFetchError = isWarehousesError || isRacksError
   const isLoading = isWarehousesPending || isRacksPending
   const [currentRackIndex, setCurrentRackIndex] = useState(0)
@@ -411,6 +423,7 @@ export default function WarehouseClient() {
     null
   )
   const [isItemDetailsOpen, setIsItemDetailsOpen] = useState(false)
+  const [is3DWarningOpen, setIs3DWarningOpen] = useState(false)
 
   const currentRack = racks[currentRackIndex]
   const {
@@ -535,7 +548,7 @@ export default function WarehouseClient() {
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <Badge className="gap-1.5" variant="outline">
             <HugeiconsIcon className="size-3" icon={Layers01Icon} />
-            {currentRack.name}
+            {currentRack.marker}
           </Badge>
           <Badge className="gap-1.5 font-mono" variant="outline">
             <HugeiconsIcon className="size-3" icon={RulerIcon} />
@@ -560,17 +573,48 @@ export default function WarehouseClient() {
           <HugeiconsIcon className="size-4" icon={PackageIcon} />
           <span>Asortyment</span>
         </Link>
-        <Link
-          className={cn(
-            buttonVariants({ variant: "outline", size: "sm" }),
-            "gap-2"
-          )}
-          href={`/dashboard/warehouse/${encodeURIComponent(warehouseName)}/3d-visualization`}
+        <Button
+          className="gap-2"
+          onClick={() => setIs3DWarningOpen(true)}
+          size="sm"
+          variant="outline"
         >
           <HugeiconsIcon className="size-4" icon={CubeIcon} />
           <span>Widok 3D</span>
-        </Link>
+        </Button>
       </div>
+
+      <AlertDialog onOpenChange={setIs3DWarningOpen} open={is3DWarningOpen}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-amber-500/10">
+              <HugeiconsIcon
+                className="text-amber-500"
+                icon={Alert01Icon}
+                size={24}
+              />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Widok 3D magazynu</AlertDialogTitle>
+            <AlertDialogDescription>
+              Wizualizacja 3D pobiera dane o wszystkich magazynach, regałach i
+              przedmiotach. Przy dużej ilości danych może to znacząco obciążyć
+              połączenie i zużyć dużo transferu.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                router.push(
+                  `/dashboard/warehouse/${encodeURIComponent(warehouseName)}/3d-visualization`
+                )
+              }
+            >
+              Otwórz widok 3D
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Main Content */}
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(240px,320px)]">
@@ -626,7 +670,7 @@ export default function WarehouseClient() {
         item={selectedItem ?? null}
         onOpenChange={setIsItemDetailsOpen}
         open={isItemDetailsOpen}
-        rackName={currentRack.name}
+        rackName={currentRack.marker}
       />
     </div>
   )

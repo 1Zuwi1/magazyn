@@ -1,12 +1,27 @@
+"use client"
+
 import {
+  Alert01Icon,
   ArrowRight01Icon,
   CubeIcon,
   Layers01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-// import { Badge } from "@/components/ui/badge"
-import { buttonVariants } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -59,7 +74,7 @@ function WarehouseGridSkeleton() {
           style={{ animationDelay: `${index * 75}ms` }}
         >
           {/* Decorative shimmer overlay */}
-          <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-linear-to-r from-transparent via-white/5 to-transparent" />
 
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-3">
@@ -106,6 +121,12 @@ function WarehouseGridSkeleton() {
 }
 
 export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
+  const router = useRouter()
+  const [visualizationTarget, setVisualizationTarget] = useState<{
+    id: number
+    name: string
+  } | null>(null)
+
   if (isLoading) {
     return <WarehouseGridSkeleton />
   }
@@ -242,21 +263,65 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                 <span>Regały</span>
                 <HugeiconsIcon className="size-3.5" icon={ArrowRight01Icon} />
               </Link>
-              <Link
-                className={buttonVariants({
-                  variant: "outline",
-                  size: "sm",
-                  className: "flex-1 gap-1.5",
-                })}
-                href={`/dashboard/warehouse/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}/3d-visualization`}
+              <Button
+                className="flex-1 gap-1.5"
+                onClick={() =>
+                  setVisualizationTarget({
+                    id: warehouse.id,
+                    name: warehouse.name,
+                  })
+                }
+                size="sm"
+                variant="outline"
               >
                 <HugeiconsIcon className="size-3.5" icon={CubeIcon} />
                 <span>3D</span>
-              </Link>
+              </Button>
             </CardFooter>
           </Card>
         )
       })}
+
+      <AlertDialog
+        onOpenChange={(open) => {
+          if (!open) {
+            setVisualizationTarget(null)
+          }
+        }}
+        open={visualizationTarget !== null}
+      >
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-amber-500/10">
+              <HugeiconsIcon
+                className="text-amber-500"
+                icon={Alert01Icon}
+                size={24}
+              />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Widok 3D magazynu</AlertDialogTitle>
+            <AlertDialogDescription>
+              Wizualizacja 3D pobiera dane o wszystkich magazynach, regałach i
+              przedmiotach. Przy dużej ilości danych może to znacząco obciążyć
+              połączenie i zużyć dużo transferu.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (visualizationTarget) {
+                  router.push(
+                    `/dashboard/warehouse/id/${visualizationTarget.id}/${encodeURIComponent(visualizationTarget.name)}/3d-visualization`
+                  )
+                }
+              }}
+            >
+              Otwórz widok 3D
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

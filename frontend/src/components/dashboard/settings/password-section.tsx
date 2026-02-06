@@ -1,17 +1,19 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
-import { useState } from "react"
+import { useRef } from "react"
 import { toast } from "sonner"
 import { useTwoFactorVerificationDialog } from "@/components/dashboard/settings/two-factor-verification-dialog-store"
+import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { Button } from "@/components/ui/button"
-import { ChangePasswordFormSchema } from "@/lib/schemas"
-import { wait } from "./utils"
+import { apiFetch } from "@/lib/fetcher"
+import { ChangePasswordFormSchema, ChangePasswordSchema } from "@/lib/schemas"
+import tryCatch from "@/lib/try-catch"
 
 export function PasswordSection() {
   const { open } = useTwoFactorVerificationDialog()
-  const [isVerified, setIsVerified] = useState(false) // FIXME: Only in dev - remove later
+  const isTwoFactorVerifiedRef = useRef(false)
 
   const form = useForm({
     defaultValues: {
@@ -19,24 +21,36 @@ export function PasswordSection() {
       newPassword: "",
       confirmPassword: "",
     },
-    onSubmit: async () => {
-      if (!isVerified) {
+    onSubmit: async ({ value }) => {
+      if (!isTwoFactorVerifiedRef.current) {
         open({
-          onVerified: () => {
-            setIsVerified(true) // FIXME: Only in dev - remove later
-            form.handleSubmit()
+          onVerified: async () => {
+            isTwoFactorVerifiedRef.current = true
+            await form.handleSubmit()
           },
         })
         return
       }
 
-      try {
-        await wait(1000)
-        form.reset()
-        toast.success("Hasło zostało zmienione.")
-      } catch {
-        toast.error("Nie udało się zmienić hasła. Spróbuj ponownie.")
+      const [error] = await tryCatch(
+        apiFetch("/api/users/password", ChangePasswordSchema, {
+          method: "PATCH",
+          body: {
+            oldPassword: value.oldPassword,
+            newPassword: value.newPassword,
+          },
+        })
+      )
+
+      isTwoFactorVerifiedRef.current = false
+
+      if (error) {
+        handleApiError(error, "Nie udało się zmienić hasła. Spróbuj ponownie.")
+        return
       }
+
+      form.reset()
+      toast.success("Hasło zostało zmienione.")
     },
     validators: {
       onSubmitAsync: ChangePasswordFormSchema,
