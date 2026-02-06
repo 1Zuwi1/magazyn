@@ -3,6 +3,7 @@
 import { ArrowLeft02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
+  type ColumnDef,
   type ColumnFiltersState,
   type FilterFn,
   flexRender,
@@ -14,6 +15,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { useState } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   NoItemsEmptyState,
@@ -34,8 +36,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { itemsColumns } from "./items-columns"
-import type { ItemStats } from "./types"
+import useItems, { type ItemListItem } from "@/hooks/use-items"
+import { SortableHeader, StaticHeader } from "./sortable-header"
 
 const SKELETON_ROWS = 5
 
@@ -118,33 +120,111 @@ function ItemsTableSkeleton() {
 }
 
 interface ItemsTableProps {
-  items: ItemStats[]
   isLoading?: boolean
 }
 
-const globalFilterFn: FilterFn<ItemStats> = (row, _columnId, filterValue) => {
+const itemsColumns: ColumnDef<ItemListItem>[] = [
+  {
+    accessorKey: "name",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Nazwa</SortableHeader>
+    ),
+    enableSorting: true,
+  },
+  {
+    accessorKey: "barcode",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Kod</SortableHeader>
+    ),
+    cell: ({ row }) => (
+      <span className="font-mono text-sm">{row.original.barcode}</span>
+    ),
+    enableSorting: true,
+  },
+  {
+    id: "dimensions",
+    accessorFn: (item) => `${item.sizeX}×${item.sizeY}×${item.sizeZ}`,
+    header: ({ column }) => (
+      <SortableHeader column={column}>Wymiary</SortableHeader>
+    ),
+    cell: ({ row }) => (
+      <span className="font-mono text-sm">
+        {row.original.sizeX} × {row.original.sizeY} × {row.original.sizeZ}
+      </span>
+    ),
+    enableSorting: true,
+  },
+  {
+    accessorKey: "weight",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Waga</SortableHeader>
+    ),
+    cell: ({ row }) => (
+      <span className="font-mono">{row.original.weight} kg</span>
+    ),
+    enableSorting: true,
+  },
+  {
+    accessorKey: "expireAfterDays",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Ważność</SortableHeader>
+    ),
+    cell: ({ row }) => (
+      <Badge variant="outline">{row.original.expireAfterDays} dni</Badge>
+    ),
+    enableSorting: true,
+  },
+  {
+    accessorKey: "dangerous",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Status</SortableHeader>
+    ),
+    cell: ({ row }) =>
+      row.original.dangerous ? (
+        <Badge variant="destructive">Niebezpieczny</Badge>
+      ) : (
+        <Badge variant="secondary">Bezpieczny</Badge>
+      ),
+    enableSorting: true,
+  },
+  {
+    id: "comment",
+    accessorKey: "comment",
+    header: () => <StaticHeader>Komentarz</StaticHeader>,
+    cell: ({ row }) => (
+      <span className="line-clamp-2 text-muted-foreground text-sm">
+        {row.original.comment || "Brak"}
+      </span>
+    ),
+    enableSorting: false,
+  },
+]
+
+const globalFilterFn: FilterFn<ItemListItem> = (
+  row,
+  _columnId,
+  filterValue
+) => {
   const searchValue = filterValue?.toString().trim().toLowerCase()
   if (!searchValue) {
     return true
   }
-  const definition = row.original?.definition
-  if (!definition) {
-    return false
-  }
   return (
-    definition.name.toLowerCase().includes(searchValue) ||
-    definition.category.toLowerCase().includes(searchValue)
+    row.original.name.toLowerCase().includes(searchValue) ||
+    row.original.barcode.toLowerCase().includes(searchValue) ||
+    (row.original.comment?.toLowerCase().includes(searchValue) ?? false)
   )
 }
 
-export function ItemsTable({ items, isLoading }: ItemsTableProps) {
-  console.log(items)
+export function ItemsTable({ isLoading }: ItemsTableProps) {
+  const { data: items, isPending } = useItems()
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
+  const tableData = items?.content ?? []
 
   const table = useReactTable({
-    data: items,
+    data: tableData,
     columns: itemsColumns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -161,12 +241,12 @@ export function ItemsTable({ items, isLoading }: ItemsTableProps) {
     },
   })
 
-  if (isLoading) {
+  if (isLoading || isPending) {
     return <ItemsTableSkeleton />
   }
 
   const filteredCount = table.getFilteredRowModel().rows.length
-  const totalCount = items.length
+  const totalCount = items?.totalElements ?? tableData.length
   const isFiltered = globalFilter.length > 0
   const currentPage = table.getState().pagination.pageIndex + 1
   const totalPages = table.getPageCount()
@@ -185,7 +265,7 @@ export function ItemsTable({ items, isLoading }: ItemsTableProps) {
           <SearchInput
             aria-label="Szukaj przedmiotów"
             onChange={setGlobalFilter}
-            placeholder="Szukaj po nazwie lub kategorii..."
+            placeholder="Szukaj po nazwie, kodzie lub komentarzu..."
             value={globalFilter}
           />
         </FilterGroup>

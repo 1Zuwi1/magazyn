@@ -84,7 +84,7 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
   {
     accessorKey: "qrCode",
     header: ({ column }) => (
-      <SortableHeader column={column}>Kod kreskowy</SortableHeader>
+      <SortableHeader column={column}>Kod</SortableHeader>
     ),
     cell: ({ row }) => <BarcodeCell value={row.original.qrCode} />,
     enableSorting: true,

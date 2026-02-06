@@ -18,33 +18,24 @@ function SortIcon({ isSorted }: { isSorted: false | SortDirection }) {
       : "text-muted-foreground/50 group-hover:text-muted-foreground"
   )
 
+  let icon = SortingIcon
   if (isSorted === "asc") {
-    return (
-      <span className={baseClass}>
-        <HugeiconsIcon
-          className="fade-in size-3.5 animate-in"
-          icon={ArrowUp01Icon}
-        />
-      </span>
-    )
+    icon = ArrowUp01Icon
+  } else if (isSorted === "desc") {
+    icon = ArrowDown01Icon
   }
 
-  if (isSorted === "desc") {
-    return (
-      <span className={baseClass}>
-        <HugeiconsIcon
-          className="fade-in size-3.5 animate-in"
-          icon={ArrowDown01Icon}
-        />
-      </span>
-    )
-  }
+  const iconClass = cn(
+    "size-3.5",
+    isSorted ? "fade-in animate-in" : "opacity-0 group-hover:opacity-100"
+  )
 
   return (
     <span className={baseClass}>
       <HugeiconsIcon
-        className="size-3.5 opacity-0 group-hover:opacity-100"
-        icon={SortingIcon}
+        className={iconClass}
+        icon={icon}
+        key={isSorted || "none"}
       />
     </span>
   )
@@ -63,9 +54,17 @@ export function SortableHeader<TData, TValue>({
 }: SortableHeaderProps<TData, TValue>) {
   const isSorted = column.getIsSorted()
   const canSort = column.getCanSort()
+  const nextSortingOrder = column.getNextSortingOrder()
 
   if (!canSort) {
     return <span className={className}>{children}</span>
+  }
+
+  let sortingTitle = "Wyczyść sortowanie"
+  if (nextSortingOrder === "asc") {
+    sortingTitle = "Sortuj rosnąco"
+  } else if (nextSortingOrder === "desc") {
+    sortingTitle = "Sortuj malejąco"
   }
 
   return (
@@ -75,8 +74,10 @@ export function SortableHeader<TData, TValue>({
         isSorted && "text-foreground",
         className
       )}
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      onClick={column.getToggleSortingHandler()}
       size="sm"
+      title={sortingTitle}
+      type="button"
       variant="ghost"
     >
       <span>{children}</span>

@@ -298,13 +298,23 @@ const createPaginatedSchema = <T extends z.ZodType>(itemSchema: T) => {
   })
 }
 
-const createPaginatedSchemaInput = <T extends z.ZodType>(itemSchema?: T) => {
+const createPaginatedSchemaInput = <T extends z.ZodType | undefined>(
+  itemSchema?: T
+) => {
   return z.object({
     ...itemSchema,
     page: z.number().int().nonnegative().optional(),
     size: z.number().int().nonnegative().optional(),
+    sortBy: z.string().optional(),
+    sortDir: z.enum(["asc", "desc"]).optional(),
   })
 }
+
+export type PaginatedResponse<T extends z.ZodType> = z.infer<
+  ReturnType<typeof createPaginatedSchema<T>>
+>
+export type PaginatedRequest<T extends z.ZodType | undefined = undefined> =
+  z.infer<ReturnType<typeof createPaginatedSchemaInput<T>>>
 
 const WarehouseSchema = z.object({
   freeSlots: z.number().int().nonnegative(),
@@ -356,5 +366,28 @@ export const AssortmentSchema = createApiSchema({
         positionY: z.number().int().nonnegative(),
       })
     ),
+  },
+})
+
+const ItemDefinitionSchema = z.object({
+  id: z.number().int().nonnegative(),
+  barcode: z.string(),
+  name: z.string(),
+  photoUrl: z.string().nullable(),
+  minTemp: z.number(),
+  maxTemp: z.number(),
+  weight: z.number(),
+  sizeX: z.number(),
+  sizeY: z.number(),
+  sizeZ: z.number(),
+  comment: z.string().nullable(),
+  expireAfterDays: z.number(),
+  dangerous: z.boolean(),
+})
+
+export const ItemsSchema = createApiSchema({
+  GET: {
+    input: createPaginatedSchemaInput(),
+    output: createPaginatedSchema(ItemDefinitionSchema),
   },
 })

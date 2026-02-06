@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
+  type ColumnDef,
   type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
@@ -17,6 +18,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { useMemo, useState } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   FilterEmptyState,
@@ -46,34 +48,158 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import useAssortment from "@/hooks/use-assortment"
+import type { InferApiOutput } from "@/lib/fetcher"
+import type { AssortmentSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { getDaysUntilExpiry } from "../utils/helpers"
-import { assortmentColumns } from "./assortment-columns"
-import type { ItemInstance } from "./types"
+import { SortableHeader, StaticHeader } from "./sortable-header"
 
 type ExpiryFilters = "14_DAYS" | "7_DAYS" | "3_DAYS" | "EXPIRED" | "ALL"
+
+type AssortmentItem = InferApiOutput<
+  typeof AssortmentSchema,
+  "GET"
+>["content"][number]
 
 const EXPIRY_FILTER_OPTIONS: {
   value: ExpiryFilters
   label: string
-  icon?: boolean
 }[] = [
   { value: "ALL", label: "Wszystkie" },
-  { value: "EXPIRED", label: "Przeterminowane", icon: true },
-  { value: "3_DAYS", label: "Do 3 dni", icon: true },
-  { value: "7_DAYS", label: "Do 7 dni", icon: true },
-  { value: "14_DAYS", label: "Do 14 dni", icon: true },
+  { value: "EXPIRED", label: "Przeterminowane" },
+  { value: "3_DAYS", label: "Do 3 dni" },
+  { value: "7_DAYS", label: "Do 7 dni" },
+  { value: "14_DAYS", label: "Do 14 dni" },
+]
+
+const dateFormatter = new Intl.DateTimeFormat("pl-PL")
+
+const formatDateLabel = (value: string): string => {
+  const parsedDate = new Date(value)
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Brak danych"
+  }
+  return dateFormatter.format(parsedDate)
+}
+
+const getDaysToExpiry = (value: string): number | undefined => {
+  const parsedDate = new Date(value)
+  if (Number.isNaN(parsedDate.getTime())) {
+    return undefined
+  }
+  return getDaysUntilExpiry(new Date(), parsedDate)
+}
+
+function ExpiryStatusBadge({ value }: { value: string }) {
+  const daysUntilExpiry = getDaysToExpiry(value)
+
+  if (typeof daysUntilExpiry !== "number") {
+    return <Badge variant="outline">Brak daty</Badge>
+  }
+  if (daysUntilExpiry < 0) {
+    return <Badge variant="destructive">Przeterminowane</Badge>
+  }
+  if (daysUntilExpiry <= 3) {
+    return <Badge variant="destructive">za {daysUntilExpiry} dni</Badge>
+  }
+  if (daysUntilExpiry <= 7) {
+    return (
+      <Badge className="bg-yellow-500 text-white" variant="default">
+        za {daysUntilExpiry} dni
+      </Badge>
+    )
+  }
+  return <Badge variant="outline">za {daysUntilExpiry} dni</Badge>
+}
+
+const assortmentColumns: ColumnDef<AssortmentItem>[] = [
+  {
+    accessorKey: "barcode",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Kod</SortableHeader>
+    ),
+    cell: ({ row }) => (
+      <span className="font-mono text-xs">{row.original.barcode}</span>
+    ),
+    enableSorting: true,
+  },
+  {
+    accessorKey: "itemId",
+    header: ({ column }) => (
+      <SortableHeader column={column}>ID Produktu</SortableHeader>
+    ),
+    cell: ({ row }) => <span className="font-mono">{row.original.itemId}</span>,
+    enableSorting: true,
+  },
+  {
+    accessorKey: "rackId",
+    header: ({ column }) => (
+      <SortableHeader column={column}>ID Regału</SortableHeader>
+    ),
+    cell: ({ row }) => <span className="font-mono">{row.original.rackId}</span>,
+    enableSorting: true,
+  },
+  {
+    id: "position",
+    accessorFn: (item) => `${item.positionX + 1}:${item.positionY + 1}`,
+    header: ({ column }) => (
+      <SortableHeader column={column}>Pozycja</SortableHeader>
+    ),
+    cell: ({ row }) => (
+      <span className="font-mono text-sm">
+        Rząd {row.original.positionX + 1}, Kol. {row.original.positionY + 1}
+      </span>
+    ),
+    enableSorting: true,
+  },
+  {
+    accessorKey: "createdAt",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Dodano</SortableHeader>
+    ),
+    cell: ({ row }) => (
+      <span className="font-mono text-sm">
+        {formatDateLabel(row.original.createdAt)}
+      </span>
+    ),
+    enableSorting: true,
+  },
+  {
+    accessorKey: "expiresAt",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Ważność</SortableHeader>
+    ),
+    cell: ({ row }) => (
+      <div className="space-y-1">
+        <div className="font-mono text-sm">
+          {formatDateLabel(row.original.expiresAt)}
+        </div>
+        <ExpiryStatusBadge value={row.original.expiresAt} />
+      </div>
+    ),
+    enableSorting: true,
+  },
+  {
+    accessorKey: "userId",
+    header: () => <StaticHeader>Użytkownik ID</StaticHeader>,
+    cell: ({ row }) => <span className="font-mono">{row.original.userId}</span>,
+    enableSorting: false,
+  },
 ]
 
 function matchesExpiryFilter(
-  item: ItemInstance,
+  item: AssortmentItem,
   filterValue: ExpiryFilters
 ): boolean {
   if (filterValue === "ALL") {
     return true
   }
 
-  const daysUntilExpiry = getDaysUntilExpiry(new Date(), item.expiryDate)
+  const daysUntilExpiry = getDaysToExpiry(item.expiresAt)
+  if (typeof daysUntilExpiry !== "number") {
+    return false
+  }
 
   switch (filterValue) {
     case "EXPIRED":
@@ -90,7 +216,6 @@ function matchesExpiryFilter(
 }
 
 interface AssortmentTableProps {
-  items: ItemInstance[]
   isLoading?: boolean
 }
 
@@ -186,15 +311,22 @@ function AssortmentTableSkeleton() {
   )
 }
 
-export function AssortmentTable({ items, isLoading }: AssortmentTableProps) {
+const isExpiryFilterValue = (value: string | null): value is ExpiryFilters =>
+  typeof value === "string" &&
+  EXPIRY_FILTER_OPTIONS.some((option) => option.value === value)
+
+export function AssortmentTable({ isLoading }: AssortmentTableProps) {
+  const { data: assortment, isPending } = useAssortment()
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
   const [expiryFilter, setExpiryFilter] = useState<ExpiryFilters>("ALL")
+  const assortmentItems = assortment?.content ?? []
 
   const filteredItems = useMemo(
-    () => items.filter((item) => matchesExpiryFilter(item, expiryFilter)),
-    [items, expiryFilter]
+    () =>
+      assortmentItems.filter((item) => matchesExpiryFilter(item, expiryFilter)),
+    [assortmentItems, expiryFilter]
   )
 
   const table = useReactTable({
@@ -208,20 +340,16 @@ export function AssortmentTable({ items, isLoading }: AssortmentTableProps) {
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, _columnId, filterValue) => {
-      const searchValue = filterValue?.toString().trim()
+      const searchValue = filterValue?.toString().trim().toLowerCase()
       if (!searchValue) {
         return true
       }
-      const definition = row.original?.definition
-      if (!definition) {
-        return false
-      }
-      const normalizedSearchValue = searchValue.toLowerCase()
-      const name = definition.name.toLowerCase()
-      const category = definition.category.toLowerCase()
+
       return (
-        name.includes(normalizedSearchValue) ||
-        category.includes(normalizedSearchValue)
+        row.original.barcode.toLowerCase().includes(searchValue) ||
+        row.original.itemId.toString().includes(searchValue) ||
+        row.original.rackId.toString().includes(searchValue) ||
+        row.original.userId.toString().includes(searchValue)
       )
     },
     state: {
@@ -232,7 +360,7 @@ export function AssortmentTable({ items, isLoading }: AssortmentTableProps) {
   })
 
   const filteredCount = table.getFilteredRowModel().rows.length
-  const totalCount = items.length
+  const totalCount = assortment?.totalElements ?? assortmentItems.length
   const isSearchFiltered = globalFilter.length > 0
   const isExpiryFiltered = expiryFilter !== "ALL"
   const isFiltered = isSearchFiltered || isExpiryFiltered
@@ -250,7 +378,7 @@ export function AssortmentTable({ items, isLoading }: AssortmentTableProps) {
     genitive: "przedmiotów",
   }
 
-  if (isLoading) {
+  if (isLoading || isPending) {
     return <AssortmentTableSkeleton />
   }
 
@@ -260,9 +388,9 @@ export function AssortmentTable({ items, isLoading }: AssortmentTableProps) {
       <FilterBar>
         <FilterGroup>
           <SearchInput
-            aria-label="Filtruj przedmioty po nazwie lub kategorii"
+            aria-label="Filtruj asortyment po kodzie i identyfikatorach"
             onChange={setGlobalFilter}
-            placeholder="Szukaj po nazwie lub kategorii..."
+            placeholder="Szukaj po kodzie kreskowym, ID produktu lub regału..."
             value={globalFilter}
           />
 
@@ -272,7 +400,11 @@ export function AssortmentTable({ items, isLoading }: AssortmentTableProps) {
             isActive={isExpiryFiltered}
           >
             <Select
-              onValueChange={(value) => setExpiryFilter(value as ExpiryFilters)}
+              onValueChange={(value) => {
+                if (isExpiryFilterValue(value)) {
+                  setExpiryFilter(value)
+                }
+              }}
               value={expiryFilter}
             >
               <SelectTrigger
