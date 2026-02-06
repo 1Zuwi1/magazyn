@@ -6,12 +6,13 @@ import {
   Package,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
 import { mapItemCsv } from "@/components/admin-panel/warehouses/csv/utils/map-csv"
 import type { Item } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
+import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../lib/constants"
 import type { CsvRowType } from "../warehouses/csv/utils/types"
@@ -73,6 +74,15 @@ export default function AssortmentMain() {
   const [selectedItem, setSelectedItem] = useState<Item | undefined>(undefined)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<Item | undefined>(undefined)
+  const { addItemDialogOpen, closeAddItemDialog } = useVoiceCommandStore()
+
+  useEffect(() => {
+    if (addItemDialogOpen) {
+      setSelectedItem(undefined)
+      setDialogOpen(true)
+      closeAddItemDialog()
+    }
+  }, [addItemDialogOpen, closeAddItemDialog])
 
   const handleAddItem = () => {
     setSelectedItem(undefined)

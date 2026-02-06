@@ -17,7 +17,7 @@ import {
   getCommandLabel,
   handleConfirmCommandAction,
   isCommandMatchValid,
-} from "./lib/utils"
+} from "./helpers/utils"
 import { VoiceAssistantConfirmView } from "./voice-assistant-confirm-view"
 import { VoiceAssistantListeningView } from "./voice-assistant-listening-view"
 import { VoiceAssistantNormalView } from "./voice-assistant-normal-view"
@@ -66,6 +66,7 @@ export function VoiceAssistant({
 
   useEffect(() => {
     if (!open) {
+      stop()
       return
     }
 
@@ -78,12 +79,17 @@ export function VoiceAssistant({
       if (open) {
         setOpen(false)
         armedRef.current = false
+        stop()
+        reset()
+        setView("idle")
+        setErrorMessage(null)
+        setMatchedCommand(null)
       }
     }
 
     window.addEventListener("popstate", onPopState)
     return () => window.removeEventListener("popstate", onPopState)
-  }, [open])
+  }, [open, stop, reset])
 
   useEffect(() => {
     if (view !== "processing") {
@@ -127,9 +133,11 @@ export function VoiceAssistant({
       const shouldPopHistory = options?.shouldPopHistory ?? true
       setOpen(false)
 
-      if (armedRef.current && shouldPopHistory) {
+      if (armedRef.current) {
+        if (shouldPopHistory) {
+          window.history.back()
+        }
         armedRef.current = false
-        window.history.back()
       }
       handleReset()
     },

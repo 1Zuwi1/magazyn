@@ -6,6 +6,7 @@ export type VoiceCommandId =
   | "settings"
   | "open-scanner"
   | "add-item"
+  | "delete-item"
 
 export interface VoiceCommand {
   id: VoiceCommandId
@@ -26,6 +27,8 @@ export const normalizeTranscript = (
   options?: { toLowerCase?: boolean }
 ): string => {
   const base = value
+    .replace(/ł/g, "l")
+    .replace(/Ł/g, "L")
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
     .replace(/[^a-z0-9\s]/gi, "")
@@ -44,6 +47,7 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       { regex: /^przejdz do dashboard$/ },
       { regex: /^pokaz dashboard$/ },
       { regex: /^pokaz strone glowna$/ },
+      { regex: /^przejdz do strony glownej$/ },
       { regex: /^strona glowna$/ },
       { regex: /^dashboard$/ },
     ],
@@ -97,13 +101,29 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
     patterns: [
       { regex: /^uruchom skaner$/ },
       { regex: /^otworz skaner$/ },
+      { regex: /^odpal skaner$/ },
       { regex: /^skaner$/ },
     ],
   },
   {
     id: "add-item",
     description: "Dodaj produkt",
-    patterns: [{ regex: /^dodaj produkt$/ }, { regex: /^dodaj przedmiot$/ }],
+    patterns: [
+      { regex: /^dodaj produkt$/ },
+      { regex: /^dodaj przedmiot$/ },
+      { regex: /^dodaj asortyment$/ },
+      { regex: /^nowy produkt$/ },
+      { regex: /^nowy przedmiot$/ },
+    ],
+  },
+  {
+    id: "delete-item",
+    description: "Usuń produkt",
+    patterns: [
+      { regex: /^usun produkt ([a-z0-9]+)$/ },
+      { regex: /^usun przedmiot ([a-z0-9]+)$/ },
+      { regex: /^usun asortyment ([a-z0-9]+)$/ },
+    ],
   },
 ]
 

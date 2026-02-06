@@ -115,7 +115,8 @@ export const handleConfirmCommandAction = (
       break
     case "add-item":
       actions.openAddItemDialog()
-      break
+      actions.navigateAndClose("/admin/assortment")
+      return
     default:
       actions.setErrorMessage("Nieobsługiwana komenda")
       actions.setView("error")
