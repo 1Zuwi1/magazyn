@@ -6,6 +6,7 @@ import {
   Calendar03Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useQueries } from "@tanstack/react-query"
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -17,7 +18,9 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
+import Link from "next/link"
 import { useMemo, useState } from "react"
+import z from "zod"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -49,7 +52,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import useAssortment from "@/hooks/use-assortment"
-import type { InferApiOutput } from "@/lib/fetcher"
+import { createApiSchema } from "@/lib/create-api-schema"
+import { apiFetch, type InferApiOutput } from "@/lib/fetcher"
 import type { AssortmentSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { getDaysUntilExpiry } from "../utils/helpers"
@@ -61,6 +65,28 @@ type AssortmentItem = InferApiOutput<
   typeof AssortmentSchema,
   "GET"
 >["content"][number]
+
+const ITEM_DETAILS_SCHEMA = createApiSchema({
+  GET: {
+    output: z.object({
+      id: z.number().int().nonnegative(),
+      name: z.string(),
+    }),
+  },
+})
+
+const RACK_DETAILS_SCHEMA = createApiSchema({
+  GET: {
+    output: z.object({
+      id: z.number().int().nonnegative(),
+      name: z.string().nullish(),
+      symbol: z.string().nullish(),
+    }),
+  },
+})
+
+const ITEM_DETAILS_CACHE_TIME_MS = 5 * 60 * 1000
+const RACK_DETAILS_CACHE_TIME_MS = 5 * 60 * 1000
 
 const EXPIRY_FILTER_OPTIONS: {
   value: ExpiryFilters
@@ -112,81 +138,6 @@ function ExpiryStatusBadge({ value }: { value: string }) {
   }
   return <Badge variant="outline">za {daysUntilExpiry} dni</Badge>
 }
-
-const assortmentColumns: ColumnDef<AssortmentItem>[] = [
-  {
-    accessorKey: "barcode",
-    header: ({ column }) => (
-      <SortableHeader column={column}>Kod</SortableHeader>
-    ),
-    cell: ({ row }) => (
-      <span className="font-mono text-xs">{row.original.barcode}</span>
-    ),
-    enableSorting: true,
-  },
-  {
-    accessorKey: "itemId",
-    header: ({ column }) => (
-      <SortableHeader column={column}>ID Produktu</SortableHeader>
-    ),
-    cell: ({ row }) => <span className="font-mono">{row.original.itemId}</span>,
-    enableSorting: true,
-  },
-  {
-    accessorKey: "rackId",
-    header: ({ column }) => (
-      <SortableHeader column={column}>ID Regału</SortableHeader>
-    ),
-    cell: ({ row }) => <span className="font-mono">{row.original.rackId}</span>,
-    enableSorting: true,
-  },
-  {
-    id: "position",
-    accessorFn: (item) => `${item.positionX + 1}:${item.positionY + 1}`,
-    header: ({ column }) => (
-      <SortableHeader column={column}>Pozycja</SortableHeader>
-    ),
-    cell: ({ row }) => (
-      <span className="font-mono text-sm">
-        Rząd {row.original.positionX + 1}, Kol. {row.original.positionY + 1}
-      </span>
-    ),
-    enableSorting: true,
-  },
-  {
-    accessorKey: "createdAt",
-    header: ({ column }) => (
-      <SortableHeader column={column}>Dodano</SortableHeader>
-    ),
-    cell: ({ row }) => (
-      <span className="font-mono text-sm">
-        {formatDateLabel(row.original.createdAt)}
-      </span>
-    ),
-    enableSorting: true,
-  },
-  {
-    accessorKey: "expiresAt",
-    header: ({ column }) => (
-      <SortableHeader column={column}>Ważność</SortableHeader>
-    ),
-    cell: ({ row }) => (
-      <div className="space-y-1">
-        <div className="font-mono text-sm">
-          {formatDateLabel(row.original.expiresAt)}
-        </div>
-        <ExpiryStatusBadge value={row.original.expiresAt} />
-      </div>
-    ),
-    enableSorting: true,
-  },
-  {
-    accessorKey: "userId",
-    header: () => <StaticHeader>Użytkownik ID</StaticHeader>,
-    cell: ({ row }) => <span className="font-mono">{row.original.userId}</span>,
-    enableSorting: false,
-  },
-]
 
 function matchesExpiryFilter(
   item: AssortmentItem,
@@ -322,11 +273,152 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
   const [globalFilter, setGlobalFilter] = useState("")
   const [expiryFilter, setExpiryFilter] = useState<ExpiryFilters>("ALL")
   const assortmentItems = assortment?.content ?? []
+  const itemIds = useMemo(
+    () => [...new Set(assortmentItems.map((item) => item.itemId))],
+    [assortmentItems]
+  )
+  const rackIds = useMemo(
+    () => [...new Set(assortmentItems.map((item) => item.rackId))],
+    [assortmentItems]
+  )
+
+  const itemDetailsQueries = useQueries({
+    queries: itemIds.map((itemId) => ({
+      queryKey: ["item-details", itemId],
+      queryFn: () => apiFetch(`/api/items/${itemId}`, ITEM_DETAILS_SCHEMA),
+      staleTime: ITEM_DETAILS_CACHE_TIME_MS,
+    })),
+  })
+  const rackDetailsQueries = useQueries({
+    queries: rackIds.map((rackId) => ({
+      queryKey: ["rack-details", rackId],
+      queryFn: () => apiFetch(`/api/racks/${rackId}`, RACK_DETAILS_SCHEMA),
+      staleTime: RACK_DETAILS_CACHE_TIME_MS,
+    })),
+  })
+
+  const itemNamesById = useMemo(() => {
+    const namesMap = new Map<number, string>()
+    for (const [index, itemId] of itemIds.entries()) {
+      const itemName = itemDetailsQueries[index]?.data?.name?.trim()
+      if (itemName) {
+        namesMap.set(itemId, itemName)
+      }
+    }
+    return namesMap
+  }, [itemDetailsQueries, itemIds])
+
+  const rackNamesById = useMemo(() => {
+    const namesMap = new Map<number, string>()
+    for (const [index, rackId] of rackIds.entries()) {
+      const rack = rackDetailsQueries[index]?.data
+      const rackName = rack?.name?.trim() || rack?.symbol?.trim()
+      if (rackName) {
+        namesMap.set(rackId, rackName)
+      }
+    }
+    return namesMap
+  }, [rackDetailsQueries, rackIds])
 
   const filteredItems = useMemo(
     () =>
       assortmentItems.filter((item) => matchesExpiryFilter(item, expiryFilter)),
     [assortmentItems, expiryFilter]
+  )
+  const assortmentColumns = useMemo<ColumnDef<AssortmentItem>[]>(
+    () => [
+      {
+        accessorKey: "barcode",
+        header: ({ column }) => (
+          <SortableHeader column={column}>Kod</SortableHeader>
+        ),
+        cell: ({ row }) => (
+          <span className="font-mono text-xs">{row.original.barcode}</span>
+        ),
+        enableSorting: true,
+      },
+      {
+        id: "itemName",
+        accessorFn: (row) => itemNamesById.get(row.itemId) ?? "",
+        header: ({ column }) => (
+          <SortableHeader column={column}>Produkt</SortableHeader>
+        ),
+        cell: ({ row }) => (
+          <Link
+            className="font-medium text-primary hover:underline"
+            href={`/dashboard/items?itemId=${row.original.itemId}`}
+          >
+            {itemNamesById.get(row.original.itemId) ?? "Nieznany produkt"}
+          </Link>
+        ),
+        enableSorting: true,
+      },
+      {
+        id: "rackName",
+        accessorFn: (row) => rackNamesById.get(row.rackId) ?? "",
+        header: ({ column }) => (
+          <SortableHeader column={column}>Regał</SortableHeader>
+        ),
+        cell: ({ row }) => (
+          <Link
+            className="font-medium text-primary hover:underline"
+            href={`/dashboard/warehouse?rackId=${row.original.rackId}`}
+          >
+            {rackNamesById.get(row.original.rackId) ?? "Nieznany regał"}
+          </Link>
+        ),
+        enableSorting: true,
+      },
+      {
+        id: "position",
+        accessorFn: (item) => `${item.positionX + 1}:${item.positionY + 1}`,
+        header: ({ column }) => (
+          <SortableHeader column={column}>Pozycja</SortableHeader>
+        ),
+        cell: ({ row }) => (
+          <span className="font-mono text-sm">
+            Rząd {row.original.positionX + 1}, Kol. {row.original.positionY + 1}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        accessorKey: "createdAt",
+        header: ({ column }) => (
+          <SortableHeader column={column}>Dodano</SortableHeader>
+        ),
+        cell: ({ row }) => (
+          <span className="font-mono text-sm">
+            {formatDateLabel(row.original.createdAt)}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        accessorKey: "expiresAt",
+        header: ({ column }) => (
+          <SortableHeader column={column}>Ważność</SortableHeader>
+        ),
+        cell: ({ row }) => (
+          <div className="space-y-1">
+            <div className="font-mono text-sm">
+              {formatDateLabel(row.original.expiresAt)}
+            </div>
+            <ExpiryStatusBadge value={row.original.expiresAt} />
+          </div>
+        ),
+        enableSorting: true,
+      },
+      {
+        accessorKey: "userId",
+        header: () => <StaticHeader>Użytkownik ID</StaticHeader>,
+        cell: ({ row }) => (
+          <span className="font-mono">{row.original.userId}</span>
+        ),
+        enableSorting: false,
+      },
+    ],
+    [itemNamesById, rackNamesById]
   )
 
   const table = useReactTable({
@@ -344,11 +436,15 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
       if (!searchValue) {
         return true
       }
+      const itemName =
+        itemNamesById.get(row.original.itemId)?.toLowerCase() ?? ""
+      const rackName =
+        rackNamesById.get(row.original.rackId)?.toLowerCase() ?? ""
 
       return (
         row.original.barcode.toLowerCase().includes(searchValue) ||
-        row.original.itemId.toString().includes(searchValue) ||
-        row.original.rackId.toString().includes(searchValue) ||
+        itemName.includes(searchValue) ||
+        rackName.includes(searchValue) ||
         row.original.userId.toString().includes(searchValue)
       )
     },
@@ -390,7 +486,7 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
           <SearchInput
             aria-label="Filtruj asortyment po kodzie i identyfikatorach"
             onChange={setGlobalFilter}
-            placeholder="Szukaj po kodzie kreskowym, ID produktu lub regału..."
+            placeholder="Szukaj po kodzie kreskowym, nazwie produktu lub regału..."
             value={globalFilter}
           />
 
