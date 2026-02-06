@@ -192,7 +192,7 @@ export function VoiceAssistant({
     autoStopTimeoutRef.current = setTimeout(() => {
       autoStopTimeoutRef.current = null
       handleStopListening()
-    }, TIMEOUT_DURATION)
+    }, 600)
   }, [view, liveCommand, handleStopListening])
 
   useEffect(() => {
