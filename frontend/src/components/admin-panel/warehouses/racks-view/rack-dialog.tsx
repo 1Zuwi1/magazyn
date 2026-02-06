@@ -1,6 +1,6 @@
 "use client"
 
-import { useForm } from "@tanstack/react-form"
+import { useForm, useStore } from "@tanstack/react-form"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import type { Rack } from "@/components/dashboard/types"
 import { FieldWithState } from "@/components/helpers/field-state"
@@ -31,7 +31,7 @@ export function RackDialog({
     defaultValues: formValues,
     onSubmit: ({ value }) => {
       onSubmit({
-        symbol: value.symbol || undefined,
+        marker: value.marker,
         name: value.name,
         rows: value.rows || 1,
         cols: value.cols || 1,
@@ -48,12 +48,15 @@ export function RackDialog({
     },
   })
 
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
+
   return (
     <FormDialog
       description={
         isEdit ? "Zmień parametry regału" : "Wprowadź parametry nowego regału."
       }
       formId="rack-form"
+      isLoading={isSubmitting}
       onFormReset={() => form.reset()}
       onOpenChange={onOpenChange}
       open={open}
@@ -80,12 +83,12 @@ export function RackDialog({
             )}
           </form.Field>
 
-          <form.Field name="symbol">
+          <form.Field name="marker">
             {(field) => (
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label="Symbol"
+                label="Marker"
                 layout="grid"
                 placeholder="A1-01"
               />

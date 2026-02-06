@@ -81,7 +81,7 @@ const RACK_DETAILS_SCHEMA = createApiSchema({
     output: z.object({
       id: z.number().int().nonnegative(),
       name: z.string().nullish(),
-      symbol: z.string().nullish(),
+      marker: z.string(),
     }),
   },
 })
@@ -313,7 +313,7 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
     const namesMap = new Map<number, string>()
     for (const [index, rackId] of rackIds.entries()) {
       const rack = rackDetailsQueries[index]?.data
-      const rackName = rack?.name?.trim() || rack?.symbol?.trim()
+      const rackName = rack?.name?.trim() || rack?.marker.trim()
       if (rackName) {
         namesMap.set(rackId, rackName)
       }

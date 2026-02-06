@@ -1,6 +1,6 @@
 "use client"
 
-import { useForm } from "@tanstack/react-form"
+import { useForm, useStore } from "@tanstack/react-form"
 import { useEffect } from "react"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import { FieldWithState } from "@/components/helpers/field-state"
@@ -46,6 +46,8 @@ export function WarehouseDialog({
     }
   }, [currentRow, form])
 
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
+
   return (
     <FormDialog
       description={
@@ -54,6 +56,7 @@ export function WarehouseDialog({
           : "Wprowadź informacje o nowym magazynie."
       }
       formId={formId}
+      isLoading={isSubmitting}
       onFormReset={() => form.reset()}
       onOpenChange={onOpenChange}
       open={open}

@@ -27,7 +27,7 @@ export const ItemSchema = z.object({
 
 export const RackSchema = z.object({
   id: z.string(),
-  symbol: z.string().optional(),
+  marker: z.string(),
   name: z.string(),
   rows: z.number().min(1),
   cols: z.number().min(1),
@@ -51,7 +51,7 @@ export const RackCsvSchema = RackSchema.omit({
   name: true,
 }).extend({
   name: z.string().optional(),
-  symbol: z.string(),
+  marker: z.string(),
 })
 
 export const ItemCsvSchema = ItemSchema.omit({

@@ -4,7 +4,7 @@ import type { ItemCsvData, RackCsvData } from "./types"
 export function mapRackCsv(rows: RackCsvData[]): Rack[] {
   return rows.map((row) => ({
     id: crypto.randomUUID(),
-    marker: row.symbol,
+    marker: row.marker,
     rows: row.rows,
     cols: row.cols,
     minTemp: row.minTemp,

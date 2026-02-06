@@ -72,6 +72,7 @@ interface FormDialogProps {
   children: React.ReactNode
   onFormReset?: () => void
   formId?: string
+  isLoading?: boolean
 }
 
 export function FormDialog({
@@ -82,6 +83,7 @@ export function FormDialog({
   children,
   onFormReset,
   formId,
+  isLoading,
 }: FormDialogProps) {
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
@@ -104,7 +106,7 @@ export function FormDialog({
         <Separator />
         <div className="py-1">{children}</div>
         <DialogFooter>
-          <Button form={formId} type="submit">
+          <Button form={formId} isLoading={isLoading} type="submit">
             Zapisz
           </Button>
         </DialogFooter>

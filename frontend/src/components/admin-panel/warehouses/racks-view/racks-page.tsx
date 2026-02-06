@@ -48,7 +48,6 @@ const mapApiRackToViewModel = (rack: ApiRack): Rack => {
   return {
     id: String(rack.id),
     marker: rack.marker,
-    symbol: rack.marker ?? undefined,
     name: rack.marker ?? `Regał ${rack.id}`,
     rows,
     cols,
@@ -91,7 +90,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
   } = useRacks({
     page: 0,
     size: RACKS_PAGE_SIZE,
-    warehouseId: apiWarehouse?.id,
+    warehouseId: apiWarehouse?.id ?? -1,
   })
 
   const mappedRacks = useMemo(() => {

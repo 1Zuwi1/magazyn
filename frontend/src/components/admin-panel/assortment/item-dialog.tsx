@@ -1,6 +1,6 @@
 "use client"
 
-import { useForm } from "@tanstack/react-form"
+import { useForm, useStore } from "@tanstack/react-form"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import type { Item } from "@/components/dashboard/types"
 import { FieldWithState } from "@/components/helpers/field-state"
@@ -94,6 +94,8 @@ export function ItemDialog({
     },
   })
 
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
+
   return (
     <FormDialog
       description={
@@ -102,6 +104,7 @@ export function ItemDialog({
           : "Wprowadź parametry nowego przedmiotu."
       }
       formId="item-form"
+      isLoading={isSubmitting}
       onFormReset={() => form.reset()}
       onOpenChange={onOpenChange}
       open={open}

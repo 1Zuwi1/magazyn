@@ -27,8 +27,8 @@ const NUMBER_FIELDS = new Set([
 
 const RACK_HEADER_MAP: Record<string, string> = {
   // Polish headers
-  "#oznaczenie": "symbol",
-  oznaczenie: "symbol",
+  "#oznaczenie": "marker",
+  oznaczenie: "marker",
   m: "rows",
   n: "cols",
   tempmin: "minTemp",
@@ -39,7 +39,7 @@ const RACK_HEADER_MAP: Record<string, string> = {
   maxglebokoscmm: "maxItemDepth",
   komentarz: "comment",
   // English fallbacks
-  symbol: "symbol",
+  marker: "marker",
   name: "name",
   rows: "rows",
   cols: "cols",

@@ -320,6 +320,85 @@ export type PaginatedResponse<T extends z.ZodType> = z.infer<
 export type PaginatedRequest<T extends z.ZodType | undefined = undefined> =
   z.infer<ReturnType<typeof createPaginatedSchemaInput<T>>>
 
+const AdminTeamSchema = z.enum([
+  "OPERATIONS",
+  "LOGISTICS",
+  "WAREHOUSE",
+  "INVENTORY",
+  "QUALITY_CONTROL",
+  "RECEIVING",
+  "SHIPPING",
+  "IT_SUPPORT",
+  "MANAGEMENT",
+])
+
+const UserAccountStatusSchema = z.enum([
+  "ACTIVE",
+  "PENDING_VERIFICATION",
+  "DISABLED",
+  "LOCKED",
+])
+
+const AdminUserSchema = z.object({
+  id: z.number().int().nonnegative(),
+  full_name: z.string().nullable().optional(),
+  email: z.string().min(1),
+  role: z.enum(["USER", "ADMIN"]),
+  account_status: UserAccountStatusSchema,
+  phone: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  team: z.string().nullable().optional(),
+})
+
+const TeamOptionSchema = z.object({
+  value: AdminTeamSchema,
+  label: z.string().min(1),
+})
+
+export const AdminUsersSchema = createApiSchema({
+  GET: {
+    input: createPaginatedSchemaInput(),
+    output: createPaginatedSchema(AdminUserSchema),
+  },
+})
+
+export const AdminUserTeamsSchema = createApiSchema({
+  GET: {
+    output: z.array(TeamOptionSchema),
+  },
+})
+
+export const AdminUpdateUserProfileSchema = createApiSchema({
+  PATCH: {
+    input: z.object({
+      phone: z
+        .string()
+        .max(20)
+        .regex(/^[+\d\s()-]*$/)
+        .optional(),
+      fullName: z.string().trim().min(3).max(100).optional(),
+      location: z.string().trim().max(100).optional(),
+      team: AdminTeamSchema.optional(),
+    }),
+    output: z.null(),
+  },
+})
+
+export const AdminChangeUserEmailSchema = createApiSchema({
+  PATCH: {
+    input: z.object({
+      newEmail: z.string().trim().email().min(1),
+    }),
+    output: z.null(),
+  },
+})
+
+export const AdminDeleteUserSchema = createApiSchema({
+  DELETE: {
+    output: z.null(),
+  },
+})
+
 const WarehouseSchema = z.object({
   freeSlots: z.number().int().nonnegative(),
   id: z.number().int().nonnegative(),
