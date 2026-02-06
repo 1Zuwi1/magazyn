@@ -148,7 +148,7 @@ function BarcodeDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center gap-4 py-4">
-          <div className="rounded-lg border border-border/50 bg-white p-4 dark:bg-white/95">
+          <div className="w-full overflow-hidden rounded-lg border border-border/50 bg-white p-4 dark:bg-white/95 [&>svg]:h-auto [&>svg]:w-full">
             {isQr ? (
               <QrCodeImage size={QR_CODE_SIZE_LARGE} value={value} />
             ) : (

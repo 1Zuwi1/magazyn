@@ -3,6 +3,7 @@
 import {
   AlertCircleIcon,
   Cancel01Icon,
+  KeyboardIcon,
   Loading03Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -20,15 +21,13 @@ import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 import { TAB_TRIGGERS } from "./scanner"
 
 const CODE_FORMATS = [BarcodeFormat.QR_CODE, BarcodeFormat.CODE_128] as const
-const REMOVE_FORMATS = [BarcodeFormat.CODE_128] as const
 
-const DECODE_HINTS = new Map<DecodeHintType, unknown>()
-
-const TAKE_DECODE_HINTS: Map<DecodeHintType, unknown> = new Map(DECODE_HINTS)
+const TAKE_DECODE_HINTS: Map<DecodeHintType, unknown> = new Map()
 TAKE_DECODE_HINTS.set(DecodeHintType.POSSIBLE_FORMATS, CODE_FORMATS)
+TAKE_DECODE_HINTS.set(DecodeHintType.ASSUME_GS1, false)
 
-const REMOVE_DECODE_HINTS: Map<DecodeHintType, unknown> = new Map(DECODE_HINTS)
-REMOVE_DECODE_HINTS.set(DecodeHintType.POSSIBLE_FORMATS, REMOVE_FORMATS)
+const REMOVE_DECODE_HINTS: Map<DecodeHintType, unknown> = new Map()
+REMOVE_DECODE_HINTS.set(DecodeHintType.POSSIBLE_FORMATS, CODE_FORMATS)
 REMOVE_DECODE_HINTS.set(DecodeHintType.ASSUME_GS1, true)
 
 const getDecodeHints = (
@@ -48,6 +47,7 @@ interface ScannerCameraProps {
   onModeChange: (value: (typeof TAB_TRIGGERS)[number]["action"]) => void
   onScan: (text: string) => void
   onRequestClose: () => void
+  onManualInput: () => void
   isLoading?: boolean
 }
 
@@ -61,6 +61,7 @@ export function ScannerCamera({
   mode,
   onModeChange,
   onRequestClose,
+  onManualInput,
   onScan,
   isLoading,
 }: ScannerCameraProps) {
@@ -160,8 +161,13 @@ export function ScannerCamera({
       try {
         // iOS Safari friendliness
         currentVideo.setAttribute("playsinline", "true")
+        currentVideo.setAttribute("webkit-playsinline", "true")
+        currentVideo.setAttribute("autoplay", "true")
+        currentVideo.setAttribute("muted", "true")
 
-        const reader = new BrowserMultiFormatReader(getDecodeHints(mode))
+        const reader = new BrowserMultiFormatReader(getDecodeHints(mode), {
+          delayBetweenScanAttempts: 300,
+        })
         readerRef.current = reader
 
         const mediaConstraints: MediaStreamConstraints =
@@ -169,6 +175,9 @@ export function ScannerCamera({
           ({
             video: {
               facingMode: { ideal: "environment" },
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+              frameRate: { ideal: 30, max: 60 },
             },
             audio: false,
           } satisfies MediaStreamConstraints)
@@ -267,7 +276,7 @@ export function ScannerCamera({
             </div>
 
             {/* Action button */}
-            <div className="pt-2">
+            <div className="flex flex-col gap-2 pt-2">
               <Button
                 onClick={() => {
                   setErrorMsg(null)
@@ -279,6 +288,10 @@ export function ScannerCamera({
                 variant="outline"
               >
                 Spróbuj ponownie
+              </Button>
+              <Button onClick={onManualInput} type="button" variant="ghost">
+                <HugeiconsIcon className="size-4" icon={KeyboardIcon} />
+                Wprowadź kod ręcznie
               </Button>
             </div>
           </div>
@@ -360,10 +373,32 @@ export function ScannerCamera({
           )}
 
           <video
+            autoPlay
             className={cn("h-full w-full object-cover")}
             muted
+            playsInline
             ref={setVideoRef}
           />
+
+          {!isLoading && (
+            <div
+              className={cn(
+                "absolute bottom-6 left-1/2 z-10 -translate-x-1/2",
+                { "bottom-12": isMobile }
+              )}
+            >
+              <Button
+                className="rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70"
+                onClick={onManualInput}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                <HugeiconsIcon className="size-4" icon={KeyboardIcon} />
+                Wprowadź kod ręcznie
+              </Button>
+            </div>
+          )}
         </>
       )}
     </>

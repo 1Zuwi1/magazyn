@@ -64,7 +64,7 @@ export function LocationCard({
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label htmlFor={`${baseId}-rack`}>Regał ID</Label>
+          <Label htmlFor={`${baseId}-rack`}>ID Regału</Label>
           <Input
             id={`${baseId}-rack`}
             min={0}
@@ -81,7 +81,7 @@ export function LocationCard({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor={`${baseId}-x`}>Pozycja X</Label>
+          <Label htmlFor={`${baseId}-x`}>Rząd</Label>
           <Input
             id={`${baseId}-x`}
             min={0}
@@ -98,7 +98,7 @@ export function LocationCard({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor={`${baseId}-y`}>Pozycja Y</Label>
+          <Label htmlFor={`${baseId}-y`}>Kolumna</Label>
           <Input
             id={`${baseId}-y`}
             min={0}

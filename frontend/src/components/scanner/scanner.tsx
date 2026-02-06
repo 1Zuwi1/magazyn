@@ -25,6 +25,7 @@ import { ScannerBody } from "./scanner-body"
 import { ScannerCamera } from "./scanner-camera"
 import { ScannerErrorState } from "./scanner-error-state"
 import { ScannerLocationsStep } from "./scanner-locations-step"
+import { ScannerManualInput } from "./scanner-manual-input"
 import { ScannerQuantityStep } from "./scanner-quantity-step"
 import { ScannerSuccessStep } from "./scanner-success-step"
 import type {
@@ -139,7 +140,7 @@ const SCANNER_ERROR_MESSAGES = {
     "Wybrana pozycja jest zajęta. Ustaw inną lokalizację i potwierdź ponownie.",
 } as const
 
-type Step = "camera" | "quantity" | "locations" | "success"
+type Step = "camera" | "manual-input" | "quantity" | "locations" | "success"
 
 interface ScannerState {
   step: Step
@@ -198,6 +199,7 @@ export function Scanner({
   const [confirmedPlacementsCount, setConfirmedPlacementsCount] =
     useState<number>(0)
   const [error, setError] = useState<string | null>(null)
+  const [lastManualBarcode, setLastManualBarcode] = useState<string>("")
 
   const placementIdRef = useRef<number>(0)
   const warehouseCacheRef = useRef<{ name: string; id: number } | null>(null)
@@ -254,6 +256,7 @@ export function Scanner({
     setEditablePlacements([])
     setConfirmedPlacementsCount(0)
     setError(null)
+    setLastManualBarcode("")
     placementIdRef.current = 0
   }, [])
 
@@ -346,6 +349,55 @@ export function Scanner({
       )
       setScannerState({
         step: "camera",
+        isLoading: false,
+        isSubmitting: false,
+      })
+    }
+  }, [])
+
+  const onManualScan = useCallback(async (barcode: string) => {
+    setLastManualBarcode(barcode)
+    const trimmed = barcode.trim()
+    if (!trimmed) {
+      return
+    }
+
+    setError(null)
+    setScannerState((current) => ({
+      ...current,
+      isLoading: true,
+    }))
+
+    try {
+      const item = await apiFetch(
+        `/api/items/barcode/${encodeURIComponent(trimmed)}`,
+        ITEM_BY_BARCODE_SCHEMA
+      )
+
+      setScannedItem(item)
+      setScannedBarcode(trimmed)
+      setLastManualBarcode("")
+      setPlacementPlan(null)
+      setEditablePlacements([])
+      setConfirmedPlacementsCount(0)
+      setScannerState({
+        step: "quantity",
+        isLoading: false,
+        isSubmitting: false,
+      })
+    } catch (scanError) {
+      setScannedItem(null)
+      setScannedBarcode("")
+      setPlacementPlan(null)
+      setEditablePlacements([])
+      setError(
+        getScannerErrorMessage(
+          scanError,
+          "Nie udało się pobrać danych produktu dla wprowadzonego kodu."
+        )
+      )
+      setScannerState({
+        step: "manual-input",
         isLoading: false,
         isSubmitting: false,
       })
@@ -555,6 +607,15 @@ export function Scanner({
     setError(null)
   }, [])
 
+  const handleManualInputOpen = useCallback(() => {
+    setScannerState({
+      step: "manual-input",
+      isLoading: false,
+      isSubmitting: false,
+    })
+    setError(null)
+  }, [])
+
   const renderScannerFallback = useCallback(
     (_error: Error, reset: () => void) => (
       <ScannerErrorState
@@ -575,6 +636,7 @@ export function Scanner({
       isMobile={isMobile}
       isOpen={open}
       mode={mode}
+      onManualInput={handleManualInputOpen}
       onModeChange={setMode}
       onRequestClose={closeDialog}
       onScan={onScan}
@@ -586,6 +648,24 @@ export function Scanner({
 
   if (children) {
     content = <ScannerBody>{children}</ScannerBody>
+  } else if (step === "manual-input") {
+    content = (
+      <ScannerManualInput
+        error={error}
+        initialBarcode={lastManualBarcode}
+        isLoading={isLoading}
+        onCancel={() => {
+          setError(null)
+          setLastManualBarcode("")
+          setScannerState({
+            step: "camera",
+            isLoading: false,
+            isSubmitting: false,
+          })
+        }}
+        onSubmit={onManualScan}
+      />
+    )
   } else if (error) {
     content = <ScannerErrorState error={error} onRetry={handleErrorReset} />
   } else if (step === "quantity" && scannedItem) {
@@ -658,7 +738,7 @@ export function Scanner({
       <DialogContent
         className={cn(
           "p-0",
-          isMobile ? "h-dvh w-screen max-w-none rounded-none" : ""
+          isMobile ? "h-dvh w-screen max-w-none! rounded-none" : ""
         )}
         showCloseButton={false}
       >
