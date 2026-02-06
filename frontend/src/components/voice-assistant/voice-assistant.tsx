@@ -5,22 +5,25 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
 import type { ReactNode } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import type { Warehouse } from "@/components/dashboard/types"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition"
 import { cn } from "@/lib/utils"
-import { matchVoiceCommand, normalizeTranscript } from "@/lib/voice/commands"
+import { matchVoiceCommand } from "@/lib/voice/commands"
 import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
 import { MOCK_WAREHOUSES } from "../dashboard/mock-data"
+import {
+  getCommandLabel,
+  handleConfirmCommandAction,
+  isCommandMatchValid,
+} from "./lib/utils"
 import { VoiceAssistantConfirmView } from "./voice-assistant-confirm-view"
 import { VoiceAssistantListeningView } from "./voice-assistant-listening-view"
 import { VoiceAssistantNormalView } from "./voice-assistant-normal-view"
 import {
   VoiceAssistantErrorView,
   VoiceAssistantProcessingView,
-  VoiceAssistantSuccessView,
 } from "./voice-assistant-other-views"
 
 export type VoiceAssistantViews =
@@ -28,7 +31,6 @@ export type VoiceAssistantViews =
   | "listening"
   | "processing"
   | "confirm"
-  | "success"
   | "error"
 
 interface VoiceAssistantProps {
@@ -52,6 +54,7 @@ export function VoiceAssistant({
     useState<ReturnType<typeof matchVoiceCommand>>(null)
 
   const warehouses = MOCK_WAREHOUSES.map(({ id, name }) => ({ id, name }))
+  let content: ReactNode
   const {
     finalTranscript,
     interimTranscript,
@@ -82,6 +85,31 @@ export function VoiceAssistant({
     return () => window.removeEventListener("popstate", onPopState)
   }, [open])
 
+  useEffect(() => {
+    if (view !== "processing") {
+      return
+    }
+
+    const finalText = finalTranscript.trim()
+    const interimText = interimTranscript.trim()
+    const resolvedText = finalText || interimText
+    if (!resolvedText) {
+      setErrorMessage("Nie rozpoznano polecenia.")
+      setView("error")
+      return
+    }
+
+    const match = matchVoiceCommand(resolvedText)
+    if (!(match && isCommandMatchValid(match, warehouses))) {
+      setErrorMessage("Nie znam tego polecenia.")
+      setView("error")
+      return
+    }
+
+    setMatchedCommand(match)
+    setView("confirm")
+  }, [view, finalTranscript, interimTranscript, warehouses])
+
   const handleReset = useCallback(() => {
     setView("idle")
     setErrorMessage(null)
@@ -108,120 +136,6 @@ export function VoiceAssistant({
     [open, handleReset]
   )
 
-  const navigateAndClose = useCallback(
-    (href: string) => {
-      router.push(href)
-      setView("success")
-      closeDialog({ shouldPopHistory: false })
-    },
-    [router, closeDialog]
-  )
-
-  const handleStartListening = useCallback(() => {
-    if (!isSupported) {
-      setErrorMessage("Przeglądarka nie obsługuje rozpoznawania mowy.")
-      setView("error")
-      return
-    }
-
-    reset()
-    start()
-    setView("listening")
-  }, [isSupported, reset, start])
-
-  const handleStopListening = useCallback(() => {
-    stop()
-    setView("processing")
-  }, [stop])
-
-  const handleConfirmCommand = useCallback(() => {
-    if (!matchedCommand) {
-      setErrorMessage("Brak komendy do wykonania.")
-      setView("error")
-      return
-    }
-
-    switch (matchedCommand.command.id) {
-      case "dashboard":
-        navigateAndClose("/dashboard")
-        return
-      case "warehouses:id":
-        {
-          const warehouseName = matchedCommand.params.warehouseName
-          if (!warehouseName) {
-            setErrorMessage("Brak nazwy magazynu w komendzie.")
-            setView("error")
-            return
-          }
-          const warehouse = findWarehouseByName(warehouseName, warehouses)
-          if (!warehouse) {
-            setErrorMessage("Nie znaleziono magazynu o takiej nazwie.")
-            setView("error")
-            return
-          }
-          const encodedName = encodeURIComponent(warehouse.name)
-          navigateAndClose(
-            `/dashboard/warehouse/id/${warehouse.id}/${encodedName}`
-          )
-        }
-        return
-      case "warehouses":
-        navigateAndClose("/dashboard/warehouse")
-        return
-      case "items":
-        navigateAndClose("/dashboard/items")
-        return
-      case "settings":
-        navigateAndClose("/settings")
-        return
-      case "open-scanner":
-        openScanner()
-        break
-      case "add-item":
-        openAddItemDialog()
-        break
-      default:
-        setErrorMessage("Nieobsługiwana komenda")
-        setView("error")
-        return
-    }
-
-    setView("success")
-    closeDialog()
-  }, [
-    matchedCommand,
-    navigateAndClose,
-    openAddItemDialog,
-    openScanner,
-    closeDialog,
-    warehouses,
-  ])
-
-  useEffect(() => {
-    if (view !== "processing") {
-      return
-    }
-
-    const finalText = finalTranscript.trim()
-    const interimText = interimTranscript.trim()
-    const resolvedText = finalText || interimText
-    if (!resolvedText) {
-      setErrorMessage("Nie rozpoznano polecenia.")
-      setView("error")
-      return
-    }
-
-    const match = matchVoiceCommand(resolvedText)
-    if (!(match && isCommandMatchValid(match, warehouses))) {
-      setErrorMessage("Nie znam tego polecenia.")
-      setView("error")
-      return
-    }
-
-    setMatchedCommand(match)
-    setView("confirm")
-  }, [view, finalTranscript, interimTranscript, warehouses])
-
   const liveTranscript = finalTranscript || interimTranscript
   const liveCommand = useMemo(() => {
     if (!liveTranscript) {
@@ -231,6 +145,11 @@ export function VoiceAssistant({
     const match = matchVoiceCommand(liveTranscript)
     return match && isCommandMatchValid(match, warehouses) ? match : null
   }, [liveTranscript, warehouses])
+
+  const handleStopListening = useCallback(() => {
+    stop()
+    setView("processing")
+  }, [stop])
 
   useEffect(() => {
     if (view !== "listening") {
@@ -259,7 +178,43 @@ export function VoiceAssistant({
     }, 600)
   }, [view, liveCommand, handleStopListening])
 
-  let content: ReactNode
+  const navigateAndClose = useCallback(
+    (href: string) => {
+      router.push(href)
+      closeDialog({ shouldPopHistory: false })
+    },
+    [router, closeDialog]
+  )
+
+  const handleStartListening = useCallback(() => {
+    if (!isSupported) {
+      setErrorMessage("Przeglądarka nie obsługuje rozpoznawania mowy.")
+      setView("error")
+      return
+    }
+
+    reset()
+    start()
+    setView("listening")
+  }, [isSupported, reset, start])
+
+  const handleConfirmCommand = useCallback(() => {
+    handleConfirmCommandAction(matchedCommand, warehouses, {
+      navigateAndClose,
+      openScanner,
+      openAddItemDialog,
+      closeDialog,
+      setErrorMessage,
+      setView,
+    })
+  }, [
+    matchedCommand,
+    navigateAndClose,
+    openAddItemDialog,
+    openScanner,
+    closeDialog,
+    warehouses,
+  ])
 
   switch (view) {
     case "idle":
@@ -294,9 +249,6 @@ export function VoiceAssistant({
           transcript={finalTranscript || interimTranscript}
         />
       ) : null
-      break
-    case "success":
-      content = <VoiceAssistantSuccessView onReset={handleReset} />
       break
     case "error":
       content = (
@@ -369,56 +321,4 @@ export function VoiceAssistant({
       </DialogContent>
     </Dialog>
   )
-}
-
-const getCommandLabel = (
-  match: NonNullable<ReturnType<typeof matchVoiceCommand>>,
-  warehouses: Pick<Warehouse, "id" | "name">[]
-): string => {
-  if (match.command.id === "warehouses:id") {
-    const warehouseName = match.params.warehouseName
-    if (warehouseName) {
-      const warehouse = findWarehouseByName(warehouseName, warehouses)
-      const label = warehouse?.name ?? warehouseName
-      return `Otwórz magazyn ${label}`
-    }
-  }
-
-  return match.command.description
-}
-
-const findWarehouseByName = (
-  inputName: string,
-  warehouses: Pick<Warehouse, "id" | "name">[]
-) => {
-  const normalizedInput = normalizeTranscript(inputName, { toLowerCase: true })
-  return (
-    warehouses.find((warehouse) => {
-      const normalizedName = normalizeTranscript(warehouse.name, {
-        toLowerCase: true,
-      })
-      const normalizedId = normalizeTranscript(warehouse.id, {
-        toLowerCase: true,
-      })
-      return (
-        normalizedName === normalizedInput || normalizedId === normalizedInput
-      )
-    }) ?? null
-  )
-}
-
-const isCommandMatchValid = (
-  match: NonNullable<ReturnType<typeof matchVoiceCommand>>,
-  warehouses: Pick<Warehouse, "id" | "name">[]
-): boolean => {
-  if (match.command.id !== "warehouses:id") {
-    return true
-  }
-
-  const warehouseName = match.params.warehouseName
-  if (!warehouseName) {
-    return false
-  }
-
-  return Boolean(findWarehouseByName(warehouseName, warehouses))
 }

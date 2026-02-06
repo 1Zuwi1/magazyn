@@ -97,7 +97,15 @@ export function useSpeechRecognition() {
   }, [])
 
   const start = useCallback(() => {
-    recognitionRef.current?.start()
+    try {
+      recognitionRef.current?.start()
+    } catch {
+      setState((prev) => ({
+        ...prev,
+        isListening: false,
+        error: "start-failed",
+      }))
+    }
   }, [])
 
   const stop = useCallback(() => {
