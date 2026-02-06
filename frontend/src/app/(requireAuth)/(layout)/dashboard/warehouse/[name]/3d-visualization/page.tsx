@@ -1,9 +1,9 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { DetailsPanel } from "@/components/dashboard/3d-visualization/details-panel"
-import { generateMockWarehouse } from "@/components/dashboard/3d-visualization/mock-data"
+import { buildWarehouse3DFromApi } from "@/components/dashboard/3d-visualization/map-api-data"
 import { SidebarPanel } from "@/components/dashboard/3d-visualization/sidebar-panel"
 import { useWarehouseStore } from "@/components/dashboard/3d-visualization/store"
 import type { FocusWindow } from "@/components/dashboard/3d-visualization/types"
@@ -18,6 +18,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import useRacks from "@/hooks/use-racks"
+import useWarehouses from "@/hooks/use-warehouses"
 import { cn } from "@/lib/utils"
 
 const HISTORY_STATE_KEY = "__warehouseView"
@@ -181,9 +183,60 @@ const renderVisualizationFallback = (_error: Error, reset: () => void) => (
   </div>
 )
 
+const WAREHOUSES_PAGE_SIZE = 200
+const RACKS_PAGE_SIZE = 500
+
+const decodeWarehouseName = (encodedName: string): string => {
+  try {
+    return decodeURIComponent(encodedName)
+  } catch {
+    return encodedName
+  }
+}
+
 export default function ThreeDVisualizationPage() {
-  // TODO: Replace mock data with real warehouse data fetched from the backend
-  const warehouse = useMemo(() => generateMockWarehouse(20), [])
+  const params = useParams<{ name: string }>()
+  const encodedWarehouseName = Array.isArray(params?.name)
+    ? (params.name[0] ?? "")
+    : (params?.name ?? "")
+  const decodedWarehouseName = useMemo(
+    () => decodeWarehouseName(encodedWarehouseName),
+    [encodedWarehouseName]
+  )
+
+  const {
+    data: warehousesData,
+    isError: isWarehousesError,
+    isPending: isWarehousesPending,
+  } = useWarehouses({ page: 0, size: WAREHOUSES_PAGE_SIZE })
+
+  const apiWarehouse = useMemo(
+    () =>
+      warehousesData?.content.find(
+        (candidate) =>
+          candidate.name.toLocaleLowerCase() ===
+          decodedWarehouseName.toLocaleLowerCase()
+      ),
+    [decodedWarehouseName, warehousesData?.content]
+  )
+
+  const {
+    data: racksData,
+    isError: isRacksError,
+    isPending: isRacksPending,
+  } = useRacks({
+    page: 0,
+    size: RACKS_PAGE_SIZE,
+    warehouseId: apiWarehouse?.id,
+  })
+
+  const warehouse = useMemo(() => {
+    if (!(apiWarehouse && racksData)) {
+      return null
+    }
+    return buildWarehouse3DFromApi(apiWarehouse, racksData.content)
+  }, [apiWarehouse, racksData])
+
   const router = useRouter()
   const {
     mode,
@@ -299,6 +352,58 @@ export default function ThreeDVisualizationPage() {
 
     router.push("./")
   }, [focusWindow, isFocusActive, router])
+
+  const isLoading = isWarehousesPending || isRacksPending
+  const isError = isWarehousesError || isRacksError
+
+  if (isLoading) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center gap-2"
+        style={{
+          height: "calc(100dvh - var(--header-height) - 3.5rem - 1px)",
+        }}
+      >
+        <p className="text-muted-foreground text-sm">
+          Ładowanie wizualizacji 3D...
+        </p>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center gap-2"
+        style={{
+          height: "calc(100dvh - var(--header-height) - 3.5rem - 1px)",
+        }}
+      >
+        <p className="text-muted-foreground text-sm">
+          Nie udało się pobrać danych magazynu.
+        </p>
+      </div>
+    )
+  }
+
+  if (!apiWarehouse) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center gap-2"
+        style={{
+          height: "calc(100dvh - var(--header-height) - 3.5rem - 1px)",
+        }}
+      >
+        <p className="text-muted-foreground text-sm">
+          Nie znaleziono magazynu o nazwie: {decodedWarehouseName}
+        </p>
+      </div>
+    )
+  }
+
+  if (!warehouse) {
+    return null
+  }
 
   const headerStats = [
     {

@@ -6,6 +6,7 @@ interface ShelfGridConfig {
   gridHeight: number
   cellHeight: number
   shelfThickness: number
+  rackHeight?: number
 }
 
 export function getShelfPositionsForGrid({
@@ -14,12 +15,17 @@ export function getShelfPositionsForGrid({
   gridHeight,
   cellHeight,
   shelfThickness,
+  rackHeight,
 }: ShelfGridConfig): number[] {
   const positions: number[] = []
+  const minY = rackHeight ? -rackHeight / 2 + shelfThickness / 2 : undefined
 
   for (let row = 0; row < rows; row++) {
     const y = (rows - 1 - row) * unitY - gridHeight / 2
-    const shelfY = y - cellHeight / 2 + shelfThickness / 2
+    let shelfY = y - cellHeight / 2 + shelfThickness / 2
+    if (minY !== undefined && shelfY < minY) {
+      shelfY = minY
+    }
     positions.push(shelfY)
   }
 
