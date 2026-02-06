@@ -45,7 +45,6 @@ import { cn } from "@/lib/utils"
 
 const OCCUPANCY_WARNING_THRESHOLD = 75
 const OCCUPANCY_CRITICAL_THRESHOLD = 90
-const WAREHOUSES_PAGE_SIZE = 200
 const RACKS_PAGE_SIZE = 500
 const DEFAULT_MAX_ELEMENT_SIZE = { width: 500, height: 400, depth: 300 }
 
@@ -396,8 +395,6 @@ export default function WarehouseClient() {
     isPending: isWarehousesPending,
   } = useWarehouses({
     warehouseId: Number(wId),
-    page: 0,
-    size: WAREHOUSES_PAGE_SIZE,
   })
   const {
     data: racksData,
