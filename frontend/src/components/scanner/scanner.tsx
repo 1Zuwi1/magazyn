@@ -3,6 +3,7 @@
 import { QrCodeIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useQueryClient } from "@tanstack/react-query"
+import { useSearchParams } from "next/navigation"
 import {
   type ReactNode,
   useCallback,
@@ -17,7 +18,6 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { createApiSchema } from "@/lib/create-api-schema"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import { cn } from "@/lib/utils"
-import { getCookieValue } from "../dashboard/utils/helpers"
 import { buttonVariants } from "../ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog"
 import { ErrorBoundary } from "../ui/error-boundary"
@@ -146,8 +146,6 @@ interface ScannerState {
   isSubmitting: boolean
 }
 
-const WAREHOUSE_ID_COOKIE_NAME = "warehouseId"
-
 const getScannerErrorMessage = (error: unknown, fallback: string): string => {
   if (!FetchError.isError(error)) {
     return fallback
@@ -201,6 +199,7 @@ export function Scanner({
   const [lastManualBarcode, setLastManualBarcode] = useState<string>("")
 
   const placementIdRef = useRef<number>(0)
+  const searchParams = useSearchParams()
 
   const { step, isLoading, isSubmitting } = scannerState
 
@@ -274,19 +273,19 @@ export function Scanner({
   }, [open, handleReset])
 
   const resolveCurrentWarehouseId = useCallback((): number => {
-    const warehouseIdFromCookie = getCookieValue(WAREHOUSE_ID_COOKIE_NAME)
+    const warehouseIdFromParams = searchParams.get("warehouseId")
 
-    if (!warehouseIdFromCookie) {
-      throw new Error("Nie znaleziono warehouseId w cookies.")
+    if (!warehouseIdFromParams) {
+      throw new Error("Nie znaleziono warehouseId w parametrach URL.")
     }
 
-    const parsedWarehouseId = Number.parseInt(warehouseIdFromCookie, 10)
+    const parsedWarehouseId = Number.parseInt(warehouseIdFromParams, 10)
     if (!Number.isInteger(parsedWarehouseId) || parsedWarehouseId < 0) {
-      throw new Error("Nieprawidłowy warehouseId w cookies.")
+      throw new Error("Nieprawidłowy warehouseId w parametrach URL.")
     }
 
     return parsedWarehouseId
-  }, [])
+  }, [searchParams])
 
   const onScan = useCallback(async (rawCode: string) => {
     const barcode = rawCode.trim()

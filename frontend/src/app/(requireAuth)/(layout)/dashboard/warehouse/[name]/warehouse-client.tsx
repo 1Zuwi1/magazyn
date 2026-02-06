@@ -10,7 +10,12 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-import { useParams, useRouter } from "next/navigation"
+import {
+  redirect,
+  useParams,
+  useRouter,
+  useSearchParams,
+} from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { ItemDetailsDialog } from "@/components/dashboard/rack-visualization/item-details-dialog"
@@ -19,10 +24,7 @@ import { RackParametersCard } from "@/components/dashboard/rack-visualization/ra
 import { RackShelfDetailsCard } from "@/components/dashboard/rack-visualization/rack-shelf-details-card"
 import { RackStatusCard } from "@/components/dashboard/rack-visualization/rack-status-card"
 import type { ItemSlot, Rack } from "@/components/dashboard/types"
-import {
-  getCookieValue,
-  getSlotCoordinate,
-} from "@/components/dashboard/utils/helpers"
+import { getSlotCoordinate } from "@/components/dashboard/utils/helpers"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -373,6 +375,7 @@ function getRackDerivedValues(
 
 export default function WarehouseClient() {
   const params = useParams<{ name: string }>()
+  const searchParams = useSearchParams()
   const encodedWarehouseName = Array.isArray(params?.name)
     ? (params.name[0] ?? "")
     : (params?.name ?? "")
@@ -381,12 +384,18 @@ export default function WarehouseClient() {
     [encodedWarehouseName]
   )
 
+  const wId = searchParams.get("warehouseId")
+
+  if (!wId) {
+    redirect("/dashboard/warehouse")
+  }
+
   const {
     data: warehouse,
     isError: isWarehousesError,
     isPending: isWarehousesPending,
   } = useWarehouses({
-    warehouseId: Number(getCookieValue("warehouseId") ?? -1),
+    warehouseId: Number(wId),
     page: 0,
     size: WAREHOUSES_PAGE_SIZE,
   })

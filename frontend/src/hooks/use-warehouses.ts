@@ -55,7 +55,7 @@ export default function useWarehouses(
       if (warehouseId !== undefined) {
         if (warehouseId === -1) {
           // This is a workaround to prevent the query from running when warehouseId is not yet available.
-          return undefined
+          return null
         }
         return await apiFetch(
           `/api/warehouses/${warehouseId}`,

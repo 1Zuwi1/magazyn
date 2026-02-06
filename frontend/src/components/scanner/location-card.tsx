@@ -1,13 +1,14 @@
 import { Tick02Icon, UnfoldMoreIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Badge } from "../ui/badge"
 import { Button, buttonVariants } from "../ui/button"
 import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
+import { ScrollArea } from "../ui/scroll-area"
 import { Spinner } from "../ui/spinner"
 import type { EditablePlacement, RackSelectOption } from "./scanner-types"
 
@@ -34,14 +35,20 @@ interface LocationCardProps {
   ) => void
 }
 
-const normalizeNumberInput = (value: string): number => {
+const normalizeNumberInput = (value: string, max?: number): number => {
   const parsedValue = Number.parseInt(value, 10)
 
   if (Number.isNaN(parsedValue)) {
-    return 0
+    return 1
   }
 
-  return Math.max(0, parsedValue)
+  const clamped = Math.max(1, parsedValue)
+
+  if (max !== undefined) {
+    return Math.min(clamped, max)
+  }
+
+  return clamped
 }
 
 interface RackSelectProps {
@@ -71,8 +78,10 @@ function RackSelect({
   onFetchNextRackPage,
   onChange,
 }: RackSelectProps) {
-  const [isRackSelectOpen, setIsRackSelectOpen] = useState<boolean>(false)
-  const rackListRef = useRef<HTMLDivElement | null>(null)
+  const [isRackSelectOpen, setIsRackSelectOpen] = useState(false)
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(
+    null
+  )
 
   const selectedRackName = useMemo(() => {
     const selectedRack = rackOptions.find((rack) => rack.id === value)
@@ -81,12 +90,16 @@ function RackSelect({
 
   const rackListVirtualizer = useVirtualizer({
     count: rackOptions.length,
-    getScrollElement: () => rackListRef.current,
+    getScrollElement: () => scrollElement,
     estimateSize: () => RACK_OPTION_HEIGHT_PX,
     overscan: 8,
   })
 
   const virtualRackItems = rackListVirtualizer.getVirtualItems()
+
+  const scrollAreaRef = useCallback((node: HTMLDivElement | null) => {
+    setScrollElement(node)
+  }, [])
 
   useEffect(() => {
     if (!(isRackSelectOpen && hasNextRackPage) || isFetchingNextRackPage) {
@@ -131,10 +144,10 @@ function RackSelect({
         <HugeiconsIcon icon={UnfoldMoreIcon} strokeWidth={2} />
       </PopoverTrigger>
       <PopoverContent align="start" className="w-(--anchor-width) gap-0 p-0">
-        <div
+        <ScrollArea
           aria-label="Lista regałów"
-          className="max-h-56 overflow-y-auto p-1"
-          ref={rackListRef}
+          className="h-56 p-1 pr-3"
+          ref={scrollAreaRef}
           role="listbox"
         >
           {rackOptions.length > 0 ? (
@@ -192,7 +205,7 @@ function RackSelect({
               Nie udało się pobrać listy regałów.
             </p>
           ) : null}
-        </div>
+        </ScrollArea>
 
         {(isRackOptionsPending || isFetchingNextRackPage) && (
           <div className="flex items-center gap-2 border-t px-2 py-1.5 text-muted-foreground text-xs">
@@ -221,6 +234,14 @@ export function LocationCard({
   onChange,
 }: LocationCardProps) {
   const baseId = `placement-${placement.id}`
+
+  const selectedRack = useMemo(
+    () => rackOptions.find((rack) => rack.id === placement.rackId),
+    [rackOptions, placement.rackId]
+  )
+
+  const maxColumn = selectedRack ? Math.max(0, selectedRack.sizeX) : undefined
+  const maxRow = selectedRack ? Math.max(0, selectedRack.sizeY) : undefined
 
   return (
     <div className="group relative overflow-hidden rounded-xl border bg-card p-4 transition-all hover:border-primary/30 hover:shadow-sm">
@@ -271,34 +292,42 @@ export function LocationCard({
           <Label htmlFor={`${baseId}-x`}>Kolumna</Label>
           <Input
             id={`${baseId}-x`}
-            min={0}
+            max={maxColumn}
+            min={1}
             onChange={(event) => {
               onChange(
                 placement.id,
                 "positionX",
-                normalizeNumberInput(event.currentTarget.value)
+                normalizeNumberInput(event.currentTarget.value, maxColumn)
               )
             }}
             type="number"
             value={placement.positionX}
           />
+          {maxColumn !== undefined ? (
+            <p className="text-muted-foreground text-xs">maks. {maxColumn}</p>
+          ) : null}
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor={`${baseId}-y`}>Rząd</Label>
           <Input
             id={`${baseId}-y`}
-            min={0}
+            max={maxRow}
+            min={1}
             onChange={(event) => {
               onChange(
                 placement.id,
                 "positionY",
-                normalizeNumberInput(event.currentTarget.value)
+                normalizeNumberInput(event.currentTarget.value, maxRow)
               )
             }}
             type="number"
             value={placement.positionY}
           />
+          {maxRow !== undefined ? (
+            <p className="text-muted-foreground text-xs">maks. {maxRow}</p>
+          ) : null}
         </div>
       </div>
     </div>

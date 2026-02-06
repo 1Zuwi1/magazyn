@@ -43,4 +43,6 @@ export interface EditablePlacement {
 export interface RackSelectOption {
   id: number
   name: string
+  sizeX: number
+  sizeY: number
 }

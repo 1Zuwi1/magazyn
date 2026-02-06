@@ -112,6 +112,8 @@ export function ScannerLocationsStep({
       page.content.map((rack) => ({
         id: rack.id,
         name: rack.marker,
+        sizeX: rack.sizeX,
+        sizeY: rack.sizeY,
       }))
     )
   }, [racksData])
