@@ -32,7 +32,7 @@ export function RackItemsDialog({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="flex h-[90vh] max-h-[90vh] w-full max-w-[95vw] flex-col overflow-hidden sm:h-auto sm:max-w-[85vw] lg:max-w-5xl xl:max-w-6xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl">{rack.name}</DialogTitle>
+          <DialogTitle className="text-2xl">{rack.marker}</DialogTitle>
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col gap-4">

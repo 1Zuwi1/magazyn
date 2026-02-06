@@ -9,7 +9,7 @@ export interface Column {
 export type RackCsvData = z.infer<typeof RackCsvSchema>
 
 export interface RackFormData {
-  symbol?: string
+  marker: string
   name: string
   rows: number
   cols: number

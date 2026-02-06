@@ -387,7 +387,7 @@ export const ItemsSchema = createApiSchema({
 
 const RackSchema = z.object({
   id: z.number().int().nonnegative(),
-  marker: z.string().nullable(),
+  marker: z.string(),
   warehouseId: z.number().int().nonnegative(),
   comment: z.string().nullable(),
   sizeX: z.number().int().nonnegative(),

@@ -77,12 +77,9 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
             </div>
             <div className="min-w-0">
               <h3 className="truncate font-semibold text-lg">
-                {rack.name}
-                {rack.symbol && (
-                  <span className="ml-2 font-normal text-muted-foreground text-sm">
-                    ({rack.symbol})
-                  </span>
-                )}
+                <span className="ml-2 font-normal text-muted-foreground text-sm">
+                  ({rack.marker})
+                </span>
               </h3>
               <p className="truncate text-muted-foreground text-xs">
                 ID: {rack.id.slice(0, 8)}...

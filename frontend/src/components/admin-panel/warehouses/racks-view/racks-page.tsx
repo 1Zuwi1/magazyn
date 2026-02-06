@@ -140,8 +140,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     if (selectedRack === undefined) {
       const newRack: Rack = {
         id: crypto.randomUUID(),
-        marker: data.symbol ?? null,
-        name: data.name,
+        marker: data.marker,
         rows: data.rows,
         cols: data.cols,
         minTemp: data.minTemp,
@@ -162,7 +161,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
         rack.id === selectedRack.id
           ? {
               ...rack,
-              marker: data.symbol ?? null,
+              marker: data.marker,
               name: data.name,
               rows: data.rows,
               cols: data.cols,
@@ -295,7 +294,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
       />
 
       <ConfirmDialog
-        description={`Czy na pewno chcesz usunąć regał "${rackToDelete?.name}"? Ta operacja jest nieodwracalna.`}
+        description={`Czy na pewno chcesz usunąć regał "${rackToDelete?.marker}"? Ta operacja jest nieodwracalna.`}
         onConfirm={confirmDeleteRack}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}

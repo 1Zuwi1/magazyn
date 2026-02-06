@@ -1,7 +1,6 @@
 export interface Rack {
   id: string
-  marker: string | null
-  name: string
+  marker: string
   rows: number
   cols: number
   minTemp: number
