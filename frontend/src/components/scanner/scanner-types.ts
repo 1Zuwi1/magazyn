@@ -1,14 +1,41 @@
-export interface Location {
-  rack: number
-  row: number
-  col: number
+export interface ScanItem {
+  id: number
+  barcode: string
+  name: string
+  photoUrl: string | null
+  minTemp: number
+  maxTemp: number
+  weight: number
+  sizeX: number
+  sizeY: number
+  sizeZ: number
+  comment: string | null
+  expireAfterDays: number
+  dangerous: boolean
 }
 
-export interface ScanItem {
-  id?: string
-  name?: string
-  qrCode?: string
-  expiresIn?: number
-  weight?: number
-  imageUrl?: string
+export interface PlacementPlanLocation {
+  rackId: number
+  rackMarker: string
+  positionX: number
+  positionY: number
+}
+
+export interface PlacementPlan {
+  itemId: number
+  requestedQuantity: number
+  allocatedQuantity: number
+  remainingQuantity: number
+  placements: PlacementPlanLocation[]
+  reserved: boolean
+  reservedUntil: string | null
+  reservedCount: number
+}
+
+export interface EditablePlacement {
+  id: string
+  rackId: number
+  positionX: number
+  positionY: number
+  rackMarker?: string
 }

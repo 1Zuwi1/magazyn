@@ -19,23 +19,23 @@ import { Button } from "../ui/button"
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 import { TAB_TRIGGERS } from "./scanner"
 
-const CODE_FORMATS = [
-  BarcodeFormat.QR_CODE,
-  BarcodeFormat.CODE_128,
-  BarcodeFormat.CODE_39,
-  BarcodeFormat.EAN_13,
-  BarcodeFormat.EAN_8,
-  BarcodeFormat.UPC_A,
-  BarcodeFormat.UPC_E,
-  BarcodeFormat.DATA_MATRIX,
-  BarcodeFormat.PDF_417,
-  BarcodeFormat.AZTEC,
-  BarcodeFormat.ITF,
-] as const
+const CODE_FORMATS = [BarcodeFormat.QR_CODE, BarcodeFormat.CODE_128] as const
+const REMOVE_FORMATS = [BarcodeFormat.CODE_128] as const
 
-const DECODE_HINTS = new Map<DecodeHintType, unknown>([
-  [DecodeHintType.POSSIBLE_FORMATS, CODE_FORMATS],
-])
+const DECODE_HINTS = new Map<DecodeHintType, unknown>()
+
+const TAKE_DECODE_HINTS: Map<DecodeHintType, unknown> = new Map(DECODE_HINTS)
+TAKE_DECODE_HINTS.set(DecodeHintType.POSSIBLE_FORMATS, CODE_FORMATS)
+
+const REMOVE_DECODE_HINTS: Map<DecodeHintType, unknown> = new Map(DECODE_HINTS)
+REMOVE_DECODE_HINTS.set(DecodeHintType.POSSIBLE_FORMATS, REMOVE_FORMATS)
+REMOVE_DECODE_HINTS.set(DecodeHintType.ASSUME_GS1, true)
+
+const getDecodeHints = (
+  mode: (typeof TAB_TRIGGERS)[number]["action"]
+): Map<DecodeHintType, unknown> => {
+  return mode === "remove" ? REMOVE_DECODE_HINTS : TAKE_DECODE_HINTS
+}
 
 interface ScannerCameraProps {
   scanDelayMs: number
@@ -71,6 +71,7 @@ export function ScannerCamera({
     null
   )
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const startSessionRef = useRef<number>(0)
   const setVideoRef = useCallback((node: HTMLVideoElement | null) => {
     videoRef.current = node
     setVideoElement(node)
@@ -138,6 +139,7 @@ export function ScannerCamera({
   )
 
   const stop = useCallback(() => {
+    startSessionRef.current += 1
     controlsRef.current?.stop()
     controlsRef.current = null
     readerRef.current = null
@@ -152,12 +154,14 @@ export function ScannerCamera({
 
   const start = useCallback(
     async (currentVideo: HTMLVideoElement) => {
+      const startSession = startSessionRef.current + 1
+      startSessionRef.current = startSession
       setErrorMsg(null)
       try {
         // iOS Safari friendliness
         currentVideo.setAttribute("playsinline", "true")
 
-        const reader = new BrowserMultiFormatReader(DECODE_HINTS)
+        const reader = new BrowserMultiFormatReader(getDecodeHints(mode))
         readerRef.current = reader
 
         const mediaConstraints: MediaStreamConstraints =
@@ -175,15 +179,24 @@ export function ScannerCamera({
           handleScanResult
         )
 
+        if (startSessionRef.current !== startSession) {
+          controls.stop()
+          return
+        }
+
         controlsRef.current = controls
       } catch (e) {
+        if (startSessionRef.current !== startSession) {
+          return
+        }
+
         const msg =
           e instanceof Error ? e.message : "Could not start the camera scanner."
         setErrorMsg(msg)
         stop()
       }
     },
-    [constraints, handleScanResult, stop]
+    [constraints, handleScanResult, stop, mode]
   )
 
   useEffect(() => {

@@ -1,7 +1,10 @@
 import Image from "next/image"
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
+import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
+import { Label } from "../ui/label"
+import { Switch } from "../ui/switch"
 import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 import type { ScanItem } from "./scanner-types"
@@ -14,6 +17,8 @@ interface ScannerQuantityStepProps {
   onDecrease: () => void
   onIncrease: () => void
   onQuantityChange: (value: number) => void
+  reserve: boolean
+  onReserveChange: (value: boolean) => void
   onSubmit: () => void
 }
 
@@ -25,6 +30,8 @@ export function ScannerQuantityStep({
   onDecrease,
   onIncrease,
   onQuantityChange,
+  reserve,
+  onReserveChange,
   onSubmit,
 }: ScannerQuantityStepProps) {
   return (
@@ -32,7 +39,6 @@ export function ScannerQuantityStep({
       <div className="relative flex h-full flex-col">
         <CancelButton onClick={onCancel} />
 
-        {/* Header */}
         <div className="mb-6">
           <h2 className="font-semibold text-xl tracking-tight">
             Podaj ilość przedmiotów
@@ -42,47 +48,58 @@ export function ScannerQuantityStep({
           </p>
         </div>
 
-        {/* Item preview card */}
         <div className="mb-6 flex-1">
           <div className="overflow-hidden rounded-xl border bg-card/50">
             <div className="flex gap-4 p-4">
-              {scannedItem?.imageUrl && (
+              {scannedItem.photoUrl ? (
                 <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
                   <Image
-                    alt={scannedItem.name || "Skanowany przedmiot"}
+                    alt={scannedItem.name}
                     className="object-cover"
                     fill
-                    src={scannedItem.imageUrl}
+                    src={scannedItem.photoUrl}
                   />
                 </div>
-              )}
+              ) : null}
               <div className="min-w-0 flex-1">
-                <h3 className="truncate font-medium">
-                  {scannedItem?.name || "Nieznany przedmiot"}
-                </h3>
-                {scannedItem?.expiresIn !== undefined && (
-                  <p className="mt-1 text-muted-foreground text-sm">
-                    Wygasa za{" "}
-                    <span className="font-medium text-foreground">
-                      {scannedItem.expiresIn}
-                    </span>{" "}
-                    dni
-                  </p>
-                )}
-                {scannedItem?.weight !== undefined && (
-                  <p className="text-muted-foreground text-sm">
-                    Waga:{" "}
-                    <span className="font-medium text-foreground">
-                      {scannedItem.weight} kg
-                    </span>
-                  </p>
-                )}
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="truncate font-medium">{scannedItem.name}</h3>
+                  {scannedItem.dangerous ? <Badge>Niebezpieczny</Badge> : null}
+                </div>
+                <p className="mt-1 font-mono text-muted-foreground text-xs">
+                  Kod: {scannedItem.barcode}
+                </p>
+                <p className="mt-2 text-muted-foreground text-sm">
+                  Wygasa za{" "}
+                  <span className="font-medium text-foreground">
+                    {scannedItem.expireAfterDays}
+                  </span>{" "}
+                  dni
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Temperatura:{" "}
+                  <span className="font-medium text-foreground">
+                    {scannedItem.minTemp}°C – {scannedItem.maxTemp}°C
+                  </span>
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Waga:{" "}
+                  <span className="font-medium text-foreground">
+                    {scannedItem.weight} kg
+                  </span>
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Wymiary:{" "}
+                  <span className="font-medium text-foreground">
+                    {scannedItem.sizeX} × {scannedItem.sizeY} ×{" "}
+                    {scannedItem.sizeZ}
+                  </span>
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Quantity controls */}
         <div className="space-y-4">
           <div>
             <label
@@ -135,13 +152,28 @@ export function ScannerQuantityStep({
               </Button>
             </div>
           </div>
+
+          <div className="flex items-center justify-between rounded-xl border bg-card/30 p-3">
+            <div>
+              <Label htmlFor="reserve-toggle">Rezerwuj miejsca</Label>
+              <p className="text-muted-foreground text-xs">
+                Zablokuj pozycje do momentu potwierdzenia rozmieszczenia.
+              </p>
+            </div>
+            <Switch
+              checked={reserve}
+              id="reserve-toggle"
+              onCheckedChange={onReserveChange}
+            />
+          </div>
+
           <Button
             className="h-12 w-full rounded-xl"
             isLoading={isSubmitting}
             onClick={onSubmit}
             type="button"
           >
-            Potwierdź
+            Wyznacz lokalizacje
           </Button>
         </div>
       </div>
