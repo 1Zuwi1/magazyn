@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { formatDate } from "../utils/helpers"
+import { BarcodeCell } from "./components/barcode-cell"
 import { ExpiryBadge } from "./components/expiry-badge"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 import type { ItemInstance } from "./types"
@@ -83,17 +84,9 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
   {
     accessorKey: "qrCode",
     header: ({ column }) => (
-      <SortableHeader column={column}>QR Code</SortableHeader>
+      <SortableHeader column={column}>Kod kreskowy</SortableHeader>
     ),
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <HugeiconsIcon
-          className="h-4 w-4 text-muted-foreground"
-          icon={QrCodeIcon}
-        />
-        <span className="font-mono text-sm">{row.original.qrCode}</span>
-      </div>
-    ),
+    cell: ({ row }) => <BarcodeCell value={row.original.qrCode} />,
     enableSorting: true,
   },
   {

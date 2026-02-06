@@ -143,6 +143,12 @@
   }
 }
 
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 @utility no-spinners {
   /* For WebKit browsers */
   &::-webkit-outer-spin-button,

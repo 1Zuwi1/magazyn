@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 
@@ -24,6 +25,7 @@ import { cn } from "@/lib/utils"
 
 interface WarehouseGridProps {
   warehouses: Warehouse[]
+  isLoading?: boolean
 }
 
 // const getOccupancyColor = (percentage: number): string => {
@@ -47,7 +49,66 @@ interface WarehouseGridProps {
 //   }
 //   return "secondary"
 // }
-export function WarehouseGrid({ warehouses }: WarehouseGridProps) {
+function WarehouseGridSkeleton() {
+  return (
+    <div className="grid gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <Card
+          className="relative overflow-hidden"
+          key={index}
+          style={{ animationDelay: `${index * 75}ms` }}
+        >
+          {/* Decorative shimmer overlay */}
+          <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-10 rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-28" />
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-4 pb-4">
+            {/* Occupancy Bar Skeleton */}
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <Skeleton className="h-3 w-16" />
+              </div>
+              <Skeleton className="h-2 w-full rounded-full" />
+            </div>
+
+            {/* Quick Stats Row Skeleton */}
+            <div className="grid grid-cols-3 gap-2">
+              {Array.from({ length: 3 }).map((_, statIndex) => (
+                <div
+                  className="rounded-md bg-muted/50 px-2 py-1.5 text-center"
+                  key={statIndex}
+                >
+                  <Skeleton className="mx-auto mb-1 h-4 w-8" />
+                  <Skeleton className="mx-auto h-2.5 w-10" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+
+          <CardFooter className="gap-2 border-t pt-4">
+            <Skeleton className="h-8 flex-1 rounded-md" />
+            <Skeleton className="h-8 flex-1 rounded-md" />
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
+export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
+  if (isLoading) {
+    return <WarehouseGridSkeleton />
+  }
   if (warehouses.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/30 py-16 text-center">

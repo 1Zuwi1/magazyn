@@ -286,7 +286,7 @@ export const PasskeyRenameSchema = createApiSchema({
   },
 })
 
-const createPaginatedSchema = <T extends z.ZodTypeAny>(itemSchema: T) => {
+const createPaginatedSchema = <T extends z.ZodType>(itemSchema: T) => {
   return z.object({
     content: z.array(itemSchema),
     page: z.number().int(),
@@ -295,6 +295,14 @@ const createPaginatedSchema = <T extends z.ZodTypeAny>(itemSchema: T) => {
     totalPages: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+  })
+}
+
+const createPaginatedSchemaInput = <T extends z.ZodType>(itemSchema?: T) => {
+  return z.object({
+    ...itemSchema,
+    page: z.number().int().nonnegative().optional(),
+    size: z.number().int().nonnegative().optional(),
   })
 }
 
@@ -310,10 +318,43 @@ export type Warehouse = z.infer<typeof WarehouseSchema>
 
 export const WarehousesSchema = createApiSchema({
   GET: {
-    input: z.object({
-      page: z.number().int().nonnegative().optional(),
-      size: z.number().int().nonnegative().optional(),
-    }),
+    input: createPaginatedSchemaInput(),
     output: createPaginatedSchema(WarehouseSchema),
+  },
+})
+
+export const WarehouseDetailsSchema = createApiSchema({
+  GET: {
+    input: createPaginatedSchemaInput(),
+    output: z.object({
+      id: z.number().int().nonnegative(),
+      name: z.string(),
+      racksCount: z.number().int().nonnegative(),
+      occupiedSlots: z.number().int().nonnegative(),
+      freeSlots: z.number().int().nonnegative(),
+    }),
+  },
+})
+
+export const AssortmentSchema = createApiSchema({
+  GET: {
+    input: createPaginatedSchemaInput(
+      z.object({
+        search: z.string(),
+      })
+    ),
+    output: createPaginatedSchema(
+      z.object({
+        id: z.number().int().nonnegative(),
+        barcode: z.string(),
+        itemId: z.number().int().nonnegative(),
+        rackId: z.number().int().nonnegative(),
+        userId: z.number().int().nonnegative(),
+        createdAt: z.string(),
+        expiresAt: z.string(),
+        positionX: z.number().int().nonnegative(),
+        positionY: z.number().int().nonnegative(),
+      })
+    ),
   },
 })

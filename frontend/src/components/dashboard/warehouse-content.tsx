@@ -16,7 +16,7 @@ import { pluralize } from "./utils/helpers"
 const EMPTY_ARRAY: Warehouse[] = []
 
 export const WarehouseContent = () => {
-  const { data: warehouses } = useWarehouses()
+  const { data: warehouses, isPending } = useWarehouses()
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const filteredWarehouses = filterWarehouses(
     warehouses?.content ?? EMPTY_ARRAY,
@@ -76,7 +76,7 @@ export const WarehouseContent = () => {
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-lg">Twoje Magazyny</h2>
         </div>
-        <WarehouseGrid warehouses={filteredWarehouses} />
+        <WarehouseGrid isLoading={isPending} warehouses={filteredWarehouses} />
       </section>
     </div>
   )

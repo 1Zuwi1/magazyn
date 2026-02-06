@@ -25,6 +25,7 @@ import {
   FilterResults,
   SearchInput,
 } from "@/components/ui/filter-bar"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -36,8 +37,89 @@ import {
 import { itemsColumns } from "./items-columns"
 import type { ItemStats } from "./types"
 
+const SKELETON_ROWS = 5
+
+function ItemsTableSkeleton() {
+  return (
+    <div className="space-y-4">
+      {/* Filter Bar Skeleton */}
+      <div className="flex items-center justify-between gap-4">
+        <Skeleton className="h-10 w-72 rounded-lg" />
+        <Skeleton className="h-5 w-32" />
+      </div>
+
+      {/* Table Skeleton */}
+      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b bg-muted/30 hover:bg-muted/30">
+              <TableHead className="h-11 px-4">
+                <Skeleton className="h-3 w-16" />
+              </TableHead>
+              <TableHead className="h-11 px-4">
+                <Skeleton className="h-3 w-20" />
+              </TableHead>
+              <TableHead className="h-11 px-4">
+                <Skeleton className="h-3 w-12" />
+              </TableHead>
+              <TableHead className="h-11 px-4">
+                <Skeleton className="h-3 w-28" />
+              </TableHead>
+              <TableHead className="h-11 px-4">
+                <Skeleton className="h-3 w-24" />
+              </TableHead>
+              <TableHead className="h-11 px-4">
+                <Skeleton className="h-3 w-12" />
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: SKELETON_ROWS }).map((_, index) => (
+              <TableRow
+                className="transition-colors"
+                key={index}
+                style={{ animationDelay: `${index * 75}ms` }}
+              >
+                {/* Name */}
+                <TableCell className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                  </div>
+                </TableCell>
+                {/* Category */}
+                <TableCell className="px-4 py-3">
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </TableCell>
+                {/* Quantity */}
+                <TableCell className="px-4 py-3">
+                  <Skeleton className="h-4 w-14" />
+                </TableCell>
+                {/* Expiry */}
+                <TableCell className="px-4 py-3">
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                </TableCell>
+                {/* Danger */}
+                <TableCell className="px-4 py-3">
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </TableCell>
+                {/* Actions */}
+                <TableCell className="px-4 py-3">
+                  <Skeleton className="size-7 rounded-md" />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  )
+}
+
 interface ItemsTableProps {
   items: ItemStats[]
+  isLoading?: boolean
 }
 
 const globalFilterFn: FilterFn<ItemStats> = (row, _columnId, filterValue) => {
@@ -55,7 +137,8 @@ const globalFilterFn: FilterFn<ItemStats> = (row, _columnId, filterValue) => {
   )
 }
 
-export function ItemsTable({ items }: ItemsTableProps) {
+export function ItemsTable({ items, isLoading }: ItemsTableProps) {
+  console.log(items)
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
@@ -77,6 +160,10 @@ export function ItemsTable({ items }: ItemsTableProps) {
       globalFilter,
     },
   })
+
+  if (isLoading) {
+    return <ItemsTableSkeleton />
+  }
 
   const filteredCount = table.getFilteredRowModel().rows.length
   const totalCount = items.length

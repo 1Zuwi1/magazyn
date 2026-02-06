@@ -17,7 +17,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { ExpiryBadge } from "./components/expiry-badge"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 import type { ItemStats } from "./types"
 
@@ -77,12 +76,11 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
   },
   {
     accessorKey: "daysUntilExpiry",
-    header: "Okres przydatności",
+    header: ({ column }) => (
+      <SortableHeader column={column}>Ilość</SortableHeader>
+    ),
     cell: ({ row }) => {
-      const { nearestExpiryDate, daysUntilExpiry } = row.original
-      if (nearestExpiryDate) {
-        return <ExpiryBadge expiryDate={nearestExpiryDate} />
-      }
+      const { daysUntilExpiry } = row.original
       if (typeof daysUntilExpiry === "number") {
         return <Badge variant="secondary">{daysUntilExpiry} dni</Badge>
       }

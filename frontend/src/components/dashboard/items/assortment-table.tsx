@@ -37,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -90,9 +91,102 @@ function matchesExpiryFilter(
 
 interface AssortmentTableProps {
   items: ItemInstance[]
+  isLoading?: boolean
 }
 
-export function AssortmentTable({ items }: AssortmentTableProps) {
+const SKELETON_ROWS = 5
+
+function AssortmentTableSkeleton() {
+  return (
+    <div className="space-y-4">
+      {/* Filter Bar Skeleton */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-72 rounded-lg" />
+          <Skeleton className="h-10 w-44 rounded-lg" />
+        </div>
+        <Skeleton className="h-5 w-32" />
+      </div>
+
+      {/* Table Skeleton */}
+      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b bg-muted/30 hover:bg-muted/30">
+              <TableHead className="h-11 px-4">
+                <Skeleton className="h-3 w-20" />
+              </TableHead>
+              <TableHead className="h-11 px-4">
+                <Skeleton className="h-3 w-28" />
+              </TableHead>
+              <TableHead className="h-11 px-4">
+                <Skeleton className="h-3 w-14" />
+              </TableHead>
+              <TableHead className="h-11 px-4">
+                <Skeleton className="h-3 w-16" />
+              </TableHead>
+              <TableHead className="h-11 px-4">
+                <Skeleton className="h-3 w-24" />
+              </TableHead>
+              <TableHead className="h-11 px-4">
+                <Skeleton className="h-3 w-28" />
+              </TableHead>
+              <TableHead className="h-11 px-4">
+                <Skeleton className="h-3 w-12" />
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: SKELETON_ROWS }).map((_, index) => (
+              <TableRow
+                className="transition-colors"
+                key={index}
+                style={{ animationDelay: `${index * 75}ms` }}
+              >
+                {/* Category */}
+                <TableCell className="px-4 py-3">
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </TableCell>
+                {/* Name */}
+                <TableCell className="px-4 py-3">
+                  <Skeleton className="h-4 w-32" />
+                </TableCell>
+                {/* Rack */}
+                <TableCell className="px-4 py-3">
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </TableCell>
+                {/* QR Code */}
+                <TableCell className="px-4 py-3">
+                  <Skeleton className="h-12 w-48 rounded" />
+                </TableCell>
+                {/* Added Date */}
+                <TableCell className="px-4 py-3">
+                  <Skeleton className="h-4 w-20" />
+                </TableCell>
+                {/* Expiry */}
+                <TableCell className="px-4 py-3">
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-6 w-24 rounded-full" />
+                  </div>
+                </TableCell>
+                {/* Actions */}
+                <TableCell className="px-4 py-3">
+                  <Skeleton className="size-7 rounded-md" />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  )
+}
+
+export function AssortmentTable({ items, isLoading }: AssortmentTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
@@ -154,6 +248,10 @@ export function AssortmentTable({ items }: AssortmentTableProps) {
     singular: "przedmiot",
     plural: "przedmioty",
     genitive: "przedmiotów",
+  }
+
+  if (isLoading) {
+    return <AssortmentTableSkeleton />
   }
 
   return (
