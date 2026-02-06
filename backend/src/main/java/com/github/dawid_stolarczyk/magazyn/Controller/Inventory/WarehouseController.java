@@ -43,11 +43,12 @@ public class WarehouseController {
             @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir,
+            @Parameter(description = "Filter by warehouse name containing this) string", example = "Central") @RequestParam(required = false) String nameFilter) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, 100), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(warehouseService.getAllWarehousesPaged(request, pageable))));
+                PagedResponse.from(warehouseService.getAllWarehousesPaged(request, pageable, nameFilter))));
     }
 
     @Operation(summary = "Get warehouse by ID",

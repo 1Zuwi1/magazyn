@@ -14,9 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
 @Service
@@ -26,15 +23,12 @@ public class WarehouseService {
     private final AssortmentRepository assortmentRepository;
     private final Bucket4jRateLimiter rateLimiter;
 
-    public List<WarehouseDto> getAllWarehouses(HttpServletRequest request) {
+    public Page<WarehouseDto> getAllWarehousesPaged(HttpServletRequest request, Pageable pageable, String nameFilter) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        return warehouseRepository.findAll().stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
-    }
-
-    public Page<WarehouseDto> getAllWarehousesPaged(HttpServletRequest request, Pageable pageable) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
+        if (nameFilter != null && !nameFilter.isEmpty()) {
+            return warehouseRepository.findByNameContaining(nameFilter, pageable)
+                    .map(this::mapToDto);
+        }
         return warehouseRepository.findAll(pageable)
                 .map(this::mapToDto);
     }
