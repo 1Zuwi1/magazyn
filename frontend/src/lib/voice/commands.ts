@@ -45,6 +45,7 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       { regex: /^pokaz dashboard$/ },
       { regex: /^pokaz strone glowna$/ },
       { regex: /^strona glowna$/ },
+      { regex: /^dashboard$/ },
     ],
   },
   {
@@ -80,6 +81,9 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       { regex: /^otworz asortyment$/ },
       { regex: /^pokaz przedmioty$/ },
       { regex: /^otworz przedmioty$/ },
+      { regex: /^produkty$/ },
+      { regex: /^asortyment$/ },
+      { regex: /^przedmioty$/ },
     ],
   },
   {
@@ -90,7 +94,11 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
   {
     id: "open-scanner",
     description: "Uruchom skaner",
-    patterns: [{ regex: /^uruchom skaner$/ }, { regex: /^otworz skaner$/ }],
+    patterns: [
+      { regex: /^uruchom skaner$/ },
+      { regex: /^otworz skaner$/ },
+      { regex: /^skaner$/ },
+    ],
   },
   {
     id: "add-item",

@@ -160,7 +160,9 @@ export function VoiceAssistant({
             return
           }
           const encodedName = encodeURIComponent(warehouse.name)
-          navigateAndClose(`/dashboard/warehouse/${encodedName}`)
+          navigateAndClose(
+            `/dashboard/warehouse/id/${warehouse.id}/${encodedName}`
+          )
         }
         return
       case "warehouses":
