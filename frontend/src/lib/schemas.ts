@@ -335,14 +335,7 @@ export const WarehousesSchema = createApiSchema({
 
 export const WarehouseDetailsSchema = createApiSchema({
   GET: {
-    input: createPaginatedSchemaInput(),
-    output: z.object({
-      id: z.number().int().nonnegative(),
-      name: z.string(),
-      racksCount: z.number().int().nonnegative(),
-      occupiedSlots: z.number().int().nonnegative(),
-      freeSlots: z.number().int().nonnegative(),
-    }),
+    output: WarehouseSchema,
   },
 })
 
@@ -389,5 +382,34 @@ export const ItemsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput(),
     output: createPaginatedSchema(ItemDefinitionSchema),
+  },
+})
+
+const RackSchema = z.object({
+  id: z.number().int().nonnegative(),
+  marker: z.string().nullable(),
+  warehouseId: z.number().int().nonnegative(),
+  comment: z.string().nullable(),
+  sizeX: z.number().int().nonnegative(),
+  sizeY: z.number().int().nonnegative(),
+  maxTemp: z.number(),
+  minTemp: z.number(),
+  maxWeight: z.number(),
+  maxSizeX: z.number(),
+  maxSizeY: z.number(),
+  maxSizeZ: z.number(),
+  acceptsDangerous: z.boolean(),
+})
+
+export const RacksSchema = createApiSchema({
+  GET: {
+    input: createPaginatedSchemaInput(),
+    output: createPaginatedSchema(RackSchema),
+  },
+})
+
+export const RackDetailsSchema = createApiSchema({
+  GET: {
+    output: RackSchema,
   },
 })

@@ -48,13 +48,7 @@ export default function useWarehouses(
       if (warehouseId !== undefined) {
         return await apiFetch(
           `/api/warehouses/${warehouseId}`,
-          WarehouseDetailsSchema,
-          {
-            queryParams: {
-              page,
-              size,
-            },
-          }
+          WarehouseDetailsSchema
         )
       }
       return await apiFetch("/api/warehouses", WarehousesSchema, {

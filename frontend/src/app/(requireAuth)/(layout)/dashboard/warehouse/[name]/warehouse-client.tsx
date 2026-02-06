@@ -9,21 +9,34 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useParams } from "next/navigation"
+import { useEffect, useMemo, useState } from "react"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { ItemDetailsDialog } from "@/components/dashboard/rack-visualization/item-details-dialog"
 import { RackGridView } from "@/components/dashboard/rack-visualization/rack-grid-view"
 import { RackParametersCard } from "@/components/dashboard/rack-visualization/rack-parameters-card"
 import { RackShelfDetailsCard } from "@/components/dashboard/rack-visualization/rack-shelf-details-card"
 import { RackStatusCard } from "@/components/dashboard/rack-visualization/rack-status-card"
-import type { ItemSlot } from "@/components/dashboard/types"
+import type { ItemSlot, Rack } from "@/components/dashboard/types"
 import { getSlotCoordinate } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
+import useRacks, { type RacksList } from "@/hooks/use-racks"
+import useWarehouses from "@/hooks/use-warehouses"
 import { cn } from "@/lib/utils"
 
 const OCCUPANCY_WARNING_THRESHOLD = 75
 const OCCUPANCY_CRITICAL_THRESHOLD = 90
+const WAREHOUSES_PAGE_SIZE = 200
+const RACKS_PAGE_SIZE = 500
+const DEFAULT_MAX_ELEMENT_SIZE = { width: 500, height: 400, depth: 300 }
+
+interface HeaderStat {
+  label: string
+  value: string | number
+  icon?: typeof Layers01Icon
+  variant?: "default" | "warning" | "destructive"
+}
 
 function getOccupancyVariant(
   occupancy: number
@@ -37,29 +50,233 @@ function getOccupancyVariant(
   return "default"
 }
 
-export default function WarehouseClient({
-  racks,
-  warehouseId,
+function mapRackToVisualization(
+  rack: RacksList["content"][number],
+  slotItems: ItemSlot[] = []
+): Rack {
+  const rows = Math.max(1, rack.sizeY)
+  const cols = Math.max(1, rack.sizeX)
+  const totalSlots = rows * cols
+  const paddedItems = [
+    ...slotItems.slice(0, totalSlots),
+    ...Array.from(
+      { length: Math.max(0, totalSlots - slotItems.length) },
+      () => null
+    ),
+  ]
+
+  return {
+    id: String(rack.id),
+    marker: rack.marker,
+    name: rack.marker || `Regał ${rack.id}`,
+    rows,
+    cols,
+    minTemp: rack.minTemp,
+    maxTemp: rack.maxTemp,
+    maxWeight: rack.maxWeight,
+    currentWeight: 0,
+    maxItemWidth: rack.maxSizeX,
+    maxItemHeight: rack.maxSizeY,
+    maxItemDepth: rack.maxSizeZ,
+    comment: rack.comment,
+    occupancy: 0,
+    items: paddedItems,
+  }
+}
+
+const decodeWarehouseName = (encodedName: string): string => {
+  try {
+    return decodeURIComponent(encodedName)
+  } catch {
+    return encodedName
+  }
+}
+
+const getWarehouseDisplayMessage = ({
+  isLoading,
+  hasFetchError,
+  hasWarehouse,
+  hasRack,
   warehouseName,
 }: {
-  racks: {
-    id: string
-    name: string
-    rows: number
-    cols: number
-    minTemp: number
-    maxTemp: number
-    maxWeight: number
-    maxItemWidth: number
-    maxItemHeight: number
-    maxItemDepth: number
-    currentWeight: number
-    occupancy: number
-    items: ItemSlot[]
-  }[]
-  warehouseId: string
+  isLoading: boolean
+  hasFetchError: boolean
+  hasWarehouse: boolean
+  hasRack: boolean
   warehouseName: string
+}): string | null => {
+  if (isLoading) {
+    return "Ładowanie danych magazynu..."
+  }
+  if (hasFetchError) {
+    return "Nie udało się pobrać danych magazynu."
+  }
+  if (!hasWarehouse) {
+    return `Nie znaleziono magazynu o nazwie: ${warehouseName}`
+  }
+  if (!hasRack) {
+    return "Ten magazyn nie ma jeszcze żadnych regałów."
+  }
+
+  return null
+}
+
+function buildHeaderStats({
+  racks,
+  freeSlots,
+  occupancyPercentage,
+  warehouseFreeSlots,
+  warehouseOccupiedSlots,
+  warehouseRacksCount,
+}: {
+  racks: Rack[]
+  freeSlots: number
+  occupancyPercentage: number
+  warehouseFreeSlots: number
+  warehouseOccupiedSlots: number
+  warehouseRacksCount: number
+}): HeaderStat[] {
+  const warehouseTotalSlots = warehouseFreeSlots + warehouseOccupiedSlots
+  const warehouseOccupancyPercentage =
+    warehouseTotalSlots > 0
+      ? Math.round((warehouseOccupiedSlots / warehouseTotalSlots) * 100)
+      : 0
+  const headerOccupancyPercentage =
+    racks.length > 0 ? occupancyPercentage : warehouseOccupancyPercentage
+  const headerFreeSlots = racks.length > 0 ? freeSlots : warehouseFreeSlots
+
+  return [
+    {
+      label: "Regałów",
+      value: racks.length || warehouseRacksCount,
+      icon: Layers01Icon,
+    },
+    {
+      label: "Obłożenie",
+      value: `${headerOccupancyPercentage}%`,
+      variant: getOccupancyVariant(headerOccupancyPercentage),
+    },
+    {
+      label: "Wolnych",
+      value: headerFreeSlots,
+    },
+  ]
+}
+
+function WarehouseStateView({
+  headerStats,
+  warehouseName,
+  titleBadge,
+  message,
+}: {
+  headerStats: HeaderStat[]
+  warehouseName: string
+  titleBadge?: string
+  message: string
 }) {
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        backHref="/dashboard/warehouse"
+        backTitle="Powrót do listy magazynów"
+        stats={headerStats}
+        title={warehouseName}
+        titleBadge={titleBadge}
+      />
+      <div className="rounded-2xl border border-dashed bg-muted/20 p-8 text-center text-muted-foreground">
+        {message}
+      </div>
+    </div>
+  )
+}
+
+function getRackDerivedValues(
+  currentRack: Rack | undefined,
+  selectedSlotIndex: number | null
+) {
+  if (!currentRack) {
+    return {
+      selectedItem: null,
+      selectedCoordinate: null,
+      totalSlots: 0,
+      occupiedSlots: 0,
+      freeSlots: 0,
+      occupancyPercentage: 0,
+    }
+  }
+
+  const selectedItem =
+    selectedSlotIndex !== null ? currentRack.items[selectedSlotIndex] : null
+  const selectedCoordinate =
+    selectedSlotIndex !== null
+      ? getSlotCoordinate(selectedSlotIndex, currentRack.cols)
+      : null
+  const totalSlots = currentRack.rows * currentRack.cols
+  const occupiedSlots = currentRack.items.filter((item) => item !== null).length
+  const freeSlots = totalSlots - occupiedSlots
+  const occupancyPercentage =
+    currentRack.occupancy ||
+    (totalSlots > 0 ? Math.round((occupiedSlots / totalSlots) * 100) : 0)
+
+  return {
+    selectedItem,
+    selectedCoordinate,
+    totalSlots,
+    occupiedSlots,
+    freeSlots,
+    occupancyPercentage,
+  }
+}
+
+export default function WarehouseClient() {
+  const params = useParams<{ name: string }>()
+  const encodedWarehouseName = Array.isArray(params?.name)
+    ? (params.name[0] ?? "")
+    : (params?.name ?? "")
+  const decodedWarehouseName = useMemo(
+    () => decodeWarehouseName(encodedWarehouseName),
+    [encodedWarehouseName]
+  )
+
+  const {
+    data: warehousesData,
+    isError: isWarehousesError,
+    isPending: isWarehousesPending,
+  } = useWarehouses({
+    page: 0,
+    size: WAREHOUSES_PAGE_SIZE,
+  })
+  const {
+    data: racksData,
+    isError: isRacksError,
+    isPending: isRacksPending,
+  } = useRacks({
+    page: 0,
+    size: RACKS_PAGE_SIZE,
+  })
+
+  const warehouse = useMemo(
+    () =>
+      warehousesData?.content.find(
+        (candidate) =>
+          candidate.name.toLocaleLowerCase() ===
+          decodedWarehouseName.toLocaleLowerCase()
+      ),
+    [decodedWarehouseName, warehousesData?.content]
+  )
+
+  const racks = useMemo(() => {
+    if (!warehouse) {
+      return []
+    }
+
+    return (racksData?.content ?? [])
+      .filter((rack) => rack.warehouseId === warehouse.id)
+      .map((rack) => mapRackToVisualization(rack))
+  }, [racksData?.content, warehouse])
+
+  const hasFetchError = isWarehousesError || isRacksError
+  const isLoading = isWarehousesPending || isRacksPending
   const [currentRackIndex, setCurrentRackIndex] = useState(0)
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(
     null
@@ -67,25 +284,37 @@ export default function WarehouseClient({
   const [isItemDetailsOpen, setIsItemDetailsOpen] = useState(false)
 
   const currentRack = racks[currentRackIndex]
-  const selectedItem =
-    selectedSlotIndex !== null ? currentRack.items[selectedSlotIndex] : null
-  const selectedCoordinate =
-    selectedSlotIndex !== null
-      ? getSlotCoordinate(selectedSlotIndex, currentRack.cols)
-      : null
-
-  const totalSlots = currentRack.rows * currentRack.cols
-  const occupiedSlots = currentRack.items.filter((item) => item !== null).length
-  const freeSlots = totalSlots - occupiedSlots
-  const occupancyPercentage =
-    currentRack.occupancy || Math.round((occupiedSlots / totalSlots) * 100)
+  const {
+    selectedItem,
+    selectedCoordinate,
+    totalSlots,
+    occupiedSlots,
+    freeSlots,
+    occupancyPercentage,
+  } = getRackDerivedValues(currentRack, selectedSlotIndex)
 
   const handlePreviousRack = () => {
+    if (racks.length <= 1) {
+      return
+    }
     setCurrentRackIndex((prev) => (prev === 0 ? racks.length - 1 : prev - 1))
+    setSelectedSlotIndex(null)
+    setIsItemDetailsOpen(false)
   }
 
   const handleNextRack = () => {
+    if (racks.length <= 1) {
+      return
+    }
     setCurrentRackIndex((prev) => (prev === racks.length - 1 ? 0 : prev + 1))
+    setSelectedSlotIndex(null)
+    setIsItemDetailsOpen(false)
+  }
+
+  const handleSetRackIndex = (index: number) => {
+    setCurrentRackIndex(index)
+    setSelectedSlotIndex(null)
+    setIsItemDetailsOpen(false)
   }
 
   const handleSelectSlot = (index: number) => {
@@ -93,6 +322,10 @@ export default function WarehouseClient({
   }
 
   const handleActivateSlot = (index: number) => {
+    if (!currentRack) {
+      return
+    }
+
     setSelectedSlotIndex(index)
     if (currentRack.items[index]) {
       setIsItemDetailsOpen(true)
@@ -106,11 +339,19 @@ export default function WarehouseClient({
   }
 
   useEffect(() => {
-    if (currentRackIndex >= 0) {
+    if (racks.length === 0) {
+      setCurrentRackIndex(0)
+      setSelectedSlotIndex(null)
+      setIsItemDetailsOpen(false)
+      return
+    }
+
+    if (currentRackIndex >= racks.length) {
+      setCurrentRackIndex(0)
       setSelectedSlotIndex(null)
       setIsItemDetailsOpen(false)
     }
-  }, [currentRackIndex])
+  }, [currentRackIndex, racks.length])
 
   useEffect(() => {
     if (!selectedItem) {
@@ -118,28 +359,38 @@ export default function WarehouseClient({
     }
   }, [selectedItem])
 
-  // Extend rack data with maxElementSize
-  const rackWithMaxSize = {
-    ...currentRack,
-    maxElementSize: { width: 500, height: 400, depth: 300 },
-  }
+  const warehouseName = warehouse?.name ?? decodedWarehouseName
+  const warehouseId = warehouse?.id
 
-  const headerStats = [
-    {
-      label: "Regałów",
-      value: racks.length,
-      icon: Layers01Icon,
-    },
-    {
-      label: "Obłożenie",
-      value: `${occupancyPercentage}%`,
-      variant: getOccupancyVariant(occupancyPercentage),
-    },
-    {
-      label: "Wolnych",
-      value: freeSlots,
-    },
-  ]
+  const headerStats = buildHeaderStats({
+    racks,
+    freeSlots,
+    occupancyPercentage,
+    warehouseFreeSlots: warehouse?.freeSlots ?? 0,
+    warehouseOccupiedSlots: warehouse?.occupiedSlots ?? 0,
+    warehouseRacksCount: warehouse?.racksCount ?? 0,
+  })
+
+  const warehouseMessage = getWarehouseDisplayMessage({
+    isLoading,
+    hasFetchError,
+    hasWarehouse: Boolean(warehouse),
+    hasRack: Boolean(currentRack),
+    warehouseName,
+  })
+
+  if (warehouseMessage) {
+    return (
+      <WarehouseStateView
+        headerStats={headerStats}
+        message={warehouseMessage}
+        titleBadge={
+          warehouseId !== undefined ? `ID: ${warehouseId}` : undefined
+        }
+        warehouseName={warehouseName}
+      />
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -148,7 +399,9 @@ export default function WarehouseClient({
         backTitle="Powrót do listy magazynów"
         stats={headerStats}
         title={warehouseName}
-        titleBadge={`ID: ${warehouseId}`}
+        titleBadge={
+          warehouseId !== undefined ? `ID: ${warehouseId}` : undefined
+        }
       >
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <Badge className="gap-1.5" variant="outline">
@@ -202,7 +455,7 @@ export default function WarehouseClient({
             onNextRack={handleNextRack}
             onPreviousRack={handlePreviousRack}
             onSelectSlot={handleSelectSlot}
-            onSetRack={setCurrentRackIndex}
+            onSetRack={handleSetRackIndex}
             rack={currentRack}
             rows={currentRack.rows}
             selectedSlotIndex={selectedSlotIndex}
@@ -223,7 +476,7 @@ export default function WarehouseClient({
               cols: currentRack.cols,
               rows: currentRack.rows,
             }}
-            maxElementSize={rackWithMaxSize.maxElementSize}
+            maxElementSize={DEFAULT_MAX_ELEMENT_SIZE}
             tempRange={{ max: currentRack.maxTemp, min: currentRack.minTemp }}
           />
         </div>

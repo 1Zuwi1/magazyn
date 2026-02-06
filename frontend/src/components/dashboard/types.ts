@@ -1,6 +1,6 @@
 export interface Rack {
   id: string
-  symbol?: string
+  marker: string | null
   name: string
   rows: number
   cols: number
@@ -11,7 +11,7 @@ export interface Rack {
   maxItemWidth: number
   maxItemHeight: number
   maxItemDepth: number
-  comment?: string
+  comment: string | null
   occupancy: number // 0-100
   items: ItemSlot[]
 }
