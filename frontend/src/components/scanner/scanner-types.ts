@@ -39,3 +39,8 @@ export interface EditablePlacement {
   positionY: number
   rackMarker?: string
 }
+
+export interface RackSelectOption {
+  id: number
+  name: string
+}

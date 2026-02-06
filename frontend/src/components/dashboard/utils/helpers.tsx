@@ -60,3 +60,15 @@ export const getOccupancyPercentage = (
 ): number => {
   return capacity > 0 ? (used / capacity) * 100 : 0
 }
+
+export const getCookieValue = (cookieName: string): string | undefined => {
+  const cookie = document.cookie
+    .split("; ")
+    .find((entry) => entry.startsWith(`${cookieName}=`))
+
+  if (!cookie) {
+    return undefined
+  }
+
+  return decodeURIComponent(cookie.slice(cookieName.length + 1))
+}

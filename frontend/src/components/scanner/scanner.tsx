@@ -16,8 +16,8 @@ import { SCAN_DELAY_MS, SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { createApiSchema } from "@/lib/create-api-schema"
 import { apiFetch, FetchError } from "@/lib/fetcher"
-import { WarehousesSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
+import { getCookieValue } from "../dashboard/utils/helpers"
 import { buttonVariants } from "../ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog"
 import { ErrorBoundary } from "../ui/error-boundary"
@@ -129,8 +129,6 @@ const PLACEMENT_CONFIRM_SCHEMA = createApiSchema({
   },
 })
 
-const WAREHOUSE_LOOKUP_PAGE_SIZE = 500
-
 const SCANNER_ERROR_MESSAGES = {
   ITEM_NOT_FOUND: "Nie znaleziono produktu dla zeskanowanego kodu.",
   INVALID_INPUT: "Wprowadzono nieprawidłowe dane. Sprawdź i spróbuj ponownie.",
@@ -148,9 +146,7 @@ interface ScannerState {
   isSubmitting: boolean
 }
 
-const normalizeWarehouseName = (warehouseName: string): string => {
-  return warehouseName.trim().toLocaleLowerCase()
-}
+const WAREHOUSE_ID_COOKIE_NAME = "warehouseId"
 
 const getScannerErrorMessage = (error: unknown, fallback: string): string => {
   if (!FetchError.isError(error)) {
@@ -193,6 +189,9 @@ export function Scanner({
   const [scannedItem, setScannedItem] = useState<ScanItem | null>(null)
   const [scannedBarcode, setScannedBarcode] = useState<string>("")
   const [placementPlan, setPlacementPlan] = useState<PlacementPlan | null>(null)
+  const [currentWarehouseId, setCurrentWarehouseId] = useState<number | null>(
+    null
+  )
   const [editablePlacements, setEditablePlacements] = useState<
     EditablePlacement[]
   >([])
@@ -202,7 +201,6 @@ export function Scanner({
   const [lastManualBarcode, setLastManualBarcode] = useState<string>("")
 
   const placementIdRef = useRef<number>(0)
-  const warehouseCacheRef = useRef<{ name: string; id: number } | null>(null)
 
   const { step, isLoading, isSubmitting } = scannerState
 
@@ -233,7 +231,7 @@ export function Scanner({
 
       return {
         id: String(placementIdRef.current),
-        rackId: placement?.rackId ?? 0,
+        rackId: placement?.rackId ?? -1,
         positionX: placement?.positionX ?? 0,
         positionY: placement?.positionY ?? 0,
         rackMarker: placement?.rackMarker,
@@ -253,6 +251,7 @@ export function Scanner({
     setScannedItem(null)
     setScannedBarcode("")
     setPlacementPlan(null)
+    setCurrentWarehouseId(null)
     setEditablePlacements([])
     setConfirmedPlacementsCount(0)
     setError(null)
@@ -274,38 +273,20 @@ export function Scanner({
     handleReset()
   }, [open, handleReset])
 
-  const resolveCurrentWarehouseId = useCallback(async (): Promise<number> => {
-    const warehouseLabel = warehouseName?.trim()
-    if (!warehouseLabel) {
-      throw new Error("Wybierz magazyn, aby zaplanować rozmieszczenie.")
+  const resolveCurrentWarehouseId = useCallback((): number => {
+    const warehouseIdFromCookie = getCookieValue(WAREHOUSE_ID_COOKIE_NAME)
+
+    if (!warehouseIdFromCookie) {
+      throw new Error("Nie znaleziono warehouseId w cookies.")
     }
 
-    const normalizedLabel = normalizeWarehouseName(warehouseLabel)
-    if (warehouseCacheRef.current?.name === normalizedLabel) {
-      return warehouseCacheRef.current.id
+    const parsedWarehouseId = Number.parseInt(warehouseIdFromCookie, 10)
+    if (!Number.isInteger(parsedWarehouseId) || parsedWarehouseId < 0) {
+      throw new Error("Nieprawidłowy warehouseId w cookies.")
     }
 
-    const warehouses = await apiFetch("/api/warehouses", WarehousesSchema, {
-      queryParams: {
-        page: 0,
-        size: WAREHOUSE_LOOKUP_PAGE_SIZE,
-      },
-    })
-
-    const currentWarehouse = warehouses.content.find((warehouse) => {
-      return normalizeWarehouseName(warehouse.name) === normalizedLabel
-    })
-
-    if (!currentWarehouse) {
-      throw new Error(`Nie znaleziono magazynu: ${warehouseLabel}`)
-    }
-
-    warehouseCacheRef.current = {
-      name: normalizedLabel,
-      id: currentWarehouse.id,
-    }
-    return currentWarehouse.id
-  }, [warehouseName])
+    return parsedWarehouseId
+  }, [])
 
   const onScan = useCallback(async (rawCode: string) => {
     const barcode = rawCode.trim()
@@ -329,6 +310,7 @@ export function Scanner({
       setScannedItem(item)
       setScannedBarcode(barcode)
       setPlacementPlan(null)
+      setCurrentWarehouseId(null)
       setEditablePlacements([])
       setConfirmedPlacementsCount(0)
       setScannerState({
@@ -340,6 +322,7 @@ export function Scanner({
       setScannedItem(null)
       setScannedBarcode("")
       setPlacementPlan(null)
+      setCurrentWarehouseId(null)
       setEditablePlacements([])
       setError(
         getScannerErrorMessage(
@@ -378,6 +361,7 @@ export function Scanner({
       setScannedBarcode(trimmed)
       setLastManualBarcode("")
       setPlacementPlan(null)
+      setCurrentWarehouseId(null)
       setEditablePlacements([])
       setConfirmedPlacementsCount(0)
       setScannerState({
@@ -389,6 +373,7 @@ export function Scanner({
       setScannedItem(null)
       setScannedBarcode("")
       setPlacementPlan(null)
+      setCurrentWarehouseId(null)
       setEditablePlacements([])
       setError(
         getScannerErrorMessage(
@@ -416,7 +401,8 @@ export function Scanner({
     }))
 
     try {
-      const warehouseId = await resolveCurrentWarehouseId()
+      const warehouseId = resolveCurrentWarehouseId()
+      setCurrentWarehouseId(warehouseId)
       const plan = await apiFetch(
         "/api/inventory/placements/plan",
         PLACEMENT_PLAN_SCHEMA,
@@ -452,6 +438,7 @@ export function Scanner({
         isSubmitting: false,
       }))
     } catch (planError) {
+      console.error(planError)
       setError(
         getScannerErrorMessage(
           planError,
@@ -697,6 +684,7 @@ export function Scanner({
         onRemovePlacement={handleRemovePlacement}
         placements={editablePlacements}
         plan={placementPlan}
+        warehouseId={currentWarehouseId}
       />
     )
   } else if (step === "success" && scannedItem) {

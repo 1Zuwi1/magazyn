@@ -53,6 +53,10 @@ export default function useWarehouses(
     queryKey: [...WAREHOUSES_QUERY_KEY, { page, size, warehouseId }],
     queryFn: async () => {
       if (warehouseId !== undefined) {
+        if (warehouseId === -1) {
+          // This is a workaround to prevent the query from running when warehouseId is not yet available.
+          return undefined
+        }
         return await apiFetch(
           `/api/warehouses/${warehouseId}`,
           WarehouseDetailsSchema

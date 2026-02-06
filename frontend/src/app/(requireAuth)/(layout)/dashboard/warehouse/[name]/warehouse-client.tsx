@@ -19,7 +19,10 @@ import { RackParametersCard } from "@/components/dashboard/rack-visualization/ra
 import { RackShelfDetailsCard } from "@/components/dashboard/rack-visualization/rack-shelf-details-card"
 import { RackStatusCard } from "@/components/dashboard/rack-visualization/rack-status-card"
 import type { ItemSlot, Rack } from "@/components/dashboard/types"
-import { getSlotCoordinate } from "@/components/dashboard/utils/helpers"
+import {
+  getCookieValue,
+  getSlotCoordinate,
+} from "@/components/dashboard/utils/helpers"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -379,10 +382,11 @@ export default function WarehouseClient() {
   )
 
   const {
-    data: warehousesData,
+    data: warehouse,
     isError: isWarehousesError,
     isPending: isWarehousesPending,
   } = useWarehouses({
+    warehouseId: Number(getCookieValue("warehouseId") ?? -1),
     page: 0,
     size: WAREHOUSES_PAGE_SIZE,
   })
@@ -393,27 +397,13 @@ export default function WarehouseClient() {
   } = useRacks({
     page: 0,
     size: RACKS_PAGE_SIZE,
+    warehouseId: warehouse?.id ?? -1,
   })
-
-  const warehouse = useMemo(
+  const racks = useMemo(
     () =>
-      warehousesData?.content.find(
-        (candidate) =>
-          candidate.name.toLocaleLowerCase() ===
-          decodedWarehouseName.toLocaleLowerCase()
-      ),
-    [decodedWarehouseName, warehousesData?.content]
+      (racksData?.content ?? []).map((rack) => mapRackToVisualization(rack)),
+    [racksData?.content]
   )
-
-  const racks = useMemo(() => {
-    if (!warehouse) {
-      return []
-    }
-
-    return (racksData?.content ?? [])
-      .filter((rack) => rack.warehouseId === warehouse.id)
-      .map((rack) => mapRackToVisualization(rack))
-  }, [racksData?.content, warehouse])
 
   const router = useRouter()
   const hasFetchError = isWarehousesError || isRacksError

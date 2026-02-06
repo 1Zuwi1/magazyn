@@ -86,13 +86,15 @@ export async function proxy(request: NextRequest) {
   res.cookies.set({
     name: cookieName,
     value: id,
-    httpOnly: true,
+    httpOnly: false,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     // Scope cookie to the resolved page (now includes tail, which is what you're redirecting to)
     path: targetPath,
     maxAge: COOKIE_MAX_AGE,
   })
+
+  res.headers.set("Refresh", `0; url=${targetPath}`)
 
   return res
 }

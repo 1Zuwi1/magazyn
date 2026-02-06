@@ -53,6 +53,10 @@ export default function useRacks(
     queryKey: [...Racks_QUERY_KEY, { page, size, rackId, warehouseId }],
     queryFn: async () => {
       if (warehouseId !== undefined) {
+        if (warehouseId === -1) {
+          // placeholder when useWarehouses is in pending state and warehouseId is not yet available
+          return
+        }
         return await apiFetch(
           `/api/racks/warehouse/${warehouseId}`,
           RacksSchema,
