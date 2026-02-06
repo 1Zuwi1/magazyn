@@ -1,9 +1,9 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.InboundOperationDto;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.OutboundOperationDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
-import com.github.dawid_stolarczyk.magazyn.Services.Inventory.InboundOperationService;
+import com.github.dawid_stolarczyk.magazyn.Services.Inventory.OutboundAuditService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -24,29 +24,24 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 
-/**
- * Controller do zarządzania audytem operacji przyjęć towaru
- */
 @RestController
-@RequestMapping("/audit/inbound-operations")
-@Tag(name = "Inbound Operations Audit", description = "Endpoints for auditing inbound operations (product receiving)")
+@RequestMapping("/audit/outbound-operations")
+@Tag(name = "Outbound Operations Audit", description = "Endpoints for auditing outbound operations (product issuing)")
 @RequiredArgsConstructor
-public class InboundOperationController {
+public class OutboundAuditController {
 
-    private final InboundOperationService inboundOperationService;
+    private final OutboundAuditService outboundAuditService;
 
-    @Operation(summary = "Get all inbound operations with pagination (ADMIN only)",
-            description = "Returns paginated list of all inbound operations with audit details")
+    @Operation(summary = "Get all outbound operations with pagination (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = PagedResponse.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied - requires ADMIN role",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<PagedResponse<InboundOperationDto>>> getAllOperations(
+    public ResponseEntity<ResponseTemplate<PagedResponse<OutboundOperationDto>>> getAllOperations(
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)", example = "0")
             @RequestParam(defaultValue = "0") int page,
@@ -59,22 +54,20 @@ public class InboundOperationController {
 
         Sort.Direction direction = sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        PagedResponse<InboundOperationDto> response = inboundOperationService.getAllOperations(request, pageRequest);
+        PagedResponse<OutboundOperationDto> response = outboundAuditService.getAllOperations(request, pageRequest);
         return ResponseEntity.ok(ResponseTemplate.success(response));
     }
 
-    @Operation(summary = "Get inbound operations by user ID (ADMIN only)",
-            description = "Returns paginated list of inbound operations performed by specific user")
+    @Operation(summary = "Get outbound operations by user ID (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = PagedResponse.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied - requires ADMIN role",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/by-user/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<PagedResponse<InboundOperationDto>>> getOperationsByUser(
+    public ResponseEntity<ResponseTemplate<PagedResponse<OutboundOperationDto>>> getOperationsByUser(
             @PathVariable Long userId,
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)", example = "0")
@@ -88,54 +81,49 @@ public class InboundOperationController {
 
         Sort.Direction direction = sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        PagedResponse<InboundOperationDto> response = inboundOperationService.getOperationsByUser(userId, request, pageRequest);
+        PagedResponse<OutboundOperationDto> response = outboundAuditService.getOperationsByUser(userId, request, pageRequest);
         return ResponseEntity.ok(ResponseTemplate.success(response));
     }
 
-    @Operation(summary = "Get inbound operations by item ID (ADMIN only)",
-            description = "Returns list of all inbound operations for specific product")
+    @Operation(summary = "Get outbound operations by item ID (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = InboundOperationDto.class)))),
+                            array = @ArraySchema(schema = @Schema(implementation = OutboundOperationDto.class)))),
             @ApiResponse(responseCode = "403", description = "Access denied - requires ADMIN role",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/by-item/{itemId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<List<InboundOperationDto>>> getOperationsByItem(
+    public ResponseEntity<ResponseTemplate<List<OutboundOperationDto>>> getOperationsByItem(
             @PathVariable Long itemId,
             HttpServletRequest request) {
-
-        List<InboundOperationDto> response = inboundOperationService.getOperationsByItem(itemId, request);
+        List<OutboundOperationDto> response = outboundAuditService.getOperationsByItem(itemId, request);
         return ResponseEntity.ok(ResponseTemplate.success(response));
     }
 
-    @Operation(summary = "Get inbound operations by rack ID (ADMIN only)",
-            description = "Returns list of all inbound operations for specific rack")
+    @Operation(summary = "Get outbound operations by rack ID (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = InboundOperationDto.class)))),
+                            array = @ArraySchema(schema = @Schema(implementation = OutboundOperationDto.class)))),
             @ApiResponse(responseCode = "403", description = "Access denied - requires ADMIN role",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/by-rack/{rackId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<List<InboundOperationDto>>> getOperationsByRack(
+    public ResponseEntity<ResponseTemplate<List<OutboundOperationDto>>> getOperationsByRack(
             @PathVariable Long rackId,
             HttpServletRequest request) {
-
-        List<InboundOperationDto> response = inboundOperationService.getOperationsByRack(rackId, request);
+        List<OutboundOperationDto> response = outboundAuditService.getOperationsByRack(rackId, request);
         return ResponseEntity.ok(ResponseTemplate.success(response));
     }
 
-    @Operation(summary = "Get inbound operations by date range (ADMIN only)",
-            description = "Returns list of inbound operations within specified date range. Dates should be in ISO 8601 format (e.g., 2026-02-01T00:00:00Z)")
+    @Operation(summary = "Get outbound operations by date range (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = InboundOperationDto.class)))),
+                            array = @ArraySchema(schema = @Schema(implementation = OutboundOperationDto.class)))),
             @ApiResponse(responseCode = "400", description = "Invalid date format",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
             @ApiResponse(responseCode = "403", description = "Access denied - requires ADMIN role",
@@ -143,7 +131,7 @@ public class InboundOperationController {
     })
     @GetMapping("/by-date-range")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<List<InboundOperationDto>>> getOperationsByDateRange(
+    public ResponseEntity<ResponseTemplate<List<OutboundOperationDto>>> getOperationsByDateRange(
             @Parameter(description = "Start date (ISO 8601)", example = "2026-02-01T00:00:00Z")
             @RequestParam String startDate,
             @Parameter(description = "End date (ISO 8601)", example = "2026-02-05T23:59:59Z")
@@ -152,16 +140,15 @@ public class InboundOperationController {
 
         Timestamp start = Timestamp.from(Instant.parse(startDate));
         Timestamp end = Timestamp.from(Instant.parse(endDate));
-        List<InboundOperationDto> response = inboundOperationService.getOperationsByDateRange(start, end, request);
+        List<OutboundOperationDto> response = outboundAuditService.getOperationsByDateRange(start, end, request);
         return ResponseEntity.ok(ResponseTemplate.success(response));
     }
 
-    @Operation(summary = "Get inbound operations by user and date range (ADMIN only)",
-            description = "Returns list of inbound operations for specific user within date range")
+    @Operation(summary = "Get outbound operations by user and date range (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = InboundOperationDto.class)))),
+                            array = @ArraySchema(schema = @Schema(implementation = OutboundOperationDto.class)))),
             @ApiResponse(responseCode = "400", description = "Invalid date format",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
             @ApiResponse(responseCode = "403", description = "Access denied - requires ADMIN role",
@@ -169,7 +156,7 @@ public class InboundOperationController {
     })
     @GetMapping("/by-user/{userId}/date-range")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<List<InboundOperationDto>>> getOperationsByUserAndDateRange(
+    public ResponseEntity<ResponseTemplate<List<OutboundOperationDto>>> getOperationsByUserAndDateRange(
             @PathVariable Long userId,
             @Parameter(description = "Start date (ISO 8601)", example = "2026-02-01T00:00:00Z")
             @RequestParam String startDate,
@@ -179,7 +166,7 @@ public class InboundOperationController {
 
         Timestamp start = Timestamp.from(Instant.parse(startDate));
         Timestamp end = Timestamp.from(Instant.parse(endDate));
-        List<InboundOperationDto> response = inboundOperationService.getOperationsByUserAndDateRange(userId, start, end, request);
+        List<OutboundOperationDto> response = outboundAuditService.getOperationsByUserAndDateRange(userId, start, end, request);
         return ResponseEntity.ok(ResponseTemplate.success(response));
     }
 }

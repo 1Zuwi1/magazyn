@@ -18,78 +18,50 @@ import java.util.stream.Collectors;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
-/**
- * Serwis do zarządzania audytem operacji przyjęć towaru
- */
 @Service
 @RequiredArgsConstructor
-public class InboundOperationService {
+public class InboundAuditService {
     private final InboundOperationRepository inboundOperationRepository;
     private final Bucket4jRateLimiter rateLimiter;
 
-    /**
-     * Pobiera wszystkie operacje z paginacją
-     */
     public PagedResponse<InboundOperationDto> getAllOperations(HttpServletRequest request, Pageable pageable) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
         Page<InboundOperation> page = inboundOperationRepository.findAll(pageable);
         return mapToPagedResponse(page);
     }
 
-    /**
-     * Pobiera operacje dla konkretnego użytkownika
-     */
     public PagedResponse<InboundOperationDto> getOperationsByUser(Long userId, HttpServletRequest request, Pageable pageable) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
         Page<InboundOperation> page = inboundOperationRepository.findByReceivedById(userId, pageable);
         return mapToPagedResponse(page);
     }
 
-    /**
-     * Pobiera operacje dla konkretnego produktu
-     */
     public List<InboundOperationDto> getOperationsByItem(Long itemId, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        List<InboundOperation> operations = inboundOperationRepository.findByItemId(itemId);
-        return operations.stream().map(this::mapToDto).collect(Collectors.toList());
+        return inboundOperationRepository.findByItemId(itemId).stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
-    /**
-     * Pobiera operacje dla konkretnego regału
-     */
     public List<InboundOperationDto> getOperationsByRack(Long rackId, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        List<InboundOperation> operations = inboundOperationRepository.findByRackId(rackId);
-        return operations.stream().map(this::mapToDto).collect(Collectors.toList());
+        return inboundOperationRepository.findByRackId(rackId).stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
-    /**
-     * Pobiera operacje w określonym zakresie czasowym
-     */
     public List<InboundOperationDto> getOperationsByDateRange(Timestamp startDate, Timestamp endDate, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        List<InboundOperation> operations = inboundOperationRepository.findByDateRange(startDate, endDate);
-        return operations.stream().map(this::mapToDto).collect(Collectors.toList());
+        return inboundOperationRepository.findByDateRange(startDate, endDate).stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
-    /**
-     * Pobiera operacje dla użytkownika w określonym zakresie czasowym
-     */
     public List<InboundOperationDto> getOperationsByUserAndDateRange(Long userId, Timestamp startDate, Timestamp endDate, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        List<InboundOperation> operations = inboundOperationRepository.findByUserAndDateRange(userId, startDate, endDate);
-        return operations.stream().map(this::mapToDto).collect(Collectors.toList());
+        return inboundOperationRepository.findByUserAndDateRange(userId, startDate, endDate).stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
-    /**
-     * Mapuje encję InboundOperation na DTO
-     */
     private InboundOperationDto mapToDto(InboundOperation operation) {
         InboundOperationDto dto = new InboundOperationDto();
         dto.setId(operation.getId());
         dto.setItemId(operation.getItem().getId());
         dto.setItemName(operation.getItem().getName());
-        dto.setItemBarcode(operation.getItem().getBarcode());
+        dto.setItemCode(operation.getItem().getCode());
         dto.setRackId(operation.getRack().getId());
         dto.setRackMarker(operation.getRack().getMarker());
         dto.setReceivedBy(operation.getReceivedBy().getId());
@@ -100,14 +72,11 @@ public class InboundOperationService {
         dto.setQuantity(operation.getQuantity());
         if (operation.getAssortment() != null) {
             dto.setAssortmentId(operation.getAssortment().getId());
-            dto.setAssortmentBarcode(operation.getAssortment().getBarcode());
+            dto.setAssortmentCode(operation.getAssortment().getCode());
         }
         return dto;
     }
 
-    /**
-     * Mapuje stronę encji na PagedResponse
-     */
     private PagedResponse<InboundOperationDto> mapToPagedResponse(Page<InboundOperation> page) {
         List<InboundOperationDto> dtos = page.getContent().stream()
                 .map(this::mapToDto)

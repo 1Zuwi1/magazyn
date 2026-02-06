@@ -1,7 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseDto;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Warehouse;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AssortmentRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.WarehouseRepository;
@@ -23,14 +23,22 @@ public class WarehouseService {
     private final AssortmentRepository assortmentRepository;
     private final Bucket4jRateLimiter rateLimiter;
 
-    public Page<WarehouseDto> getAllWarehousesPaged(HttpServletRequest request, Pageable pageable, String nameFilter) {
+    public WarehousePagedResponse getAllWarehousesPaged(HttpServletRequest request, Pageable pageable, String nameFilter) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
+
+        Page<WarehouseDto> warehousePage;
         if (nameFilter != null && !nameFilter.isEmpty()) {
-            return warehouseRepository.findByNameContaining(nameFilter, pageable)
+            warehousePage = warehouseRepository.findByNameContaining(nameFilter, pageable)
+                    .map(this::mapToDto);
+        } else {
+            warehousePage = warehouseRepository.findAll(pageable)
                     .map(this::mapToDto);
         }
-        return warehouseRepository.findAll(pageable)
-                .map(this::mapToDto);
+
+        // Calculate cumulative summary across ALL warehouses (not just current page)
+        WarehouseSummaryDto summary = calculateWarehouseSummary();
+
+        return WarehousePagedResponse.from(warehousePage, summary);
     }
 
     public WarehouseDto getWarehouseById(Long id, HttpServletRequest request) {
@@ -41,9 +49,11 @@ public class WarehouseService {
     }
 
     @Transactional
-    public WarehouseDto createWarehouse(WarehouseDto dto, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
-        return createWarehouseInternal(dto);
+    public WarehouseDto createWarehouse(WarehouseCreateRequest request, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
+        Warehouse warehouse = new Warehouse();
+        warehouse.setName(request.getName());
+        return mapToDto(warehouseRepository.save(warehouse));
     }
 
     /**
@@ -57,11 +67,11 @@ public class WarehouseService {
     }
 
     @Transactional
-    public WarehouseDto updateWarehouse(Long id, WarehouseDto dto, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
+    public WarehouseDto updateWarehouse(Long id, WarehouseUpdateRequest request, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
         Warehouse warehouse = warehouseRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.WAREHOUSE_NOT_FOUND.name()));
-        warehouse.setName(dto.getName());
+        warehouse.setName(request.getName());
         return mapToDto(warehouseRepository.save(warehouse));
     }
 
@@ -71,6 +81,40 @@ public class WarehouseService {
         Warehouse warehouse = warehouseRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.WAREHOUSE_NOT_FOUND.name()));
         warehouseRepository.delete(warehouse);
+    }
+
+    private WarehouseSummaryDto calculateWarehouseSummary() {
+        // Get all warehouses to calculate cumulative statistics
+        var allWarehouses = warehouseRepository.findAll();
+
+        int totalCapacity = 0;
+        int totalOccupiedSlots = 0;
+        int totalRacks = 0;
+
+        for (Warehouse warehouse : allWarehouses) {
+            // Calculate total capacity from all racks
+            int warehouseCapacity = warehouse.getRacks().stream()
+                    .mapToInt(rack -> rack.getSize_x() * rack.getSize_y())
+                    .sum();
+            totalCapacity += warehouseCapacity;
+
+            // Count occupied slots (assortments)
+            long warehouseOccupied = assortmentRepository.countByRack_WarehouseId(warehouse.getId());
+            totalOccupiedSlots += warehouseOccupied;
+
+            // Count racks
+            totalRacks += warehouse.getRacks().size();
+        }
+
+        int totalFreeSlots = totalCapacity - totalOccupiedSlots;
+
+        return WarehouseSummaryDto.builder()
+                .totalCapacity(totalCapacity)
+                .freeSlots(totalFreeSlots)
+                .occupiedSlots(totalOccupiedSlots)
+                .totalWarehouses((int) allWarehouses.size())
+                .totalRacks(totalRacks)
+                .build();
     }
 
     private WarehouseDto mapToDto(Warehouse warehouse) {
@@ -94,6 +138,7 @@ public class WarehouseService {
                 .racksCount(racksCount)
                 .occupiedSlots((int) occupiedSlots)
                 .freeSlots(freeSlots)
+                .totalSlots(totalSlots)
                 .build();
     }
 }

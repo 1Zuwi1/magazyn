@@ -20,11 +20,11 @@ public class AssortmentDto {
     private Long id;
 
     @Schema(
-            description = "GS1-128 barcode (digits only) using AIs (11) YYMMDD, (01) GTIN-14, (21) serial",
+            description = "GS1-128 barcode code (digits only) using AIs (11) YYMMDD, (01) GTIN-14, (21) serial",
             example = "11020126010000000000123421012345"
     )
     @Pattern(regexp = "\\d{32}", message = "BARCODE_MUST_BE_32_DIGITS")
-    private String barcode;
+    private String code;
 
     @NotNull
     @Schema(description = "ID of the item", example = "1")

@@ -27,6 +27,18 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
     );
 
     /**
+     * Check if an active alert of the same type exists for a rack and specific item
+     */
+    @Query("SELECT COUNT(a) > 0 FROM Alert a WHERE a.rack.id = :rackId AND a.item.id = :itemId " +
+            "AND a.alertType = :alertType AND a.status IN :statuses")
+    boolean existsActiveAlertForRackAndItem(
+            @Param("rackId") Long rackId,
+            @Param("itemId") Long itemId,
+            @Param("alertType") AlertType alertType,
+            @Param("statuses") List<AlertStatus> statuses
+    );
+
+    /**
      * Find active alert of specific type for a rack
      */
     @Query("SELECT a FROM Alert a WHERE a.rack.id = :rackId AND a.alertType = :alertType AND a.status IN :statuses")

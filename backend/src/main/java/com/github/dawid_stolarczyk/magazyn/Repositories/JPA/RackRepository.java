@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface RackRepository extends JpaRepository<Rack, Long> {
     List<Rack> findByWarehouseId(Long warehouseId);
@@ -13,4 +14,8 @@ public interface RackRepository extends JpaRepository<Rack, Long> {
     Page<Rack> findAll(Pageable pageable);
 
     Page<Rack> findByWarehouseId(Long warehouseId, Pageable pageable);
+
+    Optional<Rack> findByWarehouseIdAndMarker(Long warehouseId, String marker);
+
+    boolean existsByWarehouseIdAndMarker(Long warehouseId, String marker);
 }

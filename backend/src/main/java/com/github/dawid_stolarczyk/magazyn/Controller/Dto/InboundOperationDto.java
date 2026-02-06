@@ -27,8 +27,8 @@ public class InboundOperationDto {
     @Schema(description = "Item name", example = "Laptop Dell XPS 15")
     private String itemName;
 
-    @Schema(description = "Item barcode", example = "12345678901234")
-    private String itemBarcode;
+    @Schema(description = "Item code - GS1-128 barcode", example = "12345678901234")
+    private String itemCode;
 
     @Schema(description = "Rack ID", example = "5")
     private Long rackId;
@@ -57,6 +57,6 @@ public class InboundOperationDto {
     @Schema(description = "Assortment ID created during this operation", example = "123")
     private Long assortmentId;
 
-    @Schema(description = "GS1-128 barcode of created assortment", example = "01123456789012341710260205")
-    private String assortmentBarcode;
+    @Schema(description = "GS1-128 barcode code of created assortment", example = "01123456789012341710260205")
+    private String assortmentCode;
 }

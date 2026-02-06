@@ -56,11 +56,16 @@ public class DbConfig {
                 );
                 log.info("IVFFlat index created successfully");
 
-                // Create unique partial index
+                // Drop old unique partial index if it exists (without item_id)
+                jdbcTemplate.execute(
+                        "DROP INDEX IF EXISTS idx_unique_open_alert"
+                );
+
+                // Create unique partial index with item_id support
                 log.info("Creating unique partial index for alert idempotency...");
                 jdbcTemplate.execute(
                         "CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_open_alert " +
-                                "ON alerts (rack_id, alert_type, status) " +
+                                "ON alerts (rack_id, COALESCE(item_id, -1), alert_type, status) " +
                                 "WHERE status IN ('OPEN', 'ACTIVE')"
                 );
                 log.info("Alert idempotency index created successfully");

@@ -88,8 +88,8 @@ public class GlobalExceptionHandler {
                     if (sqlMessage != null) {
                         if (sqlMessage.contains("position") || sqlMessage.contains("rack_id")) {
                             errorCode = "PLACEMENT_CONFLICT";
-                        } else if (sqlMessage.contains("barcode")) {
-                            errorCode = "DUPLICATE_BARCODE";
+                        } else if (sqlMessage.contains("barcode") || sqlMessage.contains("code")) {
+                            errorCode = "DUPLICATE_CODE";
                         } else if (sqlMessage.contains("email")) {
                             errorCode = "DUPLICATE_EMAIL";
                         } else {

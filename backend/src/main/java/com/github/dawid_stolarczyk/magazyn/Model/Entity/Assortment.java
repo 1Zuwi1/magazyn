@@ -17,7 +17,7 @@ public class Assortment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(unique = true, length = 32)
-    private String barcode;
+    private String code;
     @ManyToOne
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
@@ -29,8 +29,11 @@ public class Assortment {
     private User user;
     private Timestamp created_at;
     private Timestamp expires_at;
-    private Integer position_x;
-    private Integer position_y;
+    @Column(name = "position_x")
+    private Integer positionX;
+
+    @Column(name = "position_y")
+    private Integer positionY;
 
     @PrePersist
     public void initializeCreatedAt() {

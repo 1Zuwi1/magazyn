@@ -73,40 +73,41 @@ public class ItemController {
         }
     }
 
-    @Operation(summary = "Get item by barcode (14-digit GS1-128)")
+    @Operation(summary = "Get item by code (14-digit GS1-128 barcode)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),
             @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @GetMapping("/barcode/{barcode}")
-    public ResponseEntity<ResponseTemplate<ItemDto>> getItemByBarcode(@PathVariable String barcode, HttpServletRequest request) {
+    @GetMapping("/code/{code}")
+    public ResponseEntity<ResponseTemplate<ItemDto>> getItemByCode(@PathVariable String code, HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(ResponseTemplate.success(itemService.getItemByBarcode(barcode, request)));
+            return ResponseEntity.ok(ResponseTemplate.success(itemService.getItemByCode(code, request)));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
         }
     }
 
-    @Operation(summary = "Create item (ADMIN only) - auto-generates 14-digit barcode")
+    @Operation(summary = "Create item (ADMIN only)",
+            description = "Creates a new item with physical properties only. Name is optional. GS1-128 barcode code is auto-generated (14-digit).")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Success - returns created item with generated barcode",
+            @ApiResponse(responseCode = "201", description = "Success - returns created item with generated barcode code",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),
             @ApiResponse(responseCode = "400", description = "Error codes: INVALID_INPUT",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<ItemDto>> createItem(@RequestBody ItemDto dto, HttpServletRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(itemService.createItem(dto, request)));
+    public ResponseEntity<ResponseTemplate<ItemDto>> createItem(@Valid @RequestBody ItemCreateRequest request, HttpServletRequest httpRequest) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(itemService.createItem(request, httpRequest)));
     }
 
     @Operation(
             summary = "Update an existing item (ADMIN only)",
             description = """
-                    Updates product information. Requires ADMIN role.
-                    Barcode cannot be changed through this endpoint.
+                    Updates product physical properties. Name is optional. Requires ADMIN role.
+                    Code (barcode) and photo cannot be changed through this endpoint.
                     """
     )
     @ApiResponses(value = {
@@ -133,8 +134,8 @@ public class ItemController {
     })
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<ItemDto>> updateItem(@PathVariable Long id, @RequestBody ItemDto dto, HttpServletRequest request) {
-        return ResponseEntity.ok(ResponseTemplate.success(itemService.updateItem(id, dto, request)));
+    public ResponseEntity<ResponseTemplate<ItemDto>> updateItem(@PathVariable Long id, @Valid @RequestBody ItemUpdateRequest request, HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(ResponseTemplate.success(itemService.updateItem(id, request, httpRequest)));
     }
 
     @Operation(
@@ -296,7 +297,7 @@ public class ItemController {
                     ```
                     
                     **Uwagi:**
-                    - Barcode produktu jest generowany automatycznie (6-cyfrowy kod produktu zgodny z GS1-128)
+                    - GS1-128 barcode code produktu jest generowany automatycznie (14-cyfrowy kod produktu)
                     - Zdjęcia należy uploadować osobno przez endpoint POST /items/{id}/photo
                     - Wartości NULL lub puste dla kolumn opcjonalnych są ignorowane
                     

@@ -25,7 +25,7 @@ import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientI
 @Service
 @AllArgsConstructor
 @Slf4j
-public class InventoryPlacementService {
+public class InboundService {
     private static final int MAX_EXPIRE_DAYS = 3650;
     private static final int MAX_RACK_SIDE = 1000;
     private static final int MAX_RACK_AREA = 1_000_000;
@@ -205,16 +205,16 @@ public class InventoryPlacementService {
     @Transactional
     public PlacementConfirmationResponse confirmPlacement(PlacementConfirmationRequest request, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
-        // Walidacja żeby tylko itemId lub barcode było podane
+        // Walidacja żeby tylko itemId lub code było podane
         request.validate();
 
-        // Znajdź item na podstawie itemId lub barcode
+        // Znajdź item na podstawie itemId lub code (barcode)
         Item item;
         if (request.getItemId() != null) {
             item = itemRepository.findById(request.getItemId())
                     .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
         } else {
-            item = itemRepository.findByBarcode(request.getBarcode())
+            item = itemRepository.findByCode(request.getCode())
                     .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
         }
 
@@ -233,15 +233,13 @@ public class InventoryPlacementService {
         Timestamp createdAt = Timestamp.from(Instant.now());
         Timestamp expiresAt = calculateExpiresAt(item.getExpireAfterDays(), createdAt.toInstant());
 
-        barcodeService.ensureItemBarcode(item);
+        barcodeService.ensureItemCode(item);
 
         for (Map.Entry<Long, List<PlacementSlotRequest>> entry : placementsByRack.entrySet()) {
             Rack rack = rackRepository.findById(entry.getKey())
                     .orElseThrow(() -> new IllegalArgumentException(InventoryError.PLACEMENT_INVALID.name()));
             validateRackDimensions(rack);
-            if (!rackMatchesItem(rack, item)) {
-                throw new IllegalArgumentException(InventoryError.PLACEMENT_INVALID.name());
-            }
+            validateItemRackCompatibility(rack, item);
             List<Assortment> existingAssortments = assortmentRepository.findByRackId(rack.getId());
             RackCapacity capacity = resolveRackCapacity(rack, item, existingAssortments);
             int neededSlots = entry.getValue().size();
@@ -250,8 +248,8 @@ public class InventoryPlacementService {
             }
             Set<Coordinate> occupied = new HashSet<>();
             for (Assortment assortment : existingAssortments) {
-                if (assortment.getPosition_x() != null && assortment.getPosition_y() != null) {
-                    occupied.add(new Coordinate(assortment.getPosition_x(), assortment.getPosition_y()));
+                if (assortment.getPositionX() != null && assortment.getPositionY() != null) {
+                    occupied.add(new Coordinate(assortment.getPositionX(), assortment.getPositionY()));
                 }
             }
             Set<Coordinate> usedInRequest = new HashSet<>();
@@ -289,8 +287,8 @@ public class InventoryPlacementService {
                 assortment.setUser(user);
                 assortment.setCreated_at(createdAt);
                 assortment.setExpires_at(expiresAt);
-                assortment.setPosition_x(slot.getPositionX());
-                assortment.setPosition_y(slot.getPositionY());
+                assortment.setPositionX(slot.getPositionX());
+                assortment.setPositionY(slot.getPositionY());
                 newAssortments.add(assortment);
             }
         }
@@ -303,8 +301,8 @@ public class InventoryPlacementService {
         }
 
         for (Assortment assortment : newAssortments) {
-            if (assortment.getBarcode() == null || assortment.getBarcode().isBlank()) {
-                assortment.setBarcode(barcodeService.buildPlacementBarcode(item.getBarcode()));
+            if (assortment.getCode() == null || assortment.getCode().isBlank()) {
+                assortment.setCode(barcodeService.buildPlacementCode(item.getCode()));
             }
         }
         assortmentRepository.saveAll(newAssortments);
@@ -318,8 +316,8 @@ public class InventoryPlacementService {
             operation.setAssortment(assortment);
             operation.setReceivedBy(user);
             operation.setOperationTimestamp(createdAt);
-            operation.setPositionX(assortment.getPosition_x());
-            operation.setPositionY(assortment.getPosition_y());
+            operation.setPositionX(assortment.getPositionX());
+            operation.setPositionY(assortment.getPositionY());
             operation.setQuantity(1);
             inboundOperations.add(operation);
         }
@@ -338,53 +336,66 @@ public class InventoryPlacementService {
         PlacementConfirmationResponse response = new PlacementConfirmationResponse();
         response.setItemId(item.getId());
         response.setStoredQuantity(newAssortments.size());
-        response.setBarcodes(newAssortments.stream()
-                .map(Assortment::getBarcode)
+        response.setCodes(newAssortments.stream()
+                .map(Assortment::getCode)
                 .toList());
         return response;
     }
 
-    private boolean rackMatchesItem(Rack rack, Item item) {
+    /**
+     * Validates if item can be placed on rack. Throws detailed exceptions for placement validation.
+     */
+    private void validateItemRackCompatibility(Rack rack, Item item) {
         Objects.requireNonNull(rack, "rack");
         Objects.requireNonNull(item, "item");
 
         if (item.isDangerous() && !rack.isAcceptsDangerous()) {
             log.debug("[MATCH] ✗ Rack #{} rejected: item is dangerous but rack doesn't accept dangerous items",
                     rack.getId());
-            return false;
+            throw new IllegalArgumentException(InventoryError.RACK_DOES_NOT_ACCEPT_DANGEROUS_ITEMS.name());
         }
 
-        if (rack.getMin_temp() > item.getMin_temp()) {
-            log.debug("[MATCH] ✗ Rack #{} rejected: rack.min_temp ({}) > item.min_temp ({})",
+        if (rack.getMin_temp() < item.getMin_temp()) {
+            log.debug("[MATCH] ✗ Rack #{} rejected: rack.min_temp ({}) < item.min_temp ({}) - rack goes below item tolerance",
                     rack.getId(), rack.getMin_temp(), item.getMin_temp());
-            return false;
+            throw new IllegalArgumentException(InventoryError.RACK_TEMP_MIN_BELOW_ITEM_TOLERANCE.name());
         }
 
-        if (rack.getMax_temp() < item.getMax_temp()) {
-            log.debug("[MATCH] ✗ Rack #{} rejected: rack.max_temp ({}) < item.max_temp ({})",
+        if (rack.getMax_temp() > item.getMax_temp()) {
+            log.debug("[MATCH] ✗ Rack #{} rejected: rack.max_temp ({}) > item.max_temp ({}) - rack exceeds item tolerance",
                     rack.getId(), rack.getMax_temp(), item.getMax_temp());
-            return false;
+            throw new IllegalArgumentException(InventoryError.RACK_TEMP_MAX_ABOVE_ITEM_TOLERANCE.name());
         }
 
         if (!lessOrEqualWithEps(item.getSize_x(), rack.getMax_size_x())) {
             log.debug("[MATCH] ✗ Rack #{} rejected: item.size_x ({}) > rack.max_size_x ({})",
                     rack.getId(), item.getSize_x(), rack.getMax_size_x());
-            return false;
+            throw new IllegalArgumentException(InventoryError.ITEM_SIZE_X_EXCEEDS_RACK_LIMIT.name());
         }
 
         if (!lessOrEqualWithEps(item.getSize_y(), rack.getMax_size_y())) {
             log.debug("[MATCH] ✗ Rack #{} rejected: item.size_y ({}) > rack.max_size_y ({})",
                     rack.getId(), item.getSize_y(), rack.getMax_size_y());
-            return false;
+            throw new IllegalArgumentException(InventoryError.ITEM_SIZE_Y_EXCEEDS_RACK_LIMIT.name());
         }
 
         if (!lessOrEqualWithEps(item.getSize_z(), rack.getMax_size_z())) {
             log.debug("[MATCH] ✗ Rack #{} rejected: item.size_z ({}) > rack.max_size_z ({})",
                     rack.getId(), item.getSize_z(), rack.getMax_size_z());
+            throw new IllegalArgumentException(InventoryError.ITEM_SIZE_Z_EXCEEDS_RACK_LIMIT.name());
+        }
+    }
+
+    /**
+     * Legacy method - returns boolean for plan filtering
+     */
+    private boolean rackMatchesItem(Rack rack, Item item) {
+        try {
+            validateItemRackCompatibility(rack, item);
+            return true;
+        } catch (IllegalArgumentException e) {
             return false;
         }
-
-        return true;
     }
 
     private boolean lessOrEqualWithEps(double a, double b) {
@@ -447,11 +458,11 @@ public class InventoryPlacementService {
         validateRackDimensions(rack);
         Set<Coordinate> occupied = new HashSet<>();
         for (Assortment assortment : assortments) {
-            if (assortment.getPosition_x() == null || assortment.getPosition_y() == null) {
+            if (assortment.getPositionX() == null || assortment.getPositionY() == null) {
                 continue;
             }
-            int x = assortment.getPosition_x();
-            int y = assortment.getPosition_y();
+            int x = assortment.getPositionX();
+            int y = assortment.getPositionY();
             if (x >= 1 && x <= rack.getSize_x() && y >= 1 && y <= rack.getSize_y()) {
                 occupied.add(new Coordinate(x, y));
             }
@@ -584,11 +595,11 @@ public class InventoryPlacementService {
 
         // Zajęte przez produkty
         for (Assortment assortment : assortments) {
-            if (assortment.getPosition_x() == null || assortment.getPosition_y() == null) {
+            if (assortment.getPositionX() == null || assortment.getPositionY() == null) {
                 continue;
             }
-            int x = assortment.getPosition_x();
-            int y = assortment.getPosition_y();
+            int x = assortment.getPositionX();
+            int y = assortment.getPositionY();
             if (x >= 1 && x <= rack.getSize_x() && y >= 1 && y <= rack.getSize_y()) {
                 occupied.add(new Coordinate(x, y));
             }

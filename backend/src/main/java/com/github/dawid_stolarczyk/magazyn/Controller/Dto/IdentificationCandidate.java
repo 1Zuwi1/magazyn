@@ -22,8 +22,8 @@ public class IdentificationCandidate {
     @Schema(description = "Name of the candidate item", example = "Laptop Dell XPS 15")
     private String itemName;
 
-    @Schema(description = "Barcode of the candidate item", example = "123456")
-    private String barcode;
+    @Schema(description = "GS1-128 barcode code of the candidate item", example = "12345678901234")
+    private String code;
 
     @Schema(description = "URL or path to the item's photo", example = "/api/items/42/photo")
     private String photoUrl;

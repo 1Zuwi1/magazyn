@@ -51,4 +51,9 @@ public interface InboundOperationRepository extends JpaRepository<InboundOperati
      * Stronicowane wyniki dla użytkownika
      */
     Page<InboundOperation> findByReceivedById(Long userId, Pageable pageable);
+
+    /**
+     * Znajdź operację przyjęcia powiązaną z danym assortmentem (do wyczyszczenia FK przed usunięciem)
+     */
+    List<InboundOperation> findByAssortmentId(Long assortmentId);
 }

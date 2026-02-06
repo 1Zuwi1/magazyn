@@ -1,9 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Entity;
 
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.Default2faMethod;
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserTeam;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -48,8 +45,12 @@ public class User {
     private List<WebAuthnCredential> webAuthnCredentials = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "varchar(20) default 'PENDING_VERIFICATION'")
     private AccountStatus status = AccountStatus.PENDING_VERIFICATION;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "email_status", nullable = false, columnDefinition = "varchar(20) default 'UNVERIFIED'")
+    private EmailStatus emailStatus = EmailStatus.UNVERIFIED;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TwoFactorMethod> twoFactorMethods = new ArrayList<>();
@@ -58,7 +59,7 @@ public class User {
     private List<BackupCode> backupCodes = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "default_2fa_method", nullable = false)
+    @Column(name = "default_2fa_method", nullable = false, columnDefinition = "varchar(20) default 'EMAIL'")
     private Default2faMethod default2faMethod = Default2faMethod.EMAIL;
 
     // Dodatkowe informacje użytkownika (edytowalne przez admina)

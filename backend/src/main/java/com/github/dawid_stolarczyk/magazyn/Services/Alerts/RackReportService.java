@@ -18,9 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -38,6 +36,7 @@ public class RackReportService {
     private final RackReportRepository reportRepository;
     private final RackRepository rackRepository;
     private final AlertRepository alertRepository;
+    private final AssortmentRepository assortmentRepository;
     private final UserRepository userRepository;
     private final UserNotificationRepository notificationRepository;
     private final Bucket4jRateLimiter rateLimiter;
@@ -106,6 +105,26 @@ public class RackReportService {
             }
         }
 
+        // Check item temperature tolerances
+        float currentTemp = request.getCurrentTemperature();
+        List<Assortment> assortments = assortmentRepository.findByRackId(rack.getId());
+        Set<Long> checkedItemIds = new HashSet<>();
+        for (Assortment assortment : assortments) {
+            Item item = assortment.getItem();
+            if (!checkedItemIds.add(item.getId())) continue;
+
+            if (currentTemp > item.getMax_temp()) {
+                boolean created = createAlertIfNotExistsForItem(rack, item, report,
+                        AlertType.ITEM_TEMPERATURE_TOO_HIGH, item.getMax_temp(), currentTemp);
+                if (created) triggeredAlerts.add(AlertType.ITEM_TEMPERATURE_TOO_HIGH);
+            }
+            if (currentTemp < item.getMin_temp()) {
+                boolean created = createAlertIfNotExistsForItem(rack, item, report,
+                        AlertType.ITEM_TEMPERATURE_TOO_LOW, item.getMin_temp(), currentTemp);
+                if (created) triggeredAlerts.add(AlertType.ITEM_TEMPERATURE_TOO_LOW);
+            }
+        }
+
         // Update report with alert status
         report.setAlertTriggered(!triggeredAlerts.isEmpty());
         reportRepository.save(report);
@@ -164,6 +183,42 @@ public class RackReportService {
     }
 
     /**
+     * Creates an item-level alert if no active alert of the same type exists for the rack+item combination.
+     *
+     * @return true if a new alert was created, false if one already existed
+     */
+    private boolean createAlertIfNotExistsForItem(Rack rack, Item item, RackReport report, AlertType alertType,
+                                                   float thresholdValue, float actualValue) {
+        if (alertRepository.existsActiveAlertForRackAndItem(rack.getId(), item.getId(), alertType, ACTIVE_STATUSES)) {
+            log.debug("Active alert of type {} already exists for rack {} and item {}, skipping",
+                    alertType, rack.getId(), item.getId());
+            return false;
+        }
+
+        String message = buildAlertMessageForItem(alertType, rack, item, thresholdValue, actualValue);
+
+        Alert alert = Alert.builder()
+                .rack(rack)
+                .warehouse(rack.getWarehouse())
+                .triggeringReport(report)
+                .item(item)
+                .alertType(alertType)
+                .status(AlertStatus.OPEN)
+                .message(message)
+                .thresholdValue(thresholdValue)
+                .actualValue(actualValue)
+                .createdAt(Instant.now())
+                .build();
+
+        alertRepository.save(alert);
+        log.info("Created new item alert: type={}, rack={}, item={}, message={}", alertType, rack.getId(), item.getId(), message);
+
+        distributeNotifications(alert);
+
+        return true;
+    }
+
+    /**
      * Distributes notifications for an alert to all active users.
      * In production, this could be filtered by warehouse assignment, role, etc.
      */
@@ -207,15 +262,32 @@ public class RackReportService {
             case TEMPERATURE_TOO_LOW -> String.format(
                     "%s - Temperatura poniżej minimalnej dopuszczalnej. Limit: %.1f°C, Aktualna: %.1f°C",
                     rackInfo, threshold, actual);
-            case DANGEROUS_ITEM_NOT_ALLOWED -> String.format(
-                    "%s - Wykryto niebezpieczny przedmiot w regale niedozwolonym dla takich przedmiotów",
-                    rackInfo);
-            case ITEM_TOO_LARGE -> String.format(
-                    "%s - Wykryto przedmiot przekraczający dopuszczalne wymiary regału",
-                    rackInfo);
             case LOW_VISUAL_SIMILARITY -> String.format(
                     "%s - Niski wynik podobieństwa wizualnego. Próg: %.1f%%, Aktualny: %.1f%%",
                     rackInfo, threshold * 100, actual * 100);
+            case ITEM_TEMPERATURE_TOO_HIGH, ITEM_TEMPERATURE_TOO_LOW -> String.format(
+                    "%s - Temperatura regału (%.1f°C) poza zakresem tolerancji przedmiotu",
+                    rackInfo, actual);
+        };
+    }
+
+    /**
+     * Builds a human-readable alert message for item-level alerts
+     */
+    private String buildAlertMessageForItem(AlertType alertType, Rack rack, Item item, float threshold, float actual) {
+        String rackInfo = String.format("Regał %s (ID: %d)",
+                rack.getMarker() != null ? rack.getMarker() : "bez oznaczenia", rack.getId());
+
+        return switch (alertType) {
+            case ITEM_TEMPERATURE_TOO_HIGH -> String.format(
+                    "%s - Temperatura regału (%.1f°C) przekracza maksymalną tolerancję przedmiotu '%s' (ID: %d). " +
+                            "Maks. dopuszczalna: %.1f°C",
+                    rackInfo, actual, item.getName(), item.getId(), item.getMax_temp());
+            case ITEM_TEMPERATURE_TOO_LOW -> String.format(
+                    "%s - Temperatura regału (%.1f°C) poniżej minimalnej tolerancji przedmiotu '%s' (ID: %d). " +
+                            "Min. dopuszczalna: %.1f°C",
+                    rackInfo, actual, item.getName(), item.getId(), item.getMin_temp());
+            default -> buildAlertMessage(alertType, rack, threshold, actual);
         };
     }
 

@@ -8,6 +8,7 @@ import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.EmailVerification;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.EmailStatus;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
@@ -95,12 +96,20 @@ public class UserService {
     }
 
     /**
-     * Admin: Get all users with pagination
+     * Admin: Get all users with pagination and optional filtering
+     * @param name Optional filter by full name (case-insensitive, partial match)
+     * @param email Optional filter by email (case-insensitive, partial match)
+     * @param status Optional filter by account status
      */
-    public Page<UserInfoResponse> adminGetAllUsersPaged(HttpServletRequest request, Pageable pageable) {
+    public Page<UserInfoResponse> adminGetAllUsersPaged(HttpServletRequest request, String name, String email, AccountStatus status, Pageable pageable) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
-        return userRepository.findByIdNot(authPrincipal.getUserId(), pageable)
+        return userRepository.findUsersWithFilters(
+                authPrincipal.getUserId(),
+                name,
+                email,
+                status,
+                pageable)
                 .map(this::mapToUserInfoResponse);
     }
 
@@ -146,6 +155,7 @@ public class UserService {
         targetUser.removeEmailVerifications();
         targetUser.setEmail(newEmail);
         targetUser.setStatus(AccountStatus.PENDING_VERIFICATION);
+        targetUser.setEmailStatus(EmailStatus.UNVERIFIED);
 
         EmailVerification emailVerification = new EmailVerification();
         String emailVerificationToken = UUID.randomUUID().toString();
@@ -156,7 +166,7 @@ public class UserService {
         userRepository.save(targetUser);
 
         String baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
-                .path("/auth/verify-email")
+                .path("/verify-mail")
                 .toUriString();
         emailService.sendVerificationEmail(targetUser.getEmail(), baseUrl + "?token=" + emailVerificationToken);
     }
@@ -206,6 +216,27 @@ public class UserService {
             targetUser.setFullName(fullName);
         }
 
+        userRepository.save(targetUser);
+    }
+
+    /**
+     * Admin: Update user account status
+     * Changes the account status (ACTIVE, DISABLED, LOCKED, PENDING_VERIFICATION)
+     * Note: When a user is DISABLED or LOCKED, existing sessions will be blocked on next request
+     */
+    @Transactional
+    public void adminUpdateUserStatus(Long targetUserId, AccountStatus newStatus, String reason, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        // Prevent admins from locking/disabling themselves
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        if (targetUser.getId().equals(authPrincipal.getUserId())) {
+            throw new AuthenticationException(AuthError.CANNOT_MODIFY_OWN_STATUS.name());
+        }
+
+        targetUser.setStatus(newStatus);
         userRepository.save(targetUser);
     }
 

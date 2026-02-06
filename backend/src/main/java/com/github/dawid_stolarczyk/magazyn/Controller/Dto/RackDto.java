@@ -1,9 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,52 +10,53 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Rack response with computed statistics")
 public class RackDto {
     @Schema(description = "Unique identifier of the rack", example = "1")
     private Long id;
 
-    @Schema(description = "Rack marker/label", example = "A-01")
+    @Schema(description = "Rack marker/label (normalized to uppercase)", example = "A-01")
     private String marker;
 
-    @NotNull
     @Schema(description = "ID of the warehouse this rack belongs to", example = "1")
     private Long warehouseId;
 
     @Schema(description = "Optional comment", example = "Cold storage rack")
     private String comment;
 
-    @Min(1)
-    @Schema(description = "Width dimensions (cells)", example = "10")
+    @Schema(description = "Width dimensions in cells", example = "10")
     private int sizeX;
 
-    @Min(1)
-    @Schema(description = "Height dimensions (cells)", example = "10")
+    @Schema(description = "Height dimensions in cells", example = "10")
     private int sizeY;
 
-    @DecimalMin("-273.15")
-    @Schema(description = "Maximum storage temperature", example = "25.0")
+    @Schema(description = "Maximum storage temperature in Celsius", example = "25.0")
     private float maxTemp;
 
-    @DecimalMin("-273.15")
-    @Schema(description = "Minimum storage temperature", example = "-20.0")
+    @Schema(description = "Minimum storage temperature in Celsius", example = "-20.0")
     private float minTemp;
 
-    @DecimalMin("0.0")
-    @Schema(description = "Maximum weight capacity", example = "1000.0")
+    @Schema(description = "Maximum weight capacity in kilograms", example = "1000.0")
     private float maxWeight;
 
-    @DecimalMin("0.0")
-    @Schema(description = "Maximum item width", example = "1.5")
+    @Schema(description = "Maximum item width in millimeters", example = "1500.0")
     private float maxSizeX;
 
-    @DecimalMin("0.0")
-    @Schema(description = "Maximum item height", example = "2.0")
+    @Schema(description = "Maximum item height in millimeters", example = "2000.0")
     private float maxSizeY;
 
-    @DecimalMin("0.0")
-    @Schema(description = "Maximum item depth", example = "1.0")
+    @Schema(description = "Maximum item depth in millimeters", example = "1000.0")
     private float maxSizeZ;
 
     @Schema(description = "Whether the rack accepts dangerous items", example = "false")
     private boolean acceptsDangerous;
+
+    @Schema(description = "Number of occupied slots in this rack (computed)", example = "50")
+    private Integer occupiedSlots;
+
+    @Schema(description = "Number of free slots in this rack (computed)", example = "50")
+    private Integer freeSlots;
+
+    @Schema(description = "Total number of slots in this rack (computed: sizeX * sizeY)", example = "100")
+    private Integer totalSlots;
 }

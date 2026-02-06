@@ -3,6 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Controller.Auth;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.LoginRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RegisterRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.VerifyEmailRequest;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Services.Auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -79,21 +80,24 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "Verify email address")
+    @Operation(summary = "Verify email address",
+            description = "Verifies user email with the token sent in the verification email. Token is provided in request body.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - email verified",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "401", description = "Error codes: TOKEN_INVALID, TOKEN_EXPIRED, EMAIL_NOT_VERIFIED",
+            @ApiResponse(responseCode = "400", description = "Error codes: TOKEN_INVALID, TOKEN_EXPIRED",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "401", description = "Error codes: EMAIL_NOT_VERIFIED",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @GetMapping("/verify-email")
-    public ResponseEntity<ResponseTemplate<Void>> verifyEmail(@RequestParam("token") String token,
-                                                              HttpServletRequest request) {
+    @PostMapping("/verify-email")
+    public ResponseEntity<ResponseTemplate<Void>> verifyEmail(@Valid @RequestBody VerifyEmailRequest request,
+                                                              HttpServletRequest httpRequest) {
         try {
-            authService.verifyEmailCheck(token, request);
+            authService.verifyEmailCheck(request.getToken(), httpRequest);
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
-            log.error("Email verification failed for token: {}", token, e);
+            log.warn("Email verification failed: {}", e.getCode());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
         }
     }

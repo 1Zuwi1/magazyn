@@ -65,45 +65,27 @@ public class AssortmentController {
         }
     }
 
-    @Operation(summary = "Create assortment (ADMIN only)")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Success - returns created assortment with generated barcode (GS1-128)",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssortmentDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error codes: ITEM_NOT_FOUND, RACK_NOT_FOUND, INVALID_POSITION, POSITION_OCCUPIED, PLACEMENT_INVALID",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
-    })
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<AssortmentDto>> createAssortment(@Valid @RequestBody AssortmentDto assortmentDto, HttpServletRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(assortmentService.createAssortment(assortmentDto, request)));
-    }
+    // REMOVED: Direct assortment creation bypasses inbound operation validation and tracking.
+    // Use POST /inventory/inbound-operations/execute instead for proper inbound flow.
 
-    @Operation(summary = "Update assortment (ADMIN only)")
+    @Operation(
+            summary = "Update assortment metadata only (ADMIN only)",
+            description = "Allows updating expiration date only. Position, rack, and item cannot be changed - use inbound/outbound operations for moves."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - returns updated assortment",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssortmentDto.class))),
-            @ApiResponse(responseCode = "400", description = "Error codes: ASSORTMENT_NOT_FOUND, ITEM_NOT_FOUND, RACK_NOT_FOUND, INVALID_POSITION",
+            @ApiResponse(responseCode = "400", description = "Error codes: ASSORTMENT_NOT_FOUND, POSITION_UPDATE_FORBIDDEN, RACK_UPDATE_FORBIDDEN, ITEM_UPDATE_FORBIDDEN",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseTemplate<AssortmentDto>> updateAssortment(@PathVariable Long id, @Valid @RequestBody AssortmentDto assortmentDto, HttpServletRequest request) {
-        return ResponseEntity.ok(ResponseTemplate.success(assortmentService.updateAssortment(id, assortmentDto, request)));
+        return ResponseEntity.ok(ResponseTemplate.success(assortmentService.updateAssortmentMetadata(id, assortmentDto, request)));
     }
 
-    @Operation(summary = "Delete assortment (ADMIN only)")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success - assortment deleted",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "404", description = "Error codes: ASSORTMENT_NOT_FOUND",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
-    })
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<Void>> deleteAssortment(@PathVariable Long id, HttpServletRequest request) {
-        assortmentService.deleteAssortment(id, request);
-        return ResponseEntity.ok(ResponseTemplate.success());
-    }
+    // REMOVED: Direct assortment deletion bypasses outbound operation tracking and FIFO compliance.
+    // Use POST /inventory/outbound-operations/execute instead for proper outbound flow.
 
     @Operation(
             summary = "Import assortments (placements) from CSV (ADMIN only)",
@@ -174,17 +156,17 @@ public class AssortmentController {
         return ResponseEntity.ok(ResponseTemplate.success(assortmentImportService.importFromCsv(file)));
     }
 
-    @Operation(summary = "Get assortment by barcode (GS1-128)")
+    @Operation(summary = "Get assortment by code (GS1-128 barcode)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success - returns assortment by barcode",
+            @ApiResponse(responseCode = "200", description = "Success - returns assortment by code",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssortmentDto.class))),
             @ApiResponse(responseCode = "404", description = "Error codes: ASSORTMENT_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @GetMapping("/barcode/{code}")
-    public ResponseEntity<ResponseTemplate<AssortmentDto>> getAssortmentByBarcode(@PathVariable String code, HttpServletRequest request) {
+    @GetMapping("/code/{code}")
+    public ResponseEntity<ResponseTemplate<AssortmentDto>> getAssortmentByCode(@PathVariable String code, HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAssortmentByBarcode(code, request)));
+            return ResponseEntity.ok(ResponseTemplate.success(assortmentService.getAssortmentByCode(code, request)));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
         }

@@ -34,7 +34,7 @@ public interface PositionReservationRepository extends JpaRepository<PositionRes
     /**
      * Znajduje wszystkie aktywne rezerwacje użytkownika.
      */
-    @Query("SELECT pr FROM PositionReservation pr WHERE pr.reservedBy = :userId AND pr.expiresAt > :now")
+    @Query("SELECT pr FROM PositionReservation pr WHERE pr.reservedBy.id = :userId AND pr.expiresAt > :now")
     List<PositionReservation> findActiveReservationsForUser(@Param("userId") Long userId, @Param("now") Timestamp now);
 
     /**
@@ -50,7 +50,7 @@ public interface PositionReservationRepository extends JpaRepository<PositionRes
     @Modifying
     @Query("DELETE FROM PositionReservation pr WHERE pr.rack.id = :rackId " +
             "AND pr.positionX = :positionX AND pr.positionY = :positionY " +
-            "AND pr.reservedBy = :userId")
+            "AND pr.reservedBy.id = :userId")
     int deleteByPosition(@Param("rackId") Long rackId, @Param("positionX") int positionX,
                          @Param("positionY") int positionY, @Param("userId") Long userId);
 
@@ -59,7 +59,7 @@ public interface PositionReservationRepository extends JpaRepository<PositionRes
      */
     @Query("SELECT COUNT(pr) > 0 FROM PositionReservation pr WHERE pr.rack.id = :rackId " +
             "AND pr.positionX = :positionX AND pr.positionY = :positionY " +
-            "AND pr.reservedBy != :userId AND pr.expiresAt > :now")
+            "AND pr.reservedBy.id != :userId AND pr.expiresAt > :now")
     boolean isReservedByOther(@Param("rackId") Long rackId, @Param("positionX") int positionX,
                               @Param("positionY") int positionY, @Param("userId") Long userId,
                               @Param("now") Timestamp now);

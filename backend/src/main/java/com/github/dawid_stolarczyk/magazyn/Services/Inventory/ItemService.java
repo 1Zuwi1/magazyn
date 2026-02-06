@@ -1,7 +1,9 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemCreateRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemDto;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemUpdateRequest;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
@@ -57,36 +59,42 @@ public class ItemService {
         return mapToDto(item);
     }
 
-    public ItemDto getItemByBarcode(String barcode, HttpServletRequest request) {
+    public ItemDto getItemByCode(String code, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        Item item = itemRepository.findByBarcode(barcode)
+        Item item = itemRepository.findByCode(code)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
         return mapToDto(item);
     }
 
     @Transactional
-    public ItemDto createItem(ItemDto dto, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
-        return createItemInternal(dto);
+    public ItemDto createItem(ItemCreateRequest request, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
+        Item item = new Item();
+        updateItemFromRequest(item, request);
+        item.setCode(barcodeService.generateUniqueItemCode());
+        return mapToDto(itemRepository.save(item));
     }
 
     /**
      * Internal method for bulk import - no rate limiting
      */
     @Transactional
-    public ItemDto createItemInternal(ItemDto dto) {
+    public void createItemInternal(ItemDto dto) {
         Item item = new Item();
         updateItemFromDto(item, dto);
-        item.setBarcode(barcodeService.generateUniqueItemBarcode());
-        return mapToDto(itemRepository.save(item));
+        if (dto.getCode() != null && !dto.getCode().isBlank()) {
+            item.setCode(dto.getCode());
+        }
+        item.setCode(barcodeService.generateUniqueItemCode());
+        mapToDto(itemRepository.save(item));
     }
 
     @Transactional
-    public ItemDto updateItem(Long id, ItemDto dto, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
+    public ItemDto updateItem(Long id, ItemUpdateRequest request, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
-        updateItemFromDto(item, dto);
+        updateItemFromRequest(item, request);
         return mapToDto(itemRepository.save(item));
     }
 
@@ -240,6 +248,38 @@ public class ItemService {
         item.setName(dto.getName());
     }
 
+    private void updateItemFromRequest(Item item, ItemCreateRequest request) {
+        item.setMin_temp(request.getMinTemp());
+        item.setMax_temp(request.getMaxTemp());
+        item.setWeight(request.getWeight());
+        item.setSize_x(request.getSizeX());
+        item.setSize_y(request.getSizeY());
+        item.setSize_z(request.getSizeZ());
+        item.setComment(request.getComment());
+        item.setExpireAfterDays(request.getExpireAfterDays());
+        item.setDangerous(request.isDangerous());
+        // Name is optional - only set if provided
+        if (request.getName() != null && !request.getName().isBlank()) {
+            item.setName(request.getName());
+        }
+    }
+
+    private void updateItemFromRequest(Item item, ItemUpdateRequest request) {
+        item.setMin_temp(request.getMinTemp());
+        item.setMax_temp(request.getMaxTemp());
+        item.setWeight(request.getWeight());
+        item.setSize_x(request.getSizeX());
+        item.setSize_y(request.getSizeY());
+        item.setSize_z(request.getSizeZ());
+        item.setComment(request.getComment());
+        item.setExpireAfterDays(request.getExpireAfterDays());
+        item.setDangerous(request.isDangerous());
+        // Name is optional - only update if provided
+        if (request.getName() != null && !request.getName().isBlank()) {
+            item.setName(request.getName());
+        }
+    }
+
     /**
      * Walidacja pliku - sprawdza czy to rzeczywiście obraz
      */
@@ -289,8 +329,7 @@ public class ItemService {
     private ItemDto mapToDto(Item item) {
         return ItemDto.builder()
                 .id(item.getId())
-                .barcode(item.getBarcode())
-                .photoUrl(item.getPhoto_url() != null ? "/api/items/" + item.getId() + "/photo" : null)
+                .code(item.getCode())
                 .minTemp(item.getMin_temp())
                 .maxTemp(item.getMax_temp())
                 .weight(item.getWeight())

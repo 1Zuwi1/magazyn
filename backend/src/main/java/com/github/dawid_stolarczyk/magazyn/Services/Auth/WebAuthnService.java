@@ -7,6 +7,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.WebAuthnCredential;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Default2faMethod;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.EmailStatus;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.WebAuthRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
@@ -329,6 +330,9 @@ public class WebAuthnService {
 
         if (!user.getStatus().equals(AccountStatus.ACTIVE) && !user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
             throw new AuthenticationException(AuthError.ACCOUNT_LOCKED.name());
+        }
+        if (user.getEmailStatus().equals(EmailStatus.UNVERIFIED)) {
+            throw new AuthenticationException(AuthError.EMAIL_UNVERIFIED.name());
         }
         sessionManager.createSuccessLoginSession(user, httpServletRequest, httpServletResponse, true, true);
     }

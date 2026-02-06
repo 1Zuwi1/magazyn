@@ -18,7 +18,8 @@ import java.util.List;
         @Index(name = "idx_alerts_rack_id", columnList = "rack_id"),
         @Index(name = "idx_alerts_status", columnList = "status"),
         @Index(name = "idx_alerts_type_status", columnList = "alertType, status"),
-        @Index(name = "idx_alerts_warehouse_id", columnList = "warehouse_id")
+        @Index(name = "idx_alerts_warehouse_id", columnList = "warehouse_id"),
+        @Index(name = "idx_alerts_item_id", columnList = "item_id")
 })
 @Getter
 @Setter
@@ -51,6 +52,13 @@ public class Alert {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "report_id")
     private RackReport triggeringReport;
+
+    /**
+     * The item associated with this alert (optional, for item-level alerts like ITEM_TEMPERATURE_VIOLATION)
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "item_id")
+    private Item item;
 
     /**
      * Type of the alert (what went wrong)
