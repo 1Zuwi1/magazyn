@@ -23,7 +23,7 @@ interface WarehousesListParams {
   size?: number
 }
 
-type WarehousesDetailsParams = WarehousesListParams & {
+interface WarehousesDetailsParams {
   warehouseId: number
 }
 

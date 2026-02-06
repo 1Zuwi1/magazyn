@@ -13,12 +13,12 @@ interface RacksListParams {
   size?: number
 }
 
-type RacksDetailsParams = RacksListParams & {
+interface RacksDetailsParams {
   rackId: number
 }
 
-type RacksByWarehouseParams = RacksListParams & {
-  warehouseId?: number
+interface RacksByWarehouseParams extends RacksListParams {
+  warehouseId: number
 }
 
 export default function useRacks(
