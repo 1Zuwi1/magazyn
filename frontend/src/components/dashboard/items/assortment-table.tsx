@@ -57,6 +57,7 @@ import { apiFetch, type InferApiOutput } from "@/lib/fetcher"
 import type { AssortmentSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { getDaysUntilExpiry } from "../utils/helpers"
+import { BarcodeCell } from "./components/barcode-cell"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 
 type ExpiryFilters = "14_DAYS" | "7_DAYS" | "3_DAYS" | "EXPIRED" | "ALL"
@@ -332,9 +333,7 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
         header: ({ column }) => (
           <SortableHeader column={column}>Kod</SortableHeader>
         ),
-        cell: ({ row }) => (
-          <span className="font-mono text-xs">{row.original.barcode}</span>
-        ),
+        cell: ({ row }) => <BarcodeCell value={row.original.barcode} />,
         enableSorting: true,
       },
       {

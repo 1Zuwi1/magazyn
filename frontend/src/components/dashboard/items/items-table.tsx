@@ -37,6 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import useItems, { type ItemListItem } from "@/hooks/use-items"
+import { BarcodeCell } from "./components/barcode-cell"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 
 const SKELETON_ROWS = 5
@@ -136,9 +137,7 @@ const itemsColumns: ColumnDef<ItemListItem>[] = [
     header: ({ column }) => (
       <SortableHeader column={column}>Kod</SortableHeader>
     ),
-    cell: ({ row }) => (
-      <span className="font-mono text-sm">{row.original.barcode}</span>
-    ),
+    cell: ({ row }) => <BarcodeCell value={row.original.barcode} />,
     enableSorting: true,
   },
   {
