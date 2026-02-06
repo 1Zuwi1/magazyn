@@ -1,4 +1,4 @@
-package com.github.dawid_stolarczyk.magazyn.Repositories;
+package com.github.dawid_stolarczyk.magazyn.Repositories.JPA;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.InboundOperation;
 import org.springframework.data.domain.Page;

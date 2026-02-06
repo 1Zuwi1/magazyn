@@ -6,7 +6,7 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackReportResponse;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertType;
-import com.github.dawid_stolarczyk.magazyn.Repositories.*;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.*;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import jakarta.servlet.http.HttpServletRequest;

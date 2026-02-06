@@ -5,7 +5,7 @@ import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
-import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.SessionData;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.TwoFactorAuth;

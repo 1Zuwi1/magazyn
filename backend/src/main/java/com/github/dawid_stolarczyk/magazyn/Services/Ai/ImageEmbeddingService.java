@@ -4,10 +4,18 @@ import ai.djl.MalformedModelException;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
+import ai.djl.modality.cv.transform.Normalize;
+import ai.djl.modality.cv.transform.ToTensor;
+import ai.djl.ndarray.NDArray;
+import ai.djl.ndarray.NDList;
+import ai.djl.ndarray.NDManager;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
+import ai.djl.translate.Batchifier;
 import ai.djl.translate.TranslateException;
+import ai.djl.translate.Translator;
+import ai.djl.translate.TranslatorContext;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -20,19 +28,19 @@ import java.util.List;
 
 /**
  * Service for generating image embeddings using deep learning models.
- * Converts images to 512-dimensional float vectors for similarity search.
+ * Converts images to 1000-dimensional float vectors for similarity search.
  *
- * <p>Note: This implementation uses ResNet50 as the default embedding model
- * for broad compatibility. For production use cases requiring semantic understanding
- * (e.g., "product looks similar"), consider integrating a CLIP model instead.
- * ResNet50 embeddings capture visual features but may not provide the same
- * semantic similarity as CLIP for diverse product catalogs.</p>
+ * <p>Note: This implementation uses ResNet18 as the default embedding model
+ * for broad compatibility. ResNet models output 1000-dimensional vectors
+ * corresponding to ImageNet class logits. For production use cases requiring
+ * semantic understanding (e.g., "product looks similar"), consider integrating
+ * a CLIP model instead, which provides better semantic similarity.</p>
  */
 @Slf4j
 @Service
 public class ImageEmbeddingService {
 
-    private static final int EMBEDDING_DIMENSION = 512;
+    private static final int EMBEDDING_DIMENSION = 1000;
     private static final List<String> ALLOWED_CONTENT_TYPES = List.of(
             "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/bmp"
     );
@@ -43,22 +51,29 @@ public class ImageEmbeddingService {
 
     /**
      * Initializes the image embedding model on application startup.
-     * Uses DJL's model zoo to load a pretrained ResNet50 embedding model.
+     * Uses DJL's model zoo to load a pretrained ResNet18 embedding model.
+     *
+     * <p>This method implements fail-fast behavior: if the model cannot be loaded,
+     * the application will fail to start. This ensures visual identification is always
+     * available and prevents silent degradation of functionality.</p>
      *
      * <p>For production environments requiring CLIP-based semantic search,
      * configure the model URL to point to a CLIP model endpoint or local ONNX model.</p>
+     *
+     * @throws RuntimeException if the model cannot be loaded
      */
     @PostConstruct
     public void init() {
         try {
             log.info("Loading image embedding model...");
 
-            // Using ResNet50 for visual feature extraction
-            // For semantic similarity (CLIP-like behavior), replace with CLIP model
+            // Use PyTorch ResNet18 model from model zoo
             Criteria<Image, float[]> criteria = Criteria.builder()
                     .setTypes(Image.class, float[].class)
-                    .optModelUrls("djl://ai.djl.pytorch/resnet50_embedding")
+                    .optApplication(ai.djl.Application.CV.IMAGE_CLASSIFICATION)
+                    .optArtifactId("resnet")
                     .optEngine("PyTorch")
+                    .optTranslator(new ImageNetTranslator())
                     .optProgress(new ai.djl.training.util.ProgressBar())
                     .build();
 
@@ -68,9 +83,63 @@ public class ImageEmbeddingService {
 
             log.info("Image embedding model loaded successfully");
         } catch (ModelNotFoundException | MalformedModelException | IOException e) {
-            log.warn("Failed to load image embedding model. Visual identification will not be available: {}",
-                    e.getMessage());
-            modelLoaded = false;
+            String errorMsg = "CRITICAL: Failed to load image embedding model. Application cannot start without AI capabilities.";
+            log.error("{} Error: {}", errorMsg, e.getMessage(), e);
+            throw new RuntimeException(errorMsg, e);
+        } catch (Exception e) {
+            String errorMsg = "CRITICAL: Unexpected error loading image embedding model. Application cannot start.";
+            log.error("{} Error: {}", errorMsg, e.getMessage(), e);
+            throw new RuntimeException(errorMsg, e);
+        }
+    }
+
+    /**
+     * Custom Translator for ImageNet-based models (ResNet).
+     * Properly handles image preprocessing to avoid tensor dimension errors.
+     */
+    private static class ImageNetTranslator implements Translator<Image, float[]> {
+
+        private static final int IMAGE_SIZE = 224;
+        private static final float[] MEAN = {0.485f, 0.456f, 0.406f};
+        private static final float[] STD = {0.229f, 0.224f, 0.225f};
+
+        @Override
+        public NDList processInput(TranslatorContext ctx, Image input) {
+            NDManager manager = ctx.getNDManager();
+
+            // Resize image to 224x224
+            Image resized = input.resize(IMAGE_SIZE, IMAGE_SIZE, false);
+
+            // Convert to NDArray [H, W, C]
+            NDArray array = resized.toNDArray(manager);
+
+            // Apply ToTensor: [H, W, C] -> [C, H, W] and scale to [0, 1]
+            array = new ToTensor().transform(array);
+
+            // Apply ImageNet normalization
+            array = new Normalize(MEAN, STD).transform(array);
+
+            // Add batch dimension: [C, H, W] -> [1, C, H, W]
+            array = array.expandDims(0);
+
+            return new NDList(array);
+        }
+
+        @Override
+        public float[] processOutput(TranslatorContext ctx, NDList list) {
+            NDArray output = list.singletonOrThrow();
+
+            // Remove batch dimension if present
+            if (output.getShape().dimension() > 1 && output.getShape().get(0) == 1) {
+                output = output.squeeze(0);
+            }
+
+            return output.toFloatArray();
+        }
+
+        @Override
+        public Batchifier getBatchifier() {
+            return null; // We handle batching manually
         }
     }
 
@@ -89,13 +158,12 @@ public class ImageEmbeddingService {
     }
 
     /**
-     * Converts a MultipartFile image to a 512-dimensional embedding vector.
+     * Converts a MultipartFile image to a 1000-dimensional embedding vector.
      *
      * @param file the image file to process
-     * @return float array of 512 dimensions representing the image embedding
-     * @throws ImageEmbeddingException if the image cannot be processed
+     * @return float array of 1000 dimensions representing the image embedding
      */
-    public float[] getEmbedding(MultipartFile file) throws ImageEmbeddingException {
+    public float[] getEmbedding(MultipartFile file) {
         validateFile(file);
 
         if (!modelLoaded) {
@@ -111,13 +179,12 @@ public class ImageEmbeddingService {
     }
 
     /**
-     * Converts an InputStream image to a 512-dimensional embedding vector.
+     * Converts an InputStream image to a 1000-dimensional embedding vector.
      *
      * @param inputStream the image input stream to process
-     * @return float array of 512 dimensions representing the image embedding
-     * @throws ImageEmbeddingException if the image cannot be processed
+     * @return float array of 1000 dimensions representing the image embedding
      */
-    public float[] getEmbedding(InputStream inputStream) throws ImageEmbeddingException {
+    public float[] getEmbedding(InputStream inputStream) {
         if (!modelLoaded) {
             throw new ImageEmbeddingException("Image embedding model is not available");
         }
@@ -140,7 +207,7 @@ public class ImageEmbeddingService {
     /**
      * Validates that the file is a supported image format.
      */
-    private void validateFile(MultipartFile file) throws ImageEmbeddingException {
+    private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new ImageEmbeddingException("File is empty or null");
         }
@@ -153,35 +220,35 @@ public class ImageEmbeddingService {
     }
 
     /**
-     * Normalizes embedding to exactly 512 dimensions and applies L2 normalization.
-     * Pads with zeros if shorter, truncates if longer.
+     * Normalizes embedding to exactly 1000 dimensions and applies L2 normalization.
+     * ResNet models natively output 1000-dimensional vectors, so no truncation is needed.
      * Always applies L2 normalization to ensure consistent vector comparison.
      */
     private float[] normalizeEmbedding(float[] embedding) {
-        float[] result;
-        if (embedding.length == EMBEDDING_DIMENSION) {
-            // Copy to avoid modifying input array during normalization
-            result = embedding.clone();
-        } else {
-            result = new float[EMBEDDING_DIMENSION];
+        if (embedding.length != EMBEDDING_DIMENSION) {
+            log.warn("Expected embedding dimension {}, but got {}. This may indicate a model mismatch.",
+                    EMBEDDING_DIMENSION, embedding.length);
+            // Resize if needed (but this should not happen with ResNet)
+            float[] result = new float[EMBEDDING_DIMENSION];
             int copyLength = Math.min(embedding.length, EMBEDDING_DIMENSION);
             System.arraycopy(embedding, 0, result, 0, copyLength);
+            embedding = result;
         }
 
         // L2 normalize the embedding for consistent similarity comparison
         float norm = 0f;
-        for (float v : result) {
+        for (float v : embedding) {
             norm += v * v;
         }
         norm = (float) Math.sqrt(norm);
 
         if (norm > 0) {
-            for (int i = 0; i < result.length; i++) {
-                result[i] /= norm;
+            for (int i = 0; i < embedding.length; i++) {
+                embedding[i] /= norm;
             }
         }
 
-        return result;
+        return embedding;
     }
 
     /**
@@ -219,7 +286,7 @@ public class ImageEmbeddingService {
     /**
      * Exception thrown when image embedding fails.
      */
-    public static class ImageEmbeddingException extends Exception {
+    public static class ImageEmbeddingException extends RuntimeException {
         public ImageEmbeddingException(String message) {
             super(message);
         }

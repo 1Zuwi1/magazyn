@@ -1,4 +1,4 @@
-package com.github.dawid_stolarczyk.magazyn.Repositories;
+package com.github.dawid_stolarczyk.magazyn.Repositories.JPA;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.AuditLog;
 import org.springframework.data.domain.Page;
