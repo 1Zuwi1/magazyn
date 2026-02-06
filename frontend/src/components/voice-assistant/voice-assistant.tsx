@@ -162,6 +162,8 @@ export function VoiceAssistant({
     setView("processing")
   }, [stop])
 
+  const TIMEOUT_DURATION = 3000
+
   useEffect(() => {
     if (view !== "listening") {
       if (autoStopTimeoutRef.current) {
@@ -190,10 +192,8 @@ export function VoiceAssistant({
     autoStopTimeoutRef.current = setTimeout(() => {
       autoStopTimeoutRef.current = null
       handleStopListening()
-    }, 600)
+    }, TIMEOUT_DURATION)
   }, [view, liveCommand, handleStopListening])
-
-  const TIMEOUT_DURATION = 3000
 
   useEffect(() => {
     if (view !== "listening") {

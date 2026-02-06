@@ -6,7 +6,6 @@ export type VoiceCommandId =
   | "settings"
   | "open-scanner"
   | "add-item"
-  | "delete-item"
 
 export interface VoiceCommand {
   id: VoiceCommandId
@@ -114,15 +113,6 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       { regex: /^dodaj asortyment$/i },
       { regex: /^nowy produkt$/i },
       { regex: /^nowy przedmiot$/i },
-    ],
-  },
-  {
-    id: "delete-item",
-    description: "Usuń produkt",
-    patterns: [
-      { regex: /^usun produkt ([a-z0-9]+)$/i },
-      { regex: /^usun przedmiot ([a-z0-9]+)$/i },
-      { regex: /^usun asortyment ([a-z0-9]+)$/i },
     ],
   },
 ]

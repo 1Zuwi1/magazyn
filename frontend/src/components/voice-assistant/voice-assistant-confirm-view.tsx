@@ -34,7 +34,14 @@ export function VoiceAssistantConfirmView({
     }
 
     const interval = setInterval(() => {
-      setTimeLeft((prev) => prev - 100)
+      setTimeLeft((prev) => {
+        if (prev <= 100) {
+          clearInterval(interval)
+          handleConfirm()
+          return 0
+        }
+        return prev - 100
+      })
     }, 100)
 
     return () => clearInterval(interval)
@@ -72,7 +79,7 @@ export function VoiceAssistantConfirmView({
           />
         </svg>
         <span
-          aria-label={`Pozostalo ${secondsLeft} sekund`}
+          aria-label={`Pozostało ${secondsLeft} sekund`}
           aria-live="assertive"
           className="absolute font-bold text-2xl text-foreground"
           role="timer"
@@ -86,7 +93,7 @@ export function VoiceAssistantConfirmView({
           Rozpoznano polecenie
         </h2>
         <p className="text-muted-foreground text-sm">{commandLabel}</p>
-        <p className="text-muted-foreground text-xs">„{transcript}"</p>
+        <p className="text-muted-foreground text-xs">„{transcript}”</p>
       </div>
 
       <div className="flex flex-wrap justify-center gap-2">
