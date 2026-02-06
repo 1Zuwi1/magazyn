@@ -48,7 +48,11 @@ export function VoiceAssistantConfirmView({
       <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent opacity-50" />
 
       <div className="relative flex size-24 items-center justify-center">
-        <svg className="size-24 -rotate-90" viewBox="0 0 100 100">
+        <svg
+          aria-hidden="true"
+          className="size-24 -rotate-90"
+          viewBox="0 0 100 100"
+        >
           <circle
             className="fill-none stroke-muted"
             cx="50"
@@ -67,7 +71,12 @@ export function VoiceAssistantConfirmView({
             strokeWidth="6"
           />
         </svg>
-        <span className="absolute font-bold text-2xl text-foreground">
+        <span
+          aria-label={`Pozostalo ${secondsLeft} sekund`}
+          aria-live="assertive"
+          className="absolute font-bold text-2xl text-foreground"
+          role="timer"
+        >
           {secondsLeft}
         </span>
       </div>

@@ -9,6 +9,14 @@ describe("voice commands", () => {
     )
   })
 
+  it("normalizes empty transcript", () => {
+    expect(normalizeTranscript("   ")).toBe("")
+  })
+
+  it("normalizes transcript with special characters", () => {
+    expect(normalizeTranscript("@@@###!!!")).toBe("")
+  })
+
   it("matches warehouse command case-insensitively", () => {
     const match = matchVoiceCommand("Pokaż magazyn A3")
 
@@ -58,5 +66,33 @@ describe("voice commands", () => {
     const match = matchVoiceCommand("Uruchom skaner")
     expect(match).not.toBeNull()
     expect(match?.command.id).toBe("open-scanner")
+  })
+
+  it("matches dashboard command", () => {
+    const match = matchVoiceCommand("Pokaż dashboard")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("dashboard")
+  })
+
+  it("matches settings command", () => {
+    const match = matchVoiceCommand("Ustawienia")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("settings")
+  })
+
+  it("matches add item command", () => {
+    const match = matchVoiceCommand("Dodaj produkt")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("add-item")
+  })
+
+  it("matches delete item command", () => {
+    const match = matchVoiceCommand("Usuń produkt A12")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("delete-item")
   })
 })
