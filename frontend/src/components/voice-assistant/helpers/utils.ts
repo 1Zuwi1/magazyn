@@ -61,7 +61,6 @@ export interface VoiceAssistantActions {
   navigateAndClose: (href: string) => void
   openScanner: () => void
   openAddItemDialog: () => void
-  openDeleteItemDialog: () => void
   closeDialog: () => void
   setErrorMessage: (msg: string) => void
   setView: (view: VoiceAssistantViews) => void
@@ -116,10 +115,6 @@ export const handleConfirmCommandAction = (
       break
     case "add-item":
       actions.openAddItemDialog()
-      actions.navigateAndClose("/admin/assortment")
-      return
-    case "delete-item":
-      actions.openDeleteItemDialog()
       actions.navigateAndClose("/admin/assortment")
       return
     default:

@@ -88,11 +88,4 @@ describe("voice commands", () => {
     expect(match).not.toBeNull()
     expect(match?.command.id).toBe("add-item")
   })
-
-  it("matches delete item command", () => {
-    const match = matchVoiceCommand("Usuń produkt A12")
-
-    expect(match).not.toBeNull()
-    expect(match?.command.id).toBe("delete-item")
-  })
 })
