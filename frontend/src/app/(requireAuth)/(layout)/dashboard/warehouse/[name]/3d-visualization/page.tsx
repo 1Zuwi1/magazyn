@@ -1,5 +1,7 @@
 "use client"
 
+import { Layers01Icon, PackageSearchIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { useParams, useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { DetailsPanel } from "@/components/dashboard/3d-visualization/details-panel"
@@ -403,6 +405,42 @@ export default function ThreeDVisualizationPage() {
 
   if (!warehouse) {
     return null
+  }
+
+  if (warehouse.racks.length === 0) {
+    return (
+      <div
+        className="flex flex-col gap-4 overflow-hidden"
+        style={{
+          height: "calc(100dvh - var(--header-height) - 3.5rem - 1px)",
+        }}
+      >
+        <PageHeader
+          backTitle="Wróć do panelu magazynu"
+          description="Interaktywny widok przestrzenny regałów i produktów"
+          onBack={() => router.push("./")}
+          stats={[{ label: "Regałów", value: 0, icon: Layers01Icon }]}
+          title="Wizualizacja 3D"
+        />
+        <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-2xl border bg-background">
+          <div className="flex max-w-sm flex-col items-center gap-4 p-8 text-center">
+            <div className="flex size-16 items-center justify-center rounded-2xl bg-muted">
+              <HugeiconsIcon
+                className="size-8 text-muted-foreground"
+                icon={PackageSearchIcon}
+              />
+            </div>
+            <div className="space-y-2">
+              <h2 className="font-semibold text-lg">Brak regałów</h2>
+              <p className="text-muted-foreground text-sm">
+                Ten magazyn nie posiada jeszcze żadnych regałów. Dodaj regały,
+                aby zobaczyć wizualizację 3D.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const headerStats = [

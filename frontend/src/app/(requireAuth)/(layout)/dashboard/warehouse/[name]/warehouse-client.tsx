@@ -21,6 +21,7 @@ import type { ItemSlot, Rack } from "@/components/dashboard/types"
 import { getSlotCoordinate } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import useRacks, { type RacksList } from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
 import { cn } from "@/lib/utils"
@@ -93,21 +94,16 @@ const decodeWarehouseName = (encodedName: string): string => {
 }
 
 const getWarehouseDisplayMessage = ({
-  isLoading,
   hasFetchError,
   hasWarehouse,
   hasRack,
   warehouseName,
 }: {
-  isLoading: boolean
   hasFetchError: boolean
   hasWarehouse: boolean
   hasRack: boolean
   warehouseName: string
 }): string | null => {
-  if (isLoading) {
-    return "Ładowanie danych magazynu..."
-  }
   if (hasFetchError) {
     return "Nie udało się pobrać danych magazynu."
   }
@@ -161,6 +157,139 @@ function buildHeaderStats({
       value: headerFreeSlots,
     },
   ]
+}
+
+function WarehouseLoadingSkeleton({
+  warehouseName,
+}: {
+  warehouseName: string
+}) {
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        backHref="/dashboard/warehouse"
+        backTitle="Powrót do listy magazynów"
+        stats={[
+          { label: "Regałów", value: "-", icon: Layers01Icon },
+          { label: "Obłożenie", value: "-" },
+          { label: "Wolnych", value: "-" },
+        ]}
+        title={warehouseName}
+      >
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <Skeleton className="h-5 w-24 rounded-full" />
+          <Skeleton className="h-5 w-16 rounded-full" />
+          <Skeleton className="h-5 w-28 rounded-full" />
+        </div>
+      </PageHeader>
+
+      {/* Action buttons skeleton */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Skeleton className="h-8 w-28 rounded-md" />
+        <Skeleton className="h-8 w-24 rounded-md" />
+      </div>
+
+      {/* Main content skeleton */}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(240px,320px)]">
+        {/* Grid visualization skeleton */}
+        <div className="order-1">
+          <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+            {/* Grid header */}
+            <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-8 rounded-lg" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="size-8 rounded-md" />
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="size-8 rounded-md" />
+              </div>
+            </div>
+            {/* Grid body */}
+            <div className="p-6">
+              <div className="grid grid-cols-4 gap-2">
+                {Array.from({ length: 16 }).map((_, index) => (
+                  <Skeleton
+                    className="aspect-square rounded-lg"
+                    key={index}
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right column skeleton */}
+        <div className="order-3 space-y-6 xl:order-2">
+          {/* Status card skeleton */}
+          <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+            <div className="flex items-center gap-3 border-b bg-muted/30 px-4 py-3">
+              <Skeleton className="size-8 rounded-lg" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <div className="border-b px-4 py-4">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-8 w-14" />
+              </div>
+              <Skeleton className="mt-3 h-3 w-full rounded-full" />
+            </div>
+            <div className="grid grid-cols-3 divide-x">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  className="flex flex-col items-center gap-1 px-3 py-4"
+                  key={index}
+                  style={{ animationDelay: `${index * 75}ms` }}
+                >
+                  <Skeleton className="size-8 rounded-lg" />
+                  <Skeleton className="h-5 w-8" />
+                  <Skeleton className="h-3 w-12" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Parameters card skeleton */}
+          <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+            <div className="flex items-center gap-3 border-b bg-muted/30 px-4 py-3">
+              <Skeleton className="size-8 rounded-lg" />
+              <Skeleton className="h-4 w-28" />
+            </div>
+            <div className="divide-y">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  className="flex items-center gap-3 px-4 py-3"
+                  key={index}
+                  style={{ animationDelay: `${index * 75}ms` }}
+                >
+                  <Skeleton className="size-10 shrink-0 rounded-xl" />
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <Skeleton className="h-3 w-28" />
+                    <Skeleton className="h-4 w-36" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Shelf details skeleton */}
+        <div className="order-2 xl:order-3 xl:col-span-2">
+          <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+            <div className="flex items-center gap-3 border-b bg-muted/30 px-4 py-3">
+              <Skeleton className="size-8 rounded-lg" />
+              <Skeleton className="h-4 w-36" />
+            </div>
+            <div className="p-6">
+              <Skeleton className="h-16 w-full rounded-lg" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function WarehouseStateView({
@@ -372,12 +501,15 @@ export default function WarehouseClient() {
   })
 
   const warehouseMessage = getWarehouseDisplayMessage({
-    isLoading,
     hasFetchError,
     hasWarehouse: Boolean(warehouse),
     hasRack: Boolean(currentRack),
     warehouseName,
   })
+
+  if (isLoading) {
+    return <WarehouseLoadingSkeleton warehouseName={warehouseName} />
+  }
 
   if (warehouseMessage) {
     return (
@@ -399,9 +531,6 @@ export default function WarehouseClient() {
         backTitle="Powrót do listy magazynów"
         stats={headerStats}
         title={warehouseName}
-        titleBadge={
-          warehouseId !== undefined ? `ID: ${warehouseId}` : undefined
-        }
       >
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <Badge className="gap-1.5" variant="outline">
