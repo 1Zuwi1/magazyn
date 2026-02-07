@@ -68,6 +68,8 @@ public class AuthService {
         }
 
         if (user.getEmailStatus().equals(EmailStatus.UNVERIFIED)) {
+            // Automatically resend verification email with strict rate limiting
+            resendVerificationEmail(user, request);
             throw new AuthenticationException(AuthError.EMAIL_UNVERIFIED.name());
         }
 
@@ -187,6 +189,31 @@ public class AuthService {
         // Mark token as used and delete it
         passwordResetToken.setUsed(true);
         passwordResetTokenRepository.delete(passwordResetToken);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    private void resendVerificationEmail(User user, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.EMAIL_VERIFICATION_RESEND);
+
+        // Delete existing verification token if present
+        if (user.getEmailVerifications() != null) {
+            user.removeEmailVerifications();
+        }
+
+        // Generate new verification token
+        EmailVerification emailVerification = new EmailVerification();
+        String emailVerificationToken = UUID.randomUUID().toString();
+        emailVerification.setVerificationToken(Hasher.hashSHA256(emailVerificationToken));
+        emailVerification.setExpiresAt(Instant.now().plus(15, java.time.temporal.ChronoUnit.MINUTES));
+        user.setEmailVerifications(emailVerification);
+        userRepository.save(user);
+
+        // Send verification email
+        String baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
+                .replacePath(null)
+                .path("/verify-mail")
+                .toUriString();
+        emailService.sendVerificationEmail(user.getEmail(), baseUrl + "?token=" + emailVerificationToken);
     }
 
 }
