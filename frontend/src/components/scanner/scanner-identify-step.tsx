@@ -61,6 +61,7 @@ function CandidateCard({
             alt={candidate.itemName}
             className="object-cover"
             height={100}
+            // FIXME: Remove in prod
             src={`${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/items/${candidate.itemId}/photo`}
             style={{ width: "100%", height: "100%" }}
             width={100}
