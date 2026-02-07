@@ -170,22 +170,10 @@ public class UserService {
         userRepository.save(targetUser);
 
         String baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
+                .replacePath(null)
                 .path("/verify-mail")
                 .toUriString();
         emailService.sendVerificationEmail(targetUser.getEmail(), baseUrl + "?token=" + emailVerificationToken);
-    }
-
-    /**
-     * Admin: Change full name for any user
-     */
-    @Transactional
-    public void adminChangeFullName(Long targetUserId, String newFullName, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
-        User targetUser = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
-
-        targetUser.setFullName(newFullName);
-        userRepository.save(targetUser);
     }
 
     /**
