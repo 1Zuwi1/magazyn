@@ -47,7 +47,7 @@ const useWarehouseIdStore = create<WarehouseIdStore>()(
   )
 )
 
-interface CurrentWarehouseId {
+export interface CurrentWarehouseId {
   warehouseId: number | null
   warehouseIdForQuery: number
   isHydrated: boolean

@@ -9,13 +9,16 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { type ReactNode, useState } from "react"
+import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
+import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import useWarehouses, {
   useCreateWarehouse,
   useDeleteWarehouse,
+  useImportWarehouses,
   useUpdateWarehouse,
   type WarehousesList,
 } from "@/hooks/use-warehouses"
@@ -41,6 +44,7 @@ export default function WarehousesMain() {
   const createWarehouseMutation = useCreateWarehouse()
   const updateWarehouseMutation = useUpdateWarehouse()
   const deleteWarehouseMutation = useDeleteWarehouse()
+  const importWarehousesMutation = useImportWarehouses()
   const [open, setOpen] = useState(false)
   const [selectedWarehouse, setSelectedWarehouse] = useState<ApiWarehouse>()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -80,6 +84,18 @@ export default function WarehousesMain() {
     }
 
     setSelectedWarehouse(undefined)
+  }
+
+  const handleCsvImport = async ({ file }: { file: File }) => {
+    const report = await importWarehousesMutation.mutateAsync(file)
+    if (report.errors.length > 0) {
+      toast.warning(
+        `Import zakończony częściowo: ${report.imported}/${report.processedLines}`
+      )
+      return
+    }
+
+    toast.success(`Zaimportowano ${report.imported} magazynów`)
   }
 
   const totalWarehouses =
@@ -196,10 +212,17 @@ export default function WarehousesMain() {
       {/* Page Header */}
       <AdminPageHeader
         actions={
-          <Button onClick={handleAddWarehouse}>
-            <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-            Dodaj magazyn
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <CsvImporter
+              isImporting={importWarehousesMutation.isPending}
+              onImport={handleCsvImport}
+              type="warehouse"
+            />
+            <Button onClick={handleAddWarehouse}>
+              <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
+              Dodaj magazyn
+            </Button>
+          </div>
         }
         description="Zarządzaj magazynami i ich regałami"
         icon={WarehouseIcon}

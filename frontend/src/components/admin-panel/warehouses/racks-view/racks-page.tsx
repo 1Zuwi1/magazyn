@@ -1,29 +1,26 @@
 "use client"
 
-import {
-  Add01Icon,
-  ArrowLeft02Icon,
-  GridIcon,
-  Package,
-} from "@hugeicons/core-free-icons"
+import { Add01Icon, GridIcon, Package } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { type ReactNode, useMemo, useState } from "react"
+import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
 import type { Rack } from "@/components/dashboard/types"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
+import { useCurrentAdminWarehouseId } from "@/hooks/use-current-admin-warehouse-id"
 import useRacks, {
   type RacksList,
   useCreateRack,
   useDeleteRack,
+  useImportRacks,
   useUpdateRack,
 } from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
-import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../../lib/constants"
-import type { CsvRowType, RackFormData } from "../csv/utils/types"
+import type { RackFormData } from "../csv/utils/types"
 import { RackDialog } from "./rack-dialog"
 import { RackGrid } from "./racks-grid"
 
@@ -33,7 +30,6 @@ interface AdminRacksPageProps {
   }
 }
 
-const WAREHOUSES_PAGE_SIZE = 1000
 const RACKS_PAGE_SIZE = 2000
 const MAX_MOCK_ITEMS_PER_RACK = 12
 const CREATE_RACK_TEMP_ID = 0
@@ -104,22 +100,15 @@ const buildRackMutationData = ({
 }
 
 export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
+  const router = useRouter()
+  const { warehouseIdForQuery, isHydrated, isMissingWarehouseId } =
+    useCurrentAdminWarehouseId()
   const warehouseName = warehouse.name
   const {
-    data: warehousesData,
-    isPending: isWarehousesPending,
-    isError: isWarehousesError,
-  } = useWarehouses({ page: 0, size: WAREHOUSES_PAGE_SIZE })
-
-  const apiWarehouse = useMemo(
-    () =>
-      warehousesData?.content.find(
-        (candidate) =>
-          candidate.name.toLocaleLowerCase() ===
-          warehouseName.toLocaleLowerCase()
-      ),
-    [warehouseName, warehousesData?.content]
-  )
+    data: apiWarehouse,
+    isPending: isWarehousePending,
+    isError: isWarehouseError,
+  } = useWarehouses({ warehouseId: warehouseIdForQuery })
 
   const {
     data: racksData,
@@ -133,6 +122,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
   const createRackMutation = useCreateRack()
   const updateRackMutation = useUpdateRack()
   const deleteRackMutation = useDeleteRack()
+  const importRacksMutation = useImportRacks()
 
   const mappedRacks = useMemo(() => {
     if (!apiWarehouse) {
@@ -217,21 +207,16 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     setSelectedRack(undefined)
   }
 
-  const handleCsvImport = (data: CsvRowType<"rack">[]) => {
-    if (!apiWarehouse) {
+  const handleCsvImport = async ({ file }: { file: File }) => {
+    const report = await importRacksMutation.mutateAsync(file)
+    if (report.errors.length > 0) {
+      toast.warning(
+        `Import zakończony częściowo: ${report.imported}/${report.processedLines}`
+      )
       return
     }
 
-    for (const row of data) {
-      createRackMutation.mutate(
-        buildRackMutationData({
-          acceptsDangerous: DEFAULT_ACCEPTS_DANGEROUS_ITEMS,
-          data: row,
-          rackId: CREATE_RACK_TEMP_ID,
-          warehouseId: apiWarehouse.id,
-        })
-      )
-    }
+    toast.success(`Zaimportowano ${report.imported} regałów`)
   }
 
   const totalWeight = mappedRacks.reduce(
@@ -242,10 +227,27 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     (acc, rack) => acc + rack.items.length,
     0
   )
-  const isWarehouseMissing = !isWarehousesPending && apiWarehouse === undefined
+  const isWarehouseMissing =
+    isHydrated &&
+    !isWarehousePending &&
+    !isWarehouseError &&
+    apiWarehouse == null
   const isLoading =
-    isWarehousesPending || (apiWarehouse !== undefined && isRacksPending)
+    !isHydrated ||
+    isWarehousePending ||
+    (apiWarehouse != null && isRacksPending)
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back()
+      return
+    }
+    router.push("/admin/warehouses")
+  }
   let racksContent: ReactNode
+
+  if (isMissingWarehouseId) {
+    return null
+  }
 
   if (isWarehouseMissing) {
     racksContent = (
@@ -253,7 +255,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
         Nie znaleziono magazynu o nazwie: {warehouseName}
       </div>
     )
-  } else if (isWarehousesError || isRacksError) {
+  } else if (isWarehouseError || isRacksError) {
     racksContent = (
       <div className="rounded-2xl border border-dashed bg-muted/20 p-8 text-center text-muted-foreground">
         Nie udało się pobrać regałów.
@@ -281,36 +283,29 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
       <AdminPageHeader
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <CsvImporter onImport={handleCsvImport} type="rack" />
-            <Button
-              disabled={apiWarehouse === undefined}
-              onClick={handleAddRack}
-            >
+            <CsvImporter
+              isImporting={importRacksMutation.isPending}
+              onImport={handleCsvImport}
+              type="rack"
+            />
+            <Button disabled={apiWarehouse == null} onClick={handleAddRack}>
               <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
               Dodaj regał
             </Button>
           </div>
         }
+        backTitle="Wróć do magazynów"
         description={`Zarządzaj regałami w magazynie ${warehouseName}`}
         icon={GridIcon}
         navLinks={ADMIN_NAV_LINKS.map((link) => ({
           title: link.title,
           url: link.url,
         }))}
+        onBack={handleBack}
         title="Regały"
       >
-        {/* Quick Stats & Back Link */}
+        {/* Quick Stats */}
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <Link
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "gap-2"
-            )}
-            href="/admin/warehouses"
-          >
-            <HugeiconsIcon className="size-4" icon={ArrowLeft02Icon} />
-            Wróć do magazynów
-          </Link>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <HugeiconsIcon
               className="size-3.5 text-muted-foreground"

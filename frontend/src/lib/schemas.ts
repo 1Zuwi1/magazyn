@@ -423,6 +423,18 @@ const TeamOptionSchema = z.object({
   label: z.string().min(1),
 })
 
+const ImportErrorSchema = z.object({
+  lineNumber: z.number().int().nonnegative(),
+  message: z.string(),
+  rawLine: z.string().nullish(),
+})
+
+const ImportReportSchema = z.object({
+  processedLines: z.number().int().nonnegative(),
+  imported: z.number().int().nonnegative(),
+  errors: z.array(ImportErrorSchema),
+})
+
 export const AdminUsersSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
@@ -528,6 +540,15 @@ export const UpdateWarehouseSchema = createApiSchema({
   },
 })
 
+export const WarehouseImportSchema = createApiSchema({
+  POST: {
+    input: z.object({
+      file: z.custom<File>(),
+    }),
+    output: ImportReportSchema,
+  },
+})
+
 const AssortmentSchema = z.object({
   id: z.number().int().nonnegative(),
   code: z.string(),
@@ -582,6 +603,39 @@ export const ItemDetailsSchema = createApiSchema({
   },
 })
 
+const ItemMutationInputSchema = z.object({
+  name: z.string().trim().max(255).optional(),
+  minTemp: z.number(),
+  maxTemp: z.number(),
+  weight: z.number().nonnegative(),
+  sizeX: z.number().nonnegative(),
+  sizeY: z.number().nonnegative(),
+  sizeZ: z.number().nonnegative(),
+  comment: z.string().trim().max(1000).optional(),
+  expireAfterDays: z.number().int().nonnegative(),
+  dangerous: z.boolean(),
+})
+
+export const CreateItemSchema = createApiSchema({
+  POST: {
+    input: ItemMutationInputSchema,
+    output: ItemDefinitionSchema,
+  },
+})
+
+export const UpdateItemSchema = createApiSchema({
+  PUT: {
+    input: ItemMutationInputSchema,
+    output: ItemDefinitionSchema,
+  },
+})
+
+export const DeleteItemSchema = createApiSchema({
+  DELETE: {
+    output: z.null(),
+  },
+})
+
 const RackSchema = z.object({
   id: z.number().int().nonnegative(),
   marker: z.string(),
@@ -622,6 +676,24 @@ export const RackDetailsSchema = createApiSchema({
 export const DeleteRackSchema = createApiSchema({
   DELETE: {
     output: z.null(),
+  },
+})
+
+export const RackImportSchema = createApiSchema({
+  POST: {
+    input: z.object({
+      file: z.custom<File>(),
+    }),
+    output: ImportReportSchema,
+  },
+})
+
+export const ItemImportSchema = createApiSchema({
+  POST: {
+    input: z.object({
+      file: z.custom<File>(),
+    }),
+    output: ImportReportSchema,
   },
 })
 

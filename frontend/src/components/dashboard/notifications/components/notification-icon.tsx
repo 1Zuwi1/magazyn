@@ -32,7 +32,6 @@ import {
 } from "@/components/ui/popover"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { MOCK_NOTIFICATIONS } from "../../mock-data"
 
 function getNotificationIcon(type: NotificationType): IconSvgElement {
   const icons: Record<NotificationType, IconSvgElement> = {
@@ -68,8 +67,7 @@ function getSeverityConfig(severity: NotificationSeverity) {
 }
 
 export function NotificationInbox() {
-  const [notifications, setNotifications] =
-    useState<Notification[]>(MOCK_NOTIFICATIONS)
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [open, setOpen] = useState(false)
   const unreadCount = notifications.filter((n) => !n.read).length
 

@@ -5,6 +5,7 @@ import {
   DeleteWarehouseSchema,
   UpdateWarehouseSchema,
   WarehouseDetailsSchema,
+  WarehouseImportSchema,
   WarehousesSchema,
 } from "@/lib/schemas"
 import { useApiMutation } from "./use-api-mutation"
@@ -129,6 +130,25 @@ export function useUpdateWarehouse() {
     },
     onSuccess: (_, __, ___, context) => {
       // Invalidate warehouses list query to refetch updated data
+      context.client.invalidateQueries({
+        queryKey: WAREHOUSES_QUERY_KEY,
+      })
+    },
+  })
+}
+
+export function useImportWarehouses() {
+  return useApiMutation({
+    mutationFn: async (file: File) => {
+      return await apiFetch("/api/warehouses/import", WarehouseImportSchema, {
+        method: "POST",
+        body: { file },
+        formData: (formData, data) => {
+          formData.append("file", data.file)
+        },
+      })
+    },
+    onSuccess: (_, __, ___, context) => {
       context.client.invalidateQueries({
         queryKey: WAREHOUSES_QUERY_KEY,
       })

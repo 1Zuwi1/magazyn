@@ -1,6 +1,7 @@
 "use client"
 
 import { useForm, useStore } from "@tanstack/react-form"
+import { useEffect } from "react"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import type { Item } from "@/components/dashboard/types"
 import { FieldWithState } from "@/components/helpers/field-state"
@@ -45,7 +46,7 @@ interface ItemDialogProps {
   currentRow?: Item
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: ItemFormData) => void
+  onSubmit: (data: ItemFormData) => Promise<void>
 }
 
 export function ItemDialog({
@@ -74,9 +75,9 @@ export function ItemDialog({
 
   const form = useForm({
     defaultValues: formValues,
-    onSubmit: ({ value }) => {
-      onSubmit({
-        id: value.id || crypto.randomUUID(),
+    onSubmit: async ({ value }) => {
+      await onSubmit({
+        id: value.id,
         name: value.name,
         imageUrl: value.imageUrl || null,
         minTemp: value.minTemp,
@@ -93,6 +94,28 @@ export function ItemDialog({
       onOpenChange(false)
     },
   })
+
+  useEffect(() => {
+    if (currentRow) {
+      form.reset({
+        id: currentRow.id,
+        name: currentRow.name,
+        imageUrl: currentRow.imageUrl,
+        minTemp: currentRow.minTemp,
+        maxTemp: currentRow.maxTemp,
+        weight: currentRow.weight,
+        width: currentRow.width,
+        height: currentRow.height,
+        depth: currentRow.depth,
+        comment: currentRow.comment,
+        daysToExpiry: currentRow.daysToExpiry,
+        isDangerous: currentRow.isDangerous,
+      })
+      return
+    }
+
+    form.reset(DEFAULT_ITEM)
+  }, [currentRow, form])
 
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
 

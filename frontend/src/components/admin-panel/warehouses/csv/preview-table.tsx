@@ -108,7 +108,7 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
         </ScrollArea>
       </div>
 
-      <div className="text-center text-muted-foreground text-sm">
+      <div className="text-left text-muted-foreground text-sm">
         {hasMoreRows
           ? `Wyświetlono ${previewRows.length} z ${rows.length} ${pluralize(rows.length, "wiersz", "wiersze", "wierszy")}`
           : rows.length > 0 &&

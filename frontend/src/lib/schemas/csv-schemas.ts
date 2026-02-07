@@ -1,80 +1,34 @@
 import z from "zod"
-import { createApiSchema } from "../create-api-schema"
 
-export const ItemSchema = z.object({
-  name: z.string(),
-  id: z.string(),
-  qrCode: z.string(),
-  imageUrl: z.string().optional().or(z.literal("")),
+export const WarehouseCsvSchema = z.object({
+  name: z.string().trim().min(1, "Nazwa magazynu jest wymagana"),
+})
+
+export const RackCsvSchema = z.object({
+  marker: z.string().trim().min(1, "Marker jest wymagany"),
+  rows: z.number().int().min(1),
+  cols: z.number().int().min(1),
+  minTemp: z.number(),
+  maxTemp: z.number(),
+  maxWeight: z.number().nonnegative(),
+  maxItemWidth: z.number().positive(),
+  maxItemHeight: z.number().positive(),
+  maxItemDepth: z.number().positive(),
+  isDangerous: z.boolean().optional(),
+  comment: z.string().optional(),
+})
+
+export const ItemCsvSchema = z.object({
+  name: z.string().trim().min(1, "Nazwa produktu jest wymagana"),
   minTemp: z.number(),
   maxTemp: z.number(),
   weight: z.number().nonnegative(),
   width: z.number().positive(),
   height: z.number().positive(),
   depth: z.number().positive(),
+  daysToExpiry: z.number().int().nonnegative().optional(),
+  isDangerous: z.boolean().optional(),
   comment: z.string().optional(),
-  daysToExpiry: z.number().nonnegative(),
-  isDangerous: z
-    .string()
-    .refine(
-      (val) => val.toLowerCase() === "true" || val.toLowerCase() === "false",
-      {
-        message: "isDangerous must be 'true' or 'false'",
-      }
-    )
-    .transform((val) => val.toLowerCase() === "true"),
-})
-
-export const RackSchema = z.object({
-  id: z.string(),
-  marker: z.string(),
-  name: z.string(),
-  rows: z.number().min(1),
-  cols: z.number().min(1),
-  minTemp: z.number(),
-  maxTemp: z.number(),
-  maxWeight: z.number().nonnegative(),
-  currentWeight: z.number().nonnegative(),
-  maxItemWidth: z.number().positive(),
-  maxItemHeight: z.number().positive(),
-  maxItemDepth: z.number().positive(),
-  comment: z.string().optional(),
-  occupancy: z.number().min(0).max(100),
-  items: z.array(ItemSchema),
-})
-
-export const RackCsvSchema = RackSchema.omit({
-  id: true,
-  currentWeight: true,
-  occupancy: true,
-  items: true,
-  name: true,
-}).extend({
-  name: z.string().optional(),
-  marker: z.string(),
-})
-
-export const ItemCsvSchema = ItemSchema.omit({
-  qrCode: true,
-})
-
-export const ApiRacksSchema = createApiSchema({
-  GET: {
-    output: z.array(RackSchema),
-  },
-  POST: {
-    input: RackCsvSchema,
-    output: RackSchema,
-  },
-})
-
-export const ApiItemsSchema = createApiSchema({
-  POST: {
-    input: ItemSchema.omit({
-      id: true,
-    }),
-    output: ItemSchema,
-  },
 })
 
 const usernameSchema = z

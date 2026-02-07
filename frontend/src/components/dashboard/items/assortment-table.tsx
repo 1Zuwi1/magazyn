@@ -6,7 +6,6 @@ import {
   Calendar03Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useQueries } from "@tanstack/react-query"
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -20,7 +19,6 @@ import {
 } from "@tanstack/react-table"
 import Link from "next/link"
 import { useMemo, useState } from "react"
-import z from "zod"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -53,8 +51,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import useAssortment from "@/hooks/use-assortment"
-import { createApiSchema } from "@/lib/create-api-schema"
-import { apiFetch, type InferApiOutput } from "@/lib/fetcher"
+import { useMultipleItems } from "@/hooks/use-items"
+import { useMultipleRacks } from "@/hooks/use-racks"
+import type { InferApiOutput } from "@/lib/fetcher"
 import type { AssortmentsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { getDaysUntilExpiry } from "../utils/helpers"
@@ -65,28 +64,6 @@ type ExpiryFilters = "14_DAYS" | "7_DAYS" | "3_DAYS" | "EXPIRED" | "ALL"
 
 type AssortmentList = InferApiOutput<typeof AssortmentsSchema, "GET">
 type AssortmentItem = AssortmentList["content"][number]
-
-const ITEM_DETAILS_SCHEMA = createApiSchema({
-  GET: {
-    output: z.object({
-      id: z.number().int().nonnegative(),
-      name: z.string(),
-    }),
-  },
-})
-
-const RACK_DETAILS_SCHEMA = createApiSchema({
-  GET: {
-    output: z.object({
-      id: z.number().int().nonnegative(),
-      name: z.string().nullish(),
-      marker: z.string(),
-    }),
-  },
-})
-
-const ITEM_DETAILS_CACHE_TIME_MS = 5 * 60 * 1000
-const RACK_DETAILS_CACHE_TIME_MS = 5 * 60 * 1000
 
 const EXPIRY_FILTER_OPTIONS: {
   value: ExpiryFilters
@@ -296,20 +273,8 @@ function AssortmentTableContent({
     [assortmentItems]
   )
 
-  const itemDetailsQueries = useQueries({
-    queries: itemIds.map((itemId) => ({
-      queryKey: ["item-details", itemId],
-      queryFn: () => apiFetch(`/api/items/${itemId}`, ITEM_DETAILS_SCHEMA),
-      staleTime: ITEM_DETAILS_CACHE_TIME_MS,
-    })),
-  })
-  const rackDetailsQueries = useQueries({
-    queries: rackIds.map((rackId) => ({
-      queryKey: ["rack-details", rackId],
-      queryFn: () => apiFetch(`/api/racks/${rackId}`, RACK_DETAILS_SCHEMA),
-      staleTime: RACK_DETAILS_CACHE_TIME_MS,
-    })),
-  })
+  const itemDetailsQueries = useMultipleItems({ itemIds })
+  const rackDetailsQueries = useMultipleRacks({ rackIds })
 
   const itemNamesById = useMemo(() => {
     const namesMap = new Map<number, string>()

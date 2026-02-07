@@ -117,6 +117,7 @@ export function FileUploader({
         accept={DEFAULT_CONFIG.accept}
         disabled={isDisabled}
         maxFiles={DEFAULT_CONFIG.maxFileCount}
+        maxSize={DEFAULT_CONFIG.maxSizeInBytes}
         onDrop={onDrop}
       >
         {({ getRootProps, getInputProps, isDragActive }) => (

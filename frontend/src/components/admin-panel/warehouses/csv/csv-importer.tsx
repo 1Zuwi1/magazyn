@@ -16,20 +16,35 @@ import { cn } from "@/lib/utils"
 import { useCsvImporter } from "../../hooks/use-csv-importer"
 import { FileUploader } from "./file-uploader"
 import { PreviewTable } from "./preview-table"
-import { ITEM_COLUMNS, RACK_COLUMNS } from "./utils/constants"
+import {
+  ITEM_COLUMNS,
+  RACK_COLUMNS,
+  WAREHOUSE_COLUMNS,
+} from "./utils/constants"
 import type { CsvImporterType, CsvRowType } from "./utils/types"
 
 interface CsvImporterProps<T extends CsvImporterType> {
   type: T
-  onImport: (data: CsvRowType<T>[]) => void
+  isImporting?: boolean
+  onImport: (payload: {
+    file: File
+    rows: CsvRowType<T>[]
+  }) => Promise<void> | void
 }
 
 export function CsvImporter<T extends CsvImporterType>({
+  isImporting = false,
   type,
   onImport,
 }: CsvImporterProps<T>) {
-  const handleImport = (data: CsvRowType<T>[]): void => {
-    onImport(data)
+  const handleImport = async ({
+    file,
+    rows,
+  }: {
+    file: File
+    rows: CsvRowType<T>[]
+  }): Promise<void> => {
+    await onImport({ file, rows })
   }
 
   const {
@@ -43,7 +58,19 @@ export function CsvImporter<T extends CsvImporterType>({
     resetFile,
   } = useCsvImporter<T>({ type, onImport: handleImport })
 
-  const columns = type === "rack" ? RACK_COLUMNS : ITEM_COLUMNS
+  let columns: ReadonlyArray<{ key: string; label: string }> = ITEM_COLUMNS
+  if (type === "warehouse") {
+    columns = WAREHOUSE_COLUMNS
+  } else if (type === "rack") {
+    columns = RACK_COLUMNS
+  }
+
+  let dialogTitle = "Importuj przedmioty z CSV"
+  if (type === "warehouse") {
+    dialogTitle = "Importuj magazyny z CSV"
+  } else if (type === "rack") {
+    dialogTitle = "Importuj regały z CSV"
+  }
 
   const labels = useMemo(() => {
     const map: Record<string, string> = {}
@@ -77,11 +104,7 @@ export function CsvImporter<T extends CsvImporterType>({
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] min-w-fit overflow-auto sm:min-w-125">
         <DialogHeader>
-          <DialogTitle>
-            {type === "rack"
-              ? "Importuj regały z CSV"
-              : "Importuj przedmioty z CSV"}
-          </DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
 
         {isPreviewing ? (
@@ -95,10 +118,11 @@ export function CsvImporter<T extends CsvImporterType>({
           </div>
         )}
 
-        <DialogFooter className="w-full flex-row justify-center gap-3 sm:justify-center">
+        <DialogFooter className="justify-start! w-full flex-row gap-3">
           {isPreviewing ? (
             <>
               <Button
+                disabled={isImporting}
                 onClick={() => {
                   resetFile()
                 }}
@@ -106,7 +130,12 @@ export function CsvImporter<T extends CsvImporterType>({
               >
                 Usuń
               </Button>
-              <Button onClick={confirmImport}>
+              <Button
+                disabled={isImporting}
+                onClick={async () => {
+                  await confirmImport()
+                }}
+              >
                 Importuj
                 <HugeiconsIcon
                   className="ml-2 size-4"
@@ -115,7 +144,11 @@ export function CsvImporter<T extends CsvImporterType>({
               </Button>
             </>
           ) : (
-            <Button onClick={() => setOpen(false)} variant="outline">
+            <Button
+              disabled={isImporting}
+              onClick={() => setOpen(false)}
+              variant="outline"
+            >
               Anuluj
             </Button>
           )}

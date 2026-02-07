@@ -1,10 +1,12 @@
 "use client"
 
+import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 interface NavLink {
@@ -22,6 +24,12 @@ interface AdminPageHeaderProps {
   icon?: IconSvgElement
   /** Badge count to display on the icon */
   iconBadge?: number | string
+  /** URL to navigate back to (displays back arrow instead of icon) */
+  backHref?: string
+  /** Title for the back button */
+  backTitle?: string
+  /** Optional click handler for the back button */
+  onBack?: () => void
   /** Navigation links */
   navLinks?: NavLink[]
   /** Additional badge to display next to the title */
@@ -37,12 +45,68 @@ export function AdminPageHeader({
   description,
   icon,
   iconBadge,
+  backHref,
+  backTitle = "Wstecz",
+  onBack,
   navLinks,
   titleBadge,
   actions,
   children,
 }: AdminPageHeaderProps) {
   const pathname = usePathname()
+  const renderIconOrBackButton = () => {
+    if (onBack) {
+      return (
+        <Button
+          aria-label={backTitle}
+          className={cn(
+            "relative flex size-14 shrink-0 items-center justify-center rounded-xl transition-all hover:bg-primary/5 hover:ring-primary/30 sm:size-16"
+          )}
+          onClick={onBack}
+          size="icon"
+          title={backTitle}
+          type="button"
+          variant="outline"
+        >
+          <HugeiconsIcon className="size-6 sm:size-7" icon={ArrowLeft02Icon} />
+        </Button>
+      )
+    }
+
+    if (backHref) {
+      return (
+        <Link
+          aria-label={backTitle}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "icon" }),
+            "relative flex size-14 shrink-0 items-center justify-center rounded-xl transition-all hover:bg-primary/5 hover:ring-primary/30 sm:size-16"
+          )}
+          href={backHref}
+          title={backTitle}
+        >
+          <HugeiconsIcon className="size-6 sm:size-7" icon={ArrowLeft02Icon} />
+        </Link>
+      )
+    }
+
+    if (icon) {
+      return (
+        <div className="relative flex size-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20 sm:size-16">
+          <HugeiconsIcon
+            className="size-7 text-primary sm:size-8"
+            icon={icon}
+          />
+          {iconBadge !== undefined && (
+            <div className="absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full bg-primary font-bold text-[10px] text-primary-foreground">
+              {iconBadge}
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    return null
+  }
 
   return (
     <header className="relative overflow-hidden rounded-2xl border bg-linear-to-br from-card via-card to-primary/2">
@@ -55,20 +119,7 @@ export function AdminPageHeader({
       <div className="relative p-6 sm:p-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-4">
-            {/* Icon Container */}
-            {icon && (
-              <div className="relative flex size-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20 sm:size-16">
-                <HugeiconsIcon
-                  className="size-7 text-primary sm:size-8"
-                  icon={icon}
-                />
-                {iconBadge !== undefined && (
-                  <div className="absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full bg-primary font-bold text-[10px] text-primary-foreground">
-                    {iconBadge}
-                  </div>
-                )}
-              </div>
-            )}
+            {renderIconOrBackButton()}
 
             {/* Title and Description */}
             <div className="space-y-2">

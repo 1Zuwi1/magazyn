@@ -5,28 +5,45 @@ import { getSession } from "./lib/session"
 
 const ID_REGEX = /^(?=.*[a-zA-Z0-9])[a-zA-Z0-9-]+$/
 
-// Only the base "id" prefixes. Extras come AFTER [name].
-const REDIRECT_PREFIXES = ["/dashboard/warehouse/id/"] as const
+interface RedirectRule {
+  sourcePrefix: string
+  targetPrefix: string
+  queryParamName: string
+  fallbackPath: string
+}
+
+const REDIRECT_RULES: readonly RedirectRule[] = [
+  {
+    sourcePrefix: "/dashboard/warehouse/id/",
+    targetPrefix: "/dashboard/warehouse/",
+    queryParamName: "warehouseId",
+    fallbackPath: "/dashboard/warehouse",
+  },
+  {
+    sourcePrefix: "/admin/warehouses/id/",
+    targetPrefix: "/admin/warehouses/",
+    queryParamName: "warehouseId",
+    fallbackPath: "/admin/warehouses",
+  },
+] as const
 
 function normalizePrefix(p: string) {
   return p.endsWith("/") ? p : `${p}/`
 }
 
-function getRedirectPrefix(pathname: string) {
-  for (const raw of REDIRECT_PREFIXES) {
-    const prefix = normalizePrefix(raw)
+function getRedirectRule(pathname: string): RedirectRule | null {
+  for (const rule of REDIRECT_RULES) {
+    const prefix = normalizePrefix(rule.sourcePrefix)
     if (pathname.startsWith(prefix)) {
-      return prefix
+      return {
+        ...rule,
+        sourcePrefix: prefix,
+        targetPrefix: normalizePrefix(rule.targetPrefix),
+      }
     }
   }
-  return null
-}
 
-const ENTITY_REGEX = /^\/dashboard\/([^/]+)\/id\/$/
-function getEntityFromPrefix(prefix: string) {
-  // prefix: /dashboard/<entity>/id/
-  const m = prefix.match(ENTITY_REGEX)
-  return m?.[1] ?? null
+  return null
 }
 
 export async function proxy(request: NextRequest) {
@@ -41,26 +58,19 @@ export async function proxy(request: NextRequest) {
   }
 
   const pathname = request.nextUrl.pathname
-  const prefix = getRedirectPrefix(pathname)
-
-  if (!prefix) {
+  const rule = getRedirectRule(pathname)
+  if (!rule) {
     return NextResponse.next()
   }
 
-  const entity = getEntityFromPrefix(prefix)
-  if (!entity) {
-    return NextResponse.redirect(new URL("/dashboard/", request.url))
-  }
-
   // After prefix we expect: [id]/[name]/(...optional tail...)
-  const rest = pathname.slice(prefix.length)
+  const rest = pathname.slice(rule.sourcePrefix.length)
   const parts = rest.split("/").filter(Boolean)
-
   const [id, nameSegment, ...tail] = parts
 
   if (!(id && nameSegment && ID_REGEX.test(id))) {
     const base = await getUrl(request)
-    return NextResponse.redirect(new URL("/dashboard/", base))
+    return NextResponse.redirect(new URL(rule.fallbackPath, base))
   }
 
   // Normalize name safely (avoid double-encoding)
@@ -69,24 +79,23 @@ export async function proxy(request: NextRequest) {
     decodedName = decodeURIComponent(nameSegment)
   } catch {
     const base = await getUrl(request)
-    return NextResponse.redirect(new URL("/dashboard/", base))
+    return NextResponse.redirect(new URL(rule.fallbackPath, base))
   }
   const safeName = encodeURIComponent(decodedName)
-
   const tailPath = tail.length ? `/${tail.join("/")}` : ""
 
-  // Redirect target: /dashboard/<entity>/<name>/<tail...>
-  const targetPath = `/dashboard/${entity}/${safeName}${tailPath}`
+  const targetPath = `${rule.targetPrefix}${safeName}${tailPath}`
 
   const base = await getUrl(request)
   const url = new URL(targetPath, base)
-  const paramName = `${entity}Id`
-  url.searchParams.set(paramName, id)
-  const res = NextResponse.redirect(url)
+  for (const [param, value] of request.nextUrl.searchParams.entries()) {
+    url.searchParams.append(param, value)
+  }
+  url.searchParams.set(rule.queryParamName, id)
 
-  return res
+  return NextResponse.redirect(url)
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/settings"],
+  matcher: ["/dashboard/:path*", "/settings/:path*", "/admin/:path*"],
 }

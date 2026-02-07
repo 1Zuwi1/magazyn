@@ -16,7 +16,6 @@ import { format, formatDistanceToNow } from "date-fns"
 import { pl } from "date-fns/locale"
 import { AnimatePresence, motion } from "framer-motion"
 import { type ReactNode, useMemo, useState } from "react"
-import { MOCK_NOTIFICATIONS } from "@/components/dashboard/mock-data"
 import type {
   Notification,
   NotificationSeverity,
@@ -205,8 +204,7 @@ function MetricCard({
 }
 
 export default function NotificationsMain() {
-  const [notifications, setNotifications] =
-    useState<Notification[]>(MOCK_NOTIFICATIONS)
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [filterType, setFilterType] = useState<NotificationType | null>(null)
   const [selectedNotification, setSelectedNotification] =
     useState<Notification | null>(null)

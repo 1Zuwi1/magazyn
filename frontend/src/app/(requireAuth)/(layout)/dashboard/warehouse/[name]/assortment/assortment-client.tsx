@@ -1,16 +1,14 @@
 "use client"
 
 import { PackageIcon } from "@hugeicons/core-free-icons"
-import { useQueries } from "@tanstack/react-query"
 import { useMemo } from "react"
 import { AssortmentTableWithData } from "@/components/dashboard/items/assortment-table"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { ErrorEmptyState } from "@/components/ui/empty-state"
 import useAssortments from "@/hooks/use-assortment"
 import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
+import { useMultipleItems } from "@/hooks/use-items"
 import useWarehouses from "@/hooks/use-warehouses"
-import { apiFetch } from "@/lib/fetcher"
-import { ItemDetailsSchema } from "@/lib/schemas"
 
 const ITEM_DETAILS_CACHE_TIME_MS = 5 * 60 * 1000
 
@@ -46,15 +44,9 @@ export default function AssortmentClient() {
     [assortments?.content]
   )
 
-  const itemDetailsQueries = useQueries({
-    queries: itemIds.map((itemId) => ({
-      queryKey: ["warehouse-assortment-item-details", itemId] as const,
-      queryFn: async () =>
-        await apiFetch(`/api/items/${itemId}`, ItemDetailsSchema, {
-          method: "GET",
-        }),
-      staleTime: ITEM_DETAILS_CACHE_TIME_MS,
-    })),
+  const itemDetailsQueries = useMultipleItems({
+    itemIds,
+    staleTime: ITEM_DETAILS_CACHE_TIME_MS,
   })
 
   const headerStats = [
