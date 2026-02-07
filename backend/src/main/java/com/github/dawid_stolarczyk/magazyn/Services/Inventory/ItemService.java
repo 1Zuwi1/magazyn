@@ -1,10 +1,13 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemCreateRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemDto;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemUpdateRequest;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
-import com.github.dawid_stolarczyk.magazyn.Repositories.ItemRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
+import com.github.dawid_stolarczyk.magazyn.Services.Ai.ImageEmbeddingService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Services.Storage.StorageService;
@@ -34,6 +37,7 @@ public class ItemService {
     private final StorageService storageService;
     private final BarcodeService barcodeService;
     private final Bucket4jRateLimiter rateLimiter;
+    private final ImageEmbeddingService imageEmbeddingService;
 
     public List<ItemDto> getAllItems(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
@@ -55,36 +59,42 @@ public class ItemService {
         return mapToDto(item);
     }
 
-    public ItemDto getItemByBarcode(String barcode, HttpServletRequest request) {
+    public ItemDto getItemByCode(String code, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        Item item = itemRepository.findByBarcode(barcode)
+        Item item = itemRepository.findByCode(code)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
         return mapToDto(item);
     }
 
     @Transactional
-    public ItemDto createItem(ItemDto dto, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
-        return createItemInternal(dto);
+    public ItemDto createItem(ItemCreateRequest request, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
+        Item item = new Item();
+        updateItemFromRequest(item, request);
+        item.setCode(barcodeService.generateUniqueItemCode());
+        return mapToDto(itemRepository.save(item));
     }
 
     /**
      * Internal method for bulk import - no rate limiting
      */
     @Transactional
-    public ItemDto createItemInternal(ItemDto dto) {
+    public void createItemInternal(ItemDto dto) {
         Item item = new Item();
         updateItemFromDto(item, dto);
-        item.setBarcode(barcodeService.generateUniqueItemBarcode());
-        return mapToDto(itemRepository.save(item));
+        if (dto.getCode() != null && !dto.getCode().isBlank()) {
+            item.setCode(dto.getCode());
+        }
+        item.setCode(barcodeService.generateUniqueItemCode());
+        mapToDto(itemRepository.save(item));
     }
 
     @Transactional
-    public ItemDto updateItem(Long id, ItemDto dto, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
+    public ItemDto updateItem(Long id, ItemUpdateRequest request, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
-        updateItemFromDto(item, dto);
+        updateItemFromRequest(item, request);
         return mapToDto(itemRepository.save(item));
     }
 
@@ -181,6 +191,17 @@ public class ItemService {
 
         try {
             item.setPhoto_url(fileName);
+            // Image embedding is optional - if model isn't available, photo upload still works
+            if (imageEmbeddingService.isModelLoaded()) {
+                try {
+                    item.setImageEmbedding(imageEmbeddingService.getEmbedding(file));
+                } catch (ImageEmbeddingService.ImageEmbeddingException e) {
+                    log.warn("Failed to generate image embedding, visual search will not work for this item: {}",
+                            e.getMessage());
+                }
+            } else {
+                log.debug("Image embedding model not available, skipping embedding generation");
+            }
             itemRepository.save(item);
         } catch (Exception ex) {
             // Compensating transaction: if DB save fails, delete the uploaded file
@@ -225,6 +246,38 @@ public class ItemService {
         item.setExpireAfterDays(dto.getExpireAfterDays());
         item.setDangerous(dto.isDangerous());
         item.setName(dto.getName());
+    }
+
+    private void updateItemFromRequest(Item item, ItemCreateRequest request) {
+        item.setMin_temp(request.getMinTemp());
+        item.setMax_temp(request.getMaxTemp());
+        item.setWeight(request.getWeight());
+        item.setSize_x(request.getSizeX());
+        item.setSize_y(request.getSizeY());
+        item.setSize_z(request.getSizeZ());
+        item.setComment(request.getComment());
+        item.setExpireAfterDays(request.getExpireAfterDays());
+        item.setDangerous(request.isDangerous());
+        // Name is optional - only set if provided
+        if (request.getName() != null && !request.getName().isBlank()) {
+            item.setName(request.getName());
+        }
+    }
+
+    private void updateItemFromRequest(Item item, ItemUpdateRequest request) {
+        item.setMin_temp(request.getMinTemp());
+        item.setMax_temp(request.getMaxTemp());
+        item.setWeight(request.getWeight());
+        item.setSize_x(request.getSizeX());
+        item.setSize_y(request.getSizeY());
+        item.setSize_z(request.getSizeZ());
+        item.setComment(request.getComment());
+        item.setExpireAfterDays(request.getExpireAfterDays());
+        item.setDangerous(request.isDangerous());
+        // Name is optional - only update if provided
+        if (request.getName() != null && !request.getName().isBlank()) {
+            item.setName(request.getName());
+        }
     }
 
     /**
@@ -276,8 +329,7 @@ public class ItemService {
     private ItemDto mapToDto(Item item) {
         return ItemDto.builder()
                 .id(item.getId())
-                .barcode(item.getBarcode())
-                .photoUrl(item.getPhoto_url() != null ? "/api/items/" + item.getId() + "/photo" : null)
+                .code(item.getCode())
                 .minTemp(item.getMin_temp())
                 .maxTemp(item.getMax_temp())
                 .weight(item.getWeight())

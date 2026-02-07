@@ -21,6 +21,7 @@ public class TwoFactorMethod {
     private String emailCode;
     private String authenticatorSecret;
     private Timestamp codeGeneratedAt;
+    private boolean finished = true;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

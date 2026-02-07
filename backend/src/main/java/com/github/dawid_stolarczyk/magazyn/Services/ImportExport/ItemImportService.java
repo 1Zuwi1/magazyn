@@ -13,17 +13,18 @@ import java.util.Map;
 public class ItemImportService extends AbstractImportService<ItemDto, ItemImportReport, ItemImportError> {
     // Format CSV (stała kolejność kolumn, BEZ nagłówka):
     // Nazwa;TempMin;TempMax;Waga;SzerokoscMm;WysokoscMm;GlebokoscMm;TerminWaznosciDni;CzyNiebezpieczny;Komentarz
-    private static final int COL_NAZWA = 0;
-    private static final int COL_TEMP_MIN = 1;
-    private static final int COL_TEMP_MAX = 2;
-    private static final int COL_WAGA = 3;
-    private static final int COL_SZEROKOSC_MM = 4;
-    private static final int COL_WYSOKOSC_MM = 5;
-    private static final int COL_GLEBOKOSC_MM = 6;
-    private static final int COL_TERMIN_WAZNOSCI_DNI = 7;
-    private static final int COL_CZY_NIEBEZPIECZNY = 8;
-    private static final int COL_KOMENTARZ = 9;
-    private static final int MIN_COLUMNS = 7; // Minimalna liczba wymaganych kolumn (do GlebokoscMm włącznie)
+    private static final int COL_ID = 0;
+    private static final int COL_NAZWA = 1;
+    private static final int COL_TEMP_MIN = 2;
+    private static final int COL_TEMP_MAX = 3;
+    private static final int COL_WAGA = 4;
+    private static final int COL_SZEROKOSC_MM = 5;
+    private static final int COL_WYSOKOSC_MM = 6;
+    private static final int COL_GLEBOKOSC_MM = 7;
+    private static final int COL_TERMIN_WAZNOSCI_DNI = 8;
+    private static final int COL_CZY_NIEBEZPIECZNY = 9;
+    private static final int COL_KOMENTARZ = 10;
+    private static final int MIN_COLUMNS = 8;
 
     private final ItemService itemService;
 
@@ -48,6 +49,35 @@ public class ItemImportService extends AbstractImportService<ItemDto, ItemImport
         }
 
         ItemDto dto = new ItemDto();
+
+        String idCode = getColumn(columns, COL_ID);
+        if (!idCode.isEmpty()) {
+            String code = "";
+
+            // 1. Obsługa QR Code
+            if (idCode.startsWith("QR-")) {
+                code = idCode;
+            }
+
+            // 2. GS1-128 z prefiksem 01 (razem 16 znaków)
+            else if (idCode.length() == 16 && idCode.startsWith("01")) {
+                code = idCode.substring(2);
+            }
+
+            // 3. Czysty GTIN-14
+            else if (idCode.matches("\\d{14}")) {
+                code = idCode;
+            }
+
+            // 4. Obsługa EAN-13 (opcjonalnie)
+            else if (idCode.matches("\\d{13}")) {
+                code = "0" + idCode;
+            }
+
+            if (!code.isBlank()) {
+                dto.setCode(code);
+            }
+        }
 
         // Nazwa produktu (WYMAGANE)
         dto.setName(getColumn(columns, COL_NAZWA));

@@ -8,11 +8,13 @@ import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.EmailVerification;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.EmailStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
-import com.github.dawid_stolarczyk.magazyn.Repositories.EmailVerificationRepository;
-import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.EmailVerificationRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;
 import com.github.dawid_stolarczyk.magazyn.Services.EmailService;
+import com.github.dawid_stolarczyk.magazyn.Services.GeolocationService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.CodeGenerator;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -40,6 +43,7 @@ public class AuthService {
     private final SessionManager sessionManager;
     private final EmailVerificationRepository emailVerificationRepository;
     private final EmailService emailService;
+    private final GeolocationService geolocationService;
 
 
     public void logoutUser(HttpServletResponse response, HttpServletRequest request) {
@@ -59,6 +63,14 @@ public class AuthService {
         if (!user.getStatus().equals(AccountStatus.ACTIVE) && !user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
             throw new AuthenticationException(AuthError.ACCOUNT_LOCKED.name());
         }
+
+        if (user.getEmailStatus().equals(EmailStatus.UNVERIFIED)) {
+            throw new AuthenticationException(AuthError.EMAIL_UNVERIFIED.name());
+        }
+
+        // Aktualizacja lastLogin przy każdym udanym uwierzytelnieniu
+        user.setLastLogin(Timestamp.from(Instant.now()));
+        userRepository.save(user);
 
         sessionManager.createSuccessLoginSession(user, request, response, loginRequest.isRememberMe(), false);
 
@@ -80,6 +92,12 @@ public class AuthService {
         newUser.setFullName(registerRequest.getFullName());
         newUser.setRole(UserRole.USER);
         newUser.setStatus(AccountStatus.PENDING_VERIFICATION);
+        newUser.setEmailStatus(EmailStatus.UNVERIFIED);
+
+        // Get and set location from IP address
+        String clientIp = getClientIp(request);
+        String location = geolocationService.getLocationFromIp(clientIp);
+        newUser.setLocation(location);
 
         newUser.setUserHandle(CodeGenerator.generateRandomBase64Url());
 
@@ -91,7 +109,7 @@ public class AuthService {
         userRepository.save(newUser);
 
         String baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
-                .path("/auth/verify-email")
+                .path("/verify-mail")
                 .toUriString();
         emailService.sendVerificationEmail(newUser.getEmail(), baseUrl + "?token=" + emailVerificationToken);
     }

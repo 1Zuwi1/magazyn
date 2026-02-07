@@ -1,7 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Security.Auth.PassKeys;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.WebAuthnCredential;
-import com.github.dawid_stolarczyk.magazyn.Repositories.WebAuthRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.WebAuthRepository;
 import com.yubico.webauthn.CredentialRepository;
 import com.yubico.webauthn.RegisteredCredential;
 import com.yubico.webauthn.data.ByteArray;

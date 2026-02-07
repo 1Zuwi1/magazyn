@@ -1,9 +1,12 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemDto;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemImportReport;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
+import com.github.dawid_stolarczyk.magazyn.Common.ConfigurationConstants;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
+import com.github.dawid_stolarczyk.magazyn.Services.Ai.ItemEmbeddingGenerationService;
+import com.github.dawid_stolarczyk.magazyn.Services.Ai.VisualIdentificationService;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.ItemImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.ItemService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +37,9 @@ import org.springframework.web.multipart.MultipartFile;
 public class ItemController {
     private final ItemService itemService;
     private final ItemImportService itemImportService;
+    private final VisualIdentificationService visualIdentificationService;
+    private final ItemEmbeddingGenerationService embeddingGenerationService;
+    private final UserRepository userRepository;
 
     @Operation(summary = "Get all items with pagination")
     @ApiResponse(responseCode = "200", description = "Success",
@@ -46,7 +53,7 @@ public class ItemController {
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), sort);
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(itemService.getAllItemsPaged(request, pageable))));
     }
@@ -67,40 +74,41 @@ public class ItemController {
         }
     }
 
-    @Operation(summary = "Get item by barcode (14-digit GS1-128)")
+    @Operation(summary = "Get item by code (14-digit GS1-128 barcode)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),
             @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @GetMapping("/barcode/{barcode}")
-    public ResponseEntity<ResponseTemplate<ItemDto>> getItemByBarcode(@PathVariable String barcode, HttpServletRequest request) {
+    @GetMapping("/code/{code}")
+    public ResponseEntity<ResponseTemplate<ItemDto>> getItemByCode(@PathVariable String code, HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(ResponseTemplate.success(itemService.getItemByBarcode(barcode, request)));
+            return ResponseEntity.ok(ResponseTemplate.success(itemService.getItemByCode(code, request)));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
         }
     }
 
-    @Operation(summary = "Create item [ADMIN] - auto-generates 14-digit barcode")
+    @Operation(summary = "Create item (ADMIN only)",
+            description = "Creates a new item with physical properties only. Name is optional. GS1-128 barcode code is auto-generated (14-digit).")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Success - returns created item with generated barcode",
+            @ApiResponse(responseCode = "201", description = "Success - returns created item with generated barcode code",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),
             @ApiResponse(responseCode = "400", description = "Error codes: INVALID_INPUT",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<ItemDto>> createItem(@RequestBody ItemDto dto, HttpServletRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(itemService.createItem(dto, request)));
+    public ResponseEntity<ResponseTemplate<ItemDto>> createItem(@Valid @RequestBody ItemCreateRequest request, HttpServletRequest httpRequest) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(itemService.createItem(request, httpRequest)));
     }
 
     @Operation(
-            summary = "Update an existing item",
+            summary = "Update an existing item (ADMIN only)",
             description = """
-                    Updates product information. Requires ADMIN role.
-                    Barcode cannot be changed through this endpoint.
+                    Updates product physical properties. Name is optional. Requires ADMIN role.
+                    Code (barcode) and photo cannot be changed through this endpoint.
                     """
     )
     @ApiResponses(value = {
@@ -127,12 +135,12 @@ public class ItemController {
     })
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<ItemDto>> updateItem(@PathVariable Long id, @RequestBody ItemDto dto, HttpServletRequest request) {
-        return ResponseEntity.ok(ResponseTemplate.success(itemService.updateItem(id, dto, request)));
+    public ResponseEntity<ResponseTemplate<ItemDto>> updateItem(@PathVariable Long id, @Valid @RequestBody ItemUpdateRequest request, HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(ResponseTemplate.success(itemService.updateItem(id, request, httpRequest)));
     }
 
     @Operation(
-            summary = "Delete an item",
+            summary = "Delete an item (ADMIN only)",
             description = """
                     Permanently deletes a product from the system. Requires ADMIN role.
                     Associated photo will also be deleted from storage.
@@ -163,7 +171,7 @@ public class ItemController {
     }
 
     @Operation(
-            summary = "Upload item photo",
+            summary = "Upload item photo (ADMIN only)",
             description = """
                     Uploads an encrypted photo for a product to S3-compatible storage. Requires ADMIN role.
                     Only image files (JPEG, PNG, WebP) are accepted.
@@ -248,7 +256,7 @@ public class ItemController {
     }
 
     @Operation(
-            summary = "Import items (products) from CSV",
+            summary = "Import items (products) from CSV (ADMIN only)",
             description = """
                     Import produktów z pliku CSV ze **stałą kolejnością kolumn** (bez nagłówka).
                     
@@ -290,7 +298,7 @@ public class ItemController {
                     ```
                     
                     **Uwagi:**
-                    - Barcode produktu jest generowany automatycznie (6-cyfrowy kod produktu zgodny z GS1-128)
+                    - GS1-128 barcode code produktu jest generowany automatycznie (14-cyfrowy kod produktu)
                     - Zdjęcia należy uploadować osobno przez endpoint POST /items/{id}/photo
                     - Wartości NULL lub puste dla kolumn opcjonalnych są ignorowane
                     
@@ -328,5 +336,185 @@ public class ItemController {
     public ResponseEntity<ResponseTemplate<ItemImportReport>> importItems(
             @RequestPart("file") MultipartFile file) {
         return ResponseEntity.ok(ResponseTemplate.success(itemImportService.importFromCsv(file)));
+    }
+
+    @Operation(
+            summary = "Identify item by image (visual search)",
+            description = """
+                    Identifies a product by uploading an image for visual similarity search.
+                    Uses image embeddings and compares against stored item embeddings using cosine similarity.
+                    
+                    **Authentication required:** This endpoint requires a valid user session.
+                    
+                    **Tiered confidence strategy:**
+                    - **HIGH_CONFIDENCE** (score >= 0.9): Single best match returned
+                    - **NEEDS_VERIFICATION** (0.7 <= score < 0.9): Single match with verification flag
+                    - **LOW_CONFIDENCE** (score < 0.7): Top-5 candidates returned for user selection
+                    
+                    **Mismatch flow:** The response includes an `identificationId` that can be used
+                    with the `/identify/mismatch` endpoint to reject a match and get alternatives.
+                    
+                    **Supported formats:** JPEG, PNG, GIF, WebP, BMP
+                    **Maximum file size:** 10MB
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Item identified successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ItemIdentificationResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid image file or processing error",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Authentication required",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "AI model not available",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
+            )
+    })
+    @PostMapping(value = "/identify", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ResponseTemplate<ItemIdentificationResponse>> identifyItem(
+            @Parameter(description = "Image file to identify", required = true)
+            @RequestPart("file") MultipartFile file,
+            HttpServletRequest request) {
+        try {
+            ItemIdentificationResponse response = visualIdentificationService.identifyItem(
+                    file, resolveCurrentUser(), request);
+            return ResponseEntity.ok(ResponseTemplate.success(response));
+
+        } catch (VisualIdentificationService.VisualIdentificationException e) {
+            log.warn("Visual identification failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ResponseTemplate.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during visual identification", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseTemplate.error("IDENTIFICATION_FAILED"));
+        }
+    }
+
+    @Operation(
+            summary = "Report mismatch and get alternative candidates",
+            description = """
+                    When a user rejects a visual identification match, this endpoint
+                    returns alternative candidates excluding the rejected item.
+                    
+                    **Authentication required:** This endpoint requires a valid user session.
+                    
+                    Requires the `identificationId` from the original `/identify` response
+                    (valid for 15 minutes after the initial identification).
+                    
+                    Returns up to 3 alternative candidates ordered by similarity.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Alternative candidates returned",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ItemIdentificationResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request or expired identification session",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Authentication required",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
+            )
+    })
+    @PostMapping("/identify/mismatch")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ResponseTemplate<ItemIdentificationResponse>> reportMismatch(
+            @Valid @RequestBody MismatchFeedbackRequest feedbackRequest,
+            HttpServletRequest request) {
+        try {
+            ItemIdentificationResponse response = visualIdentificationService.handleMismatch(
+                    feedbackRequest.getIdentificationId(),
+                    feedbackRequest.getRejectedItemId(),
+                    resolveCurrentUser(),
+                    request);
+            return ResponseEntity.ok(ResponseTemplate.success(response));
+
+        } catch (VisualIdentificationService.VisualIdentificationException e) {
+            log.warn("Mismatch feedback failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ResponseTemplate.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during mismatch feedback", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseTemplate.error("MISMATCH_FEEDBACK_FAILED"));
+        }
+    }
+
+    @Operation(
+            summary = "Generate embeddings for items without embeddings (ADMIN only)",
+            description = """
+                    Batch generates image embeddings for all items that have photos but no embeddings.
+                    This is useful after migration or when adding the visual identification feature
+                    to an existing system.
+                    
+                    **Warning:** This operation can be time-consuming for large datasets.
+                    It processes items sequentially to avoid overloading the AI model.
+                    
+                    **Process:**
+                    1. Finds all items with photo_url but imageEmbedding == null
+                    2. Downloads each photo from S3
+                    3. Generates embedding using the AI model
+                    4. Saves embedding to database
+                    
+                    Returns statistics about the generation process.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Embedding generation completed (check report for details)",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ItemEmbeddingGenerationService.EmbeddingGenerationReport.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Access denied - requires ADMIN role",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
+            )
+    })
+    @PostMapping("/generate-embeddings")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<ItemEmbeddingGenerationService.EmbeddingGenerationReport>> generateEmbeddings() {
+        try {
+            log.info("Admin requested batch embedding generation");
+            ItemEmbeddingGenerationService.EmbeddingGenerationReport report =
+                    embeddingGenerationService.generateMissingEmbeddings();
+            return ResponseEntity.ok(ResponseTemplate.success(report));
+        } catch (Exception e) {
+            log.error("Error during batch embedding generation", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseTemplate.error("EMBEDDING_GENERATION_FAILED: " + e.getMessage()));
+        }
+    }
+
+    private User resolveCurrentUser() {
+        try {
+            Long userId = AuthUtil.getCurrentUserId();
+            if (userId != null) {
+                return userRepository.findById(userId).orElse(null);
+            }
+        } catch (Exception e) {
+            log.debug("No authenticated user for request");
+        }
+        return null;
     }
 }

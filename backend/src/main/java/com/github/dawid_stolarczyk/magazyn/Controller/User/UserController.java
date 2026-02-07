@@ -1,7 +1,9 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.User;
 
+import com.github.dawid_stolarczyk.magazyn.Common.ConfigurationConstants;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserTeam;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Services.User.UserService;
@@ -46,7 +48,7 @@ public class UserController {
         return ResponseEntity.ok(ResponseTemplate.success(userService.getBasicInformation(request)));
     }
 
-    @Operation(summary = "[ADMIN] Get available teams", description = "Returns list of all available team options for dropdown/select")
+    @Operation(summary = "Get available teams (ADMIN only)", description = "Returns list of all available team options for dropdown/select")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - returns list of available teams with value and label",
                     content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TeamOption.class)))),
@@ -62,7 +64,8 @@ public class UserController {
         return ResponseEntity.ok(ResponseTemplate.success(teams));
     }
 
-    @Operation(summary = "[ADMIN] Get all users with pagination")
+    @Operation(summary = "Get all users with pagination and filtering (ADMIN only)",
+            description = "Returns paginated list of users with optional filtering by name, email, and status")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - returns paginated list of all users",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
@@ -76,14 +79,17 @@ public class UserController {
             @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir,
+            @Parameter(description = "Filter by full name (case-insensitive, partial match)", example = "John") @RequestParam(required = false) String name,
+            @Parameter(description = "Filter by email (case-insensitive, partial match)", example = "john@") @RequestParam(required = false) String email,
+            @Parameter(description = "Filter by account status", example = "ACTIVE") @RequestParam(required = false) AccountStatus status) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), sort);
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(userService.adminGetAllUsersPaged(request, pageable))));
+                PagedResponse.from(userService.adminGetAllUsersPaged(request, name, email, status, pageable))));
     }
 
-    @Operation(summary = "[ADMIN] Change user email")
+    @Operation(summary = "Change user email (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - email changed, verification email sent",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
@@ -129,7 +135,7 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "[ADMIN] Update user profile (phone, location, team, full name)",
+    @Operation(summary = "Update user profile (phone, location, team, full name) (ADMIN only)",
             description = "Updates user profile. Team must be one of: OPERATIONS, LOGISTICS, WAREHOUSE, INVENTORY, QUALITY_CONTROL, RECEIVING, SHIPPING, IT_SUPPORT, MANAGEMENT")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - profile updated",
@@ -157,7 +163,44 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "[ADMIN] Delete user account")
+    @Operation(summary = "Update user account status (ADMIN only)",
+            description = """
+                    Changes the account status of a user. Available statuses:
+                    - ACTIVE: User can log in and use the system normally
+                    - DISABLED: User cannot log in, all sessions invalidated
+                    - LOCKED: User account is locked due to security reasons, all sessions invalidated
+                    - PENDING_VERIFICATION: User needs to verify their email before accessing the system
+                    
+                    Note: Admins cannot change their own status.
+                    When a user is DISABLED or LOCKED, all their active sessions are immediately invalidated.
+                    """)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - status updated",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: INVALID_INPUT, CANNOT_MODIFY_OWN_STATUS",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "Error codes: ACCESS_FORBIDDEN",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @PatchMapping("/{userId}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<Void>> updateUserStatus(
+            @PathVariable Long userId,
+            @Valid @RequestBody UpdateUserStatusRequest statusRequest,
+            HttpServletRequest request) {
+        try {
+            userService.adminUpdateUserStatus(userId, statusRequest.getStatus(), statusRequest.getReason(), request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            log.error("Admin status update failed for user {}", userId, e);
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
+        }
+    }
+
+    @Operation(summary = "Delete user account (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - account deleted",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
@@ -176,6 +219,87 @@ public class UserController {
             return ResponseEntity.ok(ResponseTemplate.success());
         } catch (AuthenticationException e) {
             log.error("Admin account deletion failed for user {}", userId, e);
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
+        }
+    }
+
+    @Operation(summary = "Assign user to warehouse (ADMIN only)",
+            description = "Grants user access to a warehouse. User will receive notifications for alerts from this warehouse.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - user assigned to warehouse",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND, WAREHOUSE_NOT_FOUND",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @PostMapping("/warehouse-assignments")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<Void>> assignUserToWarehouse(
+            @Valid @RequestBody UserWarehouseAssignmentRequest assignmentRequest,
+            HttpServletRequest request) {
+        try {
+            userService.assignUserToWarehouse(
+                    assignmentRequest.getUserId(),
+                    assignmentRequest.getWarehouseId(),
+                    request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            log.error("User warehouse assignment failed", e);
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
+        } catch (IllegalArgumentException e) {
+            log.error("Warehouse not found for assignment", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Remove user from warehouse (ADMIN only)",
+            description = "Revokes user's access to a warehouse. User will no longer receive notifications from this warehouse.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - user removed from warehouse",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND, WAREHOUSE_NOT_FOUND",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @DeleteMapping("/warehouse-assignments")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<Void>> removeUserFromWarehouse(
+            @Valid @RequestBody UserWarehouseAssignmentRequest assignmentRequest,
+            HttpServletRequest request) {
+        try {
+            userService.removeUserFromWarehouse(
+                    assignmentRequest.getUserId(),
+                    assignmentRequest.getWarehouseId(),
+                    request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            log.error("User warehouse removal failed", e);
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
+        } catch (IllegalArgumentException e) {
+            log.error("Warehouse not found for removal", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Get user's warehouse assignments (ADMIN only)",
+            description = "Returns list of warehouse IDs that the user has access to")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - warehouse list returned",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @GetMapping("/{userId}/warehouses")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<List<Long>>> getUserWarehouses(
+            @PathVariable Long userId,
+            HttpServletRequest request) {
+        try {
+            List<Long> warehouseIds = userService.getUserWarehouseIds(userId, request);
+            return ResponseEntity.ok(ResponseTemplate.success(warehouseIds));
+        } catch (AuthenticationException e) {
+            log.error("Failed to get user warehouses for user {}", userId, e);
             HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
             return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }

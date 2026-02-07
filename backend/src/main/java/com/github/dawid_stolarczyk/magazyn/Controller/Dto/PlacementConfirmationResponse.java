@@ -12,5 +12,5 @@ import java.util.List;
 public class PlacementConfirmationResponse {
     private Long itemId;
     private int storedQuantity;
-    private List<String> barcodes;
+    private List<String> codes;
 }

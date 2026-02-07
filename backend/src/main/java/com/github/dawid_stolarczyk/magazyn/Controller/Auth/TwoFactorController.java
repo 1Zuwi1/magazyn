@@ -87,6 +87,31 @@ public class TwoFactorController {
         return ResponseEntity.ok(ResponseTemplate.success(twoFactorService.generateTwoFactorGoogleSecret(request)));
     }
 
+    @Operation(summary = "Finish setting up Google Authenticator by verifying the code from the app")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - Google Authenticator 2FA method enabled",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TwoFactorAuthenticatorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: INVALID_OR_EXPIRED_CODE, UNSUPPORTED_2FA_METHOD",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "401", description = "Error codes: NOT_AUTHENTICATED",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "Error codes: INSUFFICIENT_PERMISSIONS",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @PostMapping("/authenticator/finish")
+    public ResponseEntity<ResponseTemplate<Void>> finishAuthenticatorSecret(HttpServletRequest request,
+                                                                            @Valid @RequestBody
+                                                                            FinishTwoFactorAuthenticatorRequest finishRequest) {
+        try {
+            twoFactorService.finishTwoFactorGoogleSecret(finishRequest, request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            log.error("Failed to generate backup codes", e);
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
+        }
+    }
+
     @Operation(summary = "Generate backup codes")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - returns list of backup codes",

@@ -5,7 +5,7 @@ import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
-import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.SessionData;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.TwoFactorAuth;
@@ -50,7 +50,9 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                 try {
                     User user = userRepository.findById(session.getUserId())
                             .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
-                    if (user.getStatus().equals(AccountStatus.ACTIVE) || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
+                    if (user.getStatus().equals(AccountStatus.ACTIVE)
+                            || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)
+                            || user.getEmailStatus().equals(AccountStatus.ACTIVE)) {
                         sessionService.refreshSession(sessionId);
                         authenticateUser(user, session.getStatus2FA(), request);
                     } else {
@@ -117,7 +119,9 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                     return;
                 }
-                if (user.getStatus().equals(AccountStatus.ACTIVE) || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
+                if (user.getStatus().equals(AccountStatus.ACTIVE)
+                        || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)
+                        || user.getEmailStatus().equals(AccountStatus.ACTIVE)) {
                     SessionData newSessionData = new SessionData(
                             UUID.randomUUID().toString(),
                             rememberMeData.getUserId(),

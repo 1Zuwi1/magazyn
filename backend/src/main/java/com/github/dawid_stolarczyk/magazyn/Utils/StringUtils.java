@@ -44,4 +44,41 @@ public class StringUtils {
 
         return hasUpper && hasLower && hasDigit && hasSpecial;
     }
+
+    /**
+     * Normalizes a rack marker to ensure consistent formatting:
+     * - Trims whitespace
+     * - Converts to uppercase
+     * - Replaces multiple spaces/dashes/underscores with single ones
+     * - Removes any characters except alphanumeric, dashes, and underscores
+     *
+     * @param marker the raw marker string
+     * @return normalized marker
+     * @throws IllegalArgumentException if marker is null or becomes empty after normalization
+     */
+    public static String normalizeRackMarker(String marker) {
+        if (marker == null || marker.isBlank()) {
+            throw new IllegalArgumentException("MARKER_REQUIRED");
+        }
+
+        // Trim and convert to uppercase
+        String normalized = marker.trim().toUpperCase();
+
+        // Remove any characters except alphanumeric, dashes, underscores, and spaces
+        normalized = normalized.replaceAll("[^A-Z0-9_\\-\\s]", "");
+
+        // Replace multiple spaces/dashes/underscores with single ones
+        normalized = normalized.replaceAll("\\s+", "-");
+        normalized = normalized.replaceAll("-+", "-");
+        normalized = normalized.replaceAll("_+", "_");
+
+        // Remove leading/trailing dashes or underscores
+        normalized = normalized.replaceAll("^[-_]+|[-_]+$", "");
+
+        if (normalized.isEmpty()) {
+            throw new IllegalArgumentException("MARKER_INVALID_FORMAT");
+        }
+
+        return normalized;
+    }
 }
