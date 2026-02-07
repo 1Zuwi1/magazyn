@@ -10,12 +10,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-import {
-  redirect,
-  useParams,
-  useRouter,
-  useSearchParams,
-} from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { ItemDetailsDialog } from "@/components/dashboard/rack-visualization/item-details-dialog"
@@ -39,6 +34,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
 import useRacks, { type RacksList } from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
 import { cn } from "@/lib/utils"
@@ -374,7 +370,6 @@ function getRackDerivedValues(
 
 export default function WarehouseClient() {
   const params = useParams<{ name: string }>()
-  const searchParams = useSearchParams()
   const encodedWarehouseName = Array.isArray(params?.name)
     ? (params.name[0] ?? "")
     : (params?.name ?? "")
@@ -382,19 +377,18 @@ export default function WarehouseClient() {
     () => decodeWarehouseName(encodedWarehouseName),
     [encodedWarehouseName]
   )
-
-  const wId = searchParams.get("warehouseId")
-
-  if (!wId) {
-    redirect("/dashboard/warehouse")
-  }
+  const router = useRouter()
+  const { warehouseIdForQuery, isHydrated, isMissingWarehouseId } =
+    useCurrentWarehouseId({
+      redirectIfMissingTo: "/dashboard/warehouse",
+    })
 
   const {
     data: warehouse,
     isError: isWarehousesError,
     isPending: isWarehousesPending,
   } = useWarehouses({
-    warehouseId: Number(wId),
+    warehouseId: warehouseIdForQuery,
   })
   const {
     data: racksData,
@@ -411,9 +405,8 @@ export default function WarehouseClient() {
     [racksData?.content]
   )
 
-  const router = useRouter()
   const hasFetchError = isWarehousesError || isRacksError
-  const isLoading = isWarehousesPending || isRacksPending
+  const isLoading = !isHydrated || isWarehousesPending || isRacksPending
   const [currentRackIndex, setCurrentRackIndex] = useState(0)
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(
     null
@@ -515,6 +508,10 @@ export default function WarehouseClient() {
     hasRack: Boolean(currentRack),
     warehouseName,
   })
+
+  if (isMissingWarehouseId) {
+    return null
+  }
 
   if (isLoading) {
     return <WarehouseLoadingSkeleton warehouseName={warehouseName} />

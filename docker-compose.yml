@@ -1,0 +1,85 @@
+volumes:
+  postgres_data: {}
+
+networks:
+  proxy:
+    external: true
+  app_front:
+    driver: bridge
+  app_back:
+    driver: bridge
+  magazyn-baza:
+    external: true
+    name: magazyn-baza
+  dbnet_2:
+    driver: bridge
+
+services:
+  web:
+    image: ghcr.io/1zuwi1/magazyn-web:latest
+    restart: unless-stopped
+    env_file:
+      - ./env/.env.web
+    ports:
+      - "3001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks: [proxy, app_front]
+
+  api:
+    image: ghcr.io/1zuwi1/magazyn-api:latest
+    restart: unless-stopped
+    env_file:
+      - ./env/.env.api
+      - ./env/.env.redis
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - VIRTUAL_HOST=magazyn.ordermaster.pl
+      - VIRTUAL_PORT=8080
+      - VIRTUAL_PATH=/api
+    ports:
+      - "8080"
+    networks: [proxy, app_back, app_front, magazyn-baza]
+
+  postgres:
+    image: ankane/pgvector:latest
+    env_file:
+      - ./env/.env.postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-magazyn} -d ${POSTGRES_DB:-magazyn}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [dbnet_2, magazyn-baza]
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    ports:
+      - "8081:8080"
+    env_file:
+      - ./env/.env.adminer
+    depends_on:
+      - postgres
+    networks: [dbnet_2, magazyn-baza]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    env_file:
+      - ./env/.env.redis
+    
+    command: >
+      sh -lc "exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""
+
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 2s
+      timeout: 1s
+      retries: 20
+      start_period: 2s 
+    networks: [app_back]

@@ -18,6 +18,7 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
+  ErrorEmptyState,
   NoItemsEmptyState,
   SearchEmptyState,
 } from "@/components/ui/empty-state"
@@ -212,7 +213,7 @@ const globalFilterFn: FilterFn<Item> = (row, _columnId, filterValue) => {
 }
 
 export function ItemsTable({ isLoading }: ItemsTableProps) {
-  const { data: items, isPending } = useItems()
+  const { data: items, isPending, isError, refetch } = useItems()
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
@@ -238,6 +239,10 @@ export function ItemsTable({ isLoading }: ItemsTableProps) {
 
   if (isLoading || isPending) {
     return <ItemsTableSkeleton />
+  }
+
+  if (isError) {
+    return <ErrorEmptyState onRetry={() => refetch()} />
   }
 
   const filteredCount = table.getFilteredRowModel().rows.length

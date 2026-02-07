@@ -3,7 +3,6 @@
 import { QrCodeIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useQueryClient } from "@tanstack/react-query"
-import { useSearchParams } from "next/navigation"
 import {
   type ReactNode,
   useCallback,
@@ -13,6 +12,7 @@ import {
   useState,
 } from "react"
 import { SCAN_DELAY_MS, SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
+import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
@@ -135,7 +135,7 @@ export function Scanner({
   const [lastManualCode, setLastManualCode] = useState<string>("")
 
   const placementIdRef = useRef<number>(0)
-  const searchParams = useSearchParams()
+  const { warehouseId, isHydrated } = useCurrentWarehouseId()
 
   const { step, isLoading, isSubmitting } = scannerState
 
@@ -209,19 +209,18 @@ export function Scanner({
   }, [open, handleReset])
 
   const resolveCurrentWarehouseId = useCallback((): number => {
-    const warehouseIdFromParams = searchParams.get("warehouseId")
-
-    if (!warehouseIdFromParams) {
-      throw new Error("Nie znaleziono warehouseId w parametrach URL.")
+    if (!isHydrated) {
+      throw new Error(
+        "Trwa odczytywanie kontekstu magazynu. Spróbuj ponownie za chwilę."
+      )
     }
 
-    const parsedWarehouseId = Number.parseInt(warehouseIdFromParams, 10)
-    if (!Number.isInteger(parsedWarehouseId) || parsedWarehouseId < 0) {
-      throw new Error("Nieprawidłowy warehouseId w parametrach URL.")
+    if (warehouseId === null) {
+      throw new Error("Nie znaleziono warehouseId dla bieżącej sesji.")
     }
 
-    return parsedWarehouseId
-  }, [searchParams])
+    return warehouseId
+  }, [isHydrated, warehouseId])
 
   const onScan = useCallback(async (rawCode: string) => {
     const code = rawCode.trim()
