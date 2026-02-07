@@ -11,8 +11,9 @@ import type * as React from "react"
 import { useEffect, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import type { Rack } from "@/lib/schemas"
 import { RackItemsDialog } from "../items-visualization/rack-items-dialog"
-import type { ItemSlot, Rack } from "../types"
+import type { ItemSlot } from "../types"
 import Virtualized from "./components/virtualized"
 
 interface RackGridViewProps {

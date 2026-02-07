@@ -5,8 +5,16 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
+
+const MODE_OPTIONS = [
+  { label: "Przyjmowanie", value: "take" },
+  { label: "Zdejmowanie", value: "remove" },
+] as const
+
+type ScannerManualMode = (typeof MODE_OPTIONS)[number]["value"]
 
 interface ScannerManualInputProps {
   onSubmit: (code: string) => void
@@ -16,6 +24,8 @@ interface ScannerManualInputProps {
   initialCode?: string
   /** Error message to display inline (e.g. product not found) */
   error?: string | null
+  mode?: ScannerManualMode
+  onModeChange?: (mode: ScannerManualMode) => void
 }
 
 export function ScannerManualInput({
@@ -24,9 +34,15 @@ export function ScannerManualInput({
   isLoading,
   initialCode = "",
   error,
+  mode,
+  onModeChange,
 }: ScannerManualInputProps) {
   const [code, setCode] = useState<string>(initialCode)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setCode(initialCode)
+  }, [initialCode])
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -52,10 +68,39 @@ export function ScannerManualInput({
     [handleSubmit]
   )
 
+  const handleModeValueChange = useCallback(
+    (nextMode: string) => {
+      if (
+        onModeChange &&
+        (nextMode === MODE_OPTIONS[0].value ||
+          nextMode === MODE_OPTIONS[1].value)
+      ) {
+        onModeChange(nextMode)
+      }
+    },
+    [onModeChange]
+  )
+
   return (
     <ScannerBody>
       <div className="relative flex h-full flex-col">
         <CancelButton onClick={onCancel} />
+
+        {mode && onModeChange ? (
+          <Tabs
+            className={"mx-10"}
+            onValueChange={handleModeValueChange}
+            value={mode}
+          >
+            <TabsList className="mb-4 grid w-full grid-cols-2 rounded-xl bg-muted p-1">
+              {MODE_OPTIONS.map((option) => (
+                <TabsTrigger key={option.value} value={option.value}>
+                  {option.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        ) : null}
 
         <div className="mb-6 flex items-start gap-3">
           <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">

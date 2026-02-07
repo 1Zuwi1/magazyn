@@ -7,17 +7,16 @@ import { type ReactNode, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
-import type { Rack } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
 import { useCurrentAdminWarehouseId } from "@/hooks/use-current-admin-warehouse-id"
 import useRacks, {
-  type RacksList,
   useCreateRack,
   useDeleteRack,
   useImportRacks,
   useUpdateRack,
 } from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
+import type { Rack } from "@/lib/schemas"
 import { AdminPageHeader } from "../../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../../lib/constants"
 import type { RackFormData } from "../csv/utils/types"
@@ -31,45 +30,8 @@ interface AdminRacksPageProps {
 }
 
 const RACKS_PAGE_SIZE = 2000
-const MAX_MOCK_ITEMS_PER_RACK = 12
 const CREATE_RACK_TEMP_ID = 0
 const DEFAULT_ACCEPTS_DANGEROUS_ITEMS = false
-
-type ApiRack = RacksList["content"][number]
-
-const mapApiRackToViewModel = (rack: ApiRack): Rack => {
-  const rows = Math.max(1, rack.sizeY)
-  const cols = Math.max(1, rack.sizeX)
-  const totalSlots = rows * cols
-  const occupancy = Math.min(100, 25 + (rack.id % 60))
-  const mockItemsCount = Math.min(
-    MAX_MOCK_ITEMS_PER_RACK,
-    Math.round((occupancy / 100) * totalSlots)
-  )
-
-  return {
-    id: String(rack.id),
-    marker: rack.marker,
-    rows,
-    cols,
-    minTemp: rack.minTemp,
-    maxTemp: rack.maxTemp,
-    maxWeight: rack.maxWeight,
-    currentWeight: Math.round((rack.maxWeight * occupancy) / 100),
-    maxItemWidth: rack.maxSizeX,
-    maxItemHeight: rack.maxSizeY,
-    maxItemDepth: rack.maxSizeZ,
-    comment: rack.comment,
-    occupancy,
-    // There is no items endpoint yet - keep deterministic mocked occupancy/items.
-    items: Array.from({ length: mockItemsCount }, () => null),
-  }
-}
-
-const getRackId = (rack: Rack): number | null => {
-  const rackId = Number.parseInt(rack.id, 10)
-  return Number.isNaN(rackId) ? null : rackId
-}
 
 const buildRackMutationData = ({
   acceptsDangerous,
@@ -129,9 +91,9 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
       return []
     }
 
-    return (racksData?.content ?? [])
-      .filter((rack) => rack.warehouseId === apiWarehouse.id)
-      .map(mapApiRackToViewModel)
+    return (racksData?.content ?? []).filter(
+      (rack) => rack.warehouseId === apiWarehouse.id
+    )
   }, [apiWarehouse, racksData?.content])
 
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -159,7 +121,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
       return
     }
 
-    const rackId = getRackId(rackToDelete)
+    const rackId = rackToDelete.id
     if (rackId !== null) {
       deleteRackMutation.mutate(rackId)
     }
@@ -184,7 +146,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
       return
     }
 
-    const selectedRackId = getRackId(selectedRack)
+    const selectedRackId = selectedRack.id
     if (selectedRackId === null) {
       throw new Error("Rack ID is invalid.")
     }
@@ -219,12 +181,8 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     toast.success(`Zaimportowano ${report.imported} regałów`)
   }
 
-  const totalWeight = mappedRacks.reduce(
-    (acc, rack) => acc + rack.currentWeight,
-    0
-  )
   const totalItems = mappedRacks.reduce(
-    (acc, rack) => acc + rack.items.length,
+    (acc, rack) => acc + rack.occupiedSlots,
     0
   )
   const isWarehouseMissing =
@@ -324,10 +282,10 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
             <span className="font-mono font-semibold">{totalItems}</span>
             <span className="text-muted-foreground text-xs">przedmiotów</span>
           </div>
-          <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
+          {/* <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <span className="text-muted-foreground text-xs">Łączna waga:</span>
             <span className="font-mono font-semibold">{totalWeight} kg</span>
-          </div>
+          </div> */}
         </div>
       </AdminPageHeader>
 

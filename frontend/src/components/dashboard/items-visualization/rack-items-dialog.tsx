@@ -6,7 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import type { Item, Rack } from "../types"
+import { Skeleton } from "@/components/ui/skeleton"
+import useAssortments from "@/hooks/use-assortment"
+import type { Rack } from "@/lib/schemas"
 import { RackItemsStats } from "./rack-items-stats"
 import { RackItemsTable } from "./rack-items-table"
 
@@ -21,12 +23,15 @@ export function RackItemsDialog({
   onOpenChange,
   rack,
 }: RackItemsDialogProps) {
+  const { data: assortments, isLoading } = useAssortments({
+    rackId: rack?.id ?? -1,
+  })
+
   if (!rack) {
     return null
   }
 
-  const items = rack.items.filter((item): item is Item => item !== null)
-  const occupiedSlots = items.length
+  const occupiedSlots = assortments?.totalElements ?? 0
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -36,12 +41,43 @@ export function RackItemsDialog({
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col gap-4">
-          <RackItemsStats occupiedSlots={occupiedSlots} rack={rack} />
-          <div className="min-h-0 flex-1">
-            <RackItemsTable items={items} />
-          </div>
+          {isLoading ? (
+            <RackItemsDialogSkeleton />
+          ) : (
+            <>
+              <RackItemsStats occupiedSlots={occupiedSlots} rack={rack} />
+              <div className="min-h-0 flex-1">
+                <RackItemsTable items={assortments?.content ?? []} />
+              </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function RackItemsDialogSkeleton() {
+  return (
+    <>
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-8 w-32" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-8 w-32" />
+        </div>
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-2">
+        {Array.from({ length: 5 }, (_, i) => (
+          <Skeleton
+            className="h-16 w-full"
+            key={`skeleton-row-${i.toString()}`}
+          />
+        ))}
+      </div>
+    </>
   )
 }

@@ -3,7 +3,6 @@
 import {
   Cancel01Icon,
   CheckmarkCircle02Icon,
-  Image01Icon,
   SearchList01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -14,6 +13,7 @@ import type {
 } from "@/lib/schemas"
 import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
+import { ItemPhoto } from "../ui/item-photo"
 import { ScrollArea } from "../ui/scroll-area"
 import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
@@ -22,6 +22,7 @@ const CONFIDENCE_LABELS: Record<string, string> = {
   HIGH_CONFIDENCE: "Wysokie dopasowanie",
   MEDIUM_CONFIDENCE: "Średnie dopasowanie",
 }
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? ""
 
 const getConfidenceLevelLabel = (level: string): string =>
   CONFIDENCE_LABELS[level] ?? "Niskie dopasowanie"
@@ -54,27 +55,17 @@ function CandidateCard({
       onClick={() => onSelect(candidate)}
       type="button"
     >
-      {candidate.photoUrl ? (
-        <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-muted">
-          {/* biome-ignore lint/performance/noImgElement: img needs authorization */}
-          <img
-            alt={candidate.itemName}
-            className="object-cover"
-            height={100}
-            // FIXME: Remove in prod
-            src={`${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/items/${candidate.itemId}/photo`}
-            style={{ width: "100%", height: "100%" }}
-            width={100}
-          />
-        </div>
-      ) : (
-        <div className="flex size-14 shrink-0 items-center justify-center rounded-lg bg-muted">
-          <HugeiconsIcon
-            className="size-6 text-muted-foreground"
-            icon={Image01Icon}
-          />
-        </div>
-      )}
+      <ItemPhoto
+        alt={candidate.itemName}
+        containerClassName="size-14 shrink-0"
+        iconClassName="size-6 text-muted-foreground"
+        imageClassName="object-cover"
+        src={
+          candidate.photoUrl
+            ? `${API_BASE_URL}/api/items/${candidate.itemId}/photo`
+            : null
+        }
+      />
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <h4 className="truncate font-medium text-sm">{candidate.itemName}</h4>

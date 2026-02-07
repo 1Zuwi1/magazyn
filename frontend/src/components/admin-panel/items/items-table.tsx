@@ -3,7 +3,6 @@
 import {
   ArrowLeft02Icon,
   ArrowRight02Icon,
-  Image01Icon,
   ImageUploadIcon,
   MoreHorizontalIcon,
   PencilIcon,
@@ -46,6 +45,7 @@ import {
   FilterResults,
   SearchInput,
 } from "@/components/ui/filter-bar"
+import { ItemPhoto } from "@/components/ui/item-photo"
 import {
   Table,
   TableBody,
@@ -80,28 +80,15 @@ function createColumns(
         const item = row.original
         return (
           <div className="flex items-center gap-3">
-            {item.imageUrl && (
-              <div className="h-10 w-10 shrink-0 overflow-hidden rounded bg-muted">
-                {/* biome-ignore lint/performance/noImgElement: img needs authorization */}
-                <img
-                  alt={item.name}
-                  className="object-cover"
-                  height={100}
-                  // FIXME: Remove in prod
-                  src={`${apiBaseUrl}/api/items/${item.id}/photo`}
-                  style={{ width: "100%", height: "100%" }}
-                  width={100}
-                />
-              </div>
-            )}
-            {!item.imageUrl && (
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted">
-                <HugeiconsIcon
-                  className="size-4 text-muted-foreground"
-                  icon={Image01Icon}
-                />
-              </div>
-            )}
+            <ItemPhoto
+              alt={item.name}
+              containerClassName="h-10 w-10 shrink-0 rounded"
+              src={
+                item.imageUrl
+                  ? `${apiBaseUrl}/api/items/${item.id}/photo`
+                  : null
+              }
+            />
             <div>
               <div className="font-medium">{item.name}</div>
             </div>

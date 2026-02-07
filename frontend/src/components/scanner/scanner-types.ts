@@ -46,3 +46,16 @@ export interface RackSelectOption {
   sizeX: number
   sizeY: number
 }
+
+// ── Outbound (Zdejmowanie) types ─────────────────────────────────────
+
+export type OutboundStep =
+  | "camera"
+  | "manual-input"
+  | "choose-method"
+  | "select-item"
+  | "select-quantity"
+  | "pick-list"
+  | "fifo-warning"
+  | "executing"
+  | "success"

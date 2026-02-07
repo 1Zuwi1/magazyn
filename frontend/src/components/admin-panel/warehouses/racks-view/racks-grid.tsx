@@ -10,7 +10,6 @@ import {
   WeightScale01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import type { Rack } from "@/components/dashboard/types"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
@@ -18,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { Rack } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { THRESHOLD } from "../../lib/constants"
 
@@ -27,11 +27,12 @@ interface RackCardProps {
   onDelete?: (rack: Rack) => void
 }
 
+// TODO: Remove commented out code related to weight once we have the actual weight data available and decide how to use it in the UI
 function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
   const hasActions = onEdit || onDelete
-  const isCritical = rack.occupancy >= THRESHOLD
-  const isOverweight = rack.currentWeight > rack.maxWeight
-  const hasWarning = isCritical || isOverweight
+  const isCritical = rack.occupiedSlots / rack.totalSlots >= THRESHOLD
+  // const isOverweight = rack.currentWeight > rack.maxWeight
+  const hasWarning = isCritical // || isOverweight
 
   return (
     <div className="group relative overflow-hidden rounded-xl border bg-card transition-all hover:shadow-md">
@@ -76,20 +77,16 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
               />
             </div>
             <div className="min-w-0">
-              <h3 className="truncate font-semibold text-lg">
-                <span className="ml-2 font-normal text-muted-foreground text-sm">
-                  ({rack.marker})
-                </span>
-              </h3>
+              <h3 className="truncate font-semibold text-lg">{rack.marker}</h3>
               <p className="truncate text-muted-foreground text-xs">
-                ID: {rack.id.slice(0, 8)}...
+                ID: {rack.id}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <Badge variant={isCritical ? "destructive" : "secondary"}>
-              {rack.occupancy}%
+              {rack.occupiedSlots}/{rack.totalSlots}
             </Badge>
             {hasActions && (
               <DropdownMenu>
@@ -142,10 +139,10 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <HugeiconsIcon className="size-4" icon={GridIcon} />
-              <span>Wymiary</span>
+              <span>Wymiary (wiersze × kolumny)</span>
             </div>
             <span className="font-medium font-mono">
-              {rack.rows} × {rack.cols}
+              {rack.sizeY} × {rack.sizeX}
             </span>
           </div>
 
@@ -169,17 +166,17 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
             <div className="flex items-center gap-2">
               <span
                 className={cn(
-                  "font-medium font-mono",
-                  isOverweight && "text-destructive"
+                  "font-medium font-mono"
+                  // isOverweight && "text-destructive"
                 )}
               >
-                {rack.currentWeight} / {rack.maxWeight} kg
+                {/* {rack.currentWeight}  */}/ {rack.maxWeight} kg
               </span>
-              {isOverweight && (
+              {/* {isOverweight && (
                 <Badge className="text-[10px]" variant="destructive">
                   Przeciążenie
                 </Badge>
-              )}
+              )} */}
             </div>
           </div>
 
@@ -189,7 +186,7 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
               <HugeiconsIcon className="size-4" icon={Package} />
               <span>Przedmioty</span>
             </div>
-            <span className="font-medium font-mono">{rack.items.length}</span>
+            <span className="font-medium font-mono">{rack.occupiedSlots}</span>
           </div>
 
           {/* Comment if present */}

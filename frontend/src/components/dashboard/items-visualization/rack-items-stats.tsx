@@ -1,4 +1,4 @@
-import type { Rack } from "../types"
+import type { Rack } from "@/lib/schemas"
 
 interface RackItemsStatsProps {
   rack: Rack
@@ -11,13 +11,14 @@ export function RackItemsStats({ rack, occupiedSlots }: RackItemsStatsProps) {
       <div className="space-y-1">
         <p className="text-muted-foreground text-sm">Zajęte miejsca</p>
         <p className="font-semibold text-2xl">
-          {occupiedSlots} / {rack.rows * rack.cols}
+          {occupiedSlots} / {rack.sizeY * rack.sizeX}
         </p>
       </div>
       <div className="space-y-1">
         <p className="text-muted-foreground text-sm">Obciążenie</p>
         <p className="font-semibold text-2xl">
-          {rack.currentWeight.toFixed(0)} / {rack.maxWeight} kg
+          {/* {rack.currentWeight.toFixed(0)} / {rack.maxWeight}  */}
+          kg
         </p>
       </div>
     </div>

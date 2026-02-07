@@ -60,7 +60,7 @@ import { getDaysUntilExpiry } from "../utils/helpers"
 import { CodeCell } from "./components/code-cell"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 
-type ExpiryFilters = "14_DAYS" | "7_DAYS" | "3_DAYS" | "EXPIRED" | "ALL"
+type ExpiryFilters = "DAYS_14" | "DAYS_7" | "DAYS_3" | "EXPIRED" | "ALL"
 
 type AssortmentList = InferApiOutput<typeof AssortmentsSchema, "GET">
 type AssortmentItem = AssortmentList["content"][number]
@@ -71,9 +71,9 @@ const EXPIRY_FILTER_OPTIONS: {
 }[] = [
   { value: "ALL", label: "Wszystkie" },
   { value: "EXPIRED", label: "Przeterminowane" },
-  { value: "3_DAYS", label: "Do 3 dni" },
-  { value: "7_DAYS", label: "Do 7 dni" },
-  { value: "14_DAYS", label: "Do 14 dni" },
+  { value: "DAYS_3", label: "Do 3 dni" },
+  { value: "DAYS_7", label: "Do 7 dni" },
+  { value: "DAYS_14", label: "Do 14 dni" },
 ]
 
 const dateFormatter = new Intl.DateTimeFormat("pl-PL")
@@ -132,11 +132,11 @@ function matchesExpiryFilter(
   switch (filterValue) {
     case "EXPIRED":
       return daysUntilExpiry < 0
-    case "3_DAYS":
+    case "DAYS_3":
       return daysUntilExpiry >= 0 && daysUntilExpiry <= 3
-    case "7_DAYS":
+    case "DAYS_7":
       return daysUntilExpiry >= 0 && daysUntilExpiry <= 7
-    case "14_DAYS":
+    case "DAYS_14":
       return daysUntilExpiry >= 0 && daysUntilExpiry <= 14
     default:
       return true
@@ -510,7 +510,7 @@ function AssortmentTableContent({
                     <span
                       className={cn(
                         option.value === "EXPIRED" && "text-destructive",
-                        option.value === "3_DAYS" && "text-orange-500"
+                        option.value === "DAYS_3" && "text-orange-500"
                       )}
                     >
                       {option.label}

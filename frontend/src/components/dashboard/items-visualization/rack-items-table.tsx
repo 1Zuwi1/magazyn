@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import type { Item } from "../types"
+import type { Assortment } from "@/lib/schemas"
 import Virtualized from "./components/virtualized"
 
 interface RackItemsTableProps {
-  items: Item[]
+  items: Assortment[]
 }
 
 const ROW_HEIGHT = 64
@@ -15,16 +15,16 @@ export function RackItemsTable({ items }: RackItemsTableProps) {
   const [containerWidth, setContainerWidth] = useState(0)
   const [containerHeight, setContainerHeight] = useState(0)
 
-  const handleView = (itemId: string) => {
-    console.log("handleView", itemId)
+  const handleView = (_itemId: number) => {
+    // TODO: implement view
   }
 
-  const handleEdit = (itemId: string) => {
-    console.log("handleEdit", itemId)
+  const handleEdit = (_itemId: number) => {
+    // TODO: implement edit
   }
 
-  const handleDelete = (itemId: string) => {
-    console.log("handleDelete", itemId)
+  const handleDelete = (_itemId: number) => {
+    // TODO: implement delete
   }
 
   useEffect(() => {

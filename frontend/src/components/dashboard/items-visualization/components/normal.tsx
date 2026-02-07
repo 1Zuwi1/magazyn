@@ -3,18 +3,18 @@
 import { memo } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody } from "@/components/ui/table"
-import type { Item } from "../../types"
+import type { Assortment } from "@/lib/schemas"
 import { NormalRow } from "./normal-row"
 import { RackItemsTableHeader } from "./table-header"
 
 interface NormalProps {
-  items: Item[]
+  items: Assortment[]
   rowHeight: number
   containerWidth: number
   containerHeight: number
-  onView: (id: string) => void
-  onEdit: (id: string) => void
-  onDelete: (id: string) => void
+  onView: (id: number) => void
+  onEdit: (id: number) => void
+  onDelete: (id: number) => void
 }
 
 const Normal = ({
@@ -37,11 +37,11 @@ const Normal = ({
       <Table>
         <RackItemsTableHeader />
         <TableBody>
-          {items.map((item) => {
+          {items.map((assortment) => {
             return (
               <NormalRow
-                item={item}
-                key={item.id}
+                assortment={assortment}
+                key={assortment.id}
                 onDelete={onDelete}
                 onEdit={onEdit}
                 onView={onView}

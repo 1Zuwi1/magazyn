@@ -1,13 +1,15 @@
-import Image from "next/image"
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
+import { ItemPhoto } from "../ui/item-photo"
 import { Label } from "../ui/label"
 import { Switch } from "../ui/switch"
 import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 import type { ScanItem } from "./scanner-types"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? ""
 
 interface ScannerQuantityStepProps {
   scannedItem: ScanItem
@@ -51,16 +53,17 @@ export function ScannerQuantityStep({
         <div className="mb-6 flex-1">
           <div className="overflow-hidden rounded-xl border bg-card/50">
             <div className="flex gap-4 p-4">
-              {scannedItem.photoUrl ? (
-                <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
-                  <Image
-                    alt={scannedItem.name}
-                    className="object-cover"
-                    fill
-                    src={scannedItem.photoUrl}
-                  />
-                </div>
-              ) : null}
+              <ItemPhoto
+                alt={scannedItem.name}
+                containerClassName="size-20 shrink-0"
+                iconClassName="size-6 text-muted-foreground"
+                imageClassName="object-cover"
+                src={
+                  scannedItem.photoUrl
+                    ? `${API_BASE_URL}/api/items/${scannedItem.id}/photo`
+                    : null
+                }
+              />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="truncate font-medium">{scannedItem.name}</h3>

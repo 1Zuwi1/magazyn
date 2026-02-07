@@ -561,6 +561,8 @@ const AssortmentSchema = z.object({
   positionY: z.number().int().nonnegative(),
 })
 
+export type Assortment = z.infer<typeof AssortmentSchema>
+
 export const AssortmentsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput(),
@@ -657,7 +659,12 @@ const RackSchema = z.object({
   maxSizeY: z.number(),
   maxSizeZ: z.number(),
   acceptsDangerous: z.boolean(),
+  occupiedSlots: z.number().int().nonnegative(),
+  freeSlots: z.number().int().nonnegative(),
+  totalSlots: z.number().int().nonnegative(),
 })
+
+export type Rack = z.infer<typeof RackSchema>
 
 export const RacksSchema = createApiSchema({
   GET: {
@@ -671,11 +678,21 @@ export const RackDetailsSchema = createApiSchema({
     output: RackSchema,
   },
   POST: {
-    input: RackSchema,
+    input: RackSchema.omit({
+      id: true,
+      occupiedSlots: true,
+      freeSlots: true,
+      totalSlots: true,
+    }),
     output: RackSchema,
   },
   PUT: {
-    input: RackSchema,
+    input: RackSchema.omit({
+      id: true,
+      occupiedSlots: true,
+      freeSlots: true,
+      totalSlots: true,
+    }),
     output: RackSchema,
   },
 })
@@ -818,3 +835,122 @@ export const INBOUND_OPERATION_EXECUTE_SCHEMA = createApiSchema({
     output: z.unknown(),
   },
 })
+
+// ── Outbound (Zdejmowanie) ──────────────────────────────────────────
+
+export const ASSORTMENT_BY_CODE_SCHEMA = createApiSchema({
+  GET: {
+    output: z.object({
+      id: z.number().int().nonnegative(),
+      code: z.string(),
+      itemId: z.number().int().nonnegative(),
+      rackId: z.number().int().nonnegative(),
+      userId: z.number().int().nonnegative(),
+      createdAt: z.string(),
+      expiresAt: z.string(),
+      positionX: z.number().int().nonnegative(),
+      positionY: z.number().int().nonnegative(),
+    }),
+  },
+})
+
+export type ScannedAssortment = z.infer<
+  typeof ASSORTMENT_BY_CODE_SCHEMA.shape.GET.shape.output
+>
+
+const OutboundPickSlotSchema = z.object({
+  assortmentId: z.number().int().nonnegative(),
+  assortmentCode: z.string(),
+  rackId: z.number().int().nonnegative(),
+  rackMarker: z.string(),
+  positionX: z.number().int().nonnegative(),
+  positionY: z.number().int().nonnegative(),
+  createdAt: z.string(),
+  expiresAt: z.string(),
+})
+
+export type OutboundPickSlot = z.infer<typeof OutboundPickSlotSchema>
+
+export const OUTBOUND_CHECK_SCHEMA = createApiSchema({
+  POST: {
+    input: z.object({
+      rackId: z.number().int().nonnegative(),
+      positionX: z.number().int().nonnegative(),
+      positionY: z.number().int().nonnegative(),
+    }),
+    output: z.object({
+      fifoCompliant: z.boolean(),
+      requestedAssortment: OutboundPickSlotSchema,
+      olderAssortments: z.array(OutboundPickSlotSchema),
+      warning: z.string().nullable().optional(),
+    }),
+  },
+})
+
+export type OutboundCheckResult = z.infer<
+  typeof OUTBOUND_CHECK_SCHEMA.shape.POST.shape.output
+>
+
+export const OUTBOUND_PLAN_SCHEMA = createApiSchema({
+  POST: {
+    input: z.object({
+      itemId: z.number().int().nonnegative(),
+      quantity: z.number().int().positive(),
+    }),
+    output: z.object({
+      itemId: z.number().int().nonnegative(),
+      itemName: z.string(),
+      requestedQuantity: z.number().int().nonnegative(),
+      availableQuantity: z.number().int().nonnegative(),
+      expiredQuantity: z.number().int().nonnegative(),
+      warning: z.string().nullable().optional(),
+      pickSlots: z.array(OutboundPickSlotSchema),
+    }),
+  },
+})
+
+export type OutboundPlan = z.infer<
+  typeof OUTBOUND_PLAN_SCHEMA.shape.POST.shape.output
+>
+
+const OutboundOperationSchema = z.object({
+  id: z.number().int().nonnegative(),
+  itemId: z.number().int().nonnegative(),
+  itemName: z.string(),
+  itemCode: z.string(),
+  rackId: z.number().int().nonnegative(),
+  rackMarker: z.string(),
+  issuedBy: z.number().int().nonnegative(),
+  issuedByName: z.string(),
+  operationTimestamp: z.string(),
+  positionX: z.number().int().nonnegative(),
+  positionY: z.number().int().nonnegative(),
+  quantity: z.number().int().nonnegative(),
+  assortmentCode: z.string(),
+  fifoCompliant: z.boolean(),
+})
+
+export const OUTBOUND_EXECUTE_SCHEMA = createApiSchema({
+  POST: {
+    input: z.object({
+      positions: z
+        .array(
+          z.object({
+            rackId: z.number().int().nonnegative(),
+            positionX: z.number().int().nonnegative(),
+            positionY: z.number().int().nonnegative(),
+          })
+        )
+        .min(1),
+      skipFifo: z.boolean(),
+    }),
+    output: z.object({
+      issuedCount: z.number().int().nonnegative(),
+      operations: z.array(OutboundOperationSchema),
+    }),
+  },
+})
+
+export type OutboundExecuteResult = z.infer<
+  typeof OUTBOUND_EXECUTE_SCHEMA.shape.POST.shape.output
+>

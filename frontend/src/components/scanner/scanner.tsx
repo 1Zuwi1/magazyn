@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils"
 import { buttonVariants } from "../ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog"
 import { ErrorBoundary } from "../ui/error-boundary"
+import { OutboundFlow, type OutboundFlowHandle } from "./outbound/outbound-flow"
 import { ScannerBody } from "./scanner-body"
 import { ScannerCamera } from "./scanner-camera"
 import { ScannerErrorState } from "./scanner-error-state"
@@ -124,6 +125,7 @@ export function Scanner({
   )
   const [open, setOpen] = useState<boolean>(false)
   const armedRef = useRef<boolean>(false)
+  const outboundRef = useRef<OutboundFlowHandle>(null)
   const [scannerState, setScannerState] = useState<ScannerState>({
     step: "camera",
     isLoading: false,
@@ -147,6 +149,10 @@ export function Scanner({
   const [identificationResult, setIdentificationResult] =
     useState<IdentificationResult | null>(null)
   const [isReportingMismatch, setIsReportingMismatch] = useState<boolean>(false)
+  const [outboundShowsCamera, setOutboundShowsCamera] = useState<boolean>(true)
+  const [pendingOutboundScanCode, setPendingOutboundScanCode] = useState<
+    string | null
+  >(null)
 
   const placementIdRef = useRef<number>(0)
   const { warehouseId, isHydrated } = useCurrentWarehouseId()
@@ -207,7 +213,10 @@ export function Scanner({
     setLastManualCode("")
     setIdentificationResult(null)
     setIsReportingMismatch(false)
+    setPendingOutboundScanCode(null)
+    setOutboundShowsCamera(true)
     placementIdRef.current = 0
+    outboundRef.current?.reset()
   }, [])
 
   const closeDialog = useCallback(() => {
@@ -674,6 +683,18 @@ export function Scanner({
     setError(null)
   }, [])
 
+  const handleManualInputCancel = useCallback(() => {
+    setError(null)
+    setLastManualCode("")
+    setPendingOutboundScanCode(null)
+    setOutboundShowsCamera(true)
+    setScannerState({
+      step: "camera",
+      isLoading: false,
+      isSubmitting: false,
+    })
+  }, [])
+
   const handleManualInputOpen = useCallback(() => {
     setScannerState({
       step: "manual-input",
@@ -696,97 +717,240 @@ export function Scanner({
     [handleReset]
   )
 
-  let content: ReactNode = (
-    <ScannerCamera
-      constraints={constraints}
-      isLoading={isLoading}
-      isMobile={isMobile}
-      isOpen={open}
-      mode={mode}
-      onManualInput={handleManualInputOpen}
-      onModeChange={setMode}
-      onRequestClose={closeDialog}
-      onScan={onScan}
-      onTakePhoto={onTakePhoto}
-      scanDelayMs={scanDelayMs}
-      stopOnScan={stopOnScan}
-      warehouseName={warehouseName}
-    />
+  const queueOutboundScanCode = useCallback((rawCode: string) => {
+    const code = rawCode.trim()
+    if (!code) {
+      return false
+    }
+
+    setError(null)
+    setPendingOutboundScanCode(code)
+    setOutboundShowsCamera(false)
+    setScannerState((current) => ({
+      ...current,
+      step: "camera",
+      isLoading: false,
+      isSubmitting: false,
+    }))
+
+    return true
+  }, [])
+
+  const handleOutboundManualScan = useCallback(
+    (rawCode: string) => {
+      setLastManualCode(rawCode)
+
+      const didQueueCode = queueOutboundScanCode(rawCode)
+      if (didQueueCode) {
+        setLastManualCode("")
+      }
+    },
+    [queueOutboundScanCode]
   )
+
+  const handleOutboundRequestCamera = useCallback(() => {
+    setPendingOutboundScanCode(null)
+    setOutboundShowsCamera(true)
+    setScannerState({
+      step: "camera",
+      isLoading: false,
+      isSubmitting: false,
+    })
+  }, [])
+
+  const handleOutboundScanCodeHandled = useCallback(() => {
+    setPendingOutboundScanCode(null)
+  }, [])
+
+  const handleModeChange = useCallback(
+    (
+      nextMode: (typeof TAB_TRIGGERS)[number]["action"],
+      options?: {
+        keepManualInput?: boolean
+      }
+    ) => {
+      setMode(nextMode)
+      handleReset()
+
+      if (options?.keepManualInput) {
+        setScannerState({
+          step: "manual-input",
+          isLoading: false,
+          isSubmitting: false,
+        })
+      }
+    },
+    [handleReset]
+  )
+
+  const handleManualInputModeChange = useCallback(
+    (nextMode: (typeof TAB_TRIGGERS)[number]["action"]) => {
+      handleModeChange(nextMode, { keepManualInput: true })
+    },
+    [handleModeChange]
+  )
+
+  // ── Inbound content helper ────────────────────────────────────────
+
+  function resolveInboundContent(): ReactNode {
+    if (step === "camera") {
+      return (
+        <ScannerCamera
+          constraints={constraints}
+          isLoading={isLoading}
+          isMobile={isMobile}
+          isOpen={open}
+          mode={mode}
+          onManualInput={handleManualInputOpen}
+          onModeChange={handleModeChange}
+          onRequestClose={closeDialog}
+          onScan={onScan}
+          onTakePhoto={onTakePhoto}
+          scanDelayMs={scanDelayMs}
+          stopOnScan={stopOnScan}
+          warehouseName={warehouseName}
+        />
+      )
+    }
+
+    if (step === "identify" && identificationResult) {
+      return (
+        <ScannerIdentifyStep
+          isAccepting={isLoading}
+          isReporting={isReportingMismatch}
+          onAccept={onAcceptIdentification}
+          onCancel={handleReset}
+          onMismatch={onReportMismatch}
+          result={identificationResult}
+        />
+      )
+    }
+
+    if (error) {
+      return <ScannerErrorState error={error} onRetry={handleErrorReset} />
+    }
+
+    if (step === "quantity" && scannedItem) {
+      return (
+        <ScannerQuantityStep
+          isSubmitting={isSubmitting}
+          onCancel={handleReset}
+          onDecrease={handleQuantityDecrease}
+          onIncrease={handleQuantityIncrease}
+          onQuantityChange={handleQuantityChange}
+          onReserveChange={setReserve}
+          onSubmit={handleSubmit}
+          quantity={quantity}
+          reserve={reserve}
+          scannedItem={scannedItem}
+        />
+      )
+    }
+
+    if (step === "locations" && scannedItem && placementPlan) {
+      return (
+        <ScannerLocationsStep
+          isConfirmDisabled={isConfirmDisabled}
+          isSubmitting={isSubmitting}
+          onAddPlacement={handleAddPlacement}
+          onBack={() =>
+            setScannerState((current) => ({ ...current, step: "quantity" }))
+          }
+          onConfirm={handleConfirmPlacement}
+          onPlacementChange={handlePlacementChange}
+          onRemovePlacement={handleRemovePlacement}
+          placements={editablePlacements}
+          plan={placementPlan}
+          warehouseId={currentWarehouseId}
+        />
+      )
+    }
+
+    if (step === "success" && scannedItem) {
+      return (
+        <ScannerSuccessStep
+          itemName={scannedItem.name}
+          onReset={handleReset}
+          placementsCount={confirmedPlacementsCount}
+        />
+      )
+    }
+
+    // Default: show camera
+    return (
+      <ScannerCamera
+        constraints={constraints}
+        isLoading={isLoading}
+        isMobile={isMobile}
+        isOpen={open}
+        mode={mode}
+        onManualInput={handleManualInputOpen}
+        onModeChange={handleModeChange}
+        onRequestClose={closeDialog}
+        onScan={onScan}
+        onTakePhoto={onTakePhoto}
+        scanDelayMs={scanDelayMs}
+        stopOnScan={stopOnScan}
+        warehouseName={warehouseName}
+      />
+    )
+  }
+
+  function renderManualInput(): ReactNode {
+    return (
+      <ScannerManualInput
+        error={mode === "take" ? error : null}
+        initialCode={lastManualCode}
+        isLoading={isLoading}
+        mode={mode}
+        onCancel={handleManualInputCancel}
+        onModeChange={handleManualInputModeChange}
+        onSubmit={mode === "remove" ? handleOutboundManualScan : onManualScan}
+      />
+    )
+  }
+
+  // ── Content resolution ──────────────────────────────────────────────
+
+  let content: ReactNode
 
   if (children) {
     content = <ScannerBody>{children}</ScannerBody>
   } else if (step === "manual-input") {
-    content = (
-      <ScannerManualInput
-        error={error}
-        initialCode={lastManualCode}
-        isLoading={isLoading}
-        onCancel={() => {
-          setError(null)
-          setLastManualCode("")
-          setScannerState({
-            step: "camera",
-            isLoading: false,
-            isSubmitting: false,
-          })
-        }}
-        onSubmit={onManualScan}
-      />
-    )
-  } else if (step === "identify" && identificationResult) {
-    content = (
-      <ScannerIdentifyStep
-        isAccepting={isLoading}
-        isReporting={isReportingMismatch}
-        onAccept={onAcceptIdentification}
-        onCancel={handleReset}
-        onMismatch={onReportMismatch}
-        result={identificationResult}
-      />
-    )
-  } else if (error) {
-    content = <ScannerErrorState error={error} onRetry={handleErrorReset} />
-  } else if (step === "quantity" && scannedItem) {
-    content = (
-      <ScannerQuantityStep
-        isSubmitting={isSubmitting}
-        onCancel={handleReset}
-        onDecrease={handleQuantityDecrease}
-        onIncrease={handleQuantityIncrease}
-        onQuantityChange={handleQuantityChange}
-        onReserveChange={setReserve}
-        onSubmit={handleSubmit}
-        quantity={quantity}
-        reserve={reserve}
-        scannedItem={scannedItem}
-      />
-    )
-  } else if (step === "locations" && scannedItem && placementPlan) {
-    content = (
-      <ScannerLocationsStep
-        isConfirmDisabled={isConfirmDisabled}
-        isSubmitting={isSubmitting}
-        onAddPlacement={handleAddPlacement}
-        onBack={() =>
-          setScannerState((current) => ({ ...current, step: "quantity" }))
-        }
-        onConfirm={handleConfirmPlacement}
-        onPlacementChange={handlePlacementChange}
-        onRemovePlacement={handleRemovePlacement}
-        placements={editablePlacements}
-        plan={placementPlan}
-        warehouseId={currentWarehouseId}
-      />
-    )
-  } else if (step === "success" && scannedItem) {
-    content = (
-      <ScannerSuccessStep
-        itemName={scannedItem.name}
-        onReset={handleReset}
-        placementsCount={confirmedPlacementsCount}
-      />
-    )
+    content = renderManualInput()
+  } else if (mode === "remove") {
+    // Outbound mode: show camera when scanning, otherwise delegate to OutboundFlow
+    if (outboundShowsCamera) {
+      content = (
+        <ScannerCamera
+          constraints={constraints}
+          isLoading={isLoading}
+          isMobile={isMobile}
+          isOpen={open}
+          mode={mode}
+          onManualInput={handleManualInputOpen}
+          onModeChange={handleModeChange}
+          onRequestClose={closeDialog}
+          onScan={queueOutboundScanCode}
+          onTakePhoto={onTakePhoto}
+          scanDelayMs={scanDelayMs}
+          stopOnScan={stopOnScan}
+          warehouseName={warehouseName}
+        />
+      )
+    } else {
+      content = (
+        <OutboundFlow
+          onClose={closeDialog}
+          onRequestCamera={handleOutboundRequestCamera}
+          onScanCodeHandled={handleOutboundScanCodeHandled}
+          pendingScanCode={pendingOutboundScanCode}
+          ref={outboundRef}
+        />
+      )
+    }
+  } else {
+    content = resolveInboundContent()
   }
 
   return (

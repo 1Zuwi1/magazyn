@@ -4,21 +4,21 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 import { memo, useRef } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
-import type { Item } from "../../types"
+import type { Assortment } from "@/lib/schemas"
 import { NormalRow } from "./normal-row"
 import { RackItemsTableHeader } from "./table-header"
 
 const OVERSCAN = 10
-const COLUMN_COUNT = 9
+const COLUMN_COUNT = 7
 
 interface VirtualizedProps {
-  items: Item[]
+  items: Assortment[]
   rowHeight: number
   containerWidth: number
   containerHeight: number
-  onView: (id: string) => void
-  onEdit: (id: string) => void
-  onDelete: (id: string) => void
+  onView: (id: number) => void
+  onEdit: (id: number) => void
+  onDelete: (id: number) => void
 }
 
 const Virtualized = ({
@@ -71,17 +71,16 @@ const Virtualized = ({
             </TableRow>
           )}
           {virtualItems.map((virtualRow) => {
-            const item = items[virtualRow.index]
+            const assortment = items[virtualRow.index]
 
-            // Even though it's unlikely to not exist, but better to be safe
-            if (!item) {
+            if (!assortment) {
               return null
             }
 
             return (
               <NormalRow
-                item={item}
-                key={item.id}
+                assortment={assortment}
+                key={assortment.id}
                 onDelete={onDelete}
                 onEdit={onEdit}
                 onView={onView}

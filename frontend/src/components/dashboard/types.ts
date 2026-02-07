@@ -1,20 +1,3 @@
-export interface Rack {
-  id: string
-  marker: string
-  rows: number
-  cols: number
-  minTemp: number
-  maxTemp: number
-  maxWeight: number
-  currentWeight: number
-  maxItemWidth: number
-  maxItemHeight: number
-  maxItemDepth: number
-  comment: string | null
-  occupancy: number // 0-100
-  items: ItemSlot[]
-}
-
 export interface FilterState {
   query: string
   minOccupancy: number
