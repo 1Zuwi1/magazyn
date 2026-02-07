@@ -7,7 +7,6 @@ export type VoiceCommandId =
   | "open-scanner"
   | "add-item"
   | "remove-item"
-  | "move-item"
   | "search-item"
   | "notifications"
   | "inventory-check"
@@ -148,30 +147,6 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       {
         regex: /^zdejmij produkt ([a-z0-9 ]+)$/i,
         paramNames: ["itemName"],
-      },
-    ],
-  },
-  {
-    id: "move-item",
-    description: "Przenieś produkt między regałami",
-    patterns: [
-      {
-        regex:
-          /^przenies produkt ([a-z0-9 ]+) z regalu ([a-z0-9 ]+) do regalu ([a-z0-9 ]+)$/i,
-        paramNames: ["itemName", "sourceRack", "targetRack"],
-      },
-      {
-        regex:
-          /^przenies ([a-z0-9 ]+) z regalu ([a-z0-9 ]+) do regalu ([a-z0-9 ]+)$/i,
-        paramNames: ["itemName", "sourceRack", "targetRack"],
-      },
-      {
-        regex: /^przenies produkt ([a-z0-9 ]+) do regalu ([a-z0-9 ]+)$/i,
-        paramNames: ["itemName", "targetRack"],
-      },
-      {
-        regex: /^przenies ([a-z0-9 ]+) do regalu ([a-z0-9 ]+)$/i,
-        paramNames: ["itemName", "targetRack"],
       },
     ],
   },

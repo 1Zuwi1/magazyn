@@ -115,27 +115,6 @@ describe("voice commands", () => {
     expect(match?.params.rackName).toBe("B2")
   })
 
-  it("matches move item between racks", () => {
-    const match = matchVoiceCommand(
-      "Przenieś produkt Mleko z regału A1 do regału B2"
-    )
-
-    expect(match).not.toBeNull()
-    expect(match?.command.id).toBe("move-item")
-    expect(match?.params.itemName).toBe("Mleko")
-    expect(match?.params.sourceRack).toBe("A1")
-    expect(match?.params.targetRack).toBe("B2")
-  })
-
-  it("matches move item to rack without source", () => {
-    const match = matchVoiceCommand("Przenieś produkt Cukier do regału C3")
-
-    expect(match).not.toBeNull()
-    expect(match?.command.id).toBe("move-item")
-    expect(match?.params.itemName).toBe("Cukier")
-    expect(match?.params.targetRack).toBe("C3")
-  })
-
   it("matches search item command", () => {
     const match = matchVoiceCommand("Znajdź produkt Mleko")
 

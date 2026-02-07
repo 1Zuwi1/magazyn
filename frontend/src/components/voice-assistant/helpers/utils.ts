@@ -47,14 +47,6 @@ export const getCommandLabel = (
     return `Usuń produkt "${itemName}"`
   }
 
-  if (match.command.id === "move-item") {
-    const { itemName, sourceRack, targetRack } = match.params
-    if (sourceRack) {
-      return `Przenieś "${itemName}" z ${sourceRack} do ${targetRack}`
-    }
-    return `Przenieś "${itemName}" do regału ${targetRack}`
-  }
-
   if (match.command.id === "search-item") {
     return `Wyszukaj "${match.params.itemName}"`
   }
@@ -163,23 +155,6 @@ export const handleConfirmCommandAction = (
           payload: { itemName, rackName },
         })
         actions.navigateAndClose("/dashboard/items")
-      }
-      return
-    case "move-item":
-      {
-        const { itemName, sourceRack, targetRack } = matchedCommand.params
-        if (!(itemName && targetRack)) {
-          actions.setErrorMessage(
-            "Brak nazwy produktu lub regału docelowego w komendzie."
-          )
-          actions.setView("error")
-          return
-        }
-        actions.setPendingAction({
-          type: "move-item",
-          payload: { itemName, sourceRack, targetRack },
-        })
-        actions.closeDialog()
       }
       return
     case "search-item":

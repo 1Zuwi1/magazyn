@@ -22,7 +22,6 @@ export interface InventoryCheckPayload {
 
 export type PendingAction =
   | { type: "remove-item"; payload: RemoveItemPayload }
-  | { type: "move-item"; payload: MoveItemPayload }
   | { type: "search-item"; payload: SearchItemPayload }
   | { type: "inventory-check"; payload: InventoryCheckPayload }
 
