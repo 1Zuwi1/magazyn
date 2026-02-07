@@ -522,7 +522,7 @@ function AssortmentTableContent({
               <SelectTrigger
                 aria-label="Filtruj według daty ważności"
                 className={cn(
-                  "h-10 w-44 gap-2 pl-9",
+                  "h-10! w-44 gap-2 pl-9",
                   isExpiryFiltered &&
                     "border-primary/50 bg-primary/5 text-primary"
                 )}

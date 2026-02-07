@@ -15,6 +15,7 @@ interface AssortmentsListParams {
   page?: number
   size?: number
   warehouseId?: number
+  rackId?: number
 }
 
 interface AssortmentsDetailsParams {
@@ -35,18 +36,23 @@ export default function useAssortments(
     size,
     assortmentId,
     warehouseId,
+    rackId,
   }: {
     page?: number
     size?: number
     assortmentId?: number
     warehouseId?: number
+    rackId?: number
   } = {
     page: 0,
     size: 20,
   }
 ) {
   return useApiQuery({
-    queryKey: [...ASSORTMENT_QUERY_KEY, { page, size, warehouseId }],
+    queryKey: [
+      ...ASSORTMENT_QUERY_KEY,
+      { page, size, assortmentId, warehouseId, rackId },
+    ],
     queryFn: async () => {
       if (assortmentId !== undefined) {
         if (assortmentId === -1) {
@@ -58,6 +64,24 @@ export default function useAssortments(
           AssortmentDetailsSchema,
           {
             method: "GET",
+          }
+        )
+      }
+
+      if (rackId !== undefined) {
+        if (rackId === -1) {
+          // This is a workaround to prevent the query from running when rackId is not yet available.
+          return null
+        }
+        return await apiFetch(
+          `/api/racks/${rackId}/assortments`,
+          AssortmentsSchema,
+          {
+            method: "GET",
+            queryParams: {
+              page,
+              size,
+            },
           }
         )
       }

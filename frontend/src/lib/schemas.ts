@@ -548,7 +548,7 @@ export const AssortmentDetailsSchema = createApiSchema({
   },
 })
 
-const ItemDefinitionSchema = z.object({
+export const ItemDefinitionSchema = z.object({
   id: z.number().int().nonnegative(),
   code: z.string(),
   name: z.string(),
@@ -568,6 +568,12 @@ export const ItemsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput(),
     output: createPaginatedSchema(ItemDefinitionSchema),
+  },
+})
+
+export const ItemDetailsSchema = createApiSchema({
+  GET: {
+    output: ItemDefinitionSchema,
   },
 })
 
@@ -611,21 +617,7 @@ export const VerifyMailSchema = createApiSchema({
 
 export const ITEM_BY_CODE_SCHEMA = createApiSchema({
   GET: {
-    output: z.object({
-      id: z.number().int().nonnegative(),
-      code: z.string(),
-      name: z.string(),
-      photoUrl: z.string().nullable(),
-      minTemp: z.number(),
-      maxTemp: z.number(),
-      weight: z.number(),
-      sizeX: z.number(),
-      sizeY: z.number(),
-      sizeZ: z.number(),
-      comment: z.string().nullable(),
-      expireAfterDays: z.number(),
-      dangerous: z.boolean(),
-    }),
+    output: ItemDefinitionSchema,
   },
 })
 

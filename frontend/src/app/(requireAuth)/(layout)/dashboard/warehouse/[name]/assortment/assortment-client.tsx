@@ -1,14 +1,24 @@
+"use client"
+
 import { PackageIcon } from "@hugeicons/core-free-icons"
-import { useSearchParams } from "next/navigation"
+import { useQueries } from "@tanstack/react-query"
+import { useMemo } from "react"
 import { AssortmentTableWithData } from "@/components/dashboard/items/assortment-table"
 import { PageHeader } from "@/components/dashboard/page-header"
-import useWarehouses from "@/hooks/use-warehouses"
 import { ErrorEmptyState } from "@/components/ui/empty-state"
 import useAssortments from "@/hooks/use-assortment"
+import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
+import useWarehouses from "@/hooks/use-warehouses"
+import { apiFetch } from "@/lib/fetcher"
+import { ItemDetailsSchema } from "@/lib/schemas"
+
+const ITEM_DETAILS_CACHE_TIME_MS = 5 * 60 * 1000
 
 export default function AssortmentClient() {
-  const sp = useSearchParams()
-  const wId = Number(sp.get("warehouseId") ?? -1)
+  const { warehouseIdForQuery, isHydrated, isMissingWarehouseId } =
+    useCurrentWarehouseId({
+      redirectIfMissingTo: "/dashboard/warehouse",
+    })
 
   const {
     data: warehouse,
@@ -16,58 +26,48 @@ export default function AssortmentClient() {
     isError: isWarehouseError,
     refetch: refetchWarehouse,
   } = useWarehouses({
-    warehouseId: wId,
+    warehouseId: warehouseIdForQuery,
   })
 
   const {
-    data: items,
-    isPending: isItemsPending,
-    isError: isItemsError,
-    refetch: refetchItems,
+    data: assortments,
+    isPending: isAssortmentsPending,
+    isError: isAssortmentsError,
+    refetch: refetchAssortments,
   } = useAssortments({
     warehouseId: warehouse?.id ?? -1,
   })
 
-  const isError = isWarehouseError || isItemsError
+  const isError = isWarehouseError || isAssortmentsError
+  const isLoading = !isHydrated || isWarehousePending || isAssortmentsPending
 
-  // const dangerousCount = items?.filter(
-  //   (item) => item.definition.isDangerous
-  // ).length
-  // const expiringCount = items?.filter((item) => {
-  //   if (!item.expiryDate) {
-  //     return false
-  //   }
-  //   const daysUntil = Math.ceil(
-  //     (item.expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-  //   )
-  //   return daysUntil <= 30 && daysUntil > 0
-  // }).length
+  const itemIds = useMemo(
+    () => [...new Set(assortments?.content.map((item) => item.itemId) ?? [])],
+    [assortments?.content]
+  )
+
+  const itemDetailsQueries = useQueries({
+    queries: itemIds.map((itemId) => ({
+      queryKey: ["warehouse-assortment-item-details", itemId] as const,
+      queryFn: async () =>
+        await apiFetch(`/api/items/${itemId}`, ItemDetailsSchema, {
+          method: "GET",
+        }),
+      staleTime: ITEM_DETAILS_CACHE_TIME_MS,
+    })),
+  })
 
   const headerStats = [
     {
       label: "Produktów",
-      value: items?.totalElements ?? 0,
+      value: assortments?.totalElements ?? 0,
       icon: PackageIcon,
     },
-    // ...(expiringCount > 0
-    //   ? [
-    //       {
-    //         label: "Wygasa <30d",
-    //         value: expiringCount,
-    //         variant: "warning" as const,
-    //       },
-    //     ]
-    //   : []),
-    // ...(dangerousCount > 0
-    //   ? [
-    //       {
-    //         label: "Niebezp.",
-    //         value: dangerousCount,
-    //         variant: "destructive" as const,
-    //       },
-    //     ]
-    //   : []),
   ]
+
+  if (isMissingWarehouseId) {
+    return null
+  }
 
   if (isError) {
     return (
@@ -81,7 +81,10 @@ export default function AssortmentClient() {
         <ErrorEmptyState
           onRetry={() => {
             refetchWarehouse()
-            refetchItems()
+            refetchAssortments()
+            for (const query of itemDetailsQueries) {
+              query.refetch()
+            }
           }}
         />
       </div>
@@ -100,9 +103,8 @@ export default function AssortmentClient() {
       />
 
       <AssortmentTableWithData
-        assortmentData={items}
-        
-        isLoading={isWarehousePending || isItemsPending}
+        assortmentData={assortments}
+        isLoading={isLoading}
       />
     </div>
   )
