@@ -112,7 +112,8 @@ export const handleConfirmCommandAction = (
       return
     case "open-scanner":
       actions.openScanner()
-      break
+      actions.closeDialog()
+      return
     case "add-item":
       actions.openAddItemDialog()
       actions.navigateAndClose("/admin/assortment")
@@ -122,6 +123,4 @@ export const handleConfirmCommandAction = (
       actions.setView("error")
       return
   }
-
-  actions.closeDialog()
 }
