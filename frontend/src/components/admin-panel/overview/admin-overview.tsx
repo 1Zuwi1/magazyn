@@ -18,7 +18,9 @@ import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import useAdminUsers from "@/hooks/use-admin-users"
 import useAssortments from "@/hooks/use-assortment"
-import useNotifications from "@/hooks/use-notifications"
+import useNotifications, {
+  useUnreadNotificationsCount,
+} from "@/hooks/use-notifications"
 import useWarehouses, { type WarehousesList } from "@/hooks/use-warehouses"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
@@ -97,29 +99,27 @@ export function AdminOverview() {
     isError: isNotificationsError,
     refetch: refetchNotifications,
   } = useNotifications()
+  const { data: unreadNotificationsCount } = useUnreadNotificationsCount()
 
   const warehouses = useMemo(
     () => (warehousesData?.content ?? []).map(mapWarehouseSummary),
     [warehousesData?.content]
   )
-  const notifications = notificationsData?.content ?? []
-
   const stats = useMemo(() => {
     const activeUsers = activeUsersData?.totalElements ?? 0
     const totalUsers = usersData?.totalElements ?? 0
     const totalWarehouses = warehousesData?.totalElements ?? warehouses.length
     const totalItems =
       assortmentsData?.totalElements ?? assortmentsData?.content.length ?? 0
-    const unreadAlerts = notifications.filter(
-      (notification) => !notification.read
-    ).length
+    const unreadAlerts = unreadNotificationsCount ?? 0
+    const totalAlerts = notificationsData?.totalElements ?? 0
 
     return {
       users: { total: totalUsers, active: activeUsers },
       warehouses: { total: totalWarehouses },
       alerts: {
         unread: unreadAlerts,
-        total: notifications.length,
+        total: totalAlerts,
       },
       items: { total: totalItems },
     }
@@ -127,7 +127,8 @@ export function AdminOverview() {
     activeUsersData?.totalElements,
     assortmentsData?.content.length,
     assortmentsData?.totalElements,
-    notifications,
+    notificationsData?.totalElements,
+    unreadNotificationsCount,
     usersData?.totalElements,
     warehouses,
     warehousesData?.totalElements,

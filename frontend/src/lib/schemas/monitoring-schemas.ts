@@ -1,37 +1,97 @@
 import z from "zod"
 import { createApiSchema } from "../create-api-schema"
-import { createPaginatedSchema } from "../schemas"
+import { createPaginatedSchema, createPaginatedSchemaInput } from "../schemas"
 
-export const NotificationSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  description: z.string(),
-  type: z.enum([
-    "UNAUTHORIZED_REMOVAL",
-    "RACK_OVERWEIGHT",
-    "ITEM_EXPIRED",
-    "TEMPERATURE_VIOLATION",
-  ]),
-  severity: z.enum(["INFO", "WARNING", "CRITICAL"]),
-  warehouseId: z.string().optional(),
-  rackId: z.string().optional(),
-  itemId: z.string().optional(),
-  metadata: z.record(z.string(), z.unknown()),
+export const AlertSchema = z.object({
+  id: z.coerce.number().int().nonnegative(),
+  rackId: z.coerce.number().int().nonnegative().nullable().optional(),
+  rackMarker: z.string().nullable().optional(),
+  warehouseId: z.coerce.number().int().nonnegative().nullable().optional(),
+  warehouseName: z.string().nullable().optional(),
+  alertType: z.string(),
+  alertTypeDescription: z.string().nullable().optional(),
+  status: z.string(),
+  message: z.string(),
+  thresholdValue: z.number().nullable().optional(),
+  actualValue: z.number().nullable().optional(),
   createdAt: z.coerce.date(),
-  date: z.coerce.date(),
-  read: z.boolean(),
+  updatedAt: z.coerce.date().nullable().optional(),
+  resolvedAt: z.coerce.date().nullable().optional(),
+  resolvedByName: z.string().nullable().optional(),
+  resolutionNotes: z.string().nullable().optional(),
 })
 
-export const WeightAlertSchema = z.object({
-  id: z.string(),
-  rackId: z.string(),
-  previousWeight: z.number(),
-  currentWeight: z.number(),
-  timestamp: z.date(),
+const RawUserNotificationSchema = z.object({
+  id: z.coerce.number().int().nonnegative(),
+  alert: AlertSchema,
+  createdAt: z.coerce.date(),
+  readAt: z.coerce.date().nullable().optional(),
+  read: z.boolean().optional(),
+  isRead: z.boolean().optional(),
 })
+
+export const UserNotificationSchema = RawUserNotificationSchema.transform(
+  ({ isRead, read, ...notification }) => ({
+    ...notification,
+    read: read ?? isRead ?? false,
+    readAt: notification.readAt ?? null,
+  })
+)
+
+const UnreadNotificationsCountSchema = z.union([
+  z.number().int().nonnegative(),
+  z
+    .object({
+      count: z.number().int().nonnegative(),
+    })
+    .transform(({ count }) => count),
+])
 
 export const ApiNotificationsSchema = createApiSchema({
   GET: {
-    output: createPaginatedSchema(z.any()),
+    input: createPaginatedSchemaInput(),
+    output: createPaginatedSchema(UserNotificationSchema),
+  },
+})
+
+export const ApiUnreadNotificationsSchema = createApiSchema({
+  GET: {
+    input: createPaginatedSchemaInput(),
+    output: createPaginatedSchema(UserNotificationSchema),
+  },
+})
+
+export const ApiUnreadNotificationsCountSchema = createApiSchema({
+  GET: {
+    output: UnreadNotificationsCountSchema,
+  },
+})
+
+export const ApiNotificationByAlertSchema = createApiSchema({
+  GET: {
+    output: UserNotificationSchema,
+  },
+})
+
+const EmptyPatchSchema = z.object({})
+
+export const ApiMarkNotificationReadSchema = createApiSchema({
+  PATCH: {
+    input: EmptyPatchSchema,
+    output: z.unknown(),
+  },
+})
+
+export const ApiMarkNotificationUnreadSchema = createApiSchema({
+  PATCH: {
+    input: EmptyPatchSchema,
+    output: z.unknown(),
+  },
+})
+
+export const ApiMarkAllNotificationsReadSchema = createApiSchema({
+  PATCH: {
+    input: EmptyPatchSchema,
+    output: z.unknown(),
   },
 })
