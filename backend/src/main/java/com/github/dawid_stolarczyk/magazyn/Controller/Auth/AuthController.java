@@ -1,9 +1,8 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Auth;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.LoginRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RegisterRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.VerifyEmailRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ForgotPasswordRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResetPasswordRequest;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Services.Auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -102,6 +101,48 @@ public class AuthController {
         } catch (AuthenticationException e) {
             log.warn("Email verification failed: {}", e.getCode());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseTemplate.error(e.getCode()));
+        }
+    }
+
+    @Operation(summary = "Request password reset",
+            description = "Sends a password reset link to the provided email address if a user with that email exists.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - password reset email sent (or email not found, for security)",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: INVALID_INPUT",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ResponseTemplate<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request,
+                                                                  HttpServletRequest httpRequest) {
+        try {
+            authService.forgotPassword(request.getEmail(), httpRequest);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            // For security reasons, we return success even if email doesn't exist
+            // to prevent email enumeration attacks
+            log.warn("Forgot password request: {}", e.getCode());
+            return ResponseEntity.ok(ResponseTemplate.success());
+        }
+    }
+
+    @Operation(summary = "Reset password with token",
+            description = "Resets user password using the token received in the password reset email.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - password reset",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: RESET_TOKEN_INVALID, RESET_TOKEN_EXPIRED, WEAK_PASSWORD",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @PostMapping("/reset-password")
+    public ResponseEntity<ResponseTemplate<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request,
+                                                                 HttpServletRequest httpRequest) {
+        try {
+            authService.resetPassword(request.getToken(), request.getNewPassword(), httpRequest);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            log.warn("Password reset failed: {}", e.getCode());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getCode()));
         }
     }
 

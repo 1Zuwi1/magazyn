@@ -28,8 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -45,13 +43,6 @@ public class AssortmentService {
     private final Bucket4jRateLimiter rateLimiter;
 
     private static final double EPS = 1e-6;
-
-    public List<AssortmentDto> getAllAssortments(HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        return assortmentRepository.findAll().stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
-    }
 
     public Page<AssortmentDto> getAllAssortmentsPaged(HttpServletRequest request, Pageable pageable) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
@@ -92,18 +83,12 @@ public class AssortmentService {
         return mapToDto(assortment);
     }
 
-    @Transactional
-    public AssortmentDto createAssortment(AssortmentDto dto, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
-        return createAssortmentInternal(dto);
-    }
-
     /**
      * Internal method for bulk import - no rate limiting
      * Uses SERIALIZABLE isolation to prevent race conditions in code (barcode) generation
      */
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public AssortmentDto createAssortmentInternal(AssortmentDto dto) {
+    public void createAssortmentInternal(AssortmentDto dto) {
         Item item = itemRepository.findById(dto.getItemId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
         Rack rack = rackRepository.findById(dto.getRackId())
@@ -144,7 +129,8 @@ public class AssortmentService {
                         .code(placementCode)
                         .build();
 
-                return mapToDto(assortmentRepository.save(assortment));
+                mapToDto(assortmentRepository.save(assortment));
+                return;
 
             } catch (DataIntegrityViolationException ex) {
                 // Check if it's a code collision (unique constraint violation)
@@ -243,14 +229,6 @@ public class AssortmentService {
         }
 
         return mapToDto(assortmentRepository.save(assortment));
-    }
-
-    @Transactional
-    public void deleteAssortment(Long id, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
-        Assortment assortment = assortmentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
-        assortmentRepository.delete(assortment);
     }
 
     private void validatePlacement(Rack rack, Item item, Integer x, Integer y, Long excludeAssortmentId) {
