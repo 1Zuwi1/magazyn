@@ -52,12 +52,11 @@ public class ItemController {
             @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir,
-            @Parameter(description = "Filter by dangerous") @RequestParam(defaultValue = "false") boolean isDangerousOnly,
-            @Parameter(description = "Filter by closeToExpiryOnly") @RequestParam(defaultValue = "false") boolean closeToExpiryOnly) {
+            @Parameter(description = "Filter by dangerous") @RequestParam(defaultValue = "false") boolean isDangerousOnly) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(itemService.getAllItemsPaged(request, pageable, isDangerousOnly, closeToExpiryOnly))));
+                PagedResponse.from(itemService.getAllItemsPaged(request, pageable, isDangerousOnly))));
     }
 
     @Operation(summary = "Get item by ID")

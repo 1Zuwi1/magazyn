@@ -51,7 +51,7 @@ public class OutboundController {
     })
     @PostMapping("/check")
     public ResponseEntity<ResponseTemplate<OutboundCheckResponse>> check(
-            @Valid @RequestBody OutboundCheckRequest request,
+            @Valid @RequestBody OutboundPickPosition request,
             HttpServletRequest httpRequest) {
         OutboundCheckResponse response = outboundService.check(request, httpRequest);
         return ResponseEntity.ok(ResponseTemplate.success(response));

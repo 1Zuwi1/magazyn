@@ -19,8 +19,8 @@ public class OutboundExecuteRequest {
 
     @NotEmpty
     @Valid
-    @Schema(description = "List of positions to pick (rackId, x, y)")
-    private List<OutboundPickPosition> positions;
+    @Schema(description = "List of assortments to pick (barcode)")
+    private List<OutboundPickPosition> assortments;
 
     @Builder.Default
     @Schema(description = "Skip FIFO validation (default false). When true, allows picking non-FIFO items but records fifoCompliant=false in audit.", example = "false")

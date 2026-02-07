@@ -39,20 +39,11 @@ public class ItemService {
     private final Bucket4jRateLimiter rateLimiter;
     private final ImageEmbeddingService imageEmbeddingService;
 
-    public Page<ItemDto> getAllItemsPaged(HttpServletRequest request, Pageable pageable, boolean onlyDangerous, boolean closeToExpiryOnly) {
+    public Page<ItemDto> getAllItemsPaged(HttpServletRequest request, Pageable pageable, boolean onlyDangerous) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
         Page<ItemDto> itemsPage = itemRepository.findAll(pageable).map(this::mapToDto);
         if (onlyDangerous) {
             itemsPage = itemRepository.findByDangerousTrue(pageable).map(this::mapToDto);
-        }
-        if (closeToExpiryOnly) {
-            itemsPage = new PageImpl<>(
-                    itemsPage.getContent().stream()
-                            .filter(dto -> dto.getExpireAfterDays() != null && dto.getExpireAfterDays() <= 30)
-                            .toList(),
-                    pageable,
-                    itemsPage.getTotalElements()
-            );
         }
         return itemsPage;
     }

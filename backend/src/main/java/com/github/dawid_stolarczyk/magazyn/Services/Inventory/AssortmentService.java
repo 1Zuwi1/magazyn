@@ -8,6 +8,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.Assortment;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Rack;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.ExpiryFilters;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AssortmentRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.RackRepository;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -28,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -44,10 +47,34 @@ public class AssortmentService {
 
     private static final double EPS = 1e-6;
 
-    public Page<AssortmentDto> getAllAssortmentsPaged(HttpServletRequest request, Pageable pageable) {
+    public Page<AssortmentDto> getAllAssortmentsPaged(HttpServletRequest request, Pageable pageable, ArrayList<ExpiryFilters> expiryFilters) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        return assortmentRepository.findAll(pageable)
+        Page<AssortmentDto> page = assortmentRepository.findAll(pageable)
                 .map(this::mapToDto);
+
+        if (!expiryFilters.isEmpty() && !expiryFilters.contains(ExpiryFilters.ALL)) {
+            Instant now = Instant.now();
+            int maxDays = expiryFilters.stream()
+                    .filter(f -> f != ExpiryFilters.EXPIRED)
+                    .mapToInt(f -> Integer.parseInt(f.name().split("_")[1]))
+                    .max()
+                    .orElse(0);
+            Instant threshold = now.plus(maxDays, ChronoUnit.DAYS);
+            log.info("Applying expiry filters: {}, threshold date: {}", expiryFilters, threshold);
+
+
+            page = new PageImpl<>(page
+                    .stream()
+                    .filter(dto -> dto.getExpiresAt() != null
+                            && dto.getExpiresAt().toInstant().isBefore(threshold)
+                            && dto.getExpiresAt().toInstant().isAfter(now)
+                            || (dto.getExpiresAt() != null
+                            && expiryFilters.contains(ExpiryFilters.EXPIRED)
+                            && dto.getExpiresAt().toInstant().isBefore(now))
+                    )
+                    .toList(), pageable, page.getTotalElements());
+        }
+        return page;
     }
 
     public Page<AssortmentWithItemDto> getAssortmentsByRackIdPaged(Long rackId, HttpServletRequest request, Pageable pageable) {

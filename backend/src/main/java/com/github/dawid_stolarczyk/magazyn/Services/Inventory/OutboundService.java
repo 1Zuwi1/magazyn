@@ -77,11 +77,10 @@ public class OutboundService {
     /**
      * Check: sprawdza czy assortment na konkretnej pozycji jest FIFO-compliant i niewygasły.
      */
-    public OutboundCheckResponse check(OutboundCheckRequest request, HttpServletRequest httpRequest) {
+    public OutboundCheckResponse check(OutboundPickPosition request, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
 
-        Assortment assortment = assortmentRepository.findByRackIdAndPositionXAndPositionY(
-                        request.getRackId(), request.getPositionX(), request.getPositionY())
+        Assortment assortment = assortmentRepository.findByCode(request.getCode())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
 
         // Sprawdź czy assortment jest wygasły
@@ -125,9 +124,9 @@ public class OutboundService {
 
         List<OutboundOperationDto> operationDtos = new ArrayList<>();
 
-        for (OutboundPickPosition position : request.getPositions()) {
-            Assortment assortment = assortmentRepository.findByRackIdAndPositionXAndPositionY(
-                            position.getRackId(), position.getPositionX(), position.getPositionY())
+        for (OutboundPickPosition position : request.getAssortments()) {
+            Assortment assortment = assortmentRepository.findByCode(
+                            position.getCode())
                     .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
 
             // Sprawdź czy assortment jest wygasły
