@@ -286,11 +286,54 @@ export const PasskeyRenameSchema = createApiSchema({
   },
 })
 
-const createPaginatedSchema = <T extends z.ZodType>(
-  itemSchema: T,
-  additionalSchemas?: Record<string, z.ZodType>
-) => {
-  return z.object({
+interface EmptyAdditionalSchemas extends Record<never, z.ZodType> {}
+
+type PaginatedSchemaObject<
+  TItem extends z.ZodType,
+  TAdditional extends z.ZodRawShape = EmptyAdditionalSchemas,
+> = z.ZodObject<
+  {
+    content: z.ZodArray<TItem>
+    page: z.ZodNumber
+    size: z.ZodNumber
+    totalElements: z.ZodNumber
+    totalPages: z.ZodNumber
+    first: z.ZodBoolean
+    last: z.ZodBoolean
+  } & TAdditional
+>
+
+type PaginatedInputSchemaObject<
+  TAdditional extends z.ZodRawShape = EmptyAdditionalSchemas,
+> = z.ZodObject<
+  {
+    page: z.ZodOptional<z.ZodNumber>
+    size: z.ZodOptional<z.ZodNumber>
+    sortBy: z.ZodOptional<z.ZodString>
+    sortDir: z.ZodOptional<z.ZodEnum<{ asc: "asc"; desc: "desc" }>>
+  } & TAdditional
+>
+
+function createPaginatedSchema<TItem extends z.ZodType>(
+  itemSchema: TItem
+): PaginatedSchemaObject<TItem>
+
+function createPaginatedSchema<
+  TItem extends z.ZodType,
+  TAdditional extends z.ZodRawShape,
+>(
+  itemSchema: TItem,
+  additionalSchemas: TAdditional
+): PaginatedSchemaObject<TItem, TAdditional>
+
+function createPaginatedSchema<
+  TItem extends z.ZodType,
+  TAdditional extends z.ZodRawShape = EmptyAdditionalSchemas,
+>(
+  itemSchema: TItem,
+  additionalSchemas?: TAdditional
+): PaginatedSchemaObject<TItem, TAdditional> {
+  const baseSchema = z.object({
     content: z.array(itemSchema),
     page: z.number().int(),
     size: z.number().int(),
@@ -298,27 +341,51 @@ const createPaginatedSchema = <T extends z.ZodType>(
     totalPages: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    ...additionalSchemas,
   })
+
+  if (additionalSchemas) {
+    return baseSchema.extend(additionalSchemas) as PaginatedSchemaObject<
+      TItem,
+      TAdditional
+    >
+  }
+
+  return baseSchema as PaginatedSchemaObject<TItem, TAdditional>
 }
 
-const createPaginatedSchemaInput = <T extends z.ZodType | undefined>(
-  itemSchema?: T
-) => {
-  return z.object({
-    ...itemSchema,
+function createPaginatedSchemaInput(): PaginatedInputSchemaObject
+
+function createPaginatedSchemaInput<TAdditional extends z.ZodRawShape>(
+  additionalSchemas: TAdditional
+): PaginatedInputSchemaObject<TAdditional>
+
+function createPaginatedSchemaInput<
+  TAdditional extends z.ZodRawShape = EmptyAdditionalSchemas,
+>(additionalSchemas?: TAdditional): PaginatedInputSchemaObject<TAdditional> {
+  const baseSchema = z.object({
     page: z.number().int().nonnegative().optional(),
     size: z.number().int().nonnegative().optional(),
     sortBy: z.string().optional(),
     sortDir: z.enum(["asc", "desc"]).optional(),
   })
+
+  if (additionalSchemas) {
+    return baseSchema.extend(
+      additionalSchemas
+    ) as PaginatedInputSchemaObject<TAdditional>
+  }
+
+  return baseSchema as PaginatedInputSchemaObject<TAdditional>
 }
 
-export type PaginatedResponse<T extends z.ZodType> = z.infer<
-  ReturnType<typeof createPaginatedSchema<T>>
->
-export type PaginatedRequest<T extends z.ZodType | undefined = undefined> =
-  z.infer<ReturnType<typeof createPaginatedSchemaInput<T>>>
+export type PaginatedResponse<
+  TItem extends z.ZodType,
+  TAdditional extends z.ZodRawShape = EmptyAdditionalSchemas,
+> = z.output<PaginatedSchemaObject<TItem, TAdditional>>
+
+export type PaginatedRequest<
+  TAdditional extends z.ZodRawShape = EmptyAdditionalSchemas,
+> = z.output<PaginatedInputSchemaObject<TAdditional>>
 
 const AdminTeamSchema = z.enum([
   "OPERATIONS",
@@ -387,7 +454,7 @@ export const AdminUpdateUserProfileSchema = createApiSchema({
 export const AdminChangeUserEmailSchema = createApiSchema({
   PATCH: {
     input: z.object({
-      newEmail: z.string().trim().email().min(1),
+      newEmail: z.email().min(1),
     }),
     output: z.null(),
   },
@@ -411,7 +478,9 @@ export type Warehouse = z.infer<typeof WarehouseSchema>
 
 export const WarehousesSchema = createApiSchema({
   GET: {
-    input: createPaginatedSchemaInput(),
+    input: createPaginatedSchemaInput({
+      nameFilter: z.string().optional(),
+    }),
     output: createPaginatedSchema(WarehouseSchema),
   },
 })
@@ -460,11 +529,7 @@ const AssortmentSchema = z.object({
 
 export const AssortmentsSchema = createApiSchema({
   GET: {
-    input: createPaginatedSchemaInput(
-      z.object({
-        search: z.string(),
-      })
-    ),
+    input: createPaginatedSchemaInput(),
     output: createPaginatedSchema(AssortmentSchema),
   },
 })
@@ -517,18 +582,15 @@ const RackSchema = z.object({
 export const RacksSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput(),
-    output: createPaginatedSchema(
-      RackSchema
-      // {
-      // summary: z.object({
-      //   totalCapacity: z.number().int().nonnegative(),
-      //   freeSlots: z.number().int().nonnegative(),
-      //   occupiedSlots: z.number().int().nonnegative(),
-      //   totalWarehouses: z.number().int().nonnegative(),
-      //   totalRacks: z.number().int().nonnegative(),
-      // }),
-      // }
-    ),
+    output: createPaginatedSchema(RackSchema, {
+      summary: z.object({
+        totalCapacity: z.number().int().nonnegative(),
+        freeSlots: z.number().int().nonnegative(),
+        occupiedSlots: z.number().int().nonnegative(),
+        totalWarehouses: z.number().int().nonnegative(),
+        totalRacks: z.number().int().nonnegative(),
+      }),
+    }),
   },
 })
 

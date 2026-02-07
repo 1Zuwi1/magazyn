@@ -54,16 +54,16 @@ import {
 import useAssortment from "@/hooks/use-assortment"
 import { createApiSchema } from "@/lib/create-api-schema"
 import { apiFetch, type InferApiOutput } from "@/lib/fetcher"
-import type { AssortmentSchema } from "@/lib/schemas"
+import type { AssortmentsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { getDaysUntilExpiry } from "../utils/helpers"
-import { BarcodeCell } from "./components/barcode-cell"
+import { CodeCell } from "./components/code-cell"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 
 type ExpiryFilters = "14_DAYS" | "7_DAYS" | "3_DAYS" | "EXPIRED" | "ALL"
 
 type AssortmentItem = InferApiOutput<
-  typeof AssortmentSchema,
+  typeof AssortmentsSchema,
   "GET"
 >["content"][number]
 
@@ -329,11 +329,11 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
   const assortmentColumns = useMemo<ColumnDef<AssortmentItem>[]>(
     () => [
       {
-        accessorKey: "barcode",
+        accessorKey: "code",
         header: ({ column }) => (
           <SortableHeader column={column}>Kod</SortableHeader>
         ),
-        cell: ({ row }) => <BarcodeCell value={row.original.barcode} />,
+        cell: ({ row }) => <CodeCell value={row.original.code} />,
         enableSorting: true,
       },
       {
@@ -441,7 +441,7 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
         rackNamesById.get(row.original.rackId)?.toLowerCase() ?? ""
 
       return (
-        row.original.barcode.toLowerCase().includes(searchValue) ||
+        row.original.code.toLowerCase().includes(searchValue) ||
         itemName.includes(searchValue) ||
         rackName.includes(searchValue) ||
         row.original.userId.toString().includes(searchValue)

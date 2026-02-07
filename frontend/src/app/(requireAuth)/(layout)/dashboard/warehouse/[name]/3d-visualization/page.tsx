@@ -229,7 +229,7 @@ export default function ThreeDVisualizationPage() {
   } = useRacks({
     page: 0,
     size: RACKS_PAGE_SIZE,
-    warehouseId: apiWarehouse?.id,
+    warehouseId: apiWarehouse?.id ?? -1,
   })
 
   const warehouse = useMemo(() => {
