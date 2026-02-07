@@ -6,11 +6,12 @@ import {
   MoreHorizontalCircle01FreeIcons,
   Package,
   PencilEdit01Icon,
-  Warehouse,
+  WarehouseIcon,
 } from "@hugeicons/core-free-icons"
+
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-import type { Warehouse as WarehouseType } from "@/components/dashboard/types"
+
 import {
   getOccupancyPercentage,
   pluralize,
@@ -22,13 +23,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { WarehousesList } from "@/hooks/use-warehouses"
 import { cn } from "@/lib/utils"
 import { THRESHOLD } from "../../lib/constants"
 
+type WarehouseListItem = WarehousesList["content"][number]
+
 interface WarehouseCardProps {
-  warehouse: WarehouseType
-  onEdit?: (warehouse: WarehouseType) => void
-  onDelete?: (warehouse: WarehouseType) => void
+  warehouse: WarehouseListItem
+  onEdit?: (warehouse: WarehouseListItem) => void
+  onDelete?: (warehouse: WarehouseListItem) => void
 }
 
 export function WarehouseCard({
@@ -36,10 +40,9 @@ export function WarehouseCard({
   onEdit,
   onDelete,
 }: WarehouseCardProps) {
-  const occupancyPercentage = getOccupancyPercentage(
-    warehouse.used,
-    warehouse.capacity
-  )
+  const usedSlots = warehouse.occupiedSlots
+  const totalCapacity = warehouse.occupiedSlots + warehouse.freeSlots
+  const occupancyPercentage = getOccupancyPercentage(usedSlots, totalCapacity)
   const isCritical = occupancyPercentage >= THRESHOLD
 
   return (
@@ -81,7 +84,7 @@ export function WarehouseCard({
                   "size-5",
                   isCritical ? "text-destructive" : "text-primary"
                 )}
-                icon={Warehouse}
+                icon={WarehouseIcon}
               />
             </div>
             <div>
@@ -144,7 +147,7 @@ export function WarehouseCard({
               <span className="text-muted-foreground">Zapełnienie</span>
               <div className="flex items-center gap-2">
                 <span className="font-medium">
-                  {warehouse.used} / {warehouse.capacity}
+                  {usedSlots} / {totalCapacity}
                 </span>
                 <Badge variant={isCritical ? "destructive" : "secondary"}>
                   {Math.round(occupancyPercentage)}%
@@ -169,13 +172,8 @@ export function WarehouseCard({
             <div className="flex items-center gap-1.5">
               <HugeiconsIcon className="size-4" icon={Package} />
               <span>
-                {warehouse.racks.length}{" "}
-                {pluralize(
-                  warehouse.racks.length,
-                  "regał",
-                  "regały",
-                  "regałów"
-                )}
+                {warehouse.racksCount}{" "}
+                {pluralize(warehouse.racksCount, "regał", "regały", "regałów")}
               </span>
             </div>
           </div>

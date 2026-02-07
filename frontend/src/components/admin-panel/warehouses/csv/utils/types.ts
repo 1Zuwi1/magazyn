@@ -10,7 +10,6 @@ export type RackCsvData = z.infer<typeof RackCsvSchema>
 
 export interface RackFormData {
   marker: string
-  name: string
   rows: number
   cols: number
   minTemp: number

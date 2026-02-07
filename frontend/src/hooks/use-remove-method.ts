@@ -1,10 +1,13 @@
 import { apiFetch } from "@/lib/fetcher"
-import { TFARemoveMethodSchema, type TwoFactorMethod } from "@/lib/schemas"
+import {
+  type RemovableTwoFactorMethod,
+  TFARemoveMethodSchema,
+} from "@/lib/schemas"
 import { useApiMutation } from "./use-api-mutation"
 
 export default function useRemoveMethod() {
   return useApiMutation({
-    mutationFn: (method: TwoFactorMethod) =>
+    mutationFn: (method: RemovableTwoFactorMethod) =>
       apiFetch("/api/2fa/methods", TFARemoveMethodSchema, {
         method: "DELETE",
         body: { method },

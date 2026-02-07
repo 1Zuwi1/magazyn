@@ -1,6 +1,12 @@
 import type { UseQueryResult } from "@tanstack/react-query"
-import { apiFetch, type FetchError, type InferApiOutput } from "@/lib/fetcher"
-import { RackDetailsSchema, RacksSchema } from "@/lib/schemas"
+import {
+  apiFetch,
+  type FetchError,
+  type InferApiInput,
+  type InferApiOutput,
+} from "@/lib/fetcher"
+import { DeleteRackSchema, RackDetailsSchema, RacksSchema } from "@/lib/schemas"
+import { useApiMutation } from "./use-api-mutation"
 import { useApiQuery } from "./use-api-query"
 
 const Racks_QUERY_KEY = ["Racks"] as const
@@ -77,6 +83,53 @@ export default function useRacks(
           size,
         },
       })
+    },
+  })
+}
+
+export function useCreateRack() {
+  return useApiMutation({
+    mutationFn: (data: InferApiInput<typeof RackDetailsSchema, "POST">) =>
+      apiFetch("/api/racks", RackDetailsSchema, {
+        method: "POST",
+        body: data,
+      }),
+    onSuccess: (_, __, ___, context) => {
+      // Invalidate racks list queries to refetch updated data after creating a rack
+      context.client.invalidateQueries({ queryKey: Racks_QUERY_KEY })
+    },
+  })
+}
+
+export function useDeleteRack() {
+  return useApiMutation({
+    mutationFn: (rackId: number) =>
+      apiFetch(`/api/racks/${rackId}`, DeleteRackSchema, {
+        method: "DELETE",
+      }),
+    onSuccess: (_, __, ___, context) => {
+      // Invalidate racks list queries to refetch updated data after deleting a rack
+      context.client.invalidateQueries({ queryKey: Racks_QUERY_KEY })
+    },
+  })
+}
+
+export function useUpdateRack() {
+  return useApiMutation({
+    mutationFn: ({
+      rackId,
+      data,
+    }: {
+      rackId: number
+      data: InferApiInput<typeof RackDetailsSchema, "PUT">
+    }) =>
+      apiFetch(`/api/racks/${rackId}`, RackDetailsSchema, {
+        method: "PUT",
+        body: data,
+      }),
+    onSuccess: (_, __, ___, context) => {
+      // Invalidate racks list queries to refetch updated data after updating a rack
+      context.client.invalidateQueries({ queryKey: Racks_QUERY_KEY })
     },
   })
 }

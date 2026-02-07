@@ -1,11 +1,24 @@
 "use client"
 
-import { Add01Icon, Package, WarehouseIcon } from "@hugeicons/core-free-icons"
+import {
+  Add01Icon,
+  Alert02Icon,
+  Package,
+  WarehouseIcon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { type ReactNode, useEffect, useMemo, useState } from "react"
+
+import { type ReactNode, useState } from "react"
+
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { Button } from "@/components/ui/button"
-import useWarehouses, { type WarehousesList } from "@/hooks/use-warehouses"
+import { Skeleton } from "@/components/ui/skeleton"
+import useWarehouses, {
+  useCreateWarehouse,
+  useDeleteWarehouse,
+  useUpdateWarehouse,
+  type WarehousesList,
+} from "@/hooks/use-warehouses"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../lib/constants"
 import { WarehouseCard } from "./components/warehouse-card"
@@ -18,121 +31,130 @@ const WAREHOUSES_SUMMARY_PAGE_SIZE = 1000
 
 type ApiWarehouse = WarehousesList["content"][number]
 
-interface WarehouseCardModel {
-  id: string
-  name: string
-  capacity: number
-  used: number
-  racks: unknown[]
-}
-
-const mapApiWarehouseToCardModel = (
-  warehouse: ApiWarehouse
-): WarehouseCardModel => {
-  const racks: unknown[] = []
-  racks.length = warehouse.racksCount
-
-  return {
-    id: String(warehouse.id),
-    name: warehouse.name,
-    capacity: warehouse.occupiedSlots + warehouse.freeSlots,
-    used: warehouse.occupiedSlots,
-    racks,
-  }
-}
-
 export default function WarehousesMain() {
   const {
     data: warehousesData,
     isPending: isWarehousesPending,
     isError: isWarehousesError,
   } = useWarehouses({ page: 0, size: WAREHOUSES_SUMMARY_PAGE_SIZE })
-  const apiWarehouses = warehousesData?.content ?? []
-  const mappedWarehouses = useMemo(
-    () => apiWarehouses.map(mapApiWarehouseToCardModel),
-    [apiWarehouses]
-  )
-  const [warehouses, setWarehouses] =
-    useState<WarehouseCardModel[]>(mappedWarehouses)
+  const warehouses = warehousesData?.content ?? []
+  const createWarehouseMutation = useCreateWarehouse()
+  const updateWarehouseMutation = useUpdateWarehouse()
+  const deleteWarehouseMutation = useDeleteWarehouse()
   const [open, setOpen] = useState(false)
-  const [selectedWarehouse, setSelectedWarehouse] = useState<
-    WarehouseCardModel | undefined
-  >(undefined)
+  const [selectedWarehouse, setSelectedWarehouse] = useState<ApiWarehouse>()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [warehouseToDelete, setWarehouseToDelete] = useState<
-    WarehouseCardModel | undefined
-  >(undefined)
-
-  useEffect(() => {
-    setWarehouses(mappedWarehouses)
-  }, [mappedWarehouses])
+  const [warehouseToDelete, setWarehouseToDelete] = useState<ApiWarehouse>()
 
   const handleAddWarehouse = () => {
     setSelectedWarehouse(undefined)
     setOpen(true)
   }
-
-  const handleEditWarehouse = (warehouse: WarehouseCardModel) => {
+  const handleEditWarehouse = (warehouse: ApiWarehouse) => {
     setSelectedWarehouse(warehouse)
     setOpen(true)
   }
 
-  const handleDeleteWarehouse = (warehouse: WarehouseCardModel) => {
+  const handleDeleteWarehouse = (warehouse: ApiWarehouse) => {
     setWarehouseToDelete(warehouse)
     setDeleteDialogOpen(true)
   }
 
-  const confirmDeleteWarehouse = () => {
-    if (warehouseToDelete) {
-      setWarehouses((prev) => prev.filter((w) => w.id !== warehouseToDelete.id))
-      setWarehouseToDelete(undefined)
+  const confirmDeleteWarehouse = async () => {
+    if (!warehouseToDelete) {
+      return
     }
+
+    await deleteWarehouseMutation.mutateAsync(warehouseToDelete.id)
+    setWarehouseToDelete(undefined)
   }
 
-  const handleSubmit = (data: WarehouseFormData) => {
+  const handleSubmit = async (data: WarehouseFormData) => {
     if (selectedWarehouse) {
-      setWarehouses((prev) =>
-        prev.map((w) => (w.id === data.id ? { ...w, name: data.name } : w))
-      )
-    } else {
-      const newWarehouse: WarehouseCardModel = {
-        id: data.id,
+      await updateWarehouseMutation.mutateAsync({
+        warehouseId: selectedWarehouse.id,
         name: data.name,
-        capacity: 0,
-        used: 0,
-        racks: [],
-      }
-      setWarehouses((prev) => [...prev, newWarehouse])
+      })
+    } else {
+      await createWarehouseMutation.mutateAsync(data.name)
     }
+
+    setSelectedWarehouse(undefined)
   }
 
-  const totalWarehouses = warehousesData?.totalElements ?? warehouses.length
-  const totalCapacity = apiWarehouses.reduce(
-    (acc, warehouse) => acc + warehouse.occupiedSlots + warehouse.freeSlots,
-    0
-  )
-  const totalUsed = apiWarehouses.reduce(
-    (acc, warehouse) => acc + warehouse.occupiedSlots,
-    0
-  )
-  const totalRacks = apiWarehouses.reduce(
-    (acc, warehouse) => acc + warehouse.racksCount,
-    0
-  )
+  const totalWarehouses =
+    warehousesData?.summary.totalWarehouses ??
+    warehousesData?.totalElements ??
+    warehouses.length
+  const totalCapacity =
+    warehousesData?.summary.totalCapacity ??
+    warehouses.reduce(
+      (acc, warehouse) => acc + warehouse.occupiedSlots + warehouse.freeSlots,
+      0
+    )
+  const totalUsed =
+    warehousesData?.summary.occupiedSlots ??
+    warehouses.reduce((acc, warehouse) => acc + warehouse.occupiedSlots, 0)
+  const totalRacks =
+    warehousesData?.summary.totalRacks ??
+    warehouses.reduce((acc, warehouse) => acc + warehouse.racksCount, 0)
   let warehousesContent: ReactNode
 
   if (isWarehousesPending) {
     warehousesContent = (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/20 py-16">
-        <p className="font-medium text-foreground">Ładowanie magazynów...</p>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            className="overflow-hidden rounded-xl border bg-card"
+            key={i}
+            style={{ animationDelay: `${i * 75}ms` }}
+          >
+            <div className="space-y-4 p-5">
+              <div className="flex items-start gap-3">
+                <Skeleton className="size-10 rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-28" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+                <Skeleton className="h-2 w-full rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <div className="border-t p-5">
+              <Skeleton className="h-10 w-full rounded-lg" />
+            </div>
+          </div>
+        ))}
       </div>
     )
   } else if (isWarehousesError) {
     warehousesContent = (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/20 py-16">
-        <p className="font-medium text-foreground">
-          Nie udało się pobrać magazynów.
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-destructive/5 py-16">
+        <div className="flex size-14 items-center justify-center rounded-full bg-destructive/10">
+          <HugeiconsIcon
+            className="size-7 text-destructive"
+            icon={Alert02Icon}
+          />
+        </div>
+        <p className="mt-4 font-medium text-foreground">
+          Nie udało się pobrać magazynów
         </p>
+        <p className="mt-1 text-muted-foreground text-sm">
+          Wystąpił problem podczas ładowania danych. Spróbuj odświeżyć stronę.
+        </p>
+        <Button
+          className="mt-4"
+          onClick={() => window.location.reload()}
+          variant="outline"
+        >
+          Spróbuj ponownie
+        </Button>
       </div>
     )
   } else if (warehouses.length === 0) {
@@ -222,7 +244,7 @@ export default function WarehousesMain() {
       <WarehouseDialog
         currentRow={
           selectedWarehouse
-            ? { id: selectedWarehouse.id, name: selectedWarehouse.name }
+            ? { id: String(selectedWarehouse.id), name: selectedWarehouse.name }
             : undefined
         }
         formId="warehouse-form"

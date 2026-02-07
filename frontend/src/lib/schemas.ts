@@ -6,6 +6,7 @@ const txtEncoder = new TextEncoder()
 
 export const TFAMethods = z.enum(["AUTHENTICATOR", "EMAIL", "PASSKEYS"])
 export type TwoFactorMethod = z.infer<typeof TFAMethods>
+export type RemovableTwoFactorMethod = Exclude<TwoFactorMethod, "EMAIL">
 
 export const ResendMethods = TFAMethods.exclude(["AUTHENTICATOR", "PASSKEYS"])
 export type ResendType = z.infer<typeof ResendMethods>
@@ -506,9 +507,9 @@ export const WarehouseDetailsSchema = createApiSchema({
 export const CreateWarehouseSchema = createApiSchema({
   POST: {
     input: z.object({
-      name: z.string().min(1),
+      name: z.string().trim().min(3).max(100),
     }),
-    output: WarehouseDetailsSchema,
+    output: WarehouseSchema,
   },
 })
 
@@ -521,9 +522,9 @@ export const DeleteWarehouseSchema = createApiSchema({
 export const UpdateWarehouseSchema = createApiSchema({
   PUT: {
     input: z.object({
-      name: z.string().min(1),
+      name: z.string().trim().min(3).max(100),
     }),
-    output: WarehouseDetailsSchema,
+    output: WarehouseSchema,
   },
 })
 
@@ -607,6 +608,20 @@ export const RacksSchema = createApiSchema({
 export const RackDetailsSchema = createApiSchema({
   GET: {
     output: RackSchema,
+  },
+  POST: {
+    input: RackSchema,
+    output: RackSchema,
+  },
+  PUT: {
+    input: RackSchema,
+    output: RackSchema,
+  },
+})
+
+export const DeleteRackSchema = createApiSchema({
+  DELETE: {
+    output: z.null(),
   },
 })
 

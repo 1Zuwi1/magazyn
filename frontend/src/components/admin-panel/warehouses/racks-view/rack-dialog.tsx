@@ -15,7 +15,7 @@ interface RackDialogProps {
   currentRow?: Rack
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: RackFormData) => void
+  onSubmit: (data: RackFormData) => Promise<void>
 }
 
 export function RackDialog({
@@ -29,10 +29,9 @@ export function RackDialog({
 
   const form = useForm({
     defaultValues: formValues,
-    onSubmit: ({ value }) => {
-      onSubmit({
+    onSubmit: async ({ value }) => {
+      await onSubmit({
         marker: value.marker,
-        name: value.name,
         rows: value.rows || 1,
         cols: value.cols || 1,
         minTemp: value.minTemp || 0,
@@ -71,18 +70,6 @@ export function RackDialog({
         }}
       >
         <FieldGroup className="gap-4">
-          <form.Field name="name">
-            {(field) => (
-              <FieldWithState
-                autoComplete="off"
-                field={field}
-                label="Nazwa"
-                layout="grid"
-                placeholder="Regał A1"
-              />
-            )}
-          </form.Field>
-
           <form.Field name="marker">
             {(field) => (
               <FieldWithState

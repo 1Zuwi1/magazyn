@@ -15,7 +15,7 @@ interface WarehouseDialogProps {
   currentRow?: WarehouseFormData
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: WarehouseFormData) => void
+  onSubmit: (data: WarehouseFormData) => Promise<void>
   formId: string
 }
 
@@ -30,9 +30,9 @@ export function WarehouseDialog({
 
   const form = useForm({
     defaultValues: isEdit ? { name: currentRow.name } : { name: "" },
-    onSubmit: ({ value }) => {
+    onSubmit: async ({ value }) => {
       const id = isEdit ? currentRow.id : `warehouse-${Date.now()}`
-      onSubmit({ id, name: value.name })
+      await onSubmit({ id, name: value.name })
       form.reset()
       onOpenChange(false)
     },
