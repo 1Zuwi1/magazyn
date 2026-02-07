@@ -18,6 +18,8 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     Page<Item> findAll(Pageable pageable);
 
+    Page<Item> findByDangerousTrue(Pageable pageable);
+
     /**
      * Finds items with embeddings that are most similar to the provided vector.
      * Uses PostgreSQL pgvector's cosine distance operator (the {@code <=>} operator).
@@ -69,4 +71,5 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     List<ItemSimilarityProjection> findMostSimilarExcluding(@Param("embedding") String embedding,
                                                             @Param("excludedIds") List<Long> excludedIds,
                                                             @Param("limit") int limit);
+
 }

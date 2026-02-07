@@ -231,7 +231,10 @@ public class InboundService {
         List<Assortment> newAssortments = new ArrayList<>();
         List<PositionReservation> reservationsToDelete = new ArrayList<>();
         Timestamp createdAt = Timestamp.from(Instant.now());
-        Timestamp expiresAt = calculateExpiresAt(item.getExpireAfterDays(), createdAt.toInstant());
+        Timestamp expiresAt = null;
+        if (item.getExpireAfterDays() != null) {
+            expiresAt = calculateExpiresAt(item.getExpireAfterDays(), createdAt.toInstant());
+        }
 
         barcodeService.ensureItemCode(item);
 

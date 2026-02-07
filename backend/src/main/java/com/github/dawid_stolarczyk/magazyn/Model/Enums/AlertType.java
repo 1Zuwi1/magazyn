@@ -12,7 +12,9 @@ public enum AlertType {
     TEMPERATURE_TOO_LOW("Temperatura poniżej minimalnej dopuszczalnej"),
     LOW_VISUAL_SIMILARITY("Niski wynik podobieństwa wizualnego - produkt może być błędnie zidentyfikowany"),
     ITEM_TEMPERATURE_TOO_HIGH("Temperatura regału przekracza maksymalną tolerancję przedmiotu"),
-    ITEM_TEMPERATURE_TOO_LOW("Temperatura regału poniżej minimalnej tolerancji przedmiotu");
+    ITEM_TEMPERATURE_TOO_LOW("Temperatura regału poniżej minimalnej tolerancji przedmiotu"),
+    EMBEDDING_GENERATION_COMPLETED("Zakończono generowanie embeddingów dla produktów"),
+    EMBEDDING_GENERATION_FAILED("Błąd podczas generowania embeddingów dla produktów");
 
     private final String description;
 

@@ -35,7 +35,7 @@ public class UserNotificationController {
             description = "Returns all notifications assigned to the logged-in user with pagination")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedUserNotificationsResponse.class)))
     })
     @GetMapping
     public ResponseEntity<ResponseTemplate<PagedResponse<UserNotificationDto>>> getMyNotifications(
@@ -51,7 +51,7 @@ public class UserNotificationController {
             description = "Returns only unread notifications for the logged-in user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedUserNotificationsResponse.class)))
     })
     @GetMapping("/unread")
     public ResponseEntity<ResponseTemplate<PagedResponse<UserNotificationDto>>> getMyUnreadNotifications(

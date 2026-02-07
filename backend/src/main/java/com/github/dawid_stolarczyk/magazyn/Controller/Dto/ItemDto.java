@@ -46,7 +46,7 @@ public class ItemDto {
     private String comment;
 
     @Schema(description = "Days until expiration", example = "30")
-    private long expireAfterDays;
+    private Long expireAfterDays;
 
     @Schema(description = "Whether the item is dangerous", example = "false")
     private boolean isDangerous;

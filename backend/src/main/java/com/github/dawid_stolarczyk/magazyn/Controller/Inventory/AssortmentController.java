@@ -36,7 +36,7 @@ public class AssortmentController {
     @Operation(summary = "Get all assortments with pagination")
     @ApiResponse(responseCode = "200", description = "Success",
             content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = PagedResponse.class)))
+                    schema = @Schema(implementation = ResponseTemplate.PagedAssortmentsResponse.class)))
     @GetMapping
     public ResponseEntity<ResponseTemplate<PagedResponse<AssortmentDto>>> getAllAssortments(
             HttpServletRequest request,

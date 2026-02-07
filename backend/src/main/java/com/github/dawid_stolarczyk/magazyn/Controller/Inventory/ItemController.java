@@ -44,18 +44,20 @@ public class ItemController {
     @Operation(summary = "Get all items with pagination")
     @ApiResponse(responseCode = "200", description = "Success",
             content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = PagedResponse.class)))
+                    schema = @Schema(implementation = ResponseTemplate.PagedItemsResponse.class)))
     @GetMapping
     public ResponseEntity<ResponseTemplate<PagedResponse<ItemDto>>> getAllItems(
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir,
+            @Parameter(description = "Filter by dangerous") @RequestParam(defaultValue = "false") boolean isDangerousOnly,
+            @Parameter(description = "Filter by closeToExpiryOnly") @RequestParam(defaultValue = "false") boolean closeToExpiryOnly) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(itemService.getAllItemsPaged(request, pageable))));
+                PagedResponse.from(itemService.getAllItemsPaged(request, pageable, isDangerousOnly, closeToExpiryOnly))));
     }
 
     @Operation(summary = "Get item by ID")
@@ -462,28 +464,29 @@ public class ItemController {
     @Operation(
             summary = "Generate embeddings for items without embeddings (ADMIN only)",
             description = """
-                    Batch generates image embeddings for all items that have photos but no embeddings.
-                    This is useful after migration or when adding the visual identification feature
-                    to an existing system.
-                    
-                    **Warning:** This operation can be time-consuming for large datasets.
-                    It processes items sequentially to avoid overloading the AI model.
-                    
+                    Batch generates image embeddings for all items with photos.
+                    This operation runs asynchronously in the background.
+                    Check server logs for progress and completion status.
+
+                    **forceRegenerate parameter:**
+                    - `false` (default): Only generate embeddings for items that don't have them yet
+                    - `true`: Regenerate embeddings for ALL items with photos (useful after model updates)
+
                     **Process:**
-                    1. Finds all items with photo_url but imageEmbedding == null
+                    1. Finds all items with photo_url (filtered by forceRegenerate flag)
                     2. Downloads each photo from S3
-                    3. Generates embedding using the AI model
+                    3. Generates embedding using the AI model with background removal
                     4. Saves embedding to database
-                    
-                    Returns statistics about the generation process.
+
+                    Returns 202 Accepted immediately. The operation continues in the background.
                     """
     )
     @ApiResponses(value = {
             @ApiResponse(
-                    responseCode = "200",
-                    description = "Embedding generation completed (check report for details)",
+                    responseCode = "202",
+                    description = "Embedding generation started in background",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ItemEmbeddingGenerationService.EmbeddingGenerationReport.class))
+                            schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))
             ),
             @ApiResponse(
                     responseCode = "403",
@@ -493,18 +496,11 @@ public class ItemController {
     })
     @PostMapping("/generate-embeddings")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<ItemEmbeddingGenerationService.EmbeddingGenerationReport>> generateEmbeddings(
+    public ResponseEntity<ResponseTemplate<Void>> generateEmbeddings(
             @RequestParam(defaultValue = "false") boolean forceRegenerate) {
-        try {
-            log.info("Admin requested batch embedding generation (forceRegenerate={})", forceRegenerate);
-            ItemEmbeddingGenerationService.EmbeddingGenerationReport report =
-                    embeddingGenerationService.generateEmbeddings(forceRegenerate);
-            return ResponseEntity.ok(ResponseTemplate.success(report));
-        } catch (Exception e) {
-            log.error("Error during batch embedding generation", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ResponseTemplate.error("EMBEDDING_GENERATION_FAILED: " + e.getMessage()));
-        }
+        log.info("Admin requested batch embedding generation (forceRegenerate={}) - starting async task", forceRegenerate);
+        embeddingGenerationService.generateEmbeddingsAsync(forceRegenerate);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ResponseTemplate.success());
     }
 
     private User resolveCurrentUser() {

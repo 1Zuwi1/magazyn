@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +25,6 @@ import java.io.*;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -39,17 +39,22 @@ public class ItemService {
     private final Bucket4jRateLimiter rateLimiter;
     private final ImageEmbeddingService imageEmbeddingService;
 
-    public List<ItemDto> getAllItems(HttpServletRequest request) {
+    public Page<ItemDto> getAllItemsPaged(HttpServletRequest request, Pageable pageable, boolean onlyDangerous, boolean closeToExpiryOnly) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        return itemRepository.findAll().stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
-    }
-
-    public Page<ItemDto> getAllItemsPaged(HttpServletRequest request, Pageable pageable) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        return itemRepository.findAll(pageable)
-                .map(this::mapToDto);
+        Page<ItemDto> itemsPage = itemRepository.findAll(pageable).map(this::mapToDto);
+        if (onlyDangerous) {
+            itemsPage = itemRepository.findByDangerousTrue(pageable).map(this::mapToDto);
+        }
+        if (closeToExpiryOnly) {
+            itemsPage = new PageImpl<>(
+                    itemsPage.getContent().stream()
+                            .filter(dto -> dto.getExpireAfterDays() != null && dto.getExpireAfterDays() <= 30)
+                            .toList(),
+                    pageable,
+                    itemsPage.getTotalElements()
+            );
+        }
+        return itemsPage;
     }
 
     public ItemDto getItemById(Long id, HttpServletRequest request) {
@@ -82,10 +87,11 @@ public class ItemService {
     public void createItemInternal(ItemDto dto) {
         Item item = new Item();
         updateItemFromDto(item, dto);
-        if (dto.getCode() != null && !dto.getCode().isBlank()) {
+        if (dto.getCode() != null && !dto.getCode().isBlank() && barcodeService.checkUniqueItemCode(dto.getCode())) {
             item.setCode(dto.getCode());
+        } else {
+            item.setCode(barcodeService.generateUniqueItemCode());
         }
-        item.setCode(barcodeService.generateUniqueItemCode());
         mapToDto(itemRepository.save(item));
     }
 
@@ -258,10 +264,7 @@ public class ItemService {
         item.setComment(request.getComment());
         item.setExpireAfterDays(request.getExpireAfterDays());
         item.setDangerous(request.isDangerous());
-        // Name is optional - only set if provided
-        if (request.getName() != null && !request.getName().isBlank()) {
-            item.setName(request.getName());
-        }
+        item.setName(request.getName());
     }
 
     private void updateItemFromRequest(Item item, ItemUpdateRequest request) {
@@ -274,10 +277,7 @@ public class ItemService {
         item.setComment(request.getComment());
         item.setExpireAfterDays(request.getExpireAfterDays());
         item.setDangerous(request.isDangerous());
-        // Name is optional - only update if provided
-        if (request.getName() != null && !request.getName().isBlank()) {
-            item.setName(request.getName());
-        }
+        item.setName(request.getName());
     }
 
     /**

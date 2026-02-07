@@ -281,6 +281,8 @@ public class RackReportService {
             case ITEM_TEMPERATURE_TOO_HIGH, ITEM_TEMPERATURE_TOO_LOW -> String.format(
                     "%s - Temperatura regału (%.1f°C) poza zakresem tolerancji przedmiotu",
                     rackInfo, actual);
+            case EMBEDDING_GENERATION_COMPLETED, EMBEDDING_GENERATION_FAILED ->
+                    throw new IllegalArgumentException("System alert types should not be used in rack reports");
         };
     }
 

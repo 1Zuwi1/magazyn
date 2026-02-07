@@ -44,11 +44,12 @@ public class WarehouseController {
             @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir,
-            @Parameter(description = "Filter by warehouse name containing this string", example = "Central") @RequestParam(required = false) String nameFilter) {
+            @Parameter(description = "Filter by warehouse name containing this string", example = "Central") @RequestParam(required = false) String nameFilter,
+            @RequestParam(required = false) Integer percentOfFreeSlots) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
-                warehouseService.getAllWarehousesPaged(request, pageable, nameFilter)));
+                warehouseService.getAllWarehousesPaged(request, pageable, nameFilter, percentOfFreeSlots)));
     }
 
     @Operation(summary = "Get warehouse by ID",
@@ -104,7 +105,7 @@ public class WarehouseController {
 
     @Operation(summary = "Get racks by warehouse ID with pagination")
     @ApiResponse(responseCode = "200", description = "Success",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedRacksResponse.class)))
     @GetMapping("/{warehouseId}/racks")
     public ResponseEntity<ResponseTemplate<PagedResponse<RackDto>>> getRacksByWarehouse(
             @PathVariable Long warehouseId,
@@ -123,7 +124,7 @@ public class WarehouseController {
             description = "Returns paginated list of all assortments (items) stored in a specific warehouse, including full item details")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAssortmentsWithItemResponse.class))),
             @ApiResponse(responseCode = "400", description = "Error codes: WAREHOUSE_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })

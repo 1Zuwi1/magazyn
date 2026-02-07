@@ -4,27 +4,30 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemImportError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemImportReport;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.ItemService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class ItemImportService extends AbstractImportService<ItemDto, ItemImportReport, ItemImportError> {
     // Format CSV (stała kolejność kolumn, BEZ nagłówka):
-    // Nazwa;TempMin;TempMax;Waga;SzerokoscMm;WysokoscMm;GlebokoscMm;TerminWaznosciDni;CzyNiebezpieczny;Komentarz
-    private static final int COL_ID = 0;
-    private static final int COL_NAZWA = 1;
-    private static final int COL_TEMP_MIN = 2;
-    private static final int COL_TEMP_MAX = 3;
-    private static final int COL_WAGA = 4;
-    private static final int COL_SZEROKOSC_MM = 5;
-    private static final int COL_WYSOKOSC_MM = 6;
-    private static final int COL_GLEBOKOSC_MM = 7;
-    private static final int COL_TERMIN_WAZNOSCI_DNI = 8;
-    private static final int COL_CZY_NIEBEZPIECZNY = 9;
-    private static final int COL_KOMENTARZ = 10;
-    private static final int MIN_COLUMNS = 8;
+    // Nazwa;Id;Zdjecie;TempMin;TempMax;Waga;SzerokoscMm;WysokoscMm;GlebokoscMm;Komentarz;TerminWaznosciDni;CzyNiebezpieczny;
+    private static final int COL_NAZWA = 0;
+    private static final int COL_ID = 1;
+    private static final int COL_ZDJECIE = 2;
+    private static final int COL_TEMP_MIN = 3;
+    private static final int COL_TEMP_MAX = 4;
+    private static final int COL_WAGA = 5;
+    private static final int COL_SZEROKOSC_MM = 6;
+    private static final int COL_WYSOKOSC_MM = 7;
+    private static final int COL_GLEBOKOSC_MM = 8;
+    private static final int COL_KOMENTARZ = 9;
+    private static final int COL_TERMIN_WAZNOSCI_DNI = 10;
+    private static final int COL_CZY_NIEBEZPIECZNY = 11;
+    private static final int MIN_COLUMNS = 12;
 
     private final ItemService itemService;
 
@@ -44,7 +47,7 @@ public class ItemImportService extends AbstractImportService<ItemDto, ItemImport
 
     @Override
     protected ItemDto mapToDto(String[] columns, Map<String, Integer> headerIndex) {
-        if (columns.length < MIN_COLUMNS) {
+        if (columns.length != MIN_COLUMNS) {
             throw new IllegalArgumentException("INSUFFICIENT_COLUMNS: Expected at least " + MIN_COLUMNS + ", got " + columns.length);
         }
 
@@ -56,25 +59,30 @@ public class ItemImportService extends AbstractImportService<ItemDto, ItemImport
 
             // 1. Obsługa QR Code
             if (idCode.startsWith("QR-")) {
+                log.info("Detected QR code format for ID: {}", idCode);
                 code = idCode;
             }
 
             // 2. GS1-128 z prefiksem 01 (razem 16 znaków)
             else if (idCode.length() == 16 && idCode.startsWith("01")) {
+                log.info("Detected GS1-128 format for ID: {}", idCode);
                 code = idCode.substring(2);
             }
 
             // 3. Czysty GTIN-14
             else if (idCode.matches("\\d{14}")) {
+                log.info("Detected GTIN-14 format for ID: {}", idCode);
                 code = idCode;
             }
 
             // 4. Obsługa EAN-13 (opcjonalnie)
             else if (idCode.matches("\\d{13}")) {
+                log.info("Detected EAN-13 format for ID: {}", idCode);
                 code = "0" + idCode;
             }
 
             if (!code.isBlank()) {
+                log.info("Parsed code '{}' from raw ID '{}'", code, idCode);
                 dto.setCode(code);
             }
         }
@@ -95,30 +103,22 @@ public class ItemImportService extends AbstractImportService<ItemDto, ItemImport
         dto.setSizeZ(parseFloat(getColumn(columns, COL_GLEBOKOSC_MM), "INVALID_SIZE_Z"));
 
         // Termin ważności w dniach (OPCJONALNE)
-        if (columns.length > COL_TERMIN_WAZNOSCI_DNI) {
-            String expireRaw = getColumn(columns, COL_TERMIN_WAZNOSCI_DNI);
-            if (!expireRaw.isEmpty()) {
-                dto.setExpireAfterDays(parseLong(expireRaw, "INVALID_EXPIRE_DAYS"));
-            }
+        String expireRaw = getColumn(columns, COL_TERMIN_WAZNOSCI_DNI);
+        if (!expireRaw.isEmpty()) {
+            dto.setExpireAfterDays(parseLong(expireRaw, "INVALID_EXPIRE_DAYS"));
         }
 
         // Czy niebezpieczny TRUE/FALSE (OPCJONALNE, domyślnie FALSE)
-        if (columns.length > COL_CZY_NIEBEZPIECZNY) {
-            String dangerousRaw = getColumn(columns, COL_CZY_NIEBEZPIECZNY);
-            if (!dangerousRaw.isEmpty()) {
-                dto.setDangerous(parseBoolean(dangerousRaw));
-            } else {
-                dto.setDangerous(false);
-            }
+        String dangerousRaw = getColumn(columns, COL_CZY_NIEBEZPIECZNY);
+        if (!dangerousRaw.isEmpty()) {
+            dto.setDangerous(parseBoolean(dangerousRaw));
         } else {
             dto.setDangerous(false);
         }
 
         // Komentarz (OPCJONALNE)
-        if (columns.length > COL_KOMENTARZ) {
-            String comment = emptyToNull(getColumn(columns, COL_KOMENTARZ));
-            dto.setComment(comment);
-        }
+        String comment = emptyToNull(getColumn(columns, COL_KOMENTARZ));
+        dto.setComment(comment);
 
         return dto;
     }
