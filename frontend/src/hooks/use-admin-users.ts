@@ -34,20 +34,8 @@ export type ChangeAdminUserEmailInput = InferApiInput<
   "PATCH"
 >
 
-interface AdminUsersListParams {
-  page?: number
-  size?: number
-  sortBy?: string
-  sortDir?: "asc" | "desc"
-}
-
 export default function useAdminUsers(
-  {
-    page = 0,
-    size = 20,
-    sortBy = "id",
-    sortDir = "asc",
-  }: AdminUsersListParams = {
+  params: InferApiInput<typeof AdminUsersSchema, "GET"> = {
     page: 0,
     size: 20,
     sortBy: "id",
@@ -55,49 +43,37 @@ export default function useAdminUsers(
   }
 ): UseQueryResult<AdminUsersList, FetchError> {
   return useApiQuery({
-    queryKey: [...ADMIN_USERS_QUERY_KEY, { page, size, sortBy, sortDir }],
-    queryFn: async () => {
-      return await apiFetch("/api/users", AdminUsersSchema, {
-        queryParams: {
-          page,
-          size,
-          sortBy,
-          sortDir,
-        },
-      })
-    },
+    queryKey: [...ADMIN_USERS_QUERY_KEY, params],
+    queryFn: () =>
+      apiFetch("/api/users", AdminUsersSchema, {
+        queryParams: params,
+      }),
   })
 }
 
 export function useAdminUserTeams() {
   return useApiQuery({
     queryKey: ADMIN_USER_TEAMS_QUERY_KEY,
-    queryFn: async () => {
-      return await apiFetch("/api/users/teams", AdminUserTeamsSchema, {
+    queryFn: () =>
+      apiFetch("/api/users/teams", AdminUserTeamsSchema, {
         method: "GET",
-      })
-    },
+      }),
   })
 }
 
 export function useUpdateAdminUserProfile() {
   return useApiMutation({
-    mutationFn: async ({
+    mutationFn: ({
       userId,
       body,
     }: {
       userId: number
       body: UpdateAdminUserProfileInput
-    }) => {
-      return await apiFetch(
-        `/api/users/${userId}/profile`,
-        AdminUpdateUserProfileSchema,
-        {
-          method: "PATCH",
-          body,
-        }
-      )
-    },
+    }) =>
+      apiFetch(`/api/users/${userId}/profile`, AdminUpdateUserProfileSchema, {
+        method: "PATCH",
+        body,
+      }),
     onSuccess: (_, __, ___, context) => {
       context.client.invalidateQueries({
         queryKey: ADMIN_USERS_QUERY_KEY,
@@ -111,22 +87,17 @@ export function useUpdateAdminUserProfile() {
 
 export function useChangeAdminUserEmail() {
   return useApiMutation({
-    mutationFn: async ({
+    mutationFn: ({
       userId,
       body,
     }: {
       userId: number
       body: ChangeAdminUserEmailInput
-    }) => {
-      return await apiFetch(
-        `/api/users/${userId}/email`,
-        AdminChangeUserEmailSchema,
-        {
-          method: "PATCH",
-          body,
-        }
-      )
-    },
+    }) =>
+      apiFetch(`/api/users/${userId}/email`, AdminChangeUserEmailSchema, {
+        method: "PATCH",
+        body,
+      }),
     onSuccess: (_, __, ___, context) => {
       context.client.invalidateQueries({
         queryKey: ADMIN_USERS_QUERY_KEY,
@@ -140,11 +111,10 @@ export function useChangeAdminUserEmail() {
 
 export function useDeleteAdminUser() {
   return useApiMutation({
-    mutationFn: async (userId: number) => {
-      return await apiFetch(`/api/users/${userId}`, AdminDeleteUserSchema, {
+    mutationFn: (userId: number) =>
+      apiFetch(`/api/users/${userId}`, AdminDeleteUserSchema, {
         method: "DELETE",
-      })
-    },
+      }),
     onSuccess: (_, __, ___, context) => {
       context.client.invalidateQueries({
         queryKey: ADMIN_USERS_QUERY_KEY,

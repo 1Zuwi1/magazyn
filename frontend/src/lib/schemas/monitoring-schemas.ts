@@ -1,5 +1,6 @@
 import z from "zod"
 import { createApiSchema } from "../create-api-schema"
+import { createPaginatedSchema } from "../schemas"
 
 export const NotificationSchema = z.object({
   id: z.string(),
@@ -31,6 +32,6 @@ export const WeightAlertSchema = z.object({
 
 export const ApiNotificationsSchema = createApiSchema({
   GET: {
-    output: z.array(NotificationSchema),
+    output: createPaginatedSchema(z.any()),
   },
 })

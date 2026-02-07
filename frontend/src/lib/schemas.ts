@@ -314,11 +314,11 @@ type PaginatedInputSchemaObject<
   } & TAdditional
 >
 
-function createPaginatedSchema<TItem extends z.ZodType>(
+export function createPaginatedSchema<TItem extends z.ZodType>(
   itemSchema: TItem
 ): PaginatedSchemaObject<TItem>
 
-function createPaginatedSchema<
+export function createPaginatedSchema<
   TItem extends z.ZodType,
   TAdditional extends z.ZodRawShape,
 >(
@@ -326,7 +326,7 @@ function createPaginatedSchema<
   additionalSchemas: TAdditional
 ): PaginatedSchemaObject<TItem, TAdditional>
 
-function createPaginatedSchema<
+export function createPaginatedSchema<
   TItem extends z.ZodType,
   TAdditional extends z.ZodRawShape = EmptyAdditionalSchemas,
 >(
@@ -353,13 +353,13 @@ function createPaginatedSchema<
   return baseSchema as PaginatedSchemaObject<TItem, TAdditional>
 }
 
-function createPaginatedSchemaInput(): PaginatedInputSchemaObject
+export function createPaginatedSchemaInput(): PaginatedInputSchemaObject
 
-function createPaginatedSchemaInput<TAdditional extends z.ZodRawShape>(
+export function createPaginatedSchemaInput<TAdditional extends z.ZodRawShape>(
   additionalSchemas: TAdditional
 ): PaginatedInputSchemaObject<TAdditional>
 
-function createPaginatedSchemaInput<
+export function createPaginatedSchemaInput<
   TAdditional extends z.ZodRawShape = EmptyAdditionalSchemas,
 >(additionalSchemas?: TAdditional): PaginatedInputSchemaObject<TAdditional> {
   const baseSchema = z.object({
@@ -424,7 +424,11 @@ const TeamOptionSchema = z.object({
 
 export const AdminUsersSchema = createApiSchema({
   GET: {
-    input: createPaginatedSchemaInput(),
+    input: createPaginatedSchemaInput({
+      name: z.string().optional(),
+      email: z.string().optional(),
+      status: UserAccountStatusSchema.optional(),
+    }),
     output: createPaginatedSchema(AdminUserSchema),
   },
 })
