@@ -37,11 +37,67 @@ const NUMBER_FIELDS = new Set([
 ])
 
 const BOOLEAN_FIELDS = new Set(["isDangerous"])
+const COMMENT_PREFIX_REGEX = /^#\s*/
 
 const WAREHOUSE_HEADER_MAP: Record<string, string> = {
   name: "name",
   nazwa: "name",
   warehouse: "name",
+}
+
+const RACK_HEADER_MAP: Record<string, string> = {
+  marker: "marker",
+  oznaczenie: "marker",
+  m: "rows",
+  rows: "rows",
+  n: "cols",
+  cols: "cols",
+  tempmin: "minTemp",
+  mintemp: "minTemp",
+  tempmax: "maxTemp",
+  maxtemp: "maxTemp",
+  maxwagakg: "maxWeight",
+  maxweight: "maxWeight",
+  maxszerokoscmm: "maxItemWidth",
+  maxitemwidth: "maxItemWidth",
+  maxwysokoscmm: "maxItemHeight",
+  maxitemheight: "maxItemHeight",
+  maxglebokoscmm: "maxItemDepth",
+  maxitemdepth: "maxItemDepth",
+  acceptsdangerous: "isDangerous",
+  czyniebezpieczny: "isDangerous",
+  isdangerous: "isDangerous",
+  dangerous: "isDangerous",
+  komentarz: "comment",
+  comment: "comment",
+}
+
+const ITEM_HEADER_MAP: Record<string, string> = {
+  name: "name",
+  nazwa: "name",
+  tempmin: "minTemp",
+  mintemp: "minTemp",
+  tempmax: "maxTemp",
+  maxtemp: "maxTemp",
+  waga: "weight",
+  weight: "weight",
+  szerokoscmm: "width",
+  widthmm: "width",
+  width: "width",
+  wysokoscmm: "height",
+  heightmm: "height",
+  height: "height",
+  glebokoscmm: "depth",
+  depthmm: "depth",
+  depth: "depth",
+  terminwaznoscidni: "daysToExpiry",
+  daystoexpiry: "daysToExpiry",
+  expireafterdays: "daysToExpiry",
+  czyniebezpieczny: "isDangerous",
+  isdangerous: "isDangerous",
+  dangerous: "isDangerous",
+  komentarz: "comment",
+  comment: "comment",
 }
 
 const RACK_FIELD_ORDER = [
@@ -60,6 +116,7 @@ const RACK_FIELD_ORDER = [
 
 const ITEM_FIELD_ORDER = [
   "name",
+  "id",
   "minTemp",
   "maxTemp",
   "weight",
@@ -181,6 +238,220 @@ function mapFixedValuesToFields(
   return mapped
 }
 
+function mapValuesByHeaders(
+  normalizedHeaders: string[],
+  values: string[],
+  headerMap: Record<string, string>
+): Record<string, unknown> {
+  const mapped: Record<string, unknown> = {}
+
+  for (const [headerIndex, header] of normalizedHeaders.entries()) {
+    const field = headerMap[header]
+
+    if (!field) {
+      continue
+    }
+
+    const coercedValue = coerceValue(values[headerIndex] ?? "", field)
+    if (coercedValue !== undefined) {
+      mapped[field] = coercedValue
+    }
+  }
+
+  return mapped
+}
+
+function isCommentedRow(firstValue: string): boolean {
+  return firstValue.startsWith("#")
+}
+
+function extractNormalizedHeaders(values: string[]): string[] {
+  return values.map((header, headerIndex) => {
+    const value =
+      headerIndex === 0 ? header.replace(COMMENT_PREFIX_REGEX, "") : header
+
+    return normalizeHeader(value)
+  })
+}
+
+function hasInvalidColumnCount(
+  values: string[],
+  minColumns: number,
+  maxColumns: number
+): boolean {
+  return values.length < minColumns || values.length > maxColumns
+}
+
+function appendColumnCountError(
+  errors: CsvParseError[],
+  rowNumber: number,
+  valueCount: number,
+  minColumns: number,
+  maxColumns: number
+) {
+  errors.push({
+    row: rowNumber,
+    message: `Nieprawidłowa liczba kolumn: ${valueCount}. Oczekiwano ${minColumns}-${maxColumns}.`,
+  })
+}
+
+function appendValidatedRow<T extends "rack" | "item">(
+  mapped: Record<string, unknown>,
+  rowNumber: number,
+  schema: typeof RackCsvSchema | typeof ItemCsvSchema,
+  validRows: CsvRowType<T>[],
+  errors: CsvParseError[]
+) {
+  const parsed = schema.safeParse(mapped)
+
+  if (parsed.success) {
+    validRows.push(parsed.data as CsvRowType<T>)
+    return
+  }
+
+  appendSchemaIssues(errors, rowNumber, parsed.error.issues)
+}
+
+function getCommentedHeaderRow(
+  values: string[],
+  normalizedHeadersFromFile?: string[]
+): string[] | undefined {
+  const firstValue = values[0] ?? ""
+
+  if (!isCommentedRow(firstValue) || normalizedHeadersFromFile) {
+    return undefined
+  }
+
+  return extractNormalizedHeaders(values)
+}
+
+function appendHeaderMappedFixedRow<T extends "rack" | "item">(
+  values: string[],
+  rowNumber: number,
+  normalizedHeaders: string[],
+  headerMap: Record<string, string>,
+  schema: typeof RackCsvSchema | typeof ItemCsvSchema,
+  validRows: CsvRowType<T>[],
+  rawRows: Record<string, string>[],
+  errors: CsvParseError[]
+) {
+  rawRows.push(buildRawPreviewRow(normalizedHeaders, values))
+  const mapped = mapValuesByHeaders(normalizedHeaders, values, headerMap)
+  appendValidatedRow<T>(mapped, rowNumber, schema, validRows, errors)
+}
+
+function appendPositionalFixedRow<T extends "rack" | "item">(
+  values: string[],
+  rowNumber: number,
+  fieldOrder: readonly string[],
+  minColumns: number,
+  maxColumns: number,
+  previewHeaders: string[],
+  schema: typeof RackCsvSchema | typeof ItemCsvSchema,
+  validRows: CsvRowType<T>[],
+  rawRows: Record<string, string>[],
+  errors: CsvParseError[]
+) {
+  if (hasInvalidColumnCount(values, minColumns, maxColumns)) {
+    appendColumnCountError(
+      errors,
+      rowNumber,
+      values.length,
+      minColumns,
+      maxColumns
+    )
+    return
+  }
+
+  rawRows.push(buildRawPreviewRow(previewHeaders, values))
+  const mapped = mapFixedValuesToFields(fieldOrder, values)
+  appendValidatedRow<T>(mapped, rowNumber, schema, validRows, errors)
+}
+
+function parseFixedRows<T extends "rack" | "item">(
+  rows: unknown[][],
+  {
+    fieldOrder,
+    headerMap,
+    maxColumns,
+    minColumns,
+    previewHeaders,
+    schema,
+  }: {
+    fieldOrder: readonly string[]
+    headerMap: Record<string, string>
+    maxColumns: number
+    minColumns: number
+    previewHeaders: string[]
+    schema: typeof RackCsvSchema | typeof ItemCsvSchema
+  },
+  errors: CsvParseError[]
+): {
+  headers: string[]
+  rawRows: Record<string, string>[]
+  validRows: CsvRowType<T>[]
+} {
+  const rawRows: Record<string, string>[] = []
+  const validRows: CsvRowType<T>[] = []
+  let normalizedHeadersFromFile: string[] | undefined
+
+  for (const [index, row] of rows.entries()) {
+    if (isFixedRowEmpty(row)) {
+      continue
+    }
+
+    const values = row.map((cell) => String(cell ?? "").trim())
+    const firstValue = values[0] ?? ""
+    const rowNumber = index + 1
+    const extractedHeaderRow = getCommentedHeaderRow(
+      values,
+      normalizedHeadersFromFile
+    )
+
+    if (extractedHeaderRow) {
+      normalizedHeadersFromFile = extractedHeaderRow
+      continue
+    }
+
+    if (isCommentedRow(firstValue)) {
+      continue
+    }
+
+    if (normalizedHeadersFromFile) {
+      appendHeaderMappedFixedRow<T>(
+        values,
+        rowNumber,
+        normalizedHeadersFromFile,
+        headerMap,
+        schema,
+        validRows,
+        rawRows,
+        errors
+      )
+      continue
+    }
+
+    appendPositionalFixedRow<T>(
+      values,
+      rowNumber,
+      fieldOrder,
+      minColumns,
+      maxColumns,
+      previewHeaders,
+      schema,
+      validRows,
+      rawRows,
+      errors
+    )
+  }
+
+  return {
+    headers: normalizedHeadersFromFile ?? previewHeaders,
+    rawRows,
+    validRows,
+  }
+}
+
 function appendSchemaIssues(
   errors: CsvParseError[],
   rowNumber: number,
@@ -240,12 +511,14 @@ function parseFixedCsv<T extends "rack" | "item">(
   file: File,
   {
     fieldOrder,
+    headerMap,
     maxColumns,
     minColumns,
     previewHeaders,
     schema,
   }: {
     fieldOrder: readonly string[]
+    headerMap: Record<string, string>
     maxColumns: number
     minColumns: number
     previewHeaders: string[]
@@ -258,46 +531,25 @@ function parseFixedCsv<T extends "rack" | "item">(
     Papa.parse<unknown[]>(file, {
       header: false,
       skipEmptyLines: true,
-      comments: "#",
       encoding: "UTF-8",
       delimiter: DEFAULT_CONFIG.delimiter,
       complete: (results) => {
         appendParserErrors(errors, results.errors, 1)
-
-        const rawRows: Record<string, string>[] = []
-        const validRows: CsvRowType<T>[] = []
-
-        for (const [index, row] of results.data.entries()) {
-          if (isFixedRowEmpty(row)) {
-            continue
-          }
-
-          const values = row.map((cell) => String(cell ?? "").trim())
-          const rowNumber = index + 1
-
-          if (values.length < minColumns || values.length > maxColumns) {
-            errors.push({
-              row: rowNumber,
-              message: `Nieprawidłowa liczba kolumn: ${values.length}. Oczekiwano ${minColumns}-${maxColumns}.`,
-            })
-            continue
-          }
-
-          rawRows.push(buildRawPreviewRow(previewHeaders, values))
-          const mapped = mapFixedValuesToFields(fieldOrder, values)
-
-          const parsed = schema.safeParse(mapped)
-
-          if (parsed.success) {
-            validRows.push(parsed.data as CsvRowType<T>)
-            continue
-          }
-
-          appendSchemaIssues(errors, rowNumber, parsed.error.issues)
-        }
+        const { headers, rawRows, validRows } = parseFixedRows<T>(
+          results.data,
+          {
+            fieldOrder,
+            headerMap,
+            maxColumns,
+            minColumns,
+            previewHeaders,
+            schema,
+          },
+          errors
+        )
 
         resolve({
-          headers: previewHeaders,
+          headers,
           rows: validRows,
           rawRows,
           errors,
@@ -311,6 +563,7 @@ function parseFixedCsv<T extends "rack" | "item">(
 function parseRackCsv(file: File): Promise<CsvParseResult<"rack">> {
   return parseFixedCsv<"rack">(file, {
     fieldOrder: RACK_FIELD_ORDER,
+    headerMap: RACK_HEADER_MAP,
     minColumns: 10,
     maxColumns: 12,
     previewHeaders: RACK_PREVIEW_HEADERS,
@@ -321,8 +574,9 @@ function parseRackCsv(file: File): Promise<CsvParseResult<"rack">> {
 function parseItemCsv(file: File): Promise<CsvParseResult<"item">> {
   return parseFixedCsv<"item">(file, {
     fieldOrder: ITEM_FIELD_ORDER,
-    minColumns: 7,
-    maxColumns: 10,
+    headerMap: ITEM_HEADER_MAP,
+    minColumns: 9,
+    maxColumns: 12,
     previewHeaders: ITEM_PREVIEW_HEADERS,
     schema: ItemCsvSchema,
   })

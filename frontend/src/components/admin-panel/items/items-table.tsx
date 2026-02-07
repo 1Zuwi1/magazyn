@@ -3,6 +3,7 @@
 import {
   ArrowLeft02Icon,
   ArrowRight02Icon,
+  Image01Icon,
   ImageUploadIcon,
   MoreHorizontalIcon,
   PencilIcon,
@@ -20,7 +21,6 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
-import Image from "next/image"
 import { useState } from "react"
 import {
   SortableHeader,
@@ -68,6 +68,8 @@ function createColumns(
   onDelete: (item: Item) => void,
   onUploadPhoto: (item: Item) => void
 ): ColumnDef<Item>[] {
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? ""
+
   return [
     {
       accessorKey: "name",
@@ -79,17 +81,26 @@ function createColumns(
         return (
           <div className="flex items-center gap-3">
             {item.imageUrl && (
-              <Image
-                alt={item.name}
-                className="h-10 w-10 rounded object-cover"
-                height={40}
-                src={
-                  item.imageUrl.startsWith("/")
-                    ? item.imageUrl
-                    : `/images/items/${item.imageUrl}`
-                }
-                width={40}
-              />
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded bg-muted">
+                {/* biome-ignore lint/performance/noImgElement: img needs authorization */}
+                <img
+                  alt={item.name}
+                  className="object-cover"
+                  height={100}
+                  // FIXME: Remove in prod
+                  src={`${apiBaseUrl}/api/items/${item.id}/photo`}
+                  style={{ width: "100%", height: "100%" }}
+                  width={100}
+                />
+              </div>
+            )}
+            {!item.imageUrl && (
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-muted">
+                <HugeiconsIcon
+                  className="size-4 text-muted-foreground"
+                  icon={Image01Icon}
+                />
+              </div>
             )}
             <div>
               <div className="font-medium">{item.name}</div>
