@@ -1,4 +1,5 @@
 import {
+  Alert02Icon,
   Cancel01Icon,
   Copy01Icon,
   Key01Icon,
@@ -415,6 +416,8 @@ function ConnectedMethods({
   linkedMethods,
   defaultMethod,
   isLoading,
+  isError,
+  onRetry,
   onDefaultMethodChange,
   isSettingDefault,
   onRemoveMethod,
@@ -423,6 +426,8 @@ function ConnectedMethods({
   linkedMethods?: TwoFactorMethod[]
   defaultMethod?: TwoFactorMethod
   isLoading: boolean
+  isError?: boolean
+  onRetry?: () => void
   onDefaultMethodChange: (method: TwoFactorMethod) => void
   isSettingDefault: boolean
   onRemoveMethod: (method: TwoFactorMethod) => void
@@ -435,6 +440,37 @@ function ConnectedMethods({
         <span className="text-muted-foreground text-sm">
           Ładowanie połączonych metod...
         </span>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-lg border border-destructive/20 border-dashed bg-destructive/5 px-4 py-4 text-center">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-destructive/10">
+          <HugeiconsIcon
+            className="text-destructive"
+            icon={Alert02Icon}
+            size={20}
+          />
+        </div>
+        <div className="space-y-1">
+          <p className="font-medium text-foreground/80 text-sm">
+            Nie udało się załadować metod
+          </p>
+          <p className="text-muted-foreground text-xs">
+            Wystąpił problem podczas pobierania połączonych metod weryfikacji.
+          </p>
+        </div>
+        {onRetry && (
+          <button
+            className="rounded-md border px-3 py-1.5 font-medium text-xs transition-colors hover:bg-muted"
+            onClick={onRetry}
+            type="button"
+          >
+            Spróbuj ponownie
+          </button>
+        )}
       </div>
     )
   }
@@ -905,6 +941,8 @@ function TwoFactorConfigurationSection({
   linkedMethods,
   defaultMethod,
   isLinkedMethodsLoading,
+  isLinkedMethodsError,
+  onRetryLinkedMethods,
   onDefaultMethodChange,
   isSettingDefault,
   onRemoveMethod,
@@ -919,6 +957,8 @@ function TwoFactorConfigurationSection({
   linkedMethods?: TwoFactorMethod[]
   defaultMethod?: TwoFactorMethod
   isLinkedMethodsLoading: boolean
+  isLinkedMethodsError?: boolean
+  onRetryLinkedMethods?: () => void
   onDefaultMethodChange: (method: TwoFactorMethod) => void
   isSettingDefault: boolean
   onRemoveMethod: (method: TwoFactorMethod) => void
@@ -949,11 +989,13 @@ function TwoFactorConfigurationSection({
         <p className="font-medium text-sm">Połączone metody</p>
         <ConnectedMethods
           defaultMethod={defaultMethod}
+          isError={isLinkedMethodsError}
           isLoading={isLinkedMethodsLoading}
           isSettingDefault={isSettingDefault}
           linkedMethods={linkedMethods}
           onDefaultMethodChange={onDefaultMethodChange}
           onRemoveMethod={onRemoveMethod}
+          onRetry={onRetryLinkedMethods}
           removingMethod={removingMethod}
         />
       </div>
@@ -1032,6 +1074,7 @@ export function TwoFactorSetup({
   const {
     data: linkedMethods,
     isLoading: isLinkedMethodsLoading,
+    isError: isLinkedMethodsError,
     refetch: refetchLinkedMethods,
   } = useLinkedMethods()
 
@@ -1150,6 +1193,7 @@ export function TwoFactorSetup({
     <div className="space-y-6">
       <TwoFactorConfigurationSection
         defaultMethod={linkedMethods?.defaultMethod}
+        isLinkedMethodsError={isLinkedMethodsError}
         isLinkedMethodsLoading={isLinkedMethodsLoading}
         isSettingDefault={setDefaultMethodMutation.isPending}
         linkedMethods={linkedMethods?.methods}
@@ -1158,6 +1202,7 @@ export function TwoFactorSetup({
         onDefaultMethodChange={handleDefaultMethodChange}
         onMethodChange={onMethodChange}
         onRemoveMethod={handleRemoveMethod}
+        onRetryLinkedMethods={() => refetchLinkedMethods()}
         onStartSetup={startSetup}
         removingMethod={removingMethod}
         setupStage={setupStage}

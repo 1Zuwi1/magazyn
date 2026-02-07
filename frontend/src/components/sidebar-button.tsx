@@ -25,7 +25,11 @@ export default function SidebarButton({ item }: { item: NavigationItem }) {
   const isActive = pathname.startsWith(item.href)
   const [isOpen, setIsOpen] = useState(isActive)
   const hasItems = item.items && item.items.length > 0
-  const { data: session } = useSession()
+  const { data: session, isPending: isSessionPending } = useSession()
+
+  if (isSessionPending) {
+    return null
+  }
 
   if (item.adminOnly && session?.role !== "ADMIN") {
     return null

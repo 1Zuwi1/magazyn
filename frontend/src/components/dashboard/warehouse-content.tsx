@@ -1,9 +1,10 @@
 "use client"
 
-import { Search } from "@hugeicons/core-free-icons"
+import { Alert02Icon, Search } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import useWarehouses from "@/hooks/use-warehouses"
 import type { Warehouse } from "@/lib/schemas"
@@ -16,7 +17,7 @@ import { pluralize } from "./utils/helpers"
 const EMPTY_ARRAY: Warehouse[] = []
 
 export const WarehouseContent = () => {
-  const { data: warehouses, isPending } = useWarehouses()
+  const { data: warehouses, isPending, isError, refetch } = useWarehouses()
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const filteredWarehouses = filterWarehouses(
     warehouses?.content ?? EMPTY_ARRAY,
@@ -29,6 +30,28 @@ export const WarehouseContent = () => {
     filters.tempRange[0] !== DEFAULT_FILTERS.tempRange[0] ||
     filters.tempRange[1] !== DEFAULT_FILTERS.tempRange[1] ||
     filters.showEmpty !== DEFAULT_FILTERS.showEmpty
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center gap-4 rounded-xl border border-destructive/30 bg-card py-12 text-center">
+        <div className="flex size-12 items-center justify-center rounded-xl bg-destructive/10">
+          <HugeiconsIcon
+            className="size-6 text-destructive"
+            icon={Alert02Icon}
+          />
+        </div>
+        <div className="space-y-1">
+          <p className="font-semibold">Nie udało się załadować magazynów</p>
+          <p className="text-muted-foreground text-sm">
+            Wystąpił problem podczas pobierania danych. Spróbuj ponownie.
+          </p>
+        </div>
+        <Button onClick={() => refetch()} variant="outline">
+          Spróbuj ponownie
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

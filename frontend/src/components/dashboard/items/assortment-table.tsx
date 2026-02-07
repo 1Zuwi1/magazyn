@@ -24,6 +24,7 @@ import z from "zod"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
+  ErrorEmptyState,
   FilterEmptyState,
   NoItemsEmptyState,
 } from "@/components/ui/empty-state"
@@ -175,6 +176,8 @@ interface AssortmentTableWithDataProps extends AssortmentTableProps {
 
 interface AssortmentTableContentProps extends AssortmentTableProps {
   assortmentData: AssortmentList | null | undefined
+  isError?: boolean
+  onRetry?: () => void
 }
 
 const SKELETON_ROWS = 5
@@ -276,6 +279,8 @@ const isExpiryFilterValue = (value: string | null): value is ExpiryFilters =>
 function AssortmentTableContent({
   assortmentData,
   isLoading,
+  isError,
+  onRetry,
 }: AssortmentTableContentProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -485,6 +490,10 @@ function AssortmentTableContent({
     return <AssortmentTableSkeleton />
   }
 
+  if (isError) {
+    return <ErrorEmptyState onRetry={onRetry} />
+  }
+
   return (
     <div className="space-y-4">
       {/* Filter Bar */}
@@ -660,12 +669,14 @@ function AssortmentTableContent({
 }
 
 export function AssortmentTable({ isLoading }: AssortmentTableProps) {
-  const { data: assortmentData, isPending } = useAssortment()
+  const { data: assortmentData, isPending, isError, refetch } = useAssortment()
 
   return (
     <AssortmentTableContent
       assortmentData={assortmentData}
+      isError={isError}
       isLoading={isLoading || isPending}
+      onRetry={() => refetch()}
     />
   )
 }

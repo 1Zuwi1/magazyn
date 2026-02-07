@@ -14,6 +14,7 @@ export type AssortmentDetails = InferApiOutput<
 interface AssortmentsListParams {
   page?: number
   size?: number
+  warehouseId?: number
 }
 
 interface AssortmentsDetailsParams {
@@ -33,17 +34,19 @@ export default function useAssortments(
     page,
     size,
     assortmentId,
+    warehouseId,
   }: {
     page?: number
     size?: number
     assortmentId?: number
+    warehouseId?: number
   } = {
     page: 0,
     size: 20,
   }
 ) {
   return useApiQuery({
-    queryKey: [...ASSORTMENT_QUERY_KEY, { page, size }],
+    queryKey: [...ASSORTMENT_QUERY_KEY, { page, size, warehouseId }],
     queryFn: async () => {
       if (assortmentId !== undefined) {
         if (assortmentId === -1) {
@@ -55,6 +58,24 @@ export default function useAssortments(
           AssortmentDetailsSchema,
           {
             method: "GET",
+          }
+        )
+      }
+
+      if (warehouseId !== undefined) {
+        if (warehouseId === -1) {
+          // This is a workaround to prevent the query from running when warehouseId is not yet available.
+          return null
+        }
+        return await apiFetch(
+          `/api/warehouses/${warehouseId}/assortments`,
+          AssortmentsSchema,
+          {
+            method: "GET",
+            queryParams: {
+              page,
+              size,
+            },
           }
         )
       }

@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  Alert02Icon,
   Delete02Icon,
   Key01Icon,
   PencilEdit02Icon,
@@ -156,9 +157,11 @@ function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
 
 interface PasskeysListProps {
   isLoading: boolean
+  isError?: boolean
   passkeys: Passkey[]
   onRename: (passkey: Passkey) => void
   onDelete: (passkey: Passkey) => void
+  onRetry?: () => void
 }
 
 function PasskeysListSkeleton() {
@@ -209,12 +212,45 @@ function PasskeysEmptyState() {
 
 function PasskeysList({
   isLoading,
+  isError,
   passkeys,
   onRename,
   onDelete,
+  onRetry,
 }: PasskeysListProps) {
   if (isLoading) {
     return <PasskeysListSkeleton />
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-destructive/20 border-dashed bg-destructive/5 px-6 py-6 text-center">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-destructive/10">
+          <HugeiconsIcon
+            className="text-destructive"
+            icon={Alert02Icon}
+            size={20}
+          />
+        </div>
+        <div className="space-y-1">
+          <p className="font-medium text-foreground/80 text-sm">
+            Nie udało się załadować kluczy
+          </p>
+          <p className="text-muted-foreground text-xs">
+            Wystąpił problem podczas pobierania danych.
+          </p>
+        </div>
+        {onRetry && (
+          <button
+            className="rounded-md border px-3 py-1.5 font-medium text-xs transition-colors hover:bg-muted"
+            onClick={onRetry}
+            type="button"
+          >
+            Spróbuj ponownie
+          </button>
+        )}
+      </div>
+    )
   }
 
   if (passkeys.length === 0) {
@@ -243,7 +279,12 @@ export function PasskeysSection() {
   const { open } = useTwoFactorVerificationDialog()
 
   // Queries and mutations
-  const { data: passkeys = [], isLoading: isLoadingPasskeys } = usePasskeys()
+  const {
+    data: passkeys = [],
+    isLoading: isLoadingPasskeys,
+    isError: isPasskeysError,
+    refetch: refetchPasskeys,
+  } = usePasskeys()
   const deletePasskey = useDeletePasskey()
   const renamePasskey = useRenamePasskey()
 
@@ -480,9 +521,11 @@ export function PasskeysSection() {
         <CardContent className="space-y-5">
           {/* Passkeys list */}
           <PasskeysList
+            isError={isPasskeysError}
             isLoading={isLoadingPasskeys}
             onDelete={handleOpenDelete}
             onRename={handleOpenRename}
+            onRetry={() => refetchPasskeys()}
             passkeys={passkeys}
           />
 

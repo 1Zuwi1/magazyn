@@ -9,6 +9,28 @@ import { useTwoFactorVerificationDialog } from "@/components/dashboard/settings/
 import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { FetchError } from "@/lib/fetcher"
 
+const DEFAULT_RETRY_COUNT = 3
+
+function shouldRetryRequest<TError>(
+  retryOption: UseQueryOptions<unknown, TError>["retry"],
+  nextFailureCount: number,
+  error: TError
+): boolean {
+  if (typeof retryOption === "function") {
+    return retryOption(nextFailureCount, error)
+  }
+
+  if (retryOption === false) {
+    return false
+  }
+
+  if (retryOption === true || retryOption == null) {
+    return nextFailureCount <= DEFAULT_RETRY_COUNT
+  }
+
+  return nextFailureCount <= retryOption
+}
+
 export function useApiQuery<
   TQueryFnData,
   TData = TQueryFnData,
@@ -28,17 +50,26 @@ export function useApiQuery<
           try {
             return await queryFn(context)
           } catch (error) {
-            if (FetchError.isError(error)) {
-              if (error.code === "INSUFFICIENT_PERMISSIONS") {
-                open({
-                  onVerified: query.refetch,
-                })
-              } else {
-                handleApiError(error)
-              }
-            } else {
+            const state = context.client.getQueryState(context.queryKey)
+            const currentFailureCount = state?.fetchFailureCount ?? 0
+            const nextFailureCount = currentFailureCount + 1
+            const willRetry = shouldRetryRequest(
+              options.retry,
+              nextFailureCount,
+              error as TError
+            )
+
+            if (
+              FetchError.isError(error) &&
+              error.code === "INSUFFICIENT_PERMISSIONS"
+            ) {
+              open({
+                onVerified: query.refetch,
+              })
+            } else if (!willRetry) {
               handleApiError(error)
             }
+
             throw error
           }
         }

@@ -130,13 +130,19 @@ export default function UsersMain() {
     sortBy: "id",
     sortDir: "asc",
   })
-  const { data: teamsData } = useAdminUserTeams()
+  const {
+    data: teamsData,
+    isPending: isTeamsPending,
+    isError: isTeamsError,
+  } = useAdminUserTeams()
   const updateProfileMutation = useUpdateAdminUserProfile()
   const changeEmailMutation = useChangeAdminUserEmail()
   const deleteUserMutation = useDeleteAdminUser()
 
   const users = usersData?.content ?? []
-  const teams = teamsData ?? []
+  const teams = useMemo(() => {
+    return isTeamsPending ? [] : (teamsData ?? [])
+  }, [teamsData, isTeamsPending])
 
   const [search, setSearch] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -211,6 +217,11 @@ export default function UsersMain() {
   }, [filtered, currentPage])
 
   const handleEditUser = (userId: number) => {
+    if (isTeamsError) {
+      toast.warning(
+        "Nie udało się załadować listy zespołów. Pole zespołu może być niedostępne."
+      )
+    }
     setSelectedUserId(userId)
     setDialogOpen(true)
   }

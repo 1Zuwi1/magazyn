@@ -1,5 +1,6 @@
 "use client"
 
+import { Alert02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Spinner } from "@/components/ui/spinner"
 import useLinkedMethods from "@/hooks/use-linked-methods"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
@@ -50,7 +52,11 @@ export function TwoFactorVerificationDialog({
   copy,
 }: TwoFactorVerificationDialogProps) {
   const [code, setCode] = useState("")
-  const { data: methods } = useLinkedMethods()
+  const {
+    data: methods,
+    isPending: isMethodsPending,
+    isError: isMethodsError,
+  } = useLinkedMethods()
   const [selectedMethod, setSelectedMethod] = useState<TwoFactorMethod>(
     methods?.defaultMethod ?? "AUTHENTICATOR"
   )
@@ -185,59 +191,84 @@ export function TwoFactorVerificationDialog({
           >
             Metoda weryfikacji
           </Label>
-          <RadioGroup
-            aria-labelledby="verification-method-label"
-            className={"grid gap-0"}
-            onValueChange={(value) => {
-              const nextMethod = value as TwoFactorMethod
-              setSelectedMethod(nextMethod)
-              setCode("")
-              setIsVerified(false)
-              setIsVerifying(false)
-              setVerificationError("")
-            }}
-            value={selectedMethod}
-          >
-            {methodOptions.map((method) => {
-              const isSelected = method.value === selectedMethod
-              const Icon = METHOD_ICONS[method.value as TwoFactorMethod]
+          {isMethodsPending && (
+            <div className="flex items-center gap-3 rounded-lg border border-muted-foreground/30 border-dashed bg-muted/20 px-4 py-3">
+              <Spinner className="size-4 text-muted-foreground" />
+              <span className="text-muted-foreground text-sm">
+                Ładowanie metod weryfikacji...
+              </span>
+            </div>
+          )}
+          {!isMethodsPending && isMethodsError && (
+            <div className="flex flex-col items-center gap-2 rounded-lg border border-destructive/20 border-dashed bg-destructive/5 px-4 py-4 text-center">
+              <HugeiconsIcon
+                className="text-destructive"
+                icon={Alert02Icon}
+                size={20}
+              />
+              <p className="font-medium text-foreground/80 text-sm">
+                Nie udało się załadować metod weryfikacji
+              </p>
+              <p className="text-muted-foreground text-xs">
+                Zamknij okno i spróbuj ponownie.
+              </p>
+            </div>
+          )}
+          {!(isMethodsPending || isMethodsError) && (
+            <RadioGroup
+              aria-labelledby="verification-method-label"
+              className={"grid gap-0"}
+              onValueChange={(value) => {
+                const nextMethod = value as TwoFactorMethod
+                setSelectedMethod(nextMethod)
+                setCode("")
+                setIsVerified(false)
+                setIsVerifying(false)
+                setVerificationError("")
+              }}
+              value={selectedMethod}
+            >
+              {methodOptions.map((method) => {
+                const isSelected = method.value === selectedMethod
+                const Icon = METHOD_ICONS[method.value as TwoFactorMethod]
 
-              return (
-                <div key={method.value}>
-                  <RadioGroupItem
-                    className="peer sr-only"
-                    id={`verify-method-${method.value}`}
-                    value={method.value}
-                  />
-                  <Label
-                    className={cn(
-                      "flex flex-1 cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 transition-colors",
-                      isSelected
-                        ? "border-primary/40 bg-primary/5 text-foreground"
-                        : "border-muted bg-muted/20 text-muted-foreground hover:border-muted-foreground/40"
-                    )}
-                    htmlFor={`verify-method-${method.value}`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          "flex size-8 items-center justify-center rounded-md border",
-                          isSelected
-                            ? "border-primary/30 bg-primary/10 text-primary"
-                            : "border-muted bg-background text-muted-foreground"
-                        )}
-                      >
-                        <HugeiconsIcon icon={Icon} size={16} />
+                return (
+                  <div key={method.value}>
+                    <RadioGroupItem
+                      className="peer sr-only"
+                      id={`verify-method-${method.value}`}
+                      value={method.value}
+                    />
+                    <Label
+                      className={cn(
+                        "flex flex-1 cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 transition-colors",
+                        isSelected
+                          ? "border-primary/40 bg-primary/5 text-foreground"
+                          : "border-muted bg-muted/20 text-muted-foreground hover:border-muted-foreground/40"
+                      )}
+                      htmlFor={`verify-method-${method.value}`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "flex size-8 items-center justify-center rounded-md border",
+                            isSelected
+                              ? "border-primary/30 bg-primary/10 text-primary"
+                              : "border-muted bg-background text-muted-foreground"
+                          )}
+                        >
+                          <HugeiconsIcon icon={Icon} size={16} />
+                        </span>
+                        <span className="font-medium text-sm">
+                          {method.label}
+                        </span>
                       </span>
-                      <span className="font-medium text-sm">
-                        {method.label}
-                      </span>
-                    </span>
-                  </Label>
-                </div>
-              )
-            })}
-          </RadioGroup>
+                    </Label>
+                  </div>
+                )
+              })}
+            </RadioGroup>
+          )}
         </div>
         {selectedMethod === "PASSKEYS" ? (
           <div className="space-y-3">
