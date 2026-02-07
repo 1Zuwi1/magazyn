@@ -43,11 +43,11 @@ export function VoiceAssistant({
   dialogTrigger,
   warehouses = [],
 }: VoiceAssistantProps) {
-  const autoStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const listenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isMobile = useIsMobile()
   const router = useRouter()
-  const { openAddItemDialog, openScanner } = useVoiceCommandStore()
+  const { openAddItemDialog, openScanner, setPendingAction } =
+    useVoiceCommandStore()
   const [open, setOpen] = useState(false)
   const armedRef = useRef(false)
   const [view, setView] = useState<VoiceAssistantViews>("idle")
@@ -147,7 +147,7 @@ export function VoiceAssistant({
   )
 
   const liveTranscript = finalTranscript || interimTranscript
-  const silenceTranscript = `${finalTranscript}${interimTranscript}`.trim()
+  const hasSpeech = Boolean(finalTranscript || interimTranscript)
   const liveCommand = useMemo(() => {
     if (!liveTranscript) {
       return null
@@ -162,61 +162,46 @@ export function VoiceAssistant({
     setView("processing")
   }, [stop])
 
-  const TIMEOUT_DURATION = 3000
+  const AUTO_STOP_DELAY = 600
+  const SILENCE_TIMEOUT = 3000
 
   useEffect(() => {
     if (view !== "listening") {
-      if (autoStopTimeoutRef.current) {
-        clearTimeout(autoStopTimeoutRef.current)
-        autoStopTimeoutRef.current = null
-      }
-      if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current)
-        silenceTimeoutRef.current = null
+      if (listenTimeoutRef.current) {
+        clearTimeout(listenTimeoutRef.current)
+        listenTimeoutRef.current = null
       }
       return
     }
 
-    if (!liveCommand) {
-      if (autoStopTimeoutRef.current) {
-        clearTimeout(autoStopTimeoutRef.current)
-        autoStopTimeoutRef.current = null
-      }
+    let delay: number | null = null
+    if (liveCommand) {
+      delay = AUTO_STOP_DELAY
+    } else if (hasSpeech) {
+      delay = SILENCE_TIMEOUT
+    }
+
+    if (listenTimeoutRef.current) {
+      clearTimeout(listenTimeoutRef.current)
+      listenTimeoutRef.current = null
+    }
+
+    if (delay == null) {
       return
     }
 
-    if (autoStopTimeoutRef.current) {
-      return
-    }
-
-    autoStopTimeoutRef.current = setTimeout(() => {
-      autoStopTimeoutRef.current = null
+    listenTimeoutRef.current = setTimeout(() => {
+      listenTimeoutRef.current = null
       handleStopListening()
-    }, 600)
-  }, [view, liveCommand, handleStopListening])
+    }, delay)
 
-  useEffect(() => {
-    if (view !== "listening") {
-      return
-    }
-
-    if (!silenceTranscript || liveCommand) {
-      if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current)
-        silenceTimeoutRef.current = null
+    return () => {
+      if (listenTimeoutRef.current) {
+        clearTimeout(listenTimeoutRef.current)
+        listenTimeoutRef.current = null
       }
-      return
     }
-
-    if (silenceTimeoutRef.current) {
-      clearTimeout(silenceTimeoutRef.current)
-    }
-
-    silenceTimeoutRef.current = setTimeout(() => {
-      silenceTimeoutRef.current = null
-      handleStopListening()
-    }, TIMEOUT_DURATION)
-  }, [view, silenceTranscript, liveCommand, handleStopListening])
+  }, [view, liveCommand, hasSpeech, handleStopListening])
 
   const navigateAndClose = useCallback(
     (href: string) => {
@@ -263,6 +248,7 @@ export function VoiceAssistant({
       navigateAndClose,
       openScanner,
       openAddItemDialog,
+      setPendingAction,
       closeDialog,
       setErrorMessage,
       setView,
@@ -272,6 +258,7 @@ export function VoiceAssistant({
     navigateAndClose,
     openAddItemDialog,
     openScanner,
+    setPendingAction,
     closeDialog,
     warehouses,
   ])

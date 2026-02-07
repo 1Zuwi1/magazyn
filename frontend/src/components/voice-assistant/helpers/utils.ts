@@ -3,6 +3,7 @@ import {
   type matchVoiceCommand,
   normalizeTranscript,
 } from "@/lib/voice/commands"
+import type { PendingAction } from "@/lib/voice/voice-command-store"
 import type { VoiceAssistantViews } from "../voice-assistant"
 
 export const findWarehouseByName = (
@@ -38,6 +39,36 @@ export const getCommandLabel = (
     }
   }
 
+  if (match.command.id === "remove-item") {
+    const { itemName, rackName } = match.params
+    if (rackName) {
+      return `Usuń "${itemName}" z regału ${rackName}`
+    }
+    return `Usuń produkt "${itemName}"`
+  }
+
+  if (match.command.id === "move-item") {
+    const { itemName, sourceRack, targetRack } = match.params
+    if (sourceRack) {
+      return `Przenieś "${itemName}" z ${sourceRack} do ${targetRack}`
+    }
+    return `Przenieś "${itemName}" do regału ${targetRack}`
+  }
+
+  if (match.command.id === "search-item") {
+    return `Wyszukaj "${match.params.itemName}"`
+  }
+
+  if (match.command.id === "inventory-check") {
+    const { rackName, itemName } = match.params
+    if (rackName) {
+      return `Sprawdź stan regału ${rackName}`
+    }
+    if (itemName) {
+      return `Sprawdź stan "${itemName}"`
+    }
+  }
+
   return match.command.description
 }
 
@@ -61,6 +92,7 @@ export interface VoiceAssistantActions {
   navigateAndClose: (href: string) => void
   openScanner: () => void
   openAddItemDialog: () => void
+  setPendingAction: (action: PendingAction) => void
   closeDialog: () => void
   setErrorMessage: (msg: string) => void
   setView: (view: VoiceAssistantViews) => void
@@ -117,6 +149,69 @@ export const handleConfirmCommandAction = (
     case "add-item":
       actions.openAddItemDialog()
       actions.navigateAndClose("/admin/assortment")
+      return
+    case "remove-item":
+      {
+        const { itemName, rackName } = matchedCommand.params
+        if (!itemName) {
+          actions.setErrorMessage("Brak nazwy produktu w komendzie.")
+          actions.setView("error")
+          return
+        }
+        actions.setPendingAction({
+          type: "remove-item",
+          payload: { itemName, rackName },
+        })
+        actions.navigateAndClose("/dashboard/items")
+      }
+      return
+    case "move-item":
+      {
+        const { itemName, sourceRack, targetRack } = matchedCommand.params
+        if (!(itemName && targetRack)) {
+          actions.setErrorMessage(
+            "Brak nazwy produktu lub regału docelowego w komendzie."
+          )
+          actions.setView("error")
+          return
+        }
+        actions.setPendingAction({
+          type: "move-item",
+          payload: { itemName, sourceRack, targetRack },
+        })
+        actions.closeDialog()
+      }
+      return
+    case "search-item":
+      {
+        const { itemName } = matchedCommand.params
+        if (!itemName) {
+          actions.setErrorMessage("Brak nazwy produktu do wyszukania.")
+          actions.setView("error")
+          return
+        }
+        actions.setPendingAction({
+          type: "search-item",
+          payload: { itemName },
+        })
+        actions.navigateAndClose("/dashboard/items")
+      }
+      return
+    case "notifications":
+      actions.navigateAndClose("/admin/notifications")
+      return
+    case "inventory-check":
+      {
+        const { rackName, itemName } = matchedCommand.params
+        actions.setPendingAction({
+          type: "inventory-check",
+          payload: { rackName, itemName },
+        })
+        actions.navigateAndClose("/dashboard/warehouse")
+      }
+      return
+    case "admin-users":
+      actions.navigateAndClose("/admin/users")
       return
     default:
       actions.setErrorMessage("Nieobsługiwana komenda")

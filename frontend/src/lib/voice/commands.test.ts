@@ -88,4 +88,126 @@ describe("voice commands", () => {
     expect(match).not.toBeNull()
     expect(match?.command.id).toBe("add-item")
   })
+
+  it("matches remove item from rack command", () => {
+    const match = matchVoiceCommand("Usuń produkt Mleko z regału A1")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("remove-item")
+    expect(match?.params.itemName).toBe("Mleko")
+    expect(match?.params.rackName).toBe("A1")
+  })
+
+  it("matches remove item without rack", () => {
+    const match = matchVoiceCommand("Usuń produkt Cukier")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("remove-item")
+    expect(match?.params.itemName).toBe("Cukier")
+  })
+
+  it("matches zdejmij synonym for remove", () => {
+    const match = matchVoiceCommand("Zdejmij produkt Sok z regału B2")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("remove-item")
+    expect(match?.params.itemName).toBe("Sok")
+    expect(match?.params.rackName).toBe("B2")
+  })
+
+  it("matches move item between racks", () => {
+    const match = matchVoiceCommand(
+      "Przenieś produkt Mleko z regału A1 do regału B2"
+    )
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("move-item")
+    expect(match?.params.itemName).toBe("Mleko")
+    expect(match?.params.sourceRack).toBe("A1")
+    expect(match?.params.targetRack).toBe("B2")
+  })
+
+  it("matches move item to rack without source", () => {
+    const match = matchVoiceCommand("Przenieś produkt Cukier do regału C3")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("move-item")
+    expect(match?.params.itemName).toBe("Cukier")
+    expect(match?.params.targetRack).toBe("C3")
+  })
+
+  it("matches search item command", () => {
+    const match = matchVoiceCommand("Znajdź produkt Mleko")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("search-item")
+    expect(match?.params.itemName).toBe("Mleko")
+  })
+
+  it("matches gdzie jest synonym for search", () => {
+    const match = matchVoiceCommand("Gdzie jest Cukier")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("search-item")
+    expect(match?.params.itemName).toBe("Cukier")
+  })
+
+  it("matches wyszukaj synonym for search", () => {
+    const match = matchVoiceCommand("Wyszukaj produkt Sok pomarańczowy")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("search-item")
+    expect(match?.params.itemName).toBe("Sok pomaranczowy")
+  })
+
+  it("matches notifications command", () => {
+    const match = matchVoiceCommand("Pokaż powiadomienia")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("notifications")
+  })
+
+  it("matches alerty synonym for notifications", () => {
+    const match = matchVoiceCommand("Alerty")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("notifications")
+  })
+
+  it("matches inventory check for specific rack", () => {
+    const match = matchVoiceCommand("Sprawdź stan regału A1")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("inventory-check")
+    expect(match?.params.rackName).toBe("A1")
+  })
+
+  it("matches inventory check for specific item", () => {
+    const match = matchVoiceCommand("Ile jest Mleko")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("inventory-check")
+    expect(match?.params.itemName).toBe("Mleko")
+  })
+
+  it("matches general inventory check", () => {
+    const match = matchVoiceCommand("Sprawdź stan magazynowy")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("inventory-check")
+  })
+
+  it("matches admin users command", () => {
+    const match = matchVoiceCommand("Pokaż użytkowników")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("admin-users")
+  })
+
+  it("matches użytkownicy shorthand", () => {
+    const match = matchVoiceCommand("Użytkownicy")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("admin-users")
+  })
 })

@@ -6,6 +6,12 @@ export type VoiceCommandId =
   | "settings"
   | "open-scanner"
   | "add-item"
+  | "remove-item"
+  | "move-item"
+  | "search-item"
+  | "notifications"
+  | "inventory-check"
+  | "admin-users"
 
 export interface VoiceCommand {
   id: VoiceCommandId
@@ -113,6 +119,137 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       { regex: /^dodaj asortyment$/i },
       { regex: /^nowy produkt$/i },
       { regex: /^nowy przedmiot$/i },
+    ],
+  },
+  {
+    id: "remove-item",
+    description: "Usuń produkt z regału",
+    patterns: [
+      {
+        regex: /^usun produkt ([a-z0-9 ]+) z regalu ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName", "rackName"],
+      },
+      {
+        regex: /^zdejmij produkt ([a-z0-9 ]+) z regalu ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName", "rackName"],
+      },
+      {
+        regex: /^usun ([a-z0-9 ]+) z regalu ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName", "rackName"],
+      },
+      {
+        regex: /^zdejmij ([a-z0-9 ]+) z regalu ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName", "rackName"],
+      },
+      {
+        regex: /^usun produkt ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      {
+        regex: /^zdejmij produkt ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+    ],
+  },
+  {
+    id: "move-item",
+    description: "Przenieś produkt między regałami",
+    patterns: [
+      {
+        regex:
+          /^przenies produkt ([a-z0-9 ]+) z regalu ([a-z0-9 ]+) do regalu ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName", "sourceRack", "targetRack"],
+      },
+      {
+        regex:
+          /^przenies ([a-z0-9 ]+) z regalu ([a-z0-9 ]+) do regalu ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName", "sourceRack", "targetRack"],
+      },
+      {
+        regex: /^przenies produkt ([a-z0-9 ]+) do regalu ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName", "targetRack"],
+      },
+      {
+        regex: /^przenies ([a-z0-9 ]+) do regalu ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName", "targetRack"],
+      },
+    ],
+  },
+  {
+    id: "search-item",
+    description: "Wyszukaj produkt",
+    patterns: [
+      {
+        regex: /^znajdz produkt ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      {
+        regex: /^wyszukaj produkt ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      {
+        regex: /^szukaj produktu ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      {
+        regex: /^znajdz ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      {
+        regex: /^wyszukaj ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      {
+        regex: /^gdzie jest ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+    ],
+  },
+  {
+    id: "notifications",
+    description: "Pokaż powiadomienia",
+    patterns: [
+      { regex: /^pokaz powiadomienia$/i },
+      { regex: /^otworz powiadomienia$/i },
+      { regex: /^powiadomienia$/i },
+      { regex: /^pokaz alerty$/i },
+      { regex: /^alerty$/i },
+    ],
+  },
+  {
+    id: "inventory-check",
+    description: "Sprawdź stan magazynowy",
+    patterns: [
+      {
+        regex: /^sprawdz stan regalu ([a-z0-9 ]+)$/i,
+        paramNames: ["rackName"],
+      },
+      {
+        regex: /^stan regalu ([a-z0-9 ]+)$/i,
+        paramNames: ["rackName"],
+      },
+      {
+        regex: /^ile jest ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      {
+        regex: /^sprawdz stan ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      { regex: /^sprawdz stan magazynowy$/i },
+      { regex: /^stan magazynowy$/i },
+      { regex: /^sprawdz zapasy$/i },
+    ],
+  },
+  {
+    id: "admin-users",
+    description: "Zarządzanie użytkownikami",
+    patterns: [
+      { regex: /^pokaz uzytkownikow$/i },
+      { regex: /^otworz uzytkownikow$/i },
+      { regex: /^lista uzytkownikow$/i },
+      { regex: /^zarzadzanie uzytkownikami$/i },
+      { regex: /^uzytkownicy$/i },
     ],
   },
 ]
