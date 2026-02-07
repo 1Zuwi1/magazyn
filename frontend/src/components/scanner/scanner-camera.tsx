@@ -2,6 +2,7 @@
 
 import {
   AlertCircleIcon,
+  Camera01Icon,
   Cancel01Icon,
   KeyboardIcon,
   Loading03Icon,
@@ -48,6 +49,7 @@ interface ScannerCameraProps {
   onScan: (text: string) => void
   onRequestClose: () => void
   onManualInput: () => void
+  onTakePhoto: (file: File) => void
   isLoading?: boolean
 }
 
@@ -62,6 +64,7 @@ export function ScannerCamera({
   onModeChange,
   onRequestClose,
   onManualInput,
+  onTakePhoto,
   onScan,
   isLoading,
 }: ScannerCameraProps) {
@@ -79,6 +82,33 @@ export function ScannerCamera({
   }, [])
 
   const lastAtRef = useRef<number>(0)
+
+  const capturePhoto = useCallback(() => {
+    const video = videoRef.current
+    if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
+      return
+    }
+
+    const canvas = document.createElement("canvas")
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext("2d")
+    if (!ctx) {
+      return
+    }
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          const file = new File([blob], "photo.jpg", { type: "image/jpeg" })
+          onTakePhoto(file)
+        }
+      },
+      "image/jpeg",
+      0.85
+    )
+  }, [onTakePhoto])
 
   const getTranslation = useCallback(
     (mode: (typeof TAB_TRIGGERS)[number]["action"]) => {
@@ -175,8 +205,9 @@ export function ScannerCamera({
           ({
             video: {
               facingMode: { ideal: "environment" },
-              width: { ideal: 1920 },
-              height: { ideal: 1080 },
+              width: { ideal: 1080 },
+              height: { ideal: 1920 },
+              aspectRatio: { ideal: 9 / 16 },
               frameRate: { ideal: 30, max: 60 },
             },
             audio: false,
@@ -383,7 +414,7 @@ export function ScannerCamera({
           {!isLoading && (
             <div
               className={cn(
-                "absolute bottom-6 left-1/2 z-10 -translate-x-1/2",
+                "absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2",
                 { "bottom-12": isMobile }
               )}
             >
@@ -396,6 +427,16 @@ export function ScannerCamera({
               >
                 <HugeiconsIcon className="size-4" icon={KeyboardIcon} />
                 Wprowadź kod ręcznie
+              </Button>
+              <Button
+                className="rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70"
+                onClick={capturePhoto}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                <HugeiconsIcon className="size-4" icon={Camera01Icon} />
+                Zrób zdjęcie
               </Button>
             </div>
           )}

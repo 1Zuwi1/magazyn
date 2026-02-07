@@ -16,9 +16,13 @@ import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
+  type IdentificationCandidate,
+  type IdentificationResult,
   INBOUND_OPERATION_EXECUTE_SCHEMA,
   INBOUND_OPERATION_PLAN_SCHEMA,
   ITEM_BY_CODE_SCHEMA,
+  ITEM_IDENTIFY_MISMATCH_SCHEMA,
+  ITEM_IDENTIFY_SCHEMA,
 } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "../ui/button"
@@ -27,6 +31,7 @@ import { ErrorBoundary } from "../ui/error-boundary"
 import { ScannerBody } from "./scanner-body"
 import { ScannerCamera } from "./scanner-camera"
 import { ScannerErrorState } from "./scanner-error-state"
+import { ScannerIdentifyStep } from "./scanner-identify-step"
 import { ScannerLocationsStep } from "./scanner-locations-step"
 import { ScannerManualInput } from "./scanner-manual-input"
 import { ScannerQuantityStep } from "./scanner-quantity-step"
@@ -74,7 +79,13 @@ const SCANNER_ERROR_MESSAGES = {
     "Wybrana pozycja jest zajęta. Ustaw inną lokalizację i potwierdź ponownie.",
 } as const
 
-type Step = "camera" | "manual-input" | "quantity" | "locations" | "success"
+type Step =
+  | "camera"
+  | "manual-input"
+  | "identify"
+  | "quantity"
+  | "locations"
+  | "success"
 
 interface ScannerState {
   step: Step
@@ -133,6 +144,9 @@ export function Scanner({
     useState<number>(0)
   const [error, setError] = useState<string | null>(null)
   const [lastManualCode, setLastManualCode] = useState<string>("")
+  const [identificationResult, setIdentificationResult] =
+    useState<IdentificationResult | null>(null)
+  const [isReportingMismatch, setIsReportingMismatch] = useState<boolean>(false)
 
   const placementIdRef = useRef<number>(0)
   const { warehouseId, isHydrated } = useCurrentWarehouseId()
@@ -191,6 +205,8 @@ export function Scanner({
     setConfirmedPlacementsCount(0)
     setError(null)
     setLastManualCode("")
+    setIdentificationResult(null)
+    setIsReportingMismatch(false)
     placementIdRef.current = 0
   }, [])
 
@@ -322,6 +338,136 @@ export function Scanner({
       })
     }
   }, [])
+
+  const onTakePhoto = useCallback(async (file: File) => {
+    setError(null)
+    setScannerState((current) => ({
+      ...current,
+      isLoading: true,
+    }))
+
+    try {
+      const result = await apiFetch(
+        "/api/items/identify",
+        ITEM_IDENTIFY_SCHEMA,
+        {
+          method: "POST",
+          body: { file },
+          formData: (formData, data) => {
+            formData.append("file", data.file)
+          },
+        }
+      )
+
+      if (!result.itemId) {
+        setError("Nie udało się rozpoznać przedmiotu ze zdjęcia.")
+        setScannerState({
+          step: "camera",
+          isLoading: false,
+          isSubmitting: false,
+        })
+        return
+      }
+
+      setIdentificationResult(result)
+      setScannerState({
+        step: "identify",
+        isLoading: false,
+        isSubmitting: false,
+      })
+    } catch (photoError) {
+      setError(
+        getScannerErrorMessage(
+          photoError,
+          "Nie udało się rozpoznać przedmiotu ze zdjęcia."
+        )
+      )
+      setScannerState({
+        step: "camera",
+        isLoading: false,
+        isSubmitting: false,
+      })
+    }
+  }, [])
+
+  const onAcceptIdentification = useCallback(
+    async (candidate: IdentificationCandidate) => {
+      setError(null)
+      setScannerState((current) => ({
+        ...current,
+        isLoading: true,
+      }))
+
+      try {
+        const item = await apiFetch(
+          `/api/items/code/${encodeURIComponent(candidate.code)}`,
+          ITEM_BY_CODE_SCHEMA
+        )
+
+        setScannedItem(item)
+        setScannedCode(candidate.code)
+        setPlacementPlan(null)
+        setCurrentWarehouseId(null)
+        setEditablePlacements([])
+        setConfirmedPlacementsCount(0)
+        setIdentificationResult(null)
+        setScannerState({
+          step: "quantity",
+          isLoading: false,
+          isSubmitting: false,
+        })
+      } catch (fetchError) {
+        setError(
+          getScannerErrorMessage(
+            fetchError,
+            "Nie udało się pobrać danych przedmiotu."
+          )
+        )
+        setScannerState({
+          step: "identify",
+          isLoading: false,
+          isSubmitting: false,
+        })
+      }
+    },
+    []
+  )
+
+  const onReportMismatch = useCallback(
+    async (rejectedItemId: number) => {
+      if (!identificationResult) {
+        return
+      }
+
+      setIsReportingMismatch(true)
+
+      try {
+        const result = await apiFetch(
+          "/api/items/identify/mismatch",
+          ITEM_IDENTIFY_MISMATCH_SCHEMA,
+          {
+            method: "POST",
+            body: {
+              identificationId: identificationResult.identificationId,
+              rejectedItemId,
+            },
+          }
+        )
+
+        setIdentificationResult(result)
+      } catch (mismatchError) {
+        setError(
+          getScannerErrorMessage(
+            mismatchError,
+            "Nie udało się zgłosić niezgodności."
+          )
+        )
+      } finally {
+        setIsReportingMismatch(false)
+      }
+    },
+    [identificationResult]
+  )
 
   const handleSubmit = useCallback(async () => {
     if (!scannedItem) {
@@ -561,6 +707,7 @@ export function Scanner({
       onModeChange={setMode}
       onRequestClose={closeDialog}
       onScan={onScan}
+      onTakePhoto={onTakePhoto}
       scanDelayMs={scanDelayMs}
       stopOnScan={stopOnScan}
       warehouseName={warehouseName}
@@ -585,6 +732,17 @@ export function Scanner({
           })
         }}
         onSubmit={onManualScan}
+      />
+    )
+  } else if (step === "identify" && identificationResult) {
+    content = (
+      <ScannerIdentifyStep
+        isAccepting={isLoading}
+        isReporting={isReportingMismatch}
+        onAccept={onAcceptIdentification}
+        onCancel={handleReset}
+        onMismatch={onReportMismatch}
+        result={identificationResult}
       />
     )
   } else if (error) {

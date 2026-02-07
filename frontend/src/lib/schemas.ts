@@ -636,6 +636,13 @@ export const DeleteItemSchema = createApiSchema({
   },
 })
 
+export const UploadItemPhotoSchema = createApiSchema({
+  POST: {
+    input: z.object({ photo: z.instanceof(File) }),
+    output: z.string(),
+  },
+})
+
 const RackSchema = z.object({
   id: z.number().int().nonnegative(),
   marker: z.string(),
@@ -737,6 +744,59 @@ export const INBOUND_OPERATION_PLAN_SCHEMA = createApiSchema({
       reservedUntil: z.string().nullable(),
       reservedCount: z.number().int().nonnegative(),
     }),
+  },
+})
+
+const IdentificationCandidateSchema = z.object({
+  itemId: z.number().int().nonnegative(),
+  itemName: z.string(),
+  code: z.string(),
+  photoUrl: z.string().nullable(),
+  weight: z.number(),
+  isDangerous: z.boolean(),
+  cosineDistance: z.number(),
+  similarityScore: z.number(),
+  rank: z.number().int().nonnegative(),
+})
+
+export type IdentificationCandidate = z.infer<
+  typeof IdentificationCandidateSchema
+>
+
+const IdentificationResultSchema = z.object({
+  identificationId: z.string(),
+  itemId: z.number().int().nonnegative().nullable(),
+  itemName: z.string().nullable(),
+  code: z.string().nullable(),
+  similarityScore: z.number(),
+  confidentMatch: z.boolean(),
+  confidenceLevel: z.string(),
+  needsVerification: z.boolean(),
+  alertGenerated: z.boolean(),
+  message: z.string(),
+  candidates: z.array(IdentificationCandidateSchema),
+  candidateCount: z.number().int().nonnegative(),
+  excludedItemIds: z.array(z.number().int()),
+})
+
+export type IdentificationResult = z.infer<typeof IdentificationResultSchema>
+
+export const ITEM_IDENTIFY_SCHEMA = createApiSchema({
+  POST: {
+    input: z.object({
+      file: z.custom<File>(),
+    }),
+    output: IdentificationResultSchema,
+  },
+})
+
+export const ITEM_IDENTIFY_MISMATCH_SCHEMA = createApiSchema({
+  POST: {
+    input: z.object({
+      identificationId: z.string(),
+      rejectedItemId: z.number().int().nonnegative(),
+    }),
+    output: IdentificationResultSchema,
   },
 })
 

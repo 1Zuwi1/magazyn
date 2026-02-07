@@ -3,7 +3,7 @@
 import {
   ArrowLeft02Icon,
   ArrowRight02Icon,
-  EyeIcon,
+  ImageUploadIcon,
   MoreHorizontalIcon,
   PencilIcon,
   Trash,
@@ -56,15 +56,17 @@ import {
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
-interface AdminAssortmentTableProps {
+interface AdminItemsTableProps {
   items: Item[]
   onEdit: (item: Item) => void
   onDelete: (item: Item) => void
+  onUploadPhoto: (item: Item) => void
 }
 
 function createColumns(
   onEdit: (item: Item) => void,
-  onDelete: (item: Item) => void
+  onDelete: (item: Item) => void,
+  onUploadPhoto: (item: Item) => void
 ): ColumnDef<Item>[] {
   return [
     {
@@ -91,9 +93,6 @@ function createColumns(
             )}
             <div>
               <div className="font-medium">{item.name}</div>
-              <div className="font-mono text-muted-foreground text-xs">
-                {item.id}
-              </div>
             </div>
           </div>
         )
@@ -177,10 +176,13 @@ function createColumns(
                 icon={MoreHorizontalIcon}
               />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => console.log("View", item.id)}>
-                <HugeiconsIcon className="mr-2 h-4 w-4" icon={EyeIcon} />
-                Szczegóły
+            <DropdownMenuContent align="end" className="w-fit">
+              <DropdownMenuItem onClick={() => onUploadPhoto(item)}>
+                <HugeiconsIcon
+                  className="mr-2 h-4 w-4"
+                  icon={ImageUploadIcon}
+                />
+                {item.imageUrl ? "Zmień zdjęcie" : "Dodaj zdjęcie"}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(item)}>
                 <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
@@ -202,16 +204,17 @@ function createColumns(
   ]
 }
 
-export function AdminAssortmentTable({
+export function AdminItemsTable({
   items,
   onEdit,
   onDelete,
-}: AdminAssortmentTableProps) {
+  onUploadPhoto,
+}: AdminItemsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
 
-  const columns = createColumns(onEdit, onDelete)
+  const columns = createColumns(onEdit, onDelete, onUploadPhoto)
 
   const table = useReactTable({
     data: items,

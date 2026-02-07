@@ -21,8 +21,8 @@ import useItems, {
 } from "@/hooks/use-items"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../lib/constants"
-import { AdminAssortmentTable } from "./assortment-table"
-import { ItemDialog, type ItemFormData } from "./item-dialog"
+import { ItemDialog, type ItemFormData, PhotoPromptDialog } from "./item-dialog"
+import { AdminItemsTable } from "./items-table"
 
 const ITEMS_PAGE_SIZE = 2000
 
@@ -68,7 +68,7 @@ const getItemId = (item: DashboardItem): number | null => {
   return Number.isNaN(itemId) ? null : itemId
 }
 
-export default function AssortmentMain() {
+export default function ItemsMain() {
   const {
     data: itemsData,
     isPending: isItemsPending,
@@ -86,6 +86,10 @@ export default function AssortmentMain() {
   )
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<DashboardItem | undefined>(
+    undefined
+  )
+  const [photoDialogOpen, setPhotoDialogOpen] = useState(false)
+  const [photoItem, setPhotoItem] = useState<DashboardItem | undefined>(
     undefined
   )
 
@@ -108,6 +112,11 @@ export default function AssortmentMain() {
     setDeleteDialogOpen(true)
   }
 
+  const handleUploadPhoto = (item: DashboardItem) => {
+    setPhotoItem(item)
+    setPhotoDialogOpen(true)
+  }
+
   const confirmDeleteItem = async () => {
     if (!itemToDelete) {
       return
@@ -123,7 +132,9 @@ export default function AssortmentMain() {
     setItemToDelete(undefined)
   }
 
-  const handleSubmit = async (data: ItemFormData) => {
+  const handleSubmit = async (
+    data: ItemFormData
+  ): Promise<number | undefined> => {
     if (selectedItem) {
       const itemId = getItemId(selectedItem)
       if (itemId === null) {
@@ -136,12 +147,15 @@ export default function AssortmentMain() {
       })
       toast.success("Zaktualizowano przedmiot")
       setSelectedItem(undefined)
-      return
+      return undefined
     }
 
-    await createItemMutation.mutateAsync(buildItemMutationData(data))
+    const created = await createItemMutation.mutateAsync(
+      buildItemMutationData(data)
+    )
     toast.success("Dodano nowy przedmiot")
     setSelectedItem(undefined)
+    return created.id
   }
 
   const handleCsvImport = async ({ file }: { file: File }) => {
@@ -166,14 +180,14 @@ export default function AssortmentMain() {
   if (isItemsPending) {
     tableContent = (
       <div className="rounded-2xl border border-dashed bg-muted/20 p-8 text-center text-muted-foreground">
-        Ładowanie asortymentu...
+        Ładowanie przedmiotów...
       </div>
     )
   } else if (isItemsError) {
     tableContent = (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-destructive/5 py-16">
         <p className="font-medium text-foreground">
-          Nie udało się pobrać asortymentu
+          Nie udało się pobrać przedmiotów
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
           Spróbuj ponownie, aby odświeżyć dane.
@@ -191,10 +205,11 @@ export default function AssortmentMain() {
     )
   } else {
     tableContent = (
-      <AdminAssortmentTable
+      <AdminItemsTable
         items={items}
         onDelete={handleDeleteItem}
         onEdit={handleEditItem}
+        onUploadPhoto={handleUploadPhoto}
       />
     )
   }
@@ -221,7 +236,7 @@ export default function AssortmentMain() {
           title: link.title,
           url: link.url,
         }))}
-        title="Asortyment"
+        title="Przedmioty"
       >
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
@@ -266,6 +281,13 @@ export default function AssortmentMain() {
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
         title="Usuń przedmiot"
+      />
+
+      <PhotoPromptDialog
+        hasExistingPhoto={!!photoItem?.imageUrl}
+        itemId={photoItem ? Number(photoItem.id) : null}
+        onOpenChange={setPhotoDialogOpen}
+        open={photoDialogOpen}
       />
     </div>
   )

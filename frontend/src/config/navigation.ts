@@ -61,8 +61,8 @@ export const navigationItems: NavigationItem[] = [
         icon: WarehouseIcon,
       },
       {
-        title: "Asortyment",
-        href: "/admin/assortment",
+        title: "Przedmioty",
+        href: "/admin/items",
         icon: Package,
       },
       {

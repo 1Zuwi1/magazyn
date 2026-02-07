@@ -13,6 +13,7 @@ import {
   ItemImportSchema,
   ItemsSchema,
   UpdateItemSchema,
+  UploadItemPhotoSchema,
 } from "@/lib/schemas"
 import { useApiMutation } from "./use-api-mutation"
 import { useApiQuery } from "./use-api-query"
@@ -186,6 +187,24 @@ export function useDeleteItem() {
     mutationFn: (itemId: number) =>
       apiFetch(`/api/items/${itemId}`, DeleteItemSchema, {
         method: "DELETE",
+      }),
+    onSuccess: (_, __, ___, context) => {
+      context.client.invalidateQueries({
+        queryKey: ITEMS_QUERY_KEY,
+      })
+    },
+  })
+}
+
+export function useUploadItemPhoto() {
+  return useApiMutation({
+    mutationFn: ({ itemId, photo }: { itemId: number; photo: File }) =>
+      apiFetch(`/api/items/${itemId}/photo`, UploadItemPhotoSchema, {
+        method: "POST",
+        body: { photo },
+        formData: (formData, data) => {
+          formData.append("file", data.photo)
+        },
       }),
     onSuccess: (_, __, ___, context) => {
       context.client.invalidateQueries({

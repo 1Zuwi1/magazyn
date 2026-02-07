@@ -8,7 +8,7 @@ export const ADMIN_NAV_LINKS = [
   { title: "Przegląd", url: "/admin" },
   { title: "Użytkownicy", url: "/admin/users" },
   { title: "Magazyny", url: "/admin/warehouses" },
-  { title: "Asortyment", url: "/admin/assortment" },
+  { title: "Przedmioty", url: "/admin/items" },
   { title: "Powiadomienia", url: "/admin/notifications" },
 ] as const
 
