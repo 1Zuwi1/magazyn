@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { formatDate } from "../utils/helpers"
-import { BarcodeCell } from "./components/barcode-cell"
+import { CodeCell } from "./components/code-cell"
 import { ExpiryBadge } from "./components/expiry-badge"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 import type { ItemInstance } from "./types"
@@ -86,7 +86,7 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
     header: ({ column }) => (
       <SortableHeader column={column}>Kod</SortableHeader>
     ),
-    cell: ({ row }) => <BarcodeCell value={row.original.qrCode} />,
+    cell: ({ row }) => <CodeCell value={row.original.qrCode} />,
     enableSorting: true,
   },
   {

@@ -9,11 +9,11 @@ import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 
 interface ScannerManualInputProps {
-  onSubmit: (barcode: string) => void
+  onSubmit: (code: string) => void
   onCancel: () => void
   isLoading: boolean
-  /** Pre-filled barcode value (e.g. from a previous failed attempt) */
-  initialBarcode?: string
+  /** Pre-filled code value (e.g. from a previous failed attempt) */
+  initialCode?: string
   /** Error message to display inline (e.g. product not found) */
   error?: string | null
 }
@@ -22,25 +22,25 @@ export function ScannerManualInput({
   onSubmit,
   onCancel,
   isLoading,
-  initialBarcode = "",
+  initialCode = "",
   error,
 }: ScannerManualInputProps) {
-  const [barcode, setBarcode] = useState<string>(initialBarcode)
+  const [code, setCode] = useState<string>(initialCode)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
 
-  const trimmedBarcode = barcode.trim()
-  const isSubmitDisabled = trimmedBarcode.length === 0
+  const trimmedCode = code.trim()
+  const isSubmitDisabled = trimmedCode.length === 0
 
   const handleSubmit = useCallback(() => {
     if (isSubmitDisabled || isLoading) {
       return
     }
-    onSubmit(trimmedBarcode)
-  }, [isSubmitDisabled, isLoading, onSubmit, trimmedBarcode])
+    onSubmit(trimmedCode)
+  }, [isSubmitDisabled, isLoading, onSubmit, trimmedCode])
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -79,20 +79,20 @@ export function ScannerManualInput({
             <div className="space-y-2">
               <label
                 className="block font-medium text-sm"
-                htmlFor="manual-barcode"
+                htmlFor="manual-code"
               >
                 Kod produktu
               </label>
               <Input
                 autoComplete="off"
                 className="h-14 rounded-xl font-mono text-lg tracking-wider"
-                id="manual-barcode"
-                onChange={(event) => setBarcode(event.target.value)}
+                id="manual-code"
+                onChange={(event) => setCode(event.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="np. 5901234123457"
                 ref={inputRef}
                 type="text"
-                value={barcode}
+                value={code}
               />
               {error ? (
                 <p className="text-destructive text-sm" role="alert">

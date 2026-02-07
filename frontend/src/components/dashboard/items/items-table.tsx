@@ -37,7 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import useItems, { type ItemListItem } from "@/hooks/use-items"
-import { BarcodeCell } from "./components/barcode-cell"
+import { CodeCell } from "./components/code-cell"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 
 const SKELETON_ROWS = 5
@@ -133,11 +133,11 @@ const itemsColumns: ColumnDef<ItemListItem>[] = [
     enableSorting: true,
   },
   {
-    accessorKey: "barcode",
+    accessorKey: "code",
     header: ({ column }) => (
       <SortableHeader column={column}>Kod</SortableHeader>
     ),
-    cell: ({ row }) => <BarcodeCell value={row.original.barcode} />,
+    cell: ({ row }) => <CodeCell value={row.original.code} />,
     enableSorting: true,
   },
   {
@@ -210,7 +210,7 @@ const globalFilterFn: FilterFn<ItemListItem> = (
   }
   return (
     row.original.name.toLowerCase().includes(searchValue) ||
-    row.original.barcode.toLowerCase().includes(searchValue) ||
+    row.original.code.toLowerCase().includes(searchValue) ||
     (row.original.comment?.toLowerCase().includes(searchValue) ?? false)
   )
 }

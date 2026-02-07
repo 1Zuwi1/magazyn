@@ -448,7 +448,7 @@ export const UpdateWarehouseSchema = createApiSchema({
 
 const AssortmentSchema = z.object({
   id: z.number().int().nonnegative(),
-  barcode: z.string(),
+  code: z.string(),
   itemId: z.number().int().nonnegative(),
   rackId: z.number().int().nonnegative(),
   userId: z.number().int().nonnegative(),
@@ -477,7 +477,7 @@ export const AssortmentDetailsSchema = createApiSchema({
 
 const ItemDefinitionSchema = z.object({
   id: z.number().int().nonnegative(),
-  barcode: z.string(),
+  code: z.string(),
   name: z.string(),
   photoUrl: z.string().nullable(),
   minTemp: z.number(),
@@ -544,5 +544,72 @@ export const VerifyMailSchema = createApiSchema({
       token: z.string().min(1, "Token jest wymagany"),
     }),
     output: z.null(),
+  },
+})
+
+export const ITEM_BY_CODE_SCHEMA = createApiSchema({
+  GET: {
+    output: z.object({
+      id: z.number().int().nonnegative(),
+      code: z.string(),
+      name: z.string(),
+      photoUrl: z.string().nullable(),
+      minTemp: z.number(),
+      maxTemp: z.number(),
+      weight: z.number(),
+      sizeX: z.number(),
+      sizeY: z.number(),
+      sizeZ: z.number(),
+      comment: z.string().nullable(),
+      expireAfterDays: z.number(),
+      dangerous: z.boolean(),
+    }),
+  },
+})
+
+export const INBOUND_OPERATION_PLAN_SCHEMA = createApiSchema({
+  POST: {
+    input: z.object({
+      itemId: z.number().int().nonnegative(),
+      quantity: z.number().int().positive(),
+      warehouseId: z.number().int().nonnegative(),
+      reserve: z.boolean(),
+    }),
+    output: z.object({
+      itemId: z.number().int().nonnegative(),
+      requestedQuantity: z.number().int().nonnegative(),
+      allocatedQuantity: z.number().int().nonnegative(),
+      remainingQuantity: z.number().int().nonnegative(),
+      placements: z.array(
+        z.object({
+          rackId: z.number().int().nonnegative(),
+          rackMarker: z.string(),
+          positionX: z.number().int().nonnegative(),
+          positionY: z.number().int().nonnegative(),
+        })
+      ),
+      reserved: z.boolean(),
+      reservedUntil: z.string().nullable(),
+      reservedCount: z.number().int().nonnegative(),
+    }),
+  },
+})
+
+export const INBOUND_OPERATION_EXECUTE_SCHEMA = createApiSchema({
+  POST: {
+    input: z.object({
+      itemId: z.number().int().nonnegative(),
+      code: z.string().min(1),
+      placements: z
+        .array(
+          z.object({
+            rackId: z.number().int().nonnegative(),
+            positionX: z.number().int().nonnegative(),
+            positionY: z.number().int().nonnegative(),
+          })
+        )
+        .min(1),
+    }),
+    output: z.unknown(),
   },
 })

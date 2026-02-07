@@ -12,11 +12,14 @@ import {
   useRef,
   useState,
 } from "react"
-import z from "zod"
 import { SCAN_DELAY_MS, SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { createApiSchema } from "@/lib/create-api-schema"
 import { apiFetch, FetchError } from "@/lib/fetcher"
+import {
+  INBOUND_OPERATION_EXECUTE_SCHEMA,
+  INBOUND_OPERATION_PLAN_SCHEMA,
+  ITEM_BY_CODE_SCHEMA,
+} from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "../ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog"
@@ -61,73 +64,6 @@ export const TAB_TRIGGERS = [
     action: "remove",
   },
 ] as const
-
-const ITEM_BY_BARCODE_SCHEMA = createApiSchema({
-  GET: {
-    output: z.object({
-      id: z.number().int().nonnegative(),
-      barcode: z.string(),
-      name: z.string(),
-      photoUrl: z.string().nullable(),
-      minTemp: z.number(),
-      maxTemp: z.number(),
-      weight: z.number(),
-      sizeX: z.number(),
-      sizeY: z.number(),
-      sizeZ: z.number(),
-      comment: z.string().nullable(),
-      expireAfterDays: z.number(),
-      dangerous: z.boolean(),
-    }),
-  },
-})
-
-const PLACEMENT_PLAN_SCHEMA = createApiSchema({
-  POST: {
-    input: z.object({
-      itemId: z.number().int().nonnegative(),
-      quantity: z.number().int().positive(),
-      warehouseId: z.number().int().nonnegative(),
-      reserve: z.boolean(),
-    }),
-    output: z.object({
-      itemId: z.number().int().nonnegative(),
-      requestedQuantity: z.number().int().nonnegative(),
-      allocatedQuantity: z.number().int().nonnegative(),
-      remainingQuantity: z.number().int().nonnegative(),
-      placements: z.array(
-        z.object({
-          rackId: z.number().int().nonnegative(),
-          rackMarker: z.string(),
-          positionX: z.number().int().nonnegative(),
-          positionY: z.number().int().nonnegative(),
-        })
-      ),
-      reserved: z.boolean(),
-      reservedUntil: z.string().nullable(),
-      reservedCount: z.number().int().nonnegative(),
-    }),
-  },
-})
-
-const PLACEMENT_CONFIRM_SCHEMA = createApiSchema({
-  POST: {
-    input: z.object({
-      itemId: z.number().int().nonnegative(),
-      barcode: z.string().min(1),
-      placements: z
-        .array(
-          z.object({
-            rackId: z.number().int().nonnegative(),
-            positionX: z.number().int().nonnegative(),
-            positionY: z.number().int().nonnegative(),
-          })
-        )
-        .min(1),
-    }),
-    output: z.unknown(),
-  },
-})
 
 const SCANNER_ERROR_MESSAGES = {
   ITEM_NOT_FOUND: "Nie znaleziono produktu dla zeskanowanego kodu.",
@@ -185,7 +121,7 @@ export function Scanner({
   const [quantity, setQuantity] = useState<number>(1)
   const [reserve, setReserve] = useState<boolean>(true)
   const [scannedItem, setScannedItem] = useState<ScanItem | null>(null)
-  const [scannedBarcode, setScannedBarcode] = useState<string>("")
+  const [scannedCode, setScannedCode] = useState<string>("")
   const [placementPlan, setPlacementPlan] = useState<PlacementPlan | null>(null)
   const [currentWarehouseId, setCurrentWarehouseId] = useState<number | null>(
     null
@@ -196,7 +132,7 @@ export function Scanner({
   const [confirmedPlacementsCount, setConfirmedPlacementsCount] =
     useState<number>(0)
   const [error, setError] = useState<string | null>(null)
-  const [lastManualBarcode, setLastManualBarcode] = useState<string>("")
+  const [lastManualCode, setLastManualCode] = useState<string>("")
 
   const placementIdRef = useRef<number>(0)
   const searchParams = useSearchParams()
@@ -248,13 +184,13 @@ export function Scanner({
     setQuantity(1)
     setReserve(true)
     setScannedItem(null)
-    setScannedBarcode("")
+    setScannedCode("")
     setPlacementPlan(null)
     setCurrentWarehouseId(null)
     setEditablePlacements([])
     setConfirmedPlacementsCount(0)
     setError(null)
-    setLastManualBarcode("")
+    setLastManualCode("")
     placementIdRef.current = 0
   }, [])
 
@@ -288,8 +224,8 @@ export function Scanner({
   }, [searchParams])
 
   const onScan = useCallback(async (rawCode: string) => {
-    const barcode = rawCode.trim()
-    if (!barcode) {
+    const code = rawCode.trim()
+    if (!code) {
       setError("Nie udało się odczytać kodu. Spróbuj ponownie.")
       return
     }
@@ -302,12 +238,12 @@ export function Scanner({
 
     try {
       const item = await apiFetch(
-        `/api/items/barcode/${encodeURIComponent(barcode)}`,
-        ITEM_BY_BARCODE_SCHEMA
+        `/api/items/code/${encodeURIComponent(code)}`,
+        ITEM_BY_CODE_SCHEMA
       )
 
       setScannedItem(item)
-      setScannedBarcode(barcode)
+      setScannedCode(code)
       setPlacementPlan(null)
       setCurrentWarehouseId(null)
       setEditablePlacements([])
@@ -319,7 +255,7 @@ export function Scanner({
       })
     } catch (scanError) {
       setScannedItem(null)
-      setScannedBarcode("")
+      setScannedCode("")
       setPlacementPlan(null)
       setCurrentWarehouseId(null)
       setEditablePlacements([])
@@ -337,9 +273,9 @@ export function Scanner({
     }
   }, [])
 
-  const onManualScan = useCallback(async (barcode: string) => {
-    setLastManualBarcode(barcode)
-    const trimmed = barcode.trim()
+  const onManualScan = useCallback(async (code: string) => {
+    setLastManualCode(code)
+    const trimmed = code.trim()
     if (!trimmed) {
       return
     }
@@ -352,13 +288,13 @@ export function Scanner({
 
     try {
       const item = await apiFetch(
-        `/api/items/barcode/${encodeURIComponent(trimmed)}`,
-        ITEM_BY_BARCODE_SCHEMA
+        `/api/items/code/${encodeURIComponent(trimmed)}`,
+        ITEM_BY_CODE_SCHEMA
       )
 
       setScannedItem(item)
-      setScannedBarcode(trimmed)
-      setLastManualBarcode("")
+      setScannedCode(trimmed)
+      setLastManualCode("")
       setPlacementPlan(null)
       setCurrentWarehouseId(null)
       setEditablePlacements([])
@@ -370,7 +306,7 @@ export function Scanner({
       })
     } catch (scanError) {
       setScannedItem(null)
-      setScannedBarcode("")
+      setScannedCode("")
       setPlacementPlan(null)
       setCurrentWarehouseId(null)
       setEditablePlacements([])
@@ -403,8 +339,8 @@ export function Scanner({
       const warehouseId = resolveCurrentWarehouseId()
       setCurrentWarehouseId(warehouseId)
       const plan = await apiFetch(
-        "/api/inventory/placements/plan",
-        PLACEMENT_PLAN_SCHEMA,
+        "/api/inventory/inbound-operation/plan",
+        INBOUND_OPERATION_PLAN_SCHEMA,
         {
           method: "POST",
           body: {
@@ -475,13 +411,13 @@ export function Scanner({
 
     try {
       await apiFetch(
-        "/api/inventory/placements/confirm",
-        PLACEMENT_CONFIRM_SCHEMA,
+        "/api/inventory/inbound-operation/execute",
+        INBOUND_OPERATION_EXECUTE_SCHEMA,
         {
           method: "POST",
           body: {
             itemId: scannedItem.id,
-            barcode: scannedBarcode || scannedItem.barcode,
+            code: scannedCode || scannedItem.code,
             placements: editablePlacements.map((placement) => ({
               rackId: placement.rackId,
               positionX: placement.positionX,
@@ -518,7 +454,7 @@ export function Scanner({
         isSubmitting: false,
       }))
     }
-  }, [editablePlacements, queryClient, scannedBarcode, scannedItem])
+  }, [editablePlacements, queryClient, scannedCode, scannedItem])
 
   const handleQuantityDecrease = useCallback(() => {
     setQuantity((current) => Math.max(1, current - 1))
@@ -638,11 +574,11 @@ export function Scanner({
     content = (
       <ScannerManualInput
         error={error}
-        initialBarcode={lastManualBarcode}
+        initialCode={lastManualCode}
         isLoading={isLoading}
         onCancel={() => {
           setError(null)
-          setLastManualBarcode("")
+          setLastManualCode("")
           setScannerState({
             step: "camera",
             isLoading: false,

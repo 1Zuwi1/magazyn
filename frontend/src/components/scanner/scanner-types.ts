@@ -1,6 +1,6 @@
 export interface ScanItem {
   id: number
-  barcode: string
+  code: string
   name: string
   photoUrl: string | null
   minTemp: number

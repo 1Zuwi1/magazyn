@@ -28,10 +28,10 @@ const QR_CODE_SIZE_LARGE = 256
 
 const isQrCode = (value: string): boolean => value.startsWith(QR_PREFIX)
 
-const formatGs1Barcode = (barcode: string): string => {
-  const match = GS1_BARCODE_PATTERN.exec(barcode)
+const formatGs1Code = (code: string): string => {
+  const match = GS1_BARCODE_PATTERN.exec(code)
   if (!match) {
-    return barcode
+    return code
   }
 
   const [, productionDate, gtin, serial] = match
@@ -121,7 +121,7 @@ function useCopyToClipboard(value: string) {
   return { copied, handleCopy }
 }
 
-interface BarcodeDialogProps {
+interface CodeDialogProps {
   formatted: string
   isQr: boolean
   onOpenChange: (open: boolean) => void
@@ -129,13 +129,13 @@ interface BarcodeDialogProps {
   value: string
 }
 
-function BarcodeDialog({
+function CodeDialog({
   formatted,
   isQr,
   onOpenChange,
   open,
   value,
-}: BarcodeDialogProps) {
+}: CodeDialogProps) {
   const { copied, handleCopy } = useCopyToClipboard(value)
 
   return (
@@ -180,20 +180,20 @@ function BarcodeDialog({
   )
 }
 
-interface BarcodeCellProps {
+interface CodeCellProps {
   value: string
 }
 
-export function BarcodeCell({ value }: BarcodeCellProps) {
+export function CodeCell({ value }: CodeCellProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const isQr = isQrCode(value)
-  const formatted = isQr ? value : formatGs1Barcode(value)
+  const formatted = isQr ? value : formatGs1Code(value)
 
   return (
     <>
       <Tooltip>
         <TooltipTrigger
-          className="group/barcode flex w-fit cursor-pointer flex-col gap-1.5 rounded-lg border border-border/50 bg-white p-2.5 shadow-sm transition-all hover:border-border hover:shadow-md dark:bg-white/95"
+          className="group/code flex w-fit cursor-pointer flex-col gap-1.5 rounded-lg border border-border/50 bg-white p-2.5 shadow-sm transition-all hover:border-border hover:shadow-md dark:bg-white/95"
           onClick={() => setDialogOpen(true)}
         >
           {isQr ? (
@@ -216,7 +216,7 @@ export function BarcodeCell({ value }: BarcodeCellProps) {
         </TooltipTrigger>
         <TooltipContent>Kliknij, aby powiększyć</TooltipContent>
       </Tooltip>
-      <BarcodeDialog
+      <CodeDialog
         formatted={formatted}
         isQr={isQr}
         onOpenChange={setDialogOpen}

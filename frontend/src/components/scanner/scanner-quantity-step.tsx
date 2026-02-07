@@ -67,7 +67,7 @@ export function ScannerQuantityStep({
                   {scannedItem.dangerous ? <Badge>Niebezpieczny</Badge> : null}
                 </div>
                 <p className="mt-1 font-mono text-muted-foreground text-xs">
-                  Kod: {scannedItem.barcode}
+                  Kod: {scannedItem.code}
                 </p>
                 <p className="mt-2 text-muted-foreground text-sm">
                   Wygasa za{" "}
