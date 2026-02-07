@@ -60,15 +60,15 @@ public class RackController {
         return ResponseEntity.ok(ResponseTemplate.success(rackService.getRackById(id, request)));
     }
 
-    @Operation(summary = "Get items in a rack with pagination",
-            description = "Returns paginated list of all assortments (items) stored in a specific rack, including full item details")
+    @Operation(summary = "Get assortment in a rack with pagination",
+            description = "Returns paginated list of all assortments stored in a specific rack, including full item details")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
             @ApiResponse(responseCode = "400", description = "Error codes: RACK_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @GetMapping("/{rackId}/items")
+    @GetMapping("/{rackId}/assortments")
     public ResponseEntity<ResponseTemplate<PagedResponse<AssortmentWithItemDto>>> getItemsByRackId(
             @PathVariable Long rackId,
             HttpServletRequest request,

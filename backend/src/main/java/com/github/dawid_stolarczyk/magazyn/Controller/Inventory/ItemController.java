@@ -493,11 +493,12 @@ public class ItemController {
     })
     @PostMapping("/generate-embeddings")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<ItemEmbeddingGenerationService.EmbeddingGenerationReport>> generateEmbeddings() {
+    public ResponseEntity<ResponseTemplate<ItemEmbeddingGenerationService.EmbeddingGenerationReport>> generateEmbeddings(
+            @RequestParam(defaultValue = "false") boolean forceRegenerate) {
         try {
-            log.info("Admin requested batch embedding generation");
+            log.info("Admin requested batch embedding generation (forceRegenerate={})", forceRegenerate);
             ItemEmbeddingGenerationService.EmbeddingGenerationReport report =
-                    embeddingGenerationService.generateMissingEmbeddings();
+                    embeddingGenerationService.generateEmbeddings(forceRegenerate);
             return ResponseEntity.ok(ResponseTemplate.success(report));
         } catch (Exception e) {
             log.error("Error during batch embedding generation", e);

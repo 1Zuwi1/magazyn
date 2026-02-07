@@ -18,10 +18,12 @@ import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -38,12 +40,15 @@ import java.util.List;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ImageEmbeddingService {
 
     private static final int EMBEDDING_DIMENSION = 1000;
     private static final List<String> ALLOWED_CONTENT_TYPES = List.of(
             "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/bmp"
     );
+
+    private final BackgroundRemovalService backgroundRemovalService;
 
     private ZooModel<Image, float[]> model;
     private Predictor<Image, float[]> predictor;
@@ -190,10 +195,21 @@ public class ImageEmbeddingService {
         }
 
         try {
-            Image image = ImageFactory.getInstance().fromInputStream(inputStream);
+            byte[] originalBytes = inputStream.readAllBytes();
+
+            // Attempt background removal; fall back to original on failure
+            byte[] imageBytes = originalBytes;
+            byte[] processed = backgroundRemovalService.removeBackground(originalBytes);
+            if (processed != null) {
+                imageBytes = processed;
+                log.debug("Using background-removed image for embedding");
+            } else {
+                log.debug("Using original image for embedding (background removal skipped or failed)");
+            }
+
+            Image image = ImageFactory.getInstance().fromInputStream(new ByteArrayInputStream(imageBytes));
             float[] rawEmbedding = predictor.predict(image);
 
-            // Normalize to 512 dimensions if needed
             return normalizeEmbedding(rawEmbedding);
         } catch (IOException e) {
             log.error("Failed to load image: {}", e.getMessage());

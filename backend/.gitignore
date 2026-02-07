@@ -43,3 +43,5 @@ build/
 # Temporary files
 tmp_*.txt
 
+# Background removal test images
+test-images/

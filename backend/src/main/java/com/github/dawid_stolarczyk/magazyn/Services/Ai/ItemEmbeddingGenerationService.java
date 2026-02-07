@@ -32,15 +32,27 @@ public class ItemEmbeddingGenerationService {
      */
     @Transactional
     public EmbeddingGenerationReport generateMissingEmbeddings() {
-        log.info("Starting batch embedding generation for items without embeddings");
+        return generateEmbeddings(false);
+    }
 
-        // Find all items with photos but without embeddings
-        List<Item> itemsWithoutEmbeddings = itemRepository.findAll().stream()
+    /**
+     * Generates embeddings for items with photos.
+     * When forceRegenerate is true, regenerates embeddings for ALL items with photos.
+     * When false, only processes items that don't have embeddings yet.
+     *
+     * @param forceRegenerate if true, regenerate all embeddings
+     * @return report with statistics of the generation process
+     */
+    @Transactional
+    public EmbeddingGenerationReport generateEmbeddings(boolean forceRegenerate) {
+        log.info("Starting batch embedding generation (forceRegenerate={})", forceRegenerate);
+
+        List<Item> itemsToProcess = itemRepository.findAll().stream()
                 .filter(item -> item.getPhoto_url() != null && !item.getPhoto_url().isBlank())
-                .filter(item -> item.getImageEmbedding() == null)
+                .filter(item -> forceRegenerate || item.getImageEmbedding() == null)
                 .toList();
 
-        if (itemsWithoutEmbeddings.isEmpty()) {
+        if (itemsToProcess.isEmpty()) {
             log.info("No items found that need embedding generation");
             return EmbeddingGenerationReport.builder()
                     .totalItems(0)
@@ -51,13 +63,13 @@ public class ItemEmbeddingGenerationService {
                     .build();
         }
 
-        log.info("Found {} items without embeddings", itemsWithoutEmbeddings.size());
+        log.info("Found {} items to process", itemsToProcess.size());
 
         AtomicInteger processed = new AtomicInteger(0);
         AtomicInteger successful = new AtomicInteger(0);
         AtomicInteger failed = new AtomicInteger(0);
 
-        for (Item item : itemsWithoutEmbeddings) {
+        for (Item item : itemsToProcess) {
             InputStream photoStream = null;
             try {
                 // Download photo from S3
@@ -91,13 +103,13 @@ public class ItemEmbeddingGenerationService {
 
                 // Log progress every 10 items
                 if (processed.get() % 10 == 0) {
-                    log.info("Progress: {}/{} items processed", processed.get(), itemsWithoutEmbeddings.size());
+                    log.info("Progress: {}/{} items processed", processed.get(), itemsToProcess.size());
                 }
             }
         }
 
         EmbeddingGenerationReport report = EmbeddingGenerationReport.builder()
-                .totalItems(itemsWithoutEmbeddings.size())
+                .totalItems(itemsToProcess.size())
                 .processed(processed.get())
                 .successful(successful.get())
                 .failed(failed.get())

@@ -44,6 +44,7 @@ public class VerificationLevelFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         VerificationLevel requiredLevel = endpointAccessConfig.getRequiredLevel(uri);
 
+
         // Public endpoints - no verification needed
         if (requiredLevel == VerificationLevel.PUBLIC) {
             filterChain.doFilter(request, response);
