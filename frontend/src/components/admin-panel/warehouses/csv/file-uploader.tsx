@@ -23,7 +23,7 @@ interface FileWithPreview extends File {
 interface FileUploaderProps {
   value?: File[]
   onValueChange?: (files: File[]) => void
-  onUpload?: (files: File[]) => void | Promise<void>
+  onUpload?: (files: File[]) => boolean | Promise<boolean>
   disabled?: boolean
 }
 
@@ -83,13 +83,23 @@ export function FileUploader({
       onValueChange?.(updatedFiles)
 
       if (onUpload && updatedFiles.length <= DEFAULT_CONFIG.maxFileCount) {
+        let isUploadSuccessful = true
         setIsUploading(true)
         try {
-          await onUpload(updatedFiles)
+          isUploadSuccessful = await onUpload(updatedFiles)
         } catch {
+          isUploadSuccessful = false
           toast.error("Nie udało się przetworzyć pliku")
         } finally {
           setIsUploading(false)
+        }
+
+        if (!isUploadSuccessful) {
+          for (const uploadedFile of updatedFiles) {
+            URL.revokeObjectURL(uploadedFile.preview)
+          }
+          setFiles([])
+          onValueChange?.([])
         }
       }
     },

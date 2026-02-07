@@ -31,23 +31,21 @@ export function useCsvImporter<T extends CsvImporterType>({
   const [parseErrors, setParseErrors] = useState<CsvParseError[]>([])
   const [previewHeaders, setPreviewHeaders] = useState<string[]>([])
 
-  async function processFile(files: File[]) {
+  async function processFile(files: File[]): Promise<boolean> {
     const [file] = files
     if (!file) {
-      return
+      return false
     }
 
     resetFile()
-    setSourceFile(file)
 
     try {
       const result = await parseCsvFile(file, type)
-      setRawPreviewData(result.rawRows)
-      setValidatedData(result.rows)
       setParseErrors(result.errors)
-      setPreviewHeaders(result.headers)
 
       if (result.errors.length > 0) {
+        setSourceFile(null)
+
         const displayedErrors = result.errors
           .slice(0, MAX_TOAST_ROWS)
           .map((e) => `Wiersz ${e.row}: ${e.message}`)
@@ -59,10 +57,18 @@ export function useCsvImporter<T extends CsvImporterType>({
         toast.error(`Błędy parsowania CSV (${result.errors.length})`, {
           description: displayedErrors + suffix,
         })
+        return false
       }
+
+      setSourceFile(file)
+      setRawPreviewData(result.rawRows)
+      setValidatedData(result.rows)
+      setPreviewHeaders(result.headers)
+      return true
     } catch {
       toast.error("Nie udało się przetworzyć pliku CSV")
       resetFile()
+      return false
     }
   }
 
@@ -75,6 +81,11 @@ export function useCsvImporter<T extends CsvImporterType>({
   }
 
   async function confirmImport() {
+    if (parseErrors.length > 0) {
+      toast.error("Plik CSV zawiera błędy. Popraw plik przed importem.")
+      return
+    }
+
     if (!sourceFile) {
       toast.error("Najpierw wybierz plik CSV")
       return
