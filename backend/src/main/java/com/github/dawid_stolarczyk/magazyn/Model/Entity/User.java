@@ -45,11 +45,11 @@ public class User {
     private List<WebAuthnCredential> webAuthnCredentials = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, columnDefinition = "varchar(20) default 'PENDING_VERIFICATION'")
+    @Column(name = "status", nullable = false, columnDefinition = "varchar(20)")
     private AccountStatus status = AccountStatus.PENDING_VERIFICATION;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "email_status", nullable = false, columnDefinition = "varchar(20) default 'UNVERIFIED'")
+    @Column(name = "email_status", nullable = false, columnDefinition = "varchar(20)")
     private EmailStatus emailStatus = EmailStatus.UNVERIFIED;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -59,7 +59,7 @@ public class User {
     private List<BackupCode> backupCodes = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "default_2fa_method", nullable = false, columnDefinition = "varchar(20) default 'EMAIL'")
+    @Column(name = "default_2fa_method", nullable = false, columnDefinition = "varchar(20)")
     private Default2faMethod default2faMethod = Default2faMethod.EMAIL;
 
     // Dodatkowe informacje użytkownika (edytowalne przez admina)

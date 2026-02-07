@@ -60,11 +60,11 @@ public class OutboundController {
     @Operation(summary = "Execute outbound operation",
             description = """
                     Issues assortments from the warehouse. Deletes assortments and creates audit records.
-
+                    
                     **FIFO Validation:**
                     - `skipFifo=false` (default): Rejects if older assortments of the same item exist (OUTBOUND_FIFO_VIOLATION)
                     - `skipFifo=true`: Allows pick but records `fifoCompliant=false` in the audit trail
-
+                    
                     The entire operation is transactional — all assortments are issued or none are.
                     """)
     @ApiResponses(value = {

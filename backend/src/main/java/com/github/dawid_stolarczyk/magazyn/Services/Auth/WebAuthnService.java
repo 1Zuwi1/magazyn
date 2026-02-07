@@ -116,15 +116,10 @@ public class WebAuthnService {
             throw new AuthenticationException(AuthError.TOO_MANY_PASSKEYS.name());
         }
 
-        // Validate unique name for this user (trim whitespace first)
-        String trimmedKeyName = keyName != null ? keyName.strip() : null;
+        // Validate and trim passkey name
+        String trimmedKeyName = validateAndTrimPasskeyName(keyName);
 
-        // Validate length (max 100 characters, consistent with PasskeyRenameRequest)
-        if (trimmedKeyName != null && trimmedKeyName.length() > 100) {
-            throw new AuthenticationException(AuthError.INVALID_INPUT.name());
-        }
-
-        String finalKeyName = trimmedKeyName != null && !trimmedKeyName.isEmpty()
+        String finalKeyName = trimmedKeyName != null
                 ? trimmedKeyName
                 : "Passkey " + (currentKeys + 1);
 
@@ -225,15 +220,10 @@ public class WebAuthnService {
             throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
         }
 
-        // Trim whitespace and validate new name
-        String trimmedName = newName != null ? newName.strip() : null;
+        // Validate and trim passkey name
+        String trimmedName = validateAndTrimPasskeyName(newName);
 
-        if (trimmedName == null || trimmedName.isEmpty()) {
-            throw new AuthenticationException(AuthError.INVALID_INPUT.name());
-        }
-
-        // Validate length (max 100 characters, consistent with PasskeyRenameRequest)
-        if (trimmedName.length() > 100) {
+        if (trimmedName == null) {
             throw new AuthenticationException(AuthError.INVALID_INPUT.name());
         }
 
@@ -335,6 +325,29 @@ public class WebAuthnService {
             throw new AuthenticationException(AuthError.EMAIL_UNVERIFIED.name());
         }
         sessionManager.createSuccessLoginSession(user, httpServletRequest, httpServletResponse, true, true);
+    }
+
+    /**
+     * Validates and trims a passkey name.
+     * Ensures the name is within acceptable length (max 100 characters).
+     *
+     * @param name The passkey name to validate (can be null)
+     * @return Trimmed name if valid, or null if input is null
+     * @throws AuthenticationException if name exceeds 100 characters
+     */
+    private String validateAndTrimPasskeyName(String name) {
+        if (name == null) {
+            return null;
+        }
+
+        String trimmed = name.strip();
+
+        // Validate length (max 100 characters)
+        if (trimmed.length() > 100) {
+            throw new AuthenticationException(AuthError.INVALID_INPUT.name());
+        }
+
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
 }

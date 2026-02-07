@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
+import com.github.dawid_stolarczyk.magazyn.Common.ConfigurationConstants;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.RackImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.AssortmentService;
@@ -42,7 +43,7 @@ public class RackController {
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), sort);
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(rackService.getAllRacksPaged(request, pageable))));
     }
@@ -76,7 +77,7 @@ public class RackController {
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), sort);
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(assortmentService.getAssortmentsByRackIdPaged(rackId, request, pageable))));
     }
@@ -127,13 +128,13 @@ public class RackController {
             summary = "Import racks from CSV (ADMIN only)",
             description = """
                     Import regałów z pliku CSV ze **stałą kolejnością kolumn** (bez nagłówka).
-
+                    
                     **Format CSV:**
                     - Separator: **średnik (;)**
                     - Kodowanie: **UTF-8**
                     - Bez nagłówka (pierwsza linia to już dane)
                     - Linie zaczynające się od '#' są ignorowane (komentarze)
-
+                    
                     **Kolejność kolumn (STAŁA):**
                     1. **WarehouseId** (Long) - ID magazynu, do którego należy regał
                        - WYMAGANE
@@ -162,7 +163,7 @@ public class RackController {
                         - OPCJONALNE (domyślnie FALSE)
                     12. **Komentarz** (String) - Dodatkowy opis
                         - OPCJONALNE
-
+                    
                     **Przykład pliku CSV:**
                     ```
                     #WarehouseId;Marker;M;N;TempMin;TempMax;MaxWagaKg;MaxSzerokoscMm;MaxWysokoscMm;MaxGlebokoscMm;AcceptsDangerous;Komentarz
@@ -171,18 +172,18 @@ public class RackController {
                     2;R-01;6;12;-20;-5;1500;180;350;600;FALSE;Regał mroźniczy
                     2;R-02;3;6;10;60;500;300;400;700;TRUE;Regał na materiały niebezpieczne
                     ```
-
+                    
                     **Uwagi:**
                     - Marker jest automatycznie normalizowany (uppercase, usunięcie znaków specjalnych)
                     - Marker musi być unikalny w ramach jednego magazynu
                     - Wartości NULL lub puste dla kolumn opcjonalnych są ignorowane
-
+                    
                     **Walidacja pliku:**
                     - Tylko pliki CSV (rozszerzenia: .csv, .txt)
                     - Content-Type: text/csv, text/plain, application/csv
                     - Maksymalny rozmiar: 5MB
                     - Plik nie może być pusty
-
+                    
                     **Odpowiedź:**
                     - `processedLines` - liczba przetworzonych linii
                     - `imported` - liczba zaimportowanych regałów

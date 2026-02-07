@@ -97,19 +97,20 @@ public class UserService {
 
     /**
      * Admin: Get all users with pagination and optional filtering
-     * @param name Optional filter by full name (case-insensitive, partial match)
-     * @param email Optional filter by email (case-insensitive, partial match)
+     *
+     * @param name   Optional filter by full name (case-insensitive, partial match)
+     * @param email  Optional filter by email (case-insensitive, partial match)
      * @param status Optional filter by account status
      */
     public Page<UserInfoResponse> adminGetAllUsersPaged(HttpServletRequest request, String name, String email, AccountStatus status, Pageable pageable) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
         return userRepository.findUsersWithFilters(
-                authPrincipal.getUserId(),
-                name,
-                email,
-                status,
-                pageable)
+                        authPrincipal.getUserId(),
+                        name,
+                        email,
+                        status,
+                        pageable)
                 .map(this::mapToUserInfoResponse);
     }
 
@@ -211,7 +212,7 @@ public class UserService {
         if (profileRequest.getFullName() != null) {
             String fullName = profileRequest.getFullName().strip();
             if (fullName.isEmpty()) {
-                throw new IllegalArgumentException("INVALID_FULL_NAME");
+                throw new IllegalArgumentException(AuthError.INVALID_FULL_NAME.name());
             }
             targetUser.setFullName(fullName);
         }

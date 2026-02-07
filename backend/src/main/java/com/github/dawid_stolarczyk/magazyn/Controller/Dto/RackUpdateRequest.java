@@ -19,9 +19,9 @@ public class RackUpdateRequest {
 
     @NotBlank(message = "Rack marker is required")
     @Schema(
-        description = "Rack marker/label - will be normalized to uppercase alphanumeric with dashes/underscores only",
-        example = "A-01",
-        required = true
+            description = "Rack marker/label - will be normalized to uppercase alphanumeric with dashes/underscores only",
+            example = "A-01",
+            required = true
     )
     private String marker;
 

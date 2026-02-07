@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Alerts;
 
+import com.github.dawid_stolarczyk.magazyn.Common.ConfigurationConstants;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserNotificationDto;
@@ -41,7 +42,7 @@ public class UserNotificationController {
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100));
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(notificationService.getMyNotifications(request, pageable))));
     }
@@ -57,7 +58,7 @@ public class UserNotificationController {
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100));
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(notificationService.getMyUnreadNotifications(request, pageable))));
     }

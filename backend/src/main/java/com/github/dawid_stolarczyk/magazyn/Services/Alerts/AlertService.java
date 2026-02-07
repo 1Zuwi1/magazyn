@@ -126,6 +126,7 @@ public class AlertService {
                 alert.setResolvedBy(null);
                 alert.setResolutionNotes(null);
             }
+            default -> throw new IllegalArgumentException("Unsupported alert status: " + request.getStatus());
         }
 
         alertRepository.save(alert);

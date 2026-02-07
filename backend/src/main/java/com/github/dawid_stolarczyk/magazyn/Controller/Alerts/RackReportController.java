@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Alerts;
 
+import com.github.dawid_stolarczyk.magazyn.Common.ConfigurationConstants;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Services.Alerts.RackReportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -66,7 +67,7 @@ public class RackReportController {
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100));
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(rackReportService.getAllReportsPaged(request, pageable))));
     }
@@ -83,7 +84,7 @@ public class RackReportController {
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100));
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(rackReportService.getReportsByRackPaged(rackId, request, pageable))));
     }
@@ -100,7 +101,7 @@ public class RackReportController {
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100));
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(rackReportService.getReportsByWarehousePaged(warehouseId, request, pageable))));
     }
@@ -116,7 +117,7 @@ public class RackReportController {
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100));
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(rackReportService.getReportsWithAlerts(request, pageable))));
     }

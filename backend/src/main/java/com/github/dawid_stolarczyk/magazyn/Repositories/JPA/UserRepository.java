@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -31,4 +32,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
             @Param("email") String email,
             @Param("status") AccountStatus status,
             Pageable pageable);
+
+    /**
+     * Find all active users (for notification distribution)
+     */
+    List<User> findByStatus(AccountStatus status);
 }

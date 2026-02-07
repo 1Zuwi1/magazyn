@@ -55,23 +55,33 @@ public class OutboundOperation {
     @Column(name = "quantity", nullable = false)
     private Integer quantity = 1;
 
-    /** Zdenormalizowany kod assortmentu (barcode format, assortment jest usuwany) */
+    /**
+     * Zdenormalizowany kod assortmentu (barcode format, assortment jest usuwany)
+     */
     @Column(name = "assortment_code", length = 32)
     private String assortmentCode;
 
-    /** Zdenormalizowana nazwa produktu */
+    /**
+     * Zdenormalizowana nazwa produktu
+     */
     @Column(name = "item_name")
     private String itemName;
 
-    /** Zdenormalizowany kod produktu (barcode format) */
+    /**
+     * Zdenormalizowany kod produktu (barcode format)
+     */
     @Column(name = "item_code", length = 32)
     private String itemCode;
 
-    /** Czy wydanie było zgodne z FIFO */
+    /**
+     * Czy wydanie było zgodne z FIFO
+     */
     @Column(name = "fifo_compliant", nullable = false)
     private boolean fifoCompliant = true;
 
-    /** Czy podczas wydania napotkano naruszenie FIFO */
+    /**
+     * Czy podczas wydania napotkano naruszenie FIFO
+     */
     @Column(name = "fifo_violation", nullable = false)
     private boolean fifoViolation = false;
 

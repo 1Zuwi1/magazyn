@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
+import com.github.dawid_stolarczyk.magazyn.Common.ConfigurationConstants;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentImportReport;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
@@ -44,7 +45,7 @@ public class AssortmentController {
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), sort);
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(assortmentService.getAllAssortmentsPaged(request, pageable))));
     }

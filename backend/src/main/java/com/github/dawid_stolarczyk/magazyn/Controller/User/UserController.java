@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.User;
 
+import com.github.dawid_stolarczyk.magazyn.Common.ConfigurationConstants;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
@@ -83,7 +84,7 @@ public class UserController {
             @Parameter(description = "Filter by email (case-insensitive, partial match)", example = "john@") @RequestParam(required = false) String email,
             @Parameter(description = "Filter by account status", example = "ACTIVE") @RequestParam(required = false) AccountStatus status) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), sort);
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(userService.adminGetAllUsersPaged(request, name, email, status, pageable))));
     }
@@ -169,7 +170,7 @@ public class UserController {
                     - DISABLED: User cannot log in, all sessions invalidated
                     - LOCKED: User account is locked due to security reasons, all sessions invalidated
                     - PENDING_VERIFICATION: User needs to verify their email before accessing the system
-
+                    
                     Note: Admins cannot change their own status.
                     When a user is DISABLED or LOCKED, all their active sessions are immediately invalidated.
                     """)

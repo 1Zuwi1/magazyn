@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface UserNotificationRepository extends JpaRepository<UserNotification, Long> {
@@ -76,4 +77,11 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
     @Modifying
     @Query("DELETE FROM UserNotification n WHERE n.alert.id = :alertId")
     void deleteAllByAlertId(@Param("alertId") Long alertId);
+
+    /**
+     * Get all user IDs that already have a notification for the given alert.
+     * Used for batch notification distribution to avoid N+1 queries.
+     */
+    @Query("SELECT n.user.id FROM UserNotification n WHERE n.alert.id = :alertId")
+    Set<Long> findUserIdsWithNotificationForAlert(@Param("alertId") Long alertId);
 }

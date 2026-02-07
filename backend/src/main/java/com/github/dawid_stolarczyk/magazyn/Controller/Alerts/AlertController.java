@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Alerts;
 
+import com.github.dawid_stolarczyk.magazyn.Common.ConfigurationConstants;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AlertDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AlertStatusUpdateRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
@@ -46,7 +47,7 @@ public class AlertController {
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100));
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(alertService.getAllAlerts(request, pageable))));
     }
@@ -62,7 +63,7 @@ public class AlertController {
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100));
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(alertService.getActiveAlerts(request, pageable))));
     }
@@ -78,7 +79,7 @@ public class AlertController {
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100));
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(alertService.getAlertsByStatus(status, request, pageable))));
     }
@@ -94,7 +95,7 @@ public class AlertController {
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100));
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(alertService.getAlertsByType(alertType, request, pageable))));
     }
@@ -110,7 +111,7 @@ public class AlertController {
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100));
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(alertService.getAlertsByWarehouse(warehouseId, request, pageable))));
     }
@@ -126,7 +127,7 @@ public class AlertController {
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100));
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(alertService.getAlertsByRack(rackId, request, pageable))));
     }

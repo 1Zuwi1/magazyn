@@ -31,17 +31,17 @@ public class InboundController {
             summary = "Plan inbound operation",
             description = """
                     Generates a placement plan using intelligent algorithms:
-
+                    
                     **Grouping Algorithm:**
                     - Groups racks by proximity (warehouse → zone → aisle based on marker)
                     - Fills positions in "snake" pattern (row by row, left to right)
                     - Minimizes picking time by placing items close together
-
+                    
                     **Position Reservation (reserve=true):**
                     - Each allocated position is reserved for 5 minutes
                     - Only the requesting user can confirm placement to reserved positions
                     - Reservations automatically expire after 5 minutes
-
+                    
                     **Without Reservation (reserve=false, default):**
                     - Returns optimal positions without locking them
                     """

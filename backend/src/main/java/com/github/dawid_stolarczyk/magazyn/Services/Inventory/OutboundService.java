@@ -62,7 +62,7 @@ public class OutboundService {
         rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
 
         Assortment assortment = assortmentRepository.findByRackIdAndPositionXAndPositionY(
-                request.getRackId(), request.getPositionX(), request.getPositionY())
+                        request.getRackId(), request.getPositionX(), request.getPositionY())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
 
         List<Assortment> older = assortmentRepository.findOlderAssortments(
@@ -97,7 +97,7 @@ public class OutboundService {
 
         for (OutboundPickPosition position : request.getPositions()) {
             Assortment assortment = assortmentRepository.findByRackIdAndPositionXAndPositionY(
-                    position.getRackId(), position.getPositionX(), position.getPositionY())
+                            position.getRackId(), position.getPositionX(), position.getPositionY())
                     .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
 
             // Sprawdź FIFO compliance

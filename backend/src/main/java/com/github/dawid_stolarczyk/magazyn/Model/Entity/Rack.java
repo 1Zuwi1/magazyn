@@ -11,10 +11,10 @@ import java.util.List;
 
 @Entity
 @Table(
-    name = "racks",
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"warehouse_id", "marker"}, name = "uk_warehouse_marker")
-    }
+        name = "racks",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"warehouse_id", "marker"}, name = "uk_warehouse_marker")
+        }
 )
 @Getter
 @Setter

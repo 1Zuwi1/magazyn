@@ -4,6 +4,7 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackReportDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackReportRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackReportResponse;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertType;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.*;
@@ -55,7 +56,7 @@ public class RackReportService {
      * @param httpRequest HTTP request for rate limiting
      * @return Response with report details and any triggered alerts
      */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public RackReportResponse processReport(RackReportRequest request, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
 
@@ -188,7 +189,7 @@ public class RackReportService {
      * @return true if a new alert was created, false if one already existed
      */
     private boolean createAlertIfNotExistsForItem(Rack rack, Item item, RackReport report, AlertType alertType,
-                                                   float thresholdValue, float actualValue) {
+                                                  float thresholdValue, float actualValue) {
         if (alertRepository.existsActiveAlertForRackAndItem(rack.getId(), item.getId(), alertType, ACTIVE_STATUSES)) {
             log.debug("Active alert of type {} already exists for rack {} and item {}, skipping",
                     alertType, rack.getId(), item.getId());
@@ -219,30 +220,40 @@ public class RackReportService {
     }
 
     /**
-     * Distributes notifications for an alert to all active users.
-     * In production, this could be filtered by warehouse assignment, role, etc.
+     * Distributes notifications for an alert to all active users using batch insert.
+     * Uses a single query to check existing notifications, preventing N+1 problem.
+     * <p>
+     * TODO: Implement warehouse-based user assignment to filter notifications by warehouse access.
+     * Currently sends to all ACTIVE users. Future enhancement: only notify users assigned to
+     * the alert's warehouse or users with specific roles/permissions.
      */
     private void distributeNotifications(Alert alert) {
-        // Get all active users (in real scenario, filter by warehouse/role)
-        List<User> users = userRepository.findAll();
+        // Get all active users (filters out DISABLED, LOCKED, PENDING_VERIFICATION)
+        List<User> activeUsers = userRepository.findByStatus(AccountStatus.ACTIVE);
 
-        for (User user : users) {
-            // Skip if notification already exists
-            if (notificationRepository.existsByUserIdAndAlertId(user.getId(), alert.getId())) {
-                continue;
-            }
+        // Batch check: get all user IDs that already have this notification (single query)
+        Set<Long> existingUserIds = notificationRepository.findUserIdsWithNotificationForAlert(alert.getId());
 
-            UserNotification notification = UserNotification.builder()
-                    .user(user)
-                    .alert(alert)
-                    .isRead(false)
-                    .createdAt(Instant.now())
-                    .build();
+        // Build list of notifications to create
+        Instant now = Instant.now();
+        List<UserNotification> newNotifications = activeUsers.stream()
+                .filter(user -> !existingUserIds.contains(user.getId()))
+                .map(user -> UserNotification.builder()
+                        .user(user)
+                        .alert(alert)
+                        .isRead(false)
+                        .createdAt(now)
+                        .build())
+                .toList();
 
-            notificationRepository.save(notification);
+        // Batch insert: save all notifications in one operation
+        if (!newNotifications.isEmpty()) {
+            notificationRepository.saveAll(newNotifications);
+            log.info("Distributed {} notifications for alert {} to active users",
+                    newNotifications.size(), alert.getId());
+        } else {
+            log.debug("No new notifications to distribute for alert {}", alert.getId());
         }
-
-        log.debug("Distributed notifications for alert {} to {} users", alert.getId(), users.size());
     }
 
     /**
