@@ -22,14 +22,13 @@ public class EndpointAccessConfig {
         endpointLevels.put("/api/auth/register", VerificationLevel.PUBLIC);
         endpointLevels.put("/api/auth/verify-email", VerificationLevel.PUBLIC);
 
-        // AUTHENTICATED_UNVERIFIED - logged in but waiting for admin verification
-        // Only basic auth endpoints to check status or logout
-        endpointLevels.put("/api/auth/logout", VerificationLevel.AUTHENTICATED_UNVERIFIED);
-        endpointLevels.put("/api/auth/me", VerificationLevel.AUTHENTICATED_UNVERIFIED);
-
         // VERIFIED_NO_2FA - admin verified, can configure 2FA
+        endpointLevels.put("/api/auth/logout", VerificationLevel.VERIFIED_NO_2FA);
         endpointLevels.put("/api/2fa", VerificationLevel.VERIFIED_NO_2FA);
         endpointLevels.put("/api/webauthn/assertion", VerificationLevel.VERIFIED_NO_2FA);
+
+        // AUTHENTICATED_UNVERIFIED - logged in but waiting for admin verification
+        endpointLevels.put("/api/auth/me", VerificationLevel.AUTHENTICATED_UNVERIFIED);
 
         // FULLY_VERIFIED - default for all other endpoints
         // (handled in filter as fallback)

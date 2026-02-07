@@ -88,22 +88,15 @@ public class VerificationLevelFilter extends OncePerRequestFilter {
         AccountStatus accountStatus = user.getStatus();
         Status2FA status2FA = authPrincipal.getStatus2FA();
 
-        // User not verified by admin yet
+
+        if (status2FA != Status2FA.VERIFIED) {
+            return VerificationLevel.VERIFIED_NO_2FA;
+        }
+
         if (accountStatus == AccountStatus.PENDING_VERIFICATION) {
             return VerificationLevel.AUTHENTICATED_UNVERIFIED;
         }
 
-        // Account disabled or locked - treat as unverified
-        if (accountStatus == AccountStatus.DISABLED || accountStatus == AccountStatus.LOCKED) {
-            return VerificationLevel.AUTHENTICATED_UNVERIFIED;
-        }
-
-        // Admin verified (ACTIVE) but no 2FA
-        if (accountStatus == AccountStatus.ACTIVE && status2FA != Status2FA.VERIFIED) {
-            return VerificationLevel.VERIFIED_NO_2FA;
-        }
-
-        // Fully verified - admin approved and 2FA configured
         if (accountStatus == AccountStatus.ACTIVE) {
             return VerificationLevel.FULLY_VERIFIED;
         }
