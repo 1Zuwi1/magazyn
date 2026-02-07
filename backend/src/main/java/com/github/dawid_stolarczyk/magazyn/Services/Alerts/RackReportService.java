@@ -220,16 +220,18 @@ public class RackReportService {
     }
 
     /**
-     * Distributes notifications for an alert to all active users using batch insert.
-     * Uses a single query to check existing notifications, preventing N+1 problem.
+     * Distributes notifications for an alert to active users assigned to the alert's warehouse.
+     * Uses batch insert and single query check to prevent N+1 problem.
      * <p>
-     * TODO: Implement warehouse-based user assignment to filter notifications by warehouse access.
-     * Currently sends to all ACTIVE users. Future enhancement: only notify users assigned to
-     * the alert's warehouse or users with specific roles/permissions.
+     * Only users with ACTIVE status and assigned to the warehouse receive notifications.
+     * This prevents unauthorized access to warehouse data and reduces notification spam.
      */
     private void distributeNotifications(Alert alert) {
-        // Get all active users (filters out DISABLED, LOCKED, PENDING_VERIFICATION)
-        List<User> activeUsers = userRepository.findByStatus(AccountStatus.ACTIVE);
+        Long warehouseId = alert.getWarehouse().getId();
+
+        // Get active users assigned to this warehouse
+        List<User> activeUsers = userRepository.findByWarehouseIdAndStatus(
+                warehouseId, AccountStatus.ACTIVE);
 
         // Batch check: get all user IDs that already have this notification (single query)
         Set<Long> existingUserIds = notificationRepository.findUserIdsWithNotificationForAlert(alert.getId());

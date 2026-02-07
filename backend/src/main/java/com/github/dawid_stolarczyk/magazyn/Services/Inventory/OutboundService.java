@@ -31,7 +31,9 @@ public class OutboundService {
     private final Bucket4jRateLimiter rateLimiter;
 
     /**
-     * Plan: zwraca FIFO-ordered pick list dla podanego produktu
+     * Plan: zwraca FIFO-ordered pick list dla podanego produktu.
+     * Wyklucza wygasłe assortmenty (expires_at <= NOW()).
+     * Zwraca ostrzeżenie jeśli wszystkie assortmenty wygasły.
      */
     public OutboundPlanResponse plan(OutboundPlanRequest request, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
@@ -39,24 +41,41 @@ public class OutboundService {
         Item item = itemRepository.findById(request.getItemId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
 
+        // Znajdź niewygasłe assortmenty w kolejności FIFO
         List<Assortment> fifoOrdered = assortmentRepository.findByItemIdFifoOrdered(item.getId());
+
+        // Znajdź wygasłe assortmenty (dla raportowania)
+        List<Assortment> expired = assortmentRepository.findExpiredByItemId(item.getId());
+
         int limit = Math.min(request.getQuantity(), fifoOrdered.size());
         List<OutboundPickSlot> pickSlots = fifoOrdered.stream()
                 .limit(limit)
                 .map(this::mapToPickSlot)
                 .toList();
 
+        // Generuj ostrzeżenie jeśli brak dostępnych assortmentów, ale są wygasłe
+        String warning = null;
+        if (fifoOrdered.isEmpty() && !expired.isEmpty()) {
+            warning = String.format("All %d assortments have expired. Cannot fulfill outbound request.",
+                    expired.size());
+        } else if (fifoOrdered.size() < request.getQuantity() && !expired.isEmpty()) {
+            warning = String.format("Only %d non-expired assortments available (requested: %d). %d assortments have expired.",
+                    fifoOrdered.size(), request.getQuantity(), expired.size());
+        }
+
         return OutboundPlanResponse.builder()
                 .itemId(item.getId())
                 .itemName(item.getName())
                 .requestedQuantity(request.getQuantity())
                 .availableQuantity((long) fifoOrdered.size())
+                .expiredQuantity((long) expired.size())
+                .warning(warning)
                 .pickSlots(pickSlots)
                 .build();
     }
 
     /**
-     * Check: sprawdza czy assortment na konkretnej pozycji jest FIFO-compliant
+     * Check: sprawdza czy assortment na konkretnej pozycji jest FIFO-compliant i niewygasły.
      */
     public OutboundCheckResponse check(OutboundCheckRequest request, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
@@ -65,17 +84,27 @@ public class OutboundService {
                         request.getRackId(), request.getPositionX(), request.getPositionY())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
 
+        // Sprawdź czy assortment jest wygasły
+        boolean isExpired = assortment.getExpires_at() != null &&
+                assortment.getExpires_at().toInstant().isBefore(java.time.Instant.now());
+
+        // Znajdź starsze niewygasłe assortmenty
         List<Assortment> older = assortmentRepository.findOlderAssortments(
                 assortment.getItem().getId(), assortment.getCreated_at());
 
         boolean fifoCompliant = older.isEmpty();
         List<OutboundPickSlot> olderSlots = older.stream().map(this::mapToPickSlot).toList();
 
-        String warning = fifoCompliant ? null :
-                older.size() + " older assortments of the same item exist and should be picked first";
+        // Generuj ostrzeżenie
+        String warning = null;
+        if (isExpired) {
+            warning = "EXPIRED: This assortment has expired and cannot be issued";
+        } else if (!fifoCompliant) {
+            warning = older.size() + " older non-expired assortments of the same item exist and should be picked first";
+        }
 
         return OutboundCheckResponse.builder()
-                .fifoCompliant(fifoCompliant)
+                .fifoCompliant(fifoCompliant && !isExpired)
                 .requestedAssortment(mapToPickSlot(assortment))
                 .olderAssortments(olderSlots)
                 .warning(warning)
@@ -85,8 +114,9 @@ public class OutboundService {
     /**
      * Execute: wydaje assortmenty z magazynu, tworzy rekordy audytu.
      * Cała operacja jest transakcyjna — albo wszystko, albo nic.
+     * Blokuje wydanie wygasłych assortmentów (expires_at <= NOW()).
      */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public OutboundExecuteResponse execute(OutboundExecuteRequest request, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
 
@@ -100,7 +130,15 @@ public class OutboundService {
                             position.getRackId(), position.getPositionX(), position.getPositionY())
                     .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
 
-            // Sprawdź FIFO compliance
+            // Sprawdź czy assortment jest wygasły
+            boolean isExpired = assortment.getExpires_at() != null &&
+                    assortment.getExpires_at().toInstant().isBefore(java.time.Instant.now());
+
+            if (isExpired) {
+                throw new IllegalArgumentException(InventoryError.OUTBOUND_ASSORTMENT_EXPIRED.name());
+            }
+
+            // Sprawdź FIFO compliance (tylko dla niewygasłych)
             List<Assortment> older = assortmentRepository.findOlderAssortments(
                     assortment.getItem().getId(), assortment.getCreated_at());
             boolean fifoCompliant = older.isEmpty();

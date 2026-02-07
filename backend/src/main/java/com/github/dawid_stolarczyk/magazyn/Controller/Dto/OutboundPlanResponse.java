@@ -24,9 +24,15 @@ public class OutboundPlanResponse {
     @Schema(description = "Requested quantity", example = "5")
     private Integer requestedQuantity;
 
-    @Schema(description = "Total available quantity in stock", example = "12")
+    @Schema(description = "Total available quantity in stock (non-expired)", example = "12")
     private Long availableQuantity;
 
-    @Schema(description = "Pick slots in FIFO order (oldest first)")
+    @Schema(description = "Number of expired assortments for this item", example = "3")
+    private Long expiredQuantity;
+
+    @Schema(description = "Warning message if no valid assortments available", example = "All 3 assortments have expired")
+    private String warning;
+
+    @Schema(description = "Pick slots in FIFO order (oldest first, non-expired only)")
     private List<OutboundPickSlot> pickSlots;
 }

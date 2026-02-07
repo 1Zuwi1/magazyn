@@ -7,9 +7,11 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserInfoResponse;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.EmailVerification;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.Warehouse;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.EmailStatus;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.WarehouseRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;
@@ -37,6 +39,7 @@ import static com.github.dawid_stolarczyk.magazyn.Utils.StringUtils.checkPasswor
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final WarehouseRepository warehouseRepository;
     private final Bucket4jRateLimiter rateLimiter;
     private final EmailService emailService;
     private final SessionManager sessionManager;
@@ -251,5 +254,55 @@ public class UserService {
                 .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
 
         userRepository.delete(targetUser);
+    }
+
+    /**
+     * Admin: Assign user to warehouse
+     * Grants user access to receive notifications from the specified warehouse
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void assignUserToWarehouse(Long userId, Long warehouseId, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        Warehouse warehouse = warehouseRepository.findById(warehouseId)
+                .orElseThrow(() -> new IllegalArgumentException("WAREHOUSE_NOT_FOUND"));
+
+        user.assignToWarehouse(warehouse);
+        userRepository.save(user);
+    }
+
+    /**
+     * Admin: Remove user from warehouse
+     * Revokes user's access to the specified warehouse
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void removeUserFromWarehouse(Long userId, Long warehouseId, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        Warehouse warehouse = warehouseRepository.findById(warehouseId)
+                .orElseThrow(() -> new IllegalArgumentException("WAREHOUSE_NOT_FOUND"));
+
+        user.removeFromWarehouse(warehouse);
+        userRepository.save(user);
+    }
+
+    /**
+     * Admin: Get all warehouses assigned to a user
+     */
+    public List<Long> getUserWarehouseIds(Long userId, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        return user.getAssignedWarehouses().stream()
+                .map(Warehouse::getId)
+                .toList();
     }
 }

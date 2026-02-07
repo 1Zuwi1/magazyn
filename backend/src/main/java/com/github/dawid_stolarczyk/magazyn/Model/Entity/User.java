@@ -10,7 +10,9 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -77,6 +79,15 @@ public class User {
     @Column(name = "last_login")
     private Timestamp lastLogin;
 
+    // Przypisanie użytkownika do magazynów (many-to-many)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_warehouse_assignments",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "warehouse_id")
+    )
+    private Set<Warehouse> assignedWarehouses = new HashSet<>();
+
     public void addTwoFactorMethod(TwoFactorMethod method) {
         twoFactorMethods.add(method);
         method.setUser(this);
@@ -107,6 +118,28 @@ public class User {
 
     public void setRawPassword(String rawPassword) {
         this.password = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
+    }
+
+    /**
+     * Assigns user to a warehouse
+     */
+    public void assignToWarehouse(Warehouse warehouse) {
+        assignedWarehouses.add(warehouse);
+    }
+
+    /**
+     * Removes user assignment from a warehouse
+     */
+    public void removeFromWarehouse(Warehouse warehouse) {
+        assignedWarehouses.remove(warehouse);
+    }
+
+    /**
+     * Checks if user has access to a warehouse
+     */
+    public boolean hasAccessToWarehouse(Long warehouseId) {
+        return assignedWarehouses.stream()
+                .anyMatch(w -> w.getId().equals(warehouseId));
     }
 
 }

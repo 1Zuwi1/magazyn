@@ -37,4 +37,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * Find all active users (for notification distribution)
      */
     List<User> findByStatus(AccountStatus status);
+
+    /**
+     * Find active users assigned to a specific warehouse.
+     * Used for warehouse-based notification filtering.
+     */
+    @Query("SELECT DISTINCT u FROM User u JOIN u.assignedWarehouses w " +
+            "WHERE w.id = :warehouseId AND u.status = :status")
+    List<User> findByWarehouseIdAndStatus(
+            @Param("warehouseId") Long warehouseId,
+            @Param("status") AccountStatus status);
 }

@@ -42,6 +42,7 @@ public enum InventoryError {
     // Outbound operation errors
     OUTBOUND_INSUFFICIENT_STOCK,
     OUTBOUND_FIFO_VIOLATION,
+    OUTBOUND_ASSORTMENT_EXPIRED,
 
     // Rack update errors
     RACK_HAS_DANGEROUS_ITEMS

@@ -223,4 +223,85 @@ public class UserController {
             return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
+
+    @Operation(summary = "Assign user to warehouse (ADMIN only)",
+            description = "Grants user access to a warehouse. User will receive notifications for alerts from this warehouse.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - user assigned to warehouse",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND, WAREHOUSE_NOT_FOUND",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @PostMapping("/warehouse-assignments")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<Void>> assignUserToWarehouse(
+            @Valid @RequestBody UserWarehouseAssignmentRequest assignmentRequest,
+            HttpServletRequest request) {
+        try {
+            userService.assignUserToWarehouse(
+                    assignmentRequest.getUserId(),
+                    assignmentRequest.getWarehouseId(),
+                    request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            log.error("User warehouse assignment failed", e);
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
+        } catch (IllegalArgumentException e) {
+            log.error("Warehouse not found for assignment", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Remove user from warehouse (ADMIN only)",
+            description = "Revokes user's access to a warehouse. User will no longer receive notifications from this warehouse.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - user removed from warehouse",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND, WAREHOUSE_NOT_FOUND",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @DeleteMapping("/warehouse-assignments")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<Void>> removeUserFromWarehouse(
+            @Valid @RequestBody UserWarehouseAssignmentRequest assignmentRequest,
+            HttpServletRequest request) {
+        try {
+            userService.removeUserFromWarehouse(
+                    assignmentRequest.getUserId(),
+                    assignmentRequest.getWarehouseId(),
+                    request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (AuthenticationException e) {
+            log.error("User warehouse removal failed", e);
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
+        } catch (IllegalArgumentException e) {
+            log.error("Warehouse not found for removal", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Get user's warehouse assignments (ADMIN only)",
+            description = "Returns list of warehouse IDs that the user has access to")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - warehouse list returned",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @GetMapping("/{userId}/warehouses")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<List<Long>>> getUserWarehouses(
+            @PathVariable Long userId,
+            HttpServletRequest request) {
+        try {
+            List<Long> warehouseIds = userService.getUserWarehouseIds(userId, request);
+            return ResponseEntity.ok(ResponseTemplate.success(warehouseIds));
+        } catch (AuthenticationException e) {
+            log.error("Failed to get user warehouses for user {}", userId, e);
+            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
+            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
+        }
+    }
 }

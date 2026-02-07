@@ -25,15 +25,24 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long> {
     Page<Assortment> findAll(Pageable pageable);
 
     /**
-     * Znajdź assortmenty dla danego produktu w kolejności FIFO (najstarsze najpierw)
+     * Znajdź assortmenty dla danego produktu w kolejności FIFO (najstarsze najpierw).
+     * Wyklucza wygasłe assortmenty (expires_at <= NOW()).
+     * Assortmenty bez daty wygaśnięcia (expires_at IS NULL) są uwzględniane.
      */
-    @Query("SELECT a FROM Assortment a WHERE a.item.id = :itemId ORDER BY a.created_at ASC")
+    @Query("SELECT a FROM Assortment a WHERE a.item.id = :itemId " +
+            "AND (a.expires_at IS NULL OR a.expires_at > CURRENT_TIMESTAMP) " +
+            "ORDER BY a.created_at ASC")
     List<Assortment> findByItemIdFifoOrdered(@Param("itemId") Long itemId);
 
     /**
-     * Znajdź assortmenty starsze od podanego (te same item, wcześniejszy created_at)
+     * Znajdź assortmenty starsze od podanego (te same item, wcześniejszy created_at).
+     * Wyklucza wygasłe assortmenty (expires_at <= NOW()).
+     * Assortmenty bez daty wygaśnięcia (expires_at IS NULL) są uwzględniane.
      */
-    @Query("SELECT a FROM Assortment a WHERE a.item.id = :itemId AND a.created_at < :createdAt ORDER BY a.created_at ASC")
+    @Query("SELECT a FROM Assortment a WHERE a.item.id = :itemId " +
+            "AND a.created_at < :createdAt " +
+            "AND (a.expires_at IS NULL OR a.expires_at > CURRENT_TIMESTAMP) " +
+            "ORDER BY a.created_at ASC")
     List<Assortment> findOlderAssortments(@Param("itemId") Long itemId, @Param("createdAt") Timestamp createdAt);
 
     /**
@@ -45,4 +54,20 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long> {
      * Znajdź wszystkie assortmenty w danym magazynie z paginacją
      */
     Page<Assortment> findByRack_WarehouseId(Long warehouseId, Pageable pageable);
+
+    /**
+     * Znajdź wygasłe assortmenty dla danego produktu (expires_at <= NOW()).
+     * Używane do raportowania i alertowania o wygasłych produktach.
+     */
+    @Query("SELECT a FROM Assortment a WHERE a.item.id = :itemId " +
+            "AND a.expires_at IS NOT NULL AND a.expires_at <= CURRENT_TIMESTAMP " +
+            "ORDER BY a.expires_at ASC")
+    List<Assortment> findExpiredByItemId(@Param("itemId") Long itemId);
+
+    /**
+     * Policz dostępne (niewygasłe) assortmenty dla danego produktu.
+     */
+    @Query("SELECT COUNT(a) FROM Assortment a WHERE a.item.id = :itemId " +
+            "AND (a.expires_at IS NULL OR a.expires_at > CURRENT_TIMESTAMP)")
+    long countAvailableByItemId(@Param("itemId") Long itemId);
 }
