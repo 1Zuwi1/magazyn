@@ -84,7 +84,7 @@ export function RackDialog({
 
           <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
             <span className="col-span-2 text-left font-medium text-sm">
-              Wymiary
+              Wymiary (wiersze × kolumny)
             </span>
             <div className="col-span-4 flex gap-2">
               <form.Field name="rows">

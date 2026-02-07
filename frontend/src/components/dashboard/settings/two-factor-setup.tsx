@@ -39,6 +39,7 @@ import useLinkedMethods from "@/hooks/use-linked-methods"
 import useRemoveMethod from "@/hooks/use-remove-method"
 import useSetDefaultMethod from "@/hooks/use-set-default-method"
 import {
+  type RemovableTwoFactorMethod,
   ResendMethods,
   type ResendType,
   type TwoFactorMethod,
@@ -430,8 +431,8 @@ function ConnectedMethods({
   onRetry?: () => void
   onDefaultMethodChange: (method: TwoFactorMethod) => void
   isSettingDefault: boolean
-  onRemoveMethod: (method: TwoFactorMethod) => void
-  removingMethod: TwoFactorMethod | null
+  onRemoveMethod: (method: RemovableTwoFactorMethod) => void
+  removingMethod: RemovableTwoFactorMethod | null
 }) {
   if (isLoading) {
     return (
@@ -961,8 +962,8 @@ function TwoFactorConfigurationSection({
   onRetryLinkedMethods?: () => void
   onDefaultMethodChange: (method: TwoFactorMethod) => void
   isSettingDefault: boolean
-  onRemoveMethod: (method: TwoFactorMethod) => void
-  removingMethod: TwoFactorMethod | null
+  onRemoveMethod: (method: RemovableTwoFactorMethod) => void
+  removingMethod: RemovableTwoFactorMethod | null
 }) {
   const isIdleStage = isIdleSetupStage(setupStage)
   const isSetupInProgress = !isIdleStage
@@ -1080,9 +1081,8 @@ export function TwoFactorSetup({
 
   const setDefaultMethodMutation = useSetDefaultMethod()
   const removeMethodMutation = useRemoveMethod()
-  const [removingMethod, setRemovingMethod] = useState<TwoFactorMethod | null>(
-    null
-  )
+  const [removingMethod, setRemovingMethod] =
+    useState<RemovableTwoFactorMethod | null>(null)
 
   const handleDefaultMethodChange = (newDefaultMethod: TwoFactorMethod) => {
     setDefaultMethodMutation.mutate(newDefaultMethod, {
@@ -1094,7 +1094,7 @@ export function TwoFactorSetup({
     })
   }
 
-  const handleRemoveMethod = (methodToRemove: TwoFactorMethod) => {
+  const handleRemoveMethod = (methodToRemove: RemovableTwoFactorMethod) => {
     setRemovingMethod(methodToRemove)
     removeMethodMutation.mutate(methodToRemove, {
       onSuccess: () => {

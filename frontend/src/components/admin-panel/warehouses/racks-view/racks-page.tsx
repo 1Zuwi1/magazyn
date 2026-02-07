@@ -8,13 +8,17 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-import { type ReactNode, useEffect, useMemo, useState } from "react"
+import { type ReactNode, useMemo, useState } from "react"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
-import { mapRackCsv } from "@/components/admin-panel/warehouses/csv/utils/map-csv"
 import type { Rack } from "@/components/dashboard/types"
 import { Button, buttonVariants } from "@/components/ui/button"
-import useRacks, { type RacksList } from "@/hooks/use-racks"
+import useRacks, {
+  type RacksList,
+  useCreateRack,
+  useDeleteRack,
+  useUpdateRack,
+} from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../../components/admin-page-header"
@@ -32,6 +36,8 @@ interface AdminRacksPageProps {
 const WAREHOUSES_PAGE_SIZE = 1000
 const RACKS_PAGE_SIZE = 2000
 const MAX_MOCK_ITEMS_PER_RACK = 12
+const CREATE_RACK_TEMP_ID = 0
+const DEFAULT_ACCEPTS_DANGEROUS_ITEMS = false
 
 type ApiRack = RacksList["content"][number]
 
@@ -48,7 +54,6 @@ const mapApiRackToViewModel = (rack: ApiRack): Rack => {
   return {
     id: String(rack.id),
     marker: rack.marker,
-    name: rack.marker ?? `Regał ${rack.id}`,
     rows,
     cols,
     minTemp: rack.minTemp,
@@ -62,7 +67,40 @@ const mapApiRackToViewModel = (rack: ApiRack): Rack => {
     occupancy,
     // There is no items endpoint yet - keep deterministic mocked occupancy/items.
     items: Array.from({ length: mockItemsCount }, () => null),
-  } as Rack
+  }
+}
+
+const getRackId = (rack: Rack): number | null => {
+  const rackId = Number.parseInt(rack.id, 10)
+  return Number.isNaN(rackId) ? null : rackId
+}
+
+const buildRackMutationData = ({
+  acceptsDangerous,
+  data,
+  rackId,
+  warehouseId,
+}: {
+  acceptsDangerous: boolean
+  data: RackFormData
+  rackId: number
+  warehouseId: number
+}) => {
+  return {
+    id: rackId,
+    marker: data.marker,
+    warehouseId,
+    comment: data.comment ?? null,
+    sizeX: data.cols,
+    sizeY: data.rows,
+    maxTemp: data.maxTemp,
+    minTemp: data.minTemp,
+    maxWeight: data.maxWeight,
+    maxSizeX: data.maxItemWidth,
+    maxSizeY: data.maxItemHeight,
+    maxSizeZ: data.maxItemDepth,
+    acceptsDangerous,
+  }
 }
 
 export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
@@ -92,6 +130,9 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     size: RACKS_PAGE_SIZE,
     warehouseId: apiWarehouse?.id ?? -1,
   })
+  const createRackMutation = useCreateRack()
+  const updateRackMutation = useUpdateRack()
+  const deleteRackMutation = useDeleteRack()
 
   const mappedRacks = useMemo(() => {
     if (!apiWarehouse) {
@@ -103,15 +144,10 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
       .map(mapApiRackToViewModel)
   }, [apiWarehouse, racksData?.content])
 
-  const [racks, setRacks] = useState<Rack[]>(mappedRacks)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedRack, setSelectedRack] = useState<Rack | undefined>(undefined)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [rackToDelete, setRackToDelete] = useState<Rack | undefined>(undefined)
-
-  useEffect(() => {
-    setRacks(mappedRacks)
-  }, [mappedRacks])
 
   const handleAddRack = () => {
     setSelectedRack(undefined)
@@ -129,57 +165,73 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
   }
 
   const confirmDeleteRack = () => {
-    if (rackToDelete) {
-      setRacks((prev) => prev.filter((r) => r.id !== rackToDelete.id))
-      setRackToDelete(undefined)
+    if (!rackToDelete) {
+      return
     }
+
+    const rackId = getRackId(rackToDelete)
+    if (rackId !== null) {
+      deleteRackMutation.mutate(rackId)
+    }
+
+    setRackToDelete(undefined)
   }
 
-  const handleSubmit = (data: RackFormData) => {
-    if (selectedRack === undefined) {
-      const newRack: Rack = {
-        id: crypto.randomUUID(),
-        marker: data.marker,
-        rows: data.rows,
-        cols: data.cols,
-        minTemp: data.minTemp,
-        maxTemp: data.maxTemp,
-        maxWeight: data.maxWeight,
-        currentWeight: 0,
-        maxItemWidth: data.maxItemWidth,
-        maxItemHeight: data.maxItemHeight,
-        maxItemDepth: data.maxItemDepth,
-        comment: data.comment ?? null,
-        occupancy: 0,
-        items: [],
-      }
-      return setRacks((prev) => [...prev, newRack])
+  const handleSubmit = async (data: RackFormData) => {
+    if (!apiWarehouse) {
+      throw new Error("Warehouse ID is required to create or update a rack.")
     }
-    setRacks((prev) =>
-      prev.map((rack) =>
-        rack.id === selectedRack.id
-          ? {
-              ...rack,
-              marker: data.marker,
-              name: data.name,
-              rows: data.rows,
-              cols: data.cols,
-              minTemp: data.minTemp,
-              maxTemp: data.maxTemp,
-              maxWeight: data.maxWeight,
-              maxItemWidth: data.maxItemWidth,
-              maxItemHeight: data.maxItemHeight,
-              maxItemDepth: data.maxItemDepth,
-              comment: data.comment ?? null,
-            }
-          : rack
+
+    if (selectedRack === undefined) {
+      await createRackMutation.mutateAsync(
+        buildRackMutationData({
+          acceptsDangerous: DEFAULT_ACCEPTS_DANGEROUS_ITEMS,
+          data,
+          rackId: CREATE_RACK_TEMP_ID,
+          warehouseId: apiWarehouse.id,
+        })
       )
+      return
+    }
+
+    const selectedRackId = getRackId(selectedRack)
+    if (selectedRackId === null) {
+      throw new Error("Rack ID is invalid.")
+    }
+
+    const selectedApiRack = racksData?.content.find(
+      (rack) => rack.id === selectedRackId
     )
+
+    await updateRackMutation.mutateAsync({
+      rackId: selectedRackId,
+      data: buildRackMutationData({
+        acceptsDangerous:
+          selectedApiRack?.acceptsDangerous ?? DEFAULT_ACCEPTS_DANGEROUS_ITEMS,
+        data,
+        rackId: selectedRackId,
+        warehouseId: selectedApiRack?.warehouseId ?? apiWarehouse.id,
+      }),
+    })
+
+    setSelectedRack(undefined)
   }
 
   const handleCsvImport = (data: CsvRowType<"rack">[]) => {
-    const newRacks = mapRackCsv(data)
-    setRacks((prev) => [...prev, ...newRacks])
+    if (!apiWarehouse) {
+      return
+    }
+
+    for (const row of data) {
+      createRackMutation.mutate(
+        buildRackMutationData({
+          acceptsDangerous: DEFAULT_ACCEPTS_DANGEROUS_ITEMS,
+          data: row,
+          rackId: CREATE_RACK_TEMP_ID,
+          warehouseId: apiWarehouse.id,
+        })
+      )
+    }
   }
 
   const totalWeight = mappedRacks.reduce(
@@ -218,7 +270,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
       <RackGrid
         onDelete={handleDeleteRack}
         onEdit={handleEditRack}
-        racks={racks}
+        racks={mappedRacks}
       />
     )
   }
@@ -230,7 +282,10 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <CsvImporter onImport={handleCsvImport} type="rack" />
-            <Button onClick={handleAddRack}>
+            <Button
+              disabled={apiWarehouse === undefined}
+              onClick={handleAddRack}
+            >
               <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
               Dodaj regał
             </Button>
@@ -262,7 +317,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
               icon={GridIcon}
             />
             <span className="font-mono font-semibold text-primary">
-              {apiWarehouse?.racksCount ?? racks.length}
+              {mappedRacks.length}
             </span>
             <span className="text-muted-foreground text-xs">regałów</span>
           </div>
