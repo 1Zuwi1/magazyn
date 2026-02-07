@@ -62,10 +62,8 @@ import { SortableHeader, StaticHeader } from "./sortable-header"
 
 type ExpiryFilters = "14_DAYS" | "7_DAYS" | "3_DAYS" | "EXPIRED" | "ALL"
 
-type AssortmentItem = InferApiOutput<
-  typeof AssortmentsSchema,
-  "GET"
->["content"][number]
+type AssortmentList = InferApiOutput<typeof AssortmentsSchema, "GET">
+type AssortmentItem = AssortmentList["content"][number]
 
 const ITEM_DETAILS_SCHEMA = createApiSchema({
   GET: {
@@ -171,6 +169,14 @@ interface AssortmentTableProps {
   isLoading?: boolean
 }
 
+interface AssortmentTableWithDataProps extends AssortmentTableProps {
+  assortmentData: AssortmentList | null | undefined
+}
+
+interface AssortmentTableContentProps extends AssortmentTableProps {
+  assortmentData: AssortmentList | null | undefined
+}
+
 const SKELETON_ROWS = 5
 
 function AssortmentTableSkeleton() {
@@ -267,13 +273,15 @@ const isExpiryFilterValue = (value: string | null): value is ExpiryFilters =>
   typeof value === "string" &&
   EXPIRY_FILTER_OPTIONS.some((option) => option.value === value)
 
-export function AssortmentTable({ isLoading }: AssortmentTableProps) {
-  const { data: assortment, isPending } = useAssortment()
+function AssortmentTableContent({
+  assortmentData,
+  isLoading,
+}: AssortmentTableContentProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
   const [expiryFilter, setExpiryFilter] = useState<ExpiryFilters>("ALL")
-  const assortmentItems = assortment?.content ?? []
+  const assortmentItems = assortmentData?.content ?? []
   const itemIds = useMemo(
     () => [...new Set(assortmentItems.map((item) => item.itemId))],
     [assortmentItems]
@@ -455,7 +463,7 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
   })
 
   const filteredCount = table.getFilteredRowModel().rows.length
-  const totalCount = assortment?.totalElements ?? assortmentItems.length
+  const totalCount = assortmentData?.totalElements ?? assortmentItems.length
   const isSearchFiltered = globalFilter.length > 0
   const isExpiryFiltered = expiryFilter !== "ALL"
   const isFiltered = isSearchFiltered || isExpiryFiltered
@@ -473,7 +481,7 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
     genitive: "przedmiotów",
   }
 
-  if (isLoading || isPending) {
+  if (isLoading) {
     return <AssortmentTableSkeleton />
   }
 
@@ -648,5 +656,28 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
         </div>
       )}
     </div>
+  )
+}
+
+export function AssortmentTable({ isLoading }: AssortmentTableProps) {
+  const { data: assortmentData, isPending } = useAssortment()
+
+  return (
+    <AssortmentTableContent
+      assortmentData={assortmentData}
+      isLoading={isLoading || isPending}
+    />
+  )
+}
+
+export function AssortmentTableWithData({
+  assortmentData,
+  isLoading,
+}: AssortmentTableWithDataProps) {
+  return (
+    <AssortmentTableContent
+      assortmentData={assortmentData}
+      isLoading={isLoading}
+    />
   )
 }

@@ -1,22 +1,18 @@
 import type { UseQueryResult } from "@tanstack/react-query"
 import { apiFetch, type FetchError, type InferApiOutput } from "@/lib/fetcher"
-import { type AssortmentDetailsSchema, AssortmentsSchema } from "@/lib/schemas"
+import { ItemsSchema } from "@/lib/schemas"
 import { useApiQuery } from "./use-api-query"
 
 const ITEMS_QUERY_KEY = ["items"] as const
 
-export type ItemsList = InferApiOutput<typeof AssortmentsSchema, "GET">
-export type ItemsDetails = InferApiOutput<typeof AssortmentDetailsSchema, "GET">
+export type ItemsList = InferApiOutput<typeof ItemsSchema, "GET">
+export type Item = ItemsList["content"][number]
 
 interface ItemsListParams {
   page?: number
   size?: number
   warehouseId?: number
 }
-
-// interface ItemsDetailsParams {
-//   warehouseId: number
-// }
 
 export default function useItems(
   params?: ItemsListParams
@@ -45,8 +41,8 @@ export default function useItems(
           return null
         }
         return await apiFetch(
-          `/api/warehouses/${warehouseId}/assortments`,
-          AssortmentsSchema,
+          `/api/warehouses/${warehouseId}/items`,
+          ItemsSchema,
           {
             method: "GET",
             queryParams: {
@@ -57,7 +53,7 @@ export default function useItems(
         )
       }
 
-      return await apiFetch("/api/items", AssortmentsSchema, {
+      return await apiFetch("/api/items", ItemsSchema, {
         queryParams: {
           page,
           size,

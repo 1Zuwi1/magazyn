@@ -36,7 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import useItems, { type ItemListItem } from "@/hooks/use-items"
+import useItems, { type Item } from "@/hooks/use-items"
 import { CodeCell } from "./components/code-cell"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 
@@ -124,7 +124,7 @@ interface ItemsTableProps {
   isLoading?: boolean
 }
 
-const itemsColumns: ColumnDef<ItemListItem>[] = [
+const itemsColumns: ColumnDef<Item>[] = [
   {
     accessorKey: "name",
     header: ({ column }) => (
@@ -199,11 +199,7 @@ const itemsColumns: ColumnDef<ItemListItem>[] = [
   },
 ]
 
-const globalFilterFn: FilterFn<ItemListItem> = (
-  row,
-  _columnId,
-  filterValue
-) => {
+const globalFilterFn: FilterFn<Item> = (row, _columnId, filterValue) => {
   const searchValue = filterValue?.toString().trim().toLowerCase()
   if (!searchValue) {
     return true
