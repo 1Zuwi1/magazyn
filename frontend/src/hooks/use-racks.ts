@@ -58,7 +58,7 @@ export default function useRacks(
           return null
         }
         return await apiFetch(
-          `/api/warehouse/${warehouseId}/racks`,
+          `/api/warehouses/${warehouseId}/racks`,
           RacksSchema,
           {
             queryParams: {

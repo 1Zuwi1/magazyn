@@ -83,7 +83,7 @@ export function ScannerLocationsStep({
       }
 
       return await apiFetch(
-        `/api/warehouse/${warehouseId}/racks`,
+        `/api/warehouses/${warehouseId}/racks`,
         RacksSchema,
         {
           queryParams: {

@@ -32,8 +32,8 @@ export default function WarehousePage() {
 
         const { totalWarehouses, totalCapacity, totalUsed } = {
           totalWarehouses: warehouses.totalElements,
-          totalCapacity: 999,
-          totalUsed: 678,
+          totalCapacity: warehouses.summary.totalCapacity,
+          totalUsed: warehouses.summary.occupiedSlots,
         }
         const overallOccupancy =
           totalCapacity > 0 ? Math.round((totalUsed / totalCapacity) * 100) : 0

@@ -481,7 +481,15 @@ export const WarehousesSchema = createApiSchema({
     input: createPaginatedSchemaInput({
       nameFilter: z.string().optional(),
     }),
-    output: createPaginatedSchema(WarehouseSchema),
+    output: createPaginatedSchema(WarehouseSchema, {
+      summary: z.object({
+        totalCapacity: z.number().int().nonnegative(),
+        freeSlots: z.number().int().nonnegative(),
+        occupiedSlots: z.number().int().nonnegative(),
+        totalWarehouses: z.number().int().nonnegative(),
+        totalRacks: z.number().int().nonnegative(),
+      }),
+    }),
   },
 })
 
@@ -582,15 +590,7 @@ const RackSchema = z.object({
 export const RacksSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput(),
-    output: createPaginatedSchema(RackSchema, {
-      summary: z.object({
-        totalCapacity: z.number().int().nonnegative(),
-        freeSlots: z.number().int().nonnegative(),
-        occupiedSlots: z.number().int().nonnegative(),
-        totalWarehouses: z.number().int().nonnegative(),
-        totalRacks: z.number().int().nonnegative(),
-      }),
-    }),
+    output: createPaginatedSchema(RackSchema),
   },
 })
 
