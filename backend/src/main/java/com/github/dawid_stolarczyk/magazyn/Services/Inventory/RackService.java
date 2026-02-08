@@ -17,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
 @Service
@@ -29,17 +31,17 @@ public class RackService {
 
     public RackPagedResponse getAllRacksPaged(HttpServletRequest request, Pageable pageable) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        RackSummaryDto summary = calculateWarehouseSummary();
+        RackSummaryDto summary = calculateRackSummary(null);
         return RackPagedResponse.from(rackRepository.findAll(pageable).map(this::mapToDto), summary);
     }
 
-    public Page<RackDto> getRacksByWarehousePaged(Long warehouseId, HttpServletRequest request, Pageable pageable) {
+    public RackPagedResponse getRacksByWarehousePaged(Long warehouseId, HttpServletRequest request, Pageable pageable) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
         if (!warehouseRepository.existsById(warehouseId)) {
             throw new IllegalArgumentException(InventoryError.WAREHOUSE_NOT_FOUND.name());
         }
-        return rackRepository.findByWarehouseId(warehouseId, pageable)
-                .map(this::mapToDto);
+        return RackPagedResponse.from(rackRepository.findByWarehouseId(warehouseId, pageable)
+                .map(this::mapToDto), calculateRackSummary(warehouseId));
     }
 
     public RackDto getRackById(Long id, HttpServletRequest request) {
@@ -232,14 +234,19 @@ public class RackService {
                 .build();
     }
 
-    private RackSummaryDto calculateWarehouseSummary() {
-        var allRacks = rackRepository.findAll();
+    private RackSummaryDto calculateRackSummary(Long warehouseId) {
+        List<Rack> racks;
+        if (warehouseId == null) {
+            racks = rackRepository.findAll();
+        } else {
+            racks = rackRepository.findByWarehouseId(warehouseId);
+        }
 
         int totalCapacity = 0;
         int totalOccupiedSlots = 0;
         float totalWeight = 0;
 
-        for (Rack rack : allRacks) {
+        for (Rack rack : racks) {
             totalCapacity += rack.getSize_x() * rack.getSize_y();
 
             long rackOccupied = assortmentRepository.countByRackId(rack.getId());
@@ -256,7 +263,7 @@ public class RackService {
                 .totalCapacity(totalCapacity)
                 .freeSlots(totalFreeSlots)
                 .occupiedSlots(totalOccupiedSlots)
-                .totalRacks(allRacks.size())
+                .totalRacks(racks.size())
                 .totalWeight(totalWeight)
                 .build();
     }

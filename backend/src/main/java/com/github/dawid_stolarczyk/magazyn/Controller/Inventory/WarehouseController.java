@@ -108,7 +108,7 @@ public class WarehouseController {
     @ApiResponse(responseCode = "200", description = "Success",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedRacksResponse.class)))
     @GetMapping("/{warehouseId}/racks")
-    public ResponseEntity<ResponseTemplate<PagedResponse<RackDto>>> getRacksByWarehouse(
+    public ResponseEntity<ResponseTemplate<RackPagedResponse>> getRacksByWarehouse(
             @PathVariable Long warehouseId,
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
@@ -117,8 +117,7 @@ public class WarehouseController {
             @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
-        return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(rackService.getRacksByWarehousePaged(warehouseId, request, pageable))));
+        return ResponseEntity.ok(ResponseTemplate.success((rackService.getRacksByWarehousePaged(warehouseId, request, pageable))));
     }
 
     @Operation(summary = "Get assortments by warehouse ID with pagination",
