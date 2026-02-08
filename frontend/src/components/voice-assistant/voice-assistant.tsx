@@ -353,8 +353,10 @@ export function VoiceAssistant({
             "relative overflow-hidden",
             isMobile ? "h-full w-full py-8" : "aspect-3/4 w-full"
           )}
+          data-slot="voice-assistant"
         >
           <Button
+            aria-label="Zamknij asystenta głosowego"
             className={cn(
               "absolute right-3 z-10 rounded-full text-muted-foreground transition-colors hover:text-foreground",
               isMobile ? "top-12" : "top-3"
@@ -364,7 +366,6 @@ export function VoiceAssistant({
             variant="ghost"
           >
             <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
-            <span className="sr-only">Zamknij</span>
           </Button>
 
           {content}

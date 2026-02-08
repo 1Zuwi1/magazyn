@@ -14,7 +14,10 @@ export function VoiceAssistantNormalView({
   onSuggestionSelect,
 }: VoiceAssistantIdleViewProps) {
   return (
-    <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
+    <div
+      className="relative flex h-full flex-col items-center justify-center p-6 text-center"
+      data-slot="voice-assistant-idle"
+    >
       <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent opacity-50" />
 
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -25,6 +28,7 @@ export function VoiceAssistantNormalView({
         <div className="relative">
           <span className="pointer-events-none absolute -inset-3 rounded-full bg-primary/8 blur-xl" />
           <Button
+            aria-label="Rozpocznij nasłuchiwanie"
             className="relative size-22 rounded-full shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 hover:shadow-primary/30 hover:shadow-xl active:scale-95"
             id={buttonId}
             onClick={onStartListening}

@@ -4,7 +4,10 @@ import { Button } from "@/components/ui/button"
 
 export function VoiceAssistantProcessingView() {
   return (
-    <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
+    <div
+      className="relative flex h-full flex-col items-center justify-center p-6 text-center"
+      data-slot="voice-assistant-processing"
+    >
       <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent opacity-50" />
 
       <div className="relative flex flex-col items-center gap-5">
@@ -36,7 +39,10 @@ export function VoiceAssistantErrorView({
   onReset,
 }: VoiceAssistantErrorViewProps) {
   return (
-    <div className="relative flex h-full flex-col items-center justify-center gap-5 p-6 text-center">
+    <div
+      className="relative flex h-full flex-col items-center justify-center gap-5 p-6 text-center"
+      data-slot="voice-assistant-error"
+    >
       <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-destructive/5 via-transparent to-transparent opacity-50" />
 
       <div className="relative">

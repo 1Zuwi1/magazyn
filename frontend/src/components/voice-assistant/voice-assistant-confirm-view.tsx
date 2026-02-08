@@ -51,7 +51,10 @@ export function VoiceAssistantConfirmView({
   const secondsLeft = Math.ceil(timeLeft / 1000)
 
   return (
-    <div className="relative flex h-full flex-col items-center justify-center gap-5 p-6 text-center">
+    <div
+      className="relative flex h-full flex-col items-center justify-center gap-5 p-6 text-center"
+      data-slot="voice-assistant-confirm"
+    >
       <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent opacity-50" />
 
       <div className="relative flex size-20 items-center justify-center">

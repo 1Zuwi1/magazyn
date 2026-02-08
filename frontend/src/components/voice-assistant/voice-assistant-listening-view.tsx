@@ -32,8 +32,16 @@ export function VoiceAssistantListeningView({
   isCommandDetected = false,
 }: VoiceAssistantListeningViewProps) {
   return (
-    <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-destructive/5 via-transparent to-transparent opacity-60" />
+    <div
+      className="relative flex h-full flex-col items-center justify-center p-6 text-center"
+      data-slot="voice-assistant-listening"
+    >
+      <style>
+        {
+          "@keyframes voice-waveform{0%{transform:scaleY(.4)}100%{transform:scaleY(1)}}"
+        }
+      </style>
+      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-destructive/5 via-transparent to-transparent opacity-50" />
 
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute top-1/2 left-1/2 size-56 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full bg-destructive/8 opacity-40 blur-3xl" />
@@ -45,6 +53,7 @@ export function VoiceAssistantListeningView({
           <span className="pointer-events-none absolute -inset-4 animate-pulse rounded-full bg-destructive/8 blur-lg" />
 
           <Button
+            aria-label="Zatrzymaj nasłuchiwanie"
             className="relative size-22 rounded-full shadow-destructive/25 shadow-lg transition-all duration-200 hover:shadow-xl active:scale-95"
             onClick={onStopListening}
             size="icon"
@@ -94,15 +103,17 @@ export function VoiceAssistantListeningView({
           )}
         </div>
 
-        <div className="flex h-12 items-center justify-center gap-0.75">
+        <div
+          aria-hidden="true"
+          className="flex h-12 items-center justify-center gap-0.75"
+        >
           {bars.map((bar) => (
             <div
-              className="w-0.75 animate-pulse rounded-full bg-primary/50"
+              className="w-0.75 rounded-full bg-primary/50"
               key={bar.delay}
               style={{
                 height: `${bar.height}px`,
-                animationDelay: `${bar.delay}s`,
-                animationDuration: `${bar.duration}s`,
+                animation: `voice-waveform ${bar.duration}s ease-in-out ${bar.delay}s infinite alternate`,
               }}
             />
           ))}
