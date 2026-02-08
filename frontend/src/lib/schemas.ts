@@ -519,6 +519,7 @@ const WarehouseSchema = z.object({
   name: z.string(),
   occupiedSlots: z.number().int().nonnegative(),
   racksCount: z.number().int().nonnegative(),
+  occupancy: z.number().int().min(0).max(100),
 })
 
 export type Warehouse = z.infer<typeof WarehouseSchema>
@@ -532,6 +533,7 @@ export const WarehousesSchema = createApiSchema({
     }),
     output: createPaginatedSchema(WarehouseSchema, {
       summary: z.object({
+        occupancy: z.number().int().min(0).max(100),
         totalCapacity: z.number().int().nonnegative(),
         freeSlots: z.number().int().nonnegative(),
         occupiedSlots: z.number().int().nonnegative(),
