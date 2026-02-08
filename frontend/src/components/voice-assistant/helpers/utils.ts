@@ -39,14 +39,6 @@ export const getCommandLabel = (
     }
   }
 
-  if (match.command.id === "remove-item") {
-    const { itemName, rackName } = match.params
-    if (rackName) {
-      return `Usuń "${itemName}" z regału ${rackName}`
-    }
-    return `Usuń produkt "${itemName}"`
-  }
-
   if (match.command.id === "search-item") {
     return `Wyszukaj "${match.params.itemName}"`
   }
@@ -142,21 +134,6 @@ export const handleConfirmCommandAction = (
       actions.openAddItemDialog()
       actions.navigateAndClose("/admin/assortment")
       return
-    case "remove-item":
-      {
-        const { itemName, rackName } = matchedCommand.params
-        if (!itemName) {
-          actions.setErrorMessage("Brak nazwy produktu w komendzie.")
-          actions.setView("error")
-          return
-        }
-        actions.setPendingAction({
-          type: "remove-item",
-          payload: { itemName, rackName },
-        })
-        actions.navigateAndClose("/dashboard/items")
-      }
-      return
     case "search-item":
       {
         const { itemName } = matchedCommand.params
@@ -165,11 +142,9 @@ export const handleConfirmCommandAction = (
           actions.setView("error")
           return
         }
-        actions.setPendingAction({
-          type: "search-item",
-          payload: { itemName },
-        })
-        actions.navigateAndClose("/dashboard/items")
+        actions.navigateAndClose(
+          `/dashboard/items?search=${encodeURIComponent(itemName)}`
+        )
       }
       return
     case "notifications":
@@ -184,9 +159,6 @@ export const handleConfirmCommandAction = (
         })
         actions.navigateAndClose("/dashboard/warehouse")
       }
-      return
-    case "admin-users":
-      actions.navigateAndClose("/admin/users")
       return
     default:
       actions.setErrorMessage("Nieobsługiwana komenda")

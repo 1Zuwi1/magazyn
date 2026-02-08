@@ -1,29 +1,14 @@
 import { create } from "zustand"
 
-export interface RemoveItemPayload {
-  itemName: string
-  rackName?: string
-}
-
-export interface MoveItemPayload {
-  itemName: string
-  sourceRack?: string
-  targetRack: string
-}
-
-export interface SearchItemPayload {
-  itemName: string
-}
-
 export interface InventoryCheckPayload {
   rackName?: string
   itemName?: string
 }
 
-export type PendingAction =
-  | { type: "remove-item"; payload: RemoveItemPayload }
-  | { type: "search-item"; payload: SearchItemPayload }
-  | { type: "inventory-check"; payload: InventoryCheckPayload }
+export interface PendingAction {
+  type: "inventory-check"
+  payload: InventoryCheckPayload
+}
 
 interface VoiceCommandState {
   scannerOpen: boolean

@@ -89,32 +89,6 @@ describe("voice commands", () => {
     expect(match?.command.id).toBe("add-item")
   })
 
-  it("matches remove item from rack command", () => {
-    const match = matchVoiceCommand("Usuń produkt Mleko z regału A1")
-
-    expect(match).not.toBeNull()
-    expect(match?.command.id).toBe("remove-item")
-    expect(match?.params.itemName).toBe("Mleko")
-    expect(match?.params.rackName).toBe("A1")
-  })
-
-  it("matches remove item without rack", () => {
-    const match = matchVoiceCommand("Usuń produkt Cukier")
-
-    expect(match).not.toBeNull()
-    expect(match?.command.id).toBe("remove-item")
-    expect(match?.params.itemName).toBe("Cukier")
-  })
-
-  it("matches zdejmij synonym for remove", () => {
-    const match = matchVoiceCommand("Zdejmij produkt Sok z regału B2")
-
-    expect(match).not.toBeNull()
-    expect(match?.command.id).toBe("remove-item")
-    expect(match?.params.itemName).toBe("Sok")
-    expect(match?.params.rackName).toBe("B2")
-  })
-
   it("matches search item command", () => {
     const match = matchVoiceCommand("Znajdź produkt Mleko")
 
@@ -176,17 +150,43 @@ describe("voice commands", () => {
     expect(match?.command.id).toBe("inventory-check")
   })
 
-  it("matches admin users command", () => {
-    const match = matchVoiceCommand("Pokaż użytkowników")
+  it("rejects 'znajdź produkt' without actual product name", () => {
+    const match = matchVoiceCommand("Znajdź produkt")
 
-    expect(match).not.toBeNull()
-    expect(match?.command.id).toBe("admin-users")
+    expect(match).toBeNull()
   })
 
-  it("matches użytkownicy shorthand", () => {
-    const match = matchVoiceCommand("Użytkownicy")
+  it("rejects 'wyszukaj produkt' without actual product name", () => {
+    const match = matchVoiceCommand("Wyszukaj produkt")
+
+    expect(match).toBeNull()
+  })
+
+  it("rejects 'znajdź przedmiot' without actual item name", () => {
+    const match = matchVoiceCommand("Znajdź przedmiot")
+
+    expect(match).toBeNull()
+  })
+
+  it("rejects 'ile jest produkt' as generic keyword", () => {
+    const match = matchVoiceCommand("Ile jest produkt")
+
+    expect(match).toBeNull()
+  })
+
+  it("still matches when actual name follows the keyword", () => {
+    const match = matchVoiceCommand("Znajdź produkt Mleko")
 
     expect(match).not.toBeNull()
-    expect(match?.command.id).toBe("admin-users")
+    expect(match?.command.id).toBe("search-item")
+    expect(match?.params.itemName).toBe("Mleko")
+  })
+
+  it("still matches short pattern with real item name", () => {
+    const match = matchVoiceCommand("Znajdź Mleko")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("search-item")
+    expect(match?.params.itemName).toBe("Mleko")
   })
 })

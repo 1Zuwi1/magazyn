@@ -6,11 +6,9 @@ export type VoiceCommandId =
   | "settings"
   | "open-scanner"
   | "add-item"
-  | "remove-item"
   | "search-item"
   | "notifications"
   | "inventory-check"
-  | "admin-users"
 
 export interface VoiceCommand {
   id: VoiceCommandId
@@ -41,6 +39,21 @@ export const normalizeTranscript = (
 
   return options?.toLowerCase ? base.toLowerCase() : base
 }
+
+const IGNORED_PARAM_VALUES = new Set([
+  "produkt",
+  "produkty",
+  "produktu",
+  "przedmiot",
+  "przedmioty",
+  "przedmiotu",
+  "asortyment",
+  "asortymentu",
+  "stan",
+  "stanu",
+  "regalu",
+  "regal",
+])
 
 export const VOICE_COMMANDS: VoiceCommand[] = [
   {
@@ -107,6 +120,8 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       { regex: /^otworz skaner$/i },
       { regex: /^odpal skaner$/i },
       { regex: /^skaner$/i },
+      { regex: /^zdejmij produkt$/i },
+      { regex: /^przyjmij produkt$/i },
     ],
   },
   {
@@ -118,36 +133,6 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       { regex: /^dodaj asortyment$/i },
       { regex: /^nowy produkt$/i },
       { regex: /^nowy przedmiot$/i },
-    ],
-  },
-  {
-    id: "remove-item",
-    description: "Usuń produkt z regału",
-    patterns: [
-      {
-        regex: /^usun produkt ([a-z0-9 ]+) z regalu ([a-z0-9 ]+)$/i,
-        paramNames: ["itemName", "rackName"],
-      },
-      {
-        regex: /^zdejmij produkt ([a-z0-9 ]+) z regalu ([a-z0-9 ]+)$/i,
-        paramNames: ["itemName", "rackName"],
-      },
-      {
-        regex: /^usun ([a-z0-9 ]+) z regalu ([a-z0-9 ]+)$/i,
-        paramNames: ["itemName", "rackName"],
-      },
-      {
-        regex: /^zdejmij ([a-z0-9 ]+) z regalu ([a-z0-9 ]+)$/i,
-        paramNames: ["itemName", "rackName"],
-      },
-      {
-        regex: /^usun produkt ([a-z0-9 ]+)$/i,
-        paramNames: ["itemName"],
-      },
-      {
-        regex: /^zdejmij produkt ([a-z0-9 ]+)$/i,
-        paramNames: ["itemName"],
-      },
     ],
   },
   {
@@ -216,23 +201,37 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       { regex: /^sprawdz zapasy$/i },
     ],
   },
-  {
-    id: "admin-users",
-    description: "Zarządzanie użytkownikami",
-    patterns: [
-      { regex: /^pokaz uzytkownikow$/i },
-      { regex: /^otworz uzytkownikow$/i },
-      { regex: /^lista uzytkownikow$/i },
-      { regex: /^zarzadzanie uzytkownikami$/i },
-      { regex: /^uzytkownicy$/i },
-    ],
-  },
 ]
+
+const extractParams = (
+  match: RegExpMatchArray,
+  paramNames?: string[]
+): Record<string, string> | null => {
+  if (!paramNames?.length) {
+    return {}
+  }
+
+  const params: Record<string, string> = {}
+
+  for (const [index, name] of paramNames.entries()) {
+    const value = match[index + 1]
+    if (!value) {
+      continue
+    }
+    if (IGNORED_PARAM_VALUES.has(value.toLowerCase().trim())) {
+      return null
+    }
+    params[name] = value
+  }
+
+  return params
+}
 
 export const matchVoiceCommand = (
   transcript: string
 ): VoiceCommandMatch | null => {
   const normalized = normalizeTranscript(transcript)
+
   for (const command of VOICE_COMMANDS) {
     for (const pattern of command.patterns) {
       const match = normalized.match(pattern.regex)
@@ -240,18 +239,14 @@ export const matchVoiceCommand = (
         continue
       }
 
-      const params: Record<string, string> = {}
-      if (pattern.paramNames?.length) {
-        for (const [index, name] of pattern.paramNames.entries()) {
-          const value = match[index + 1]
-          if (value) {
-            params[name] = value
-          }
-        }
+      const params = extractParams(match, pattern.paramNames)
+      if (!params) {
+        continue
       }
 
       return { command, params }
     }
   }
+
   return null
 }

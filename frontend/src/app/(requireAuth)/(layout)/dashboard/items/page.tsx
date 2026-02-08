@@ -12,7 +12,13 @@ import ProtectedPage from "@/components/security/protected-page"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export default function ItemsPage() {
+interface ItemsPageProps {
+  searchParams: Promise<{ search?: string }>
+}
+
+export default async function ItemsPage({ searchParams }: ItemsPageProps) {
+  const { search } = await searchParams
+
   const totalItems = MOCK_ITEMS.length
   const totalStock = MOCK_ITEM_STATS.reduce(
     (acc, item) => acc + item.totalQuantity,
@@ -64,7 +70,7 @@ export default function ItemsPage() {
             </div>
 
             <TabsContent className="space-y-4" value="assortment">
-              <ItemsTable items={MOCK_ITEM_STATS} />
+              <ItemsTable initialSearch={search} items={MOCK_ITEM_STATS} />
             </TabsContent>
             <TabsContent className="space-y-4" value="definitions">
               <AssortmentTable items={MOCK_ITEMS} />

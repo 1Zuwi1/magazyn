@@ -38,6 +38,7 @@ import type { ItemStats } from "./types"
 
 interface ItemsTableProps {
   items: ItemStats[]
+  initialSearch?: string
 }
 
 const globalFilterFn: FilterFn<ItemStats> = (row, _columnId, filterValue) => {
@@ -55,10 +56,10 @@ const globalFilterFn: FilterFn<ItemStats> = (row, _columnId, filterValue) => {
   )
 }
 
-export function ItemsTable({ items }: ItemsTableProps) {
+export function ItemsTable({ items, initialSearch = "" }: ItemsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [globalFilter, setGlobalFilter] = useState("")
+  const [globalFilter, setGlobalFilter] = useState(initialSearch)
 
   const table = useReactTable({
     data: items,
