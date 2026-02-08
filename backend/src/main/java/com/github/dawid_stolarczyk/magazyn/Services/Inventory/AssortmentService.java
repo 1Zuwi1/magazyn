@@ -13,6 +13,7 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AssortmentRepository
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.RackRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.Specification.AssortmentSpecifications;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
@@ -47,9 +48,18 @@ public class AssortmentService {
 
     private static final double EPS = 1e-6;
 
-    public Page<AssortmentDto> getAllAssortmentsPaged(HttpServletRequest request, Pageable pageable, ArrayList<ExpiryFilters> expiryFilters) {
+    public Page<AssortmentDto> getAllAssortmentsPaged(
+            HttpServletRequest request,
+            Pageable pageable,
+            ArrayList<ExpiryFilters> expiryFilters,
+            String search,
+            Boolean weekToExpire) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        Page<AssortmentDto> page = assortmentRepository.findAll(pageable)
+
+        var spec = AssortmentSpecifications.withFilters(
+                search, weekToExpire, null);
+
+        Page<AssortmentDto> page = assortmentRepository.findAll(spec, pageable)
                 .map(this::mapToDto);
 
         if (!expiryFilters.isEmpty() && !expiryFilters.contains(ExpiryFilters.ALL)) {
@@ -77,7 +87,12 @@ public class AssortmentService {
         return page;
     }
 
-    public Page<AssortmentWithItemDto> getAssortmentsByRackIdPaged(Long rackId, HttpServletRequest request, Pageable pageable) {
+    public Page<AssortmentWithItemDto> getAssortmentsByRackIdPaged(
+            Long rackId,
+            HttpServletRequest request,
+            Pageable pageable,
+            String search,
+            Boolean weekToExpire) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
 
         // Validate rack exists
@@ -85,7 +100,10 @@ public class AssortmentService {
             throw new IllegalArgumentException(InventoryError.RACK_NOT_FOUND.name());
         }
 
-        return assortmentRepository.findByRackId(rackId, pageable)
+        var spec = AssortmentSpecifications.withFilters(
+                search, weekToExpire, rackId);
+
+        return assortmentRepository.findAll(spec, pageable)
                 .map(this::mapToDtoWithItem);
     }
 

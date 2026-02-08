@@ -14,7 +14,9 @@ public enum AlertType {
     ITEM_TEMPERATURE_TOO_HIGH("Temperatura regału przekracza maksymalną tolerancję przedmiotu"),
     ITEM_TEMPERATURE_TOO_LOW("Temperatura regału poniżej minimalnej tolerancji przedmiotu"),
     EMBEDDING_GENERATION_COMPLETED("Zakończono generowanie embeddingów dla produktów"),
-    EMBEDDING_GENERATION_FAILED("Błąd podczas generowania embeddingów dla produktów");
+    EMBEDDING_GENERATION_FAILED("Błąd podczas generowania embeddingów dla produktów"),
+    ASSORTMENT_EXPIRED("Assortment wygasł - produkt przekroczył datę ważności"),
+    ASSORTMENT_CLOSE_TO_EXPIRY("Assortment bliski wygaśnięcia - zbliża się data ważności");
 
     private final String description;
 

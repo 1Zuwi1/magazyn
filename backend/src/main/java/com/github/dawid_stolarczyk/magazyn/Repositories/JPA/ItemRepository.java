@@ -5,13 +5,14 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.Projection.ItemSimilarit
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface ItemRepository extends JpaRepository<Item, Long> {
+public interface ItemRepository extends JpaRepository<Item, Long>, JpaSpecificationExecutor<Item> {
     boolean existsByCode(String code);
 
     Optional<Item> findByCode(String code);

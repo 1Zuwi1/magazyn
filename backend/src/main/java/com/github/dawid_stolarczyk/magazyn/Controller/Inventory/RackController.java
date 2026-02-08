@@ -36,7 +36,7 @@ public class RackController {
     @ApiResponse(responseCode = "200", description = "Success",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedRacksResponse.class)))
     @GetMapping
-    public ResponseEntity<ResponseTemplate<PagedResponse<RackDto>>> getAllRacks(
+    public ResponseEntity<ResponseTemplate<RackPagedResponse>> getAllRacks(
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
@@ -45,7 +45,7 @@ public class RackController {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(rackService.getAllRacksPaged(request, pageable))));
+                rackService.getAllRacksPaged(request, pageable)));
     }
 
     @Operation(summary = "Get rack by ID")
@@ -60,8 +60,8 @@ public class RackController {
         return ResponseEntity.ok(ResponseTemplate.success(rackService.getRackById(id, request)));
     }
 
-    @Operation(summary = "Get assortment in a rack with pagination",
-            description = "Returns paginated list of all assortments stored in a specific rack, including full item details")
+    @Operation(summary = "Get assortment in a rack with pagination and filters",
+            description = "Returns paginated list of all assortments stored in a specific rack, including full item details. Supports filtering by item name/code and week to expire status")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAssortmentsWithItemResponse.class))),
@@ -75,11 +75,13 @@ public class RackController {
             @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir,
+            @Parameter(description = "Search by item name or code (case-insensitive)", example = "milk") @RequestParam(required = false) String search,
+            @Parameter(description = "Filter by week to expire (expires within 7 days)", example = "true") @RequestParam(required = false) Boolean weekToExpire) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(assortmentService.getAssortmentsByRackIdPaged(rackId, request, pageable))));
+                PagedResponse.from(assortmentService.getAssortmentsByRackIdPaged(rackId, request, pageable, search, weekToExpire))));
     }
 
     @Operation(summary = "Create rack (ADMIN only)",

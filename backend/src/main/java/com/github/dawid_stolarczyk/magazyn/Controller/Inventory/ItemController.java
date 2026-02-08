@@ -41,7 +41,8 @@ public class ItemController {
     private final ItemEmbeddingGenerationService embeddingGenerationService;
     private final UserRepository userRepository;
 
-    @Operation(summary = "Get all items with pagination")
+    @Operation(summary = "Get all items with pagination and filters",
+            description = "Retrieve items with optional filters for name/code search, dangerous status, temperature ranges, weight, and expiration days")
     @ApiResponse(responseCode = "200", description = "Success",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ResponseTemplate.PagedItemsResponse.class)))
@@ -52,11 +53,22 @@ public class ItemController {
             @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir,
-            @Parameter(description = "Filter by dangerous") @RequestParam(defaultValue = "false") boolean isDangerousOnly) {
+            @Parameter(description = "Search by name or code (case-insensitive)", example = "milk") @RequestParam(required = false) String search,
+            @Parameter(description = "Filter by dangerous status", example = "true") @RequestParam(required = false) Boolean dangerous,
+            @Parameter(description = "Minimum temperature range - from", example = "-20") @RequestParam(required = false) Float minTempFrom,
+            @Parameter(description = "Minimum temperature range - to", example = "5") @RequestParam(required = false) Float minTempTo,
+            @Parameter(description = "Maximum temperature range - from", example = "0") @RequestParam(required = false) Float maxTempFrom,
+            @Parameter(description = "Maximum temperature range - to", example = "25") @RequestParam(required = false) Float maxTempTo,
+            @Parameter(description = "Weight range - from (kg)", example = "0.5") @RequestParam(required = false) Float weightFrom,
+            @Parameter(description = "Weight range - to (kg)", example = "10") @RequestParam(required = false) Float weightTo,
+            @Parameter(description = "Expire after days range - from", example = "7") @RequestParam(required = false) Long expireAfterDaysFrom,
+            @Parameter(description = "Expire after days range - to", example = "365") @RequestParam(required = false) Long expireAfterDaysTo) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(itemService.getAllItemsPaged(request, pageable, isDangerousOnly))));
+                PagedResponse.from(itemService.getAllItemsPaged(request, pageable, search, dangerous,
+                        minTempFrom, minTempTo, maxTempFrom, maxTempTo, weightFrom, weightTo,
+                        expireAfterDaysFrom, expireAfterDaysTo))));
     }
 
     @Operation(summary = "Get item by ID")

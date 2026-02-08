@@ -7,6 +7,7 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemUpdateRequest;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.Specification.ItemSpecifications;
 import com.github.dawid_stolarczyk.magazyn.Services.Ai.ImageEmbeddingService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
@@ -39,13 +40,26 @@ public class ItemService {
     private final Bucket4jRateLimiter rateLimiter;
     private final ImageEmbeddingService imageEmbeddingService;
 
-    public Page<ItemDto> getAllItemsPaged(HttpServletRequest request, Pageable pageable, boolean onlyDangerous) {
+    public Page<ItemDto> getAllItemsPaged(
+            HttpServletRequest request,
+            Pageable pageable,
+            String search,
+            Boolean dangerous,
+            Float minTempFrom,
+            Float minTempTo,
+            Float maxTempFrom,
+            Float maxTempTo,
+            Float weightFrom,
+            Float weightTo,
+            Long expireAfterDaysFrom,
+            Long expireAfterDaysTo) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        Page<ItemDto> itemsPage = itemRepository.findAll(pageable).map(this::mapToDto);
-        if (onlyDangerous) {
-            itemsPage = itemRepository.findByDangerousTrue(pageable).map(this::mapToDto);
-        }
-        return itemsPage;
+
+        var spec = ItemSpecifications.withFilters(
+                search, dangerous, minTempFrom, minTempTo, maxTempFrom, maxTempTo,
+                weightFrom, weightTo, expireAfterDaysFrom, expireAfterDaysTo);
+
+        return itemRepository.findAll(spec, pageable).map(this::mapToDto);
     }
 
     public ItemDto getItemById(Long id, HttpServletRequest request) {
