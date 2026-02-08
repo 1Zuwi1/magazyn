@@ -1,6 +1,8 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Ai;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Service for removing backgrounds from product images using the rembg microservice.
@@ -30,6 +35,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
+@AllArgsConstructor
 public class BackgroundRemovalService {
 
     @Value("${app.background-removal.enabled:true}")
@@ -48,10 +54,14 @@ public class BackgroundRemovalService {
     private String testImagesPath;
 
     private HttpClient httpClient;
+    private ExecutorService executorService;
 
     @PostConstruct
     public void init() {
+        executorService = Executors.newFixedThreadPool(4);
+
         httpClient = HttpClient.newBuilder()
+                .executor(executorService)
                 .connectTimeout(Duration.ofSeconds(5))
                 .version(HttpClient.Version.HTTP_1_1)
                 .build();
@@ -69,6 +79,20 @@ public class BackgroundRemovalService {
             } catch (IOException e) {
                 log.warn("Failed to create test images directory: {}", e.getMessage());
             }
+        }
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        executorService.shutdown();
+        try {
+            // Dajemy wątkom 5 sekund na dokończenie zadań
+            if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executorService.shutdownNow();
+            Thread.currentThread().interrupt();
         }
     }
 
