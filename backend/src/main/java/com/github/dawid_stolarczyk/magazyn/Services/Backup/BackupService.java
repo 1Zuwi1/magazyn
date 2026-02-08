@@ -212,7 +212,7 @@ public class BackupService {
                 List<AssortmentBackupData> assortmentData = assortments.stream()
                         .map(a -> new AssortmentBackupData(a.getId(), a.getCode(),
                                 a.getItem().getId(), a.getRack().getId(),
-                                a.getCreated_at(), a.getExpires_at(),
+                                a.getCreatedAt(), a.getExpiresAt(),
                                 a.getPositionX(), a.getPositionY()))
                         .toList();
 
@@ -383,8 +383,8 @@ public class BackupService {
                             .code(ad.code())
                             .item(item)
                             .rack(rack)
-                            .created_at(ad.createdAt())
-                            .expires_at(ad.expiresAt())
+                            .createdAt(ad.createdAt())
+                            .expiresAt(ad.expiresAt())
                             .positionX(ad.positionX())
                             .positionY(ad.positionY())
                             .build();

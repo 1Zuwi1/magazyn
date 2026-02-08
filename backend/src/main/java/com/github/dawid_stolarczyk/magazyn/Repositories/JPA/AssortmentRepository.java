@@ -33,8 +33,8 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long>, J
      * Assortmenty bez daty wygaśnięcia (expires_at IS NULL) są uwzględniane.
      */
     @Query("SELECT a FROM Assortment a WHERE a.item.id = :itemId " +
-            "AND (a.expires_at IS NULL OR a.expires_at > CURRENT_TIMESTAMP) " +
-            "ORDER BY a.created_at ASC")
+            "AND (a.expiresAt IS NULL OR a.expiresAt > CURRENT_TIMESTAMP) " +
+            "ORDER BY a.createdAt ASC")
     List<Assortment> findByItemIdFifoOrdered(@Param("itemId") Long itemId);
 
     /**
@@ -43,9 +43,9 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long>, J
      * Assortmenty bez daty wygaśnięcia (expires_at IS NULL) są uwzględniane.
      */
     @Query("SELECT a FROM Assortment a WHERE a.item.id = :itemId " +
-            "AND a.created_at < :createdAt " +
-            "AND (a.expires_at IS NULL OR a.expires_at > CURRENT_TIMESTAMP) " +
-            "ORDER BY a.created_at ASC")
+            "AND a.createdAt < :createdAt " +
+            "AND (a.expiresAt IS NULL OR a.expiresAt > CURRENT_TIMESTAMP) " +
+            "ORDER BY a.createdAt ASC")
     List<Assortment> findOlderAssortments(@Param("itemId") Long itemId, @Param("createdAt") Timestamp createdAt);
 
     /**
@@ -63,27 +63,27 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long>, J
      * Używane do raportowania i alertowania o wygasłych produktach.
      */
     @Query("SELECT a FROM Assortment a WHERE a.item.id = :itemId " +
-            "AND a.expires_at IS NOT NULL AND a.expires_at <= CURRENT_TIMESTAMP " +
-            "ORDER BY a.expires_at ASC")
+            "AND a.expiresAt IS NOT NULL AND a.expiresAt <= CURRENT_TIMESTAMP " +
+            "ORDER BY a.expiresAt ASC")
     List<Assortment> findExpiredByItemId(@Param("itemId") Long itemId);
 
     /**
      * Policz dostępne (niewygasłe) assortmenty dla danego produktu.
      */
     @Query("SELECT COUNT(a) FROM Assortment a WHERE a.item.id = :itemId " +
-            "AND (a.expires_at IS NULL OR a.expires_at > CURRENT_TIMESTAMP)")
+            "AND (a.expiresAt IS NULL OR a.expiresAt > CURRENT_TIMESTAMP)")
     long countAvailableByItemId(@Param("itemId") Long itemId);
 
     /**
      * Znajdź wszystkie wygasłe assortmenty (expires_at <= NOW()).
      */
-    @Query("SELECT a FROM Assortment a WHERE a.expires_at IS NOT NULL AND a.expires_at <= CURRENT_TIMESTAMP")
+    @Query("SELECT a FROM Assortment a WHERE a.expiresAt IS NOT NULL AND a.expiresAt <= CURRENT_TIMESTAMP")
     List<Assortment> findAllExpired();
 
     /**
      * Znajdź assortmenty bliskie wygaśnięcia (expires_at > NOW() AND expires_at <= threshold).
      */
-    @Query("SELECT a FROM Assortment a WHERE a.expires_at IS NOT NULL " +
-            "AND a.expires_at > CURRENT_TIMESTAMP AND a.expires_at <= :threshold")
+    @Query("SELECT a FROM Assortment a WHERE a.expiresAt IS NOT NULL " +
+            "AND a.expiresAt > CURRENT_TIMESTAMP AND a.expiresAt <= :threshold")
     List<Assortment> findAllCloseToExpiry(@Param("threshold") Timestamp threshold);
 }

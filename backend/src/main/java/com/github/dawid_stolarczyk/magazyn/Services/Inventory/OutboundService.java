@@ -84,12 +84,12 @@ public class OutboundService {
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
 
         // Sprawdź czy assortment jest wygasły
-        boolean isExpired = assortment.getExpires_at() != null &&
-                assortment.getExpires_at().toInstant().isBefore(java.time.Instant.now());
+        boolean isExpired = assortment.getExpiresAt() != null &&
+                assortment.getExpiresAt().toInstant().isBefore(java.time.Instant.now());
 
         // Znajdź starsze niewygasłe assortmenty
         List<Assortment> older = assortmentRepository.findOlderAssortments(
-                assortment.getItem().getId(), assortment.getCreated_at());
+                assortment.getItem().getId(), assortment.getCreatedAt());
 
         boolean fifoCompliant = older.isEmpty();
         List<OutboundPickSlot> olderSlots = older.stream().map(this::mapToPickSlot).toList();
@@ -130,8 +130,8 @@ public class OutboundService {
                     .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
 
             // Sprawdź czy assortment jest wygasły
-            boolean isExpired = assortment.getExpires_at() != null &&
-                    assortment.getExpires_at().toInstant().isBefore(java.time.Instant.now());
+            boolean isExpired = assortment.getExpiresAt() != null &&
+                    assortment.getExpiresAt().toInstant().isBefore(java.time.Instant.now());
 
             if (isExpired) {
                 throw new IllegalArgumentException(InventoryError.OUTBOUND_ASSORTMENT_EXPIRED.name());
@@ -139,7 +139,7 @@ public class OutboundService {
 
             // Sprawdź FIFO compliance (tylko dla niewygasłych)
             List<Assortment> older = assortmentRepository.findOlderAssortments(
-                    assortment.getItem().getId(), assortment.getCreated_at());
+                    assortment.getItem().getId(), assortment.getCreatedAt());
             boolean fifoCompliant = older.isEmpty();
 
             if (!fifoCompliant && !request.isSkipFifo()) {
@@ -190,8 +190,8 @@ public class OutboundService {
                 .rackMarker(assortment.getRack().getMarker())
                 .positionX(assortment.getPositionX())
                 .positionY(assortment.getPositionY())
-                .createdAt(assortment.getCreated_at() != null ? assortment.getCreated_at().toInstant().toString() : null)
-                .expiresAt(assortment.getExpires_at() != null ? assortment.getExpires_at().toInstant().toString() : null)
+                .createdAt(assortment.getCreatedAt() != null ? assortment.getCreatedAt().toInstant().toString() : null)
+                .expiresAt(assortment.getExpiresAt() != null ? assortment.getExpiresAt().toInstant().toString() : null)
                 .build();
     }
 

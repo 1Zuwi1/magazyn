@@ -169,8 +169,8 @@ public class AssortmentService {
                         .item(item)
                         .rack(rack)
                         .user(user)
-                        .created_at(createdAt)
-                        .expires_at(expiresAt)
+                        .createdAt(createdAt)
+                        .expiresAt(expiresAt)
                         .positionX(dto.getPositionX())
                         .positionY(dto.getPositionY())
                         .code(placementCode)
@@ -244,10 +244,10 @@ public class AssortmentService {
 
         // Only allow updating expiration date
         if (dto.getExpiresAt() != null) {
-            if (dto.getExpiresAt().before(assortment.getCreated_at())) {
+            if (dto.getExpiresAt().before(assortment.getCreatedAt())) {
                 throw new IllegalArgumentException(InventoryError.INVALID_EXPIRY_DATE.name());
             }
-            assortment.setExpires_at(dto.getExpiresAt());
+            assortment.setExpiresAt(dto.getExpiresAt());
         }
 
         return mapToDto(assortmentRepository.save(assortment));
@@ -272,7 +272,7 @@ public class AssortmentService {
         assortment.setPositionX(dto.getPositionX());
         assortment.setPositionY(dto.getPositionY());
         if (dto.getExpiresAt() != null) {
-            assortment.setExpires_at(dto.getExpiresAt());
+            assortment.setExpiresAt(dto.getExpiresAt());
         }
 
         return mapToDto(assortmentRepository.save(assortment));
@@ -330,8 +330,8 @@ public class AssortmentService {
                 .itemId(assortment.getItem().getId())
                 .rackId(assortment.getRack().getId())
                 .userId(assortment.getUser() != null ? assortment.getUser().getId() : null)
-                .createdAt(assortment.getCreated_at())
-                .expiresAt(assortment.getExpires_at())
+                .createdAt(assortment.getCreatedAt())
+                .expiresAt(assortment.getExpiresAt())
                 .positionX(assortment.getPositionX())
                 .positionY(assortment.getPositionY())
                 .build();
@@ -360,8 +360,8 @@ public class AssortmentService {
                 .code(assortment.getCode())
                 .rackId(assortment.getRack().getId())
                 .userId(assortment.getUser() != null ? assortment.getUser().getId() : null)
-                .createdAt(assortment.getCreated_at())
-                .expiresAt(assortment.getExpires_at())
+                .createdAt(assortment.getCreatedAt())
+                .expiresAt(assortment.getExpiresAt())
                 .positionX(assortment.getPositionX())
                 .positionY(assortment.getPositionY())
                 .item(itemDto)

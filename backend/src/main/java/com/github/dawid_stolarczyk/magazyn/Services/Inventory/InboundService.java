@@ -288,8 +288,8 @@ public class InboundService {
                 assortment.setItem(item);
                 assortment.setRack(rack);
                 assortment.setUser(user);
-                assortment.setCreated_at(createdAt);
-                assortment.setExpires_at(expiresAt);
+                assortment.setCreatedAt(createdAt);
+                assortment.setExpiresAt(expiresAt);
                 assortment.setPositionX(slot.getPositionX());
                 assortment.setPositionY(slot.getPositionY());
                 newAssortments.add(assortment);
