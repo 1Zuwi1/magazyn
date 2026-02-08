@@ -10,6 +10,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Warehouse;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.EmailStatus;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.EmailVerificationRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.WarehouseRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
@@ -43,6 +44,7 @@ public class UserService {
     private final Bucket4jRateLimiter rateLimiter;
     private final EmailService emailService;
     private final SessionManager sessionManager;
+    private final EmailVerificationRepository emailVerificationRepository;
 
 
     public UserInfoResponse getBasicInformation(HttpServletRequest request) {
@@ -156,7 +158,11 @@ public class UserService {
             }
         });
 
-        targetUser.removeEmailVerifications();
+        EmailVerification existEmailVerification = targetUser.getEmailVerifications();
+        if (existEmailVerification != null) {
+            emailVerificationRepository.deleteById(targetUser.getEmailVerifications().getId());
+            emailVerificationRepository.flush();
+        }
         targetUser.setEmail(newEmail);
         targetUser.setStatus(AccountStatus.PENDING_VERIFICATION);
         targetUser.setEmailStatus(EmailStatus.UNVERIFIED);

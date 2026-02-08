@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ResponseTemplate<String>> handleAuthException(AuthenticationException ex) {
-        log.debug("Authentication error: {}", ex.getCode());
+//        log.debug("Authentication error: {}", ex.getCode());
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ResponseTemplate.error(ex.getCode() != null ? ex.getCode() : "UNAUTHORIZED"));

@@ -24,6 +24,7 @@ import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ import java.util.UUID;
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 import static com.github.dawid_stolarczyk.magazyn.Utils.StringUtils.checkPasswordStrength;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -216,8 +218,12 @@ public class AuthService {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.EMAIL_VERIFICATION_RESEND);
 
         // Delete existing verification token if present
-        if (user.getEmailVerifications() != null) {
+        EmailVerification existingVerification = user.getEmailVerifications();
+        if (existingVerification != null) {
             user.removeEmailVerifications();
+
+            emailVerificationRepository.deleteById(existingVerification.getId());
+            emailVerificationRepository.flush();
         }
 
         // Generate new verification token
