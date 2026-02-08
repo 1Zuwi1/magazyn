@@ -1,9 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Entity;
 
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.Default2faMethod;
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserTeam;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -13,7 +10,9 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -48,8 +47,12 @@ public class User {
     private List<WebAuthnCredential> webAuthnCredentials = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "varchar(20)")
     private AccountStatus status = AccountStatus.PENDING_VERIFICATION;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "email_status", nullable = false, columnDefinition = "varchar(20)")
+    private EmailStatus emailStatus = EmailStatus.UNVERIFIED;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TwoFactorMethod> twoFactorMethods = new ArrayList<>();
@@ -58,7 +61,7 @@ public class User {
     private List<BackupCode> backupCodes = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "default_2fa_method", nullable = false)
+    @Column(name = "default_2fa_method", nullable = false, columnDefinition = "varchar(20)")
     private Default2faMethod default2faMethod = Default2faMethod.EMAIL;
 
     // Dodatkowe informacje użytkownika (edytowalne przez admina)
@@ -71,6 +74,19 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(length = 50)
     private UserTeam team;
+
+    // Audyt - data ostatniego logowania
+    @Column(name = "last_login")
+    private Timestamp lastLogin;
+
+    // Przypisanie użytkownika do magazynów (many-to-many)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_warehouse_assignments",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "warehouse_id")
+    )
+    private Set<Warehouse> assignedWarehouses = new HashSet<>();
 
     public void addTwoFactorMethod(TwoFactorMethod method) {
         twoFactorMethods.add(method);
@@ -102,6 +118,28 @@ public class User {
 
     public void setRawPassword(String rawPassword) {
         this.password = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
+    }
+
+    /**
+     * Assigns user to a warehouse
+     */
+    public void assignToWarehouse(Warehouse warehouse) {
+        assignedWarehouses.add(warehouse);
+    }
+
+    /**
+     * Removes user assignment from a warehouse
+     */
+    public void removeFromWarehouse(Warehouse warehouse) {
+        assignedWarehouses.remove(warehouse);
+    }
+
+    /**
+     * Checks if user has access to a warehouse
+     */
+    public boolean hasAccessToWarehouse(Long warehouseId) {
+        return assignedWarehouses.stream()
+                .anyMatch(w -> w.getId().equals(warehouseId));
     }
 
 }

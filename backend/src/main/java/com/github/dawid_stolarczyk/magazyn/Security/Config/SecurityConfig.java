@@ -1,8 +1,9 @@
 package com.github.dawid_stolarczyk.magazyn.Security.Config;
 
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.RestAccessDeniedHandler;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.RestAuthenticationEntryPoint;
 import com.github.dawid_stolarczyk.magazyn.Security.Filter.SessionAuthFilter;
-import com.github.dawid_stolarczyk.magazyn.Security.Filter.TwoFactorFilter;
+import com.github.dawid_stolarczyk.magazyn.Security.Filter.VerificationLevelFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,9 +23,11 @@ public class SecurityConfig {
     @Autowired
     private SessionAuthFilter sessionAuthFilter;
     @Autowired
-    private TwoFactorFilter twoFactorFilter;
+    private VerificationLevelFilter verificationLevelFilter;
     @Autowired
     private RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+    @Autowired
+    private RestAccessDeniedHandler restAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) {
@@ -34,7 +37,8 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(restAuthenticationEntryPoint))
+                        .authenticationEntryPoint(restAuthenticationEntryPoint)
+                        .accessDeniedHandler(restAccessDeniedHandler))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/health").permitAll()
@@ -50,7 +54,7 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .addFilterBefore(sessionAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(twoFactorFilter, SessionAuthFilter.class);
+                .addFilterAfter(verificationLevelFilter, SessionAuthFilter.class);
 
         return http.build();
     }

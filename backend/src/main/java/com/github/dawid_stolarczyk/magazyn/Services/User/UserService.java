@@ -7,8 +7,11 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserInfoResponse;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.EmailVerification;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.Warehouse;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
-import com.github.dawid_stolarczyk.magazyn.Repositories.UserRepository;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.EmailStatus;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.WarehouseRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;
@@ -36,6 +39,7 @@ import static com.github.dawid_stolarczyk.magazyn.Utils.StringUtils.checkPasswor
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final WarehouseRepository warehouseRepository;
     private final Bucket4jRateLimiter rateLimiter;
     private final EmailService emailService;
     private final SessionManager sessionManager;
@@ -53,7 +57,8 @@ public class UserService {
                 user.getStatus().name(),
                 user.getPhone(),
                 user.getLocation(),
-                user.getTeam() != null ? user.getTeam().name() : null);
+                user.getTeam() != null ? user.getTeam().name() : null,
+                user.getLastLogin() != null ? user.getLastLogin().toInstant().toString() : null);
     }
 
     @Transactional
@@ -94,12 +99,21 @@ public class UserService {
     }
 
     /**
-     * Admin: Get all users with pagination
+     * Admin: Get all users with pagination and optional filtering
+     *
+     * @param name   Optional filter by full name (case-insensitive, partial match)
+     * @param email  Optional filter by email (case-insensitive, partial match)
+     * @param status Optional filter by account status
      */
-    public Page<UserInfoResponse> adminGetAllUsersPaged(HttpServletRequest request, Pageable pageable) {
+    public Page<UserInfoResponse> adminGetAllUsersPaged(HttpServletRequest request, String name, String email, AccountStatus status, Pageable pageable) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
-        return userRepository.findByIdNot(authPrincipal.getUserId(), pageable)
+        return userRepository.findUsersWithFilters(
+                        authPrincipal.getUserId(),
+                        name,
+                        email,
+                        status,
+                        pageable)
                 .map(this::mapToUserInfoResponse);
     }
 
@@ -112,7 +126,8 @@ public class UserService {
                 user.getStatus().name(),
                 user.getPhone(),
                 user.getLocation(),
-                user.getTeam() != null ? user.getTeam().name() : null
+                user.getTeam() != null ? user.getTeam().name() : null,
+                user.getLastLogin() != null ? user.getLastLogin().toInstant().toString() : null
         );
     }
 
@@ -144,6 +159,7 @@ public class UserService {
         targetUser.removeEmailVerifications();
         targetUser.setEmail(newEmail);
         targetUser.setStatus(AccountStatus.PENDING_VERIFICATION);
+        targetUser.setEmailStatus(EmailStatus.UNVERIFIED);
 
         EmailVerification emailVerification = new EmailVerification();
         String emailVerificationToken = UUID.randomUUID().toString();
@@ -154,22 +170,10 @@ public class UserService {
         userRepository.save(targetUser);
 
         String baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
-                .path("/auth/verify-email")
+                .replacePath(null)
+                .path("/verify-mail")
                 .toUriString();
         emailService.sendVerificationEmail(targetUser.getEmail(), baseUrl + "?token=" + emailVerificationToken);
-    }
-
-    /**
-     * Admin: Change full name for any user
-     */
-    @Transactional
-    public void adminChangeFullName(Long targetUserId, String newFullName, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
-        User targetUser = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
-
-        targetUser.setFullName(newFullName);
-        userRepository.save(targetUser);
     }
 
     /**
@@ -199,11 +203,32 @@ public class UserService {
         if (profileRequest.getFullName() != null) {
             String fullName = profileRequest.getFullName().strip();
             if (fullName.isEmpty()) {
-                throw new IllegalArgumentException("INVALID_FULL_NAME");
+                throw new IllegalArgumentException(AuthError.INVALID_FULL_NAME.name());
             }
             targetUser.setFullName(fullName);
         }
 
+        userRepository.save(targetUser);
+    }
+
+    /**
+     * Admin: Update user account status
+     * Changes the account status (ACTIVE, DISABLED, LOCKED, PENDING_VERIFICATION)
+     * Note: When a user is DISABLED or LOCKED, existing sessions will be blocked on next request
+     */
+    @Transactional
+    public void adminUpdateUserStatus(Long targetUserId, AccountStatus newStatus, String reason, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        // Prevent admins from locking/disabling themselves
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        if (targetUser.getId().equals(authPrincipal.getUserId())) {
+            throw new AuthenticationException(AuthError.CANNOT_MODIFY_OWN_STATUS.name());
+        }
+
+        targetUser.setStatus(newStatus);
         userRepository.save(targetUser);
     }
 
@@ -217,5 +242,55 @@ public class UserService {
                 .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
 
         userRepository.delete(targetUser);
+    }
+
+    /**
+     * Admin: Assign user to warehouse
+     * Grants user access to receive notifications from the specified warehouse
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void assignUserToWarehouse(Long userId, Long warehouseId, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        Warehouse warehouse = warehouseRepository.findById(warehouseId)
+                .orElseThrow(() -> new IllegalArgumentException("WAREHOUSE_NOT_FOUND"));
+
+        user.assignToWarehouse(warehouse);
+        userRepository.save(user);
+    }
+
+    /**
+     * Admin: Remove user from warehouse
+     * Revokes user's access to the specified warehouse
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void removeUserFromWarehouse(Long userId, Long warehouseId, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        Warehouse warehouse = warehouseRepository.findById(warehouseId)
+                .orElseThrow(() -> new IllegalArgumentException("WAREHOUSE_NOT_FOUND"));
+
+        user.removeFromWarehouse(warehouse);
+        userRepository.save(user);
+    }
+
+    /**
+     * Admin: Get all warehouses assigned to a user
+     */
+    public List<Long> getUserWarehouseIds(Long userId, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        return user.getAssignedWarehouses().stream()
+                .map(Warehouse::getId)
+                .toList();
     }
 }

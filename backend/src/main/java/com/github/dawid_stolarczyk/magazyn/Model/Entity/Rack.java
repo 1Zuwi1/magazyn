@@ -10,14 +10,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "racks")
+@Table(
+        name = "racks",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"warehouse_id", "marker"}, name = "uk_warehouse_marker")
+        }
+)
 @Getter
 @Setter
 public class Rack {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String marker;
+
     @ManyToOne
     @JoinColumn(name = "warehouse_id")
     private Warehouse warehouse;

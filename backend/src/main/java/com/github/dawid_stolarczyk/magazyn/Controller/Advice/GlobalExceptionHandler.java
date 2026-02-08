@@ -88,8 +88,8 @@ public class GlobalExceptionHandler {
                     if (sqlMessage != null) {
                         if (sqlMessage.contains("position") || sqlMessage.contains("rack_id")) {
                             errorCode = "PLACEMENT_CONFLICT";
-                        } else if (sqlMessage.contains("barcode")) {
-                            errorCode = "DUPLICATE_BARCODE";
+                        } else if (sqlMessage.contains("barcode") || sqlMessage.contains("code")) {
+                            errorCode = "DUPLICATE_CODE";
                         } else if (sqlMessage.contains("email")) {
                             errorCode = "DUPLICATE_EMAIL";
                         } else {
@@ -149,9 +149,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ResponseTemplate<String>> handleOtherExceptions(Exception ex) {
         log.error("Internal server error", ex);
+
+        String errorCode = "INTERNAL_ERROR";
+        String message = ex.getMessage();
+
+        // Wykryj błąd nie podania warehouseId w endpointach, które tego wymagają
+        if (message != null && (message.contains("Required request parameter 'warehouseId'"))) {
+            errorCode = "WAREHOUSE_ID_REQUIRED";
+        }
+
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ResponseTemplate.error("INTERNAL_ERROR"));
+                .body(ResponseTemplate.error(errorCode));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

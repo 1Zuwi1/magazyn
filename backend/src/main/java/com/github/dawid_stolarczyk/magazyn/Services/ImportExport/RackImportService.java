@@ -4,7 +4,9 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackImportError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackImportReport;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.RackService;
+import com.github.dawid_stolarczyk.magazyn.Utils.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -12,8 +14,8 @@ import java.util.Map;
 @Service
 public class RackImportService extends AbstractImportService<RackDto, RackImportReport, RackImportError> {
     // Format CSV (stała kolejność kolumn, BEZ nagłówka):
-    // Oznaczenie;M;N;TempMin;TempMax;MaxWagaKg;MaxSzerokoscMm;MaxWysokoscMm;MaxGlebokoscMm;AcceptsDangerous;Komentarz
-    private static final int COL_OZNACZENIE = 0;
+    // Oznaczenie;M;N;TempMin;TempMax;MaxWagaKg;MaxSzerokoscMm;MaxWysokoscMm;MaxGlebokoscMm;Komentarz
+    private static final int COL_MARKER = 0;
     private static final int COL_M = 1;
     private static final int COL_N = 2;
     private static final int COL_TEMP_MIN = 3;
@@ -22,14 +24,34 @@ public class RackImportService extends AbstractImportService<RackDto, RackImport
     private static final int COL_MAX_SZEROKOSC_MM = 6;
     private static final int COL_MAX_WYSOKOSC_MM = 7;
     private static final int COL_MAX_GLEBOKOSC_MM = 8;
-    private static final int COL_ACCEPTS_DANGEROUS = 9;
-    private static final int COL_KOMENTARZ = 10;
+    private static final int COL_KOMENTARZ = 9;
+    private static final int COL_ACCEPTS_DANGEROUS = 10;
     private static final int MIN_COLUMNS = 9; // AcceptsDangerous i Komentarz są opcjonalne
 
     private final RackService rackService;
+    private final ThreadLocal<Long> warehouseIdHolder = new ThreadLocal<>();
 
     public RackImportService(RackService rackService) {
         this.rackService = rackService;
+    }
+
+    /**
+     * Import racks from CSV file and assign them to specified warehouse
+     *
+     * @param warehouseId ID of the warehouse to assign all racks to
+     * @param file        CSV file with rack data
+     * @return Import report with statistics
+     */
+    public RackImportReport importFromCsv(Long warehouseId, MultipartFile file) {
+        if (warehouseId == null) {
+            throw new IllegalArgumentException("WAREHOUSE_ID_REQUIRED");
+        }
+        try {
+            warehouseIdHolder.set(warehouseId);
+            return super.importFromCsv(file);
+        } finally {
+            warehouseIdHolder.remove();
+        }
     }
 
     @Override
@@ -51,27 +73,15 @@ public class RackImportService extends AbstractImportService<RackDto, RackImport
 
         RackDto dto = new RackDto();
 
-        // Oznaczenie - marker regału (może zawierać prefix warehouse: W{id}-{marker})
-        String oznaczenie = getColumn(columns, COL_OZNACZENIE);
-
-        // Parsowanie warehouse ID i markera z Oznaczenia
-        Long warehouseId = null;
-        String marker = oznaczenie;
-
-        if (oznaczenie.matches("^W\\d+-.*")) {
-            int dashIndex = oznaczenie.indexOf('-');
-            String warehousePrefix = oznaczenie.substring(1, dashIndex);
-            warehouseId = parseLong(warehousePrefix, "INVALID_WAREHOUSE_PREFIX");
-            marker = oznaczenie.substring(dashIndex + 1);
+        // Warehouse ID from request parameter
+        Long warehouseId = warehouseIdHolder.get();
+        if (warehouseId == null) {
+            throw new IllegalArgumentException("WAREHOUSE_ID_NOT_SET");
         }
+        dto.setWarehouseId(warehouseId);
 
-        dto.setMarker(marker);
-
-        if (warehouseId != null) {
-            dto.setWarehouseId(warehouseId);
-        } else {
-            throw new IllegalArgumentException("MISSING_WAREHOUSE_ID: Use prefix 'W{id}-' in Oznaczenie (e.g., W1-R-01)");
-        }
+        // Marker - oznaczenie regału (normalizowane automatycznie)
+        dto.setMarker(StringUtils.normalizeRackMarker(getColumn(columns, COL_MARKER)));
 
         // M i N - rozmiary regału
         dto.setSizeX(parseInt(getColumn(columns, COL_M), "INVALID_SIZE_M"));
@@ -89,6 +99,11 @@ public class RackImportService extends AbstractImportService<RackDto, RackImport
         dto.setMaxSizeY(parseFloat(getColumn(columns, COL_MAX_WYSOKOSC_MM), "INVALID_MAX_SIZE_Y"));
         dto.setMaxSizeZ(parseFloat(getColumn(columns, COL_MAX_GLEBOKOSC_MM), "INVALID_MAX_SIZE_Z"));
 
+        // Komentarz (OPCJONALNE)
+        if (columns.length > COL_KOMENTARZ) {
+            dto.setComment(emptyToNull(getColumn(columns, COL_KOMENTARZ)));
+        }
+
         // Czy akceptuje niebezpieczne produkty TRUE/FALSE (OPCJONALNE, domyślnie FALSE)
         if (columns.length > COL_ACCEPTS_DANGEROUS) {
             String dangerousRaw = getColumn(columns, COL_ACCEPTS_DANGEROUS);
@@ -100,12 +115,6 @@ public class RackImportService extends AbstractImportService<RackDto, RackImport
         } else {
             dto.setAcceptsDangerous(false);
         }
-
-        // Komentarz (OPCJONALNE)
-        if (columns.length > COL_KOMENTARZ) {
-            dto.setComment(emptyToNull(getColumn(columns, COL_KOMENTARZ)));
-        }
-
 
         return dto;
     }

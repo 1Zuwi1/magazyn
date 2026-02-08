@@ -94,6 +94,86 @@ public class ResponseTemplate<T> {
         private PagedResponse<T> data;
     }
 
+    @Schema(name = "PagedItemsResponse")
+    @Getter
+    public static class PagedItemsResponse {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private PagedResponse<ItemDto> data;
+    }
+
+    @Schema(name = "PagedRacksResponse")
+    @Getter
+    public static class PagedRacksResponse {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private PagedResponse<RackDto> data;
+    }
+
+    @Schema(name = "PagedAssortmentsResponse")
+    @Getter
+    public static class PagedAssortmentsResponse {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private PagedResponse<AssortmentDto> data;
+    }
+
+    @Schema(name = "PagedAssortmentsWithItemResponse")
+    @Getter
+    public static class PagedAssortmentsWithItemResponse {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private PagedResponse<AssortmentWithItemDto> data;
+    }
+
+    @Schema(name = "PagedUsersResponse")
+    @Getter
+    public static class PagedUsersResponse {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private PagedResponse<UserInfoResponse> data;
+    }
+
+    @Schema(name = "PagedInboundOperationsResponse")
+    @Getter
+    public static class PagedInboundOperationsResponse {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private PagedResponse<InboundOperationDto> data;
+    }
+
+    @Schema(name = "PagedOutboundOperationsResponse")
+    @Getter
+    public static class PagedOutboundOperationsResponse {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private PagedResponse<OutboundOperationDto> data;
+    }
+
+    @Schema(name = "PagedAlertsResponse")
+    @Getter
+    public static class PagedAlertsResponse {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private PagedResponse<AlertDto> data;
+    }
+
+    @Schema(name = "PagedUserNotificationsResponse")
+    @Getter
+    public static class PagedUserNotificationsResponse {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private PagedResponse<UserNotificationDto> data;
+    }
+
+    @Schema(name = "PagedRackReportsResponse")
+    @Getter
+    public static class PagedRackReportsResponse {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private PagedResponse<RackReportDto> data;
+    }
+
     @Schema(name = "ApiError")
     @Getter
     public static class ApiError {

@@ -1,3 +1,9 @@
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 auth:
   limits:
     # === Autentykacja ===
@@ -19,6 +25,16 @@ auth:
     AUTH_FREE:
       capacity: 60          # ogólne operacje auth
       refill: 30
+      duration: PT1M
+
+    FORGOT_PASSWORD:
+      capacity: 1          # ogólne operacje auth
+      refill: 1
+      duration: PT3M
+
+    EMAIL_VERIFICATION_RESEND:
+      capacity: 1
+      refill: 1
       duration: PT1M
 
     # === 2FA ===

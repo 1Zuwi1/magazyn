@@ -55,4 +55,12 @@ public class EmailService {
         String subject = "Weryfikacja adresu e-mail";
         sendSimpleEmail(to, subject, htmlContent);
     }
+
+    public void sendPasswordResetEmail(String to, String resetLink) {
+        Context context = new Context();
+        context.setVariable("resetLink", resetLink);
+        String htmlContent = templateEngine.process("mail/password-reset", context);
+        String subject = "Resetowanie hasła";
+        sendSimpleEmail(to, subject, htmlContent);
+    }
 }
