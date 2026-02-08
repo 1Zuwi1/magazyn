@@ -56,7 +56,9 @@ import {
 } from "@/components/ui/tooltip"
 import { OTP_LENGTH } from "@/config/constants"
 import { useApiMutation } from "@/hooks/use-api-mutation"
-import useLinkedMethods from "@/hooks/use-linked-methods"
+import useLinkedMethods, {
+  LINKED_2FA_METHODS_QUERY_KEY,
+} from "@/hooks/use-linked-methods"
 import useRemoveMethod from "@/hooks/use-remove-method"
 import useSetDefaultMethod from "@/hooks/use-set-default-method"
 import { apiFetch } from "@/lib/fetcher"
@@ -918,9 +920,12 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
       )
       return codes
     },
-    onSuccess: () => {
+    onSuccess: (_, __, ___, context) => {
       setIsGenerateDialogOpen(false)
       setIsCodesDialogOpen(true)
+      context.client.invalidateQueries({
+        queryKey: LINKED_2FA_METHODS_QUERY_KEY,
+      })
     },
   })
 
