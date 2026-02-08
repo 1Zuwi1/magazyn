@@ -9,12 +9,14 @@ const METHOD_TITLES: Record<TwoFactorMethod, string> = {
   AUTHENTICATOR: "Wpisz kod z aplikacji uwierzytelniającej",
   EMAIL: "Wpisz kod wysłany na e-mail",
   PASSKEYS: "Uwierzytelnij się za pomocą kluczy dostępu",
+  BACKUP_CODES: "Wpisz kod odzyskiwania",
 }
 
 const METHOD_SWITCH_LABELS: Record<TwoFactorMethod, string> = {
   AUTHENTICATOR: "Użyj aplikacji uwierzytelniającej",
   EMAIL: "Wyślij kod e-mailem",
   PASSKEYS: "Użyj kluczy dostępu",
+  BACKUP_CODES: "Użyj kodu odzyskiwania",
 }
 
 const RESEND_METHODS: ResendType[] = ["EMAIL"]

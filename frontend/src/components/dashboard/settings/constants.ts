@@ -1,5 +1,6 @@
 import {
   Key01Icon,
+  LicenseIcon,
   Mail01Icon,
   SecurityKeyUsbIcon,
 } from "@hugeicons/core-free-icons"
@@ -36,26 +37,20 @@ export const TWO_FACTOR_METHODS = [
     hint: "Uwierzytelnianie bezhasłowe przy użyciu urządzeń z obsługą kluczy bezpieczeństwa.",
     addable: false,
   },
+  {
+    value: "BACKUP_CODES",
+    label: "Kody odzyskiwania",
+    hint: "Jednorazowe kody do wykorzystania, gdy inne metody są niedostępne.",
+    addable: false,
+  },
 ] as const
 
 export const METHOD_ICONS: Record<TwoFactorMethod, typeof Key01Icon> = {
   AUTHENTICATOR: Key01Icon,
   EMAIL: Mail01Icon,
   PASSKEYS: SecurityKeyUsbIcon,
+  BACKUP_CODES: LicenseIcon,
 }
-
-export const RECOVERY_CODES = [
-  "7DFK-93NX",
-  "3H2P-YZ8V",
-  "K9LQ-5VTX",
-  "6QRP-1CZ4",
-  "T8WM-2HNK",
-  "M0QJ-8D3R",
-  "NL7C-44PD",
-  "2VXR-G1U6",
-  "X6ZP-9S2L",
-  "R3JD-5FQ8",
-] as const
 
 export const RESEND_COOLDOWN_SECONDS = 30
 export const TWO_FACTOR_RESEND_SECONDS = 60

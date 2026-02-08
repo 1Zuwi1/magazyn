@@ -12,8 +12,28 @@ import { useLocale } from "next-intl"
 import { useCallback, useEffect, useReducer, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,10 +55,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { OTP_LENGTH } from "@/config/constants"
+import { useApiMutation } from "@/hooks/use-api-mutation"
 import useLinkedMethods from "@/hooks/use-linked-methods"
 import useRemoveMethod from "@/hooks/use-remove-method"
 import useSetDefaultMethod from "@/hooks/use-set-default-method"
+import { apiFetch } from "@/lib/fetcher"
 import {
+  BackupCodesGenerateSchema,
   type RemovableTwoFactorMethod,
   ResendMethods,
   type ResendType,
@@ -48,7 +71,6 @@ import {
   AUTHENTICATOR_QR_SIZE,
   COPY_FEEDBACK_TIMEOUT_MS,
   METHOD_ICONS,
-  RECOVERY_CODES,
   TWO_FACTOR_METHODS,
   TWO_FACTOR_RESEND_SECONDS,
 } from "./constants"
@@ -71,6 +93,7 @@ const TWO_FACTOR_METHOD_HINTS: Record<TwoFactorMethod, string> = {
   AUTHENTICATOR: "Najpewniejsza metoda",
   EMAIL: "Kod e-mail",
   PASSKEYS: "Uwierzytelnianie kluczem dostępu",
+  BACKUP_CODES: "Jednorazowe kody odzyskiwania",
 }
 
 const TWO_FACTOR_METHOD_LABELS: Record<TwoFactorMethod, string> =
@@ -167,6 +190,60 @@ const getLinkedMethodsHint = ({
 const getResendMethod = (method: TwoFactorMethod): ResendType | null => {
   const parsed = ResendMethods.safeParse(method)
   return parsed.success ? parsed.data : null
+}
+
+const escapeHtml = (value: string): string =>
+  value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;")
+
+const getPrintableRecoveryCodesDocument = (
+  codes: string[],
+  generatedAt: string
+): string => {
+  const listMarkup = codes
+    .map((code) => `<li>${escapeHtml(code)}</li>`)
+    .join("")
+
+  return `<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <title>Kody odzyskiwania 2FA GdzieToLeży</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        margin: 24px;
+        color: #111827;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 20px;
+      }
+      p {
+        margin: 0 0 12px;
+      }
+      ul {
+        margin: 0;
+        padding-left: 20px;
+        columns: 2;
+      }
+      li {
+        font-family: "Courier New", monospace;
+        margin-bottom: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Kody odzyskiwania 2FA</h1>
+    <p>Wygenerowano: ${escapeHtml(generatedAt)}</p>
+    <p>Przechowuj ten wydruk w bezpiecznym miejscu.</p>
+    <ul>${listMarkup}</ul>
+  </body>
+</html>`
 }
 
 function TwoFactorMethodInput({
@@ -821,49 +898,151 @@ function CodeInputEntry({
     </div>
   )
 }
-function RecoveryCodesSection({
-  enabled,
-  showRecoveryCodes,
-  onToggle,
-}: {
-  enabled: boolean
-  showRecoveryCodes: boolean
-  onToggle: () => void
-}) {
+function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
+  const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false)
+  const [isCodesDialogOpen, setIsCodesDialogOpen] = useState(false)
+
+  const {
+    data: codes,
+    mutateAsync: handleGenerateCodes,
+    isPending: isGeneratingCodes,
+  } = useApiMutation({
+    mutationFn: async () => {
+      const codes = await apiFetch(
+        "/api/2fa/backup-codes/generate",
+        BackupCodesGenerateSchema,
+        {
+          method: "POST",
+          body: null,
+        }
+      )
+      return codes
+    },
+    onSuccess: () => {
+      setIsGenerateDialogOpen(false)
+      setIsCodesDialogOpen(true)
+    },
+  })
+
+  const generatedCodes = codes ?? []
+
+  const handleCodesDialogOpenChange = (open: boolean): void => {
+    setIsCodesDialogOpen(open)
+  }
+
+  const handlePrintCodes = (): void => {
+    if (generatedCodes.length === 0) {
+      return
+    }
+
+    const printWindow = window.open("", "_blank", "width=720,height=900")
+
+    if (!printWindow) {
+      toast.error(
+        "Nie udało się otworzyć podglądu wydruku. Sprawdź blokadę wyskakujących okien."
+      )
+      return
+    }
+
+    const generatedAt = new Date().toLocaleString()
+    const documentMarkup = getPrintableRecoveryCodesDocument(
+      generatedCodes ?? [],
+      generatedAt
+    )
+    printWindow.document.write(documentMarkup)
+    printWindow.document.close()
+    printWindow.focus()
+    printWindow.print()
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div className="space-y-1">
-          <Label htmlFor="recovery-codes">Kody odzyskiwania</Label>
+          <p className="font-medium text-sm">Kody odzyskiwania</p>
           <p className="text-muted-foreground text-sm">
             Przechowuj je w bezpiecznym miejscu.
           </p>
         </div>
         <Button
           disabled={!enabled}
-          onClick={onToggle}
+          onClick={() => setIsGenerateDialogOpen(true)}
           type="button"
           variant="outline"
         >
-          {showRecoveryCodes ? "Ukryj" : "Pokaż"}
+          Wygeneruj
         </Button>
       </div>
 
-      {showRecoveryCodes && enabled ? (
-        <Textarea
-          aria-label="Kody odzyskiwania"
-          className="min-h-28"
-          id="recovery-codes"
-          readOnly
-          value={RECOVERY_CODES.join("\n")}
-        />
-      ) : (
-        <p className="text-muted-foreground text-sm">
-          {enabled
-            ? 'Kliknij "Pokaż", aby wyświetlić kody.'
-            : "Włącz 2FA, aby wygenerować kody."}
-        </p>
-      )}
+      <p className="text-muted-foreground text-sm">
+        {enabled
+          ? "Wygenerowanie nowych kodów unieważni wszystkie poprzednie."
+          : "Włącz 2FA, aby wygenerować kody."}
+      </p>
+
+      <AlertDialog
+        onOpenChange={setIsGenerateDialogOpen}
+        open={isGenerateDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-amber-500/10">
+              <HugeiconsIcon
+                className="text-amber-600 dark:text-amber-500"
+                icon={Alert02Icon}
+                size={24}
+              />
+            </AlertDialogMedia>
+            <AlertDialogTitle>
+              Wygenerować nowe kody odzyskiwania?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Poprzednie kody przestaną działać natychmiast po wygenerowaniu
+              nowych.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isGeneratingCodes}>
+              Anuluj
+            </AlertDialogCancel>
+            <AlertDialogAction
+              isLoading={isGeneratingCodes}
+              onClick={async () => await handleGenerateCodes()}
+            >
+              Wygeneruj nowe kody
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog
+        onOpenChange={handleCodesDialogOpenChange}
+        open={isCodesDialogOpen}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Nowe kody odzyskiwania</DialogTitle>
+            <DialogDescription>
+              Zapisz je teraz i przechowuj w bezpiecznym miejscu. Po zamknięciu
+              tego okna nie będzie możliwości ponownego podglądu.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Textarea
+            aria-label="Kody odzyskiwania"
+            className="min-h-40 font-mono text-sm"
+            readOnly
+            value={generatedCodes.join("\n")}
+          />
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button onClick={handlePrintCodes} type="button" variant="outline">
+              Drukuj kody
+            </Button>
+            <DialogClose render={<Button type="button" />}>Zamknij</DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -1130,7 +1309,6 @@ export function TwoFactorSetup({
     initialTwoFactorSetupState
   )
   const [resendCooldown, startTimer] = useCountdown(0)
-  const [showRecoveryCodes, setShowRecoveryCodes] = useState<boolean>(false)
   const { stage: setupStage, authenticatorSetupData, code, error } = setupState
   const enabled = status === "ENABLED"
   const setupActive =
@@ -1261,11 +1439,7 @@ export function TwoFactorSetup({
 
       <div className="h-px bg-border" />
 
-      <RecoveryCodesSection
-        enabled={enabled}
-        onToggle={() => setShowRecoveryCodes((current) => !current)}
-        showRecoveryCodes={showRecoveryCodes}
-      />
+      <RecoveryCodesSection enabled={enabled} />
     </div>
   )
 }

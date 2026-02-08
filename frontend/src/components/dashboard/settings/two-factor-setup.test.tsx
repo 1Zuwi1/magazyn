@@ -1,8 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { useState } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import type { TwoFactorMethod } from "@/lib/schemas"
-import { RECOVERY_CODES } from "./constants"
+import { apiFetch } from "@/lib/fetcher"
+import { BackupCodesGenerateSchema, type TwoFactorMethod } from "@/lib/schemas"
 import { TwoFactorSetup } from "./two-factor-setup"
 import type { TwoFactorStatus } from "./types"
 
@@ -22,6 +22,15 @@ vi.mock("sonner", () => ({
   toast: {
     error: vi.fn(),
     success: vi.fn(),
+  },
+}))
+
+vi.mock("@/lib/fetcher", () => ({
+  apiFetch: vi.fn(),
+  FetchError: class FetchError extends Error {
+    static isError(error: unknown) {
+      return error instanceof Error
+    }
   },
 }))
 
@@ -71,8 +80,10 @@ vi.mock("./use-countdown", async () => {
 const START_SETUP_REGEX = /rozpocznij konfigurację/i
 const ADD_METHOD_REGEX = /dodaj metodę/i
 const ACTIVE_STATUS_REGEX = /aktywna/i
-const SHOW_CODES_REGEX = /pokaż/i
+const GENERATE_CODES_REGEX = /wygeneruj/i
 const RECOVERY_CODES_REGEX = /kody odzyskiwania/i
+const GENERATE_NEW_CODES_REGEX = /wygeneruj nowe kody/i
+const PRINT_CODES_REGEX = /drukuj kody/i
 
 function TwoFactorSetupHarness({
   initialStatus = "ENABLED",
@@ -95,7 +106,10 @@ function TwoFactorSetupHarness({
 }
 
 describe("TwoFactorSetup", () => {
+  const apiFetchMock = vi.mocked(apiFetch)
+
   beforeEach(() => {
+    apiFetchMock.mockReset()
     mockUseMutation.mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
@@ -125,13 +139,31 @@ describe("TwoFactorSetup", () => {
     ).toBeInTheDocument()
   })
 
-  it("reveals recovery codes when enabled", () => {
+  it("generates and shows recovery codes after confirmation", async () => {
+    apiFetchMock.mockResolvedValue(["A1B2-C3D4", "E5F6-G7H8"])
     render(<TwoFactorSetupHarness initialStatus="ENABLED" />)
 
-    fireEvent.click(screen.getByRole("button", { name: SHOW_CODES_REGEX }))
-
-    expect(screen.getByLabelText(RECOVERY_CODES_REGEX)).toHaveValue(
-      RECOVERY_CODES.join("\n")
+    fireEvent.click(screen.getByRole("button", { name: GENERATE_CODES_REGEX }))
+    fireEvent.click(
+      screen.getByRole("button", { name: GENERATE_NEW_CODES_REGEX })
     )
+
+    await waitFor(() => {
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        "/api/2fa/backup-codes/generate",
+        BackupCodesGenerateSchema,
+        {
+          method: "POST",
+          body: null,
+        }
+      )
+    })
+
+    expect(
+      screen.getByRole("textbox", { name: RECOVERY_CODES_REGEX })
+    ).toHaveValue("A1B2-C3D4\nE5F6-G7H8")
+    expect(
+      screen.getByRole("button", { name: PRINT_CODES_REGEX })
+    ).toBeInTheDocument()
   })
 })
