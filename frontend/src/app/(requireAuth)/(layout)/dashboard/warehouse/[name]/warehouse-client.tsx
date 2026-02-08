@@ -374,7 +374,8 @@ export default function WarehouseClient() {
       return null
     }
     return (
-      selectedSlotCoordinates.y * currentRack.sizeX + selectedSlotCoordinates.x
+      (selectedSlotCoordinates.y - 1) * currentRack.sizeX +
+      (selectedSlotCoordinates.x - 1)
     )
   }, [selectedSlotCoordinates, currentRack])
 
@@ -392,11 +393,12 @@ export default function WarehouseClient() {
       return null
     }
     return (
-      assortments.content.find(
-        (a) =>
-          a.positionX === selectedSlotCoordinates.x &&
-          a.positionY === selectedSlotCoordinates.y
-      ) ?? null
+      assortments.content.find((a) => {
+        return (
+          a.positionX - 1 === selectedSlotCoordinates.x &&
+          a.positionY - 1 === selectedSlotCoordinates.y
+        )
+      }) ?? null
     )
   }, [selectedSlotCoordinates, assortments])
 
