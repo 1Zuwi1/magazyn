@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -56,7 +57,7 @@ public class RackReportController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(response));
     }
 
-    @Operation(summary = "Get rack reports with optional filtering",
+    @Operation(summary = "Get rack reports with optional filtering [ADMIN only]",
             description = """
                     Returns rack reports with pagination. Supports filtering by:
                     - `rackId` - filter by specific rack
@@ -71,6 +72,7 @@ public class RackReportController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedRackReportsResponse.class)))
     })
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseTemplate<PagedResponse<RackReportDto>>> getReports(
             HttpServletRequest request,
             @Parameter(description = "Filter by specific rack ID") @RequestParam(required = false) Long rackId,

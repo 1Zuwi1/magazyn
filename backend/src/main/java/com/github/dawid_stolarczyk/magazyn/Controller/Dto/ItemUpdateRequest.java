@@ -53,5 +53,5 @@ public class ItemUpdateRequest {
     private long expireAfterDays;
 
     @Schema(description = "Whether the item is dangerous/hazardous", example = "false", required = true)
-    private boolean isDangerous;
+    private boolean dangerous;
 }

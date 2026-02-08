@@ -88,6 +88,7 @@ public class BackupService {
 
     // --- Backup operations ---
 
+    @Transactional(rollbackFor = Exception.class)
     public BackupRecordDto initiateBackup(CreateBackupRequest request, User triggeredBy, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(httpRequest.getRemoteAddr(), RateLimitOperation.BACKUP_WRITE);
 
@@ -118,6 +119,7 @@ public class BackupService {
         return toDto(record);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public BackupRecordDto initiateScheduledBackup(Long warehouseId, Set<BackupResourceType> resourceTypes) {
         Warehouse warehouse = warehouseRepository.findById(warehouseId)
                 .orElseThrow(() -> new IllegalArgumentException("WAREHOUSE_NOT_FOUND"));
@@ -147,11 +149,16 @@ public class BackupService {
         return toDto(record);
     }
 
+    @Transactional
     private void executeBackup(Long recordId) {
         BackupRecord record = backupRecordRepository.findById(recordId).orElse(null);
         if (record == null) return;
 
         Long warehouseId = record.getWarehouse().getId();
+        Warehouse warehouse = warehouseRepository.findById(warehouseId)
+                .orElseThrow(() -> new IllegalStateException("WAREHOUSE_NOT_FOUND_FOR_BACKUP"));
+        String warehouseName = warehouse.getName();
+
         StreamingBackupWriter writer = new StreamingBackupWriter(objectMapper, fileCryptoService, backupStorageService, streamingExecutor);
 
         try {
@@ -217,7 +224,7 @@ public class BackupService {
 
             // Build and upload manifest
             BackupManifest manifest = new BackupManifest(recordId, warehouseId,
-                    record.getWarehouse().getName(), record.getCreatedAt(), 1, manifestResources);
+                    warehouseName, record.getCreatedAt(), 1, manifestResources);
             long manifestBytes = writer.writeAndUpload(basePath, "manifest.enc", manifest);
             totalSizeBytes += manifestBytes;
 
@@ -404,6 +411,7 @@ public class BackupService {
 
     // --- CRUD ---
 
+    @Transactional(readOnly = true)
     public BackupRecordDto getBackup(Long id, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(httpRequest.getRemoteAddr(), RateLimitOperation.BACKUP_READ);
         BackupRecord record = backupRecordRepository.findById(id)
@@ -411,6 +419,7 @@ public class BackupService {
         return toDto(record);
     }
 
+    @Transactional(readOnly = true)
     public PagedResponse<BackupRecordDto> getBackups(Long warehouseId, Pageable pageable, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(httpRequest.getRemoteAddr(), RateLimitOperation.BACKUP_READ);
 
@@ -442,6 +451,7 @@ public class BackupService {
 
     // --- Schedule operations ---
 
+    @Transactional(readOnly = true)
     public List<BackupScheduleDto> getAllSchedules() {
         return backupScheduleRepository.findAll().stream()
                 .map(this::toScheduleDto)
@@ -467,6 +477,7 @@ public class BackupService {
 
         backupSchedulerManager.registerSchedule(schedule);
 
+        // toScheduleDto is called within the same transaction, so lazy loading will work
         return toScheduleDto(schedule);
     }
 

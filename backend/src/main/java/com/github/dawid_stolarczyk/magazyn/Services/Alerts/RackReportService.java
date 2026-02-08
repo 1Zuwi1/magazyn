@@ -60,6 +60,10 @@ public class RackReportService {
     public RackReportResponse processReport(RackReportRequest request, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
 
+        if (request.getCurrentTemperature() == null || request.getCurrentWeight() == null) {
+            throw new IllegalArgumentException("Temperature and weight must be provided");
+        }
+
         // 1. Validate rack exists
         Rack rack = rackRepository.findById(request.getRackId())
                 .orElseThrow(() -> new IllegalArgumentException("RACK_NOT_FOUND"));
