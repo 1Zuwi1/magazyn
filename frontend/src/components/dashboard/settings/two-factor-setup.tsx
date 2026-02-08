@@ -48,7 +48,6 @@ import {
   AUTHENTICATOR_QR_SIZE,
   COPY_FEEDBACK_TIMEOUT_MS,
   METHOD_ICONS,
-  MOCK_AUTHENTICATOR_SECRET,
   RECOVERY_CODES,
   TWO_FACTOR_METHODS,
   TWO_FACTOR_RESEND_SECONDS,
@@ -56,13 +55,13 @@ import {
 import { OtpInput } from "./otp-input"
 import { generateTotpUri, QRCodeDisplay } from "./qr-code"
 import type {
-  TwoFactorChallenge,
+  AuthenticatorSetupData,
   TwoFactorSetupStage,
   TwoFactorStatus,
 } from "./types"
 import { useCountdown } from "./use-countdown"
 import {
-  createTwoFactorChallenge,
+  createAuthenticatorSetupData,
   formatCountdown,
   sendTwoFactorCode,
   verifyOneTimeCode,
@@ -236,26 +235,26 @@ function TwoFactorMethodInput({
 
 interface TwoFactorSetupState {
   stage: TwoFactorSetupStage
-  challenge: TwoFactorChallenge | null
+  authenticatorSetupData: AuthenticatorSetupData | null
   code: string
   error: string
-  note: string
 }
 
 type TwoFactorSetupAction =
   | { type: "reset" }
   | { type: "set_stage"; stage: TwoFactorSetupStage }
-  | { type: "set_challenge"; challenge: TwoFactorChallenge | null }
+  | {
+      type: "set_authenticator_setup_data"
+      authenticatorSetupData: AuthenticatorSetupData | null
+    }
   | { type: "set_code"; code: string }
   | { type: "set_error"; error: string }
-  | { type: "set_note"; note: string }
 
 const initialTwoFactorSetupState: TwoFactorSetupState = {
   stage: "IDLE",
-  challenge: null,
+  authenticatorSetupData: null,
   code: "",
   error: "",
-  note: "",
 }
 
 function twoFactorSetupReducer(
@@ -267,14 +266,15 @@ function twoFactorSetupReducer(
       return { ...initialTwoFactorSetupState }
     case "set_stage":
       return { ...state, stage: action.stage }
-    case "set_challenge":
-      return { ...state, challenge: action.challenge }
+    case "set_authenticator_setup_data":
+      return {
+        ...state,
+        authenticatorSetupData: action.authenticatorSetupData,
+      }
     case "set_code":
       return { ...state, code: action.code }
     case "set_error":
       return { ...state, error: action.error }
-    case "set_note":
-      return { ...state, note: action.note }
     default:
       return state
   }
@@ -287,7 +287,6 @@ interface TwoFactorSetupFlowParams {
   dispatch: (action: TwoFactorSetupAction) => void
   startTimer: (cooldown?: number) => void
   onSuccess?: () => void
-  userEmail?: string
 }
 
 function useTwoFactorSetupFlow({
@@ -297,18 +296,14 @@ function useTwoFactorSetupFlow({
   dispatch,
   startTimer,
   onSuccess,
-  userEmail,
 }: TwoFactorSetupFlowParams) {
-  const { challenge, code } = setupState
+  const { code } = setupState
   const resetFlow = useCallback(() => {
     dispatch({ type: "reset" })
     startTimer()
   }, [dispatch, startTimer])
   const locale = useLocale()
 
-  // If method changes while in idle, we don't need to do much,
-  // but if we were in the middle of a flow, we should probably reset or update.
-  // The requirement says: "ensure that when a user changes the method, the contact information (destination) updates correctly"
   useEffect(() => {
     if (status === "DISABLED") {
       resetFlow()
@@ -323,18 +318,24 @@ function useTwoFactorSetupFlow({
 
     dispatch({ type: "set_error", error: "" })
     dispatch({ type: "set_code", code: "" })
+    dispatch({
+      type: "set_authenticator_setup_data",
+      authenticatorSetupData: null,
+    })
     dispatch({ type: "set_stage", stage: "REQUESTING" })
 
     try {
-      const newChallenge = await createTwoFactorChallenge(
-        method,
-        locale,
-        userEmail
-      )
-      dispatch({ type: "set_challenge", challenge: newChallenge })
-      const resendMethod = getResendMethod(method)
-
-      if (resendMethod) {
+      if (method === "AUTHENTICATOR") {
+        const setupData = await createAuthenticatorSetupData(locale)
+        dispatch({
+          type: "set_authenticator_setup_data",
+          authenticatorSetupData: setupData,
+        })
+      } else {
+        const resendMethod = getResendMethod(method)
+        if (!resendMethod) {
+          throw new Error("Unsupported resend method")
+        }
         dispatch({ type: "set_stage", stage: "SENDING" })
         await sendTwoFactorCode(resendMethod)
         startTimer(TWO_FACTOR_RESEND_SECONDS)
@@ -352,7 +353,7 @@ function useTwoFactorSetupFlow({
 
   const resendCode = async () => {
     const resendMethod = getResendMethod(method)
-    if (!(challenge && resendMethod)) {
+    if (!resendMethod) {
       return
     }
 
@@ -380,12 +381,6 @@ function useTwoFactorSetupFlow({
 
       if (isValid) {
         dispatch({ type: "set_stage", stage: "SUCCESS" })
-        dispatch({
-          type: "set_note",
-          note: `Weryfikacja dwuetapowa została włączona przy użyciu: ${
-            TWO_FACTOR_METHODS.find((m) => m.value === method)?.label
-          }.`,
-        })
         onSuccess?.()
       } else {
         dispatch({
@@ -643,20 +638,19 @@ function ConnectedMethods({
 }
 
 function AuthenticatorSetup({
-  challenge,
+  authenticatorSetupData,
   userEmail,
 }: {
-  challenge: TwoFactorChallenge | null
+  authenticatorSetupData: AuthenticatorSetupData | null
   userEmail?: string
 }) {
   const [copied, setCopied] = useState(false)
-  const secret = challenge?.secret ?? MOCK_AUTHENTICATOR_SECRET
+  const secret = authenticatorSetupData?.secret ?? ""
   const accountName =
-    challenge?.accountName ?? userEmail ?? "user@magazynpro.pl"
-  const issuer = challenge?.issuer ?? "MagazynPro"
+    authenticatorSetupData?.accountName ?? userEmail ?? "user@magazynpro.pl"
+  const issuer = authenticatorSetupData?.issuer ?? "MagazynPro"
   const totpUri = generateTotpUri(secret, accountName, issuer)
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const locale = useLocale()
 
   const handleCopySecret = async (): Promise<void> => {
     if (!navigator.clipboard) {
@@ -687,6 +681,17 @@ function AuthenticatorSetup({
       }
     }
   }, [])
+
+  if (!secret) {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Brak danych konfiguracji aplikacji</AlertTitle>
+        <AlertDescription>
+          Odśwież konfigurację i spróbuj ponownie.
+        </AlertDescription>
+      </Alert>
+    )
+  }
 
   return (
     <div className="grid gap-6 sm:grid-cols-[auto_1fr]">
@@ -722,8 +727,7 @@ function AuthenticatorSetup({
           </Button>
         </div>
         <p className="text-muted-foreground text-xs">
-          Wygenerowano:{" "}
-          {challenge?.issuedAt ?? new Date().toLocaleTimeString(locale)}
+          Wygenerowano: {authenticatorSetupData?.issuedAt ?? "—"}
         </p>
       </div>
     </div>
@@ -732,7 +736,7 @@ function AuthenticatorSetup({
 
 function CodeInputEntry({
   method,
-  challenge,
+  authenticatorSetupData,
   code,
   resendCooldown,
   isBusy,
@@ -743,7 +747,7 @@ function CodeInputEntry({
   userEmail,
 }: {
   method: TwoFactorMethod
-  challenge: TwoFactorChallenge | null
+  authenticatorSetupData: AuthenticatorSetupData | null
   code: string
   resendCooldown: number
   isBusy: boolean
@@ -758,13 +762,15 @@ function CodeInputEntry({
   return (
     <div className="space-y-4">
       {method === "AUTHENTICATOR" ? (
-        <AuthenticatorSetup challenge={challenge} userEmail={userEmail} />
+        <AuthenticatorSetup
+          authenticatorSetupData={authenticatorSetupData}
+          userEmail={userEmail}
+        />
       ) : (
         <div className="space-y-2">
           <p className="font-medium text-sm">Kod jednorazowy</p>
           <p className="text-muted-foreground text-sm">
-            E-mail z kodem został wysłany. Kontakt:{" "}
-            {challenge?.destination ?? "wybrana metoda"}.
+            E-mail z kodem został wysłany na Twoją skrzynkę.
           </p>
           <p className="text-muted-foreground text-xs">
             Możesz poprosić o ponowną wysyłkę, jeśli kod nie dotarł.
@@ -1125,7 +1131,7 @@ export function TwoFactorSetup({
   )
   const [resendCooldown, startTimer] = useCountdown(0)
   const [showRecoveryCodes, setShowRecoveryCodes] = useState<boolean>(false)
-  const { stage: setupStage, challenge, code, error } = setupState
+  const { stage: setupStage, authenticatorSetupData, code, error } = setupState
   const enabled = status === "ENABLED"
   const setupActive =
     status === "SETUP" || (setupStage !== "IDLE" && setupStage !== "SUCCESS")
@@ -1166,15 +1172,13 @@ export function TwoFactorSetup({
       dispatch,
       startTimer,
       onSuccess: () => {
-        refetchLinkedMethods().catch((error) => {
-          console.error("Failed to refresh linked two-factor methods", error)
+        refetchLinkedMethods().catch(() => {
           toast.error(
-            "We couldn't refresh your two-factor methods. Your new method may not appear until you reload this page."
+            "Nie udało się odświeżyć listy metod 2FA. Odśwież stronę, aby zobaczyć nową metodę."
           )
         })
         resetFlow()
       },
-      userEmail,
     })
 
   const handleCancelSetup = (): void => {
@@ -1225,9 +1229,7 @@ export function TwoFactorSetup({
             <Alert>
               <Spinner className="text-muted-foreground" />
               <AlertTitle>Wysyłamy kod</AlertTitle>
-              <AlertDescription>
-                Kod trafia na {challenge?.destination ?? "wybraną metodę"}.
-              </AlertDescription>
+              <AlertDescription>Kod trafia na wybraną metodę.</AlertDescription>
             </Alert>
           ) : null}
 
@@ -1240,8 +1242,8 @@ export function TwoFactorSetup({
 
           {showCodeEntry ? (
             <CodeInputEntry
+              authenticatorSetupData={authenticatorSetupData}
               canResend={canResendCode}
-              challenge={challenge}
               code={code}
               isBusy={setupStage === "VERIFYING"}
               method={method}

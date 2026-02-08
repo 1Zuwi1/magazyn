@@ -7,9 +7,11 @@ import { TwoFactorSetup } from "./two-factor-setup"
 import type { TwoFactorStatus } from "./types"
 
 const mockUseQuery = vi.fn()
+const mockUseMutation = vi.fn()
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: (...args: unknown[]) => mockUseQuery(...args),
+  useMutation: (...args: unknown[]) => mockUseMutation(...args),
 }))
 
 vi.mock("next-intl", () => ({
@@ -94,6 +96,10 @@ function TwoFactorSetupHarness({
 
 describe("TwoFactorSetup", () => {
   beforeEach(() => {
+    mockUseMutation.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    })
     mockUseQuery.mockReturnValue({
       data: {
         defaultMethod: "EMAIL",

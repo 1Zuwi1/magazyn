@@ -172,6 +172,7 @@ export const WebAuthnFinishAssertionSchema = createApiSchema({
 export const FormRegisterSchema = RegisterSchema.shape.POST.shape.input
   .extend({
     confirmPassword: PasswordSchema,
+    phoneNumber: z.e164("Nieprawidłowy numer telefonu"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Hasła nie są zgodne",
@@ -210,20 +211,37 @@ export const TFAAuthenticatorStartSchema = createApiSchema({
   },
 })
 
+export const TFAAuthenticatorFinishSchema = createApiSchema({
+  POST: {
+    input: z.object({
+      code: z.string().length(6, "Kod musi mieć dokładnie 6 cyfr"),
+    }),
+    output: z.null(),
+  },
+})
+
+const UserSchema = z.object({
+  id: z.number().int().nonnegative(),
+  full_name: z.string(),
+  email: z.email(),
+  role: z.enum(["USER", "ADMIN"]),
+  account_status: z.enum([
+    "ACTIVE",
+    "PENDING_VERIFICATION",
+    "DISABLED",
+    "LOCKED",
+  ]),
+  phone: z.string().nullish(),
+  location: z.string(),
+  team: z.string().nullish(),
+  last_login: z.string().nullish(),
+})
+
+export type User = z.infer<typeof UserSchema>
+
 export const ApiMeSchema = createApiSchema({
   GET: {
-    output: z.object({
-      id: z.number(),
-      email: z.email(),
-      full_name: z.string().nullish(),
-      account_status: z.enum([
-        "ACTIVE",
-        "PENDING_VERIFICATION",
-        "DISABLED",
-        "LOCKED",
-      ]),
-      role: z.enum(["USER", "ADMIN"]),
-    }),
+    output: UserSchema,
   },
 })
 
@@ -998,3 +1016,51 @@ export const OUTBOUND_EXECUTE_SCHEMA = createApiSchema({
 export type OutboundExecuteResult = z.infer<
   typeof OUTBOUND_EXECUTE_SCHEMA.shape.POST.shape.output
 >
+
+// --- AUDIT ---
+const InboudOperationSchema = z.object({
+  id: z.number().int().nonnegative(),
+  itemId: z.number().int().nonnegative(),
+  itemName: z.string(),
+  itemCode: z.string(),
+  rackId: z.number().int().nonnegative(),
+  rackMarker: z.string(),
+  receivedBy: z.number().int().nonnegative(),
+  receivedByName: z.string(),
+  operationTimestamp: z.string(),
+  positionX: z.number().int().nonnegative(),
+  positionY: z.number().int().nonnegative(),
+  quantity: z.number().int().nonnegative(),
+  assortmentId: z.number().int().nonnegative(),
+  assortmentCode: z.string(),
+})
+export const AuditInboudOperationsSchema = createApiSchema({
+  GET: {
+    input: createPaginatedSchemaInput(),
+    output: createPaginatedSchema(InboudOperationSchema),
+  },
+})
+
+export const AuditInboudOperationsByUserSchema = createApiSchema({
+  GET: {
+    input: createPaginatedSchemaInput({
+      userId: z.number().int().nonnegative(),
+    }),
+    output: createPaginatedSchema(InboudOperationSchema),
+  },
+})
+
+export const AuditInboudOperationsByUserAndDateSchema = createApiSchema({
+  GET: {
+    input: z.object({
+      userId: z.number().int().nonnegative(),
+      dateFrom: z.string(),
+      dateTo: z.string(),
+    }),
+    output: z.array(InboudOperationSchema),
+  },
+})
+
+// export const AuditInboundOperationsByRackSchema = createApiSchema({
+// GET: {
+//

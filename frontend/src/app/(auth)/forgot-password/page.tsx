@@ -1,22 +1,67 @@
+"use client"
+
 import { ArrowLeft01Icon, Mail01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useForm, useStore } from "@tanstack/react-form"
 import Link from "next/link"
+import { toast } from "sonner"
+import z from "zod"
 import AuthCard from "@/app/(auth)/components/auth-card"
+import { handleApiError } from "@/components/dashboard/utils/helpers"
+import { FieldWithState } from "@/components/helpers/field-state"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Field, FieldDescription, FieldGroup } from "@/components/ui/field"
+import { createApiSchema } from "@/lib/create-api-schema"
+import { apiFetch, FetchError } from "@/lib/fetcher"
 import { getAnimationStyle } from "@/lib/utils"
 
+const ForgotPasswordSchema = createApiSchema({
+  POST: {
+    input: z.object({
+      email: z.email("Nieprawidłowy format email"),
+    }),
+    output: z.null(),
+  },
+})
+
 export default function ForgotPassword() {
+  const form = useForm({
+    defaultValues: {
+      email: "",
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        await apiFetch("/api/auth/forgot-password", ForgotPasswordSchema, {
+          body: value,
+          method: "POST",
+        })
+
+        toast.success(
+          "Jeśli konto z podanym emailem istnieje, otrzymasz wiadomość z instrukcjami resetowania hasła."
+        )
+      } catch (e) {
+        if (FetchError.isError(e)) {
+          handleApiError(e)
+        }
+        console.error(e)
+      }
+    },
+    validators: {
+      onSubmitAsync: ForgotPasswordSchema.shape.POST.shape.input,
+    },
+  })
+
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
   return (
     <AuthCard>
-      <form className="space-y-0">
+      <form
+        className="space-y-0"
+        onSubmit={(e) => {
+          e.preventDefault()
+          form.handleSubmit()
+        }}
+      >
         <FieldGroup>
           <div
             className="fade-in flex animate-in items-center justify-start duration-500"
@@ -38,7 +83,7 @@ export default function ForgotPassword() {
               <div className="absolute -inset-3 rounded-full bg-primary/10 blur-lg" />
               <Logo className="relative" />
             </div>
-            <FieldDescription className="mt-2 max-w-70 text-muted-foreground/80">
+            <FieldDescription className="mt-2 max-w-70 text-center text-muted-foreground/80">
               Wprowadź adres email, a wyślemy Ci link do resetowania hasła.
             </FieldDescription>
           </div>
@@ -46,34 +91,24 @@ export default function ForgotPassword() {
             className="fade-in mt-2 animate-in space-y-4 duration-500"
             style={getAnimationStyle("200ms")}
           >
-            <Field>
-              <div className="flex items-center justify-between">
-                <FieldLabel
-                  className="font-medium text-foreground/80 text-xs uppercase tracking-wide"
-                  htmlFor="email"
-                >
-                  Email
-                </FieldLabel>
-              </div>
-              <div className="relative">
-                <Input
-                  autoComplete="email"
-                  className="h-10 bg-background/50 pl-10 transition-all duration-200 focus:bg-background"
-                  id="email"
-                  inputMode="email"
-                  name="email"
+            <form.Field name="email">
+              {(field) => (
+                <FieldWithState
+                  field={field}
+                  icon={Mail01Icon}
+                  label="Email"
                   placeholder="jan@kowalski.pl"
-                  spellCheck={false}
                   type="email"
                 />
-                <HugeiconsIcon
-                  className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground/50"
-                  icon={Mail01Icon}
-                />
-              </div>
-            </Field>
-            <Field>
-              <Button className="w-full" size="lg" type="submit">
+              )}
+            </form.Field>
+            <Field className="pt-1">
+              <Button
+                className="w-full"
+                isLoading={isSubmitting}
+                size="lg"
+                type="submit"
+              >
                 Wyślij link do resetowania
               </Button>
             </Field>

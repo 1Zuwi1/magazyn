@@ -4,6 +4,7 @@ import {
   LockPasswordIcon,
   Mail01Icon,
   Shield01Icon,
+  TelephoneIcon,
   User03Icon,
 } from "@hugeicons/core-free-icons"
 import { useForm } from "@tanstack/react-form"
@@ -43,6 +44,7 @@ const values = {
   },
   register: {
     fullName: "",
+    phoneNumber: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -146,17 +148,30 @@ export default function AuthForm({ mode }: AuthFormProps) {
               )}
             </form.Field>
             {!isLogin && (
-              <form.Field name="fullName">
-                {(field) => (
-                  <FieldWithState
-                    field={field}
-                    icon={User03Icon}
-                    label="Pełne imię i nazwisko"
-                    placeholder="Jan Kowalski"
-                    type="text"
-                  />
-                )}
-              </form.Field>
+              <>
+                <form.Field name="fullName">
+                  {(field) => (
+                    <FieldWithState
+                      field={field}
+                      icon={User03Icon}
+                      label="Pełne imię i nazwisko"
+                      placeholder="Jan Kowalski"
+                      type="text"
+                    />
+                  )}
+                </form.Field>
+                <form.Field name="phoneNumber">
+                  {(field) => (
+                    <FieldWithState
+                      field={field}
+                      icon={TelephoneIcon}
+                      label="Numer telefonu"
+                      placeholder="+48 123 456 789"
+                      type="tel"
+                    />
+                  )}
+                </form.Field>
+              </>
             )}
 
             <form.Field name="password">

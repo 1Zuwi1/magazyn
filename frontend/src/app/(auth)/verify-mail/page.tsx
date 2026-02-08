@@ -9,13 +9,13 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useState } from "react"
-import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { apiFetch } from "@/lib/fetcher"
 import { VerifyMailSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
 import { getAnimationStyle } from "@/lib/utils"
+import AuthCard from "../components/auth-card"
 
 type VerificationState = "loading" | "success" | "error"
 
@@ -56,75 +56,35 @@ function VerifyMailContent() {
   }, [token])
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-md">
-        <div className="fade-in slide-in-from-bottom-4 relative animate-in duration-500">
-          {/* Background glow */}
-          <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-linear-to-b from-primary/5 via-transparent to-transparent blur-2xl" />
-
-          {/* Card */}
-          <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card p-8 shadow-black/5 shadow-xl">
-            {/* Corner accents */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute top-0 left-0 h-16 w-16"
-            >
-              <div className="absolute top-3 left-3 h-px w-6 bg-linear-to-r from-primary/40 to-transparent" />
-              <div className="absolute top-3 left-3 h-6 w-px bg-linear-to-b from-primary/40 to-transparent" />
-            </div>
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute top-0 right-0 h-16 w-16"
-            >
-              <div className="absolute top-3 right-3 h-px w-6 bg-linear-to-l from-primary/40 to-transparent" />
-              <div className="absolute top-3 right-3 h-6 w-px bg-linear-to-b from-primary/40 to-transparent" />
-            </div>
-
-            <div className="flex flex-col items-center gap-6 text-center">
-              {/* Logo */}
-              <div
-                className="fade-in animate-in duration-500"
-                style={getAnimationStyle("100ms")}
-              >
-                <div className="relative">
-                  <div className="absolute -inset-3 rounded-full bg-primary/10 blur-lg" />
-                  <Logo className="relative" />
-                </div>
-              </div>
-
-              {/* State icon */}
-              <div
-                className="fade-in animate-in duration-500"
-                style={getAnimationStyle("200ms")}
-              >
-                {state === "loading" && <LoadingState />}
-                {state === "success" && <SuccessState />}
-                {state === "error" && <ErrorState message={errorMessage} />}
-              </div>
-
-              {/* Action button */}
-              {state !== "loading" && (
-                <div
-                  className="fade-in w-full animate-in duration-500"
-                  style={getAnimationStyle("300ms")}
-                >
-                  <Link className="block" href="/login">
-                    <Button className="w-full" size="lg">
-                      {state === "success"
-                        ? "Przejdź do logowania"
-                        : "Wróć do logowania"}
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Bottom accent line */}
-          <div className="pointer-events-none absolute -bottom-2 left-1/2 h-px w-1/2 -translate-x-1/2 bg-linear-to-r from-transparent via-primary/30 to-transparent" />
+    <AuthCard>
+      <div className="grid gap-4">
+        {/* State icon */}
+        <div
+          className="fade-in animate-in text-center duration-500"
+          style={getAnimationStyle("200ms")}
+        >
+          {state === "loading" && <LoadingState />}
+          {state === "success" && <SuccessState />}
+          {state === "error" && <ErrorState message={errorMessage} />}
         </div>
+
+        {/* Action button */}
+        {state !== "loading" && (
+          <div
+            className="fade-in w-full animate-in duration-500"
+            style={getAnimationStyle("300ms")}
+          >
+            <Link className="block" href="/login">
+              <Button className="w-full" size="lg">
+                {state === "success"
+                  ? "Przejdź do logowania"
+                  : "Wróć do logowania"}
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
-    </div>
+    </AuthCard>
   )
 }
 

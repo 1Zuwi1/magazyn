@@ -14,11 +14,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { MOCK_PROFILE_FORM, ROLE_LABELS, STATUS_CONFIG } from "./constants"
-import type { ProfileDetail, SettingsUser } from "./types"
+import type { User } from "@/lib/schemas"
+import { ROLE_LABELS, STATUS_CONFIG } from "./constants"
+import type { ProfileDetail } from "./types"
 
 interface ProfileSectionProps {
-  user: SettingsUser
+  user: User
 }
 
 function ProfileDetailRow({ detail }: { detail: ProfileDetail }) {
@@ -32,11 +33,12 @@ function ProfileDetailRow({ detail }: { detail: ProfileDetail }) {
   )
 }
 
-function buildProfileDetails(user: SettingsUser): ProfileDetail[] {
+function buildProfileDetails(user: User): ProfileDetail[] {
+  console.log(user)
   return [
     {
       label: "Status konta",
-      value: STATUS_CONFIG[user.status].label,
+      value: STATUS_CONFIG[user.account_status].label,
     },
     {
       label: "Rola",
@@ -78,9 +80,9 @@ function InfoField({ icon, label, value }: InfoFieldProps) {
 }
 
 export function ProfileSection({ user }: ProfileSectionProps) {
-  const statusBadge = STATUS_CONFIG[user.status]
+  const statusBadge = STATUS_CONFIG[user.account_status]
   const profileDetails = buildProfileDetails(user)
-  const displayName = user.fullName ?? "Brak uzupełnionego imienia"
+  const displayName = user.full_name ?? "Brak uzupełnionego imienia"
 
   return (
     <Card>
@@ -129,17 +131,17 @@ export function ProfileSection({ user }: ProfileSectionProps) {
           <InfoField
             icon={SmartPhone01Icon}
             label="Telefon"
-            value={MOCK_PROFILE_FORM.phone}
+            value={user.phone ?? "—"}
           />
           <InfoField
             icon={Location04Icon}
             label="Lokalizacja"
-            value={MOCK_PROFILE_FORM.location}
+            value={user.location ?? "—"}
           />
           <InfoField
             icon={UserGroupIcon}
             label="Zespół"
-            value={MOCK_PROFILE_FORM.team}
+            value={user.team ?? "—"}
           />
         </div>
 

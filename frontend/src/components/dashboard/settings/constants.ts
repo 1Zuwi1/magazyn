@@ -44,13 +44,6 @@ export const METHOD_ICONS: Record<TwoFactorMethod, typeof Key01Icon> = {
   PASSKEYS: SecurityKeyUsbIcon,
 }
 
-export const MOCK_PROFILE_FORM = {
-  phone: "+48 555 019 203",
-  company: "MagazynPro Sp. z o.o.",
-  location: "Gdańsk, Polska",
-  team: "Operacje magazynowe",
-} as const
-
 export const RECOVERY_CODES = [
   "7DFK-93NX",
   "3H2P-YZ8V",
@@ -70,8 +63,3 @@ export const QR_CODE_DEFAULT_SIZE = 160
 export const AUTHENTICATOR_QR_SIZE = 140
 export const COPY_FEEDBACK_TIMEOUT_MS = 2000
 export const NON_DIGIT_REGEX = /\D/g
-export const MOCK_AUTHENTICATOR_SECRET = "H8X2 Q9LP 4T7Z 1V6K"
-export const MOCK_TWO_FACTOR_DESTINATIONS = {
-  sms: "+48 *** *** 203",
-  email: "a***@magazynpro.pl",
-} as const

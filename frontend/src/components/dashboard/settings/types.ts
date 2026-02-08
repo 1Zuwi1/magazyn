@@ -1,3 +1,5 @@
+import type { User } from "@/lib/schemas"
+
 export type AccountRole = "ADMIN" | "USER"
 export type AccountStatus =
   | "ACTIVE"
@@ -17,20 +19,10 @@ export type PasswordVerificationStage =
   | "IDLE"
   | "SENDING"
   | "AWAITING"
-  | "VERIFYING"
-  | "VERIFIED"
   | "ERROR"
 
-export interface SettingsUser {
-  id: number
-  email: string
-  fullName?: string | null
-  role: AccountRole
-  status: AccountStatus
-}
-
 export interface SettingsContentProps {
-  user: SettingsUser
+  user: User
 }
 
 export interface ProfileDetail {
@@ -38,16 +30,9 @@ export interface ProfileDetail {
   value: string
 }
 
-export interface TwoFactorChallenge {
-  sessionId: string
+export interface AuthenticatorSetupData {
   secret: string
-  destination: string
+  accountName: string
+  issuer: string
   issuedAt: string
-  accountName?: string
-  issuer?: string
-}
-
-export interface PasswordChallenge {
-  sessionId: string
-  destination: string
 }

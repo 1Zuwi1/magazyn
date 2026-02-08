@@ -54,12 +54,3 @@ export interface Notification {
 
 export type Role = "USER" | "ADMIN"
 export type Status = "ACTIVE" | "INACTIVE"
-
-export interface User {
-  id: string
-  username: string
-  email: string
-  role: Role
-  team: string
-  status: Status
-}
