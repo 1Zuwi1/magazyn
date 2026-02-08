@@ -42,13 +42,17 @@ public class ExpirationAlertTask {
     @Scheduled(cron = "${app.expiration.check-cron:0 0 6 * * *}")
     @Transactional(rollbackFor = Exception.class)
     public void checkExpirations() {
-        log.info("Starting scheduled expiration alert check");
+        try {
+            log.info("Starting scheduled expiration alert check");
 
-        int expiredAlerts = processExpiredAssortments();
-        int closeToExpiryAlerts = processCloseToExpiryAssortments();
+            int expiredAlerts = processExpiredAssortments();
+            int closeToExpiryAlerts = processCloseToExpiryAssortments();
 
-        log.info("Expiration alert check completed - expired alerts created: {}, close-to-expiry alerts created: {}",
-                expiredAlerts, closeToExpiryAlerts);
+            log.info("Expiration alert check completed - expired alerts created: {}, close-to-expiry alerts created: {}",
+                    expiredAlerts, closeToExpiryAlerts);
+        } catch (Exception e) {
+            log.error("Error during expiration alert check", e);
+        }
     }
 
     private int processExpiredAssortments() {

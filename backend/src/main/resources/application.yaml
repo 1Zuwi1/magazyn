@@ -27,6 +27,11 @@ auth:
       refill: 30
       duration: PT1M
 
+    FORGOT_PASSWORD:
+      capacity: 1          # ogólne operacje auth
+      refill: 1
+      duration: PT3M
+
     EMAIL_VERIFICATION_RESEND:
       capacity: 1
       refill: 1

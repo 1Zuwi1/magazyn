@@ -154,7 +154,7 @@ public class ItemService {
                 }
             }, "item-photo-encrypt");
 
-            encryptThread.setDaemon(false);
+            encryptThread.setDaemon(true);
             encryptThread.start();
 
             try {
@@ -169,6 +169,10 @@ public class ItemService {
                 }
 
                 storageService.uploadStream(fileName, pipedIn, file.getContentType());
+            } catch (InterruptedException ex) {
+                encryptThread.interrupt();
+                Thread.currentThread().interrupt();
+                throw ex;
             } catch (Exception ex) {
                 // Jeśli upload się nie uda, przerwij szyfrowanie i posprzątaj
                 encryptThread.interrupt();
@@ -183,9 +187,14 @@ public class ItemService {
                 throw ex;
             } finally {
                 // Poczekaj na zakończenie szyfrowania (max 30 sekund)
-                if (!encryptionFinished.await(30, java.util.concurrent.TimeUnit.SECONDS)) {
-                    log.warn("Encryption thread did not finish within timeout for item {}", id);
+                try {
+                    if (!encryptionFinished.await(30, java.util.concurrent.TimeUnit.SECONDS)) {
+                        log.warn("Encryption thread did not finish within timeout for item {}", id);
+                        encryptThread.interrupt();
+                    }
+                } catch (InterruptedException e) {
                     encryptThread.interrupt();
+                    Thread.currentThread().interrupt();
                 }
             }
 

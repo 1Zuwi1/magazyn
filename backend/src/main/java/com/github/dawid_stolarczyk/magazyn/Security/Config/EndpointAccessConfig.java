@@ -30,7 +30,7 @@ public class EndpointAccessConfig {
         endpointLevels.put("/api/webauthn/assertion", VerificationLevel.VERIFIED_NO_2FA);
 
         // AUTHENTICATED_UNVERIFIED - logged in but waiting for admin verification
-        endpointLevels.put("/api/auth/me", VerificationLevel.AUTHENTICATED_UNVERIFIED);
+        endpointLevels.put("/api/users/me", VerificationLevel.AUTHENTICATED_UNVERIFIED);
 
         // FULLY_VERIFIED - default for all other endpoints
         // (handled in filter as fallback)

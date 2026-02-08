@@ -45,7 +45,15 @@ public class FileCryptoService {
         dos.write(dataIv);
 
         try (CipherOutputStream cos = new CipherOutputStream(dos, meta.dataCipher())) {
-            in.transferTo(cos);
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = in.read(buffer)) >= 0) {
+                if (Thread.currentThread().isInterrupted()) {
+                    throw new InterruptedException("Encryption interrupted during data transfer");
+                }
+                cos.write(buffer, 0, read);
+            }
+            cos.flush();
         }
     }
 

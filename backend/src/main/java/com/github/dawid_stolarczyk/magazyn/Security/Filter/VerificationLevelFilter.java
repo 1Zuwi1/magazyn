@@ -136,9 +136,6 @@ public class VerificationLevelFilter extends OncePerRequestFilter {
      */
     private String getErrorCode(User user, AuthPrincipal authPrincipal) {
         // If admin verification is missing
-        if (user.getStatus() == AccountStatus.PENDING_VERIFICATION) {
-            return "NOT_VERIFIED_BY_ADMIN";
-        }
 
         // If account is disabled or locked
         if (user.getStatus() == AccountStatus.DISABLED) {
@@ -151,6 +148,10 @@ public class VerificationLevelFilter extends OncePerRequestFilter {
         // If only 2FA is missing
         if (authPrincipal.getStatus2FA() != Status2FA.VERIFIED) {
             return "2FA_NOT_VERIFIED";
+        }
+        
+        if (user.getStatus() == AccountStatus.PENDING_VERIFICATION) {
+            return "NOT_VERIFIED_BY_ADMIN";
         }
 
         // Generic insufficient verification

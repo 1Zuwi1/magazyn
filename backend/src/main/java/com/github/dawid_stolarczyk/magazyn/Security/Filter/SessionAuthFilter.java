@@ -4,6 +4,7 @@ import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.EmailStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
@@ -51,7 +52,8 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     User user = userRepository.findById(session.getUserId())
                             .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
                     if (user.getStatus().equals(AccountStatus.ACTIVE)
-                            || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
+                            || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)
+                            && user.getEmailStatus().equals(EmailStatus.VERIFIED)) {
                         sessionService.refreshSession(sessionId);
                         authenticateUser(user, session.getStatus2FA(), request);
                     } else {
@@ -124,7 +126,8 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     return;
                 }
                 if (user.getStatus().equals(AccountStatus.ACTIVE)
-                        || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
+                        || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)
+                        && user.getEmailStatus().equals(EmailStatus.VERIFIED)) {
                     SessionData newSessionData = new SessionData(
                             UUID.randomUUID().toString(),
                             rememberMeData.getUserId(),

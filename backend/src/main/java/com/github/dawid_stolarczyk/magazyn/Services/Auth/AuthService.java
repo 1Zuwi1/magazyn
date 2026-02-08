@@ -137,7 +137,7 @@ public class AuthService {
 
     @Transactional(rollbackFor = Exception.class)
     public void forgotPassword(String email, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.AUTH_FREE);
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.FORGOT_PASSWORD);
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthenticationException(AuthError.EMAIL_NOT_FOUND.name()));
@@ -188,7 +188,7 @@ public class AuthService {
 
         // Mark token as used and delete it
         passwordResetToken.setUsed(true);
-        passwordResetTokenRepository.delete(passwordResetToken);
+        passwordResetTokenRepository.deleteById(passwordResetToken.getId());
     }
 
     @Transactional(rollbackFor = Exception.class)
