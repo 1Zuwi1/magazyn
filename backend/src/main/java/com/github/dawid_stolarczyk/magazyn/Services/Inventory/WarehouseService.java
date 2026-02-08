@@ -24,7 +24,7 @@ public class WarehouseService {
     private final AssortmentRepository assortmentRepository;
     private final Bucket4jRateLimiter rateLimiter;
 
-    public WarehousePagedResponse getAllWarehousesPaged(HttpServletRequest request, Pageable pageable, String nameFilter, Integer percentOfFreeSlots, boolean onlyNonEmpty) {
+    public WarehousePagedResponse getAllWarehousesPaged(HttpServletRequest request, Pageable pageable, String nameFilter, Integer minPercentOfOccupiedSlots, boolean onlyNonEmpty) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
 
         Page<WarehouseDto> warehousePage;
@@ -36,13 +36,13 @@ public class WarehouseService {
                     .map(this::mapToDto);
         }
 
-        if (percentOfFreeSlots != null) {
+        if (minPercentOfOccupiedSlots != null) {
             warehousePage = new PageImpl<>(
                     warehousePage.getContent().stream()
                             .filter(dto -> {
                                 if (dto.getTotalSlots() == 0) return false;
-                                int freePercentage = (int) ((double) dto.getFreeSlots() / dto.getTotalSlots() * 100);
-                                return freePercentage >= percentOfFreeSlots;
+                                int occupiedSlotsPercentage = (int) ((double) dto.getOccupiedSlots() / dto.getTotalSlots() * 100);
+                                return occupiedSlotsPercentage <= minPercentOfOccupiedSlots;
                             }).toList(),
                     pageable,
                     warehousePage.getTotalElements()

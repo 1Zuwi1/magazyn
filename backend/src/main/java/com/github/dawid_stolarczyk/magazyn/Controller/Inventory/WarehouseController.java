@@ -45,12 +45,12 @@ public class WarehouseController {
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir,
             @Parameter(description = "Filter by warehouse name containing this string", example = "Central") @RequestParam(required = false) String nameFilter,
-            @RequestParam(required = false) Integer percentOfFreeSlots,
+            @RequestParam(required = false) Integer minPercentOfOccupiedSlots,
             @RequestParam(required = false, defaultValue = "false") boolean onlyNonEmpty) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
-                warehouseService.getAllWarehousesPaged(request, pageable, nameFilter, percentOfFreeSlots, onlyNonEmpty)));
+                warehouseService.getAllWarehousesPaged(request, pageable, nameFilter, minPercentOfOccupiedSlots, onlyNonEmpty)));
     }
 
     @Operation(summary = "Get warehouse by ID",
