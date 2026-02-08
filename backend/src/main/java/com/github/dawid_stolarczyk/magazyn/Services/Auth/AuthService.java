@@ -24,6 +24,7 @@ import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
@@ -47,6 +49,9 @@ public class AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
     private final GeolocationService geolocationService;
+
+    @Value("${app.webapp.url:null}")
+    private String webAppUrl;
 
 
     public void logoutUser(HttpServletResponse response, HttpServletRequest request) {
@@ -93,6 +98,11 @@ public class AuthService {
         }
         User newUser = new User();
         newUser.setEmail(registerRequest.getEmail());
+
+        if (userRepository.existsByPhone(registerRequest.getPhoneNumber())) {
+            throw new AuthenticationException(AuthError.PHONE_NUMBER_TAKEN.name());
+        }
+
         newUser.setRawPassword(registerRequest.getPassword());
         newUser.setFullName(registerRequest.getFullName());
         newUser.setRole(UserRole.USER);
@@ -113,10 +123,15 @@ public class AuthService {
         newUser.setEmailVerifications(emailVerification);
         userRepository.save(newUser);
 
-        String baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
-                .replacePath(null)
-                .path("/verify-mail")
-                .toUriString();
+        String baseUrl;
+        if (webAppUrl != null && !webAppUrl.isEmpty()) {
+            baseUrl = webAppUrl + "/verify-mail";
+        } else {
+            baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
+                    .replacePath(null)
+                    .path("/verify-mail")
+                    .toUriString();
+        }
         emailService.sendVerificationEmail(newUser.getEmail(), baseUrl + "?token=" + emailVerificationToken);
     }
 
@@ -142,8 +157,9 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthenticationException(AuthError.EMAIL_NOT_FOUND.name()));
 
-        // Delete any existing password reset tokens for this user
         passwordResetTokenRepository.deleteByUser(user);
+
+        passwordResetTokenRepository.flush();
 
         // Generate new reset token
         String resetToken = UUID.randomUUID().toString();
@@ -154,11 +170,15 @@ public class AuthService {
         passwordResetToken.setUsed(false);
         passwordResetTokenRepository.save(passwordResetToken);
 
-        // Send password reset email
-        String baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
-                .replacePath(null)
-                .path("/reset-password")
-                .toUriString();
+        String baseUrl;
+        if (webAppUrl != null && !webAppUrl.isEmpty()) {
+            baseUrl = webAppUrl + "/reset-password";
+        } else {
+            baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
+                    .replacePath(null)
+                    .path("/reset-password")
+                    .toUriString();
+        }
         emailService.sendPasswordResetEmail(user.getEmail(), baseUrl + "?token=" + resetToken);
     }
 
@@ -208,11 +228,16 @@ public class AuthService {
         user.setEmailVerifications(emailVerification);
         userRepository.save(user);
 
-        // Send verification email
-        String baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
-                .replacePath(null)
-                .path("/verify-mail")
-                .toUriString();
+        String baseUrl;
+        if (webAppUrl != null && !webAppUrl.isEmpty()) {
+            baseUrl = webAppUrl + "/verify-mail";
+        }
+        else {
+                baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
+                        .replacePath(null)
+                        .path("/verify-mail")
+                        .toUriString();
+        }
         emailService.sendVerificationEmail(user.getEmail(), baseUrl + "?token=" + emailVerificationToken);
     }
 

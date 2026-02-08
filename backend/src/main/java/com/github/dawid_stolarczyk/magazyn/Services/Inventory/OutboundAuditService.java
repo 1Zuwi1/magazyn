@@ -6,13 +6,16 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.OutboundOperation;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.OutboundOperationRepository;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,36 +27,48 @@ public class OutboundAuditService {
     private final OutboundOperationRepository outboundOperationRepository;
     private final Bucket4jRateLimiter rateLimiter;
 
-    public PagedResponse<OutboundOperationDto> getAllOperations(HttpServletRequest request, Pageable pageable) {
+    /**
+     * Get outbound operations with optional filters and pagination
+     */
+    public PagedResponse<OutboundOperationDto> getOperations(
+            Long userId,
+            Long itemId,
+            Long rackId,
+            Timestamp startDate,
+            Timestamp endDate,
+            HttpServletRequest request,
+            Pageable pageable) {
+
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        Page<OutboundOperation> page = outboundOperationRepository.findAll(pageable);
+
+        Specification<OutboundOperation> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (userId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("issuedBy").get("id"), userId));
+            }
+
+            if (itemId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("item").get("id"), itemId));
+            }
+
+            if (rackId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("rack").get("id"), rackId));
+            }
+
+            if (startDate != null && endDate != null) {
+                predicates.add(criteriaBuilder.between(root.get("operationTimestamp"), startDate, endDate));
+            } else if (startDate != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("operationTimestamp"), startDate));
+            } else if (endDate != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("operationTimestamp"), endDate));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<OutboundOperation> page = outboundOperationRepository.findAll(spec, pageable);
         return mapToPagedResponse(page);
-    }
-
-    public PagedResponse<OutboundOperationDto> getOperationsByUser(Long userId, HttpServletRequest request, Pageable pageable) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        Page<OutboundOperation> page = outboundOperationRepository.findByIssuedById(userId, pageable);
-        return mapToPagedResponse(page);
-    }
-
-    public List<OutboundOperationDto> getOperationsByItem(Long itemId, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        return outboundOperationRepository.findByItemId(itemId).stream().map(this::mapToDto).collect(Collectors.toList());
-    }
-
-    public List<OutboundOperationDto> getOperationsByRack(Long rackId, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        return outboundOperationRepository.findByRackId(rackId).stream().map(this::mapToDto).collect(Collectors.toList());
-    }
-
-    public List<OutboundOperationDto> getOperationsByDateRange(Timestamp startDate, Timestamp endDate, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        return outboundOperationRepository.findByDateRange(startDate, endDate).stream().map(this::mapToDto).collect(Collectors.toList());
-    }
-
-    public List<OutboundOperationDto> getOperationsByUserAndDateRange(Long userId, Timestamp startDate, Timestamp endDate, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        return outboundOperationRepository.findByUserAndDateRange(userId, startDate, endDate).stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
     private OutboundOperationDto mapToDto(OutboundOperation operation) {

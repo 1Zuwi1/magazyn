@@ -3,6 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Common.Enums;
 public enum AuthError {
     INVALID_CREDENTIALS,
     EMAIL_TAKEN,
+    PHONE_NUMBER_TAKEN,
     WEAK_PASSWORD,
     NOT_AUTHENTICATED,
     ACCOUNT_LOCKED,

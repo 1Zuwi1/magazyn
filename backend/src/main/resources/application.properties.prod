@@ -25,6 +25,7 @@ auth.token.expiration-seconds=3600
 app.domain=${DOMAIN}
 app.name=${APP_NAME}
 app.url=${APP_URL}
+app.webapp.url=${WEB_URL}
 
 auth.password.min-length=8
 

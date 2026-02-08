@@ -28,7 +28,7 @@ auth:
       duration: PT1M
 
     FORGOT_PASSWORD:
-      capacity: 1          # ogólne operacje auth
+      capacity: 2          # ogólne operacje auth
       refill: 1
       duration: PT3M
 
