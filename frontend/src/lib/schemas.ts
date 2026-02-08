@@ -1008,7 +1008,7 @@ const OutboundOperationSchema = z.object({
   fifoCompliant: z.boolean(),
 })
 
-export const OUTBOUND_EXECUTE_SCHEMA = createApiSchema({
+export const OutboundExecuteSchema = createApiSchema({
   POST: {
     input: z.object({
       assortments: [
@@ -1026,8 +1026,32 @@ export const OUTBOUND_EXECUTE_SCHEMA = createApiSchema({
 })
 
 export type OutboundExecuteResult = z.infer<
-  typeof OUTBOUND_EXECUTE_SCHEMA.shape.POST.shape.output
+  typeof OutboundExecuteSchema.shape.POST.shape.output
 >
+
+export const RackReportsSchema = createApiSchema({
+  GET: {
+    input: createPaginatedSchemaInput({
+      rackId: z.number().int().nonnegative().optional(),
+      warehouseId: z.number().int().nonnegative().optional(),
+      withAlerts: z.boolean().optional(),
+    }),
+    output: createPaginatedSchema(
+      z.object({
+        id: z.number().int().nonnegative(),
+        rackId: z.number().int().nonnegative(),
+        rackMarker: z.string(),
+        warehouseId: z.number().int().nonnegative(),
+        warehouseName: z.string(),
+        currentWeight: z.number().nonnegative(),
+        currentTemperature: z.number().nonnegative(),
+        sensorId: z.string(),
+        alertTriggered: z.boolean(),
+        createdAt: z.string(),
+      })
+    ),
+  },
+})
 
 // --- AUDIT ---
 const InboudOperationSchema = z.object({
@@ -1097,23 +1121,46 @@ export const AlertsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
       alertType: z
-        .enum([
-          "WEIGHT_EXCEEDED",
-          "TEMPERATURE_TOO_HIGH",
-          "TEMPERATURE_TOO_LOW",
-          "LOW_VISUAL_SIMILARITY",
-          "ITEM_TEMPERATURE_TOO_HIGH",
-          "ITEM_TEMPERATURE_TOO_LOW",
-          "EMBEDDING_GENERATION_COMPLETED",
-          "EMBEDDING_GENERATION_FAILED",
-          "ASSORTMENT_EXPIRED",
-          "ASSORTMENT_CLOSE_TO_EXPIRY",
-        ])
+        .array(
+          z.enum([
+            "WEIGHT_EXCEEDED",
+            "TEMPERATURE_TOO_HIGH",
+            "TEMPERATURE_TOO_LOW",
+            "LOW_VISUAL_SIMILARITY",
+            "ITEM_TEMPERATURE_TOO_HIGH",
+            "ITEM_TEMPERATURE_TOO_LOW",
+            "EMBEDDING_GENERATION_COMPLETED",
+            "EMBEDDING_GENERATION_FAILED",
+            "ASSORTMENT_EXPIRED",
+            "ASSORTMENT_CLOSE_TO_EXPIRY",
+          ])
+        )
         .optional(),
       warehouseId: z.number().int().nonnegative().optional(),
-      status: z.enum(["OPEN", "ACTIVE", "RESOLVED", "DISMISSED"]).optional(),
+      status: z
+        .array(z.enum(["OPEN", "ACTIVE", "RESOLVED", "DISMISSED"]))
+        .optional(),
       rackId: z.number().int().nonnegative().optional(),
     }),
     output: createPaginatedSchema(AlertSchema),
+  },
+})
+
+export const ApiAlertSchema = createApiSchema({
+  GET: {
+    output: AlertSchema,
+  },
+})
+
+export const ApiAlertsStatusSchema = createApiSchema({
+  PATCH: {
+    input: z.object({
+      alertIds: z
+        .array(z.number().int().nonnegative())
+        .min(1, "At least one alert ID is required"),
+      status: z.enum(["OPEN", "ACTIVE", "RESOLVED", "DISMISSED"]),
+      resolutionNotes: z.string().optional(),
+    }),
+    output: z.null(),
   },
 })

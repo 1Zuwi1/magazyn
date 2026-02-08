@@ -9,7 +9,7 @@ export const ADMIN_NAV_LINKS = [
   { title: "Użytkownicy", url: "/admin/users" },
   { title: "Magazyny", url: "/admin/warehouses" },
   { title: "Przedmioty", url: "/admin/items" },
-  { title: "Powiadomienia", url: "/admin/notifications" },
+  { title: "Alerty", url: "/admin/alerts" },
 ] as const
 
 export const NOTIFICATIONS_NAV_LINKS = [

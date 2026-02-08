@@ -2,9 +2,9 @@ import type { UseQueryResult } from "@tanstack/react-query"
 import type { FetchError, InferApiInput } from "@/lib/fetcher"
 import { apiFetch, type InferApiOutput } from "@/lib/fetcher"
 import {
-  ApiMarkAllNotifications,
+  ApiMarkBulkNotificationsSchema,
+  ApiMarkNotificationSchema,
   ApiNotificationsSchema,
-  type ApiUnreadNotificationsSchema,
 } from "@/lib/schemas/monitoring-schemas"
 import { useApiMutation } from "./use-api-mutation"
 import { useApiQuery } from "./use-api-query"
@@ -17,24 +17,25 @@ interface NotificationsListParams {
   size?: number
   sortBy?: string
   sortDir?: "asc" | "desc"
+  alertType?: string[]
 }
 
 const normalizeNotificationsParams = (
   params?: NotificationsListParams
 ): Required<Pick<NotificationsListParams, "page" | "size">> &
-  Pick<NotificationsListParams, "sortBy" | "sortDir"> => ({
+  Pick<NotificationsListParams, "sortBy" | "sortDir" | "alertType"> => ({
   page: params?.page ?? 0,
   size: params?.size ?? DEFAULT_NOTIFICATIONS_PAGE_SIZE,
   sortBy: params?.sortBy,
   sortDir: params?.sortDir,
+  alertType:
+    params?.alertType && params.alertType.length > 0
+      ? params.alertType
+      : undefined,
 })
 
 export type NotificationsList = InferApiOutput<
   typeof ApiNotificationsSchema,
-  "GET"
->
-export type UnreadNotificationsList = InferApiOutput<
-  typeof ApiUnreadNotificationsSchema,
   "GET"
 >
 export type UserNotification = NotificationsList["content"][number]
@@ -54,38 +55,37 @@ export default function useNotifications(
   })
 }
 
-export function useMarkNotification(
-  body: InferApiInput<typeof ApiMarkAllNotifications, "PATCH">
-) {
+export function useMarkNotification() {
   return useApiMutation({
-    mutationFn: (notificationId: number) =>
-      apiFetch(
-        `/api/notifications/${notificationId}/read`,
-        ApiMarkAllNotifications,
+    mutationFn: async ({
+      notificationId,
+      ...params
+    }: InferApiInput<typeof ApiMarkNotificationSchema, "PATCH"> & {
+      notificationId: string
+    }) =>
+      await apiFetch(
+        `/api/notifications/${notificationId}/mark`,
+        ApiMarkNotificationSchema,
         {
-          body,
           method: "PATCH",
+          body: params,
         }
       ),
-    onSuccess: (_, __, ___, context) =>
-      context.client.invalidateQueries({
-        queryKey: NOTIFICATIONS_QUERY_KEY,
-      }),
   })
 }
 
-export function useMarkAllNotifications(
-  body: InferApiInput<typeof ApiMarkAllNotifications, "PATCH">
-) {
+export function useMarkBulkNotifications() {
   return useApiMutation({
-    mutationFn: () =>
-      apiFetch("/api/notifications/mark-all", ApiMarkAllNotifications, {
-        body,
-        method: "PATCH",
-      }),
-    onSuccess: (_, __, ___, context) =>
-      context.client.invalidateQueries({
-        queryKey: NOTIFICATIONS_QUERY_KEY,
-      }),
+    mutationFn: async (
+      params: InferApiInput<typeof ApiMarkBulkNotificationsSchema, "PATCH">
+    ) =>
+      await apiFetch(
+        "/api/notifications/bulk",
+        ApiMarkBulkNotificationsSchema,
+        {
+          method: "PATCH",
+          body: params,
+        }
+      ),
   })
 }

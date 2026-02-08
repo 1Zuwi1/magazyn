@@ -1,0 +1,742 @@
+"use client"
+
+import {
+  Alert01Icon,
+  ArrowRight02Icon,
+  CheckmarkBadge01Icon,
+  FilterIcon,
+  InboxIcon,
+  Time01Icon,
+  WeightScale01Icon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { format, formatDistanceToNow } from "date-fns"
+import { pl } from "date-fns/locale"
+import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
+import { Badge } from "@/components/ui/badge"
+import { Button, buttonVariants } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import useAlerts, { usePatchAlert } from "@/hooks/use-alerts"
+import type { InferApiOutput } from "@/lib/fetcher"
+import type { AlertsSchema } from "@/lib/schemas"
+import { cn } from "@/lib/utils"
+import { AdminPageHeader } from "../components/admin-page-header"
+import { ADMIN_NAV_LINKS } from "../lib/constants"
+
+type AlertsList = InferApiOutput<typeof AlertsSchema, "GET">
+type AlertItem = AlertsList["content"][number]
+
+const ALERTS_PAGE_SIZE = 20
+
+const ALERT_TYPE_OPTIONS = [
+  { value: "WEIGHT_EXCEEDED", label: "Przekroczenie wagi" },
+  { value: "TEMPERATURE_TOO_HIGH", label: "Temp. za wysoka" },
+  { value: "TEMPERATURE_TOO_LOW", label: "Temp. za niska" },
+  { value: "LOW_VISUAL_SIMILARITY", label: "Niska zgodność wizualna" },
+  { value: "ITEM_TEMPERATURE_TOO_HIGH", label: "Temp. produktu za wysoka" },
+  { value: "ITEM_TEMPERATURE_TOO_LOW", label: "Temp. produktu za niska" },
+  {
+    value: "EMBEDDING_GENERATION_COMPLETED",
+    label: "Generowanie embeddingów ukończone",
+  },
+  {
+    value: "EMBEDDING_GENERATION_FAILED",
+    label: "Generowanie embeddingów nieudane",
+  },
+  { value: "ASSORTMENT_EXPIRED", label: "Asortyment przeterminowany" },
+  { value: "ASSORTMENT_CLOSE_TO_EXPIRY", label: "Asortyment bliski terminu" },
+] as const
+
+type AlertTypeValue = (typeof ALERT_TYPE_OPTIONS)[number]["value"]
+
+type AlertStatusValue = "OPEN" | "ACTIVE" | "RESOLVED" | "DISMISSED"
+
+const ALERT_STATUS_OPTIONS: {
+  value: AlertStatusValue
+  label: string
+}[] = [
+  { value: "OPEN", label: "Otwarte" },
+  { value: "ACTIVE", label: "Aktywne" },
+  { value: "RESOLVED", label: "Rozwiązane" },
+  { value: "DISMISSED", label: "Odrzucone" },
+]
+
+const toTitleCase = (value: string): string =>
+  value
+    .split("_")
+    .filter(Boolean)
+    .map((part) => `${part.slice(0, 1)}${part.slice(1).toLowerCase()}`)
+    .join(" ")
+
+function getAlertIcon(alertType: string): IconSvgElement {
+  switch (alertType) {
+    case "WEIGHT_EXCEEDED":
+    case "RACK_OVERWEIGHT":
+      return WeightScale01Icon
+    default:
+      return Alert01Icon
+  }
+}
+
+function getStatusConfig(status: string): {
+  badgeVariant: "default" | "destructive" | "secondary"
+  cardClassName: string
+  label: string
+} {
+  const normalizedStatus = status.toUpperCase()
+
+  if (normalizedStatus === "OPEN" || normalizedStatus.includes("CRITICAL")) {
+    return {
+      badgeVariant: "destructive",
+      cardClassName: "bg-destructive/10 text-destructive",
+      label: "Otwarte",
+    }
+  }
+
+  if (normalizedStatus === "RESOLVED" || normalizedStatus === "CLOSED") {
+    return {
+      badgeVariant: "secondary",
+      cardClassName: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+      label: "Rozwiązane",
+    }
+  }
+
+  if (normalizedStatus === "DISMISSED") {
+    return {
+      badgeVariant: "secondary",
+      cardClassName: "bg-muted text-muted-foreground",
+      label: "Odrzucone",
+    }
+  }
+
+  return {
+    badgeVariant: "default",
+    cardClassName: "bg-muted text-muted-foreground",
+    label: toTitleCase(status),
+  }
+}
+
+const formatDateTime = (date: string | null | undefined): string => {
+  if (!date) {
+    return "—"
+  }
+
+  try {
+    return format(new Date(date), "dd MMMM yyyy, HH:mm", { locale: pl })
+  } catch {
+    return "—"
+  }
+}
+
+const formatMetricValue = (value: number | null | undefined): string =>
+  value == null ? "—" : value.toString()
+
+const getLocationHref = (alert: AlertItem): string | null => {
+  const warehouseId = alert.warehouseId
+  const warehouseName = alert.warehouseName
+
+  if (warehouseId == null || !warehouseName) {
+    return null
+  }
+
+  return `/admin/warehouses/id/${warehouseId}/${encodeURIComponent(warehouseName)}`
+}
+
+function DetailsCard({
+  label,
+  value,
+}: {
+  label: string
+  value: string | number
+}) {
+  return (
+    <div className="rounded-lg border bg-muted/20 p-3">
+      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="mt-0.5 font-medium">{value}</p>
+    </div>
+  )
+}
+
+function AlertListBody({
+  isPending,
+  isError,
+  alerts,
+  onSelect,
+  selectedAlertId,
+}: {
+  isPending: boolean
+  isError: boolean
+  alerts: AlertItem[]
+  onSelect: (alert: AlertItem) => void
+  selectedAlertId: number | null
+}) {
+  if (isPending) {
+    return (
+      <>
+        {Array.from({ length: 5 }, (_, index) => (
+          <div
+            className="h-20 animate-pulse rounded-lg border bg-muted/40"
+            key={`alert-list-skeleton-${index}`}
+          />
+        ))}
+      </>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <p className="font-medium">Nie udało się pobrać alertów</p>
+        <p className="mt-1 text-muted-foreground text-sm">
+          Spróbuj ponownie za chwilę.
+        </p>
+      </div>
+    )
+  }
+
+  if (alerts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+          <HugeiconsIcon
+            className="size-6 text-muted-foreground"
+            icon={InboxIcon}
+          />
+        </div>
+        <p className="mt-3 font-medium">Brak alertów</p>
+        <p className="mt-1 text-muted-foreground text-sm">
+          Brak wpisów dla wybranego filtra
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {alerts.map((alert) => {
+        const statusConfig = getStatusConfig(alert.status)
+        const isSelected = selectedAlertId === alert.id
+
+        return (
+          <button
+            className={cn(
+              "flex w-full gap-3 rounded-lg border p-3 text-left transition-all",
+              isSelected
+                ? "border-primary bg-primary/5"
+                : "hover:border-primary/30 hover:bg-muted/50"
+            )}
+            key={alert.id}
+            onClick={() => onSelect(alert)}
+            type="button"
+          >
+            <div
+              className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                statusConfig.cardClassName
+              )}
+            >
+              <HugeiconsIcon
+                className="size-4"
+                icon={getAlertIcon(alert.alertType)}
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <p className="truncate font-medium text-sm">
+                  {alert.alertTypeDescription || toTitleCase(alert.alertType)}
+                </p>
+                <Badge className="shrink-0" variant={statusConfig.badgeVariant}>
+                  {statusConfig.label}
+                </Badge>
+              </div>
+              <p className="mt-0.5 line-clamp-2 text-muted-foreground text-xs">
+                {alert.message}
+              </p>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {formatDistanceToNow(new Date(alert.createdAt), {
+                  addSuffix: true,
+                  locale: pl,
+                })}
+              </p>
+            </div>
+          </button>
+        )
+      })}
+    </>
+  )
+}
+
+function AlertDetailsPanel({
+  alert,
+  onStatusChange,
+}: {
+  alert: AlertItem | null
+  onStatusChange: (status: AlertStatusValue) => void
+}) {
+  if (!alert) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center p-12">
+        <div className="flex size-16 items-center justify-center rounded-full bg-muted">
+          <HugeiconsIcon
+            className="size-8 text-muted-foreground"
+            icon={Alert01Icon}
+          />
+        </div>
+        <p className="mt-4 font-medium text-lg">Wybierz alert</p>
+        <p className="mt-1 text-center text-muted-foreground text-sm">
+          Kliknij wpis na liście, aby zobaczyć szczegóły
+        </p>
+      </div>
+    )
+  }
+
+  const statusConfig = getStatusConfig(alert.status)
+  const differenceValue =
+    alert.actualValue != null && alert.thresholdValue != null
+      ? alert.actualValue - alert.thresholdValue
+      : null
+  const locationHref = getLocationHref(alert)
+  const hasResolutionData = Boolean(
+    alert.resolvedByName || alert.resolutionNotes
+  )
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="border-b bg-muted/20 p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant={statusConfig.badgeVariant}>
+            {statusConfig.label}
+          </Badge>
+          <Badge variant="outline">{toTitleCase(alert.alertType)}</Badge>
+        </div>
+        <h2 className="mt-3 font-semibold text-xl">
+          {alert.alertTypeDescription || toTitleCase(alert.alertType)}
+        </h2>
+        <p className="mt-1 text-muted-foreground">{alert.message}</p>
+      </div>
+
+      <div className="flex-1 space-y-6 p-6">
+        <section className="space-y-3">
+          <h3 className="font-medium text-muted-foreground text-sm">
+            Lokalizacja
+          </h3>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <DetailsCard
+              label="Magazyn"
+              value={alert.warehouseName ?? alert.warehouseId ?? "—"}
+            />
+            <DetailsCard
+              label="Regał"
+              value={alert.rackMarker ?? alert.rackId ?? "—"}
+            />
+            <DetailsCard label="Status" value={toTitleCase(alert.status)} />
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="font-medium text-muted-foreground text-sm">Metryki</h3>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <DetailsCard
+              label="Próg"
+              value={formatMetricValue(alert.thresholdValue)}
+            />
+            <DetailsCard
+              label="Wartość"
+              value={formatMetricValue(alert.actualValue)}
+            />
+            <DetailsCard
+              label="Różnica"
+              value={differenceValue == null ? "—" : differenceValue.toString()}
+            />
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="font-medium text-muted-foreground text-sm">Czas</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <DetailsCard
+              label="Utworzono"
+              value={formatDateTime(alert.createdAt)}
+            />
+            <DetailsCard
+              label="Aktualizacja"
+              value={formatDateTime(alert.updatedAt)}
+            />
+            <DetailsCard
+              label="Rozwiązano"
+              value={formatDateTime(alert.resolvedAt)}
+            />
+          </div>
+        </section>
+
+        {hasResolutionData ? (
+          <section className="space-y-3">
+            <h3 className="font-medium text-muted-foreground text-sm">
+              Notatka rozwiązania
+            </h3>
+            <div className="rounded-lg border bg-muted/20 p-3">
+              <p className="text-muted-foreground text-xs">Rozwiązane przez</p>
+              <p className="mt-0.5 font-medium">
+                {alert.resolvedByName ?? "—"}
+              </p>
+              {alert.resolutionNotes ? (
+                <p className="mt-2 text-sm">{alert.resolutionNotes}</p>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+      </div>
+
+      <div className="flex flex-wrap items-center justify-end gap-3 border-t bg-muted/20 p-4">
+        {locationHref ? (
+          <Link
+            className={buttonVariants({
+              variant: "outline",
+              size: "sm",
+            })}
+            href={locationHref}
+          >
+            Przejdź do lokalizacji
+            <HugeiconsIcon className="ml-2 size-4" icon={ArrowRight02Icon} />
+          </Link>
+        ) : null}
+
+        {alert.status !== "RESOLVED" && alert.status !== "DISMISSED" && (
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Button size="sm" variant="default">
+                Zmień status
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Akcje</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="gap-2"
+                onClick={() => onStatusChange("RESOLVED")}
+              >
+                <HugeiconsIcon className="size-4" icon={CheckmarkBadge01Icon} />
+                Oznacz jako rozwiązane
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="gap-2"
+                onClick={() => onStatusChange("DISMISSED")}
+              >
+                <HugeiconsIcon className="size-4" icon={Alert01Icon} />
+                Odrzuć alert
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default function AlertsMain() {
+  const [alertTypeFilter, setAlertTypeFilter] = useState<AlertTypeValue[]>([])
+  const [statusFilter, setStatusFilter] = useState<AlertStatusValue[]>([])
+  const [page, setPage] = useState(0)
+  const [selectedAlertId, setSelectedAlertId] = useState<number | null>(null)
+
+  const patchAlert = usePatchAlert()
+
+  const alertsQuery = useAlerts({
+    page,
+    size: ALERTS_PAGE_SIZE,
+    sortBy: "createdAt",
+    sortDir: "desc",
+    alertType: alertTypeFilter.length > 0 ? alertTypeFilter : undefined,
+    status: statusFilter.length > 0 ? statusFilter : undefined,
+  })
+
+  const alertsData = alertsQuery.data
+  const alerts = alertsData?.content ?? []
+  const isAlertsPending = alertsQuery.isPending
+  const isAlertsError = alertsQuery.isError
+
+  const totalAlerts = alertsData?.totalElements ?? 0
+
+  const openCount = useMemo(
+    () =>
+      alerts.filter((alert) => alert.status.toUpperCase() === "OPEN").length,
+    [alerts]
+  )
+
+  useEffect(() => {
+    setSelectedAlertId((currentSelection) => {
+      if (alerts.length === 0) {
+        return null
+      }
+
+      if (
+        currentSelection != null &&
+        alerts.some((alert) => alert.id === currentSelection)
+      ) {
+        return currentSelection
+      }
+
+      return alerts[0]?.id ?? null
+    })
+  }, [alerts])
+
+  const selectedAlert = useMemo(
+    () => alerts.find((alert) => alert.id === selectedAlertId) ?? null,
+    [alerts, selectedAlertId]
+  )
+
+  const currentPage = (alertsData?.page ?? page) + 1
+  const totalPages = alertsData?.totalPages ?? 1
+
+  const handleSelectAlert = (alert: AlertItem) => {
+    setSelectedAlertId(alert.id)
+  }
+
+  const handleStatusChange = (status: AlertStatusValue) => {
+    if (!selectedAlert) {
+      return
+    }
+
+    patchAlert.mutate({
+      alertIds: [selectedAlert.id],
+      status,
+    })
+  }
+
+  const handleToggleAlertType = (alertType: AlertTypeValue) => {
+    setAlertTypeFilter((previous) =>
+      previous.includes(alertType)
+        ? previous.filter((t) => t !== alertType)
+        : [...previous, alertType]
+    )
+    setPage(0)
+  }
+
+  const handleClearAlertTypeFilter = () => {
+    setAlertTypeFilter([])
+    setPage(0)
+  }
+
+  const handleToggleStatus = (status: AlertStatusValue) => {
+    setStatusFilter((previous) =>
+      previous.includes(status)
+        ? previous.filter((s) => s !== status)
+        : [...previous, status]
+    )
+    setPage(0)
+  }
+
+  const handleClearStatusFilter = () => {
+    setStatusFilter([])
+    setPage(0)
+  }
+
+  return (
+    <div className="space-y-6">
+      <AdminPageHeader
+        description="Przeglądaj alerty systemowe dotyczące magazynów"
+        icon={Alert01Icon}
+        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+          title: link.title,
+          url: link.url,
+        }))}
+        title="Alerty"
+      >
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
+            <span className="font-mono font-semibold text-primary">
+              {totalAlerts}
+            </span>
+            <span className="text-muted-foreground text-xs">łącznie</span>
+          </div>
+          {openCount > 0 ? (
+            <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-1.5">
+              <span className="flex size-2 rounded-full bg-destructive" />
+              <span className="font-mono font-semibold text-destructive">
+                {openCount}
+              </span>
+              <span className="text-muted-foreground text-xs">otwartych</span>
+            </div>
+          ) : null}
+        </div>
+      </AdminPageHeader>
+
+      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+        <div className="space-y-4">
+          <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+            <div className="flex items-center gap-2 border-b bg-muted/30 p-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={cn(
+                    "flex items-center gap-2 rounded-md px-3 py-2 font-medium text-sm transition-colors hover:bg-muted",
+                    statusFilter.length > 0 && "text-primary"
+                  )}
+                >
+                  <HugeiconsIcon className="size-4" icon={FilterIcon} />
+                  Status
+                  {statusFilter.length > 0 && (
+                    <Badge className="ml-1" variant="secondary">
+                      {statusFilter.length}
+                    </Badge>
+                  )}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  className="w-48"
+                  side="bottom"
+                >
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>Filtruj po statusie</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {ALERT_STATUS_OPTIONS.map((option) => (
+                      <DropdownMenuCheckboxItem
+                        checked={statusFilter.includes(option.value)}
+                        key={option.value}
+                        onClick={() => handleToggleStatus(option.value)}
+                      >
+                        {option.label}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                    {statusFilter.length > 0 && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <button
+                          className="w-full rounded-sm px-2 py-1.5 text-center text-muted-foreground text-sm hover:bg-muted"
+                          onClick={handleClearStatusFilter}
+                          type="button"
+                        >
+                          Wyczyść filtry
+                        </button>
+                      </>
+                    )}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={cn(
+                    "flex items-center gap-2 rounded-md px-3 py-2 font-medium text-sm transition-colors hover:bg-muted",
+                    alertTypeFilter.length > 0 && "text-primary"
+                  )}
+                >
+                  <HugeiconsIcon className="size-4" icon={FilterIcon} />
+                  Typ alertu
+                  {alertTypeFilter.length > 0 && (
+                    <Badge className="ml-1" variant="secondary">
+                      {alertTypeFilter.length}
+                    </Badge>
+                  )}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  className="w-64"
+                  side="bottom"
+                >
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>
+                      Filtruj po typie alertu
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {ALERT_TYPE_OPTIONS.map((option) => (
+                      <DropdownMenuCheckboxItem
+                        checked={alertTypeFilter.includes(option.value)}
+                        key={option.value}
+                        onClick={() => handleToggleAlertType(option.value)}
+                      >
+                        {option.label}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                    {alertTypeFilter.length > 0 && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <button
+                          className="w-full rounded-sm px-2 py-1.5 text-center text-muted-foreground text-sm hover:bg-muted"
+                          onClick={handleClearAlertTypeFilter}
+                          type="button"
+                        >
+                          Wyczyść filtry
+                        </button>
+                      </>
+                    )}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <ScrollArea className="h-112">
+              <div className="space-y-2 p-2">
+                <AlertListBody
+                  alerts={alerts}
+                  isError={isAlertsError}
+                  isPending={isAlertsPending}
+                  onSelect={handleSelectAlert}
+                  selectedAlertId={selectedAlertId}
+                />
+              </div>
+            </ScrollArea>
+
+            <div className="flex items-center justify-between border-t bg-muted/20 px-3 py-2">
+              <p className="text-muted-foreground text-xs">
+                Strona {currentPage} z {Math.max(totalPages, 1)}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  className={cn(
+                    "rounded-md border px-2.5 py-1 text-xs transition-colors",
+                    page === 0 || isAlertsPending
+                      ? "cursor-not-allowed opacity-50"
+                      : "hover:bg-muted"
+                  )}
+                  disabled={page === 0 || isAlertsPending}
+                  onClick={() => setPage((previousPage) => previousPage - 1)}
+                  type="button"
+                >
+                  Poprzednia
+                </button>
+                <button
+                  className={cn(
+                    "rounded-md border px-2.5 py-1 text-xs transition-colors",
+                    page + 1 >= totalPages || isAlertsPending
+                      ? "cursor-not-allowed opacity-50"
+                      : "hover:bg-muted"
+                  )}
+                  disabled={page + 1 >= totalPages || isAlertsPending}
+                  onClick={() => setPage((previousPage) => previousPage + 1)}
+                  type="button"
+                >
+                  Następna
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+          <AlertDetailsPanel
+            alert={selectedAlert}
+            onStatusChange={handleStatusChange}
+          />
+        </div>
+      </div>
+
+      {selectedAlert ? (
+        <div className="rounded-lg border border-dashed p-3 text-muted-foreground text-xs">
+          <HugeiconsIcon className="mr-1 inline size-3.5" icon={Time01Icon} />
+          Ostatnia aktualizacja: {formatDateTime(selectedAlert.updatedAt)}
+        </div>
+      ) : null}
+    </div>
+  )
+}

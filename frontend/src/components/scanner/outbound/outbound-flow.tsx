@@ -12,10 +12,10 @@ import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   OUTBOUND_CHECK_SCHEMA,
-  OUTBOUND_EXECUTE_SCHEMA,
   OUTBOUND_PLAN_SCHEMA,
   type OutboundCheckResult,
   type OutboundExecuteResult,
+  OutboundExecuteSchema,
   type OutboundPickSlot,
   type OutboundPlan,
 } from "@/lib/schemas"
@@ -139,7 +139,7 @@ export const OutboundFlow = forwardRef<OutboundFlowHandle, OutboundFlowProps>(
         try {
           const result = await apiFetch(
             "/api/inventory/outbound-operation/execute",
-            OUTBOUND_EXECUTE_SCHEMA,
+            OutboundExecuteSchema,
             {
               method: "POST",
               body: {

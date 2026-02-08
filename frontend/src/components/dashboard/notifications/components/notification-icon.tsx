@@ -25,9 +25,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import useNotifications, {
   type UserNotification,
-  useMarkAllNotificationsAsRead,
-  useMarkNotificationAsRead,
-  useUnreadNotificationsCount,
+  useMarkBulkNotifications,
+  useMarkNotification,
 } from "@/hooks/use-notifications"
 import { cn } from "@/lib/utils"
 
@@ -91,26 +90,30 @@ export function NotificationInbox() {
     sortBy: "createdAt",
     sortDir: "desc",
   })
-  const { data: unreadNotificationsCount } = useUnreadNotificationsCount()
-  const markAllAsReadMutation = useMarkAllNotificationsAsRead()
-  const markAsReadMutation = useMarkNotificationAsRead()
+
+  const markBulkNotifications = useMarkBulkNotifications()
+  const markNotification = useMarkNotification()
 
   const notifications = notificationsData?.content ?? []
-  const fallbackUnreadCount = useMemo(
+  const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.read).length,
     [notifications]
   )
-  const unreadCount = unreadNotificationsCount ?? fallbackUnreadCount
 
   const handleMarkAllRead = () => {
-    markAllAsReadMutation.mutate()
+    markBulkNotifications.mutate({
+      read: true,
+    })
   }
 
   const handleMarkAsRead = (notification: UserNotification) => {
     if (notification.read) {
       return
     }
-    markAsReadMutation.mutate(notification.id)
+    markNotification.mutate({
+      notificationId: notification.id.toString(),
+      read: true,
+    })
   }
 
   let notificationsListContent: ReactNode
@@ -270,7 +273,7 @@ export function NotificationInbox() {
             </div>
             <Button
               className="h-7 gap-1.5 text-xs"
-              disabled={unreadCount === 0 || markAllAsReadMutation.isPending}
+              disabled={unreadCount === 0 || markBulkNotifications.isPending}
               onClick={handleMarkAllRead}
               size="sm"
               variant="ghost"
@@ -286,7 +289,7 @@ export function NotificationInbox() {
         <div className="flex items-center justify-between gap-2 border-t bg-muted/20 p-2">
           <Link
             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-md text-xs transition-colors hover:bg-muted"
-            href="/admin/notifications"
+            href="/dashboard/notifications"
             onClick={() => setOpen(false)}
           >
             Zobacz wszystkie

@@ -1,4 +1,5 @@
 import {
+  Alert01Icon,
   Analytics01Icon,
   Bell,
   Package,
@@ -36,6 +37,11 @@ export const navigationItems: NavigationItem[] = [
         href: "/dashboard/items",
         icon: Package,
       },
+      {
+        title: "Powiadomienia",
+        href: "/dashboard/notifications",
+        icon: Bell,
+      },
     ],
   },
   {
@@ -66,9 +72,9 @@ export const navigationItems: NavigationItem[] = [
         icon: Package,
       },
       {
-        title: "Powiadomienia",
-        href: "/admin/notifications",
-        icon: Bell,
+        title: "Alerty",
+        href: "/admin/alerts",
+        icon: Alert01Icon,
       },
     ],
   },

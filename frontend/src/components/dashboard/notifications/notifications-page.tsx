@@ -4,6 +4,7 @@ import {
   Alert01Icon,
   ArrowRight02Icon,
   CheckmarkBadge01Icon,
+  FilterIcon,
   InboxIcon,
   Notification01Icon,
   Time01Icon,
@@ -16,19 +17,45 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import type { UserNotification } from "@/hooks/use-notifications"
 import useNotifications, {
-  type UserNotification,
   useMarkBulkNotifications,
   useMarkNotification,
 } from "@/hooks/use-notifications"
 import { cn } from "@/lib/utils"
-import { AdminPageHeader } from "../components/admin-page-header"
-import { ADMIN_NAV_LINKS } from "../lib/constants"
 
 const NOTIFICATIONS_PAGE_SIZE = 20
 
 type FeedFilter = "ALL" | "UNREAD"
+
+const ALERT_TYPE_OPTIONS = [
+  { value: "WEIGHT_EXCEEDED", label: "Przekroczenie wagi" },
+  { value: "TEMPERATURE_TOO_HIGH", label: "Temp. za wysoka" },
+  { value: "TEMPERATURE_TOO_LOW", label: "Temp. za niska" },
+  { value: "LOW_VISUAL_SIMILARITY", label: "Niska zgodność wizualna" },
+  { value: "ITEM_TEMPERATURE_TOO_HIGH", label: "Temp. produktu za wysoka" },
+  { value: "ITEM_TEMPERATURE_TOO_LOW", label: "Temp. produktu za niska" },
+  {
+    value: "EMBEDDING_GENERATION_COMPLETED",
+    label: "Generowanie embeddingów ukończone",
+  },
+  {
+    value: "EMBEDDING_GENERATION_FAILED",
+    label: "Generowanie embeddingów nieudane",
+  },
+  { value: "ASSORTMENT_EXPIRED", label: "Asortyment przeterminowany" },
+  { value: "ASSORTMENT_CLOSE_TO_EXPIRY", label: "Asortyment bliski terminu" },
+] as const
 
 const toTitleCase = (value: string): string =>
   value
@@ -93,14 +120,13 @@ const formatMetricValue = (value: number | null | undefined): string =>
   value == null ? "—" : value.toString()
 
 const getLocationHref = (notification: UserNotification): string | null => {
-  const warehouseId = notification.alert.warehouseId
   const warehouseName = notification.alert.warehouseName
 
-  if (warehouseId == null || !warehouseName) {
+  if (!warehouseName) {
     return null
   }
 
-  return `/admin/warehouses/id/${warehouseId}/${encodeURIComponent(warehouseName)}`
+  return `/dashboard/warehouse/${encodeURIComponent(warehouseName)}`
 }
 
 function DetailsCard({
@@ -400,9 +426,67 @@ function NotificationDetailsPanel({
   )
 }
 
+function AlertTypeFilterDropdown({
+  selected,
+  onToggle,
+  onClear,
+}: {
+  selected: string[]
+  onToggle: (alertType: string) => void
+  onClear: () => void
+}) {
+  return (
+    <div className="flex items-center justify-between border-b p-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          className={cn(
+            "flex items-center gap-2 rounded-md px-3 py-2 font-medium text-sm transition-colors hover:bg-muted",
+            selected.length > 0 && "text-primary"
+          )}
+        >
+          <HugeiconsIcon className="size-4" icon={FilterIcon} />
+          Typ alertu
+          {selected.length > 0 && (
+            <Badge className="ml-1" variant="secondary">
+              {selected.length}
+            </Badge>
+          )}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64" side="bottom">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Filtruj po typie alertu</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {ALERT_TYPE_OPTIONS.map((option) => (
+              <DropdownMenuCheckboxItem
+                checked={selected.includes(option.value)}
+                key={option.value}
+                onClick={() => onToggle(option.value)}
+              >
+                {option.label}
+              </DropdownMenuCheckboxItem>
+            ))}
+            {selected.length > 0 && (
+              <>
+                <DropdownMenuSeparator />
+                <button
+                  className="w-full rounded-sm px-2 py-1.5 text-center text-muted-foreground text-sm hover:bg-muted"
+                  onClick={onClear}
+                  type="button"
+                >
+                  Wyczyść filtry
+                </button>
+              </>
+            )}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
+
 export default function NotificationsMain() {
   const [feedFilter, setFeedFilter] = useState<FeedFilter>("ALL")
-  const [typeFilter, setTypeFilter] = useState<string | null>(null)
+  const [alertTypeFilter, setAlertTypeFilter] = useState<string[]>([])
   const [page, setPage] = useState(0)
   const [selectedNotificationId, setSelectedNotificationId] = useState<
     number | null
@@ -413,6 +497,7 @@ export default function NotificationsMain() {
     size: NOTIFICATIONS_PAGE_SIZE,
     sortBy: "createdAt",
     sortDir: "desc",
+    alertType: alertTypeFilter.length > 0 ? alertTypeFilter : undefined,
   })
 
   const markBulkNotifications = useMarkBulkNotifications()
@@ -430,65 +515,34 @@ export default function NotificationsMain() {
 
   const totalNotifications = allNotificationsQuery.data?.totalElements ?? 0
   const unreadCount = allNotifications.filter(
-    (notification: UserNotification) => !notification.read
+    (notification) => !notification.read
   ).length
-
-  const availableAlertTypes = useMemo(
-    () => [
-      ...new Set(
-        notifications.map((notification) => notification.alert.alertType)
-      ),
-    ],
-    [notifications]
-  )
-
-  const filteredNotifications = useMemo(() => {
-    if (!typeFilter) {
-      return notifications
-    }
-
-    return notifications.filter(
-      (notification) => notification.alert.alertType === typeFilter
-    )
-  }, [notifications, typeFilter])
-
-  useEffect(() => {
-    setTypeFilter((previousTypeFilter) => {
-      if (!previousTypeFilter) {
-        return previousTypeFilter
-      }
-
-      return availableAlertTypes.includes(previousTypeFilter)
-        ? previousTypeFilter
-        : null
-    })
-  }, [availableAlertTypes])
 
   useEffect(() => {
     setSelectedNotificationId((currentSelection) => {
-      if (filteredNotifications.length === 0) {
+      if (notifications.length === 0) {
         return null
       }
 
       if (
         currentSelection != null &&
-        filteredNotifications.some(
+        notifications.some(
           (notification) => notification.id === currentSelection
         )
       ) {
         return currentSelection
       }
 
-      return filteredNotifications[0]?.id ?? null
+      return notifications[0]?.id ?? null
     })
-  }, [filteredNotifications])
+  }, [notifications])
 
   const selectedNotification = useMemo(
     () =>
-      filteredNotifications.find(
+      notifications.find(
         (notification) => notification.id === selectedNotificationId
       ) ?? null,
-    [filteredNotifications, selectedNotificationId]
+    [notifications, selectedNotificationId]
   )
 
   const currentPage = (notificationsData?.page ?? page) + 1
@@ -526,56 +580,88 @@ export default function NotificationsMain() {
     setPage(0)
   }
 
-  const handleTypeFilterChange = (nextTypeFilter: string | null) => {
-    setTypeFilter(nextTypeFilter)
+  const handleToggleAlertType = (alertType: string) => {
+    setAlertTypeFilter((previous) => {
+      const next = previous.includes(alertType)
+        ? previous.filter((t) => t !== alertType)
+        : [...previous, alertType]
+      return next
+    })
+    setPage(0)
+  }
+
+  const handleClearAlertTypeFilter = () => {
+    setAlertTypeFilter([])
     setPage(0)
   }
 
   return (
     <div className="space-y-6">
-      <AdminPageHeader
-        actions={
-          <Button
-            disabled={unreadCount === 0 || markBulkNotifications.isPending}
-            onClick={handleMarkAllAsRead}
-            variant="outline"
-          >
-            <HugeiconsIcon
-              className="mr-2 size-4"
-              icon={CheckmarkBadge01Icon}
-            />
-            Oznacz wszystkie jako przeczytane
-          </Button>
-        }
-        description="Przeglądaj i zarządzaj alertami systemowymi"
-        icon={Notification01Icon}
-        iconBadge={unreadCount > 0 ? unreadCount : undefined}
-        navLinks={ADMIN_NAV_LINKS.map((link) => ({
-          title: link.title,
-          url: link.url,
-        }))}
-        title="Powiadomienia"
-      >
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
-            <span className="font-mono font-semibold text-primary">
-              {totalNotifications}
-            </span>
-            <span className="text-muted-foreground text-xs">łącznie</span>
-          </div>
-          {unreadCount > 0 ? (
-            <div className="flex items-center gap-2 rounded-lg border border-orange-500/20 bg-orange-500/5 px-3 py-1.5">
-              <span className="flex size-2 rounded-full bg-orange-500" />
-              <span className="font-mono font-semibold text-orange-600 dark:text-orange-400">
-                {unreadCount}
-              </span>
-              <span className="text-muted-foreground text-xs">
-                nieprzeczytanych
-              </span>
+      <header className="relative overflow-hidden rounded-2xl border bg-linear-to-br from-card via-card to-primary/2">
+        <div className="mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,black_70%,transparent_100%)] pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] bg-size-[4rem_4rem] opacity-30" />
+        <div className="pointer-events-none absolute -top-24 -right-24 size-48 rounded-full bg-linear-to-br from-primary/10 to-transparent blur-3xl" />
+
+        <div className="relative p-6 sm:p-8">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="relative flex size-14 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20 sm:size-16">
+                <HugeiconsIcon
+                  className="size-7 text-primary sm:size-8"
+                  icon={Notification01Icon}
+                />
+                {unreadCount > 0 && (
+                  <div className="absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full bg-primary font-bold text-[10px] text-primary-foreground">
+                    {unreadCount}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <h1 className="font-semibold text-2xl tracking-tight sm:text-3xl">
+                  Powiadomienia
+                </h1>
+                <p className="max-w-md text-muted-foreground text-sm">
+                  Przeglądaj i zarządzaj swoimi powiadomieniami
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
+                    <span className="font-mono font-semibold text-primary">
+                      {totalNotifications}
+                    </span>
+                    <span className="text-muted-foreground text-xs">
+                      łącznie
+                    </span>
+                  </div>
+                  {unreadCount > 0 ? (
+                    <div className="flex items-center gap-2 rounded-lg border border-orange-500/20 bg-orange-500/5 px-3 py-1.5">
+                      <span className="flex size-2 rounded-full bg-orange-500" />
+                      <span className="font-mono font-semibold text-orange-600 dark:text-orange-400">
+                        {unreadCount}
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        nieprzeczytanych
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
             </div>
-          ) : null}
+
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                disabled={unreadCount === 0 || markBulkNotifications.isPending}
+                onClick={handleMarkAllAsRead}
+                variant="outline"
+              >
+                <HugeiconsIcon
+                  className="mr-2 size-4"
+                  icon={CheckmarkBadge01Icon}
+                />
+                Oznacz wszystkie jako przeczytane
+              </Button>
+            </div>
+          </div>
         </div>
-      </AdminPageHeader>
+      </header>
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <div className="space-y-4">
@@ -609,57 +695,18 @@ export default function NotificationsMain() {
               </div>
             </div>
 
-            <div className="space-y-1 border-b p-2">
-              <button
-                className={cn(
-                  "flex w-full items-center justify-between rounded-md px-3 py-2 text-left transition-colors",
-                  typeFilter === null
-                    ? "bg-primary/10 text-primary"
-                    : "hover:bg-muted"
-                )}
-                onClick={() => handleTypeFilterChange(null)}
-                type="button"
-              >
-                <span className="font-medium text-sm">Wszystkie typy</span>
-                <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-muted-foreground text-xs">
-                  {notifications.length}
-                </span>
-              </button>
-              {availableAlertTypes.map((alertType) => {
-                const typeCount = notifications.filter(
-                  (notification) => notification.alert.alertType === alertType
-                ).length
-                const isTypeActive = typeFilter === alertType
-
-                return (
-                  <button
-                    className={cn(
-                      "flex w-full items-center justify-between rounded-md px-3 py-2 text-left transition-colors",
-                      isTypeActive
-                        ? "bg-primary/10 text-primary"
-                        : "hover:bg-muted"
-                    )}
-                    key={alertType}
-                    onClick={() => handleTypeFilterChange(alertType)}
-                    type="button"
-                  >
-                    <span className="font-medium text-sm">
-                      {toTitleCase(alertType)}
-                    </span>
-                    <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-muted-foreground text-xs">
-                      {typeCount}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+            <AlertTypeFilterDropdown
+              onClear={handleClearAlertTypeFilter}
+              onToggle={handleToggleAlertType}
+              selected={alertTypeFilter}
+            />
 
             <ScrollArea className="h-112">
               <div className="space-y-2 p-2">
                 <NotificationListBody
                   isError={isNotificationsError}
                   isPending={isNotificationsPending}
-                  notifications={filteredNotifications}
+                  notifications={notifications}
                   onSelect={handleSelectNotification}
                   selectedNotificationId={selectedNotificationId}
                 />

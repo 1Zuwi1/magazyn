@@ -406,7 +406,15 @@ function buildRequestUrl(
   }
 
   for (const [key, value] of Object.entries(queryParams)) {
-    if (value !== undefined) {
+    if (value === undefined) {
+      continue
+    }
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        url.searchParams.append(key, String(item))
+      }
+    } else {
       url.searchParams.append(key, String(value))
     }
   }

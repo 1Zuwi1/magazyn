@@ -17,10 +17,8 @@ import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import useAdminUsers from "@/hooks/use-admin-users"
+import useAlerts from "@/hooks/use-alerts"
 import useAssortments from "@/hooks/use-assortment"
-import useNotifications, {
-  useUnreadNotificationsCount,
-} from "@/hooks/use-notifications"
 import useWarehouses, { type WarehousesList } from "@/hooks/use-warehouses"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
@@ -94,31 +92,43 @@ export function AdminOverview() {
     size: ADMIN_OVERVIEW_FETCH_SIZE,
   })
   const {
-    data: notificationsData,
-    isPending: isNotificationsPending,
-    isError: isNotificationsError,
-    refetch: refetchNotifications,
-  } = useNotifications()
-  const { data: unreadNotificationsCount } = useUnreadNotificationsCount()
+    data: alertsData,
+    isPending: isAlertsPending,
+    isError: isAlertsError,
+    refetch: refetchAlerts,
+  } = useAlerts({
+    size: ADMIN_OVERVIEW_FETCH_SIZE,
+  })
+  const {
+    data: openAlertsData,
+    isPending: isOpenAlertsPending,
+    isError: isOpenAlertsError,
+  } = useAlerts({
+    size: ADMIN_OVERVIEW_FETCH_SIZE,
+    status: ["OPEN"],
+  })
 
   const warehouses = useMemo(
     () => (warehousesData?.content ?? []).map(mapWarehouseSummary),
     [warehousesData?.content]
   )
+  const isAlertsStatsPending = isAlertsPending || isOpenAlertsPending
+  const isAlertsStatsError = isAlertsError || isOpenAlertsError
+
   const stats = useMemo(() => {
     const activeUsers = activeUsersData?.totalElements ?? 0
     const totalUsers = usersData?.totalElements ?? 0
     const totalWarehouses = warehousesData?.totalElements ?? warehouses.length
     const totalItems =
       assortmentsData?.totalElements ?? assortmentsData?.content.length ?? 0
-    const unreadAlerts = unreadNotificationsCount ?? 0
-    const totalAlerts = notificationsData?.totalElements ?? 0
+    const openAlerts = openAlertsData?.totalElements ?? 0
+    const totalAlerts = alertsData?.totalElements ?? 0
 
     return {
       users: { total: totalUsers, active: activeUsers },
       warehouses: { total: totalWarehouses },
       alerts: {
-        unread: unreadAlerts,
+        open: openAlerts,
         total: totalAlerts,
       },
       items: { total: totalItems },
@@ -127,8 +137,8 @@ export function AdminOverview() {
     activeUsersData?.totalElements,
     assortmentsData?.content.length,
     assortmentsData?.totalElements,
-    notificationsData?.totalElements,
-    unreadNotificationsCount,
+    alertsData?.totalElements,
+    openAlertsData?.totalElements,
     usersData?.totalElements,
     warehouses,
     warehousesData?.totalElements,
@@ -335,16 +345,16 @@ export function AdminOverview() {
         />
         <AdminStatCard
           description={
-            isNotificationsPending ? undefined : `${stats.alerts.total} łącznie`
+            isAlertsStatsPending ? undefined : `${stats.alerts.total} łącznie`
           }
-          href="/admin/notifications"
+          href="/admin/alerts"
           icon={Alert01Icon}
-          isError={isNotificationsError}
-          isLoading={isNotificationsPending}
-          onRetry={() => refetchNotifications()}
-          title="Nieprzeczytane alerty"
-          value={stats.alerts.unread}
-          variant={stats.alerts.unread > 0 ? "warning" : "default"}
+          isError={isAlertsStatsError}
+          isLoading={isAlertsStatsPending}
+          onRetry={() => refetchAlerts()}
+          title="Otwarte alerty"
+          value={stats.alerts.open}
+          variant={stats.alerts.open > 0 ? "warning" : "default"}
         />
       </div>
 

@@ -1,10 +1,5 @@
-import NotificationsMain from "@/components/admin-panel/notifications-panel/notifications-page"
-import ProtectedPage from "@/components/security/protected-page"
+import { redirect } from "next/navigation"
 
 export default function NotificationsPage() {
-  return (
-    <ProtectedPage needAdminPrivileges>
-      <NotificationsMain />
-    </ProtectedPage>
-  )
+  redirect("/admin/alerts")
 }
