@@ -4,7 +4,7 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 import { memo, useRef } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
-import type { Assortment } from "@/lib/schemas"
+import type { RackAssortment } from "@/lib/schemas"
 import { NormalRow } from "./normal-row"
 import { RackItemsTableHeader } from "./table-header"
 
@@ -12,7 +12,7 @@ const OVERSCAN = 10
 const COLUMN_COUNT = 7
 
 interface VirtualizedProps {
-  items: Assortment[]
+  items: RackAssortment[]
   rowHeight: number
   containerWidth: number
   containerHeight: number

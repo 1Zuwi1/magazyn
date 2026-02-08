@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import type { Assortment } from "@/lib/schemas"
+import type { RackAssortment } from "@/lib/schemas"
 import Virtualized from "./components/virtualized"
 
 interface RackItemsTableProps {
-  items: Assortment[]
+  items: RackAssortment[]
 }
 
 const ROW_HEIGHT = 64

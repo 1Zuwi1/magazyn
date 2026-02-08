@@ -16,11 +16,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { TableCell } from "@/components/ui/table"
-import type { Assortment } from "@/lib/schemas"
+import type { RackAssortment } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 
 interface TableRowContentProps {
-  assortment: Assortment
+  assortment: RackAssortment
   onView: (id: number) => void
   onEdit: (id: number) => void
   onDelete: (id: number) => void
@@ -51,7 +51,7 @@ export function TableRowContent({
   return (
     <>
       <TableCell className="font-mono text-sm">{assortment.code}</TableCell>
-      <TableCell>{assortment.itemId}</TableCell>
+      <TableCell>{assortment.item.id}</TableCell>
       <TableCell className="text-sm">
         ({assortment.positionX}, {assortment.positionY})
       </TableCell>

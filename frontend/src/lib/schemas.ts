@@ -1048,31 +1048,72 @@ const InboudOperationSchema = z.object({
 })
 export const AuditInboudOperationsSchema = createApiSchema({
   GET: {
-    input: createPaginatedSchemaInput(),
+    input: createPaginatedSchemaInput({
+      userId: z.number().int().nonnegative().optional(),
+      itemId: z.number().int().nonnegative().optional(),
+      rackId: z.number().int().nonnegative().optional(),
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+    }),
     output: createPaginatedSchema(InboudOperationSchema),
   },
 })
 
-export const AuditInboudOperationsByUserSchema = createApiSchema({
+export const AuditOutboundOperationsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
-      userId: z.number().int().nonnegative(),
+      userId: z.number().int().nonnegative().optional(),
+      itemId: z.number().int().nonnegative().optional(),
+      rackId: z.number().int().nonnegative().optional(),
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
     }),
-    output: createPaginatedSchema(InboudOperationSchema),
+    output: createPaginatedSchema(OutboundOperationSchema),
   },
 })
 
-export const AuditInboudOperationsByUserAndDateSchema = createApiSchema({
+// --- Alerts ---
+
+const AlertSchema = z.object({
+  id: z.number().int().nonnegative(),
+  rackId: z.number().int().nonnegative(),
+  rackMarker: z.string(),
+  warehouseId: z.number().int().nonnegative(),
+  warehouseName: z.string(),
+  alertType: z.string(),
+  alertTypeDescription: z.string(),
+  status: z.string(),
+  message: z.string(),
+  thresholdValue: z.number().nonnegative(),
+  actualValue: z.number().nonnegative(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  resolvedAt: z.string().nullable().optional(),
+  resolvedByName: z.string().nullable().optional(),
+  resolutionNotes: z.string().nullable().optional(),
+})
+
+export const AlertsSchema = createApiSchema({
   GET: {
-    input: z.object({
-      userId: z.number().int().nonnegative(),
-      dateFrom: z.string(),
-      dateTo: z.string(),
+    input: createPaginatedSchemaInput({
+      alertType: z
+        .enum([
+          "WEIGHT_EXCEEDED",
+          "TEMPERATURE_TOO_HIGH",
+          "TEMPERATURE_TOO_LOW",
+          "LOW_VISUAL_SIMILARITY",
+          "ITEM_TEMPERATURE_TOO_HIGH",
+          "ITEM_TEMPERATURE_TOO_LOW",
+          "EMBEDDING_GENERATION_COMPLETED",
+          "EMBEDDING_GENERATION_FAILED",
+          "ASSORTMENT_EXPIRED",
+          "ASSORTMENT_CLOSE_TO_EXPIRY",
+        ])
+        .optional(),
+      warehouseId: z.number().int().nonnegative().optional(),
+      status: z.enum(["OPEN", "ACTIVE", "RESOLVED", "DISMISSED"]).optional(),
+      rackId: z.number().int().nonnegative().optional(),
     }),
-    output: z.array(InboudOperationSchema),
+    output: createPaginatedSchema(AlertSchema),
   },
 })
-
-// export const AuditInboundOperationsByRackSchema = createApiSchema({
-// GET: {
-//

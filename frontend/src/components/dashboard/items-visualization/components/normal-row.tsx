@@ -2,11 +2,11 @@
 
 import { memo } from "react"
 import { TableRow } from "@/components/ui/table"
-import type { Assortment } from "@/lib/schemas"
+import type { RackAssortment } from "@/lib/schemas"
 import { TableRowContent } from "./table-row-content"
 
 interface NormalRowProps {
-  assortment: Assortment
+  assortment: RackAssortment
   onView: (id: number) => void
   onEdit: (id: number) => void
   onDelete: (id: number) => void

@@ -49,7 +49,10 @@ const UnreadNotificationsCountSchema = z.union([
 
 export const ApiNotificationsSchema = createApiSchema({
   GET: {
-    input: createPaginatedSchemaInput(),
+    input: createPaginatedSchemaInput({
+      status: z.enum(["read", "unread"]).optional(),
+      alertId: z.number().int().nonnegative().optional(),
+    }),
     output: createPaginatedSchema(UserNotificationSchema),
   },
 })
@@ -73,25 +76,20 @@ export const ApiNotificationByAlertSchema = createApiSchema({
   },
 })
 
-const EmptyPatchSchema = z.object({})
-
-export const ApiMarkNotificationReadSchema = createApiSchema({
+export const ApiMarkNotificationsSchema = createApiSchema({
   PATCH: {
-    input: EmptyPatchSchema,
-    output: z.unknown(),
+    input: z.object({
+      read: z.boolean(),
+    }),
+    output: UserNotificationSchema,
   },
 })
 
-export const ApiMarkNotificationUnreadSchema = createApiSchema({
+export const ApiMarkAllNotifications = createApiSchema({
   PATCH: {
-    input: EmptyPatchSchema,
-    output: z.unknown(),
-  },
-})
-
-export const ApiMarkAllNotificationsReadSchema = createApiSchema({
-  PATCH: {
-    input: EmptyPatchSchema,
-    output: z.unknown(),
+    input: z.object({
+      read: z.boolean(),
+    }),
+    output: z.number(),
   },
 })

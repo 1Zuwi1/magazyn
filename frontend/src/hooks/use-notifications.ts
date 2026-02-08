@@ -1,14 +1,10 @@
 import type { UseQueryResult } from "@tanstack/react-query"
-import type { FetchError } from "@/lib/fetcher"
+import type { FetchError, InferApiInput } from "@/lib/fetcher"
 import { apiFetch, type InferApiOutput } from "@/lib/fetcher"
 import {
-  ApiMarkAllNotificationsReadSchema,
-  ApiMarkNotificationReadSchema,
-  ApiMarkNotificationUnreadSchema,
-  ApiNotificationByAlertSchema,
+  ApiMarkAllNotifications,
   ApiNotificationsSchema,
-  ApiUnreadNotificationsCountSchema,
-  ApiUnreadNotificationsSchema,
+  type ApiUnreadNotificationsSchema,
 } from "@/lib/schemas/monitoring-schemas"
 import { useApiMutation } from "./use-api-mutation"
 import { useApiQuery } from "./use-api-query"
@@ -58,114 +54,38 @@ export default function useNotifications(
   })
 }
 
-export function useUnreadNotifications(
-  params?: NotificationsListParams
-): UseQueryResult<UnreadNotificationsList, FetchError> {
-  const queryParams = normalizeNotificationsParams(params)
-
-  return useApiQuery({
-    queryKey: [...NOTIFICATIONS_QUERY_KEY, "unread", queryParams],
-    queryFn: async () =>
-      await apiFetch(
-        "/api/notifications/unread",
-        ApiUnreadNotificationsSchema,
-        {
-          method: "GET",
-          queryParams,
-        }
-      ),
-  })
-}
-
-export function useUnreadNotificationsCount(): UseQueryResult<
-  number,
-  FetchError
-> {
-  return useApiQuery({
-    queryKey: [...NOTIFICATIONS_QUERY_KEY, "unread-count"],
-    queryFn: async () =>
-      await apiFetch(
-        "/api/notifications/unread/count",
-        ApiUnreadNotificationsCountSchema,
-        {
-          method: "GET",
-        }
-      ),
-  })
-}
-
-export function useNotificationByAlert(
-  alertId?: number | null
-): UseQueryResult<UserNotification, FetchError> {
-  const safeAlertId = alertId ?? -1
-
-  return useApiQuery({
-    enabled: safeAlertId > 0,
-    queryKey: [...NOTIFICATIONS_QUERY_KEY, "alert", safeAlertId],
-    queryFn: async () =>
-      await apiFetch(
-        `/api/notifications/alert/${safeAlertId}`,
-        ApiNotificationByAlertSchema,
-        {
-          method: "GET",
-        }
-      ),
-  })
-}
-
-export function useMarkNotificationAsRead() {
+export function useMarkNotification(
+  body: InferApiInput<typeof ApiMarkAllNotifications, "PATCH">
+) {
   return useApiMutation({
-    mutationFn: async (notificationId: number) =>
-      await apiFetch(
+    mutationFn: (notificationId: number) =>
+      apiFetch(
         `/api/notifications/${notificationId}/read`,
-        ApiMarkNotificationReadSchema,
+        ApiMarkAllNotifications,
         {
-          body: {},
+          body,
           method: "PATCH",
         }
       ),
-    onSuccess: (_, __, ___, context) => {
+    onSuccess: (_, __, ___, context) =>
       context.client.invalidateQueries({
         queryKey: NOTIFICATIONS_QUERY_KEY,
-      })
-    },
+      }),
   })
 }
 
-export function useMarkNotificationAsUnread() {
+export function useMarkAllNotifications(
+  body: InferApiInput<typeof ApiMarkAllNotifications, "PATCH">
+) {
   return useApiMutation({
-    mutationFn: async (notificationId: number) =>
-      await apiFetch(
-        `/api/notifications/${notificationId}/unread`,
-        ApiMarkNotificationUnreadSchema,
-        {
-          body: {},
-          method: "PATCH",
-        }
-      ),
-    onSuccess: (_, __, ___, context) => {
+    mutationFn: () =>
+      apiFetch("/api/notifications/mark-all", ApiMarkAllNotifications, {
+        body,
+        method: "PATCH",
+      }),
+    onSuccess: (_, __, ___, context) =>
       context.client.invalidateQueries({
         queryKey: NOTIFICATIONS_QUERY_KEY,
-      })
-    },
-  })
-}
-
-export function useMarkAllNotificationsAsRead() {
-  return useApiMutation({
-    mutationFn: async () =>
-      await apiFetch(
-        "/api/notifications/read-all",
-        ApiMarkAllNotificationsReadSchema,
-        {
-          body: {},
-          method: "PATCH",
-        }
-      ),
-    onSuccess: (_, __, ___, context) => {
-      context.client.invalidateQueries({
-        queryKey: NOTIFICATIONS_QUERY_KEY,
-      })
-    },
+      }),
   })
 }
