@@ -10,6 +10,7 @@ export const ADMIN_NAV_LINKS = [
   { title: "Magazyny", url: "/admin/warehouses" },
   { title: "Przedmioty", url: "/admin/items" },
   { title: "Alerty", url: "/admin/alerts" },
+  { title: "Raporty regałów", url: "/admin/rack-reports" },
 ] as const
 
 export const NOTIFICATIONS_NAV_LINKS = [
@@ -36,6 +37,7 @@ export const DEFAULT_RACK = {
   maxItemWidth: 1,
   maxItemHeight: 1,
   maxItemDepth: 1,
+  acceptsDangerous: false,
   comment: "",
 }
 

@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  Alert02Icon,
   Delete02Icon,
   GridIcon,
   MoreHorizontalCircle01FreeIcons,
@@ -31,8 +32,8 @@ interface RackCardProps {
 function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
   const hasActions = onEdit || onDelete
   const isCritical = rack.occupiedSlots / rack.totalSlots >= THRESHOLD
-  // const isOverweight = rack.currentWeight > rack.maxWeight
-  const hasWarning = isCritical // || isOverweight
+  const isOverweight = rack.totalWeight > rack.maxWeight
+  const hasWarning = isCritical || isOverweight
 
   return (
     <div className="group relative overflow-hidden rounded-xl border bg-card transition-all hover:shadow-md">
@@ -165,18 +166,17 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
             </div>
             <div className="flex items-center gap-2">
               <span
-                className={cn(
-                  "font-medium font-mono"
-                  // isOverweight && "text-destructive"
-                )}
+                className={cn("font-medium font-mono", {
+                  "text-destructive": isOverweight,
+                })}
               >
-                {/* {rack.currentWeight}  */}/ {rack.maxWeight} kg
+                {rack.totalWeight} / {rack.maxWeight} kg
               </span>
-              {/* {isOverweight && (
+              {isOverweight && (
                 <Badge className="text-[10px]" variant="destructive">
                   Przeciążenie
                 </Badge>
-              )} */}
+              )}
             </div>
           </div>
 
@@ -187,6 +187,21 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
               <span>Przedmioty</span>
             </div>
             <span className="font-medium font-mono">{rack.occupiedSlots}</span>
+          </div>
+
+          {/* Dangerous */}
+          <div
+            className={cn("flex items-center justify-between text-sm", {
+              "**:text-destructive!": rack.acceptsDangerous,
+            })}
+          >
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <HugeiconsIcon className="size-4" icon={Alert02Icon} />
+              <span>Akceptuje niebezpieczne</span>
+            </div>
+            <span className="font-medium font-mono">
+              {rack.acceptsDangerous ? "Tak" : "Nie"}
+            </span>
           </div>
 
           {/* Comment if present */}
@@ -228,15 +243,17 @@ export function RackGrid({ racks, onEdit, onDelete }: RackGridProps) {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {racks.map((rack) => (
-        <RackCard
-          key={rack.id}
-          onDelete={onDelete}
-          onEdit={onEdit}
-          rack={rack}
-        />
-      ))}
+    <div className="@container">
+      <div className="grid @xl:grid-cols-2 gap-4">
+        {racks.map((rack) => (
+          <RackCard
+            key={rack.id}
+            onDelete={onDelete}
+            onEdit={onEdit}
+            rack={rack}
+          />
+        ))}
+      </div>
     </div>
   )
 }

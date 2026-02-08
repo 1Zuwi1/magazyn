@@ -70,7 +70,7 @@ export function mapToDisplayItem(assortment: RackAssortment): Item {
   const expiresAt = parseISO(assortment.expiresAt)
 
   return {
-    id: String(assortment.id),
+    id: assortment.item.id,
     name: assortment.item.name,
     qrCode: assortment.code,
     weight: assortment.item.weight,
@@ -100,7 +100,8 @@ export function buildItemsGrid(
   const slots: ItemSlot[] = Array.from({ length: slotCount }, () => null)
 
   for (const assortment of assortments) {
-    const index = assortment.positionY * sizeX + assortment.positionX
+    const index =
+      (assortment.positionY - 1) * sizeX + (assortment.positionX - 1)
     if (index >= 0 && index < slotCount) {
       slots[index] = mapToDisplayItem(assortment)
     }

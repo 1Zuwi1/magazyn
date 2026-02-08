@@ -617,7 +617,7 @@ export type RackAssortment = z.infer<typeof RackAssortmentSchema>
 export const WarehouseAssortmentsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput(),
-    output: createPaginatedSchema(AssortmentSchema),
+    output: createPaginatedSchema(RackAssortmentSchema),
   },
 })
 
@@ -733,6 +733,7 @@ const RackSchema = z.object({
   occupiedSlots: z.number().int().nonnegative(),
   freeSlots: z.number().int().nonnegative(),
   totalSlots: z.number().int().nonnegative(),
+  totalWeight: z.number().nonnegative(),
 })
 
 export type Rack = z.infer<typeof RackSchema>
@@ -740,7 +741,9 @@ export type Rack = z.infer<typeof RackSchema>
 export const RacksSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput(),
-    output: createPaginatedSchema(RackSchema),
+    output: createPaginatedSchema(RackSchema, {
+      summary: z.any(),
+    }),
   },
 })
 
@@ -754,6 +757,7 @@ export const RackDetailsSchema = createApiSchema({
       occupiedSlots: true,
       freeSlots: true,
       totalSlots: true,
+      totalWeight: true,
     }),
     output: RackSchema,
   },
@@ -763,6 +767,7 @@ export const RackDetailsSchema = createApiSchema({
       occupiedSlots: true,
       freeSlots: true,
       totalSlots: true,
+      totalWeight: true,
     }),
     output: RackSchema,
   },

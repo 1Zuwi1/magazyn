@@ -9,8 +9,6 @@ import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 import type { ScanItem } from "./scanner-types"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? ""
-
 interface ScannerQuantityStepProps {
   scannedItem: ScanItem
   quantity: number
@@ -58,11 +56,7 @@ export function ScannerQuantityStep({
                 containerClassName="size-20 shrink-0"
                 iconClassName="size-6 text-muted-foreground"
                 imageClassName="object-cover"
-                src={
-                  scannedItem.photoUrl
-                    ? `${API_BASE_URL}/api/items/${scannedItem.id}/photo`
-                    : null
-                }
+                src={`/api/items/${scannedItem.id}/photo`}
               />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">

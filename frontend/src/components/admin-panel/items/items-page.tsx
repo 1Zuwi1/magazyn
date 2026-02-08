@@ -143,7 +143,7 @@ export default function ItemsMain() {
 
       await updateItemMutation.mutateAsync({
         itemId,
-        data: buildItemMutationData(data),
+        ...buildItemMutationData(data),
       })
       toast.success("Zaktualizowano przedmiot")
       setSelectedItem(undefined)

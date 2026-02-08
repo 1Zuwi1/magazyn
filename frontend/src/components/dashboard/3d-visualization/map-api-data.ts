@@ -67,8 +67,8 @@ function mapApiRackToRack3D(
   const minCellDim = Math.min(cellW, cellH)
 
   for (const assortment of rackAssortments) {
-    const row = assortment.positionY
-    const col = assortment.positionX
+    const row = assortment.positionY - 1
+    const col = assortment.positionX - 1
 
     if (row >= rows || col >= cols) {
       continue

@@ -105,6 +105,7 @@ const Virtualized = ({
           >
             {columnVirtualizer.getVirtualItems().map((virtualColumn) => {
               const index = virtualRow.index * cols + virtualColumn.index
+
               const item = items[index]
               const isEmpty = !item
               const coordinate = getSlotCoordinate(index, cols)

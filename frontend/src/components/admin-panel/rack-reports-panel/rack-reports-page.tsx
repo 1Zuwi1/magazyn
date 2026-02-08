@@ -1,0 +1,471 @@
+"use client"
+
+import {
+  FilterIcon,
+  PackageIcon,
+  ThermometerIcon,
+  WarehouseIcon,
+  WeightScale01Icon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { formatDistanceToNow } from "date-fns"
+import { pl } from "date-fns/locale"
+import Link from "next/link"
+import { useMemo, useState } from "react"
+import { Badge } from "@/components/ui/badge"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import useRackReports from "@/hooks/use-rack-reports"
+import type { InferApiOutput } from "@/lib/fetcher"
+import type { RackReportsSchema } from "@/lib/schemas"
+import { cn } from "@/lib/utils"
+import { AdminPageHeader } from "../components/admin-page-header"
+import { ADMIN_NAV_LINKS } from "../lib/constants"
+
+type RackReportsList = InferApiOutput<typeof RackReportsSchema, "GET">
+type RackReportItem = RackReportsList["content"][number]
+
+const RACK_REPORTS_PAGE_SIZE = 20
+
+const formatDateTime = (date: string | null | undefined): string => {
+  if (!date) {
+    return "—"
+  }
+
+  try {
+    return formatDistanceToNow(new Date(date), {
+      addSuffix: true,
+      locale: pl,
+    })
+  } catch {
+    return "—"
+  }
+}
+
+const formatValue = (value: number | null | undefined): string =>
+  value == null ? "—" : value.toString()
+
+function MetricCard({
+  label,
+  value,
+  unit,
+  icon: Icon,
+}: {
+  label: string
+  value: number | null | undefined
+  unit: string
+  icon: typeof ThermometerIcon
+}) {
+  return (
+    <div className="rounded-lg border bg-muted/20 p-3">
+      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+        <HugeiconsIcon className="size-3.5" icon={Icon} />
+        <span>{label}</span>
+      </div>
+      <p className="mt-1 font-semibold">
+        {formatValue(value)}{" "}
+        <span className="font-normal text-muted-foreground">{unit}</span>
+      </p>
+    </div>
+  )
+}
+
+function RackReportListBody({
+  isPending,
+  isError,
+  reports,
+  onSelect,
+  selectedReportId,
+}: {
+  isPending: boolean
+  isError: boolean
+  reports: RackReportItem[]
+  onSelect: (report: RackReportItem) => void
+  selectedReportId: number | null
+}) {
+  if (isPending) {
+    return (
+      <>
+        {Array.from({ length: 5 }, (_, index) => (
+          <div
+            className="h-20 animate-pulse rounded-lg border bg-muted/40"
+            key={`report-list-skeleton-${index}`}
+          />
+        ))}
+      </>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <p className="font-medium">Nie udało się pobrać raportów</p>
+        <p className="mt-1 text-muted-foreground text-sm">
+          Spróbuj ponownie za chwilę.
+        </p>
+      </div>
+    )
+  }
+
+  if (reports.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+          <HugeiconsIcon
+            className="size-6 text-muted-foreground"
+            icon={PackageIcon}
+          />
+        </div>
+        <p className="mt-3 font-medium">Brak raportów</p>
+        <p className="mt-1 text-muted-foreground text-sm">
+          Brak wpisów dla wybranego filtra
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {reports.map((report) => {
+        const isSelected = selectedReportId === report.id
+
+        return (
+          <button
+            className={cn(
+              "flex w-full gap-3 rounded-lg border p-3 text-left transition-all",
+              isSelected
+                ? "border-primary bg-primary/5"
+                : "hover:border-primary/30 hover:bg-muted/50"
+            )}
+            key={report.id}
+            onClick={() => onSelect(report)}
+            type="button"
+          >
+            <div
+              className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                report.alertTriggered
+                  ? "bg-destructive/10 text-destructive"
+                  : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+              )}
+            >
+              <HugeiconsIcon
+                className="size-4"
+                icon={report.alertTriggered ? WeightScale01Icon : PackageIcon}
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <p className="truncate font-medium text-sm">
+                  {report.rackMarker}
+                </p>
+                <Badge
+                  className="shrink-0"
+                  variant={report.alertTriggered ? "destructive" : "secondary"}
+                >
+                  {report.alertTriggered ? "Alert" : "OK"}
+                </Badge>
+              </div>
+              <p className="mt-0.5 line-clamp-1 text-muted-foreground text-xs">
+                {report.warehouseName}
+              </p>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {formatDateTime(report.createdAt)}
+              </p>
+            </div>
+          </button>
+        )
+      })}
+    </>
+  )
+}
+
+function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
+  if (!report) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center p-12">
+        <div className="flex size-16 items-center justify-center rounded-full bg-muted">
+          <HugeiconsIcon
+            className="size-8 text-muted-foreground"
+            icon={PackageIcon}
+          />
+        </div>
+        <p className="mt-4 font-medium text-lg">Wybierz raport</p>
+        <p className="mt-1 text-center text-muted-foreground text-sm">
+          Kliknij wpis na liście, aby zobaczyć szczegóły
+        </p>
+      </div>
+    )
+  }
+
+  const warehouseHref = `/admin/warehouses/id/${report.warehouseId}/${encodeURIComponent(report.warehouseName)}`
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="border-b bg-muted/20 p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant={report.alertTriggered ? "destructive" : "secondary"}>
+            {report.alertTriggered ? "Alert aktywowany" : "Wszystko OK"}
+          </Badge>
+        </div>
+        <h2 className="mt-3 font-semibold text-xl">{report.rackMarker}</h2>
+        <p className="mt-1 text-muted-foreground">{report.warehouseName}</p>
+      </div>
+
+      <div className="flex-1 space-y-6 p-6">
+        <section className="space-y-3">
+          <h3 className="font-medium text-muted-foreground text-sm">
+            Lokalizacja
+          </h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <MetricCard
+              icon={WarehouseIcon}
+              label="Magazyn"
+              unit="ID"
+              value={report.warehouseId}
+            />
+            <MetricCard
+              icon={PackageIcon}
+              label="Regał"
+              unit="ID"
+              value={report.rackId}
+            />
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="font-medium text-muted-foreground text-sm">Metryki</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <MetricCard
+              icon={WeightScale01Icon}
+              label="Aktualna waga"
+              unit="kg"
+              value={report.currentWeight}
+            />
+            <MetricCard
+              icon={ThermometerIcon}
+              label="Temperatura"
+              unit="°C"
+              value={report.currentTemperature}
+            />
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="font-medium text-muted-foreground text-sm">
+            Informacje
+          </h3>
+          <div className="rounded-lg border bg-muted/20 p-3">
+            <p className="text-muted-foreground text-xs">ID czujnika</p>
+            <p className="mt-0.5 font-medium font-mono">{report.sensorId}</p>
+          </div>
+          <div className="rounded-lg border bg-muted/20 p-3">
+            <p className="text-muted-foreground text-xs">Utworzono</p>
+            <p className="mt-0.5 font-medium">
+              {formatDateTime(report.createdAt)}
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-end gap-3 border-t bg-muted/20 p-4">
+        <Link
+          className="inline-flex items-center justify-center rounded-md border px-3 py-1.5 font-medium text-sm transition-colors hover:bg-muted"
+          href={warehouseHref}
+        >
+          Przejdź do magazynu
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+export default function RackReportsMain() {
+  const [withAlertsFilter, setWithAlertsFilter] = useState<boolean | undefined>(
+    undefined
+  )
+  const [page, setPage] = useState(0)
+  const [selectedReportId, setSelectedReportId] = useState<number | null>(null)
+
+  const reportsQuery = useRackReports({
+    page,
+    size: RACK_REPORTS_PAGE_SIZE,
+    sortBy: "createdAt",
+    sortDir: "desc",
+    withAlerts: withAlertsFilter,
+  })
+
+  const reportsData = reportsQuery.data
+  const reports = reportsData?.content ?? []
+  const isReportsPending = reportsQuery.isPending
+  const isReportsError = reportsQuery.isError
+
+  const totalReports = reportsData?.totalElements ?? 0
+
+  const alertCount = useMemo(
+    () => reports.filter((report) => report.alertTriggered).length,
+    [reports]
+  )
+
+  const selectedReport = useMemo(
+    () => reports.find((report) => report.id === selectedReportId) ?? null,
+    [reports, selectedReportId]
+  )
+
+  const currentPage = (reportsData?.page ?? page) + 1
+  const totalPages = reportsData?.totalPages ?? 1
+
+  const handleSelectReport = (report: RackReportItem) => {
+    setSelectedReportId(report.id)
+  }
+
+  const handleToggleAlertsFilter = (value: boolean) => {
+    setWithAlertsFilter((previous) => (previous === value ? undefined : value))
+    setPage(0)
+  }
+
+  return (
+    <div className="space-y-6">
+      <AdminPageHeader
+        description="Przeglądaj raporty z czujników regałów"
+        icon={PackageIcon}
+        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+          title: link.title,
+          url: link.url,
+        }))}
+        title="Raporty regałów"
+      >
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
+            <span className="font-mono font-semibold text-primary">
+              {totalReports}
+            </span>
+            <span className="text-muted-foreground text-xs">łącznie</span>
+          </div>
+          {alertCount > 0 ? (
+            <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-1.5">
+              <span className="flex size-2 rounded-full bg-destructive" />
+              <span className="font-mono font-semibold text-destructive">
+                {alertCount}
+              </span>
+              <span className="text-muted-foreground text-xs">z alertem</span>
+            </div>
+          ) : null}
+        </div>
+      </AdminPageHeader>
+
+      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+        <div className="space-y-4">
+          <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+            <div className="flex items-center gap-2 border-b bg-muted/30 p-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={cn(
+                    "flex items-center gap-2 rounded-md px-3 py-2 font-medium text-sm transition-colors hover:bg-muted",
+                    withAlertsFilter !== undefined && "text-primary"
+                  )}
+                >
+                  <HugeiconsIcon className="size-4" icon={FilterIcon} />
+                  Alerty
+                  {withAlertsFilter !== undefined && (
+                    <Badge className="ml-1" variant="secondary">
+                      {withAlertsFilter ? "Tylko" : "Wszystkie"}
+                    </Badge>
+                  )}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" side="bottom">
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel>Filtruj po alertach</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                      checked={withAlertsFilter === true}
+                      onClick={() => handleToggleAlertsFilter(true)}
+                    >
+                      Tylko z alertami
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={withAlertsFilter === false}
+                      onClick={() => handleToggleAlertsFilter(false)}
+                    >
+                      Wszystkie raporty
+                    </DropdownMenuCheckboxItem>
+                    {withAlertsFilter !== undefined && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <button
+                          className="w-full rounded-sm px-2 py-1.5 text-center text-muted-foreground text-sm hover:bg-muted"
+                          onClick={() => setWithAlertsFilter(undefined)}
+                          type="button"
+                        >
+                          Wyczyść filtr
+                        </button>
+                      </>
+                    )}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <ScrollArea className="h-112">
+              <div className="space-y-2 p-2">
+                <RackReportListBody
+                  isError={isReportsError}
+                  isPending={isReportsPending}
+                  onSelect={handleSelectReport}
+                  reports={reports}
+                  selectedReportId={selectedReportId}
+                />
+              </div>
+            </ScrollArea>
+
+            <div className="flex items-center justify-between border-t bg-muted/20 px-3 py-2">
+              <p className="text-muted-foreground text-xs">
+                Strona {currentPage} z {Math.max(totalPages, 1)}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  className={cn(
+                    "rounded-md border px-2.5 py-1 text-xs transition-colors",
+                    page === 0 || isReportsPending
+                      ? "cursor-not-allowed opacity-50"
+                      : "hover:bg-muted"
+                  )}
+                  disabled={page === 0 || isReportsPending}
+                  onClick={() => setPage((previousPage) => previousPage - 1)}
+                  type="button"
+                >
+                  Poprzednia
+                </button>
+                <button
+                  className={cn(
+                    "rounded-md border px-2.5 py-1 text-xs transition-colors",
+                    page + 1 >= totalPages || isReportsPending
+                      ? "cursor-not-allowed opacity-50"
+                      : "hover:bg-muted"
+                  )}
+                  disabled={page + 1 >= totalPages || isReportsPending}
+                  onClick={() => setPage((previousPage) => previousPage + 1)}
+                  type="button"
+                >
+                  Następna
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+          <RackReportDetailsPanel report={selectedReport} />
+        </div>
+      </div>
+    </div>
+  )
+}

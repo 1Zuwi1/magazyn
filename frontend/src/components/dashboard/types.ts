@@ -6,7 +6,7 @@ export interface FilterState {
 }
 
 export interface Item {
-  id: string
+  id: number
   name: string
   qrCode: string
   weight: number

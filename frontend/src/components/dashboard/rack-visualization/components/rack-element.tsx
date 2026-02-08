@@ -1,5 +1,3 @@
-import { PackageIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
 import { ItemPhoto } from "@/components/ui/item-photo"
 import { cn } from "@/lib/utils"
 import type { ItemSlot } from "../../types"
@@ -39,7 +37,7 @@ export default function RackElement({
       aria-label={ariaLabel}
       aria-pressed={isSelected}
       className={cn(
-        "group relative aspect-square cursor-pointer overflow-hidden rounded-lg border transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 focus-visible:outline-offset-2",
+        "group relative aspect-square cursor-pointer overflow-hidden rounded-lg border transition-all duration-200 focus-visible:outline-2 focus-visible:outline-primary/60 focus-visible:outline-offset-2",
         isEmpty
           ? "border-muted-foreground/20 border-dashed bg-muted/20 hover:border-muted-foreground/40 hover:bg-muted/40"
           : "border-border bg-card shadow-sm hover:shadow-md hover:ring-2 hover:ring-primary/20",
@@ -64,29 +62,13 @@ export default function RackElement({
         // Occupied slot
         <>
           <div className="relative flex h-full items-center justify-center bg-linear-to-br from-secondary to-secondary/80">
-            {item.imageUrl ? (
-              <ItemPhoto
-                alt={item.name}
-                containerClassName="size-14 shrink-0"
-                iconClassName="size-6 text-muted-foreground"
-                imageClassName="object-cover"
-                src={
-                  item.imageUrl
-                    ? `${process.env.NEXT_PUBLIC_API_URL}/api/items/${item.id}/photo`
-                    : null
-                }
-              />
-            ) : (
-              // Fallback icon when no image
-              <div className="flex h-full w-full flex-col items-center justify-center gap-1">
-                <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 sm:size-10">
-                  <HugeiconsIcon
-                    className="size-4 text-primary sm:size-5"
-                    icon={PackageIcon}
-                  />
-                </div>
-              </div>
-            )}
+            <ItemPhoto
+              alt={item.name}
+              containerClassName="size-14 shrink-0"
+              iconClassName="size-6 text-muted-foreground"
+              imageClassName="object-cover"
+              src={`/api/items/${item.id}/photo`}
+            />
 
             {/* Hover overlay with item name */}
             <div className="pointer-events-none absolute inset-0 flex items-end justify-center bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100">

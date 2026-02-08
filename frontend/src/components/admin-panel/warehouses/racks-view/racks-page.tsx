@@ -30,22 +30,17 @@ interface AdminRacksPageProps {
 }
 
 const RACKS_PAGE_SIZE = 2000
-const CREATE_RACK_TEMP_ID = 0
-const DEFAULT_ACCEPTS_DANGEROUS_ITEMS = false
 
 const buildRackMutationData = ({
   acceptsDangerous,
   data,
-  rackId,
   warehouseId,
 }: {
   acceptsDangerous: boolean
   data: RackFormData
-  rackId: number
   warehouseId: number
 }) => {
   return {
-    id: rackId,
     marker: data.marker,
     warehouseId,
     comment: data.comment ?? null,
@@ -137,32 +132,20 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     if (selectedRack === undefined) {
       await createRackMutation.mutateAsync(
         buildRackMutationData({
-          acceptsDangerous: DEFAULT_ACCEPTS_DANGEROUS_ITEMS,
+          acceptsDangerous: data.acceptsDangerous,
           data,
-          rackId: CREATE_RACK_TEMP_ID,
           warehouseId: apiWarehouse.id,
         })
       )
       return
     }
 
-    const selectedRackId = selectedRack.id
-    if (selectedRackId === null) {
-      throw new Error("Rack ID is invalid.")
-    }
-
-    const selectedApiRack = racksData?.content.find(
-      (rack) => rack.id === selectedRackId
-    )
-
     await updateRackMutation.mutateAsync({
-      rackId: selectedRackId,
+      rackId: selectedRack.id,
       data: buildRackMutationData({
-        acceptsDangerous:
-          selectedApiRack?.acceptsDangerous ?? DEFAULT_ACCEPTS_DANGEROUS_ITEMS,
+        acceptsDangerous: data.acceptsDangerous,
         data,
-        rackId: selectedRackId,
-        warehouseId: selectedApiRack?.warehouseId ?? apiWarehouse.id,
+        warehouseId: apiWarehouse.id,
       }),
     })
 
@@ -235,6 +218,8 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     )
   }
 
+  // console.log(racksData)
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -284,7 +269,9 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
           </div>
           {/* <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <span className="text-muted-foreground text-xs">Łączna waga:</span>
-            <span className="font-mono font-semibold">{totalWeight} kg</span>
+            <span className="font-mono font-semibold">
+              {racksData?.summary} kg
+            </span>
           </div> */}
         </div>
       </AdminPageHeader>

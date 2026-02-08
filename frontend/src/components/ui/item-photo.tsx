@@ -26,13 +26,16 @@ export function ItemPhoto({
   width = DEFAULT_IMAGE_SIZE,
   height = DEFAULT_IMAGE_SIZE,
 }: ItemPhotoProps) {
+  const parsedSrc = `${process.env.NEXT_PUBLIC_API_URL ?? ""}${src ?? ""}`
   const [failedImageSource, setFailedImageSource] = useState<string | null>(
     null
   )
   const hasLoadingError =
-    src !== undefined && src !== null && failedImageSource === src
+    parsedSrc !== undefined &&
+    parsedSrc !== null &&
+    failedImageSource === parsedSrc
 
-  if (!src || hasLoadingError) {
+  if (!parsedSrc || hasLoadingError) {
     return (
       <div
         className={cn(
@@ -58,8 +61,8 @@ export function ItemPhoto({
         alt={alt}
         className={cn("h-full w-full", imageClassName)}
         height={height}
-        onError={() => setFailedImageSource(src)}
-        src={src}
+        onError={() => setFailedImageSource(parsedSrc)}
+        src={parsedSrc}
         width={width}
       />
     </div>

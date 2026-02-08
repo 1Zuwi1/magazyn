@@ -22,6 +22,7 @@ export interface RackFormData {
   maxItemWidth: number
   maxItemHeight: number
   maxItemDepth: number
+  acceptsDangerous: boolean
   comment?: string
 }
 

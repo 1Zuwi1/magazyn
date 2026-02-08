@@ -68,8 +68,6 @@ function createColumns(
   onDelete: (item: Item) => void,
   onUploadPhoto: (item: Item) => void
 ): ColumnDef<Item>[] {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? ""
-
   return [
     {
       accessorKey: "name",
@@ -83,11 +81,7 @@ function createColumns(
             <ItemPhoto
               alt={item.name}
               containerClassName="h-10 w-10 shrink-0 rounded"
-              src={
-                item.imageUrl
-                  ? `${apiBaseUrl}/api/items/${item.id}/photo`
-                  : null
-              }
+              src={`/api/items/${item.id}/photo`}
             />
             <div>
               <div className="font-medium">{item.name}</div>
@@ -233,7 +227,7 @@ export function AdminItemsTable({
       const normalizedSearchValue = searchValue.toLowerCase()
       return (
         item.name.toLowerCase().includes(normalizedSearchValue) ||
-        item.id.toLowerCase().includes(normalizedSearchValue) ||
+        item.id.toString().includes(normalizedSearchValue) ||
         (item.comment?.toLowerCase().includes(normalizedSearchValue) ?? false)
       )
     },

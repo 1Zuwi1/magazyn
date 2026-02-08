@@ -22,7 +22,6 @@ const CONFIDENCE_LABELS: Record<string, string> = {
   HIGH_CONFIDENCE: "Wysokie dopasowanie",
   MEDIUM_CONFIDENCE: "Średnie dopasowanie",
 }
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? ""
 
 const getConfidenceLevelLabel = (level: string): string =>
   CONFIDENCE_LABELS[level] ?? "Niskie dopasowanie"
@@ -60,11 +59,7 @@ function CandidateCard({
         containerClassName="size-14 shrink-0"
         iconClassName="size-6 text-muted-foreground"
         imageClassName="object-cover"
-        src={
-          candidate.photoUrl
-            ? `${API_BASE_URL}/api/items/${candidate.itemId}/photo`
-            : null
-        }
+        src={`/api/items/${candidate.itemId}/photo`}
       />
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">

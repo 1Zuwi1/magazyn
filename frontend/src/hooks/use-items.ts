@@ -165,10 +165,9 @@ export function useUpdateItem() {
   return useApiMutation({
     mutationFn: ({
       itemId,
-      data,
-    }: {
+      ...data
+    }: InferApiInput<typeof UpdateItemSchema, "PUT"> & {
       itemId: number
-      data: InferApiInput<typeof UpdateItemSchema, "PUT">
     }) =>
       apiFetch(`/api/items/${itemId}`, UpdateItemSchema, {
         method: "PUT",
