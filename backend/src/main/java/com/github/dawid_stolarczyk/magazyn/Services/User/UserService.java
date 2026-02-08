@@ -110,10 +110,12 @@ public class UserService {
     public Page<UserInfoResponse> adminGetAllUsersPaged(HttpServletRequest request, String name, String email, AccountStatus status, Pageable pageable) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        String namePattern = name != null ? "%" + name.toLowerCase() + "%" : null;
+        String emailPattern = email != null ? "%" + email.toLowerCase() + "%" : null;
         return userRepository.findUsersWithFilters(
                         authPrincipal.getUserId(),
-                        name,
-                        email,
+                        namePattern,
+                        emailPattern,
                         status,
                         pageable)
                 .map(this::mapToUserInfoResponse);

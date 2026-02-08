@@ -6,12 +6,14 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AssortmentRepository
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
 import com.github.dawid_stolarczyk.magazyn.Utils.CodeGenerator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BarcodeService {
@@ -32,6 +34,7 @@ public class BarcodeService {
             }
             code = CodeGenerator.generateWithNumbers(ITEM_CODE_LENGTH-1);
             int checksum = CodeGenerator.calculateGTIN14Checksum(code);
+            code += checksum;
             attempts++;
         } while (itemRepository.existsByCode(code));
         return code;

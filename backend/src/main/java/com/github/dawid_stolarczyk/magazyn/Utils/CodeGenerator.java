@@ -45,14 +45,16 @@ public class CodeGenerator {
     }
 
     public static int calculateGTIN14Checksum(String code) {
-//        int sum = 0;
-//        for (char c : code.toCharArray()) {
-//            int digit = Character.getNumericValue(c);
-//            sum += (digit * 3) + (digit * 1);
-//        }
-//        for (int i = 1; i <= 13; i++) {
-//            if (i % 2 != 0)
-//        }
-        return 0;
+        int sum = 0;
+        int i = 0;
+        for (char c : code.toCharArray()) {
+            i++;
+
+            int digit = Character.getNumericValue(c);
+            if (i % 2 != 0) sum += digit * 3;
+            else sum += digit;
+        }
+        int mod = sum % 10;
+        return 10 - mod == 10 ? 0 : 10 - mod;
     }
 }

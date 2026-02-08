@@ -25,13 +25,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * Excludes the specified user ID (typically current admin)
      */
     @Query("SELECT u FROM User u WHERE u.id <> :excludeId " +
-            "AND (:name IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :name, '%'))) " +
-            "AND (:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%'))) " +
+            "AND (:namePattern IS NULL OR LOWER(u.fullName) LIKE :namePattern) " +
+            "AND (:emailPattern IS NULL OR LOWER(u.email) LIKE :emailPattern) " +
             "AND (:status IS NULL OR u.status = :status)")
     Page<User> findUsersWithFilters(
             @Param("excludeId") Long excludeId,
-            @Param("name") String name,
-            @Param("email") String email,
+            @Param("namePattern") String namePattern,
+            @Param("emailPattern") String emailPattern,
             @Param("status") AccountStatus status,
             Pageable pageable);
 
