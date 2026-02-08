@@ -188,7 +188,7 @@ export function RackGridView({
   }, [])
 
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border bg-card shadow-sm">
+    <>
       {/* Header Bar */}
       <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
         <div className="flex items-center gap-3">
@@ -314,6 +314,6 @@ export function RackGridView({
         open={isItemsDialogOpen}
         rack={rack || null}
       />
-    </div>
+    </>
   )
 }

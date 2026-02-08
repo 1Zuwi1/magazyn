@@ -30,8 +30,6 @@ import {
   type WarehouseFormData,
 } from "./components/warehouse-dialog"
 
-const WAREHOUSES_SUMMARY_PAGE_SIZE = 1000
-
 type ApiWarehouse = WarehousesList["content"][number]
 
 export default function WarehousesMain() {
@@ -39,7 +37,7 @@ export default function WarehousesMain() {
     data: warehousesData,
     isPending: isWarehousesPending,
     isError: isWarehousesError,
-  } = useWarehouses({ page: 0, size: WAREHOUSES_SUMMARY_PAGE_SIZE })
+  } = useWarehouses({ page: 0, size: 1 })
   const warehouses = warehousesData?.content ?? []
   const createWarehouseMutation = useCreateWarehouse()
   const updateWarehouseMutation = useUpdateWarehouse()
@@ -98,22 +96,10 @@ export default function WarehousesMain() {
     toast.success(`Zaimportowano ${report.imported} magazynów`)
   }
 
-  const totalWarehouses =
-    warehousesData?.summary.totalWarehouses ??
-    warehousesData?.totalElements ??
-    warehouses.length
-  const totalCapacity =
-    warehousesData?.summary.totalCapacity ??
-    warehouses.reduce(
-      (acc, warehouse) => acc + warehouse.occupiedSlots + warehouse.freeSlots,
-      0
-    )
-  const totalUsed =
-    warehousesData?.summary.occupiedSlots ??
-    warehouses.reduce((acc, warehouse) => acc + warehouse.occupiedSlots, 0)
-  const totalRacks =
-    warehousesData?.summary.totalRacks ??
-    warehouses.reduce((acc, warehouse) => acc + warehouse.racksCount, 0)
+  const totalWarehouses = warehousesData?.totalElements
+  const totalCapacity = warehousesData?.summary.totalCapacity
+  const totalUsed = warehousesData?.summary.occupiedSlots
+  const totalRacks = warehousesData?.summary.totalRacks
   let warehousesContent: ReactNode
 
   if (isWarehousesPending) {
@@ -251,8 +237,8 @@ export default function WarehousesMain() {
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <span className="text-muted-foreground text-xs">Zajętość:</span>
             <span className="font-mono font-semibold">
-              {totalCapacity > 0
-                ? Math.round((totalUsed / totalCapacity) * 100)
+              {(totalCapacity ?? 0) > 0
+                ? Math.round(((totalUsed ?? 0) / (totalCapacity ?? 1)) * 100)
                 : 0}
               %
             </span>

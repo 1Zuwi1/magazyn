@@ -18,11 +18,11 @@ import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   type IdentificationCandidate,
   type IdentificationResult,
-  INBOUND_OPERATION_EXECUTE_SCHEMA,
-  INBOUND_OPERATION_PLAN_SCHEMA,
-  ITEM_BY_CODE_SCHEMA,
-  ITEM_IDENTIFY_MISMATCH_SCHEMA,
-  ITEM_IDENTIFY_SCHEMA,
+  InboundOperationExecuteSchema,
+  InboundOperationPlanSchema,
+  ItemByCodeSchema,
+  ItemIdentifyMismatchSchema,
+  ItemIdentifySchema,
 } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "../ui/button"
@@ -270,7 +270,7 @@ export function Scanner({
     try {
       const item = await apiFetch(
         `/api/items/code/${encodeURIComponent(code)}`,
-        ITEM_BY_CODE_SCHEMA
+        ItemByCodeSchema
       )
 
       setScannedItem(item)
@@ -320,7 +320,7 @@ export function Scanner({
     try {
       const item = await apiFetch(
         `/api/items/code/${encodeURIComponent(trimmed)}`,
-        ITEM_BY_CODE_SCHEMA
+        ItemByCodeSchema
       )
 
       setScannedItem(item)
@@ -363,17 +363,13 @@ export function Scanner({
     }))
 
     try {
-      const result = await apiFetch(
-        "/api/items/identify",
-        ITEM_IDENTIFY_SCHEMA,
-        {
-          method: "POST",
-          body: { file },
-          formData: (formData, data) => {
-            formData.append("file", data.file)
-          },
-        }
-      )
+      const result = await apiFetch("/api/items/identify", ItemIdentifySchema, {
+        method: "POST",
+        body: { file },
+        formData: (formData, data) => {
+          formData.append("file", data.file)
+        },
+      })
 
       if (!result.itemId) {
         setError("Nie udało się rozpoznać przedmiotu ze zdjęcia.")
@@ -417,7 +413,7 @@ export function Scanner({
       try {
         const item = await apiFetch(
           `/api/items/code/${encodeURIComponent(candidate.code)}`,
-          ITEM_BY_CODE_SCHEMA
+          ItemByCodeSchema
         )
 
         setScannedItem(item)
@@ -460,7 +456,7 @@ export function Scanner({
       try {
         const result = await apiFetch(
           "/api/items/identify/mismatch",
-          ITEM_IDENTIFY_MISMATCH_SCHEMA,
+          ItemIdentifyMismatchSchema,
           {
             method: "POST",
             body: {
@@ -501,7 +497,7 @@ export function Scanner({
       setCurrentWarehouseId(warehouseId)
       const plan = await apiFetch(
         "/api/inventory/inbound-operation/plan",
-        INBOUND_OPERATION_PLAN_SCHEMA,
+        InboundOperationPlanSchema,
         {
           method: "POST",
           body: {
@@ -572,7 +568,7 @@ export function Scanner({
     try {
       await apiFetch(
         "/api/inventory/inbound-operation/execute",
-        INBOUND_OPERATION_EXECUTE_SCHEMA,
+        InboundOperationExecuteSchema,
         {
           method: "POST",
           body: {

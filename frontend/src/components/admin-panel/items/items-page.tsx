@@ -12,6 +12,7 @@ import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
 import type { Item as DashboardItem } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
+import { DISABLE_PAGINATION_PAGE_SIZE } from "@/config/constants"
 import useItems, {
   type Item as ApiItem,
   useCreateItem,
@@ -24,11 +25,9 @@ import { ADMIN_NAV_LINKS } from "../lib/constants"
 import { ItemDialog, type ItemFormData, PhotoPromptDialog } from "./item-dialog"
 import { AdminItemsTable } from "./items-table"
 
-const ITEMS_PAGE_SIZE = 2000
-
 const mapApiItemToViewModel = (item: ApiItem): DashboardItem => {
   return {
-    id: String(item.id),
+    id: item.id,
     name: item.name,
     qrCode: item.code,
     imageUrl: item.photoUrl,
@@ -63,18 +62,13 @@ const buildItemMutationData = (data: ItemFormData) => {
   }
 }
 
-const getItemId = (item: DashboardItem): number | null => {
-  const itemId = Number.parseInt(item.id, 10)
-  return Number.isNaN(itemId) ? null : itemId
-}
-
 export default function ItemsMain() {
   const {
     data: itemsData,
     isPending: isItemsPending,
     isError: isItemsError,
     refetch: refetchItems,
-  } = useItems({ page: 0, size: ITEMS_PAGE_SIZE })
+  } = useItems({ page: 0, size: DISABLE_PAGINATION_PAGE_SIZE })
 
   const createItemMutation = useCreateItem()
   const updateItemMutation = useUpdateItem()
@@ -122,10 +116,7 @@ export default function ItemsMain() {
       return
     }
 
-    const itemId = getItemId(itemToDelete)
-    if (itemId === null) {
-      throw new Error("Item ID is invalid.")
-    }
+    const itemId = itemToDelete.id
 
     await deleteItemMutation.mutateAsync(itemId)
     toast.success("Usunięto przedmiot")
@@ -136,10 +127,7 @@ export default function ItemsMain() {
     data: ItemFormData
   ): Promise<number | undefined> => {
     if (selectedItem) {
-      const itemId = getItemId(selectedItem)
-      if (itemId === null) {
-        throw new Error("Item ID is invalid.")
-      }
+      const itemId = selectedItem.id
 
       await updateItemMutation.mutateAsync({
         itemId,

@@ -30,8 +30,6 @@ import useNotifications, {
 } from "@/hooks/use-notifications"
 import { cn } from "@/lib/utils"
 
-const NOTIFICATION_PREVIEW_PAGE_SIZE = 20
-
 function getNotificationIcon(alertType: string): IconSvgElement {
   switch (alertType) {
     case "WEIGHT_EXCEEDED":
@@ -86,7 +84,6 @@ export function NotificationInbox() {
     isError: isNotificationsError,
   } = useNotifications({
     page: 0,
-    size: NOTIFICATION_PREVIEW_PAGE_SIZE,
     sortBy: "createdAt",
     sortDir: "desc",
   })

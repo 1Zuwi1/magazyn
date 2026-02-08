@@ -11,13 +11,13 @@ import {
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
-  OUTBOUND_CHECK_SCHEMA,
-  OUTBOUND_PLAN_SCHEMA,
   type OutboundCheckResult,
+  OutboundCheckSchema,
   type OutboundExecuteResult,
   OutboundExecuteSchema,
   type OutboundPickSlot,
   type OutboundPlan,
+  OutboundPlanSchema,
 } from "@/lib/schemas"
 import { ScannerErrorState } from "../scanner-error-state"
 import type {
@@ -252,7 +252,7 @@ export const OutboundFlow = forwardRef<OutboundFlowHandle, OutboundFlowProps>(
       try {
         const checkResult = await apiFetch(
           "/api/inventory/outbound-operation/check",
-          OUTBOUND_CHECK_SCHEMA,
+          OutboundCheckSchema,
           {
             method: "POST",
             body: { code: firstAssortmentCode },
@@ -301,7 +301,7 @@ export const OutboundFlow = forwardRef<OutboundFlowHandle, OutboundFlowProps>(
 
           const checkResult = await apiFetch(
             "/api/inventory/outbound-operation/check",
-            OUTBOUND_CHECK_SCHEMA,
+            OutboundCheckSchema,
             {
               method: "POST",
               body: { code: scannedCode },
@@ -365,7 +365,7 @@ export const OutboundFlow = forwardRef<OutboundFlowHandle, OutboundFlowProps>(
       try {
         const plan = await apiFetch(
           "/api/inventory/outbound-operation/plan",
-          OUTBOUND_PLAN_SCHEMA,
+          OutboundPlanSchema,
           {
             method: "POST",
             body: {

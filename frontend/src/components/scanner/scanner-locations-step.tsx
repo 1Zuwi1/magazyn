@@ -1,21 +1,13 @@
 import { Location04Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useInfiniteQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
-import { apiFetch } from "@/lib/fetcher"
-import { RacksSchema } from "@/lib/schemas"
+import { useInfiniteRacks } from "@/hooks/use-racks"
 import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
 import { CancelButton } from "./cancel-button"
 import { LocationCard } from "./location-card"
 import { ScannerBody } from "./scanner-body"
-import type {
-  EditablePlacement,
-  PlacementPlan,
-  RackSelectOption,
-} from "./scanner-types"
-
-const RACK_OPTIONS_PAGE_SIZE = 50
+import type { EditablePlacement, PlacementPlan } from "./scanner-types"
 
 interface ScannerLocationsStepProps {
   plan: PlacementPlan
@@ -67,56 +59,13 @@ export function ScannerLocationsStep({
 }: ScannerLocationsStepProps) {
   const reservedUntilLabel = formatReservedUntil(plan.reservedUntil)
   const {
-    data: racksData,
     fetchNextPage: fetchNextRackPage,
     hasNextPage: hasNextRackPage,
     isError: isRackOptionsError,
     isFetchingNextPage: isFetchingNextRackPage,
     isPending: isRackOptionsPending,
-  } = useInfiniteQuery({
-    queryKey: ["scanner-rack-options", warehouseId],
-    enabled: warehouseId !== null,
-    initialPageParam: 0,
-    queryFn: async ({ pageParam }) => {
-      if (warehouseId === null) {
-        throw new Error("Brak aktywnego magazynu.")
-      }
-
-      return await apiFetch(
-        `/api/warehouses/${warehouseId}/racks`,
-        RacksSchema,
-        {
-          queryParams: {
-            page: pageParam,
-            size: RACK_OPTIONS_PAGE_SIZE,
-          },
-        }
-      )
-    },
-    getNextPageParam: (lastPage) => {
-      if (lastPage.last) {
-        return undefined
-      }
-
-      return lastPage.page + 1
-    },
-    staleTime: 60_000,
-  })
-
-  const rackOptions = useMemo<RackSelectOption[]>(() => {
-    if (!racksData) {
-      return []
-    }
-
-    return racksData.pages.flatMap((page) =>
-      page.content.map((rack) => ({
-        id: rack.id,
-        name: rack.marker,
-        sizeX: rack.sizeX,
-        sizeY: rack.sizeY,
-      }))
-    )
-  }, [racksData])
+    rackOptions,
+  } = useInfiniteRacks({ warehouseId })
 
   const rackNamesById = useMemo(() => {
     const map = new Map<number, string>()

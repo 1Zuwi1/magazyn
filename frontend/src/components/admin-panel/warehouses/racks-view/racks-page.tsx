@@ -29,8 +29,6 @@ interface AdminRacksPageProps {
   }
 }
 
-const RACKS_PAGE_SIZE = 2000
-
 const buildRackMutationData = ({
   acceptsDangerous,
   data,
@@ -73,7 +71,6 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     isError: isRacksError,
   } = useRacks({
     page: 0,
-    size: RACKS_PAGE_SIZE,
     warehouseId: apiWarehouse?.id ?? -1,
   })
   const createRackMutation = useCreateRack()
@@ -217,8 +214,6 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
       />
     )
   }
-
-  // console.log(racksData)
 
   return (
     <div className="space-y-6">

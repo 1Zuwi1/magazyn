@@ -34,8 +34,6 @@ import useNotifications, {
 } from "@/hooks/use-notifications"
 import { cn } from "@/lib/utils"
 
-const NOTIFICATIONS_PAGE_SIZE = 20
-
 type FeedFilter = "ALL" | "UNREAD"
 
 const ALERT_TYPE_OPTIONS = [
@@ -494,7 +492,6 @@ export default function NotificationsMain() {
 
   const allNotificationsQuery = useNotifications({
     page,
-    size: NOTIFICATIONS_PAGE_SIZE,
     sortBy: "createdAt",
     sortDir: "desc",
     alertType: alertTypeFilter.length > 0 ? alertTypeFilter : undefined,

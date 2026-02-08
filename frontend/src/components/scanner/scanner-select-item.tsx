@@ -13,7 +13,6 @@ import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 import type { ScanItem } from "./scanner-types"
 
-const ITEMS_PAGE_SIZE = 20
 const SCROLL_THRESHOLD_PX = 200
 
 interface ScannerSelectItemProps {
@@ -46,7 +45,6 @@ export function ScannerSelectItem({
       return await apiFetch("/api/items", ItemsSchema, {
         queryParams: {
           page: pageParam,
-          size: ITEMS_PAGE_SIZE,
         },
       })
     },

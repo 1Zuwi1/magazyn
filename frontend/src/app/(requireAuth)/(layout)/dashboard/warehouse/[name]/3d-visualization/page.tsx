@@ -20,6 +20,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { DISABLE_PAGINATION_PAGE_SIZE } from "@/config/constants"
 import useAssortments from "@/hooks/use-assortment"
 import { type ItemDetails, useMultipleItems } from "@/hooks/use-items"
 import useRacks from "@/hooks/use-racks"
@@ -187,8 +188,6 @@ const renderVisualizationFallback = (_error: Error, reset: () => void) => (
   </div>
 )
 
-const WAREHOUSES_PAGE_SIZE = 200
-const RACKS_PAGE_SIZE = 500
 const ASSORTMENTS_MIN_PAGE_SIZE = 20
 
 const decodeWarehouseName = (encodedName: string): string => {
@@ -213,7 +212,7 @@ export default function ThreeDVisualizationPage() {
     data: warehousesData,
     isError: isWarehousesError,
     isPending: isWarehousesPending,
-  } = useWarehouses({ page: 0, size: WAREHOUSES_PAGE_SIZE })
+  } = useWarehouses({ page: 0, size: DISABLE_PAGINATION_PAGE_SIZE })
 
   const apiWarehouse = useMemo(
     () =>
@@ -231,7 +230,7 @@ export default function ThreeDVisualizationPage() {
     isPending: isRacksPending,
   } = useRacks({
     page: 0,
-    size: RACKS_PAGE_SIZE,
+    size: DISABLE_PAGINATION_PAGE_SIZE,
     warehouseId: apiWarehouse?.id ?? -1,
   })
 

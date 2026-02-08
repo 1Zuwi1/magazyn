@@ -37,8 +37,6 @@ import { ADMIN_NAV_LINKS } from "../lib/constants"
 type AlertsList = InferApiOutput<typeof AlertsSchema, "GET">
 type AlertItem = AlertsList["content"][number]
 
-const ALERTS_PAGE_SIZE = 20
-
 const ALERT_TYPE_OPTIONS = [
   { value: "WEIGHT_EXCEEDED", label: "Przekroczenie wagi" },
   { value: "TEMPERATURE_TOO_HIGH", label: "Temp. za wysoka" },
@@ -454,7 +452,6 @@ export default function AlertsMain() {
 
   const alertsQuery = useAlerts({
     page,
-    size: ALERTS_PAGE_SIZE,
     sortBy: "createdAt",
     sortDir: "desc",
     alertType: alertTypeFilter.length > 0 ? alertTypeFilter : undefined,

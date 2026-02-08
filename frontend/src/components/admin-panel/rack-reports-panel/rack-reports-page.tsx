@@ -387,15 +387,10 @@ export default function RackReportsMain() {
                     <DropdownMenuSeparator />
                     <DropdownMenuCheckboxItem
                       checked={withAlertsFilter === true}
+                      className="text-nowrap"
                       onClick={() => handleToggleAlertsFilter(true)}
                     >
                       Tylko z alertami
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem
-                      checked={withAlertsFilter === false}
-                      onClick={() => handleToggleAlertsFilter(false)}
-                    >
-                      Wszystkie raporty
                     </DropdownMenuCheckboxItem>
                     {withAlertsFilter !== undefined && (
                       <>

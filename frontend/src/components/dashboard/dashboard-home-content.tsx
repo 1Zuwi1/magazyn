@@ -39,8 +39,6 @@ const EXPIRY_FALLBACK_DAYS = Number.POSITIVE_INFINITY
 const RECENT_ITEMS_LIMIT = 4
 const EXPIRING_ITEMS_LIMIT = 3
 const TOP_WAREHOUSES_LIMIT = 3
-const WAREHOUSES_SUMMARY_PAGE_SIZE = 1000
-const ASSORTMENTS_SUMMARY_PAGE_SIZE = 1000
 
 type OccupancyBadgeVariant = "secondary" | "warning" | "destructive"
 interface WarehouseSummary {
@@ -90,12 +88,12 @@ export default function DashboardHomeContent() {
     data: warehousesData,
     isPending: isWarehousesPending,
     isError: isWarehousesError,
-  } = useWarehouses({ page: 0, size: WAREHOUSES_SUMMARY_PAGE_SIZE })
+  } = useWarehouses({ page: 0, size: 1 })
   const {
     data: assortmentsData,
     isPending: isAssortmentsPending,
     isError: isAssortmentsError,
-  } = useAssortments({ page: 0, size: ASSORTMENTS_SUMMARY_PAGE_SIZE })
+  } = useAssortments({ page: 0, size: 1 })
 
   const isSummaryPending = isWarehousesPending || isAssortmentsPending
   const hasSummaryError = isWarehousesError || isAssortmentsError

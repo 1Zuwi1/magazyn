@@ -742,7 +742,13 @@ export const RacksSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput(),
     output: createPaginatedSchema(RackSchema, {
-      summary: z.any(),
+      summary: z.object({
+        totalCapacity: z.number().int().nonnegative(),
+        freeSlot: z.number().int().nonnegative(),
+        occupiedSlots: z.number().int().nonnegative(),
+        totalRacks: z.number().int().nonnegative(),
+        totalWeight: z.number().nonnegative(),
+      }),
     }),
   },
 })
@@ -806,13 +812,13 @@ export const VerifyMailSchema = createApiSchema({
   },
 })
 
-export const ITEM_BY_CODE_SCHEMA = createApiSchema({
+export const ItemByCodeSchema = createApiSchema({
   GET: {
     output: ItemDefinitionSchema,
   },
 })
 
-export const INBOUND_OPERATION_PLAN_SCHEMA = createApiSchema({
+export const InboundOperationPlanSchema = createApiSchema({
   POST: {
     input: z.object({
       itemId: z.number().int().nonnegative(),
@@ -874,7 +880,7 @@ const IdentificationResultSchema = z.object({
 
 export type IdentificationResult = z.infer<typeof IdentificationResultSchema>
 
-export const ITEM_IDENTIFY_SCHEMA = createApiSchema({
+export const ItemIdentifySchema = createApiSchema({
   POST: {
     input: z.object({
       file: z.custom<File>(),
@@ -883,7 +889,7 @@ export const ITEM_IDENTIFY_SCHEMA = createApiSchema({
   },
 })
 
-export const ITEM_IDENTIFY_MISMATCH_SCHEMA = createApiSchema({
+export const ItemIdentifyMismatchSchema = createApiSchema({
   POST: {
     input: z.object({
       identificationId: z.string(),
@@ -903,7 +909,7 @@ const PlacementsSchema = z
   )
   .min(1)
 
-export const INBOUND_OPERATION_EXECUTE_SCHEMA = createApiSchema({
+export const InboundOperationExecuteSchema = createApiSchema({
   POST: {
     input: z.union([
       z.object({
@@ -923,7 +929,7 @@ export const INBOUND_OPERATION_EXECUTE_SCHEMA = createApiSchema({
 
 // ── Outbound (Zdejmowanie) ──────────────────────────────────────────
 
-export const ASSORTMENT_BY_CODE_SCHEMA = createApiSchema({
+export const AssortmentByCodeSchema = createApiSchema({
   GET: {
     output: z.object({
       id: z.number().int().nonnegative(),
@@ -940,7 +946,7 @@ export const ASSORTMENT_BY_CODE_SCHEMA = createApiSchema({
 })
 
 export type ScannedAssortment = z.infer<
-  typeof ASSORTMENT_BY_CODE_SCHEMA.shape.GET.shape.output
+  typeof AssortmentByCodeSchema.shape.GET.shape.output
 >
 
 const OutboundPickSlotSchema = z.object({
@@ -956,7 +962,7 @@ const OutboundPickSlotSchema = z.object({
 
 export type OutboundPickSlot = z.infer<typeof OutboundPickSlotSchema>
 
-export const OUTBOUND_CHECK_SCHEMA = createApiSchema({
+export const OutboundCheckSchema = createApiSchema({
   POST: {
     input: z.object({
       code: z.string().min(1, "Kod jest wymagany"),
@@ -971,10 +977,10 @@ export const OUTBOUND_CHECK_SCHEMA = createApiSchema({
 })
 
 export type OutboundCheckResult = z.infer<
-  typeof OUTBOUND_CHECK_SCHEMA.shape.POST.shape.output
+  typeof OutboundCheckSchema.shape.POST.shape.output
 >
 
-export const OUTBOUND_PLAN_SCHEMA = createApiSchema({
+export const OutboundPlanSchema = createApiSchema({
   POST: {
     input: z.object({
       itemId: z.number().int().nonnegative(),
@@ -993,7 +999,7 @@ export const OUTBOUND_PLAN_SCHEMA = createApiSchema({
 })
 
 export type OutboundPlan = z.infer<
-  typeof OUTBOUND_PLAN_SCHEMA.shape.POST.shape.output
+  typeof OutboundPlanSchema.shape.POST.shape.output
 >
 
 const OutboundOperationSchema = z.object({

@@ -1,4 +1,8 @@
-import { type UseQueryResult, useQueries } from "@tanstack/react-query"
+import {
+  type UseQueryResult,
+  useInfiniteQuery,
+  useQueries,
+} from "@tanstack/react-query"
 import { useMemo } from "react"
 import z from "zod"
 import { createApiSchema } from "@/lib/create-api-schema"
@@ -20,6 +24,7 @@ import { useApiQuery } from "./use-api-query"
 const Racks_QUERY_KEY = ["Racks"] as const
 const RACK_DETAILS_QUERY_KEY = [...Racks_QUERY_KEY, "details"] as const
 const RACK_DETAILS_STALE_TIME_MS = 5 * 60 * 1000
+const INFINITE_RACKS_DEFAULT_PAGE_SIZE = 50
 
 const RackLookupSchema = createApiSchema({
   GET: {
@@ -194,4 +199,66 @@ export function useImportRacks() {
       context.client.invalidateQueries({ queryKey: Racks_QUERY_KEY })
     },
   })
+}
+
+interface InfiniteRacksParams {
+  warehouseId: number | null
+  pageSize?: number
+  staleTime?: number
+}
+
+export function useInfiniteRacks({
+  warehouseId,
+  pageSize = INFINITE_RACKS_DEFAULT_PAGE_SIZE,
+  staleTime = 60_000,
+}: InfiniteRacksParams) {
+  const infiniteQuery = useInfiniteQuery({
+    queryKey: ["infinite-racks", warehouseId, pageSize],
+    enabled: warehouseId !== null,
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
+      if (warehouseId === null) {
+        throw new Error("Brak aktywnego magazynu.")
+      }
+
+      return await apiFetch(
+        `/api/warehouses/${warehouseId}/racks`,
+        RacksSchema,
+        {
+          queryParams: {
+            page: pageParam,
+            size: pageSize,
+          },
+        }
+      )
+    },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.last) {
+        return undefined
+      }
+
+      return lastPage.page + 1
+    },
+    staleTime,
+  })
+
+  const rackOptions = useMemo(() => {
+    if (!infiniteQuery.data) {
+      return []
+    }
+
+    return infiniteQuery.data.pages.flatMap((page) =>
+      page.content.map((rack) => ({
+        id: rack.id,
+        name: rack.marker,
+        sizeX: rack.sizeX,
+        sizeY: rack.sizeY,
+      }))
+    )
+  }, [infiniteQuery.data])
+
+  return {
+    ...infiniteQuery,
+    rackOptions,
+  }
 }

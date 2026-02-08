@@ -3,6 +3,7 @@
 import {
   Alert01Icon,
   CubeIcon,
+  GridViewIcon,
   Layers01Icon,
   PackageIcon,
   RulerIcon,
@@ -348,6 +349,8 @@ export default function WarehouseClient() {
     useState<SlotCoordinates | null>(null)
   const [isItemDetailsOpen, setIsItemDetailsOpen] = useState(false)
   const [is3DWarningOpen, setIs3DWarningOpen] = useState(false)
+  const [is2DWarningOpen, setIs2DWarningOpen] = useState(false)
+  const [is2DViewOpen, setIs2DViewOpen] = useState(false)
 
   const currentRack = rackData?.content[0] ?? null
   const totalPages = rackData?.totalPages ?? 0
@@ -564,6 +567,37 @@ export default function WarehouseClient() {
         </Button>
       </div>
 
+      <AlertDialog onOpenChange={setIs2DWarningOpen} open={is2DWarningOpen}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-amber-500/10">
+              <HugeiconsIcon
+                className="text-amber-500"
+                icon={Alert01Icon}
+                size={24}
+              />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Widok 2D regału</AlertDialogTitle>
+            <AlertDialogDescription>
+              Wizualizacja 2D pobiera dane o wszystkich magazynach, regałach i
+              przedmiotach. Przy dużej ilości danych może to znacząco obciążyć
+              połączenie i zużyć dużo transferu.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setIs2DViewOpen(true)
+                setIs2DWarningOpen(false)
+              }}
+            >
+              Pokaż widok 2D
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog onOpenChange={setIs3DWarningOpen} open={is3DWarningOpen}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
@@ -601,20 +635,34 @@ export default function WarehouseClient() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(240px,320px)]">
           {/* Grid Visualization */}
           <div className="order-1">
-            <RackGridView
-              cols={currentRack.sizeX}
-              currentPage={currentPage}
-              items={items}
-              onActivateSlot={handleActivateSlot}
-              onNextRack={handleNextRack}
-              onPreviousRack={handlePreviousRack}
-              onSelectSlot={handleSelectSlot}
-              onSetPage={handleSetPage}
-              rack={currentRack}
-              rows={currentRack.sizeY}
-              selectedSlotCoordinates={selectedSlotCoordinates}
-              totalPages={totalPages}
-            />
+            <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border bg-card shadow-sm">
+              {is2DViewOpen ? (
+                <RackGridView
+                  cols={currentRack.sizeX}
+                  currentPage={currentPage}
+                  items={items}
+                  onActivateSlot={handleActivateSlot}
+                  onNextRack={handleNextRack}
+                  onPreviousRack={handlePreviousRack}
+                  onSelectSlot={handleSelectSlot}
+                  onSetPage={handleSetPage}
+                  rack={currentRack}
+                  rows={currentRack.sizeY}
+                  selectedSlotCoordinates={selectedSlotCoordinates}
+                  totalPages={totalPages}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center p-6">
+                  <Button
+                    onClick={() => setIs2DWarningOpen(true)}
+                    variant="outline"
+                  >
+                    <HugeiconsIcon className="size-4" icon={GridViewIcon} />
+                    Otwórz widok 2D
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right Column - Parameters and Status */}

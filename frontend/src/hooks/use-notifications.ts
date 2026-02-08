@@ -10,7 +10,6 @@ import { useApiMutation } from "./use-api-mutation"
 import { useApiQuery } from "./use-api-query"
 
 const NOTIFICATIONS_QUERY_KEY = ["notifications"] as const
-const DEFAULT_NOTIFICATIONS_PAGE_SIZE = 20
 
 interface NotificationsListParams {
   page?: number
@@ -25,7 +24,7 @@ const normalizeNotificationsParams = (
 ): Required<Pick<NotificationsListParams, "page" | "size">> &
   Pick<NotificationsListParams, "sortBy" | "sortDir" | "alertType"> => ({
   page: params?.page ?? 0,
-  size: params?.size ?? DEFAULT_NOTIFICATIONS_PAGE_SIZE,
+  size: params?.size ?? 20,
   sortBy: params?.sortBy,
   sortDir: params?.sortDir,
   alertType:
