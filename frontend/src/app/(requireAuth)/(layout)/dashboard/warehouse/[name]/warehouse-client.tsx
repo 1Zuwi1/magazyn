@@ -332,14 +332,14 @@ export default function WarehouseClient() {
     warehouseId: warehouseIdForQuery,
   })
 
-  const [currentPage, setCurrentPage] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
   const {
     data: rackData,
     isError: isRacksError,
     isPending: isRacksPending,
   } = useRacks({
     warehouseId: warehouseIdForQuery,
-    page: currentPage,
+    page: currentPage - 1,
     size: 1,
   })
 

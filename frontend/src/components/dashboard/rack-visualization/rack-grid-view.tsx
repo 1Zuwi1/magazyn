@@ -11,29 +11,11 @@ import type * as React from "react"
 import { useEffect, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import PaginationFull from "@/components/ui/pagination-component"
 import type { Rack } from "@/lib/schemas"
 import { RackItemsDialog } from "../items-visualization/rack-items-dialog"
 import type { ItemSlot, SlotCoordinates } from "../types"
 import Virtualized from "./components/virtualized"
-
-const VISIBLE_PAGE_COUNT = 3
-
-function getVisiblePages(currentPage: number, totalPages: number): number[] {
-  if (totalPages <= VISIBLE_PAGE_COUNT) {
-    return Array.from({ length: totalPages }, (_, i) => i)
-  }
-  const halfWindow = Math.floor(VISIBLE_PAGE_COUNT / 2)
-  let start = currentPage - halfWindow
-  if (start < 0) {
-    start = 0
-  }
-  let end = start + VISIBLE_PAGE_COUNT - 1
-  if (end >= totalPages) {
-    end = totalPages - 1
-    start = end - VISIBLE_PAGE_COUNT + 1
-  }
-  return Array.from({ length: end - start + 1 }, (_, i) => start + i)
-}
 
 interface RackGridViewProps {
   rows: number
@@ -92,7 +74,7 @@ export function RackGridView({
   rows,
   cols,
   items,
-  currentPage = 0,
+  currentPage = 1,
   totalPages = 1,
   onPreviousRack,
   onNextRack,
@@ -278,35 +260,12 @@ export function RackGridView({
 
       {/* Footer Bar - Rack Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 border-t bg-muted/20 px-4 py-3">
-          {/* Page number buttons */}
-          <div className="flex items-center gap-1" role="tablist">
-            {getVisiblePages(currentPage, totalPages).map((page) => (
-              <button
-                aria-label={`Regał ${page + 1}`}
-                aria-selected={page === currentPage}
-                className={`flex size-7 items-center justify-center rounded-md font-mono text-xs transition-all ${
-                  page === currentPage
-                    ? "bg-primary font-semibold text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-                key={page}
-                onClick={() => onSetPage(page)}
-                role="tab"
-                type="button"
-              >
-                {page + 1}
-              </button>
-            ))}
-          </div>
-          <span className="font-mono text-muted-foreground text-xs">
-            Regał{" "}
-            <span className="font-semibold text-foreground">
-              {currentPage + 1}
-            </span>{" "}
-            z {totalPages}
-          </span>
-        </div>
+        <PaginationFull
+          className="mb-2"
+          currentPage={currentPage}
+          setPage={onSetPage}
+          totalPages={totalPages}
+        />
       )}
 
       <RackItemsDialog

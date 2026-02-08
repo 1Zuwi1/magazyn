@@ -4,7 +4,6 @@ import {
   MoreHorizontalCircle01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import Link from "next/link"
 import type * as React from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -39,8 +38,7 @@ function PaginationItem({ ...props }: React.ComponentProps<"li">) {
 
 type PaginationLinkProps = {
   isActive?: boolean
-} & Pick<React.ComponentProps<typeof Button>, "size"> &
-  React.ComponentProps<typeof Link>
+} & React.ComponentProps<typeof Button>
 
 function PaginationLink({
   className,
@@ -51,29 +49,21 @@ function PaginationLink({
   return (
     <Button
       className={cn(className)}
-      nativeButton={false}
-      render={
-        <Link
-          aria-current={isActive ? "page" : undefined}
-          data-active={isActive}
-          data-slot="pagination-link"
-          {...props}
-        />
-      }
       size={size}
       variant={isActive ? "outline" : "ghost"}
+      {...props}
     />
   )
 }
 
 function PaginationPrevious({
   className,
-  text = "Previous",
+  text = "Poprzednia",
   ...props
 }: React.ComponentProps<typeof PaginationLink> & { text?: string }) {
   return (
     <PaginationLink
-      aria-label="Go to previous page"
+      aria-label="Przejdź do poprzedniej strony"
       className={cn("pl-2!", className)}
       size="default"
       {...props}
@@ -90,12 +80,12 @@ function PaginationPrevious({
 
 function PaginationNext({
   className,
-  text = "Next",
+  text = "Następna",
   ...props
 }: React.ComponentProps<typeof PaginationLink> & { text?: string }) {
   return (
     <PaginationLink
-      aria-label="Go to next page"
+      aria-label="Przejdź do następnej strony"
       className={cn("pr-2!", className)}
       size="default"
       {...props}

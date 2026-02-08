@@ -744,7 +744,7 @@ export const RacksSchema = createApiSchema({
     output: createPaginatedSchema(RackSchema, {
       summary: z.object({
         totalCapacity: z.number().int().nonnegative(),
-        freeSlot: z.number().int().nonnegative(),
+        freeSlots: z.number().int().nonnegative(),
         occupiedSlots: z.number().int().nonnegative(),
         totalRacks: z.number().int().nonnegative(),
         totalWeight: z.number().nonnegative(),

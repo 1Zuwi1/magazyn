@@ -33,6 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { DISABLE_PAGINATION_PAGE_SIZE } from "@/config/constants"
 import useAdminUsers, {
   useAdminUserTeams,
   useChangeAdminUserEmail,
@@ -43,7 +44,6 @@ import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../lib/constants"
 
-const USERS_FETCH_SIZE = 1000
 const TABLE_PAGE_SIZE = 10
 
 const getStatusLabel = (status: string): string => {
@@ -126,7 +126,7 @@ export default function UsersMain() {
     isError: isUsersError,
   } = useAdminUsers({
     page: 0,
-    size: USERS_FETCH_SIZE,
+    size: DISABLE_PAGINATION_PAGE_SIZE,
     sortBy: "id",
     sortDir: "asc",
   })

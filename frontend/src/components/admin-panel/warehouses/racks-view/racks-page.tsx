@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
 import { Button } from "@/components/ui/button"
+import PaginationFull from "@/components/ui/pagination-component"
 import { useCurrentAdminWarehouseId } from "@/hooks/use-current-admin-warehouse-id"
 import useRacks, {
   useCreateRack,
@@ -65,12 +66,14 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     isError: isWarehouseError,
   } = useWarehouses({ warehouseId: warehouseIdForQuery })
 
+  const [page, setPage] = useState(0)
+
   const {
     data: racksData,
     isPending: isRacksPending,
     isError: isRacksError,
   } = useRacks({
-    page: 0,
+    page,
     warehouseId: apiWarehouse?.id ?? -1,
   })
   const createRackMutation = useCreateRack()
@@ -161,10 +164,11 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     toast.success(`Zaimportowano ${report.imported} regałów`)
   }
 
-  const totalItems = mappedRacks.reduce(
-    (acc, rack) => acc + rack.occupiedSlots,
-    0
-  )
+  const totalItems =
+    racksData?.content.reduce((acc, rack) => acc + rack.occupiedSlots, 0) ?? 0
+  const totalRacks = racksData?.totalElements ?? 0
+  const totalPages = racksData?.totalPages ?? 0
+  const currentPage = page + 1
   const isWarehouseMissing =
     isHydrated &&
     !isWarehousePending &&
@@ -250,7 +254,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
               icon={GridIcon}
             />
             <span className="font-mono font-semibold text-primary">
-              {mappedRacks.length}
+              {totalRacks}
             </span>
             <span className="text-muted-foreground text-xs">regałów</span>
           </div>
@@ -262,17 +266,26 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
             <span className="font-mono font-semibold">{totalItems}</span>
             <span className="text-muted-foreground text-xs">przedmiotów</span>
           </div>
-          {/* <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
+          <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <span className="text-muted-foreground text-xs">Łączna waga:</span>
             <span className="font-mono font-semibold">
-              {racksData?.summary} kg
+              {racksData?.summary.totalWeight} kg
             </span>
-          </div> */}
+          </div>
         </div>
       </AdminPageHeader>
 
       {/* Rack Grid */}
       {racksContent}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <PaginationFull
+          currentPage={currentPage}
+          setPage={setPage}
+          totalPages={totalPages}
+        />
+      )}
 
       {/* Dialogs */}
       <RackDialog

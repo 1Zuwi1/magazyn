@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   type UseQueryResult,
   useInfiniteQuery,
   useQueries,
@@ -134,6 +135,7 @@ export default function useRacks(
         },
       })
     },
+    placeholderData: keepPreviousData,
   })
 }
 

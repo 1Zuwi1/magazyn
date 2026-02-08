@@ -93,7 +93,12 @@ export default function DashboardHomeContent() {
     data: assortmentsData,
     isPending: isAssortmentsPending,
     isError: isAssortmentsError,
-  } = useAssortments({ page: 0, size: 1 })
+  } = useAssortments({
+    page: 0,
+    size: RECENT_ITEMS_LIMIT,
+    sortBy: "createdAt",
+    sortDir: "desc",
+  })
 
   const isSummaryPending = isWarehousesPending || isAssortmentsPending
   const hasSummaryError = isWarehousesError || isAssortmentsError
@@ -105,7 +110,10 @@ export default function DashboardHomeContent() {
     summaryTitleBadge = "Ładowanie"
   }
 
-  const assortments = assortmentsData?.content
+  const assortments = useMemo(
+    () => assortmentsData?.content ?? [],
+    [assortmentsData?.content]
+  )
   const warehouseSummaries = useMemo<WarehouseSummary[]>(
     () =>
       (warehousesData?.content ?? []).map((warehouse) => {
@@ -121,25 +129,13 @@ export default function DashboardHomeContent() {
       }),
     [warehousesData?.content]
   )
-
-  const recentAssortment = useMemo(
-    () =>
-      [...(assortments ?? [])]
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
-        .slice(0, RECENT_ITEMS_LIMIT),
-    [assortments]
-  )
-
   const allAssortmentItemIds = useMemo(
-    () => [...new Set((assortments ?? []).map((item) => item.itemId))],
+    () => [...new Set(assortments.map((item) => item.itemId))],
     [assortments]
   )
   const recentAssortmentRackIds = useMemo(
-    () => [...new Set(recentAssortment.map((item) => item.rackId))],
-    [recentAssortment]
+    () => [...new Set(assortments.map((item) => item.rackId))],
+    [assortments]
   )
 
   const itemDefinitionQueries = useMultipleItems({
@@ -178,7 +174,7 @@ export default function DashboardHomeContent() {
 
   const recentAssortmentEntries = useMemo(
     () =>
-      recentAssortment.map((assortment) => {
+      assortments.map((assortment) => {
         const itemDefinition = itemDefinitionsById.get(assortment.itemId)
         return {
           ...assortment,
@@ -189,7 +185,7 @@ export default function DashboardHomeContent() {
             `Regał #${assortment.rackId}`,
         }
       }),
-    [itemDefinitionsById, rackLabelsById, recentAssortment]
+    [itemDefinitionsById, rackLabelsById, assortments]
   )
   const dangerousItemsCount = useMemo(() => {
     let dangerousCount = 0
@@ -255,13 +251,9 @@ export default function DashboardHomeContent() {
   const totalOccupied = warehousesData?.summary?.occupiedSlots ?? 0
   const occupancyPercentage =
     totalCapacity > 0 ? Math.round((totalOccupied / totalCapacity) * 100) : 0
-  const totalWarehouses =
-    warehousesData?.summary?.totalWarehouses ??
-    warehousesData?.totalElements ??
-    0
+  const totalWarehouses = warehousesData?.summary?.totalWarehouses ?? 0
   const totalRacks = warehousesData?.summary?.totalRacks ?? 0
-  const productsInCirculation =
-    assortmentsData?.totalElements ?? assortments?.length ?? 0
+  const productsInCirculation = assortmentsData?.totalElements ?? 0
 
   const getOccupancyCardVariant = (): "danger" | "warning" | "success" => {
     if (occupancyPercentage >= OCCUPANCY_CRITICAL_THRESHOLD) {
@@ -473,6 +465,7 @@ export default function DashboardHomeContent() {
                       </p>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-2 text-xs">
+                      <span>{item.id}</span>
                       <span className="font-mono text-muted-foreground">
                         {formatDate(new Date(item.createdAt))}
                       </span>

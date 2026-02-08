@@ -55,36 +55,22 @@ export default function useAssortments(
 ): UseQueryResult<RackAssortmentsList, FetchError>
 
 export default function useAssortments(
-  {
-    page,
-    size,
-    assortmentId,
-    warehouseId,
-    rackId,
-  }: {
-    page?: number
-    size?: number
-    assortmentId?: number
-    warehouseId?: number
-    rackId?: number
-  } = {
-    page: 0,
-    size: 20,
-  }
+  params?:
+    | AssortmentsListParams
+    | AssortmentDetailsParams
+    | WarehouseAssortmentsParams
+    | RackAssortmentsParams
 ) {
   return useApiQuery({
-    queryKey: [
-      ...ASSORTMENT_QUERY_KEY,
-      { page, size, assortmentId, warehouseId, rackId },
-    ],
+    queryKey: [...ASSORTMENT_QUERY_KEY, params],
     queryFn: async () => {
-      if (assortmentId !== undefined) {
-        if (assortmentId === -1) {
+      if (params && "assortmentId" in params) {
+        if (params.assortmentId === -1) {
           // This is a workaround to prevent the query from running when assortmentId is not yet available.
           return null
         }
         return await apiFetch(
-          `/api/assortments/${assortmentId}`,
+          `/api/assortments/${params.assortmentId}`,
           AssortmentDetailsSchema,
           {
             method: "GET",
@@ -92,37 +78,35 @@ export default function useAssortments(
         )
       }
 
-      if (rackId !== undefined) {
-        if (rackId === -1) {
+      if (params && "rackId" in params) {
+        if (params.rackId === -1) {
           // This is a workaround to prevent the query from running when rackId is not yet available.
           return null
         }
         return await apiFetch(
-          `/api/racks/${rackId}/assortments`,
+          `/api/racks/${params.rackId}/assortments`,
           RackAssortmentsSchema,
           {
             method: "GET",
             queryParams: {
-              page,
-              size,
+              ...params,
             },
           }
         )
       }
 
-      if (warehouseId !== undefined) {
-        if (warehouseId === -1) {
+      if (params && "warehouseId" in params) {
+        if (params.warehouseId === -1) {
           // This is a workaround to prevent the query from running when warehouseId is not yet available.
           return null
         }
         return await apiFetch(
-          `/api/warehouses/${warehouseId}/assortments`,
+          `/api/warehouses/${params.warehouseId}/assortments`,
           WarehouseAssortmentsSchema,
           {
             method: "GET",
             queryParams: {
-              page,
-              size,
+              ...params,
             },
           }
         )
@@ -130,8 +114,7 @@ export default function useAssortments(
 
       return await apiFetch("/api/assortments", AssortmentsSchema, {
         queryParams: {
-          page,
-          size,
+          ...params,
         },
       })
     },
