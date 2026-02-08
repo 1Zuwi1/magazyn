@@ -37,6 +37,9 @@ public class PagedResponse<T> {
     @Schema(description = "Whether this is the last page", example = "false")
     private boolean last;
 
+    @Schema(description = "Optional summary/statistics metadata")
+    private Object summary;
+
     /**
      * Creates PagedResponse from Spring Data Page
      */

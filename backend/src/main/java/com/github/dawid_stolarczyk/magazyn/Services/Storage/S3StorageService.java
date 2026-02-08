@@ -8,6 +8,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -154,7 +155,7 @@ public class S3StorageService implements StorageService {
 
     private String buildObjectKey(String fileName) {
         // Sanitize fileName to prevent path traversal (extract only the filename part)
-        String sanitizedFileName = new java.io.File(fileName).getName();
+        String sanitizedFileName = new File(fileName).getName();
 
         String prefix = itemsPrefix == null ? "" : itemsPrefix.trim();
         if (!prefix.isEmpty() && !prefix.endsWith("/")) {

@@ -89,6 +89,22 @@ public class AlertService {
     }
 
     /**
+     * Get alerts by multiple statuses
+     */
+    public Page<AlertDto> getAlertsByStatuses(List<AlertStatus> statuses, HttpServletRequest httpRequest, Pageable pageable) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
+        return alertRepository.findByStatusInOrderByCreatedAtDesc(statuses, pageable).map(this::mapToDto);
+    }
+
+    /**
+     * Get alerts by multiple types
+     */
+    public Page<AlertDto> getAlertsByTypes(List<AlertType> types, HttpServletRequest httpRequest, Pageable pageable) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
+        return alertRepository.findByAlertTypeInOrderByCreatedAtDesc(types, pageable).map(this::mapToDto);
+    }
+
+    /**
      * Get single alert by ID
      */
     public AlertDto getAlertById(Long alertId, HttpServletRequest httpRequest) {

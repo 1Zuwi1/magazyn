@@ -56,69 +56,47 @@ public class RackReportController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(response));
     }
 
-    @Operation(summary = "Get all rack reports with pagination",
-            description = "Returns all rack reports ordered by creation date (newest first)")
+    @Operation(summary = "Get rack reports with optional filtering",
+            description = """
+                    Returns rack reports with pagination. Supports filtering by:
+                    - `rackId` - filter by specific rack
+                    - `warehouseId` - filter by warehouse
+                    - `withAlerts=true` - only reports that triggered alerts
+
+                    All filters are optional and can be combined.
+                    Results ordered by creation date (newest first).
+                    """)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedRackReportsResponse.class)))
     })
     @GetMapping
-    public ResponseEntity<ResponseTemplate<PagedResponse<RackReportDto>>> getAllReports(
+    public ResponseEntity<ResponseTemplate<PagedResponse<RackReportDto>>> getReports(
             HttpServletRequest request,
+            @Parameter(description = "Filter by specific rack ID") @RequestParam(required = false) Long rackId,
+            @Parameter(description = "Filter by warehouse ID") @RequestParam(required = false) Long warehouseId,
+            @Parameter(description = "Only reports that triggered alerts") @RequestParam(required = false, defaultValue = "false") boolean withAlerts,
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
+
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
+
+        if (rackId != null) {
+            return ResponseEntity.ok(ResponseTemplate.success(
+                    PagedResponse.from(rackReportService.getReportsByRackPaged(rackId, request, pageable))));
+        }
+
+        if (warehouseId != null) {
+            return ResponseEntity.ok(ResponseTemplate.success(
+                    PagedResponse.from(rackReportService.getReportsByWarehousePaged(warehouseId, request, pageable))));
+        }
+
+        if (withAlerts) {
+            return ResponseEntity.ok(ResponseTemplate.success(
+                    PagedResponse.from(rackReportService.getReportsWithAlerts(request, pageable))));
+        }
+
         return ResponseEntity.ok(ResponseTemplate.success(
                 PagedResponse.from(rackReportService.getAllReportsPaged(request, pageable))));
-    }
-
-    @Operation(summary = "Get reports for a specific rack",
-            description = "Returns all reports for a specific rack with pagination")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedRackReportsResponse.class)))
-    })
-    @GetMapping("/rack/{rackId}")
-    public ResponseEntity<ResponseTemplate<PagedResponse<RackReportDto>>> getReportsByRack(
-            @PathVariable Long rackId,
-            HttpServletRequest request,
-            @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
-        return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(rackReportService.getReportsByRackPaged(rackId, request, pageable))));
-    }
-
-    @Operation(summary = "Get reports for a specific warehouse",
-            description = "Returns all reports for racks in a specific warehouse")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedRackReportsResponse.class)))
-    })
-    @GetMapping("/warehouse/{warehouseId}")
-    public ResponseEntity<ResponseTemplate<PagedResponse<RackReportDto>>> getReportsByWarehouse(
-            @PathVariable Long warehouseId,
-            HttpServletRequest request,
-            @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
-        return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(rackReportService.getReportsByWarehousePaged(warehouseId, request, pageable))));
-    }
-
-    @Operation(summary = "Get reports that triggered alerts",
-            description = "Returns only reports that triggered at least one alert")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedRackReportsResponse.class)))
-    })
-    @GetMapping("/with-alerts")
-    public ResponseEntity<ResponseTemplate<PagedResponse<RackReportDto>>> getReportsWithAlerts(
-            HttpServletRequest request,
-            @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
-        return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(rackReportService.getReportsWithAlerts(request, pageable))));
     }
 }

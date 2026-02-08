@@ -79,6 +79,11 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
     Page<Alert> findByAlertTypeOrderByCreatedAtDesc(AlertType alertType, Pageable pageable);
 
     /**
+     * Find alerts by multiple types
+     */
+    Page<Alert> findByAlertTypeInOrderByCreatedAtDesc(List<AlertType> alertTypes, Pageable pageable);
+
+    /**
      * Count alerts by status
      */
     long countByStatus(AlertStatus status);

@@ -36,100 +36,65 @@ public class AlertController {
 
     private final AlertService alertService;
 
-    @Operation(summary = "Get all alerts with pagination",
-            description = "Returns all system alerts ordered by creation date (newest first)")
+    @Operation(summary = "Get alerts with optional filtering",
+            description = """
+                    Returns system alerts with pagination. Supports filtering by:
+                    - `status` - filter by alert status (accepts array: OPEN, RESOLVED, DISMISSED). If empty/null - all statuses.
+                    - `type` - filter by alert type (accepts array: WEIGHT_EXCEEDED, TEMPERATURE_TOO_HIGH, etc.). If empty/null - all types.
+                    - `warehouseId` - filter by warehouse
+                    - `rackId` - filter by specific rack
+                    - `activeOnly=true` - only unresolved alerts (OPEN status)
+
+                    All filters are optional and can be combined.
+                    Results ordered by creation date (newest first).
+
+                    Response includes `summary` field with alert statistics (counts by status).
+                    """)
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success",
+            @ApiResponse(responseCode = "200", description = "Success with statistics in summary field",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAlertsResponse.class)))
     })
     @GetMapping
-    public ResponseEntity<ResponseTemplate<PagedResponse<AlertDto>>> getAllAlerts(
+    public ResponseEntity<ResponseTemplate<PagedResponse<AlertDto>>> getAlerts(
             HttpServletRequest request,
+            @Parameter(description = "Filter by alert status (array, optional)") @RequestParam(required = false) java.util.List<AlertStatus> status,
+            @Parameter(description = "Filter by alert type (array, optional)") @RequestParam(required = false) java.util.List<AlertType> type,
+            @Parameter(description = "Filter by warehouse ID") @RequestParam(required = false) Long warehouseId,
+            @Parameter(description = "Filter by rack ID") @RequestParam(required = false) Long rackId,
+            @Parameter(description = "Only active/unresolved alerts") @RequestParam(required = false, defaultValue = "false") boolean activeOnly,
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
-        return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(alertService.getAllAlerts(request, pageable))));
-    }
 
-    @Operation(summary = "Get active (unresolved) alerts",
-            description = "Returns only alerts with status OPEN or ACTIVE")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAlertsResponse.class)))
-    })
-    @GetMapping("/active")
-    public ResponseEntity<ResponseTemplate<PagedResponse<AlertDto>>> getActiveAlerts(
-            HttpServletRequest request,
-            @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
-        return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(alertService.getActiveAlerts(request, pageable))));
-    }
 
-    @Operation(summary = "Get alerts by status")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAlertsResponse.class)))
-    })
-    @GetMapping("/status/{status}")
-    public ResponseEntity<ResponseTemplate<PagedResponse<AlertDto>>> getAlertsByStatus(
-            @PathVariable AlertStatus status,
-            HttpServletRequest request,
-            @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
-        return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(alertService.getAlertsByStatus(status, request, pageable))));
-    }
+        PagedResponse<AlertDto> response;
+        if (rackId != null) {
+            response = PagedResponse.from(alertService.getAlertsByRack(rackId, request, pageable));
+        } else if (warehouseId != null) {
+            response = PagedResponse.from(alertService.getAlertsByWarehouse(warehouseId, request, pageable));
+        } else if (type != null && !type.isEmpty()) {
+            response = PagedResponse.from(alertService.getAlertsByTypes(type, request, pageable));
+        } else if (status != null && !status.isEmpty()) {
+            response = PagedResponse.from(alertService.getAlertsByStatuses(status, request, pageable));
+        } else if (activeOnly) {
+            response = PagedResponse.from(alertService.getActiveAlerts(request, pageable));
+        } else {
+            response = PagedResponse.from(alertService.getAllAlerts(request, pageable));
+        }
 
-    @Operation(summary = "Get alerts by type")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAlertsResponse.class)))
-    })
-    @GetMapping("/type/{alertType}")
-    public ResponseEntity<ResponseTemplate<PagedResponse<AlertDto>>> getAlertsByType(
-            @PathVariable AlertType alertType,
-            HttpServletRequest request,
-            @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
-        return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(alertService.getAlertsByType(alertType, request, pageable))));
-    }
+        // Add statistics summary
+        PagedResponse<AlertDto> responseWithSummary = PagedResponse.<AlertDto>builder()
+                .content(response.getContent())
+                .page(response.getPage())
+                .size(response.getSize())
+                .totalElements(response.getTotalElements())
+                .totalPages(response.getTotalPages())
+                .first(response.isFirst())
+                .last(response.isLast())
+                .summary(alertService.getStatistics(request))
+                .build();
 
-    @Operation(summary = "Get alerts for a specific warehouse")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAlertsResponse.class)))
-    })
-    @GetMapping("/warehouse/{warehouseId}")
-    public ResponseEntity<ResponseTemplate<PagedResponse<AlertDto>>> getAlertsByWarehouse(
-            @PathVariable Long warehouseId,
-            HttpServletRequest request,
-            @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
-        return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(alertService.getAlertsByWarehouse(warehouseId, request, pageable))));
-    }
-
-    @Operation(summary = "Get alerts for a specific rack")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAlertsResponse.class)))
-    })
-    @GetMapping("/rack/{rackId}")
-    public ResponseEntity<ResponseTemplate<PagedResponse<AlertDto>>> getAlertsByRack(
-            @PathVariable Long rackId,
-            HttpServletRequest request,
-            @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
-        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE));
-        return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(alertService.getAlertsByRack(rackId, request, pageable))));
+        return ResponseEntity.ok(ResponseTemplate.success(responseWithSummary));
     }
 
     @Operation(summary = "Get single alert by ID")
@@ -151,37 +116,39 @@ public class AlertController {
     }
 
     @Operation(summary = "Update alert status (ADMIN only)",
-            description = "Update the status of an alert (resolve, dismiss, etc.)")
+            description = """
+                    Update the status of one or multiple alerts (resolve, dismiss, etc.).
+                    Supports bulk updates by providing array of alert IDs.
+                    Returns list of updated alerts.
+                    """)
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Alert updated successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AlertDto.class))),
+            @ApiResponse(responseCode = "200", description = "Alerts updated successfully - returns list of updated alerts",
+                    content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "404", description = "Error codes: ALERT_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
             @ApiResponse(responseCode = "403", description = "Access denied - requires ADMIN role",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @PatchMapping("/{alertId}/status")
+    @PatchMapping("/status")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<AlertDto>> updateAlertStatus(
-            @PathVariable Long alertId,
+    public ResponseEntity<ResponseTemplate<java.util.List<AlertDto>>> updateAlertStatus(
             @Valid @RequestBody AlertStatusUpdateRequest updateRequest,
             HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(ResponseTemplate.success(
-                    alertService.updateAlertStatus(alertId, updateRequest, request)));
+            java.util.List<AlertDto> updatedAlerts = new java.util.ArrayList<>();
+            for (Long alertId : updateRequest.getAlertIds()) {
+                try {
+                    updatedAlerts.add(alertService.updateAlertStatus(alertId, updateRequest, request));
+                } catch (IllegalArgumentException e) {
+                    // Skip alerts that don't exist
+                }
+            }
+            if (updatedAlerts.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error("ALERT_NOT_FOUND"));
+            }
+            return ResponseEntity.ok(ResponseTemplate.success(updatedAlerts));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
         }
-    }
-
-    @Operation(summary = "Get alert statistics",
-            description = "Returns counts of alerts by status")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AlertService.AlertStatistics.class)))
-    })
-    @GetMapping("/statistics")
-    public ResponseEntity<ResponseTemplate<AlertService.AlertStatistics>> getStatistics(HttpServletRequest request) {
-        return ResponseEntity.ok(ResponseTemplate.success(alertService.getStatistics(request)));
     }
 }
