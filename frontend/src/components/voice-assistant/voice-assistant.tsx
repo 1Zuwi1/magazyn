@@ -333,32 +333,32 @@ export function VoiceAssistant({
           className={buttonVariants({
             variant: "ghost",
             size: "icon",
-            className: "mr-3",
+            className:
+              "relative mr-3 text-muted-foreground transition-colors duration-200 hover:text-primary",
           })}
           title="Asystent głosowy"
         >
-          <HugeiconsIcon icon={Mic01Icon} />
+          <HugeiconsIcon icon={Mic01Icon} strokeWidth={1.75} />
         </DialogTrigger>
       )}
       <DialogContent
         className={cn(
-          "p-0",
-          isMobile ? "h-dvh w-screen max-w-none rounded-none" : ""
+          "gap-0 overflow-hidden p-0",
+          isMobile ? "h-dvh w-screen max-w-none rounded-none" : "sm:max-w-sm"
         )}
         showCloseButton={false}
       >
         <div
           className={cn(
             "relative overflow-hidden",
-            isMobile
-              ? "h-full w-full py-8"
-              : "aspect-3/4 w-full rounded-lg border"
+            isMobile ? "h-full w-full py-8" : "aspect-3/4 w-full"
           )}
         >
           <Button
-            className={cn("absolute top-12 right-2 z-10 rounded-xl", {
-              "top-4 right-4": !isMobile,
-            })}
+            className={cn(
+              "absolute right-3 z-10 rounded-full text-muted-foreground transition-colors hover:text-foreground",
+              isMobile ? "top-12" : "top-3"
+            )}
             onClick={() => closeDialog()}
             size="icon-sm"
             variant="ghost"

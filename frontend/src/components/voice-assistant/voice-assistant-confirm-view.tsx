@@ -51,13 +51,13 @@ export function VoiceAssistantConfirmView({
   const secondsLeft = Math.ceil(timeLeft / 1000)
 
   return (
-    <div className="relative flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
+    <div className="relative flex h-full flex-col items-center justify-center gap-5 p-6 text-center">
       <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent opacity-50" />
 
-      <div className="relative flex size-24 items-center justify-center">
+      <div className="relative flex size-20 items-center justify-center">
         <svg
           aria-hidden="true"
-          className="size-24 -rotate-90"
+          className="size-20 -rotate-90"
           viewBox="0 0 100 100"
         >
           <circle
@@ -65,7 +65,7 @@ export function VoiceAssistantConfirmView({
             cx="50"
             cy="50"
             r="45"
-            strokeWidth="6"
+            strokeWidth="5"
           />
           <circle
             className="fill-none stroke-primary transition-all duration-100"
@@ -75,32 +75,43 @@ export function VoiceAssistantConfirmView({
             strokeDasharray={`${2 * Math.PI * 45}`}
             strokeDashoffset={`${2 * Math.PI * 45 * (1 - progress / 100)}`}
             strokeLinecap="round"
-            strokeWidth="6"
+            strokeWidth="5"
           />
         </svg>
         <span
           aria-label={`Pozostało ${secondsLeft} sekund`}
           aria-live="assertive"
-          className="absolute font-bold text-2xl text-foreground"
+          className="absolute font-bold text-foreground text-xl tabular-nums"
           role="timer"
         >
           {secondsLeft}
         </span>
       </div>
 
-      <div className="max-w-sm space-y-2">
-        <h2 className="font-semibold text-foreground text-xl">
+      <div className="max-w-xs space-y-1.5">
+        <h2 className="font-semibold text-foreground text-lg tracking-tight">
           Rozpoznano polecenie
         </h2>
-        <p className="text-muted-foreground text-sm">{commandLabel}</p>
-        <p className="text-muted-foreground text-xs">„{transcript}”</p>
+        <p className="font-medium text-foreground/90 text-sm">{commandLabel}</p>
+        <p className="rounded-lg bg-muted/40 px-3 py-1.5 text-muted-foreground text-xs leading-relaxed">
+          &bdquo;{transcript}&rdquo;
+        </p>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-2">
-        <Button onClick={handleConfirm} type="button">
+      <div className="flex items-center gap-2 pt-1">
+        <Button
+          className="rounded-full px-6"
+          onClick={handleConfirm}
+          type="button"
+        >
           Wykonaj teraz
         </Button>
-        <Button onClick={onCancel} type="button" variant="ghost">
+        <Button
+          className="rounded-full"
+          onClick={onCancel}
+          type="button"
+          variant="ghost"
+        >
           Anuluj
         </Button>
       </div>
