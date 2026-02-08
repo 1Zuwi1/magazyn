@@ -42,7 +42,7 @@ public class WarehouseService {
                             .filter(dto -> {
                                 if (dto.getTotalSlots() == 0) return false;
                                 int occupiedSlotsPercentage = (int) ((double) dto.getOccupiedSlots() / dto.getTotalSlots() * 100);
-                                return occupiedSlotsPercentage <= minPercentOfOccupiedSlots;
+                                return occupiedSlotsPercentage >= minPercentOfOccupiedSlots;
                             }).toList(),
                     pageable,
                     warehousePage.getTotalElements()

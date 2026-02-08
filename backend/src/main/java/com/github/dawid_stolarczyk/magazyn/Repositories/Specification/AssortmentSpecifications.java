@@ -40,9 +40,9 @@ public class AssortmentSpecifications {
                 Timestamp nowTimestamp = Timestamp.from(now);
 
                 predicates.add(criteriaBuilder.and(
-                        criteriaBuilder.isNotNull(root.get("expires_at")),
-                        criteriaBuilder.greaterThan(root.get("expires_at"), nowTimestamp),
-                        criteriaBuilder.lessThanOrEqualTo(root.get("expires_at"), weekThreshold)
+                        criteriaBuilder.isNotNull(root.get("expiresAt")),
+                        criteriaBuilder.greaterThan(root.get("expiresAt"), nowTimestamp),
+                        criteriaBuilder.lessThanOrEqualTo(root.get("expiresAt"), weekThreshold)
                 ));
             }
 
