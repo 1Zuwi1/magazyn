@@ -10,7 +10,6 @@ import {
   Package,
   PackageReceiveIcon,
 } from "@hugeicons/core-free-icons"
-import { useQueries } from "@tanstack/react-query"
 import Link from "next/link"
 import { useMemo } from "react"
 import { PageHeader } from "@/components/dashboard/page-header"
@@ -19,46 +18,60 @@ import {
   QuickActionCard,
   StatCard,
 } from "@/components/dashboard/stat-card"
-import { formatDate, pluralize } from "@/components/dashboard/utils/helpers"
+import {
+  formatDate,
+  getDaysUntilExpiry,
+  pluralize,
+} from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import useAssortments from "@/hooks/use-assortment"
-import useRacks from "@/hooks/use-racks"
+import { useMultipleItems } from "@/hooks/use-items"
+import { useMultipleRacks } from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
-import { apiFetch } from "@/lib/fetcher"
-import { ItemDetailsSchema } from "@/lib/schemas"
+import { cn } from "@/lib/utils"
 
 const NUMBER_FORMATTER = new Intl.NumberFormat("pl-PL")
 const OCCUPANCY_WARNING_THRESHOLD = 75
 const OCCUPANCY_CRITICAL_THRESHOLD = 90
-// const EXPIRY_WARNING_DAYS = 30
+const EXPIRY_WARNING_DAYS = 14
+const EXPIRY_FALLBACK_DAYS = Number.POSITIVE_INFINITY
 const RECENT_ITEMS_LIMIT = 4
-const ITEM_DEFINITION_CACHE_TIME_MS = 5 * 60 * 1000
-// const TOP_WAREHOUSES_LIMIT = 3
+const EXPIRING_ITEMS_LIMIT = 3
+const TOP_WAREHOUSES_LIMIT = 3
+const WAREHOUSES_SUMMARY_PAGE_SIZE = 1000
+const ASSORTMENTS_SUMMARY_PAGE_SIZE = 1000
 
-// type OccupancyBadgeVariant = "secondary" | "warning" | "destructive"
+type OccupancyBadgeVariant = "secondary" | "warning" | "destructive"
+interface WarehouseSummary {
+  id: number
+  name: string
+  capacity: number
+  used: number
+  occupancy: number
+}
 
 const formatNumber = (value: number): string => NUMBER_FORMATTER.format(value)
 
-// const getOccupancyBadgeVariant = (occupancy: number): OccupancyBadgeVariant => {
-//   if (occupancy >= OCCUPANCY_CRITICAL_THRESHOLD) {
-//     return "destructive"
-//   }
-//   if (occupancy >= OCCUPANCY_WARNING_THRESHOLD) {
-//     return "warning"
-//   }
-//   return "secondary"
-// }
+const getOccupancyBadgeVariant = (occupancy: number): OccupancyBadgeVariant => {
+  if (occupancy >= OCCUPANCY_CRITICAL_THRESHOLD) {
+    return "destructive"
+  }
+  if (occupancy >= OCCUPANCY_WARNING_THRESHOLD) {
+    return "warning"
+  }
+  return "secondary"
+}
 
-// const getOccupancyBarClassName = (occupancy: number): string => {
-//   if (occupancy >= OCCUPANCY_CRITICAL_THRESHOLD) {
-//     return "bg-destructive"
-//   }
-//   if (occupancy >= OCCUPANCY_WARNING_THRESHOLD) {
-//     return "bg-orange-500"
-//   }
-//   return "bg-primary"
-// }
+const getOccupancyBarClassName = (occupancy: number): string => {
+  if (occupancy >= OCCUPANCY_CRITICAL_THRESHOLD) {
+    return "bg-destructive"
+  }
+  if (occupancy >= OCCUPANCY_WARNING_THRESHOLD) {
+    return "bg-orange-500"
+  }
+  return "bg-primary"
+}
 
 const getOccupancyStatVariant = (
   occupancy: number
@@ -77,15 +90,15 @@ export default function DashboardHomeContent() {
     data: warehousesData,
     isPending: isWarehousesPending,
     isError: isWarehousesError,
-  } = useWarehouses({ page: 0, size: 1 })
+  } = useWarehouses({ page: 0, size: WAREHOUSES_SUMMARY_PAGE_SIZE })
   const {
-    // data: racksData,
-    isPending: isRacksPending,
-    isError: isRacksError,
-  } = useRacks({ page: 0, size: 1 })
+    data: assortmentsData,
+    isPending: isAssortmentsPending,
+    isError: isAssortmentsError,
+  } = useAssortments({ page: 0, size: ASSORTMENTS_SUMMARY_PAGE_SIZE })
 
-  const isSummaryPending = isWarehousesPending || isRacksPending
-  const hasSummaryError = isWarehousesError || isRacksError
+  const isSummaryPending = isWarehousesPending || isAssortmentsPending
+  const hasSummaryError = isWarehousesError || isAssortmentsError
   let summaryTitleBadge: string | undefined
 
   if (hasSummaryError) {
@@ -94,77 +107,163 @@ export default function DashboardHomeContent() {
     summaryTitleBadge = "Ładowanie"
   }
 
-  const { data: assortmentsData } = useAssortments()
-
-  // const dangerousItemsCount = MOCK_ITEMS.filter(
-  //   (item) => item.definition.isDangerous
-  // ).length
-  // const expiringSoonItems = MOCK_ITEM_STATS.filter((item) => {
-  //   const daysUntilExpiry = item.daysUntilExpiry ?? EXPIRY_FALLBACK_DAYS
-  //   return daysUntilExpiry <= EXPIRY_WARNING_DAYS
-  // })
-  // const expiringSoonItemsList = [...expiringSoonItems]
-  //   .sort((a, b) => {
-  //     const daysUntilExpiry = a.daysUntilExpiry ?? EXPIRY_FALLBACK_DAYS
-  //     const nextDaysUntilExpiry = b.daysUntilExpiry ?? EXPIRY_FALLBACK_DAYS
-  //     return daysUntilExpiry - nextDaysUntilExpiry
-  //   })
-  //   .slice(0, EXPIRING_ITEMS_LIMIT)
-  // const criticalWarehouses = warehouseSummaries.filter(
-  //   (summary) => summary.occupancy >= OCCUPANCY_CRITICAL_THRESHOLD
-  // )
+  const assortments = assortmentsData?.content
+  const warehouseSummaries = useMemo<WarehouseSummary[]>(
+    () =>
+      (warehousesData?.content ?? []).map((warehouse) => {
+        const capacity = warehouse.occupiedSlots + warehouse.freeSlots
+        const used = warehouse.occupiedSlots
+        return {
+          id: warehouse.id,
+          name: warehouse.name,
+          capacity,
+          used,
+          occupancy: capacity > 0 ? Math.round((used / capacity) * 100) : 0,
+        }
+      }),
+    [warehousesData?.content]
+  )
 
   const recentAssortment = useMemo(
     () =>
-      [...(assortmentsData?.content ?? [])]
+      [...(assortments ?? [])]
         .sort(
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         )
         .slice(0, RECENT_ITEMS_LIMIT),
-    [assortmentsData?.content]
+    [assortments]
   )
 
-  const itemIdsInRecentAssortment = useMemo(
-    () => [...new Set(recentAssortment.map((item) => item.itemId))],
+  const allAssortmentItemIds = useMemo(
+    () => [...new Set((assortments ?? []).map((item) => item.itemId))],
+    [assortments]
+  )
+  const recentAssortmentRackIds = useMemo(
+    () => [...new Set(recentAssortment.map((item) => item.rackId))],
     [recentAssortment]
   )
 
-  const itemDefinitionQueries = useQueries({
-    queries: itemIdsInRecentAssortment.map((itemId) => ({
-      queryKey: ["item-details", itemId],
-      queryFn: () => apiFetch(`/api/items/${itemId}`, ItemDetailsSchema),
-      staleTime: ITEM_DEFINITION_CACHE_TIME_MS,
-    })),
+  const itemDefinitionQueries = useMultipleItems({
+    itemIds: allAssortmentItemIds,
+  })
+  const rackLookupQueries = useMultipleRacks({
+    rackIds: recentAssortmentRackIds,
   })
 
-  const itemDefinitionById = useMemo(() => {
-    const definitionMap = new Map<
+  const itemDefinitionsById = useMemo(() => {
+    const itemDefinitionsMap = new Map<
       number,
       NonNullable<(typeof itemDefinitionQueries)[number]["data"]>
     >()
-
-    for (const [index, itemId] of itemIdsInRecentAssortment.entries()) {
-      const definition = itemDefinitionQueries[index]?.data
-      if (definition) {
-        definitionMap.set(itemId, definition)
+    for (const query of itemDefinitionQueries) {
+      if (query.data) {
+        itemDefinitionsMap.set(query.data.id, query.data)
       }
     }
+    return itemDefinitionsMap
+  }, [itemDefinitionQueries])
 
-    return definitionMap
-  }, [itemDefinitionQueries, itemIdsInRecentAssortment])
-
-  // const topWarehouses = [...warehouseSummaries]
-  //   .sort((a, b) => b.occupancy - a.occupancy)
-  //   .slice(0, TOP_WAREHOUSES_LIMIT)
-
-  const occupancyPercentage = warehousesData?.summary
-    ? Math.round(
-        (warehousesData.summary.occupiedSlots /
-          warehousesData.summary.totalCapacity) *
-          100
+  const rackLabelsById = useMemo(() => {
+    const rackLabelsMap = new Map<number, string>()
+    for (const query of rackLookupQueries) {
+      if (!query.data) {
+        continue
+      }
+      rackLabelsMap.set(
+        query.data.id,
+        query.data.name?.trim() || query.data.marker.trim()
       )
-    : 0
+    }
+    return rackLabelsMap
+  }, [rackLookupQueries])
+
+  const recentAssortmentEntries = useMemo(
+    () =>
+      recentAssortment.map((assortment) => {
+        const itemDefinition = itemDefinitionsById.get(assortment.itemId)
+        return {
+          ...assortment,
+          dangerous: itemDefinition?.dangerous ?? false,
+          itemName: itemDefinition?.name ?? `Produkt #${assortment.itemId}`,
+          rackLabel:
+            rackLabelsById.get(assortment.rackId) ??
+            `Regał #${assortment.rackId}`,
+        }
+      }),
+    [itemDefinitionsById, rackLabelsById, recentAssortment]
+  )
+  const dangerousItemsCount = useMemo(() => {
+    let dangerousCount = 0
+    for (const assortment of assortments ?? []) {
+      if (itemDefinitionsById.get(assortment.itemId)?.dangerous) {
+        dangerousCount += 1
+      }
+    }
+    return dangerousCount
+  }, [assortments, itemDefinitionsById])
+  const expiringSoonItems = useMemo(
+    () =>
+      (assortments ?? []).flatMap((assortment) => {
+        const expiresAt = new Date(assortment.expiresAt)
+        if (Number.isNaN(expiresAt.getTime())) {
+          return []
+        }
+
+        const daysUntilExpiry = getDaysUntilExpiry(new Date(), expiresAt)
+        if (daysUntilExpiry > EXPIRY_WARNING_DAYS) {
+          return []
+        }
+
+        const definition = itemDefinitionsById.get(assortment.itemId)
+        return [
+          {
+            definitionId: assortment.id,
+            definition: {
+              name: definition?.name ?? `Produkt #${assortment.itemId}`,
+            },
+            daysUntilExpiry,
+          },
+        ]
+      }),
+    [assortments, itemDefinitionsById]
+  )
+  const expiringSoonItemsList = useMemo(
+    () =>
+      [...expiringSoonItems]
+        .sort(
+          (a, b) =>
+            (a.daysUntilExpiry ?? EXPIRY_FALLBACK_DAYS) -
+            (b.daysUntilExpiry ?? EXPIRY_FALLBACK_DAYS)
+        )
+        .slice(0, EXPIRING_ITEMS_LIMIT),
+    [expiringSoonItems]
+  )
+  const criticalWarehouses = useMemo(
+    () =>
+      warehouseSummaries.filter(
+        (warehouse) => warehouse.occupancy >= OCCUPANCY_CRITICAL_THRESHOLD
+      ),
+    [warehouseSummaries]
+  )
+  const topWarehouses = useMemo(
+    () =>
+      [...warehouseSummaries]
+        .sort((a, b) => b.occupancy - a.occupancy)
+        .slice(0, TOP_WAREHOUSES_LIMIT),
+    [warehouseSummaries]
+  )
+  const totalCapacity = warehousesData?.summary?.totalCapacity ?? 0
+  const totalOccupied = warehousesData?.summary?.occupiedSlots ?? 0
+  const occupancyPercentage =
+    totalCapacity > 0 ? Math.round((totalOccupied / totalCapacity) * 100) : 0
+  const totalWarehouses =
+    warehousesData?.summary?.totalWarehouses ??
+    warehousesData?.totalElements ??
+    0
+  const totalRacks = warehousesData?.summary?.totalRacks ?? 0
+  const productsInCirculation =
+    assortmentsData?.totalElements ?? assortments?.length ?? 0
 
   const getOccupancyCardVariant = (): "danger" | "warning" | "success" => {
     if (occupancyPercentage >= OCCUPANCY_CRITICAL_THRESHOLD) {
@@ -179,7 +278,7 @@ export default function DashboardHomeContent() {
   const headerStats = [
     {
       label: "Magazyny",
-      value: formatNumber(warehousesData?.totalElements ?? 0),
+      value: formatNumber(totalWarehouses),
       icon: Package,
     },
     {
@@ -207,10 +306,10 @@ export default function DashboardHomeContent() {
         </h2>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            hint={`${formatNumber(warehousesData?.totalElements ?? 0)} ${pluralize(warehousesData?.totalElements ?? 0, "regał", "regały", "regałów")}`}
+            hint={`${formatNumber(totalRacks)} ${pluralize(totalRacks, "regał", "regały", "regałów")}`}
             icon={Package}
             label="Magazyny aktywne"
-            value={formatNumber(warehousesData?.totalElements ?? 0)}
+            value={formatNumber(totalWarehouses)}
             variant="primary"
           />
           <StatCard
@@ -227,13 +326,13 @@ export default function DashboardHomeContent() {
             value={`${occupancyPercentage}%`}
             variant={getOccupancyCardVariant()}
           />
-          {/* <StatCard
+          <StatCard
             hint={`${formatNumber(dangerousItemsCount)} oznaczonych jako niebezpieczne`}
             icon={GroupItemsIcon}
             label="Produkty w obiegu"
-            value={formatNumber(MOCK_ITEMS.length)}
+            value={formatNumber(productsInCirculation)}
             variant="default"
-          /> */}
+          />
         </div>
       </section>
 
@@ -285,7 +384,7 @@ export default function DashboardHomeContent() {
           >
             <div className="space-y-4">
               <div className="space-y-2 text-sm">
-                {/* <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
+                <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
                   <span>Magazyny powyżej {OCCUPANCY_CRITICAL_THRESHOLD}%</span>
                   <Badge
                     variant={
@@ -294,8 +393,8 @@ export default function DashboardHomeContent() {
                   >
                     {formatNumber(criticalWarehouses.length)}
                   </Badge>
-                </div> */}
-                {/* <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
+                </div>
+                <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
                   <span>
                     Produkty z terminem poniżej {EXPIRY_WARNING_DAYS} dni
                   </span>
@@ -306,17 +405,17 @@ export default function DashboardHomeContent() {
                   >
                     {formatNumber(expiringSoonItems.length)}
                   </Badge>
-                </div> */}
-                {/* <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
+                </div>
+                <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
                   <span>Produkty niebezpieczne</span>
                   <Badge
                     variant={dangerousItemsCount > 0 ? "warning" : "success"}
                   >
                     {formatNumber(dangerousItemsCount)}
                   </Badge>
-                </div> */}
+                </div>
               </div>
-              {/* {expiringSoonItemsList.length > 0 ? (
+              {expiringSoonItemsList.length > 0 ? (
                 <div className="space-y-2">
                   <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                     Najbliższe terminy
@@ -339,8 +438,8 @@ export default function DashboardHomeContent() {
                 <p className="text-muted-foreground text-sm">
                   Brak produktów z krótką datą ważności.
                 </p>
-              )} */}
-              {/* {criticalWarehouses.length > 0 && (
+              )}
+              {criticalWarehouses.length > 0 && (
                 <div className="space-y-2">
                   <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                     Krytyczne lokalizacje
@@ -353,7 +452,7 @@ export default function DashboardHomeContent() {
                     ))}
                   </div>
                 </div>
-              )} */}
+              )}
             </div>
           </InsightCard>
 
@@ -362,36 +461,25 @@ export default function DashboardHomeContent() {
             icon={PackageReceiveIcon}
             title="Ostatnie przyjęcia"
           >
-            {recentAssortment.length > 0 ? (
+            {recentAssortmentEntries.length > 0 ? (
               <ul className="space-y-3">
-                {recentAssortment.map((item) => (
+                {recentAssortmentEntries.map((item) => (
                   <li
                     className="flex items-start justify-between gap-4 rounded-lg border bg-card/50 p-3"
                     key={item.id}
                   >
                     <div className="min-w-0">
-                      <p className="truncate font-medium">
-                        {itemDefinitionById.get(item.itemId)?.name ??
-                          `Produkt #${item.itemId}`}
-                      </p>
+                      <p className="truncate font-medium">{item.itemName}</p>
                       <p className="text-muted-foreground text-xs">
-                        Regał #{item.rackId}
+                        {item.rackLabel}
                       </p>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-2 text-xs">
                       <span className="font-mono text-muted-foreground">
                         {formatDate(new Date(item.createdAt))}
                       </span>
-                      <Badge
-                        variant={
-                          itemDefinitionById.get(item.itemId)?.dangerous
-                            ? "warning"
-                            : "secondary"
-                        }
-                      >
-                        {itemDefinitionById.get(item.itemId)?.dangerous
-                          ? "Niebezpieczny"
-                          : "Standard"}
+                      <Badge variant={item.dangerous ? "warning" : "secondary"}>
+                        {item.dangerous ? "Niebezpieczny" : "Standard"}
                       </Badge>
                     </div>
                   </li>
@@ -410,7 +498,7 @@ export default function DashboardHomeContent() {
             title="Obłożenie magazynów"
           >
             <div className="space-y-4">
-              {/* {topWarehouses.map((warehouse) => (
+              {topWarehouses.map((warehouse) => (
                 <div className="space-y-2" key={warehouse.id}>
                   <div className="flex items-center justify-between gap-3 text-sm">
                     <span className="truncate font-medium">
@@ -436,7 +524,7 @@ export default function DashboardHomeContent() {
                     {formatNumber(warehouse.capacity)} miejsc
                   </p>
                 </div>
-              ))} */}
+              ))}
               <Link
                 className={buttonVariants({
                   size: "sm",
