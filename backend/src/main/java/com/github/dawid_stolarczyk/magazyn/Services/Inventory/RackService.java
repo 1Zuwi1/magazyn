@@ -206,6 +206,9 @@ public class RackService {
         int occupiedSlots = rack.getAssortments().size();
         int totalSlots = rack.getSize_x() * rack.getSize_y();
         int freeSlots = totalSlots - occupiedSlots;
+        float totalWeight = (float) rack.getAssortments().stream()
+                .mapToDouble(assortment -> assortment.getItem().getWeight())
+                .sum();
 
 
         return RackDto.builder()
@@ -225,6 +228,7 @@ public class RackService {
                 .occupiedSlots(occupiedSlots)
                 .freeSlots(freeSlots)
                 .totalSlots(totalSlots)
+                .totalWeight(totalWeight)
                 .build();
     }
 

@@ -124,8 +124,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     return;
                 }
                 if (user.getStatus().equals(AccountStatus.ACTIVE)
-                        || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)
-                        || user.getEmailStatus().equals(AccountStatus.ACTIVE)) {
+                        || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)) {
                     SessionData newSessionData = new SessionData(
                             UUID.randomUUID().toString(),
                             rememberMeData.getUserId(),

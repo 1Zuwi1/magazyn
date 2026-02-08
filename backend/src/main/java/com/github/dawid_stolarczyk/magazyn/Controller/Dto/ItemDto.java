@@ -21,7 +21,7 @@ public class ItemDto {
     @Schema(description = "Name of the item", example = "Laptop")
     private String name;
 
-    @Schema(description = "URL or path to the item's photo", example = "/api/items/1/photo")
+    @Schema(description = "URL or path to the item's photo")
     private String photoUrl;
 
     @Schema(description = "Minimum temperature requirement in Celsius", example = "5.0")

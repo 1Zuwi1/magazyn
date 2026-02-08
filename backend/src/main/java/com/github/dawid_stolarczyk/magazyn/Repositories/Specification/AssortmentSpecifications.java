@@ -15,7 +15,9 @@ public class AssortmentSpecifications {
     public static Specification<Assortment> withFilters(
             String search,
             Boolean weekToExpire,
-            Long rackId) {
+            Long rackId,
+            Integer positionX,
+            Integer positionY) {
 
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -47,6 +49,16 @@ public class AssortmentSpecifications {
             // Rack filter (for /racks/{rackId}/assortments endpoint)
             if (rackId != null) {
                 predicates.add(criteriaBuilder.equal(root.get("rack").get("id"), rackId));
+            }
+
+            // Position X filter
+            if (positionX != null) {
+                predicates.add(criteriaBuilder.equal(root.get("positionX"), positionX));
+            }
+
+            // Position Y filter
+            if (positionY != null) {
+                predicates.add(criteriaBuilder.equal(root.get("positionY"), positionY));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

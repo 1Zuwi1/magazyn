@@ -57,7 +57,7 @@ public class AssortmentService {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
 
         var spec = AssortmentSpecifications.withFilters(
-                search, weekToExpire, null);
+                search, weekToExpire, null, null, null);
 
         Page<AssortmentDto> page = assortmentRepository.findAll(spec, pageable)
                 .map(this::mapToDto);
@@ -92,6 +92,8 @@ public class AssortmentService {
             HttpServletRequest request,
             Pageable pageable,
             String search,
+            Integer positionX,
+            Integer positionY,
             Boolean weekToExpire) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
 
@@ -101,7 +103,7 @@ public class AssortmentService {
         }
 
         var spec = AssortmentSpecifications.withFilters(
-                search, weekToExpire, rackId);
+                search, weekToExpire, rackId, positionX, positionY);
 
         return assortmentRepository.findAll(spec, pageable)
                 .map(this::mapToDtoWithItem);
