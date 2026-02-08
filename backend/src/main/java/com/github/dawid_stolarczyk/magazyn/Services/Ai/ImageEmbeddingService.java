@@ -18,10 +18,12 @@ import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -38,12 +40,15 @@ import java.util.List;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ImageEmbeddingService {
 
     private static final int EMBEDDING_DIMENSION = 1000;
     private static final List<String> ALLOWED_CONTENT_TYPES = List.of(
             "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/bmp"
     );
+
+    private final BackgroundRemovalService backgroundRemovalService;
 
     private ZooModel<Image, float[]> model;
     private Predictor<Image, float[]> predictor;
@@ -180,6 +185,7 @@ public class ImageEmbeddingService {
 
     /**
      * Converts an InputStream image to a 1000-dimensional embedding vector.
+     * Applies background removal before generating the embedding.
      *
      * @param inputStream the image input stream to process
      * @return float array of 1000 dimensions representing the image embedding
@@ -190,11 +196,19 @@ public class ImageEmbeddingService {
         }
 
         try {
-            Image image = ImageFactory.getInstance().fromInputStream(inputStream);
-            float[] rawEmbedding = predictor.predict(image);
+            byte[] originalBytes = inputStream.readAllBytes();
 
-            // Normalize to 512 dimensions if needed
-            return normalizeEmbedding(rawEmbedding);
+            // Attempt background removal; fall back to original on failure
+            byte[] imageBytes = originalBytes;
+            byte[] processed = backgroundRemovalService.removeBackground(originalBytes);
+            if (processed != null) {
+                imageBytes = processed;
+                log.debug("Using background-removed image for embedding");
+            } else {
+                log.debug("Using original image for embedding (background removal skipped or failed)");
+            }
+
+            return generateEmbeddingFromBytes(imageBytes);
         } catch (IOException e) {
             log.error("Failed to load image: {}", e.getMessage());
             throw new ImageEmbeddingException("Invalid image format or corrupted file", e);
@@ -202,6 +216,35 @@ public class ImageEmbeddingService {
             log.error("Failed to generate embedding: {}", e.getMessage());
             throw new ImageEmbeddingException("AI model failed to process image", e);
         }
+    }
+
+    /**
+     * Generates an embedding from already-processed image bytes (no background removal).
+     * Use this when background removal has already been applied to the image.
+     *
+     * @param imageBytes the pre-processed image bytes
+     * @return float array of 1000 dimensions representing the image embedding
+     */
+    public float[] getEmbeddingFromProcessedImage(byte[] imageBytes) {
+        if (!modelLoaded) {
+            throw new ImageEmbeddingException("Image embedding model is not available");
+        }
+
+        try {
+            return generateEmbeddingFromBytes(imageBytes);
+        } catch (IOException e) {
+            log.error("Failed to load image: {}", e.getMessage());
+            throw new ImageEmbeddingException("Invalid image format or corrupted file", e);
+        } catch (TranslateException e) {
+            log.error("Failed to generate embedding: {}", e.getMessage());
+            throw new ImageEmbeddingException("AI model failed to process image", e);
+        }
+    }
+
+    private float[] generateEmbeddingFromBytes(byte[] imageBytes) throws IOException, TranslateException {
+        Image image = ImageFactory.getInstance().fromInputStream(new ByteArrayInputStream(imageBytes));
+        float[] rawEmbedding = predictor.predict(image);
+        return normalizeEmbedding(rawEmbedding);
     }
 
     /**

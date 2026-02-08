@@ -21,7 +21,7 @@ public class ItemDto {
     @Schema(description = "Name of the item", example = "Laptop")
     private String name;
 
-    @Schema(description = "URL or path to the item's photo", example = "/api/items/1/photo")
+    @Schema(description = "URL or path to the item's photo")
     private String photoUrl;
 
     @Schema(description = "Minimum temperature requirement in Celsius", example = "5.0")
@@ -46,7 +46,7 @@ public class ItemDto {
     private String comment;
 
     @Schema(description = "Days until expiration", example = "30")
-    private long expireAfterDays;
+    private Long expireAfterDays;
 
     @Schema(description = "Whether the item is dangerous", example = "false")
     private boolean isDangerous;

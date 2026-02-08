@@ -8,10 +8,12 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.Assortment;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Rack;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.ExpiryFilters;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AssortmentRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.RackRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.Specification.AssortmentSpecifications;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
@@ -20,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -28,8 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -46,20 +48,53 @@ public class AssortmentService {
 
     private static final double EPS = 1e-6;
 
-    public List<AssortmentDto> getAllAssortments(HttpServletRequest request) {
+    public Page<AssortmentDto> getAllAssortmentsPaged(
+            HttpServletRequest request,
+            Pageable pageable,
+            ArrayList<ExpiryFilters> expiryFilters,
+            String search,
+            Boolean weekToExpire) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        return assortmentRepository.findAll().stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
-    }
 
-    public Page<AssortmentDto> getAllAssortmentsPaged(HttpServletRequest request, Pageable pageable) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        return assortmentRepository.findAll(pageable)
+        var spec = AssortmentSpecifications.withFilters(
+                search, weekToExpire, null, null, null);
+
+        Page<AssortmentDto> page = assortmentRepository.findAll(spec, pageable)
                 .map(this::mapToDto);
+
+        if (!expiryFilters.isEmpty() && !expiryFilters.contains(ExpiryFilters.ALL)) {
+            Instant now = Instant.now();
+            int maxDays = expiryFilters.stream()
+                    .filter(f -> f != ExpiryFilters.EXPIRED)
+                    .mapToInt(f -> Integer.parseInt(f.name().split("_")[1]))
+                    .max()
+                    .orElse(0);
+            Instant threshold = now.plus(maxDays, ChronoUnit.DAYS);
+            log.info("Applying expiry filters: {}, threshold date: {}", expiryFilters, threshold);
+
+
+            page = new PageImpl<>(page
+                    .stream()
+                    .filter(dto -> dto.getExpiresAt() != null
+                            && dto.getExpiresAt().toInstant().isBefore(threshold)
+                            && dto.getExpiresAt().toInstant().isAfter(now)
+                            || (dto.getExpiresAt() != null
+                            && expiryFilters.contains(ExpiryFilters.EXPIRED)
+                            && dto.getExpiresAt().toInstant().isBefore(now))
+                    )
+                    .toList(), pageable, page.getTotalElements());
+        }
+        return page;
     }
 
-    public Page<AssortmentWithItemDto> getAssortmentsByRackIdPaged(Long rackId, HttpServletRequest request, Pageable pageable) {
+    public Page<AssortmentWithItemDto> getAssortmentsByRackIdPaged(
+            Long rackId,
+            HttpServletRequest request,
+            Pageable pageable,
+            String search,
+            Integer positionX,
+            Integer positionY,
+            Boolean weekToExpire) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
 
         // Validate rack exists
@@ -67,7 +102,10 @@ public class AssortmentService {
             throw new IllegalArgumentException(InventoryError.RACK_NOT_FOUND.name());
         }
 
-        return assortmentRepository.findByRackId(rackId, pageable)
+        var spec = AssortmentSpecifications.withFilters(
+                search, weekToExpire, rackId, positionX, positionY);
+
+        return assortmentRepository.findAll(spec, pageable)
                 .map(this::mapToDtoWithItem);
     }
 
@@ -92,18 +130,12 @@ public class AssortmentService {
         return mapToDto(assortment);
     }
 
-    @Transactional
-    public AssortmentDto createAssortment(AssortmentDto dto, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
-        return createAssortmentInternal(dto);
-    }
-
     /**
      * Internal method for bulk import - no rate limiting
      * Uses SERIALIZABLE isolation to prevent race conditions in code (barcode) generation
      */
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public AssortmentDto createAssortmentInternal(AssortmentDto dto) {
+    public void createAssortmentInternal(AssortmentDto dto) {
         Item item = itemRepository.findById(dto.getItemId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
         Rack rack = rackRepository.findById(dto.getRackId())
@@ -144,7 +176,8 @@ public class AssortmentService {
                         .code(placementCode)
                         .build();
 
-                return mapToDto(assortmentRepository.save(assortment));
+                mapToDto(assortmentRepository.save(assortment));
+                return;
 
             } catch (DataIntegrityViolationException ex) {
                 // Check if it's a code collision (unique constraint violation)
@@ -243,14 +276,6 @@ public class AssortmentService {
         }
 
         return mapToDto(assortmentRepository.save(assortment));
-    }
-
-    @Transactional
-    public void deleteAssortment(Long id, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
-        Assortment assortment = assortmentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
-        assortmentRepository.delete(assortment);
     }
 
     private void validatePlacement(Rack rack, Item item, Integer x, Integer y, Long excludeAssortmentId) {

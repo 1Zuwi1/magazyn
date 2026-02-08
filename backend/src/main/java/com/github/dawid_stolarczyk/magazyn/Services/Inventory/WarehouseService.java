@@ -10,6 +10,7 @@ import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperati
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +24,7 @@ public class WarehouseService {
     private final AssortmentRepository assortmentRepository;
     private final Bucket4jRateLimiter rateLimiter;
 
-    public WarehousePagedResponse getAllWarehousesPaged(HttpServletRequest request, Pageable pageable, String nameFilter) {
+    public WarehousePagedResponse getAllWarehousesPaged(HttpServletRequest request, Pageable pageable, String nameFilter, Integer percentOfFreeSlots, boolean onlyNonEmpty) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
 
         Page<WarehouseDto> warehousePage;
@@ -33,6 +34,29 @@ public class WarehouseService {
         } else {
             warehousePage = warehouseRepository.findAll(pageable)
                     .map(this::mapToDto);
+        }
+
+        if (percentOfFreeSlots != null) {
+            warehousePage = new PageImpl<>(
+                    warehousePage.getContent().stream()
+                            .filter(dto -> {
+                                if (dto.getTotalSlots() == 0) return false;
+                                int freePercentage = (int) ((double) dto.getFreeSlots() / dto.getTotalSlots() * 100);
+                                return freePercentage >= percentOfFreeSlots;
+                            }).toList(),
+                    pageable,
+                    warehousePage.getTotalElements()
+            );
+        }
+
+        if (onlyNonEmpty) {
+            warehousePage = new PageImpl<>(
+                    warehousePage.getContent().stream()
+                            .filter(dto -> dto.getOccupiedSlots() > 0)
+                            .toList(),
+                    pageable,
+                    warehousePage.getTotalElements()
+            );
         }
 
         // Calculate cumulative summary across ALL warehouses (not just current page)

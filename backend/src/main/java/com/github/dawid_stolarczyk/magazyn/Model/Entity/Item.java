@@ -18,6 +18,7 @@ public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false)
     private String name;
     @Column(unique = true, length = 32)
     private String code;
@@ -29,7 +30,7 @@ public class Item {
     private float size_y;
     private float size_z;
     private String comment;
-    private long expireAfterDays;
+    private Long expireAfterDays;
     private boolean isDangerous;
 
     /**
@@ -42,7 +43,7 @@ public class Item {
     private float[] imageEmbedding;
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<com.github.dawid_stolarczyk.magazyn.Model.Entity.Assortment> assortments = new ArrayList<>();
+    private List<Assortment> assortments = new ArrayList<>();
 
 
 }

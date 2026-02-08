@@ -59,4 +59,7 @@ public class RackDto {
 
     @Schema(description = "Total number of slots in this rack (computed: sizeX * sizeY)", example = "100")
     private Integer totalSlots;
+
+    @Schema(description = "Total weight of items currently stored in this rack (computed)", example = "500.0")
+    private Float totalWeight;
 }

@@ -2,6 +2,7 @@ package com.github.dawid_stolarczyk.magazyn.Repositories.JPA;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -47,4 +48,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByWarehouseIdAndStatus(
             @Param("warehouseId") Long warehouseId,
             @Param("status") AccountStatus status);
+
+    /**
+     * Find users by role and status.
+     * Used for system-wide notifications to specific user roles (e.g., admins).
+     */
+    List<User> findByRoleAndStatus(UserRole role, AccountStatus status);
 }

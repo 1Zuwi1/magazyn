@@ -11,18 +11,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Position in rack to pick/check (x, y coordinates)")
+@Schema(description = "Position in rack to pick/check (code)")
 public class OutboundPickPosition {
 
     @NotNull
-    @Schema(description = "Rack ID", example = "5")
-    private Long rackId;
-
-    @NotNull
-    @Schema(description = "X position (column)", example = "3")
-    private Integer positionX;
-
-    @NotNull
-    @Schema(description = "Y position (row)", example = "7")
-    private Integer positionY;
+    @Schema(description = "Code of assortment", example = "11260206011234567891234521940130")
+    private String code;
 }

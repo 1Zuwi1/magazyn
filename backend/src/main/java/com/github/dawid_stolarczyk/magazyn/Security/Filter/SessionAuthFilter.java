@@ -4,6 +4,7 @@ import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.EmailStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
@@ -52,26 +53,26 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                             .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
                     if (user.getStatus().equals(AccountStatus.ACTIVE)
                             || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)
-                            || user.getEmailStatus().equals(AccountStatus.ACTIVE)) {
+                            && user.getEmailStatus().equals(EmailStatus.VERIFIED)) {
                         sessionService.refreshSession(sessionId);
                         authenticateUser(user, session.getStatus2FA(), request);
                     } else {
                         SecurityContextHolder.clearContext();
                         sessionManager.logoutUser(response, request);
-                        request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                     }
                 } catch (Exception e) {
                     log.warn("Session auth failed, logging out", e);
                     SecurityContextHolder.clearContext();
                     sessionManager.logoutUser(response, request);
-                    request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                 }
-            }, () -> authorizeViaRememberMe(request, response));
+            }, () -> {
+                // Session cookie exists but session not found in Redis (expired or Redis restarted)
+                log.warn("Session cookie exists but session not found in Redis, invalidating cookie");
+                CookiesUtils.deleteCookie(response, "SESSION");
+                authorizeViaRememberMe(request, response);
+            });
         } else {
             authorizeViaRememberMe(request, response);
-        }
-        if (Boolean.TRUE.equals(request.getAttribute("AUTH_LOGOUT"))) {
-            return;
         }
         filterChain.doFilter(request, response);
     }
@@ -105,7 +106,6 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     log.warn("Remember-me token mismatch, logging out");
                     SecurityContextHolder.clearContext();
                     sessionManager.logoutUser(response, request);
-                    request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                     return;
                 }
                 User user;
@@ -116,12 +116,11 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     log.warn("Remember-me user lookup failed, logging out", e);
                     SecurityContextHolder.clearContext();
                     sessionManager.logoutUser(response, request);
-                    request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                     return;
                 }
                 if (user.getStatus().equals(AccountStatus.ACTIVE)
                         || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)
-                        || user.getEmailStatus().equals(AccountStatus.ACTIVE)) {
+                        && user.getEmailStatus().equals(EmailStatus.VERIFIED)) {
                     SessionData newSessionData = new SessionData(
                             UUID.randomUUID().toString(),
                             rememberMeData.getUserId(),
@@ -137,11 +136,9 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     log.info("Inactive user status, logging out");
                     SecurityContextHolder.clearContext();
                     sessionManager.logoutUser(response, request);
-                    request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                 }
             }, () -> {
                 sessionManager.logoutUser(response, request);
-                request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
             });
         }
     }

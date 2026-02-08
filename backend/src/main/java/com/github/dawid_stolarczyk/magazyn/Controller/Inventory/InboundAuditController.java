@@ -37,7 +37,7 @@ public class InboundAuditController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = PagedResponse.class))),
+                            schema = @Schema(implementation = ResponseTemplate.PagedInboundOperationsResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied - requires ADMIN role",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
@@ -65,7 +65,7 @@ public class InboundAuditController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = PagedResponse.class))),
+                            schema = @Schema(implementation = ResponseTemplate.PagedInboundOperationsResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied - requires ADMIN role",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })

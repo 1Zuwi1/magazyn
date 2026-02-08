@@ -36,6 +36,10 @@ public class BarcodeService {
         return code;
     }
 
+    public boolean checkUniqueItemCode(String code) {
+        return !itemRepository.existsByCode(code);
+    }
+
     public void ensureItemCode(Item item) {
         if (item.getCode() != null && !item.getCode().isBlank() && item.getCode().length() == ITEM_CODE_LENGTH) {
             return;

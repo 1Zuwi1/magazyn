@@ -1,11 +1,10 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackCreateRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackDto;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.RackUpdateRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Rack;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Warehouse;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AssortmentRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.RackRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.WarehouseRepository;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
@@ -25,12 +24,13 @@ import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientI
 public class RackService {
     private final RackRepository rackRepository;
     private final WarehouseRepository warehouseRepository;
+    private final AssortmentRepository assortmentRepository;
     private final Bucket4jRateLimiter rateLimiter;
 
-    public Page<RackDto> getAllRacksPaged(HttpServletRequest request, Pageable pageable) {
+    public RackPagedResponse getAllRacksPaged(HttpServletRequest request, Pageable pageable) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        return rackRepository.findAll(pageable)
-                .map(this::mapToDto);
+        RackSummaryDto summary = calculateWarehouseSummary();
+        return RackPagedResponse.from(rackRepository.findAll(pageable).map(this::mapToDto), summary);
     }
 
     public Page<RackDto> getRacksByWarehousePaged(Long warehouseId, HttpServletRequest request, Pageable pageable) {
@@ -206,6 +206,9 @@ public class RackService {
         int occupiedSlots = rack.getAssortments().size();
         int totalSlots = rack.getSize_x() * rack.getSize_y();
         int freeSlots = totalSlots - occupiedSlots;
+        float totalWeight = (float) rack.getAssortments().stream()
+                .mapToDouble(assortment -> assortment.getItem().getWeight())
+                .sum();
 
 
         return RackDto.builder()
@@ -225,6 +228,36 @@ public class RackService {
                 .occupiedSlots(occupiedSlots)
                 .freeSlots(freeSlots)
                 .totalSlots(totalSlots)
+                .totalWeight(totalWeight)
+                .build();
+    }
+
+    private RackSummaryDto calculateWarehouseSummary() {
+        var allRacks = rackRepository.findAll();
+
+        int totalCapacity = 0;
+        int totalOccupiedSlots = 0;
+        float totalWeight = 0;
+
+        for (Rack rack : allRacks) {
+            totalCapacity += rack.getSize_x() * rack.getSize_y();
+
+            long rackOccupied = assortmentRepository.countByRackId(rack.getId());
+            totalOccupiedSlots += Long.valueOf(rackOccupied).intValue();
+
+            totalWeight += (float) rack.getAssortments().stream()
+                    .mapToDouble(assortment -> assortment.getItem().getWeight())
+                    .sum();
+        }
+
+        int totalFreeSlots = totalCapacity - totalOccupiedSlots;
+
+        return RackSummaryDto.builder()
+                .totalCapacity(totalCapacity)
+                .freeSlots(totalFreeSlots)
+                .occupiedSlots(totalOccupiedSlots)
+                .totalRacks(allRacks.size())
+                .totalWeight(totalWeight)
                 .build();
     }
 }

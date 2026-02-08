@@ -35,7 +35,7 @@ public class OutboundAuditController {
     @Operation(summary = "Get all outbound operations with pagination (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedOutboundOperationsResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied - requires ADMIN role",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
@@ -61,7 +61,7 @@ public class OutboundAuditController {
     @Operation(summary = "Get outbound operations by user ID (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedOutboundOperationsResponse.class))),
             @ApiResponse(responseCode = "403", description = "Access denied - requires ADMIN role",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })

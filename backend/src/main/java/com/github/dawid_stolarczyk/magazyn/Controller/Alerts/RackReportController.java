@@ -60,7 +60,7 @@ public class RackReportController {
             description = "Returns all rack reports ordered by creation date (newest first)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedRackReportsResponse.class)))
     })
     @GetMapping
     public ResponseEntity<ResponseTemplate<PagedResponse<RackReportDto>>> getAllReports(
@@ -76,7 +76,7 @@ public class RackReportController {
             description = "Returns all reports for a specific rack with pagination")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedRackReportsResponse.class)))
     })
     @GetMapping("/rack/{rackId}")
     public ResponseEntity<ResponseTemplate<PagedResponse<RackReportDto>>> getReportsByRack(
@@ -93,7 +93,7 @@ public class RackReportController {
             description = "Returns all reports for racks in a specific warehouse")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedRackReportsResponse.class)))
     })
     @GetMapping("/warehouse/{warehouseId}")
     public ResponseEntity<ResponseTemplate<PagedResponse<RackReportDto>>> getReportsByWarehouse(
@@ -110,7 +110,7 @@ public class RackReportController {
             description = "Returns only reports that triggered at least one alert")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedRackReportsResponse.class)))
     })
     @GetMapping("/with-alerts")
     public ResponseEntity<ResponseTemplate<PagedResponse<RackReportDto>>> getReportsWithAlerts(

@@ -68,7 +68,7 @@ public class UserController {
             description = "Returns paginated list of users with optional filtering by name, email, and status")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - returns paginated list of all users",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedUsersResponse.class))),
             @ApiResponse(responseCode = "403", description = "Error codes: ACCESS_FORBIDDEN (not admin)",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })

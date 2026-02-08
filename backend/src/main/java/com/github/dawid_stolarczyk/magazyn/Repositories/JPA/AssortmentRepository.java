@@ -4,6 +4,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.Assortment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -11,7 +12,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
-public interface AssortmentRepository extends JpaRepository<Assortment, Long> {
+public interface AssortmentRepository extends JpaRepository<Assortment, Long>, JpaSpecificationExecutor<Assortment> {
     List<Assortment> findByRackId(Long rackId);
 
     Page<Assortment> findByRackId(Long rackId, Pageable pageable);
@@ -21,6 +22,8 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long> {
     Optional<Assortment> findByCode(String code);
 
     long countByRack_WarehouseId(Long warehouseId);
+
+    long countByRackId(Long rackId);
 
     Page<Assortment> findAll(Pageable pageable);
 
@@ -70,4 +73,17 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long> {
     @Query("SELECT COUNT(a) FROM Assortment a WHERE a.item.id = :itemId " +
             "AND (a.expires_at IS NULL OR a.expires_at > CURRENT_TIMESTAMP)")
     long countAvailableByItemId(@Param("itemId") Long itemId);
+
+    /**
+     * Znajdź wszystkie wygasłe assortmenty (expires_at <= NOW()).
+     */
+    @Query("SELECT a FROM Assortment a WHERE a.expires_at IS NOT NULL AND a.expires_at <= CURRENT_TIMESTAMP")
+    List<Assortment> findAllExpired();
+
+    /**
+     * Znajdź assortmenty bliskie wygaśnięcia (expires_at > NOW() AND expires_at <= threshold).
+     */
+    @Query("SELECT a FROM Assortment a WHERE a.expires_at IS NOT NULL " +
+            "AND a.expires_at > CURRENT_TIMESTAMP AND a.expires_at <= :threshold")
+    List<Assortment> findAllCloseToExpiry(@Param("threshold") Timestamp threshold);
 }

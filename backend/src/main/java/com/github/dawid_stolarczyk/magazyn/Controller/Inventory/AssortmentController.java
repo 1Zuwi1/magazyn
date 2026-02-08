@@ -5,6 +5,7 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.AssortmentImportReport;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.ExpiryFilters;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.AssortmentImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.AssortmentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +26,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+
 @RestController
 @RequestMapping("/assortments")
 @Tag(name = "Assortment", description = "Endpoints for managing assortment placements")
@@ -33,21 +36,25 @@ public class AssortmentController {
     private final AssortmentService assortmentService;
     private final AssortmentImportService assortmentImportService;
 
-    @Operation(summary = "Get all assortments with pagination")
+    @Operation(summary = "Get all assortments with pagination and filters",
+            description = "Retrieve assortments with optional filters for item name/code search, week to expire status, and expiration filters")
     @ApiResponse(responseCode = "200", description = "Success",
             content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = PagedResponse.class)))
+                    schema = @Schema(implementation = ResponseTemplate.PagedAssortmentsResponse.class)))
     @GetMapping
     public ResponseEntity<ResponseTemplate<PagedResponse<AssortmentDto>>> getAllAssortments(
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir,
+            @Parameter(description = "Filter by expiration") @RequestParam(defaultValue = "ALL") ArrayList<ExpiryFilters> expiryFilters,
+            @Parameter(description = "Search by item name or code (case-insensitive)", example = "milk") @RequestParam(required = false) String search,
+            @Parameter(description = "Filter by week to expire (expires within 7 days)", example = "true") @RequestParam(required = false) Boolean weekToExpire) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(assortmentService.getAllAssortmentsPaged(request, pageable))));
+                PagedResponse.from(assortmentService.getAllAssortmentsPaged(request, pageable, expiryFilters, search, weekToExpire))));
     }
 
     @Operation(summary = "Get assortment by ID")

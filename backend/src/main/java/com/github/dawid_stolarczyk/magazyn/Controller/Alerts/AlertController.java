@@ -40,7 +40,7 @@ public class AlertController {
             description = "Returns all system alerts ordered by creation date (newest first)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAlertsResponse.class)))
     })
     @GetMapping
     public ResponseEntity<ResponseTemplate<PagedResponse<AlertDto>>> getAllAlerts(
@@ -56,7 +56,7 @@ public class AlertController {
             description = "Returns only alerts with status OPEN or ACTIVE")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAlertsResponse.class)))
     })
     @GetMapping("/active")
     public ResponseEntity<ResponseTemplate<PagedResponse<AlertDto>>> getActiveAlerts(
@@ -71,7 +71,7 @@ public class AlertController {
     @Operation(summary = "Get alerts by status")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAlertsResponse.class)))
     })
     @GetMapping("/status/{status}")
     public ResponseEntity<ResponseTemplate<PagedResponse<AlertDto>>> getAlertsByStatus(
@@ -87,7 +87,7 @@ public class AlertController {
     @Operation(summary = "Get alerts by type")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAlertsResponse.class)))
     })
     @GetMapping("/type/{alertType}")
     public ResponseEntity<ResponseTemplate<PagedResponse<AlertDto>>> getAlertsByType(
@@ -103,7 +103,7 @@ public class AlertController {
     @Operation(summary = "Get alerts for a specific warehouse")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAlertsResponse.class)))
     })
     @GetMapping("/warehouse/{warehouseId}")
     public ResponseEntity<ResponseTemplate<PagedResponse<AlertDto>>> getAlertsByWarehouse(
@@ -119,7 +119,7 @@ public class AlertController {
     @Operation(summary = "Get alerts for a specific rack")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAlertsResponse.class)))
     })
     @GetMapping("/rack/{rackId}")
     public ResponseEntity<ResponseTemplate<PagedResponse<AlertDto>>> getAlertsByRack(

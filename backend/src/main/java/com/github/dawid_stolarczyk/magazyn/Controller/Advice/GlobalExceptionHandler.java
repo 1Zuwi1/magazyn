@@ -149,9 +149,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ResponseTemplate<String>> handleOtherExceptions(Exception ex) {
         log.error("Internal server error", ex);
+
+        String errorCode = "INTERNAL_ERROR";
+        String message = ex.getMessage();
+
+        // Wykryj błąd nie podania warehouseId w endpointach, które tego wymagają
+        if (message != null && (message.contains("Required request parameter 'warehouseId'"))) {
+            errorCode = "WAREHOUSE_ID_REQUIRED";
+        }
+
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ResponseTemplate.error("INTERNAL_ERROR"));
+                .body(ResponseTemplate.error(errorCode));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

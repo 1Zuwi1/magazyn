@@ -33,17 +33,17 @@ public class Alert {
     private Long id;
 
     /**
-     * The rack that triggered this alert
+     * The rack that triggered this alert (optional for system-wide alerts)
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "rack_id", nullable = false)
+    @JoinColumn(name = "rack_id")
     private Rack rack;
 
     /**
-     * The warehouse where the rack is located (denormalized for faster queries)
+     * The warehouse where the rack is located (optional for system-wide alerts, denormalized for faster queries)
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "warehouse_id", nullable = false)
+    @JoinColumn(name = "warehouse_id")
     private Warehouse warehouse;
 
     /**
