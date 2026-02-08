@@ -1,16 +1,23 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemCreateRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemDto;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemUpdateRequest;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
-import com.github.dawid_stolarczyk.magazyn.Repositories.ItemRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.Specification.ItemSpecifications;
+import com.github.dawid_stolarczyk.magazyn.Services.Ai.BackgroundRemovalService;
+import com.github.dawid_stolarczyk.magazyn.Services.Ai.ImageEmbeddingService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Services.Storage.StorageService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,8 +27,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -34,18 +43,31 @@ public class ItemService {
     private final StorageService storageService;
     private final BarcodeService barcodeService;
     private final Bucket4jRateLimiter rateLimiter;
+    private final ImageEmbeddingService imageEmbeddingService;
+    private final BackgroundRemovalService backgroundRemovalService;
+    @Qualifier("asyncTaskExecutor")
+    private final AsyncTaskExecutor asyncTaskExecutor;
 
-    public List<ItemDto> getAllItems(HttpServletRequest request) {
+    public Page<ItemDto> getAllItemsPaged(
+            HttpServletRequest request,
+            Pageable pageable,
+            String search,
+            Boolean dangerous,
+            Float minTempFrom,
+            Float minTempTo,
+            Float maxTempFrom,
+            Float maxTempTo,
+            Float weightFrom,
+            Float weightTo,
+            Long expireAfterDaysFrom,
+            Long expireAfterDaysTo) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        return itemRepository.findAll().stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
-    }
 
-    public Page<ItemDto> getAllItemsPaged(HttpServletRequest request, Pageable pageable) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        return itemRepository.findAll(pageable)
-                .map(this::mapToDto);
+        var spec = ItemSpecifications.withFilters(
+                search, dangerous, minTempFrom, minTempTo, maxTempFrom, maxTempTo,
+                weightFrom, weightTo, expireAfterDaysFrom, expireAfterDaysTo);
+
+        return itemRepository.findAll(spec, pageable).map(this::mapToDto);
     }
 
     public ItemDto getItemById(Long id, HttpServletRequest request) {
@@ -55,36 +77,43 @@ public class ItemService {
         return mapToDto(item);
     }
 
-    public ItemDto getItemByBarcode(String barcode, HttpServletRequest request) {
+    public ItemDto getItemByCode(String code, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        Item item = itemRepository.findByBarcode(barcode)
+        Item item = itemRepository.findByCode(code)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
         return mapToDto(item);
     }
 
     @Transactional
-    public ItemDto createItem(ItemDto dto, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
-        return createItemInternal(dto);
+    public ItemDto createItem(ItemCreateRequest request, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
+        Item item = new Item();
+        updateItemFromRequest(item, request);
+        item.setCode(barcodeService.generateUniqueItemCode());
+        return mapToDto(itemRepository.save(item));
     }
 
     /**
      * Internal method for bulk import - no rate limiting
      */
     @Transactional
-    public ItemDto createItemInternal(ItemDto dto) {
+    public void createItemInternal(ItemDto dto) {
         Item item = new Item();
         updateItemFromDto(item, dto);
-        item.setBarcode(barcodeService.generateUniqueItemBarcode());
-        return mapToDto(itemRepository.save(item));
+        if (dto.getCode() != null && !dto.getCode().isBlank() && barcodeService.checkUniqueItemCode(dto.getCode())) {
+            item.setCode(dto.getCode());
+        } else {
+            item.setCode(barcodeService.generateUniqueItemCode());
+        }
+        mapToDto(itemRepository.save(item));
     }
 
     @Transactional
-    public ItemDto updateItem(Long id, ItemDto dto, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
+    public ItemDto updateItem(Long id, ItemUpdateRequest request, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
-        updateItemFromDto(item, dto);
+        updateItemFromRequest(item, request);
         return mapToDto(itemRepository.save(item));
     }
 
@@ -106,88 +135,85 @@ public class ItemService {
         // Walidacja: tylko obrazy są akceptowane
         validateImageFile(file);
 
+        // Read original file bytes
+        byte[] originalBytes = file.getBytes();
+
+        // Apply background removal; fall back to original on failure
+        byte[] imageBytes = originalBytes;
+        byte[] processed = backgroundRemovalService.removeBackground(originalBytes);
+        if (processed != null) {
+            imageBytes = processed;
+            log.debug("Background removed from image for item {}", id);
+        } else {
+            log.debug("Using original image for item {} (background removal skipped or failed)", id);
+        }
+
         String previousPhoto = item.getPhoto_url();
         String fileName = UUID.randomUUID() + ".enc";
-        AtomicReference<Exception> encryptionError = new AtomicReference<>();
-        java.util.concurrent.CountDownLatch encryptionStarted = new java.util.concurrent.CountDownLatch(1);
-        java.util.concurrent.CountDownLatch encryptionFinished = new java.util.concurrent.CountDownLatch(1);
+
+        // Create final reference for use in lambda
+        final byte[] finalImageBytes = imageBytes;
 
         try (PipedInputStream pipedIn = new PipedInputStream(1024 * 64);
              PipedOutputStream pipedOut = new PipedOutputStream(pipedIn)) {
 
-            Thread encryptThread = new Thread(() -> {
-                try (InputStream rawIn = file.getInputStream()) {
-                    encryptionStarted.countDown();
-                    fileCryptoService.encrypt(rawIn, pipedOut);
-                } catch (Exception ex) {
-                    encryptionError.set(ex);
-                    try {
-                        pipedIn.close();
-                    } catch (IOException ignored) {
-                    }
-                } finally {
-                    encryptionFinished.countDown();
-                    try {
-                        pipedOut.close();
-                    } catch (IOException ignored) {
-                    }
-                }
-            }, "item-photo-encrypt");
-
-            encryptThread.setDaemon(false);
-            encryptThread.start();
+            // Start encryption in background thread using CompletableFuture
+            CompletableFuture<Void> encryptionFuture = CompletableFuture.runAsync(
+                    () -> encryptToStream(finalImageBytes, pipedOut),
+                    asyncTaskExecutor
+            );
 
             try {
-                // Czekaj na start szyfrowania (max 5 sekund)
-                if (!encryptionStarted.await(5, java.util.concurrent.TimeUnit.SECONDS)) {
-                    throw new IllegalStateException("Encryption thread failed to start");
-                }
+                // Upload encrypted stream to storage
+                storageService.uploadStream(fileName, pipedIn, "image/png");
 
-                // Sprawdź czy nie było błędu podczas startu
-                if (encryptionError.get() != null) {
-                    throw encryptionError.get();
-                }
-
-                storageService.uploadStream(fileName, pipedIn, file.getContentType());
-            } catch (Exception ex) {
-                // Jeśli upload się nie uda, przerwij szyfrowanie i posprzątaj
-                encryptThread.interrupt();
-                try {
-                    pipedIn.close();
-                } catch (IOException ignored) {
-                }
-                try {
-                    storageService.delete(fileName);
-                } catch (Exception ignored) {
+                // Wait for encryption to complete (max 30 seconds)
+                encryptionFuture.get(30, TimeUnit.SECONDS);
+            } catch (InterruptedException ex) {
+                // Cancel encryption and restore interrupt status
+                encryptionFuture.cancel(true);
+                Thread.currentThread().interrupt();
+                cleanupFailedUpload(fileName);
+                throw ex;
+            } catch (ExecutionException ex) {
+                // Encryption failed - unwrap and rethrow the actual exception
+                cleanupFailedUpload(fileName);
+                Throwable cause = ex.getCause();
+                if (cause instanceof Exception) {
+                    throw (Exception) cause;
                 }
                 throw ex;
-            } finally {
-                // Poczekaj na zakończenie szyfrowania (max 30 sekund)
-                if (!encryptionFinished.await(30, java.util.concurrent.TimeUnit.SECONDS)) {
-                    log.warn("Encryption thread did not finish within timeout for item {}", id);
-                    encryptThread.interrupt();
-                }
-            }
-
-            // Sprawdź czy podczas szyfrowania wystąpił błąd
-            if (encryptionError.get() != null) {
-                try {
-                    storageService.delete(fileName);
-                } catch (Exception ignored) {
-                }
-                throw encryptionError.get();
+            } catch (TimeoutException ex) {
+                log.warn("Encryption thread did not finish within timeout for item {}", id);
+                encryptionFuture.cancel(true);
+                cleanupFailedUpload(fileName);
+                throw new IllegalStateException("Encryption timed out", ex);
+            } catch (Exception ex) {
+                // Upload failed - cancel encryption and cleanup
+                encryptionFuture.cancel(true);
+                cleanupFailedUpload(fileName);
+                throw ex;
             }
         }
 
         try {
             item.setPhoto_url(fileName);
+            // Image embedding is optional - if model isn't available, photo upload still works
+            if (imageEmbeddingService.isModelLoaded()) {
+                try {
+                    // Use the same processed image bytes - skip redundant background removal
+                    item.setImageEmbedding(imageEmbeddingService.getEmbeddingFromProcessedImage(imageBytes));
+                } catch (ImageEmbeddingService.ImageEmbeddingException e) {
+                    log.warn("Failed to generate image embedding, visual search will not work for this item: {}",
+                            e.getMessage());
+                }
+            } else {
+                log.debug("Image embedding model not available, skipping embedding generation");
+            }
             itemRepository.save(item);
         } catch (Exception ex) {
             // Compensating transaction: if DB save fails, delete the uploaded file
-            try {
-                storageService.delete(fileName);
-            } catch (Exception ignored) {
-            }
+            cleanupFailedUpload(fileName);
             throw ex;
         }
 
@@ -225,6 +251,77 @@ public class ItemService {
         item.setExpireAfterDays(dto.getExpireAfterDays());
         item.setDangerous(dto.isDangerous());
         item.setName(dto.getName());
+    }
+
+    private void updateItemFromRequest(Item item, ItemCreateRequest request) {
+        item.setMin_temp(request.getMinTemp());
+        item.setMax_temp(request.getMaxTemp());
+        item.setWeight(request.getWeight());
+        item.setSize_x(request.getSizeX());
+        item.setSize_y(request.getSizeY());
+        item.setSize_z(request.getSizeZ());
+        item.setComment(request.getComment());
+        item.setExpireAfterDays(request.getExpireAfterDays());
+        item.setDangerous(request.isDangerous());
+        item.setName(request.getName());
+    }
+
+    private void updateItemFromRequest(Item item, ItemUpdateRequest request) {
+        item.setMin_temp(request.getMinTemp());
+        item.setMax_temp(request.getMaxTemp());
+        item.setWeight(request.getWeight());
+        item.setSize_x(request.getSizeX());
+        item.setSize_y(request.getSizeY());
+        item.setSize_z(request.getSizeZ());
+        item.setComment(request.getComment());
+        item.setExpireAfterDays(request.getExpireAfterDays());
+        item.setDangerous(request.isDangerous());
+        item.setName(request.getName());
+    }
+
+    /**
+     * Encrypts the given image bytes to the provided output stream.
+     * This method runs in a separate thread via CompletableFuture.
+     * It properly handles interruptions and ensures CipherOutputStream is finalized.
+     *
+     * @param imageBytes The image bytes to encrypt
+     * @param pipedOut   The output stream to write encrypted data to
+     * @throws RuntimeException if encryption fails or thread is interrupted
+     */
+    private void encryptToStream(byte[] imageBytes, PipedOutputStream pipedOut) {
+        try (InputStream rawIn = new ByteArrayInputStream(imageBytes)) {
+            // FileCryptoService.encrypt handles CipherOutputStream internally and ensures proper flush/close
+            fileCryptoService.encrypt(rawIn, pipedOut);
+        } catch (Exception ex) {
+            // Check if thread was interrupted during encryption
+            if (Thread.currentThread().isInterrupted()) {
+                log.debug("Encryption interrupted for item photo upload");
+                throw new RuntimeException("Encryption interrupted", ex);
+            }
+            log.error("Failed to encrypt image", ex);
+            throw new RuntimeException("Encryption failed", ex);
+        } finally {
+            // Ensure PipedOutputStream is closed to signal EOF to the reader
+            try {
+                pipedOut.close();
+            } catch (IOException e) {
+                log.debug("Error closing piped output stream", e);
+            }
+        }
+    }
+
+    /**
+     * Cleans up a failed upload by deleting the file from storage.
+     * Suppresses any exceptions during cleanup to avoid masking the original error.
+     *
+     * @param fileName The name of the file to delete
+     */
+    private void cleanupFailedUpload(String fileName) {
+        try {
+            storageService.delete(fileName);
+        } catch (Exception ignored) {
+            log.debug("Failed to cleanup file {} after upload failure", fileName);
+        }
     }
 
     /**
@@ -276,8 +373,7 @@ public class ItemService {
     private ItemDto mapToDto(Item item) {
         return ItemDto.builder()
                 .id(item.getId())
-                .barcode(item.getBarcode())
-                .photoUrl(item.getPhoto_url() != null ? "/api/items/" + item.getId() + "/photo" : null)
+                .code(item.getCode())
                 .minTemp(item.getMin_temp())
                 .maxTemp(item.getMax_temp())
                 .weight(item.getWeight())

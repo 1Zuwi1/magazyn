@@ -15,12 +15,12 @@ import java.util.List;
 @Getter
 @Setter
 public class PlacementConfirmationRequest {
-    @Schema(description = "Item ID (required if barcode not provided)", example = "1")
+    @Schema(description = "Item ID (required if code not provided)", example = "1")
     private Long itemId;
 
-    @Schema(description = "Item barcode - 14 digits (required if itemId not provided)", example = "12345678901234")
+    @Schema(description = "Item code - GS1-128 barcode, 14 digits (required if itemId not provided)", example = "12345678901234")
     @Pattern(regexp = "\\d{14}", message = "BARCODE_MUST_BE_14_DIGITS")
-    private String barcode;
+    private String code;
 
     @NotEmpty
     @Size(max = 1000)
@@ -28,18 +28,18 @@ public class PlacementConfirmationRequest {
     private List<PlacementSlotRequest> placements;
 
     /**
-     * Custom validation: either itemId or barcode must be provided, but not both.
+     * Custom validation: either itemId or code must be provided, but not both.
      */
     public void validate() {
         boolean hasItemId = itemId != null;
-        boolean hasBarcode = barcode != null && !barcode.isBlank();
+        boolean hasCode = code != null && !code.isBlank();
 
-        if (!hasItemId && !hasBarcode) {
-            throw new IllegalArgumentException("Either itemId or barcode must be provided");
+        if (!hasItemId && !hasCode) {
+            throw new IllegalArgumentException("Either itemId or code must be provided");
         }
 
-        if (hasItemId && hasBarcode) {
-            throw new IllegalArgumentException("Cannot provide both itemId and barcode");
+        if (hasItemId && hasCode) {
+            throw new IllegalArgumentException("Cannot provide both itemId and code");
         }
     }
 }

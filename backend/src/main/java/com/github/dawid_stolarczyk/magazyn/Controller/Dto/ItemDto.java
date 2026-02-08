@@ -1,7 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,53 +10,43 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Item response with all properties")
 public class ItemDto {
     @Schema(description = "Unique identifier of the item", example = "1")
     private Long id;
 
-    @Schema(description = "Unique barcode for the item", example = "123456")
-    @Pattern(regexp = "\\d{6}", message = "BARCODE_MUST_BE_6_DIGITS")
-    private String barcode;
+    @Schema(description = "Unique auto-generated GS1-128 barcode (14 digits)", example = "12345678901234")
+    private String code;
 
-    @NotBlank
-    @Size(min = 2, max = 255)
     @Schema(description = "Name of the item", example = "Laptop")
     private String name;
 
-    @Schema(description = "URL or path to the item's photo", example = "/api/items/1/photo")
+    @Schema(description = "URL or path to the item's photo")
     private String photoUrl;
 
-    @DecimalMin("-273.15")
-    @Schema(description = "Minimum temperature requirement", example = "5.0")
+    @Schema(description = "Minimum temperature requirement in Celsius", example = "5.0")
     private float minTemp;
 
-    @DecimalMin("-273.15")
-    @Schema(description = "Maximum temperature requirement", example = "25.0")
+    @Schema(description = "Maximum temperature requirement in Celsius", example = "25.0")
     private float maxTemp;
 
-    @DecimalMin("0.0")
-    @Schema(description = "Weight of the item", example = "1.5")
+    @Schema(description = "Weight of the item in kilograms", example = "1.5")
     private float weight;
 
-    @DecimalMin("0.0")
-    @Schema(description = "Width of the item", example = "0.5")
+    @Schema(description = "Width of the item in millimeters", example = "500.0")
     private float sizeX;
 
-    @DecimalMin("0.0")
-    @Schema(description = "Height of the item", example = "0.3")
+    @Schema(description = "Height of the item in millimeters", example = "300.0")
     private float sizeY;
 
-    @DecimalMin("0.0")
-    @Schema(description = "Depth of the item", example = "0.2")
+    @Schema(description = "Depth of the item in millimeters", example = "200.0")
     private float sizeZ;
 
-    @Size(max = 1000)
     @Schema(description = "Optional comment", example = "Handle with care")
     private String comment;
 
-    @Min(0)
     @Schema(description = "Days until expiration", example = "30")
-    private long expireAfterDays;
+    private Long expireAfterDays;
 
     @Schema(description = "Whether the item is dangerous", example = "false")
     private boolean isDangerous;

@@ -3,6 +3,8 @@ spring.application.name=magazyn
 spring.datasource.url=${DB_CONNECTION_URL}
 spring.datasource.username=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 
 spring.mail.host=${MAIL_HOST}
 spring.mail.port=${MAIL_PORT}
@@ -42,5 +44,8 @@ app.s3.secret-key=${S3_SECRET_KEY}
 
 app.s3.items-prefix=items-photos/
 
-
 webauthn.allow-untrusted-attestation:false
+
+app.background-removal.enabled=true
+app.background-removal.url=${DOMAIN}:7000/api/remove
+app.background-removal.timeout-seconds=30

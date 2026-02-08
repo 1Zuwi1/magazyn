@@ -1,6 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Scheduler;
 
-import com.github.dawid_stolarczyk.magazyn.Repositories.PositionReservationRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.PositionReservationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

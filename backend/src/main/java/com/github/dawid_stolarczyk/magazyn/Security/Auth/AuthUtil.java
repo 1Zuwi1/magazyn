@@ -48,6 +48,20 @@ public class AuthUtil {
     }
 
     /**
+     * Gets the current user's ID from the SecurityContext.
+     *
+     * @return the user ID, or null if not authenticated
+     */
+    public static Long getCurrentUserId() {
+        try {
+            AuthPrincipal principal = getCurrentAuthPrincipal();
+            return principal != null ? principal.getUserId() : null;
+        } catch (AuthenticationNotFoundException | AuthenticationException e) {
+            return null;
+        }
+    }
+
+    /**
      * Helper method to map authentication error codes to appropriate HTTP status.
      * Centralizes error mapping logic to ensure consistency across all controllers.
      *
@@ -76,8 +90,8 @@ public class AuthUtil {
                 AuthError.TWO_FA_NOT_ENABLED.name().equals(errorCode) ||
                 AuthError.UNSUPPORTED_2FA_METHOD.name().equals(errorCode) ||
                 AuthError.EMAIL_TAKEN.name().equals(errorCode) ||
-                "INVALID_PHONE_FORMAT".equals(errorCode) ||
-                "INVALID_FULL_NAME".equals(errorCode)) {
+                AuthError.INVALID_PHONE_FORMAT.name().equals(errorCode) ||
+                AuthError.INVALID_FULL_NAME.name().equals(errorCode)) {
             return HttpStatus.BAD_REQUEST;
         }
 

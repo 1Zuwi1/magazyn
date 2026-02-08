@@ -1,9 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PagedResponse;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseDto;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.WarehouseImportReport;
+import com.github.dawid_stolarczyk.magazyn.Common.ConfigurationConstants;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.WarehouseImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.WarehouseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,22 +30,27 @@ import org.springframework.web.multipart.MultipartFile;
 public class WarehouseController {
     private final WarehouseService warehouseService;
     private final WarehouseImportService warehouseImportService;
+    private final com.github.dawid_stolarczyk.magazyn.Services.Inventory.RackService rackService;
+    private final com.github.dawid_stolarczyk.magazyn.Services.Inventory.AssortmentService assortmentService;
 
     @Operation(summary = "Get all warehouses with pagination",
-            description = "Returns paginated list of all warehouses with statistics: racks count, occupied slots, and free slots")
+            description = "Returns paginated list of all warehouses with statistics per warehouse (racks count, occupied slots, free slots) and cumulative summary across all warehouses (total capacity, total free slots, total occupied slots)")
     @ApiResponse(responseCode = "200", description = "Success",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedResponse.class)))
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = WarehousePagedResponse.class)))
     @GetMapping
-    public ResponseEntity<ResponseTemplate<PagedResponse<WarehouseDto>>> getAllWarehouses(
+    public ResponseEntity<ResponseTemplate<WarehousePagedResponse>> getAllWarehouses(
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir,
+            @Parameter(description = "Filter by warehouse name containing this string", example = "Central") @RequestParam(required = false) String nameFilter,
+            @RequestParam(required = false) Integer percentOfFreeSlots,
+            @RequestParam(required = false, defaultValue = "false") boolean onlyNonEmpty) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), sort);
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(warehouseService.getAllWarehousesPaged(request, pageable))));
+                warehouseService.getAllWarehousesPaged(request, pageable, nameFilter, percentOfFreeSlots, onlyNonEmpty)));
     }
 
     @Operation(summary = "Get warehouse by ID",
@@ -63,25 +66,35 @@ public class WarehouseController {
         return ResponseEntity.ok(ResponseTemplate.success(warehouseService.getWarehouseById(id, request)));
     }
 
-    @Operation(summary = "Create warehouse [ADMIN]")
-    @ApiResponse(responseCode = "201", description = "Success - returns created warehouse",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = WarehouseDto.class)))
+    @Operation(summary = "Create warehouse (ADMIN only)",
+            description = "Creates a new warehouse with only a name. Statistics (racks count, slots) are computed automatically.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Success - returns created warehouse with computed statistics",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = WarehouseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<WarehouseDto>> createWarehouse(@Valid @RequestBody WarehouseDto dto, HttpServletRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(warehouseService.createWarehouse(dto, request)));
+    public ResponseEntity<ResponseTemplate<WarehouseDto>> createWarehouse(@Valid @RequestBody WarehouseCreateRequest request, HttpServletRequest httpRequest) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(warehouseService.createWarehouse(request, httpRequest)));
     }
 
-    @Operation(summary = "Update a warehouse")
-    @ApiResponse(responseCode = "200", description = "Warehouse updated successfully",
-            content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class)))
+    @Operation(summary = "Update a warehouse (ADMIN only)",
+            description = "Updates warehouse name. Statistics are recomputed automatically.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Warehouse updated successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = WarehouseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: WAREHOUSE_NOT_FOUND or invalid input",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<WarehouseDto>> updateWarehouse(@PathVariable Long id, @Valid @RequestBody WarehouseDto dto, HttpServletRequest request) {
-        return ResponseEntity.ok(ResponseTemplate.success(warehouseService.updateWarehouse(id, dto, request)));
+    public ResponseEntity<ResponseTemplate<WarehouseDto>> updateWarehouse(@PathVariable Long id, @Valid @RequestBody WarehouseUpdateRequest request, HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(ResponseTemplate.success(warehouseService.updateWarehouse(id, request, httpRequest)));
     }
 
-    @Operation(summary = "Delete a warehouse")
+    @Operation(summary = "Delete a warehouse (ADMIN only)")
     @ApiResponse(responseCode = "200", description = "Warehouse deleted successfully",
             content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class)))
     @DeleteMapping("/{id}")
@@ -91,8 +104,47 @@ public class WarehouseController {
         return ResponseEntity.ok(ResponseTemplate.success());
     }
 
+    @Operation(summary = "Get racks by warehouse ID with pagination")
+    @ApiResponse(responseCode = "200", description = "Success",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedRacksResponse.class)))
+    @GetMapping("/{warehouseId}/racks")
+    public ResponseEntity<ResponseTemplate<PagedResponse<RackDto>>> getRacksByWarehouse(
+            @PathVariable Long warehouseId,
+            HttpServletRequest request,
+            @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
+        return ResponseEntity.ok(ResponseTemplate.success(
+                PagedResponse.from(rackService.getRacksByWarehousePaged(warehouseId, request, pageable))));
+    }
+
+    @Operation(summary = "Get assortments by warehouse ID with pagination",
+            description = "Returns paginated list of all assortments (items) stored in a specific warehouse, including full item details")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedAssortmentsWithItemResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: WAREHOUSE_NOT_FOUND",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @GetMapping("/{warehouseId}/assortments")
+    public ResponseEntity<ResponseTemplate<PagedResponse<AssortmentWithItemDto>>> getAssortmentsByWarehouse(
+            @PathVariable Long warehouseId,
+            HttpServletRequest request,
+            @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
+        return ResponseEntity.ok(ResponseTemplate.success(
+                PagedResponse.from(assortmentService.getAssortmentsByWarehouseIdPaged(warehouseId, request, pageable))));
+    }
+
     @Operation(
-            summary = "Import warehouses from CSV",
+            summary = "Import warehouses from CSV (ADMIN only)",
             description = """
                     Import magazynów z pliku CSV z nagłówkiem.
                     
