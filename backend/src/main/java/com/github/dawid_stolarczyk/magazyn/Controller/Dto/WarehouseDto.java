@@ -12,10 +12,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "Warehouse response with computed statistics")
 public class WarehouseDto {
-    @Schema(description = "Unique identifier of the warehouse", example = "1")
+    @Schema(description = "Unique identifier of warehouse", example = "1")
     private Long id;
 
-    @Schema(description = "Name of the warehouse", example = "Central Warehouse")
+    @Schema(description = "Name of warehouse", example = "Central Warehouse")
     private String name;
 
     @Schema(description = "Number of racks in this warehouse (computed)", example = "10")
@@ -29,4 +29,7 @@ public class WarehouseDto {
 
     @Schema(description = "Total number of slots in all racks (occupied + free) (computed)", example = "500")
     private Integer totalSlots;
+
+    @Schema(description = "Occupancy percentage (0-100)", example = "30")
+    private Integer occupancy;
 }

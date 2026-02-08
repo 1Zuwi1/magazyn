@@ -1,6 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Dto;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.BackupResourceType;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.BackupScheduleCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,8 +24,11 @@ public class BackupScheduleDto {
     @Schema(description = "Warehouse name", example = "Main Warehouse")
     private String warehouseName;
 
-    @Schema(description = "Cron expression for scheduling", example = "0 0 2 * * *")
-    private String cronExpression;
+    @Schema(description = "Backup schedule code", example = "DAILY")
+    private BackupScheduleCode scheduleCode;
+
+    @Schema(description = "Hour of day to run backup (0-23)", example = "2")
+    private Integer backupHour;
 
     @Schema(description = "Resource types to include in scheduled backups")
     private Set<BackupResourceType> resourceTypes;

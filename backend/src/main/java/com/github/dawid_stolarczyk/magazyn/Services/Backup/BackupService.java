@@ -5,9 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.BackupResourceType;
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.BackupStatus;
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.BackupType;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.*;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.*;
 import com.github.dawid_stolarczyk.magazyn.Scheduler.BackupSchedulerManager;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
@@ -52,6 +50,9 @@ public class BackupService {
     private final ObjectMapper objectMapper;
     private final Bucket4jRateLimiter rateLimiter;
     private final AsyncTaskExecutor asyncTaskExecutor;
+    private final AlertRepository alertRepository;
+    private final UserRepository userRepository;
+    private final UserNotificationRepository userNotificationRepository;
 
     @Qualifier("backupStreamingExecutor")
     private final ExecutorService streamingExecutor;
@@ -237,12 +238,16 @@ public class BackupService {
             log.info("Backup {} completed for warehouse {} — {} records, {} bytes",
                     recordId, warehouseId, totalRecords, totalSizeBytes);
 
+            createBackupAlert(warehouse, record, true);
+
         } catch (Exception e) {
             log.error("Backup {} failed for warehouse {}", recordId, warehouseId, e);
             record.setStatus(BackupStatus.FAILED);
             record.setErrorMessage(e.getMessage() != null ? e.getMessage().substring(0, Math.min(e.getMessage().length(), 2000)) : "Unknown error");
             record.setCompletedAt(Instant.now());
             backupRecordRepository.save(record);
+
+            createBackupAlert(warehouse, record, false);
 
             // Best-effort R2 cleanup
             if (record.getR2BasePath() != null) {
@@ -470,7 +475,8 @@ public class BackupService {
                     return s;
                 });
 
-        schedule.setCronExpression(request.getCronExpression());
+        schedule.setScheduleCode(request.getScheduleCode());
+        schedule.setBackupHour(request.getBackupHour());
         schedule.setResourceTypeSet(request.getResourceTypes());
         schedule.setEnabled(request.isEnabled());
         schedule = backupScheduleRepository.save(schedule);
@@ -513,11 +519,74 @@ public class BackupService {
         return BackupScheduleDto.builder()
                 .warehouseId(schedule.getWarehouse().getId())
                 .warehouseName(schedule.getWarehouse().getName())
-                .cronExpression(schedule.getCronExpression())
+                .scheduleCode(schedule.getScheduleCode())
+                .backupHour(schedule.getBackupHour())
                 .resourceTypes(schedule.getResourceTypeSet())
                 .enabled(schedule.isEnabled())
                 .lastRunAt(schedule.getLastRunAt())
                 .nextRunAt(schedule.getNextRunAt())
                 .build();
+    }
+
+    private void createBackupAlert(Warehouse warehouse, BackupRecord record, boolean success) {
+        try {
+            AlertType alertType = success ? AlertType.BACKUP_COMPLETED : AlertType.BACKUP_FAILED;
+            String message = buildBackupAlertMessage(warehouse, record, success);
+
+            Alert alert = Alert.builder()
+                    .warehouse(warehouse)
+                    .alertType(alertType)
+                    .status(AlertStatus.OPEN)
+                    .message(message)
+                    .createdAt(Instant.now())
+                    .build();
+
+            alertRepository.save(alert);
+            log.info("Created backup alert: type={}, warehouse={}, success={}", alertType, warehouse.getId(), success);
+
+            distributeBackupNotifications(alert, warehouse);
+        } catch (Exception e) {
+            log.error("Failed to create backup alert for warehouse {}", warehouse.getId(), e);
+        }
+    }
+
+    private String buildBackupAlertMessage(Warehouse warehouse, BackupRecord record, boolean success) {
+        if (success) {
+            return String.format("Backup dla magazynu %s (ID: %d) zakończony pomyślnie. " +
+                            "Rekordów: %d, Rozmiar: %d bajtów, Data: %s",
+                    warehouse.getName(), warehouse.getId(),
+                    record.getTotalRecords(), record.getSizeBytes(),
+                    record.getCompletedAt());
+        } else {
+            return String.format("Backup dla magazynu %s (ID: %d) nie powiódł się. " +
+                            "Błąd: %s, Data: %s",
+                    warehouse.getName(), warehouse.getId(),
+                    record.getErrorMessage() != null ? record.getErrorMessage() : "Nieznany błąd",
+                    record.getCompletedAt());
+        }
+    }
+
+    private void distributeBackupNotifications(Alert alert, Warehouse warehouse) {
+        List<User> adminUsers = userRepository.findByRoleAndStatus(UserRole.ADMIN, AccountStatus.ACTIVE);
+
+        if (adminUsers.isEmpty()) {
+            log.debug("No admin users found to distribute backup notifications");
+            return;
+        }
+
+        Instant now = Instant.now();
+        List<UserNotification> notifications = adminUsers.stream()
+                .map(user -> UserNotification.builder()
+                        .user(user)
+                        .alert(alert)
+                        .isRead(false)
+                        .createdAt(now)
+                        .build())
+                .toList();
+
+        if (!notifications.isEmpty()) {
+            userNotificationRepository.saveAll(notifications);
+            log.info("Distributed {} backup notifications to admin users", notifications.size());
+        }
     }
 }

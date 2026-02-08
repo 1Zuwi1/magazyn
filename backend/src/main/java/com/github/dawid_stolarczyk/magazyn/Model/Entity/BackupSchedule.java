@@ -1,6 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Entity;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.BackupResourceType;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.BackupScheduleCode;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,8 +30,12 @@ public class BackupSchedule {
     @JoinColumn(name = "warehouse_id", nullable = false)
     private Warehouse warehouse;
 
-    @Column(name = "cron_expression", nullable = false, length = 100)
-    private String cronExpression;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "schedule_code", nullable = false, length = 20)
+    private BackupScheduleCode scheduleCode;
+
+    @Column(name = "backup_hour", nullable = false)
+    private Integer backupHour;
 
     @Column(name = "resource_types", nullable = false)
     private String resourceTypes;

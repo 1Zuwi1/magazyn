@@ -12,8 +12,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -59,10 +62,57 @@ public class WarehouseService {
             );
         }
 
+        warehousePage = applySorting(warehousePage, pageable);
+
         // Calculate cumulative summary across ALL warehouses (not just current page)
         WarehouseSummaryDto summary = calculateWarehouseSummary();
 
         return WarehousePagedResponse.from(warehousePage, summary);
+    }
+
+    private Page<WarehouseDto> applySorting(Page<WarehouseDto> warehousePage, Pageable pageable) {
+        String sortBy = pageable.getSort().stream()
+                .map(order -> order.getProperty().toLowerCase())
+                .findFirst()
+                .orElse(null);
+
+        if (sortBy == null) {
+            return warehousePage;
+        }
+
+        boolean isDesc = pageable.getSort().stream()
+                .anyMatch(Sort.Order::isDescending);
+
+        List<WarehouseDto> sortedContent = switch (sortBy) {
+            case "occupancy" -> sortWarehousesByOccupancy(warehousePage.getContent(), isDesc);
+            case "occupiedslots" -> warehousePage.getContent().stream()
+                    .sorted((a, b) -> isDesc ? b.getOccupiedSlots().compareTo(a.getOccupiedSlots()) : a.getOccupiedSlots().compareTo(b.getOccupiedSlots()))
+                    .toList();
+            case "freeslots" -> warehousePage.getContent().stream()
+                    .sorted((a, b) -> isDesc ? b.getFreeSlots().compareTo(a.getFreeSlots()) : a.getFreeSlots().compareTo(b.getFreeSlots()))
+                    .toList();
+            case "totalslots" -> warehousePage.getContent().stream()
+                    .sorted((a, b) -> isDesc ? b.getTotalSlots().compareTo(a.getTotalSlots()) : a.getTotalSlots().compareTo(b.getTotalSlots()))
+                    .toList();
+            case "rackscount" -> warehousePage.getContent().stream()
+                    .sorted((a, b) -> isDesc ? b.getRacksCount().compareTo(a.getRacksCount()) : a.getRacksCount().compareTo(b.getRacksCount()))
+                    .toList();
+            case "name" -> warehousePage.getContent().stream()
+                    .sorted((a, b) -> isDesc ? b.getName().compareTo(a.getName()) : a.getName().compareTo(b.getName()))
+                    .toList();
+            default -> warehousePage.getContent();
+        };
+
+        return new PageImpl<>(sortedContent, pageable, warehousePage.getTotalElements());
+    }
+
+    private List<WarehouseDto> sortWarehousesByOccupancy(List<WarehouseDto> warehouses, boolean descending) {
+        return warehouses.stream()
+                .sorted((a, b) -> {
+                    int comparison = a.getOccupancy().compareTo(b.getOccupancy());
+                    return descending ? -comparison : comparison;
+                })
+                .toList();
     }
 
     public WarehouseDto getWarehouseById(Long id, HttpServletRequest request) {
@@ -131,11 +181,13 @@ public class WarehouseService {
         }
 
         int totalFreeSlots = totalCapacity - totalOccupiedSlots;
+        int occupancy = totalCapacity > 0 ? (int) ((double) totalOccupiedSlots / totalCapacity * 100) : 0;
 
         return WarehouseSummaryDto.builder()
                 .totalCapacity(totalCapacity)
                 .freeSlots(totalFreeSlots)
                 .occupiedSlots(totalOccupiedSlots)
+                .occupancy(occupancy)
                 .totalWarehouses((int) allWarehouses.size())
                 .totalRacks(totalRacks)
                 .build();
@@ -156,6 +208,9 @@ public class WarehouseService {
         // Liczba wolnych miejsc
         int freeSlots = totalSlots - (int) occupiedSlots;
 
+        // Obliczanie procentu zajętości
+        int occupancy = totalSlots > 0 ? (int) ((double) occupiedSlots / totalSlots * 100) : 0;
+
         return WarehouseDto.builder()
                 .id(warehouse.getId())
                 .name(warehouse.getName())
@@ -163,6 +218,7 @@ public class WarehouseService {
                 .occupiedSlots((int) occupiedSlots)
                 .freeSlots(freeSlots)
                 .totalSlots(totalSlots)
+                .occupancy(occupancy)
                 .build();
     }
 }

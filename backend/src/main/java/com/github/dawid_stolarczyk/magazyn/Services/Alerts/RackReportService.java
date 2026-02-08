@@ -286,7 +286,8 @@ public class RackReportService {
                     "%s - Temperatura regału (%.1f°C) poza zakresem tolerancji przedmiotu",
                     rackInfo, actual);
             case EMBEDDING_GENERATION_COMPLETED, EMBEDDING_GENERATION_FAILED,
-                 ASSORTMENT_EXPIRED, ASSORTMENT_CLOSE_TO_EXPIRY ->
+                 ASSORTMENT_EXPIRED, ASSORTMENT_CLOSE_TO_EXPIRY,
+                 BACKUP_COMPLETED, BACKUP_FAILED ->
                     throw new IllegalArgumentException("System alert types should not be used in rack reports");
         };
     }

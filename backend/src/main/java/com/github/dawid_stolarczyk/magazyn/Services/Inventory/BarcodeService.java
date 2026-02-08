@@ -30,7 +30,8 @@ public class BarcodeService {
             if (attempts >= MAX_RETRY_ATTEMPTS) {
                 throw new IllegalStateException(InventoryError.BARCODE_GENERATION_FAILED.name() + ": Unable to generate unique barcode after " + MAX_RETRY_ATTEMPTS + " attempts");
             }
-            code = CodeGenerator.generateWithNumbers(ITEM_CODE_LENGTH);
+            code = CodeGenerator.generateWithNumbers(ITEM_CODE_LENGTH-1);
+            int checksum = CodeGenerator.calculateGTIN14Checksum(code);
             attempts++;
         } while (itemRepository.existsByCode(code));
         return code;

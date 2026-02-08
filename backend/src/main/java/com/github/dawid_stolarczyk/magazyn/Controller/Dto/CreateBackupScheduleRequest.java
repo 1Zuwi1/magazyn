@@ -1,9 +1,12 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Dto;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.BackupResourceType;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.BackupScheduleCode;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,9 +21,15 @@ import java.util.Set;
 @Schema(description = "Request to create or update a backup schedule")
 public class CreateBackupScheduleRequest {
 
-    @NotBlank
-    @Schema(description = "Cron expression for scheduling", example = "0 0 2 * * *")
-    private String cronExpression;
+    @NotNull
+    @Schema(description = "Backup schedule code", example = "DAILY")
+    private BackupScheduleCode scheduleCode;
+
+    @NotNull
+    @Min(value = 0, message = "Backup hour must be between 0 and 23")
+    @Max(value = 23, message = "Backup hour must be between 0 and 23")
+    @Schema(description = "Hour of day to run backup (0-23)", example = "2")
+    private Integer backupHour;
 
     @NotEmpty
     @Schema(description = "Resource types to include in scheduled backups")

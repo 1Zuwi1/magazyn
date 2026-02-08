@@ -43,4 +43,16 @@ public class CodeGenerator {
         buffer.putLong(uuid.getLeastSignificantBits());
         return Base64.getUrlEncoder().withoutPadding().encodeToString(buffer.array());
     }
+
+    public static int calculateGTIN14Checksum(String code) {
+//        int sum = 0;
+//        for (char c : code.toCharArray()) {
+//            int digit = Character.getNumericValue(c);
+//            sum += (digit * 3) + (digit * 1);
+//        }
+//        for (int i = 1; i <= 13; i++) {
+//            if (i % 2 != 0)
+//        }
+        return 0;
+    }
 }

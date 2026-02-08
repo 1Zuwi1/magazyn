@@ -16,7 +16,9 @@ public enum AlertType {
     EMBEDDING_GENERATION_COMPLETED("Zakończono generowanie embeddingów dla produktów"),
     EMBEDDING_GENERATION_FAILED("Błąd podczas generowania embeddingów dla produktów"),
     ASSORTMENT_EXPIRED("Assortment wygasł - produkt przekroczył datę ważności"),
-    ASSORTMENT_CLOSE_TO_EXPIRY("Assortment bliski wygaśnięcia - zbliża się data ważności");
+    ASSORTMENT_CLOSE_TO_EXPIRY("Assortment bliski wygaśnięcia - zbliża się data ważności"),
+    BACKUP_COMPLETED("Backup zakończony pomyślnie"),
+    BACKUP_FAILED("Backup nie powiódł się");
 
     private final String description;
 
