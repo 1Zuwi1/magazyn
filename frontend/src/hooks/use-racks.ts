@@ -41,10 +41,7 @@ export type RacksList = InferApiOutput<typeof RacksSchema, "GET">
 export type RackDetails = InferApiOutput<typeof RackDetailsSchema, "GET">
 export type RackLookupDetails = InferApiOutput<typeof RackLookupSchema, "GET">
 
-interface RacksListParams {
-  page?: number
-  size?: number
-}
+type RacksListParams = InferApiInput<typeof RacksSchema, "GET">
 
 interface RacksDetailsParams {
   rackId: number
@@ -91,48 +88,33 @@ export default function useRacks(
 ): UseQueryResult<RacksList, FetchError>
 
 export default function useRacks(
-  {
-    page,
-    size,
-    rackId,
-    warehouseId,
-  }: {
-    page?: number
-    size?: number
-    rackId?: number
-    warehouseId?: number
-  } = {
-    page: 0,
-    size: 20,
-  }
+  params?: RacksListParams | RacksDetailsParams | RacksByWarehouseParams
 ) {
   return useApiQuery({
-    queryKey: [...Racks_QUERY_KEY, { page, size, rackId, warehouseId }],
+    queryKey: [...Racks_QUERY_KEY, params],
     queryFn: async () => {
-      if (warehouseId !== undefined) {
-        if (warehouseId === -1) {
-          // placeholder when useWarehouses is in pending state and warehouseId is not yet available
+      if (params && "rackId" in params) {
+        if (params.rackId === -1) {
+          return null
+        }
+        return await apiFetch(`/api/racks/${params.rackId}`, RackDetailsSchema)
+      }
+
+      if (params && "warehouseId" in params) {
+        if (params.warehouseId === -1) {
           return null
         }
         return await apiFetch(
-          `/api/warehouses/${warehouseId}/racks`,
+          `/api/warehouses/${params.warehouseId}/racks`,
           RacksSchema,
           {
-            queryParams: {
-              page,
-              size,
-            },
+            queryParams: params,
           }
         )
       }
-      if (rackId !== undefined) {
-        return await apiFetch(`/api/racks/${rackId}`, RackDetailsSchema)
-      }
+
       return await apiFetch("/api/racks", RacksSchema, {
-        queryParams: {
-          page,
-          size,
-        },
+        queryParams: params,
       })
     },
     placeholderData: keepPreviousData,

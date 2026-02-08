@@ -1,5 +1,10 @@
 import type { UseQueryResult } from "@tanstack/react-query"
-import { apiFetch, type FetchError, type InferApiOutput } from "@/lib/fetcher"
+import {
+  apiFetch,
+  type FetchError,
+  type InferApiInput,
+  type InferApiOutput,
+} from "@/lib/fetcher"
 import {
   CreateWarehouseSchema,
   DeleteWarehouseSchema,
@@ -19,12 +24,9 @@ export type WarehouseDetails = InferApiOutput<
   "GET"
 >
 
-interface WarehousesListParams {
-  page?: number
-  size?: number
-}
+type WarehousesListParams = InferApiInput<typeof WarehousesSchema, "GET">
 
-interface WarehousesDetailsParams {
+interface WarehouseDetailsParams {
   warehouseId: number
 }
 
@@ -33,41 +35,26 @@ export default function useWarehouses(
 ): UseQueryResult<WarehousesList, FetchError>
 
 export default function useWarehouses(
-  params: WarehousesDetailsParams
+  params: WarehouseDetailsParams
 ): UseQueryResult<WarehouseDetails, FetchError>
 
 export default function useWarehouses(
-  {
-    page,
-    size,
-    warehouseId,
-  }: {
-    page?: number
-    size?: number
-    warehouseId?: number
-  } = {
-    page: 0,
-    size: 20,
-  }
+  params?: WarehousesListParams | WarehouseDetailsParams
 ) {
   return useApiQuery({
-    queryKey: [...WAREHOUSES_QUERY_KEY, { page, size, warehouseId }],
+    queryKey: [...WAREHOUSES_QUERY_KEY, params],
     queryFn: async () => {
-      if (warehouseId !== undefined) {
-        if (warehouseId === -1) {
-          // This is a workaround to prevent the query from running when warehouseId is not yet available.
+      if (params && "warehouseId" in params) {
+        if (params.warehouseId === -1) {
           return null
         }
         return await apiFetch(
-          `/api/warehouses/${warehouseId}`,
+          `/api/warehouses/${params.warehouseId}`,
           WarehouseDetailsSchema
         )
       }
       return await apiFetch("/api/warehouses", WarehousesSchema, {
-        queryParams: {
-          page,
-          size,
-        },
+        queryParams: params,
       })
     },
   })

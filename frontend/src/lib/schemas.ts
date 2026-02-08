@@ -527,6 +527,8 @@ export const WarehousesSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
       nameFilter: z.string().optional(),
+      minPercentOfOccupiedSlots: z.number().int().min(0).max(100).optional(),
+      onlyNonEmpty: z.boolean().optional(),
     }),
     output: createPaginatedSchema(WarehouseSchema, {
       summary: z.object({

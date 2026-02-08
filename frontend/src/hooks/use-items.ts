@@ -26,14 +26,14 @@ export type ItemsList = InferApiOutput<typeof ItemsSchema, "GET">
 export type Item = ItemsList["content"][number]
 export type ItemDetails = InferApiOutput<typeof ItemDetailsSchema, "GET">
 
-interface ItemsListParams {
-  page?: number
-  size?: number
-  warehouseId?: number
-}
+type ItemsListParams = InferApiInput<typeof ItemsSchema, "GET">
 
 interface ItemDetailsParams {
   itemId: number
+}
+
+interface ItemsByWarehouseParams extends ItemsListParams {
+  warehouseId: number
 }
 
 interface MultipleItemsParams {
@@ -71,57 +71,44 @@ export default function useItems(
 ): UseQueryResult<ItemDetails, FetchError>
 
 export default function useItems(
-  {
-    page,
-    size,
-    warehouseId,
-    itemId,
-  }: {
-    page?: number
-    size?: number
-    warehouseId?: number
-    itemId?: number
-  } = {
-    page: 0,
-    size: 20,
-  }
+  params: ItemsByWarehouseParams
+): UseQueryResult<ItemsList, FetchError>
+
+export default function useItems(
+  params?: ItemsListParams | ItemDetailsParams | ItemsByWarehouseParams
 ) {
   return useApiQuery({
-    queryKey: [...ITEMS_QUERY_KEY, { page, size, warehouseId, itemId }],
+    queryKey: [...ITEMS_QUERY_KEY, params],
     queryFn: async () => {
-      if (itemId !== undefined) {
-        if (itemId === -1) {
-          // This is a workaround to prevent the query from running when itemId is not yet available.
-          return null
-        }
-        return await apiFetch(`/api/items/${itemId}`, ItemDetailsSchema, {
-          method: "GET",
-        })
-      }
-
-      if (warehouseId !== undefined) {
-        if (warehouseId === -1) {
-          // This is a workaround to prevent the query from running when warehouseId is not yet available.
+      if (params && "itemId" in params) {
+        if (params.itemId === -1) {
           return null
         }
         return await apiFetch(
-          `/api/warehouses/${warehouseId}/items`,
+          `/api/items/${params.itemId}`,
+          ItemDetailsSchema,
+          {
+            method: "GET",
+          }
+        )
+      }
+
+      if (params && "warehouseId" in params) {
+        if (params.warehouseId === -1) {
+          return null
+        }
+        return await apiFetch(
+          `/api/warehouses/${params.warehouseId}/items`,
           ItemsSchema,
           {
             method: "GET",
-            queryParams: {
-              page,
-              size,
-            },
+            queryParams: params,
           }
         )
       }
 
       return await apiFetch("/api/items", ItemsSchema, {
-        queryParams: {
-          page,
-          size,
-        },
+        queryParams: params,
       })
     },
   })
