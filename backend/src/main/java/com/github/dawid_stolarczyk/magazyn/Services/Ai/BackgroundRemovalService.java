@@ -53,6 +53,7 @@ public class BackgroundRemovalService {
     public void init() {
         httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
+                .version(HttpClient.Version.HTTP_1_1)
                 .build();
         log.info("BackgroundRemovalService initialized (enabled={}, url={})", enabled, rembgUrl);
 

@@ -44,5 +44,8 @@ app.s3.secret-key=${S3_SECRET_KEY}
 
 app.s3.items-prefix=items-photos/
 
-
 webauthn.allow-untrusted-attestation:false
+
+app.background-removal.enabled=true
+app.background-removal.url=${DOMAIN}:7000/api/remove
+app.background-removal.timeout-seconds=30

@@ -59,13 +59,11 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     } else {
                         SecurityContextHolder.clearContext();
                         sessionManager.logoutUser(response, request);
-                        request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                     }
                 } catch (Exception e) {
                     log.warn("Session auth failed, logging out", e);
                     SecurityContextHolder.clearContext();
                     sessionManager.logoutUser(response, request);
-                    request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                 }
             }, () -> {
                 // Session cookie exists but session not found in Redis (expired or Redis restarted)
@@ -75,9 +73,6 @@ public class SessionAuthFilter extends OncePerRequestFilter {
             });
         } else {
             authorizeViaRememberMe(request, response);
-        }
-        if (Boolean.TRUE.equals(request.getAttribute("AUTH_LOGOUT"))) {
-            return;
         }
         filterChain.doFilter(request, response);
     }
@@ -111,7 +106,6 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     log.warn("Remember-me token mismatch, logging out");
                     SecurityContextHolder.clearContext();
                     sessionManager.logoutUser(response, request);
-                    request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                     return;
                 }
                 User user;
@@ -122,7 +116,6 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     log.warn("Remember-me user lookup failed, logging out", e);
                     SecurityContextHolder.clearContext();
                     sessionManager.logoutUser(response, request);
-                    request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                     return;
                 }
                 if (user.getStatus().equals(AccountStatus.ACTIVE)
@@ -143,11 +136,9 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     log.info("Inactive user status, logging out");
                     SecurityContextHolder.clearContext();
                     sessionManager.logoutUser(response, request);
-                    request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
                 }
             }, () -> {
                 sessionManager.logoutUser(response, request);
-                request.setAttribute("AUTH_LOGOUT", Boolean.TRUE);
             });
         }
     }

@@ -185,6 +185,7 @@ public class ImageEmbeddingService {
 
     /**
      * Converts an InputStream image to a 1000-dimensional embedding vector.
+     * Applies background removal before generating the embedding.
      *
      * @param inputStream the image input stream to process
      * @return float array of 1000 dimensions representing the image embedding
@@ -207,10 +208,7 @@ public class ImageEmbeddingService {
                 log.debug("Using original image for embedding (background removal skipped or failed)");
             }
 
-            Image image = ImageFactory.getInstance().fromInputStream(new ByteArrayInputStream(imageBytes));
-            float[] rawEmbedding = predictor.predict(image);
-
-            return normalizeEmbedding(rawEmbedding);
+            return generateEmbeddingFromBytes(imageBytes);
         } catch (IOException e) {
             log.error("Failed to load image: {}", e.getMessage());
             throw new ImageEmbeddingException("Invalid image format or corrupted file", e);
@@ -218,6 +216,35 @@ public class ImageEmbeddingService {
             log.error("Failed to generate embedding: {}", e.getMessage());
             throw new ImageEmbeddingException("AI model failed to process image", e);
         }
+    }
+
+    /**
+     * Generates an embedding from already-processed image bytes (no background removal).
+     * Use this when background removal has already been applied to the image.
+     *
+     * @param imageBytes the pre-processed image bytes
+     * @return float array of 1000 dimensions representing the image embedding
+     */
+    public float[] getEmbeddingFromProcessedImage(byte[] imageBytes) {
+        if (!modelLoaded) {
+            throw new ImageEmbeddingException("Image embedding model is not available");
+        }
+
+        try {
+            return generateEmbeddingFromBytes(imageBytes);
+        } catch (IOException e) {
+            log.error("Failed to load image: {}", e.getMessage());
+            throw new ImageEmbeddingException("Invalid image format or corrupted file", e);
+        } catch (TranslateException e) {
+            log.error("Failed to generate embedding: {}", e.getMessage());
+            throw new ImageEmbeddingException("AI model failed to process image", e);
+        }
+    }
+
+    private float[] generateEmbeddingFromBytes(byte[] imageBytes) throws IOException, TranslateException {
+        Image image = ImageFactory.getInstance().fromInputStream(new ByteArrayInputStream(imageBytes));
+        float[] rawEmbedding = predictor.predict(image);
+        return normalizeEmbedding(rawEmbedding);
     }
 
     /**

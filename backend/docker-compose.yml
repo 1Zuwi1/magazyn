@@ -46,9 +46,10 @@ services:
   rembg:
     image: danielgatis/rembg:latest
     container_name: magazyn-rembg
+    restart: always
     ports:
       - "7000:80"
-    restart: unless-stopped
+    command: s --host 0.0.0.0 --port 80
 
 volumes:
   postgres_data:

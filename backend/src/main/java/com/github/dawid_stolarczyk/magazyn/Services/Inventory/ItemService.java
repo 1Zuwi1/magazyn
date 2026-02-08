@@ -8,6 +8,7 @@ import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.Specification.ItemSpecifications;
+import com.github.dawid_stolarczyk.magazyn.Services.Ai.BackgroundRemovalService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ai.ImageEmbeddingService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
@@ -24,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
@@ -38,6 +40,7 @@ public class ItemService {
     private final BarcodeService barcodeService;
     private final Bucket4jRateLimiter rateLimiter;
     private final ImageEmbeddingService imageEmbeddingService;
+    private final BackgroundRemovalService backgroundRemovalService;
 
     public Page<ItemDto> getAllItemsPaged(
             HttpServletRequest request,
@@ -126,17 +129,33 @@ public class ItemService {
         // Walidacja: tylko obrazy są akceptowane
         validateImageFile(file);
 
+        // Read original file bytes
+        byte[] originalBytes = file.getBytes();
+
+        // Apply background removal; fall back to original on failure
+        byte[] imageBytes = originalBytes;
+        byte[] processed = backgroundRemovalService.removeBackground(originalBytes);
+        if (processed != null) {
+            imageBytes = processed;
+            log.debug("Background removed from image for item {}", id);
+        } else {
+            log.debug("Using original image for item {} (background removal skipped or failed)", id);
+        }
+
         String previousPhoto = item.getPhoto_url();
         String fileName = UUID.randomUUID() + ".enc";
         AtomicReference<Exception> encryptionError = new AtomicReference<>();
-        java.util.concurrent.CountDownLatch encryptionStarted = new java.util.concurrent.CountDownLatch(1);
-        java.util.concurrent.CountDownLatch encryptionFinished = new java.util.concurrent.CountDownLatch(1);
+        CountDownLatch encryptionStarted = new CountDownLatch(1);
+        CountDownLatch encryptionFinished = new CountDownLatch(1);
+
+        // Create final reference for use in lambda
+        final byte[] finalImageBytes = imageBytes;
 
         try (PipedInputStream pipedIn = new PipedInputStream(1024 * 64);
              PipedOutputStream pipedOut = new PipedOutputStream(pipedIn)) {
 
             Thread encryptThread = new Thread(() -> {
-                try (InputStream rawIn = file.getInputStream()) {
+                try (InputStream rawIn = new ByteArrayInputStream(finalImageBytes)) {
                     encryptionStarted.countDown();
                     fileCryptoService.encrypt(rawIn, pipedOut);
                 } catch (Exception ex) {
@@ -168,7 +187,7 @@ public class ItemService {
                     throw encryptionError.get();
                 }
 
-                storageService.uploadStream(fileName, pipedIn, file.getContentType());
+                storageService.uploadStream(fileName, pipedIn, "image/png");
             } catch (InterruptedException ex) {
                 encryptThread.interrupt();
                 Thread.currentThread().interrupt();
@@ -213,7 +232,8 @@ public class ItemService {
             // Image embedding is optional - if model isn't available, photo upload still works
             if (imageEmbeddingService.isModelLoaded()) {
                 try {
-                    item.setImageEmbedding(imageEmbeddingService.getEmbedding(file));
+                    // Use the same processed image bytes - skip redundant background removal
+                    item.setImageEmbedding(imageEmbeddingService.getEmbeddingFromProcessedImage(imageBytes));
                 } catch (ImageEmbeddingService.ImageEmbeddingException e) {
                     log.warn("Failed to generate image embedding, visual search will not work for this item: {}",
                             e.getMessage());
