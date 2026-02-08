@@ -4,57 +4,19 @@ import {
   Tag01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { addDays } from "date-fns"
 import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import type { Rack } from "../types"
-import {
-  formatDate,
-  formatDimensions,
-  getDaysUntilExpiry,
-  getSlotCoordinate,
-  pluralize,
-} from "../utils/helpers"
-import {
-  getItemStatus,
-  getStatusColors,
-  getStatusText,
-  type ItemStatus,
-} from "../utils/item-status"
+import type { Assortment, Rack } from "@/lib/schemas"
+import type { SlotCoordinates } from "../types"
+import { getSlotCoordinate } from "../utils/helpers"
 
 interface RackShelfDetailsCardProps {
   rack: Rack
-  selectedIndex: number | null
+  selectedSlotCoordinates: SlotCoordinates | null
+  assortment: Assortment | null
   onClearSelection: () => void
   onOpenDetails?: () => void
-}
-
-type BadgeVariant = NonNullable<React.ComponentProps<typeof Badge>["variant"]>
-
-function getStatusBadgeVariant(status: ItemStatus): BadgeVariant {
-  if (status === "normal") {
-    return "success"
-  }
-  if (status === "expired") {
-    return "warning"
-  }
-  return "destructive"
-}
-
-function formatExpiryHint(daysUntilExpiry: number): string {
-  if (daysUntilExpiry === 0) {
-    return "Wygasa dzisiaj"
-  }
-
-  const absDays = Math.abs(daysUntilExpiry)
-  const daysLabel = `${absDays} ${pluralize(absDays, "dzień", "dni", "dni")}`
-  if (daysUntilExpiry < 0) {
-    return `Po terminie ${daysLabel}`
-  }
-
-  return `Wygasa za ${daysLabel}`
 }
 
 function DetailRow({
@@ -74,33 +36,23 @@ function DetailRow({
 
 export function RackShelfDetailsCard({
   rack,
-  selectedIndex,
+  selectedSlotCoordinates,
+  assortment,
   onClearSelection,
   onOpenDetails,
 }: RackShelfDetailsCardProps) {
-  const selectedItem = selectedIndex !== null ? rack.items[selectedIndex] : null
-  const selectedPosition =
-    selectedIndex !== null
-      ? {
-          row: Math.floor(selectedIndex / rack.cols),
-          col: selectedIndex % rack.cols,
-        }
-      : null
-  const coordinate =
-    selectedIndex !== null ? getSlotCoordinate(selectedIndex, rack.cols) : null
-  const daysUntilExpiry = selectedItem
-    ? getDaysUntilExpiry(
-        new Date(),
-        selectedItem.expiryDate ??
-          addDays(new Date(), selectedItem.daysToExpiry)
-      )
+  const hasSelection = selectedSlotCoordinates !== null
+  const selectedPosition = selectedSlotCoordinates
+    ? {
+        row: selectedSlotCoordinates.y,
+        col: selectedSlotCoordinates.x,
+      }
     : null
-  const status = selectedItem ? getItemStatus(selectedItem) : null
-  const statusColors = status ? getStatusColors(status) : null
-  const statusText = status ? getStatusText(status) : null
-  const badgeVariant = status ? getStatusBadgeVariant(status) : null
-  const expiryHint =
-    daysUntilExpiry !== null ? formatExpiryHint(daysUntilExpiry) : null
+  const selectedIndex = selectedSlotCoordinates
+    ? selectedSlotCoordinates.y * rack.sizeX + selectedSlotCoordinates.x
+    : null
+  const coordinate =
+    selectedIndex !== null ? getSlotCoordinate(selectedIndex, rack.sizeX) : null
 
   return (
     <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
@@ -133,7 +85,7 @@ export function RackShelfDetailsCard({
         </div>
       </div>
 
-      {selectedIndex === null && (
+      {!hasSelection && (
         <div className="flex flex-col items-center gap-2 p-6 text-center">
           <div className="flex size-12 items-center justify-center rounded-full bg-muted">
             <HugeiconsIcon
@@ -150,7 +102,7 @@ export function RackShelfDetailsCard({
         </div>
       )}
 
-      {selectedIndex !== null && !selectedItem && (
+      {hasSelection && !assortment && (
         <div className="flex flex-col items-center gap-2 p-6 text-center">
           <div className="flex size-12 items-center justify-center rounded-full bg-muted">
             <HugeiconsIcon
@@ -171,73 +123,52 @@ export function RackShelfDetailsCard({
         </div>
       )}
 
-      {selectedItem && selectedPosition && statusColors && statusText && (
+      {assortment && selectedPosition && (
         <div className="space-y-3 p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className={cn("size-2.5 rounded-full", statusColors.dot)} />
-            <span className={cn("font-medium text-sm", statusColors.text)}>
-              {statusText}
-            </span>
-            {expiryHint && badgeVariant && (
-              <Badge variant={badgeVariant}>{expiryHint}</Badge>
-            )}
-          </div>
-
           <div className="space-y-2 text-xs">
             <DetailRow
               label="ID"
               value={
+                <span className="font-mono font-semibold">{assortment.id}</span>
+              }
+            />
+            <DetailRow
+              label="Kod"
+              value={
                 <span className="font-mono font-semibold">
-                  {selectedItem.id}
+                  {assortment.code}
                 </span>
               }
             />
             <DetailRow
-              label="Nazwa"
-              value={<span className="font-medium">{selectedItem.name}</span>}
-            />
-            <DetailRow
-              label="Kod QR"
+              label="ID przedmiotu"
               value={
                 <span className="font-mono font-semibold">
-                  {selectedItem.qrCode}
+                  {assortment.itemId}
                 </span>
               }
             />
             <DetailRow
-              label="Waga"
+              label="Pozycja"
               value={
                 <span className="font-mono font-semibold">
-                  {selectedItem.weight.toFixed(2)} kg
+                  X: {assortment.positionX}, Y: {assortment.positionY}
                 </span>
               }
             />
             <DetailRow
-              label="Wymiary"
+              label="Utworzono"
               value={
                 <span className="font-mono font-semibold">
-                  {formatDimensions(selectedItem)}
+                  {assortment.createdAt}
                 </span>
               }
             />
             <DetailRow
-              label="Temperatura"
+              label="Wygasa"
               value={
                 <span className="font-mono font-semibold">
-                  {selectedItem.minTemp}°C – {selectedItem.maxTemp}°C
-                </span>
-              }
-            />
-            <DetailRow
-              label="Ważność"
-              value={
-                <span
-                  className={cn("font-mono font-semibold", statusColors.text)}
-                >
-                  {formatDate(
-                    selectedItem.expiryDate ??
-                      addDays(new Date(), selectedItem.daysToExpiry)
-                  )}
+                  {assortment.expiresAt}
                 </span>
               }
             />

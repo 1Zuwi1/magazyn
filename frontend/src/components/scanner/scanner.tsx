@@ -28,14 +28,16 @@ import { cn } from "@/lib/utils"
 import { buttonVariants } from "../ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog"
 import { ErrorBoundary } from "../ui/error-boundary"
-import { OutboundFlow, type OutboundFlowHandle } from "./outbound/outbound-flow"
+import { OutboundFlow } from "./outbound/outbound-flow"
 import { ScannerBody } from "./scanner-body"
 import { ScannerCamera } from "./scanner-camera"
+import { ScannerChooseMethod } from "./scanner-choose-method"
 import { ScannerErrorState } from "./scanner-error-state"
 import { ScannerIdentifyStep } from "./scanner-identify-step"
 import { ScannerLocationsStep } from "./scanner-locations-step"
 import { ScannerManualInput } from "./scanner-manual-input"
 import { ScannerQuantityStep } from "./scanner-quantity-step"
+import { ScannerSelectItem } from "./scanner-select-item"
 import { ScannerSuccessStep } from "./scanner-success-step"
 import type {
   EditablePlacement,
@@ -81,8 +83,11 @@ const SCANNER_ERROR_MESSAGES = {
 } as const
 
 type Step =
+  | "choose-mode"
+  | "choose-method"
   | "camera"
   | "manual-input"
+  | "select-item"
   | "identify"
   | "quantity"
   | "locations"
@@ -125,9 +130,8 @@ export function Scanner({
   )
   const [open, setOpen] = useState<boolean>(false)
   const armedRef = useRef<boolean>(false)
-  const outboundRef = useRef<OutboundFlowHandle>(null)
   const [scannerState, setScannerState] = useState<ScannerState>({
-    step: "camera",
+    step: "choose-mode",
     isLoading: false,
     isSubmitting: false,
   })
@@ -195,9 +199,9 @@ export function Scanner({
     []
   )
 
-  const handleReset = useCallback(() => {
+  const resetScannerFlow = useCallback((nextStep: Step) => {
     setScannerState({
-      step: "camera",
+      step: nextStep,
       isLoading: false,
       isSubmitting: false,
     })
@@ -216,8 +220,11 @@ export function Scanner({
     setPendingOutboundScanCode(null)
     setOutboundShowsCamera(true)
     placementIdRef.current = 0
-    outboundRef.current?.reset()
   }, [])
+
+  const handleReset = useCallback(() => {
+    resetScannerFlow("choose-mode")
+  }, [resetScannerFlow])
 
   const closeDialog = useCallback(() => {
     if (!open) {
@@ -527,7 +534,6 @@ export function Scanner({
         isSubmitting: false,
       }))
     } catch (planError) {
-      console.error(planError)
       setError(
         getScannerErrorMessage(
           planError,
@@ -570,7 +576,6 @@ export function Scanner({
         {
           method: "POST",
           body: {
-            itemId: scannedItem.id,
             code: scannedCode || scannedItem.code,
             placements: editablePlacements.map((placement) => ({
               rackId: placement.rackId,
@@ -689,7 +694,7 @@ export function Scanner({
     setPendingOutboundScanCode(null)
     setOutboundShowsCamera(true)
     setScannerState({
-      step: "camera",
+      step: "choose-method",
       isLoading: false,
       isSubmitting: false,
     })
@@ -702,6 +707,59 @@ export function Scanner({
       isSubmitting: false,
     })
     setError(null)
+  }, [])
+
+  const handleChooseTakeMode = useCallback(() => {
+    setMode("take")
+    resetScannerFlow("choose-method")
+  }, [resetScannerFlow])
+
+  const handleChooseRemoveMode = useCallback(() => {
+    setMode("remove")
+    resetScannerFlow("choose-method")
+  }, [resetScannerFlow])
+
+  const handleChooseMethodScan = useCallback(() => {
+    setScannerState({
+      step: "camera",
+      isLoading: false,
+      isSubmitting: false,
+    })
+    setError(null)
+  }, [])
+
+  const handleCameraRequestClose = useCallback(() => {
+    setError(null)
+    setPendingOutboundScanCode(null)
+    setOutboundShowsCamera(true)
+    setScannerState({
+      step: "choose-method",
+      isLoading: false,
+      isSubmitting: false,
+    })
+  }, [])
+
+  const handleChooseMethodSelect = useCallback(() => {
+    setScannerState({
+      step: "select-item",
+      isLoading: false,
+      isSubmitting: false,
+    })
+    setError(null)
+  }, [])
+
+  const handleInboundItemSelected = useCallback((item: ScanItem) => {
+    setScannedItem(item)
+    setScannedCode(item.code)
+    setPlacementPlan(null)
+    setCurrentWarehouseId(null)
+    setEditablePlacements([])
+    setConfirmedPlacementsCount(0)
+    setScannerState({
+      step: "quantity",
+      isLoading: false,
+      isSubmitting: false,
+    })
   }, [])
 
   const renderScannerFallback = useCallback(
@@ -738,15 +796,27 @@ export function Scanner({
 
   const handleOutboundManualScan = useCallback(
     (rawCode: string) => {
-      setLastManualCode(rawCode)
-
-      const didQueueCode = queueOutboundScanCode(rawCode)
-      if (didQueueCode) {
-        setLastManualCode("")
+      const trimmed = rawCode.trim()
+      if (!trimmed) {
+        return
       }
+
+      setLastManualCode("")
+      setError(null)
+      queueOutboundScanCode(trimmed)
     },
     [queueOutboundScanCode]
   )
+
+  const handleOutboundItemSelected = useCallback((item: ScanItem) => {
+    setScannedItem(item)
+    setOutboundShowsCamera(false)
+    setScannerState({
+      step: "camera",
+      isLoading: false,
+      isSubmitting: false,
+    })
+  }, [])
 
   const handleOutboundRequestCamera = useCallback(() => {
     setPendingOutboundScanCode(null)
@@ -762,37 +832,47 @@ export function Scanner({
     setPendingOutboundScanCode(null)
   }, [])
 
-  const handleModeChange = useCallback(
-    (
-      nextMode: (typeof TAB_TRIGGERS)[number]["action"],
-      options?: {
-        keepManualInput?: boolean
-      }
-    ) => {
-      setMode(nextMode)
-      handleReset()
-
-      if (options?.keepManualInput) {
-        setScannerState({
-          step: "manual-input",
-          isLoading: false,
-          isSubmitting: false,
-        })
-      }
-    },
-    [handleReset]
-  )
-
-  const handleManualInputModeChange = useCallback(
-    (nextMode: (typeof TAB_TRIGGERS)[number]["action"]) => {
-      handleModeChange(nextMode, { keepManualInput: true })
-    },
-    [handleModeChange]
-  )
-
   // ── Inbound content helper ────────────────────────────────────────
 
   function resolveInboundContent(): ReactNode {
+    if (step === "choose-method") {
+      return (
+        <ScannerChooseMethod
+          description="Wybierz sposób wskazania towaru do przyjęcia na magazyn."
+          manualDescription="Wpisz kod GS1-128 ręcznie, jeśli nie możesz go zeskanować."
+          manualLabel="Wprowadź kod ręcznie"
+          onCancel={() =>
+            setScannerState((prev) => ({ ...prev, step: "choose-mode" }))
+          }
+          onManual={handleManualInputOpen}
+          onScan={handleChooseMethodScan}
+          onSelect={handleChooseMethodSelect}
+          scanDescription="Zeskanuj kod kreskowy lub QR z opakowania produktu."
+          scanLabel="Zeskanuj kod"
+          selectDescription="Wyszukaj produkt i wskaż ilość do przyjęcia."
+          selectLabel="Wybierz z listy"
+          title="Przyjmowanie towaru"
+        />
+      )
+    }
+
+    if (step === "select-item") {
+      return (
+        <ScannerSelectItem
+          description="Znajdź produkt który chcesz przyjąć na magazyn."
+          onCancel={() =>
+            setScannerState({
+              step: "choose-method",
+              isLoading: false,
+              isSubmitting: false,
+            })
+          }
+          onSelect={handleInboundItemSelected}
+          title="Wybierz produkt"
+        />
+      )
+    }
+
     if (step === "camera") {
       return (
         <ScannerCamera
@@ -801,9 +881,7 @@ export function Scanner({
           isMobile={isMobile}
           isOpen={open}
           mode={mode}
-          onManualInput={handleManualInputOpen}
-          onModeChange={handleModeChange}
-          onRequestClose={closeDialog}
+          onRequestClose={handleCameraRequestClose}
           onScan={onScan}
           onTakePhoto={onTakePhoto}
           scanDelayMs={scanDelayMs}
@@ -876,22 +954,18 @@ export function Scanner({
       )
     }
 
-    // Default: show camera
+    // Default: show choose-method
     return (
-      <ScannerCamera
-        constraints={constraints}
-        isLoading={isLoading}
-        isMobile={isMobile}
-        isOpen={open}
-        mode={mode}
-        onManualInput={handleManualInputOpen}
-        onModeChange={handleModeChange}
-        onRequestClose={closeDialog}
-        onScan={onScan}
-        onTakePhoto={onTakePhoto}
-        scanDelayMs={scanDelayMs}
-        stopOnScan={stopOnScan}
-        warehouseName={warehouseName}
+      <ScannerChooseMethod
+        description="Wybierz sposób wskazania towaru do przyjęcia na magazyn."
+        onCancel={closeDialog}
+        onScan={handleChooseMethodScan}
+        onSelect={handleChooseMethodSelect}
+        scanDescription="Zeskanuj kod kreskowy lub QR z opakowania produktu."
+        scanLabel="Zeskanuj kod"
+        selectDescription="Wyszukaj produkt i wskaż ilość do przyjęcia."
+        selectLabel="Wybierz z listy"
+        title="Przyjmowanie towaru"
       />
     )
   }
@@ -899,12 +973,11 @@ export function Scanner({
   function renderManualInput(): ReactNode {
     return (
       <ScannerManualInput
-        error={mode === "take" ? error : null}
+        error={error}
         initialCode={lastManualCode}
         isLoading={isLoading}
         mode={mode}
         onCancel={handleManualInputCancel}
-        onModeChange={handleManualInputModeChange}
         onSubmit={mode === "remove" ? handleOutboundManualScan : onManualScan}
       />
     )
@@ -916,11 +989,59 @@ export function Scanner({
 
   if (children) {
     content = <ScannerBody>{children}</ScannerBody>
+  } else if (step === "choose-mode") {
+    content = (
+      <ScannerChooseMethod
+        description="Wybierz, czy chcesz przyjąć towar na magazyn, czy zdjąć go z magazynu."
+        onCancel={closeDialog}
+        onScan={handleChooseTakeMode}
+        onSelect={handleChooseRemoveMode}
+        scanDescription="Rozpocznij przyjmowanie towaru i wskaż metodę działania."
+        scanLabel="Przyjmowanie"
+        selectDescription="Rozpocznij zdejmowanie towaru i wskaż metodę działania."
+        selectLabel="Zdejmowanie"
+        title="Wybierz tryb skanera"
+      />
+    )
   } else if (step === "manual-input") {
     content = renderManualInput()
   } else if (mode === "remove") {
-    // Outbound mode: show camera when scanning, otherwise delegate to OutboundFlow
-    if (outboundShowsCamera) {
+    // Outbound mode: choose-method → camera/select-item → OutboundFlow
+    if (step === "choose-method") {
+      content = (
+        <ScannerChooseMethod
+          description="Wybierz sposób wskazania towaru do zdjęcia z magazynu."
+          manualDescription="Wpisz kod GS1-128 ręcznie, jeśli nie możesz go zeskanować."
+          manualLabel="Wprowadź kod ręcznie"
+          onCancel={() =>
+            setScannerState((prev) => ({ ...prev, step: "choose-mode" }))
+          }
+          onManual={handleManualInputOpen}
+          onScan={handleChooseMethodScan}
+          onSelect={handleChooseMethodSelect}
+          scanDescription="Zeskanuj kod GS1-128 z etykiety asortymentu."
+          scanLabel="Zeskanuj kod"
+          selectDescription="Wyszukaj produkt i wskaż ilość do zdjęcia."
+          selectLabel="Wybierz z listy"
+          title="Zdejmowanie towaru"
+        />
+      )
+    } else if (step === "select-item") {
+      content = (
+        <ScannerSelectItem
+          description="Znajdź produkt który chcesz zdjąć z magazynu."
+          onCancel={() =>
+            setScannerState({
+              step: "choose-method",
+              isLoading: false,
+              isSubmitting: false,
+            })
+          }
+          onSelect={handleOutboundItemSelected}
+          title="Wybierz produkt"
+        />
+      )
+    } else if (step === "camera" && outboundShowsCamera) {
       content = (
         <ScannerCamera
           constraints={constraints}
@@ -928,9 +1049,7 @@ export function Scanner({
           isMobile={isMobile}
           isOpen={open}
           mode={mode}
-          onManualInput={handleManualInputOpen}
-          onModeChange={handleModeChange}
-          onRequestClose={closeDialog}
+          onRequestClose={handleCameraRequestClose}
           onScan={queueOutboundScanCode}
           onTakePhoto={onTakePhoto}
           scanDelayMs={scanDelayMs}
@@ -943,9 +1062,10 @@ export function Scanner({
         <OutboundFlow
           onClose={closeDialog}
           onRequestCamera={handleOutboundRequestCamera}
+          onReset={handleReset}
           onScanCodeHandled={handleOutboundScanCodeHandled}
           pendingScanCode={pendingOutboundScanCode}
-          ref={outboundRef}
+          selectedItem={scannedItem}
         />
       )
     }

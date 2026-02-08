@@ -1,16 +1,12 @@
 "use client"
 
 import { PackageIcon } from "@hugeicons/core-free-icons"
-import { useMemo } from "react"
 import { AssortmentTableWithData } from "@/components/dashboard/items/assortment-table"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { ErrorEmptyState } from "@/components/ui/empty-state"
 import useAssortments from "@/hooks/use-assortment"
 import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
-import { useMultipleItems } from "@/hooks/use-items"
 import useWarehouses from "@/hooks/use-warehouses"
-
-const ITEM_DETAILS_CACHE_TIME_MS = 5 * 60 * 1000
 
 export default function AssortmentClient() {
   const { warehouseIdForQuery, isHydrated, isMissingWarehouseId } =
@@ -39,16 +35,6 @@ export default function AssortmentClient() {
   const isError = isWarehouseError || isAssortmentsError
   const isLoading = !isHydrated || isWarehousePending || isAssortmentsPending
 
-  const itemIds = useMemo(
-    () => [...new Set(assortments?.content.map((item) => item.itemId) ?? [])],
-    [assortments?.content]
-  )
-
-  const itemDetailsQueries = useMultipleItems({
-    itemIds,
-    staleTime: ITEM_DETAILS_CACHE_TIME_MS,
-  })
-
   const headerStats = [
     {
       label: "Produktów",
@@ -74,9 +60,6 @@ export default function AssortmentClient() {
           onRetry={() => {
             refetchWarehouse()
             refetchAssortments()
-            for (const query of itemDetailsQueries) {
-              query.refetch()
-            }
           }}
         />
       </div>

@@ -13,21 +13,40 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { Rack } from "@/lib/schemas"
 import { RackItemsDialog } from "../items-visualization/rack-items-dialog"
-import type { ItemSlot } from "../types"
+import type { ItemSlot, SlotCoordinates } from "../types"
 import Virtualized from "./components/virtualized"
+
+const VISIBLE_PAGE_COUNT = 3
+
+function getVisiblePages(currentPage: number, totalPages: number): number[] {
+  if (totalPages <= VISIBLE_PAGE_COUNT) {
+    return Array.from({ length: totalPages }, (_, i) => i)
+  }
+  const halfWindow = Math.floor(VISIBLE_PAGE_COUNT / 2)
+  let start = currentPage - halfWindow
+  if (start < 0) {
+    start = 0
+  }
+  let end = start + VISIBLE_PAGE_COUNT - 1
+  if (end >= totalPages) {
+    end = totalPages - 1
+    start = end - VISIBLE_PAGE_COUNT + 1
+  }
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i)
+}
 
 interface RackGridViewProps {
   rows: number
   cols: number
   items: ItemSlot[]
-  currentRackIndex?: number
-  totalRacks?: number
+  currentPage?: number
+  totalPages?: number
   onPreviousRack: () => void
   onNextRack: () => void
-  onSetRack: (index: number) => void
-  onActivateSlot?: (index: number) => void
-  onSelectSlot?: (index: number) => void
-  selectedSlotIndex?: number | null
+  onSetPage: (page: number) => void
+  onActivateSlot?: (coordinates: SlotCoordinates) => void
+  onSelectSlot?: (coordinates: SlotCoordinates) => void
+  selectedSlotCoordinates?: SlotCoordinates | null
   rack?: Rack
 }
 
@@ -57,38 +76,36 @@ const isArrowKey = (value: string): value is ArrowKey => value in ARROW_MOVES
 const clampValue = (value: number, min: number, max: number): number =>
   Math.min(Math.max(value, min), max)
 
-const getNextIndex = (
-  currentIndex: number,
+const getNextCoordinates = (
+  coordinates: SlotCoordinates,
   rows: number,
   cols: number,
   key: ArrowKey
-): number => {
+): SlotCoordinates => {
   const move = ARROW_MOVES[key]
-  const currentRow = Math.floor(currentIndex / cols)
-  const currentCol = currentIndex % cols
-  const nextRow = clampValue(currentRow + move.row, 0, rows - 1)
-  const nextCol = clampValue(currentCol + move.col, 0, cols - 1)
-  return nextRow * cols + nextCol
+  const nextY = clampValue(coordinates.y + move.row, 0, rows - 1)
+  const nextX = clampValue(coordinates.x + move.col, 0, cols - 1)
+  return { x: nextX, y: nextY }
 }
 
 export function RackGridView({
   rows,
   cols,
   items,
-  currentRackIndex = 0,
-  totalRacks = 1,
+  currentPage = 0,
+  totalPages = 1,
   onPreviousRack,
   onNextRack,
-  onSetRack,
+  onSetPage,
   onActivateSlot,
   onSelectSlot,
-  selectedSlotIndex,
+  selectedSlotCoordinates,
   rack,
 }: RackGridViewProps) {
   const [isItemsDialogOpen, setIsItemsDialogOpen] = useState(false)
   const parentRef = useRef<HTMLDivElement>(null)
 
-  const showNavigation = totalRacks > 1 && (onPreviousRack || onNextRack)
+  const showNavigation = totalPages > 1 && (onPreviousRack || onNextRack)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
@@ -101,28 +118,34 @@ export function RackGridView({
 
   const handleSlotKeyDown = (
     event: React.KeyboardEvent<HTMLButtonElement>,
-    index: number
+    coordinates: SlotCoordinates
   ) => {
-    if (!onSelectSlot || rows <= 0 || cols <= 0) {
+    if (rows <= 0 || cols <= 0) {
       return
     }
 
     if (event.key === "Enter") {
-      if (onActivateSlot) {
-        onActivateSlot(index)
-      }
+      onActivateSlot?.(coordinates)
       event.preventDefault()
       return
     }
 
-    if (!isArrowKey(event.key)) {
+    if (!(isArrowKey(event.key) && onSelectSlot)) {
       return
     }
 
     event.preventDefault()
-    const nextIndex = getNextIndex(index, rows, cols, event.key)
-    if (nextIndex !== index) {
-      onSelectSlot(nextIndex)
+    const nextCoordinates = getNextCoordinates(
+      coordinates,
+      rows,
+      cols,
+      event.key
+    )
+    if (
+      nextCoordinates.x !== coordinates.x ||
+      nextCoordinates.y !== coordinates.y
+    ) {
+      onSelectSlot(nextCoordinates)
     }
   }
 
@@ -229,7 +252,7 @@ export function RackGridView({
             onSlotKeyDown={handleSlotKeyDown}
             parentRef={parentRef}
             rows={rows}
-            selectedSlotIndex={selectedSlotIndex}
+            selectedSlotCoordinates={selectedSlotCoordinates}
           />
         </div>
 
@@ -247,36 +270,35 @@ export function RackGridView({
         )}
       </div>
 
-      {/* Footer Bar - Rack Indicator */}
-      {totalRacks > 1 && (
+      {/* Footer Bar - Rack Pagination */}
+      {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 border-t bg-muted/20 px-4 py-3">
-          {/* Rack dots indicator */}
-          <div className="flex items-center gap-1.5" role="tablist">
-            {Array.from({ length: totalRacks }).map((_, index) => (
+          {/* Page number buttons */}
+          <div className="flex items-center gap-1" role="tablist">
+            {getVisiblePages(currentPage, totalPages).map((page) => (
               <button
-                aria-label={`Regał ${index + 1}`}
-                aria-selected={index === currentRackIndex}
-                className={`size-2 rounded-full transition-all ${
-                  index === currentRackIndex
-                    ? "scale-125 bg-primary"
-                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                aria-label={`Regał ${page + 1}`}
+                aria-selected={page === currentPage}
+                className={`flex size-7 items-center justify-center rounded-md font-mono text-xs transition-all ${
+                  page === currentPage
+                    ? "bg-primary font-semibold text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
-                key={index}
-                onClick={() => {
-                  // Navigate to specific rack
-                  onSetRack(index)
-                }}
+                key={page}
+                onClick={() => onSetPage(page)}
                 role="tab"
                 type="button"
-              />
+              >
+                {page + 1}
+              </button>
             ))}
           </div>
           <span className="font-mono text-muted-foreground text-xs">
             Regał{" "}
             <span className="font-semibold text-foreground">
-              {currentRackIndex + 1}
+              {currentPage + 1}
             </span>{" "}
-            z {totalRacks}
+            z {totalPages}
           </span>
         </div>
       )}

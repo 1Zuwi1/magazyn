@@ -11,7 +11,6 @@ import {
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
-  ASSORTMENT_BY_CODE_SCHEMA,
   OUTBOUND_CHECK_SCHEMA,
   OUTBOUND_EXECUTE_SCHEMA,
   OUTBOUND_PLAN_SCHEMA,
@@ -21,10 +20,15 @@ import {
   type OutboundPlan,
 } from "@/lib/schemas"
 import { ScannerErrorState } from "../scanner-error-state"
-import type { OutboundStep, ScanItem } from "../scanner-types"
+import type {
+  OutboundStep,
+  ScanItem,
+  ScannedVerificationEntry,
+} from "../scanner-types"
 import { OutboundChooseMethod } from "./outbound-choose-method"
 import { OutboundFifoWarning } from "./outbound-fifo-warning"
 import { OutboundPickList } from "./outbound-pick-list"
+import { OutboundScanVerification } from "./outbound-scan-verification"
 import { OutboundSelectItem } from "./outbound-select-item"
 import { OutboundSelectQuantity } from "./outbound-select-quantity"
 import { OutboundSuccess } from "./outbound-success"
@@ -62,34 +66,46 @@ interface OutboundFlowProps {
   onClose: () => void
   pendingScanCode?: string | null
   onScanCodeHandled?: () => void
-}
-
-interface Position {
-  rackId: number
-  positionX: number
-  positionY: number
+  /** When provided by the parent (from the shared select-item screen), skip
+   *  the internal choose-method / select-item steps and go straight to
+   *  select-quantity. */
+  selectedItem?: ScanItem | null
+  /** Called when OutboundFlow wants to fully reset back to the parent's
+   *  choose-method screen (e.g. after a successful operation). */
+  onReset?: () => void
 }
 
 export const OutboundFlow = forwardRef<OutboundFlowHandle, OutboundFlowProps>(
   function OutboundFlow(
-    { onRequestCamera, onClose, pendingScanCode, onScanCodeHandled },
+    {
+      onRequestCamera,
+      onClose,
+      pendingScanCode,
+      onScanCodeHandled,
+      selectedItem: parentSelectedItem,
+      onReset: parentOnReset,
+    },
     ref
   ) {
     const queryClient = useQueryClient()
 
-    const [step, setStep] = useState<OutboundStep>("choose-method")
+    const [step, setStep] = useState<OutboundStep>(
+      parentSelectedItem ? "select-quantity" : "choose-method"
+    )
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
     // Scan flow state
-    const [scannedAssortment, setScannedAssortment] = useState<Position | null>(
-      null
-    )
+    const [scannedAssortmentCode, setScannedAssortmentCode] = useState<
+      string | null
+    >(null)
     const [fifoCheckResult, setFifoCheckResult] =
       useState<OutboundCheckResult | null>(null)
 
     // Select flow state
-    const [selectedItem, setSelectedItem] = useState<ScanItem | null>(null)
+    const [selectedItem, setSelectedItem] = useState<ScanItem | null>(
+      parentSelectedItem ?? null
+    )
     const [quantity, setQuantity] = useState(1)
     const [outboundPlan, setOutboundPlan] = useState<OutboundPlan | null>(null)
     const [selectedPickSlots, setSelectedPickSlots] = useState<
@@ -100,10 +116,23 @@ export const OutboundFlow = forwardRef<OutboundFlowHandle, OutboundFlowProps>(
     const [executeResult, setExecuteResult] =
       useState<OutboundExecuteResult | null>(null)
 
+    // Scan verification state (select flow only)
+    const [scannedVerificationEntries, setScannedVerificationEntries] =
+      useState<ScannedVerificationEntry[]>([])
+
+    // Sync parent-selected item into internal state
+    useEffect(() => {
+      if (parentSelectedItem) {
+        setSelectedItem(parentSelectedItem)
+        setQuantity(1)
+        setStep("select-quantity")
+      }
+    }, [parentSelectedItem])
+
     // ── Execute (defined first so other callbacks can reference it) ──
 
     const executeOutbound = useCallback(
-      async (positions: Position[], shouldSkipFifo: boolean) => {
+      async (assortmentCodes: string[], shouldSkipFifo: boolean) => {
         setIsSubmitting(true)
         setError(null)
 
@@ -114,7 +143,7 @@ export const OutboundFlow = forwardRef<OutboundFlowHandle, OutboundFlowProps>(
             {
               method: "POST",
               body: {
-                positions,
+                assortments: assortmentCodes.map((code) => ({ code })),
                 skipFifo: shouldSkipFifo,
               },
             }
@@ -147,66 +176,157 @@ export const OutboundFlow = forwardRef<OutboundFlowHandle, OutboundFlowProps>(
       setStep("choose-method")
       setIsSubmitting(false)
       setError(null)
-      setScannedAssortment(null)
+      setScannedAssortmentCode(null)
       setFifoCheckResult(null)
       setSelectedItem(null)
       setQuantity(1)
       setOutboundPlan(null)
       setSelectedPickSlots([])
       setExecuteResult(null)
-    }, [])
+      setScannedVerificationEntries([])
+      parentOnReset?.()
+    }, [parentOnReset])
+
+    // ── Scan verification ────────────────────────────────────────────
+    // (defined before handleScanResult so it can be referenced)
+
+    const handleVerificationScanResult = useCallback(
+      (code: string) => {
+        const scannedCode = code.trim()
+        if (!scannedCode) {
+          setError("Nie udało się odczytać kodu. Spróbuj ponownie.")
+          return
+        }
+
+        // Check if this code matches one of the selected pick slots
+        const matchingSlot = selectedPickSlots.find(
+          (slot) => slot.assortmentCode === scannedCode
+        )
+
+        if (!matchingSlot) {
+          setError(
+            "Zeskanowany kod nie pasuje do żadnej wybranej pozycji. Sprawdź etykietę."
+          )
+          return
+        }
+
+        // Check if already scanned
+        setScannedVerificationEntries((current) => {
+          const alreadyScanned = current.some(
+            (entry) => entry.assortmentCode === scannedCode
+          )
+
+          if (alreadyScanned) {
+            setError("Ta pozycja została już zeskanowana.")
+            return current
+          }
+
+          setError(null)
+          return [
+            ...current,
+            {
+              assortmentCode: matchingSlot.assortmentCode,
+              rackMarker: matchingSlot.rackMarker,
+              positionX: matchingSlot.positionX,
+              positionY: matchingSlot.positionY,
+              scannedAt: new Date(),
+            },
+          ]
+        })
+      },
+      [selectedPickSlots]
+    )
+
+    const handleConfirmAfterVerification = useCallback(async () => {
+      const assortmentCodes = selectedPickSlots.map(
+        (slot) => slot.assortmentCode
+      )
+      const firstAssortmentCode = assortmentCodes[0]
+      if (!firstAssortmentCode) {
+        return
+      }
+
+      setError(null)
+      setIsSubmitting(true)
+
+      try {
+        const checkResult = await apiFetch(
+          "/api/inventory/outbound-operation/check",
+          OUTBOUND_CHECK_SCHEMA,
+          {
+            method: "POST",
+            body: { code: firstAssortmentCode },
+          }
+        )
+
+        if (checkResult.fifoCompliant) {
+          await executeOutbound(assortmentCodes, false)
+        } else {
+          setFifoCheckResult(checkResult)
+          setStep("fifo-warning")
+        }
+      } catch (checkError) {
+        setError(
+          getOutboundErrorMessage(
+            checkError,
+            "Nie udało się zweryfikować zgodności FIFO."
+          )
+        )
+      } finally {
+        setIsSubmitting(false)
+      }
+    }, [selectedPickSlots, executeOutbound])
 
     // ── Scan flow ───────────────────────────────────────────────────
 
     const handleScanResult = useCallback(
       async (code: string) => {
+        const scannedCode = code.trim()
+        if (!scannedCode) {
+          setError("Nie udało się odczytać kodu. Spróbuj ponownie.")
+          return
+        }
+
+        // If we're in scan-verification step, delegate to verification handler
+        if (step === "scan-verification") {
+          handleVerificationScanResult(scannedCode)
+          return
+        }
+
         setError(null)
         setIsSubmitting(true)
 
         try {
-          const assortment = await apiFetch(
-            `/api/assortments/code/${encodeURIComponent(code)}`,
-            ASSORTMENT_BY_CODE_SCHEMA
-          )
-
-          const position: Position = {
-            rackId: assortment.rackId,
-            positionX: assortment.positionX,
-            positionY: assortment.positionY,
-          }
-
-          setScannedAssortment(position)
+          setScannedAssortmentCode(scannedCode)
 
           const checkResult = await apiFetch(
             "/api/inventory/outbound-operation/check",
             OUTBOUND_CHECK_SCHEMA,
             {
               method: "POST",
-              body: position,
+              body: { code: scannedCode },
             }
           )
 
           if (checkResult.fifoCompliant) {
-            await executeOutbound([position], false)
+            await executeOutbound([scannedCode], false)
           } else {
             setFifoCheckResult(checkResult)
             setStep("fifo-warning")
-            setIsSubmitting(false)
           }
         } catch (scanError) {
           setError(
             getOutboundErrorMessage(
               scanError,
-              "Nie udało się pobrać danych asortymentu."
+              "Nie udało się zweryfikować zeskanowanego kodu."
             )
           )
+        } finally {
           setIsSubmitting(false)
         }
       },
-      [executeOutbound]
+      [executeOutbound, handleVerificationScanResult, step]
     )
-
-    // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({ handleScanResult, reset: handleReset }), [
       handleScanResult,
       handleReset,
@@ -282,74 +402,32 @@ export const OutboundFlow = forwardRef<OutboundFlowHandle, OutboundFlowProps>(
       })
     }, [])
 
-    const handleConfirmPickList = useCallback(async () => {
+    const handleConfirmPickList = useCallback(() => {
       if (selectedPickSlots.length === 0) {
         return
       }
 
-      setError(null)
-      setIsSubmitting(true)
-
-      try {
-        const positions = selectedPickSlots.map((slot) => ({
-          rackId: slot.rackId,
-          positionX: slot.positionX,
-          positionY: slot.positionY,
-        }))
-
-        const firstPosition = positions[0]
-        if (!firstPosition) {
-          return
-        }
-
-        const checkResult = await apiFetch(
-          "/api/inventory/outbound-operation/check",
-          OUTBOUND_CHECK_SCHEMA,
-          {
-            method: "POST",
-            body: firstPosition,
-          }
-        )
-
-        if (checkResult.fifoCompliant) {
-          await executeOutbound(positions, false)
-        } else {
-          setFifoCheckResult(checkResult)
-          setStep("fifo-warning")
-          setIsSubmitting(false)
-        }
-      } catch (checkError) {
-        setError(
-          getOutboundErrorMessage(
-            checkError,
-            "Nie udało się zweryfikować zgodności FIFO."
-          )
-        )
-        setIsSubmitting(false)
-      }
-    }, [selectedPickSlots, executeOutbound])
+      setScannedVerificationEntries([])
+      setStep("scan-verification")
+    }, [selectedPickSlots])
 
     // ── FIFO warning actions ────────────────────────────────────────
 
     const handleSkipFifo = useCallback(async () => {
-      const positions = scannedAssortment
-        ? [scannedAssortment]
-        : selectedPickSlots.map((slot) => ({
-            rackId: slot.rackId,
-            positionX: slot.positionX,
-            positionY: slot.positionY,
-          }))
+      const assortmentCodes = scannedAssortmentCode
+        ? [scannedAssortmentCode]
+        : selectedPickSlots.map((slot) => slot.assortmentCode)
 
-      if (positions.length === 0) {
+      if (assortmentCodes.length === 0) {
         return
       }
 
-      await executeOutbound(positions, true)
-    }, [scannedAssortment, selectedPickSlots, executeOutbound])
+      await executeOutbound(assortmentCodes, true)
+    }, [scannedAssortmentCode, selectedPickSlots, executeOutbound])
 
     const handleTakeFifoCompliant = useCallback(() => {
       if (fifoCheckResult?.olderAssortments.length) {
-        setScannedAssortment(null)
+        setScannedAssortmentCode(null)
         setFifoCheckResult(null)
         setError(null)
         onRequestCamera()
@@ -383,12 +461,18 @@ export const OutboundFlow = forwardRef<OutboundFlowHandle, OutboundFlowProps>(
           error={error}
           onRetry={() => {
             setError(null)
-            if (scannedAssortment) {
+            if (step === "scan-verification") {
+              // Stay on scan-verification; just clear the error
+              return
+            }
+            if (scannedAssortmentCode) {
               onRequestCamera()
             } else if (outboundPlan) {
               setStep("pick-list")
             } else if (selectedItem) {
               setStep("select-quantity")
+            } else if (parentOnReset) {
+              parentOnReset()
             } else {
               setStep("choose-method")
             }
@@ -423,7 +507,11 @@ export const OutboundFlow = forwardRef<OutboundFlowHandle, OutboundFlowProps>(
         <OutboundSelectQuantity
           isSubmitting={isSubmitting}
           item={selectedItem}
-          onCancel={() => setStep("select-item")}
+          onCancel={
+            parentSelectedItem
+              ? () => parentOnReset?.()
+              : () => setStep("select-item")
+          }
           onDecrease={handleQuantityDecrease}
           onIncrease={handleQuantityIncrease}
           onQuantityChange={handleQuantityChange}
@@ -441,6 +529,19 @@ export const OutboundFlow = forwardRef<OutboundFlowHandle, OutboundFlowProps>(
           onConfirm={handleConfirmPickList}
           onToggleSlot={handleToggleSlot}
           plan={outboundPlan}
+          selectedSlots={selectedPickSlots}
+        />
+      )
+    }
+
+    if (step === "scan-verification") {
+      return (
+        <OutboundScanVerification
+          isSubmitting={isSubmitting}
+          onCancel={() => setStep("pick-list")}
+          onConfirm={handleConfirmAfterVerification}
+          onRequestScan={onRequestCamera}
+          scannedEntries={scannedVerificationEntries}
           selectedSlots={selectedPickSlots}
         />
       )

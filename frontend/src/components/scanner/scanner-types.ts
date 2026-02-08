@@ -49,6 +49,14 @@ export interface RackSelectOption {
 
 // ── Outbound (Zdejmowanie) types ─────────────────────────────────────
 
+export interface ScannedVerificationEntry {
+  assortmentCode: string
+  rackMarker: string
+  positionX: number
+  positionY: number
+  scannedAt: Date
+}
+
 export type OutboundStep =
   | "camera"
   | "manual-input"
@@ -56,6 +64,7 @@ export type OutboundStep =
   | "select-item"
   | "select-quantity"
   | "pick-list"
+  | "scan-verification"
   | "fifo-warning"
   | "executing"
   | "success"

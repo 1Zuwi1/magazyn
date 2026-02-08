@@ -1,6 +1,16 @@
 import type { UseQueryResult } from "@tanstack/react-query"
-import { apiFetch, type FetchError, type InferApiOutput } from "@/lib/fetcher"
-import { AssortmentDetailsSchema, AssortmentsSchema } from "@/lib/schemas"
+import {
+  apiFetch,
+  type FetchError,
+  type InferApiInput,
+  type InferApiOutput,
+} from "@/lib/fetcher"
+import {
+  AssortmentDetailsSchema,
+  AssortmentsSchema,
+  RackAssortmentsSchema,
+  WarehouseAssortmentsSchema,
+} from "@/lib/schemas"
 import { useApiQuery } from "./use-api-query"
 
 const ASSORTMENT_QUERY_KEY = ["assortments"] as const
@@ -11,15 +21,21 @@ export type AssortmentDetails = InferApiOutput<
   "GET"
 >
 
-interface AssortmentsListParams {
-  page?: number
-  size?: number
-  warehouseId?: number
-  rackId?: number
+interface AssortmentsListParams
+  extends InferApiInput<typeof AssortmentsSchema, "GET"> {}
+
+interface AssortmentDetailsParams {
+  assortmentId: number
 }
 
-interface AssortmentsDetailsParams {
-  assortmentId: number
+interface RackAssortmentsParams
+  extends InferApiInput<typeof RackAssortmentsSchema, "GET"> {
+  rackId: number
+}
+
+interface WarehouseAssortmentsParams
+  extends InferApiInput<typeof WarehouseAssortmentsSchema, "GET"> {
+  warehouseId: number
 }
 
 export default function useAssortments(
@@ -27,8 +43,12 @@ export default function useAssortments(
 ): UseQueryResult<AssortmentsList, FetchError>
 
 export default function useAssortments(
-  params: AssortmentsDetailsParams
+  params: AssortmentDetailsParams
 ): UseQueryResult<AssortmentDetails, FetchError>
+
+export default function useAssortments(
+  params: RackAssortmentsParams | WarehouseAssortmentsParams
+): UseQueryResult<AssortmentsList, FetchError>
 
 export default function useAssortments(
   {
@@ -75,7 +95,7 @@ export default function useAssortments(
         }
         return await apiFetch(
           `/api/racks/${rackId}/assortments`,
-          AssortmentsSchema,
+          RackAssortmentsSchema,
           {
             method: "GET",
             queryParams: {
@@ -93,7 +113,7 @@ export default function useAssortments(
         }
         return await apiFetch(
           `/api/warehouses/${warehouseId}/assortments`,
-          AssortmentsSchema,
+          WarehouseAssortmentsSchema,
           {
             method: "GET",
             queryParams: {

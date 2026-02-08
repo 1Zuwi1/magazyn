@@ -24,6 +24,11 @@ export interface Item {
 
 export type ItemSlot = Item | null
 
+export interface SlotCoordinates {
+  x: number
+  y: number
+}
+
 export type NotificationType =
   | "UNAUTHORIZED_REMOVAL"
   | "RACK_OVERWEIGHT"

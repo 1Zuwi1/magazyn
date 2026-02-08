@@ -264,22 +264,23 @@ function AssortmentTableContent({
   const [globalFilter, setGlobalFilter] = useState("")
   const [expiryFilter, setExpiryFilter] = useState<ExpiryFilters>("ALL")
   const assortmentItems = assortmentData?.content ?? []
-  const itemIds = useMemo(
-    () => [...new Set(assortmentItems.map((item) => item.itemId))],
-    [assortmentItems]
-  )
   const rackIds = useMemo(
     () => [...new Set(assortmentItems.map((item) => item.rackId))],
     [assortmentItems]
   )
 
-  const itemDetailsQueries = useMultipleItems({ itemIds })
   const rackDetailsQueries = useMultipleRacks({ rackIds })
+  const itemIds = useMemo(
+    () => [...new Set(assortmentItems.map((item) => item.itemId))],
+    [assortmentItems]
+  )
+  const itemDetailsQueries = useMultipleItems({ itemIds })
 
   const itemNamesById = useMemo(() => {
     const namesMap = new Map<number, string>()
     for (const [index, itemId] of itemIds.entries()) {
-      const itemName = itemDetailsQueries[index]?.data?.name?.trim()
+      const item = itemDetailsQueries[index]?.data
+      const itemName = item?.name.trim()
       if (itemName) {
         namesMap.set(itemId, itemName)
       }

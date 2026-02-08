@@ -5,7 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
-import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
+import { Label } from "../ui/label"
 import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 
@@ -25,7 +25,6 @@ interface ScannerManualInputProps {
   /** Error message to display inline (e.g. product not found) */
   error?: string | null
   mode?: ScannerManualMode
-  onModeChange?: (mode: ScannerManualMode) => void
 }
 
 export function ScannerManualInput({
@@ -35,7 +34,6 @@ export function ScannerManualInput({
   initialCode = "",
   error,
   mode,
-  onModeChange,
 }: ScannerManualInputProps) {
   const [code, setCode] = useState<string>(initialCode)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -68,38 +66,18 @@ export function ScannerManualInput({
     [handleSubmit]
   )
 
-  const handleModeValueChange = useCallback(
-    (nextMode: string) => {
-      if (
-        onModeChange &&
-        (nextMode === MODE_OPTIONS[0].value ||
-          nextMode === MODE_OPTIONS[1].value)
-      ) {
-        onModeChange(nextMode)
-      }
-    },
-    [onModeChange]
-  )
+  const modeLabel = MODE_OPTIONS.find((option) => option.value === mode)?.label
 
   return (
     <ScannerBody>
       <div className="relative flex h-full flex-col">
         <CancelButton onClick={onCancel} />
 
-        {mode && onModeChange ? (
-          <Tabs
-            className={"mx-10"}
-            onValueChange={handleModeValueChange}
-            value={mode}
-          >
-            <TabsList className="mb-4 grid w-full grid-cols-2 rounded-xl bg-muted p-1">
-              {MODE_OPTIONS.map((option) => (
-                <TabsTrigger key={option.value} value={option.value}>
-                  {option.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+        {modeLabel ? (
+          <p className="mx-10 mb-4 rounded-xl border border-border/70 bg-muted/30 px-4 py-2 text-center text-muted-foreground text-sm">
+            Jesteś w trybie:{" "}
+            <span className="font-medium text-foreground">{modeLabel}</span>.
+          </p>
         ) : null}
 
         <div className="mb-6 flex items-start gap-3">
@@ -122,12 +100,12 @@ export function ScannerManualInput({
         <div className="flex flex-1 flex-col justify-center">
           <div className="space-y-4">
             <div className="space-y-2">
-              <label
+              <Label
                 className="block font-medium text-sm"
                 htmlFor="manual-code"
               >
                 Kod produktu
-              </label>
+              </Label>
               <Input
                 autoComplete="off"
                 className="h-14 rounded-xl font-mono text-lg tracking-wider"

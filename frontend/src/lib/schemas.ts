@@ -549,33 +549,6 @@ export const WarehouseImportSchema = createApiSchema({
   },
 })
 
-const AssortmentSchema = z.object({
-  id: z.number().int().nonnegative(),
-  code: z.string(),
-  itemId: z.number().int().nonnegative(),
-  rackId: z.number().int().nonnegative(),
-  userId: z.number().int().nonnegative(),
-  createdAt: z.string(),
-  expiresAt: z.string(),
-  positionX: z.number().int().nonnegative(),
-  positionY: z.number().int().nonnegative(),
-})
-
-export type Assortment = z.infer<typeof AssortmentSchema>
-
-export const AssortmentsSchema = createApiSchema({
-  GET: {
-    input: createPaginatedSchemaInput(),
-    output: createPaginatedSchema(AssortmentSchema),
-  },
-})
-
-export const AssortmentDetailsSchema = createApiSchema({
-  GET: {
-    output: AssortmentSchema,
-  },
-})
-
 export const ItemDefinitionSchema = z.object({
   id: z.number().int().nonnegative(),
   code: z.string(),
@@ -592,9 +565,76 @@ export const ItemDefinitionSchema = z.object({
   dangerous: z.boolean(),
 })
 
-export const ItemsSchema = createApiSchema({
+const AssortmentSchema = z.object({
+  id: z.number().int().nonnegative(),
+  code: z.string(),
+  rackId: z.number().int().nonnegative(),
+  userId: z.number().int().nonnegative(),
+  itemId: z.number().int().nonnegative(),
+  createdAt: z.string(),
+  expiresAt: z.string(),
+  positionX: z.number().int().nonnegative(),
+  positionY: z.number().int().nonnegative(),
+})
+
+export type Assortment = z.infer<typeof AssortmentSchema>
+
+export const WarehouseAssortmentsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput(),
+    output: createPaginatedSchema(AssortmentSchema),
+  },
+})
+
+export const AssortmentsSchema = createApiSchema({
+  GET: {
+    input: createPaginatedSchemaInput({
+      expiryFilters: z
+        .array(z.enum(["ALL", "EXPIRED", "DAYS_3", "DAYS_7", "DAYS_14"]))
+        .optional(),
+      search: z.string().optional(),
+      weekToExpire: z.boolean().optional(),
+    }),
+    output: createPaginatedSchema(AssortmentSchema),
+  },
+})
+
+export const RackAssortmentsSchema = createApiSchema({
+  GET: {
+    input: createPaginatedSchemaInput({
+      search: z.string().optional(),
+      positonX: z.number().int().nonnegative().optional(),
+      positionY: z.number().int().nonnegative().optional(),
+      weekToExpire: z.boolean().optional(),
+    }),
+    output: createPaginatedSchema(
+      AssortmentSchema.omit({ itemId: true }).extend({
+        item: ItemDefinitionSchema,
+      })
+    ),
+  },
+})
+
+export const AssortmentDetailsSchema = createApiSchema({
+  GET: {
+    output: AssortmentSchema,
+  },
+})
+
+export const ItemsSchema = createApiSchema({
+  GET: {
+    input: createPaginatedSchemaInput({
+      search: z.string().optional(),
+      dangerous: z.boolean().optional(),
+      minTempFrom: z.number().optional(),
+      minTempTo: z.number().optional(),
+      maxTempFrom: z.number().optional(),
+      maxTempTo: z.number().optional(),
+      weightFrom: z.number().optional(),
+      weightTo: z.number().optional(),
+      expireAfterDaysFrom: z.number().int().nonnegative().optional(),
+      expireAfterDaysTo: z.number().int().nonnegative().optional(),
+    }),
     output: createPaginatedSchema(ItemDefinitionSchema),
   },
 })
@@ -817,21 +857,30 @@ export const ITEM_IDENTIFY_MISMATCH_SCHEMA = createApiSchema({
   },
 })
 
+const PlacementsSchema = z
+  .array(
+    z.object({
+      rackId: z.number().int().nonnegative(),
+      positionX: z.number().int().nonnegative(),
+      positionY: z.number().int().nonnegative(),
+    })
+  )
+  .min(1)
+
 export const INBOUND_OPERATION_EXECUTE_SCHEMA = createApiSchema({
   POST: {
-    input: z.object({
-      itemId: z.number().int().nonnegative(),
-      code: z.string().min(1),
-      placements: z
-        .array(
-          z.object({
-            rackId: z.number().int().nonnegative(),
-            positionX: z.number().int().nonnegative(),
-            positionY: z.number().int().nonnegative(),
-          })
-        )
-        .min(1),
-    }),
+    input: z.union([
+      z.object({
+        itemId: z.number().int().nonnegative(),
+        placements: PlacementsSchema,
+        code: z.undefined().optional(), // explicitly forbid
+      }),
+      z.object({
+        code: z.string().min(1),
+        placements: PlacementsSchema,
+        itemId: z.undefined().optional(), // explicitly forbid
+      }),
+    ]),
     output: z.unknown(),
   },
 })
@@ -874,9 +923,7 @@ export type OutboundPickSlot = z.infer<typeof OutboundPickSlotSchema>
 export const OUTBOUND_CHECK_SCHEMA = createApiSchema({
   POST: {
     input: z.object({
-      rackId: z.number().int().nonnegative(),
-      positionX: z.number().int().nonnegative(),
-      positionY: z.number().int().nonnegative(),
+      code: z.string().min(1, "Kod jest wymagany"),
     }),
     output: z.object({
       fifoCompliant: z.boolean(),
@@ -933,15 +980,11 @@ const OutboundOperationSchema = z.object({
 export const OUTBOUND_EXECUTE_SCHEMA = createApiSchema({
   POST: {
     input: z.object({
-      positions: z
-        .array(
-          z.object({
-            rackId: z.number().int().nonnegative(),
-            positionX: z.number().int().nonnegative(),
-            positionY: z.number().int().nonnegative(),
-          })
-        )
-        .min(1),
+      assortments: [
+        {
+          code: z.string().min(1, "Kod jest wymagany"),
+        },
+      ],
       skipFifo: z.boolean(),
     }),
     output: z.object({

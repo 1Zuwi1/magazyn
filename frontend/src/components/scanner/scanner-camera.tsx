@@ -4,7 +4,6 @@ import {
   AlertCircleIcon,
   Camera01Icon,
   Cancel01Icon,
-  KeyboardIcon,
   Loading03Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -18,7 +17,6 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "../ui/button"
-import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 import { TAB_TRIGGERS } from "./scanner"
 
 const CODE_FORMATS = [BarcodeFormat.QR_CODE, BarcodeFormat.CODE_128] as const
@@ -45,10 +43,8 @@ interface ScannerCameraProps {
   isMobile: boolean
   isOpen: boolean
   mode: (typeof TAB_TRIGGERS)[number]["action"]
-  onModeChange: (value: (typeof TAB_TRIGGERS)[number]["action"]) => void
   onScan: (text: string) => void
   onRequestClose: () => void
-  onManualInput: () => void
   onTakePhoto: (file: File) => void
   isLoading?: boolean
 }
@@ -61,9 +57,7 @@ export function ScannerCamera({
   isMobile,
   isOpen,
   mode,
-  onModeChange,
   onRequestClose,
-  onManualInput,
   onTakePhoto,
   onScan,
   isLoading,
@@ -110,12 +104,9 @@ export function ScannerCamera({
     )
   }, [onTakePhoto])
 
-  const getTranslation = useCallback(
-    (mode: (typeof TAB_TRIGGERS)[number]["action"]) => {
-      return TAB_TRIGGERS.findIndex((t) => t.action === mode) * 100
-    },
-    []
-  )
+  const modeLabel = TAB_TRIGGERS.find(
+    (trigger) => trigger.action === mode
+  )?.text
 
   const stopAfterScan = useCallback(() => {
     controlsRef.current?.stop()
@@ -320,10 +311,6 @@ export function ScannerCamera({
               >
                 Spróbuj ponownie
               </Button>
-              <Button onClick={onManualInput} type="button" variant="ghost">
-                <HugeiconsIcon className="size-4" icon={KeyboardIcon} />
-                Wprowadź kod ręcznie
-              </Button>
             </div>
           </div>
         </div>
@@ -340,42 +327,12 @@ export function ScannerCamera({
             <p className="h-full w-full text-center">
               Skanujesz w magazynie: {warehouseName}
             </p>
-            <Tabs
-              className="h-full w-full"
-              onValueChange={onModeChange}
-              value={mode}
-            >
-              <TabsList
-                className={
-                  "relative isolate flex w-full gap-2 rounded-full bg-black/50 p-1 py-4 *:rounded-full *:px-4 *:py-3"
-                }
-              >
-                {TAB_TRIGGERS.map(({ text, action }) => (
-                  <TabsTrigger
-                    className={cn(
-                      "z-10 w-0 flex-1 bg-transparent! text-white!",
-                      {
-                        "text-black!": mode === action,
-                      }
-                    )}
-                    key={action}
-                    value={action}
-                  >
-                    {text}
-                  </TabsTrigger>
-                ))}
-                <div
-                  className={cn(
-                    "pointer-events-none absolute left-0 h-[80%] bg-white p-4 transition-transform"
-                  )}
-                  role="presentation"
-                  style={{
-                    width: `${100 / TAB_TRIGGERS.length}%`,
-                    transform: `translateX(${getTranslation(mode)}%)`,
-                  }}
-                />
-              </TabsList>
-            </Tabs>
+            {modeLabel ? (
+              <p className="rounded-full bg-black/50 px-4 py-3 text-center text-sm text-white backdrop-blur-sm">
+                Jesteś w trybie:{" "}
+                <span className="font-medium">{modeLabel}</span>.
+              </p>
+            ) : null}
           </div>
           <div className="pointer-events-none absolute inset-0 z-9 flex items-center justify-center">
             <div
@@ -418,16 +375,6 @@ export function ScannerCamera({
                 { "bottom-12": isMobile }
               )}
             >
-              <Button
-                className="rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70"
-                onClick={onManualInput}
-                size="sm"
-                type="button"
-                variant="ghost"
-              >
-                <HugeiconsIcon className="size-4" icon={KeyboardIcon} />
-                Wprowadź kod ręcznie
-              </Button>
               <Button
                 className="rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70"
                 onClick={capturePhoto}

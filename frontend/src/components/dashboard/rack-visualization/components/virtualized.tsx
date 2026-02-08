@@ -1,7 +1,7 @@
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { memo, useEffect } from "react"
 import { useIsMobile } from "@/hooks/use-mobile"
-import type { ItemSlot } from "../../types"
+import type { ItemSlot, SlotCoordinates } from "../../types"
 import { getSlotCoordinate } from "../../utils/helpers"
 import RackElement from "./rack-element"
 
@@ -17,7 +17,7 @@ const Virtualized = ({
   containerWidth,
   containerHeight,
   items,
-  selectedSlotIndex,
+  selectedSlotCoordinates,
   onSelectSlot,
   onSlotKeyDown,
 }: {
@@ -27,11 +27,11 @@ const Virtualized = ({
   containerWidth: number
   containerHeight: number
   items: ItemSlot[]
-  selectedSlotIndex?: number | null
-  onSelectSlot?: (index: number) => void
+  selectedSlotCoordinates?: SlotCoordinates | null
+  onSelectSlot?: (coordinates: SlotCoordinates) => void
   onSlotKeyDown?: (
     event: React.KeyboardEvent<HTMLButtonElement>,
-    index: number
+    coordinates: SlotCoordinates
   ) => void
 }) => {
   const isMobile = useIsMobile()
@@ -108,7 +108,13 @@ const Virtualized = ({
               const item = items[index]
               const isEmpty = !item
               const coordinate = getSlotCoordinate(index, cols)
-              const isSelected = selectedSlotIndex === index
+              const slotCoordinates = {
+                x: virtualColumn.index,
+                y: virtualRow.index,
+              }
+              const isSelected =
+                selectedSlotCoordinates?.x === slotCoordinates.x &&
+                selectedSlotCoordinates?.y === slotCoordinates.y
 
               return (
                 <RackElement
@@ -118,10 +124,14 @@ const Virtualized = ({
                   isSelected={isSelected}
                   item={item}
                   key={virtualColumn.key}
-                  onClick={onSelectSlot ? () => onSelectSlot(index) : undefined}
+                  onClick={
+                    onSelectSlot
+                      ? () => onSelectSlot(slotCoordinates)
+                      : undefined
+                  }
                   onKeyDown={
                     onSlotKeyDown
-                      ? (event) => onSlotKeyDown(event, index)
+                      ? (event) => onSlotKeyDown(event, slotCoordinates)
                       : undefined
                   }
                   style={{
