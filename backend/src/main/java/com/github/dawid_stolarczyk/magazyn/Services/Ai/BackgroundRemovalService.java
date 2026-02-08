@@ -2,7 +2,6 @@ package com.github.dawid_stolarczyk.magazyn.Services.Ai;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -35,7 +34,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Service
-@AllArgsConstructor
 public class BackgroundRemovalService {
 
     @Value("${app.background-removal.enabled:true}")

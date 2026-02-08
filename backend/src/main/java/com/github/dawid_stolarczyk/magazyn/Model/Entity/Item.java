@@ -43,7 +43,7 @@ public class Item {
     private float[] imageEmbedding;
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<com.github.dawid_stolarczyk.magazyn.Model.Entity.Assortment> assortments = new ArrayList<>();
+    private List<Assortment> assortments = new ArrayList<>();
 
 
 }
