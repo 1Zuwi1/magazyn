@@ -19,7 +19,7 @@ import java.time.format.DateTimeFormatter;
 public class BarcodeService {
     private static final DateTimeFormatter GS1_DATE_FORMAT = DateTimeFormatter.ofPattern("yyMMdd");
     private static final int SERIAL_LENGTH = 6;
-    private static final int ITEM_CODE_LENGTH = 14;
+    private static final int ITEM_CODE_LENGTH = 16;
     private static final int GTIN_14_LENGTH = 14;
     private static final int MAX_RETRY_ATTEMPTS = 100; // Maksymalna liczba prób generowania unikalnego kodu
     private final ItemRepository itemRepository;
@@ -35,6 +35,7 @@ public class BarcodeService {
             code = CodeGenerator.generateWithNumbers(ITEM_CODE_LENGTH-1);
             int checksum = CodeGenerator.calculateGTIN14Checksum(code);
             code += checksum;
+            code = "01" + code; // Dodaj prefiks AI 01 do kodu GTIN-14
             attempts++;
         } while (itemRepository.existsByCode(code));
         return code;
@@ -45,9 +46,14 @@ public class BarcodeService {
     }
 
     public void ensureItemCode(Item item) {
-        if (item.getCode() != null && !item.getCode().isBlank() && item.getCode().length() == ITEM_CODE_LENGTH) {
+        if ((item.getCode() != null
+                && !item.getCode().isBlank())
+                && ((item.getCode().length() == ITEM_CODE_LENGTH
+                && item.getCode().startsWith("01"))
+                || (item.getCode().startsWith("QR")))) {
             return;
         }
+
         item.setCode(generateUniqueItemCode());
         itemRepository.save(item);
     }
@@ -56,15 +62,15 @@ public class BarcodeService {
      * Builds a GS1-128 compliant barcode for an assortment.
      * Uses:
      * (11) Production Date - YYMMDD
-     * (01) GTIN-14 - item code padded to 14 digits
+     * (01) GTIN-14 - item code is 16 digits (01 prefix + 14-digit GTIN)
      * (21) Serial Number - random digits (variable length, last AI)
      *
-     * @param itemCode the 14-digit item code (GS1-128 barcode)
+     * @param itemCode the 16-digit item code (GS1-128 barcode with 01 prefix)
      * @return GS1-128 formatted barcode string (digits only)
      */
     public String buildPlacementCode(String itemCode) {
         if (itemCode == null || !itemCode.matches("\\d{" + ITEM_CODE_LENGTH + "}")) {
-            throw new IllegalArgumentException(InventoryError.BARCODE_MUST_BE_14_DIGITS.name());
+            throw new IllegalArgumentException(InventoryError.BARCODE_MUST_BE_16_DIGITS.name());
         }
 
         String datePart = LocalDate.now(ZoneOffset.UTC).format(GS1_DATE_FORMAT);
@@ -72,9 +78,6 @@ public class BarcodeService {
         // AI 11: Production Date (YYMMDD, 6 digits).
         String ai11 = "11" + datePart;
 
-        // AI 01: GTIN-14 padded with leading zeros.
-        String gtin14 = String.format("%0" + GTIN_14_LENGTH + "d", Long.parseLong(itemCode));
-        String ai01 = "01" + gtin14;
 
         String code;
         int attempts = 0;
@@ -84,7 +87,7 @@ public class BarcodeService {
             }
             // AI 21: Serial Number (variable length, last AI so no FNC1 separator needed).
             String ai21 = "21" + CodeGenerator.generateWithNumbers(SERIAL_LENGTH);
-            code = ai11 + ai01 + ai21;
+            code = ai11 + itemCode + ai21;
             attempts++;
         } while (assortmentRepository.existsByCode(code));
 

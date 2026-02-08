@@ -66,19 +66,19 @@ public class ItemImportService extends AbstractImportService<ItemDto, ItemImport
             // 2. GS1-128 z prefiksem 01 (razem 16 znaków)
             else if (idCode.length() == 16 && idCode.startsWith("01")) {
                 log.info("Detected GS1-128 format for ID: {}", idCode);
-                code = idCode.substring(2);
+                code = idCode;
             }
 
             // 3. Czysty GTIN-14
             else if (idCode.matches("\\d{14}")) {
                 log.info("Detected GTIN-14 format for ID: {}", idCode);
-                code = idCode;
+                code = "01" + idCode;
             }
 
             // 4. Obsługa EAN-13 (opcjonalnie)
             else if (idCode.matches("\\d{13}")) {
                 log.info("Detected EAN-13 format for ID: {}", idCode);
-                code = "0" + idCode;
+                code = "010" + idCode;
             }
 
             if (!code.isBlank()) {

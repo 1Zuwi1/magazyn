@@ -27,7 +27,7 @@ public class InboundOperationDto {
     @Schema(description = "Item name", example = "Laptop Dell XPS 15")
     private String itemName;
 
-    @Schema(description = "Item code - GS1-128 barcode", example = "12345678901234")
+    @Schema(description = "Item code - GS1-128 barcode", example = "0112345678901234")
     private String itemCode;
 
     @Schema(description = "Rack ID", example = "5")

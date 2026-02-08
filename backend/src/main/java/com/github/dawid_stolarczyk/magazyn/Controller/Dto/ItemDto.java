@@ -15,7 +15,7 @@ public class ItemDto {
     @Schema(description = "Unique identifier of the item", example = "1")
     private Long id;
 
-    @Schema(description = "Unique auto-generated GS1-128 barcode (14 digits)", example = "12345678901234")
+    @Schema(description = "Unique auto-generated GS1-128 barcode (16 digits with 01 prefix)", example = "0112345678901234")
     private String code;
 
     @Schema(description = "Name of the item", example = "Laptop")

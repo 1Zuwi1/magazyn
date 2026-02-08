@@ -29,7 +29,7 @@ public class ItemIdentificationResponse {
     @Schema(description = "Name of the matched item (null for LOW_CONFIDENCE)", example = "Laptop Dell XPS 15")
     private String itemName;
 
-    @Schema(description = "GS1-128 barcode code of the matched item (null for LOW_CONFIDENCE)", example = "12345678901234")
+    @Schema(description = "GS1-128 barcode code of the matched item (null for LOW_CONFIDENCE)", example = "0112345678901234")
     private String code;
 
     @Schema(description = "Similarity score of the best match between 0.0 and 1.0", example = "0.95")

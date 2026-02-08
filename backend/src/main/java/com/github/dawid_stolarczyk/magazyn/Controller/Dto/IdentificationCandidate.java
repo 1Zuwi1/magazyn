@@ -22,7 +22,7 @@ public class IdentificationCandidate {
     @Schema(description = "Name of the candidate item", example = "Laptop Dell XPS 15")
     private String itemName;
 
-    @Schema(description = "GS1-128 barcode code of the candidate item", example = "12345678901234")
+    @Schema(description = "GS1-128 barcode code of the candidate item", example = "0112345678901234")
     private String code;
 
     @Schema(description = "URL or path to the item's photo")
