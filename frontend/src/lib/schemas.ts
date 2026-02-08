@@ -577,7 +577,12 @@ const AssortmentSchema = z.object({
   positionY: z.number().int().nonnegative(),
 })
 
+const RackAssortmentSchema = AssortmentSchema.omit({ itemId: true }).extend({
+  item: ItemDefinitionSchema,
+})
+
 export type Assortment = z.infer<typeof AssortmentSchema>
+export type RackAssortment = z.infer<typeof RackAssortmentSchema>
 
 export const WarehouseAssortmentsSchema = createApiSchema({
   GET: {
@@ -607,11 +612,7 @@ export const RackAssortmentsSchema = createApiSchema({
       positionY: z.number().int().nonnegative().optional(),
       weekToExpire: z.boolean().optional(),
     }),
-    output: createPaginatedSchema(
-      AssortmentSchema.omit({ itemId: true }).extend({
-        item: ItemDefinitionSchema,
-      })
-    ),
+    output: createPaginatedSchema(RackAssortmentSchema),
   },
 })
 

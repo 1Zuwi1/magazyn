@@ -1,9 +1,12 @@
+import type { AssortmentsList } from "@/hooks/use-assortment"
+import type { ItemDetails } from "@/hooks/use-items"
 import type { RacksList } from "@/hooks/use-racks"
 import type { WarehousesList } from "@/hooks/use-warehouses"
 import type { Item3D, Rack3D, Warehouse3D } from "./types"
 
 type ApiRack = RacksList["content"][number]
 type ApiWarehouse = WarehousesList["content"][number]
+type ApiAssortment = AssortmentsList["content"][number]
 
 const MM_TO_METERS = 0.001
 const RACKS_PER_ROW = 4
@@ -23,7 +26,34 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }
 
-function mapApiRackToRack3D(rack: ApiRack): Rack3D {
+function getItemStatus(
+  expiresAt: string,
+  isDangerous: boolean,
+  nowTimestampMs: number
+): Item3D["status"] {
+  const expiresAtTimestampMs = Date.parse(expiresAt)
+  const isExpired =
+    Number.isFinite(expiresAtTimestampMs) &&
+    expiresAtTimestampMs < nowTimestampMs
+
+  if (isExpired && isDangerous) {
+    return "expired-dangerous"
+  }
+  if (isExpired) {
+    return "expired"
+  }
+  if (isDangerous) {
+    return "dangerous"
+  }
+  return "normal"
+}
+
+function mapApiRackToRack3D(
+  rack: ApiRack,
+  rackAssortments: readonly ApiAssortment[],
+  itemDefinitionsMap: ReadonlyMap<number, ItemDetails>,
+  nowTimestampMs: number
+): Rack3D {
   const rows = Math.max(1, rack.sizeY)
   const cols = Math.max(1, rack.sizeX)
   const totalSlots = rows * cols
@@ -35,6 +65,36 @@ function mapApiRackToRack3D(rack: ApiRack): Rack3D {
   const cellH = rack.maxSizeY * MM_TO_METERS
   const cellD = rack.maxSizeZ * MM_TO_METERS
   const minCellDim = Math.min(cellW, cellH)
+
+  for (const assortment of rackAssortments) {
+    const row = assortment.positionY
+    const col = assortment.positionX
+
+    if (row >= rows || col >= cols) {
+      continue
+    }
+
+    const itemDefinition = itemDefinitionsMap.get(assortment.itemId)
+
+    const index = row * cols + col
+    items[index] = {
+      id: String(assortment.id),
+      type: itemDefinition?.code ?? "assortment",
+      status: getItemStatus(
+        assortment.expiresAt,
+        itemDefinition?.dangerous ?? false,
+        nowTimestampMs
+      ),
+      label: itemDefinition?.name ?? assortment.code,
+      imageUrl: itemDefinition?.photoUrl ?? undefined,
+      meta: {
+        assortmentCode: assortment.code,
+        expiresAt: assortment.expiresAt,
+        itemCode: itemDefinition?.code ?? null,
+        itemId: assortment.itemId,
+      },
+    }
+  }
 
   return {
     id: String(rack.id),
@@ -70,6 +130,23 @@ function mapApiRackToRack3D(rack: ApiRack): Rack3D {
     },
     items,
   }
+}
+
+function groupAssortmentsByRack(
+  assortments: readonly ApiAssortment[]
+): Map<number, ApiAssortment[]> {
+  const assortmentByRack = new Map<number, ApiAssortment[]>()
+
+  for (const assortment of assortments) {
+    const existing = assortmentByRack.get(assortment.rackId)
+    if (existing) {
+      existing.push(assortment)
+      continue
+    }
+    assortmentByRack.set(assortment.rackId, [assortment])
+  }
+
+  return assortmentByRack
 }
 
 function getRackDimensions(rack: Rack3D): {
@@ -164,9 +241,20 @@ function computeCenter(racks: Rack3D[]): {
 
 export function buildWarehouse3DFromApi(
   apiWarehouse: ApiWarehouse,
-  apiRacks: ApiRack[]
+  apiRacks: ApiRack[],
+  apiAssortments: readonly ApiAssortment[] = [],
+  itemDefinitionsMap: ReadonlyMap<number, ItemDetails> = new Map()
 ): Warehouse3D {
-  const racks = apiRacks.map(mapApiRackToRack3D)
+  const assortmentByRack = groupAssortmentsByRack(apiAssortments)
+  const nowTimestampMs = Date.now()
+  const racks = apiRacks.map((rack) =>
+    mapApiRackToRack3D(
+      rack,
+      assortmentByRack.get(rack.id) ?? [],
+      itemDefinitionsMap,
+      nowTimestampMs
+    )
+  )
 
   layoutRacks(racks)
 

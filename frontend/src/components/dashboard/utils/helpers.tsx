@@ -1,9 +1,8 @@
 import { differenceInCalendarDays, format, parseISO } from "date-fns"
 import { pl } from "date-fns/locale"
 import { toast } from "sonner"
-import type { ItemDetails } from "@/hooks/use-items"
 import { FetchError } from "@/lib/fetcher"
-import type { Assortment } from "@/lib/schemas"
+import type { RackAssortment } from "@/lib/schemas"
 import type { Item, ItemSlot } from "../types"
 
 // Helper function to convert index to coordinate (R01-P01, R02-P03, etc.)
@@ -67,27 +66,24 @@ export const getOccupancyPercentage = (
  * Combines an Assortment record with its corresponding ItemDefinition
  * into the frontend display Item type used by rack grid components.
  */
-export function mapToDisplayItem(
-  assortment: Assortment,
-  itemDefinition: ItemDetails
-): Item {
+export function mapToDisplayItem(assortment: RackAssortment): Item {
   const expiresAt = parseISO(assortment.expiresAt)
 
   return {
     id: String(assortment.id),
-    name: itemDefinition.name,
+    name: assortment.item.name,
     qrCode: assortment.code,
-    weight: itemDefinition.weight,
-    width: itemDefinition.sizeX,
-    height: itemDefinition.sizeY,
-    depth: itemDefinition.sizeZ,
-    minTemp: itemDefinition.minTemp,
-    maxTemp: itemDefinition.maxTemp,
-    comment: itemDefinition.comment ?? undefined,
-    daysToExpiry: itemDefinition.expireAfterDays,
+    weight: assortment.item.weight,
+    width: assortment.item.sizeX,
+    height: assortment.item.sizeY,
+    depth: assortment.item.sizeZ,
+    minTemp: assortment.item.minTemp,
+    maxTemp: assortment.item.maxTemp,
+    comment: assortment.item.comment ?? undefined,
+    daysToExpiry: assortment.item.expireAfterDays,
     expiryDate: expiresAt,
-    isDangerous: itemDefinition.dangerous,
-    imageUrl: itemDefinition.photoUrl,
+    isDangerous: assortment.item.dangerous,
+    imageUrl: assortment.item.photoUrl,
   }
 }
 
@@ -98,20 +94,15 @@ export function mapToDisplayItem(
 export function buildItemsGrid(
   sizeX: number,
   sizeY: number,
-  assortments: Assortment[],
-  itemDefinitionsMap: Map<number, ItemDetails>
+  assortments: RackAssortment[]
 ): ItemSlot[] {
   const slotCount = sizeX * sizeY
   const slots: ItemSlot[] = Array.from({ length: slotCount }, () => null)
 
   for (const assortment of assortments) {
-    const itemDef = itemDefinitionsMap.get(assortment.itemId)
-    if (!itemDef) {
-      continue
-    }
     const index = assortment.positionY * sizeX + assortment.positionX
     if (index >= 0 && index < slotCount) {
-      slots[index] = mapToDisplayItem(assortment, itemDef)
+      slots[index] = mapToDisplayItem(assortment)
     }
   }
 

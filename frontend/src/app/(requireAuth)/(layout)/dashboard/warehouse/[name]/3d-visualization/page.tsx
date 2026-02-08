@@ -20,6 +20,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import useAssortments from "@/hooks/use-assortment"
+import { type ItemDetails, useMultipleItems } from "@/hooks/use-items"
 import useRacks from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
 import { cn } from "@/lib/utils"
@@ -187,6 +189,7 @@ const renderVisualizationFallback = (_error: Error, reset: () => void) => (
 
 const WAREHOUSES_PAGE_SIZE = 200
 const RACKS_PAGE_SIZE = 500
+const ASSORTMENTS_MIN_PAGE_SIZE = 20
 
 const decodeWarehouseName = (encodedName: string): string => {
   try {
@@ -232,12 +235,66 @@ export default function ThreeDVisualizationPage() {
     warehouseId: apiWarehouse?.id ?? -1,
   })
 
+  const assortmentsPageSize = useMemo(() => {
+    if (!racksData?.content) {
+      return ASSORTMENTS_MIN_PAGE_SIZE
+    }
+
+    const expectedAssortmentsCount = racksData.content.reduce(
+      (sum, rack) => sum + rack.occupiedSlots,
+      0
+    )
+
+    return Math.max(ASSORTMENTS_MIN_PAGE_SIZE, expectedAssortmentsCount)
+  }, [racksData?.content])
+
+  const {
+    data: assortmentsData,
+    isError: isAssortmentsError,
+    isPending: isAssortmentsPending,
+  } = useAssortments({
+    page: 0,
+    size: assortmentsPageSize,
+    warehouseId: apiWarehouse?.id ?? -1,
+  })
+
+  const assortmentItemIds = useMemo(() => {
+    if (!assortmentsData?.content) {
+      return [] as number[]
+    }
+
+    return [
+      ...new Set(
+        assortmentsData.content.map((assortment) => assortment.itemId)
+      ),
+    ]
+  }, [assortmentsData?.content])
+
+  const itemDefinitionQueries = useMultipleItems({
+    itemIds: assortmentItemIds,
+  })
+
+  const itemDefinitionsMap = useMemo<ReadonlyMap<number, ItemDetails>>(() => {
+    const map = new Map<number, ItemDetails>()
+    for (const query of itemDefinitionQueries) {
+      if (query.data) {
+        map.set(query.data.id, query.data)
+      }
+    }
+    return map
+  }, [itemDefinitionQueries])
+
   const warehouse = useMemo(() => {
     if (!(apiWarehouse && racksData)) {
       return null
     }
-    return buildWarehouse3DFromApi(apiWarehouse, racksData.content)
-  }, [apiWarehouse, racksData])
+    return buildWarehouse3DFromApi(
+      apiWarehouse,
+      racksData.content,
+      assortmentsData?.content ?? [],
+      itemDefinitionsMap
+    )
+  }, [apiWarehouse, racksData, assortmentsData?.content, itemDefinitionsMap])
 
   const router = useRouter()
   const {
@@ -355,8 +412,9 @@ export default function ThreeDVisualizationPage() {
     router.push("./")
   }, [focusWindow, isFocusActive, router])
 
-  const isLoading = isWarehousesPending || isRacksPending
-  const isError = isWarehousesError || isRacksError
+  const isLoading =
+    isWarehousesPending || isRacksPending || isAssortmentsPending
+  const isError = isWarehousesError || isRacksError || isAssortmentsError
 
   if (isLoading) {
     return (

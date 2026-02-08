@@ -36,7 +36,6 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import useAssortments from "@/hooks/use-assortment"
 import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
-import { useMultipleItems } from "@/hooks/use-items"
 import useRacks from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
 import type { Rack } from "@/lib/schemas"
@@ -359,30 +358,6 @@ export default function WarehouseClient() {
     size: currentRack ? currentRack.sizeX * currentRack.sizeY : 20,
   })
 
-  const assortmentItemIds = useMemo(() => {
-    if (!assortments?.content) {
-      return [] as const
-    }
-    return [...new Set(assortments.content.map((a) => a.itemId))] as const
-  }, [assortments])
-
-  const itemDefinitionQueries = useMultipleItems({
-    itemIds: assortmentItemIds,
-  })
-
-  const itemDefinitionsMap = useMemo(() => {
-    const map = new Map<
-      number,
-      NonNullable<(typeof itemDefinitionQueries)[number]["data"]>
-    >()
-    for (const query of itemDefinitionQueries) {
-      if (query.data) {
-        map.set(query.data.id, query.data)
-      }
-    }
-    return map
-  }, [itemDefinitionQueries])
-
   const items = useMemo(() => {
     if (!(currentRack && assortments?.content)) {
       return []
@@ -390,10 +365,9 @@ export default function WarehouseClient() {
     return buildItemsGrid(
       currentRack.sizeX,
       currentRack.sizeY,
-      assortments.content,
-      itemDefinitionsMap
+      assortments.content
     )
-  }, [currentRack, assortments, itemDefinitionsMap])
+  }, [currentRack, assortments])
 
   const selectedSlotIndex = useMemo(() => {
     if (!(selectedSlotCoordinates && currentRack)) {

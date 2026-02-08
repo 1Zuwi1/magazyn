@@ -16,6 +16,7 @@ import { useApiQuery } from "./use-api-query"
 const ASSORTMENT_QUERY_KEY = ["assortments"] as const
 
 export type AssortmentsList = InferApiOutput<typeof AssortmentsSchema, "GET">
+type RackAssortmentsList = InferApiOutput<typeof RackAssortmentsSchema, "GET">
 export type AssortmentDetails = InferApiOutput<
   typeof AssortmentDetailsSchema,
   "GET"
@@ -47,8 +48,11 @@ export default function useAssortments(
 ): UseQueryResult<AssortmentDetails, FetchError>
 
 export default function useAssortments(
-  params: RackAssortmentsParams | WarehouseAssortmentsParams
+  params: WarehouseAssortmentsParams
 ): UseQueryResult<AssortmentsList, FetchError>
+export default function useAssortments(
+  params: RackAssortmentsParams
+): UseQueryResult<RackAssortmentsList, FetchError>
 
 export default function useAssortments(
   {

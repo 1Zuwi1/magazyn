@@ -1,6 +1,6 @@
 import { PackageIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import Image from "next/image"
+import { ItemPhoto } from "@/components/ui/item-photo"
 import { cn } from "@/lib/utils"
 import type { ItemSlot } from "../../types"
 import { getItemStatus, getStatusColors } from "../../utils/item-status"
@@ -65,12 +65,16 @@ export default function RackElement({
         <>
           <div className="relative flex h-full items-center justify-center bg-linear-to-br from-secondary to-secondary/80">
             {item.imageUrl ? (
-              <Image
+              <ItemPhoto
                 alt={item.name}
-                className="object-cover transition-transform duration-200 group-hover:scale-105"
-                fill
-                sizes="(max-width: 768px) 60px, 80px"
-                src={item.imageUrl}
+                containerClassName="size-14 shrink-0"
+                iconClassName="size-6 text-muted-foreground"
+                imageClassName="object-cover"
+                src={
+                  item.imageUrl
+                    ? `${process.env.NEXT_PUBLIC_API_URL}/api/items/${item.id}/photo`
+                    : null
+                }
               />
             ) : (
               // Fallback icon when no image

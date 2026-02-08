@@ -7,14 +7,14 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import type { Assortment, Rack } from "@/lib/schemas"
+import type { Rack, RackAssortment } from "@/lib/schemas"
 import type { SlotCoordinates } from "../types"
 import { getSlotCoordinate } from "../utils/helpers"
 
 interface RackShelfDetailsCardProps {
   rack: Rack
   selectedSlotCoordinates: SlotCoordinates | null
-  assortment: Assortment | null
+  assortment: RackAssortment | null
   onClearSelection: () => void
   onOpenDetails?: () => void
 }
@@ -144,7 +144,7 @@ export function RackShelfDetailsCard({
               label="ID przedmiotu"
               value={
                 <span className="font-mono font-semibold">
-                  {assortment.itemId}
+                  {assortment.item.id}
                 </span>
               }
             />

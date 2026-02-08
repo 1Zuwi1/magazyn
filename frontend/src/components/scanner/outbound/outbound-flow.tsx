@@ -540,6 +540,7 @@ export const OutboundFlow = forwardRef<OutboundFlowHandle, OutboundFlowProps>(
           isSubmitting={isSubmitting}
           onCancel={() => setStep("pick-list")}
           onConfirm={handleConfirmAfterVerification}
+          onManualCodeSubmit={handleVerificationScanResult}
           onRequestScan={onRequestCamera}
           scannedEntries={scannedVerificationEntries}
           selectedSlots={selectedPickSlots}
