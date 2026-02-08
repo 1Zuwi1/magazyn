@@ -2,6 +2,7 @@
 
 import { AlertCircleIcon } from "@hugeicons/core-free-icons"
 import { formatDistanceToNow } from "date-fns"
+import { pl } from "date-fns/locale"
 import { useMemo } from "react"
 import { InsightCard } from "@/components/dashboard/stat-card"
 import { Badge } from "@/components/ui/badge"
@@ -130,7 +131,9 @@ export function DashboardOperationalAlertsCard() {
                     {itemDefinitionsById.get(item.itemId)?.name}
                   </span>
                   <span className="shrink-0 font-mono text-muted-foreground text-xs">
-                    {formatDistanceToNow(new Date(item.expiresAt))} dni
+                    {formatDistanceToNow(new Date(item.expiresAt), {
+                      locale: pl,
+                    })}
                   </span>
                 </li>
               ))}

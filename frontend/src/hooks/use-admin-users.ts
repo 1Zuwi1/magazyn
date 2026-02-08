@@ -1,4 +1,4 @@
-import type { UseQueryResult } from "@tanstack/react-query"
+import type { QueryClient, UseQueryResult } from "@tanstack/react-query"
 import {
   apiFetch,
   type FetchError,
@@ -34,19 +34,36 @@ export type ChangeAdminUserEmailInput = InferApiInput<
   "PATCH"
 >
 
-export default function useAdminUsers(
-  params: InferApiInput<typeof AdminUsersSchema, "GET"> = {
-    page: 0,
-    size: 20,
-    sortBy: "id",
-    sortDir: "asc",
+type UseAdminUsersParams = InferApiInput<typeof AdminUsersSchema, "GET">
+
+const normalizeAdminUsersParams = (
+  params: UseAdminUsersParams
+): UseAdminUsersParams => {
+  const normalizedName = params.name?.trim() || undefined
+  const normalizedEmail = params.email?.trim() || undefined
+
+  return {
+    ...params,
+    page: params.page ?? 0,
+    size: params.size ?? 20,
+    sortBy: params.sortBy ?? "id",
+    sortDir: params.sortDir ?? "asc",
+    name: normalizedName,
+    email: normalizedEmail,
   }
+}
+
+export default function useAdminUsers(
+  params: UseAdminUsersParams = {}
 ): UseQueryResult<AdminUsersList, FetchError> {
+  const queryParams = normalizeAdminUsersParams(params)
+
   return useApiQuery({
-    queryKey: [...ADMIN_USERS_QUERY_KEY, params],
+    queryKey: [...ADMIN_USERS_QUERY_KEY, queryParams],
     queryFn: () =>
       apiFetch("/api/users", AdminUsersSchema, {
-        queryParams: params,
+        method: "GET",
+        queryParams,
       }),
   })
 }
@@ -58,6 +75,15 @@ export function useAdminUserTeams() {
       apiFetch("/api/users/teams", AdminUserTeamsSchema, {
         method: "GET",
       }),
+  })
+}
+
+const invalidateAdminUsersCache = (client: QueryClient): void => {
+  client.invalidateQueries({
+    queryKey: ADMIN_USERS_QUERY_KEY,
+  })
+  client.invalidateQueries({
+    queryKey: SESSION_QUERY_KEY,
   })
 }
 
@@ -75,12 +101,7 @@ export function useUpdateAdminUserProfile() {
         body,
       }),
     onSuccess: (_, __, ___, context) => {
-      context.client.invalidateQueries({
-        queryKey: ADMIN_USERS_QUERY_KEY,
-      })
-      context.client.invalidateQueries({
-        queryKey: SESSION_QUERY_KEY,
-      })
+      invalidateAdminUsersCache(context.client)
     },
   })
 }
@@ -99,12 +120,7 @@ export function useChangeAdminUserEmail() {
         body,
       }),
     onSuccess: (_, __, ___, context) => {
-      context.client.invalidateQueries({
-        queryKey: ADMIN_USERS_QUERY_KEY,
-      })
-      context.client.invalidateQueries({
-        queryKey: SESSION_QUERY_KEY,
-      })
+      invalidateAdminUsersCache(context.client)
     },
   })
 }
@@ -116,12 +132,7 @@ export function useDeleteAdminUser() {
         method: "DELETE",
       }),
     onSuccess: (_, __, ___, context) => {
-      context.client.invalidateQueries({
-        queryKey: ADMIN_USERS_QUERY_KEY,
-      })
-      context.client.invalidateQueries({
-        queryKey: SESSION_QUERY_KEY,
-      })
+      invalidateAdminUsersCache(context.client)
     },
   })
 }

@@ -11,6 +11,7 @@ export const ADMIN_NAV_LINKS = [
   { title: "Przedmioty", url: "/admin/items" },
   { title: "Alerty", url: "/admin/alerts" },
   { title: "Raporty regałów", url: "/admin/rack-reports" },
+  { title: "Audyt operacji", url: "/admin/audit" },
 ] as const
 
 export const NOTIFICATIONS_NAV_LINKS = [

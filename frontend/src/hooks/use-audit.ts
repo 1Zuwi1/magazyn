@@ -12,7 +12,7 @@ export function useAuditInboundOperations(
     queryKey: ["audit", "inbound-operations", params],
     queryFn: () => {
       return apiFetch(
-        "/api/audit/inbound-operations/",
+        "/api/audit/inbound-operations",
         AuditInboudOperationsSchema,
         {
           method: "GET",
@@ -30,7 +30,7 @@ export function useAuditOutboundOperations(
     queryKey: ["audit", "outbound-operations", params],
     queryFn: () => {
       return apiFetch(
-        "/api/audit/outbound-operations/",
+        "/api/audit/outbound-operations",
         AuditOutboundOperationsSchema,
         {
           method: "GET",

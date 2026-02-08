@@ -1,163 +1,78 @@
 "use client"
 
-import {
-  Cancel01Icon,
-  CheckmarkBadge01Icon,
-  Delete02Icon,
-  MoreHorizontalCircle01FreeIcons,
-  PencilEdit01Icon,
-  UserMultiple02Icon,
-} from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { UserMultiple02Icon } from "@hugeicons/core-free-icons"
+import { useDeferredValue, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import {
   ActionDialog,
-  type EditableAdminUser,
   type EditUserFormValues,
 } from "@/components/admin-panel/users/components/action-dialog"
-import { Badge } from "@/components/ui/badge"
+import { UsersStats } from "@/components/admin-panel/users/components/users-stats"
+import { UsersTable } from "@/components/admin-panel/users/components/users-table"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  createEditableUser,
+  normalizeValue,
+  resolveTeamValue,
+  TABLE_PAGE_SIZE,
+} from "@/components/admin-panel/users/lib/user-utils"
 import { Input } from "@/components/ui/input"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { DISABLE_PAGINATION_PAGE_SIZE } from "@/config/constants"
+import PaginationFull from "@/components/ui/pagination-component"
 import useAdminUsers, {
   useAdminUserTeams,
   useChangeAdminUserEmail,
   useDeleteAdminUser,
   useUpdateAdminUserProfile,
 } from "@/hooks/use-admin-users"
-import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../lib/constants"
 
-const TABLE_PAGE_SIZE = 10
-
-const getStatusLabel = (status: string): string => {
-  if (status === "ACTIVE") {
-    return "Aktywne"
-  }
-  if (status === "PENDING_VERIFICATION") {
-    return "Oczekuje"
-  }
-  if (status === "LOCKED") {
-    return "Zablokowane"
-  }
-  if (status === "DISABLED") {
-    return "Wyłączone"
-  }
-  return status
-}
-
-const getStatusVariant = (
-  status: string
-): "default" | "destructive" | "success" | "secondary" | "outline" => {
-  if (status === "ACTIVE") {
-    return "success"
-  }
-  if (status === "LOCKED") {
-    return "destructive"
-  }
-  return "secondary"
-}
-
-const normalizeValue = (value: string | null | undefined): string =>
-  value?.trim() ?? ""
-
-const resolveTeamValue = (
-  currentTeam: string | null | undefined,
-  teams: { value: string; label: string }[]
-): string => {
-  const normalizedTeam = normalizeValue(currentTeam)
-
-  if (!normalizedTeam) {
-    return ""
-  }
-
-  const exactValueMatch = teams.find((team) => team.value === normalizedTeam)
-  if (exactValueMatch) {
-    return exactValueMatch.value
-  }
-
-  const labelMatch = teams.find((team) => team.label === normalizedTeam)
-  if (labelMatch) {
-    return labelMatch.value
-  }
-
-  return ""
-}
-
-const createEditableUser = (
-  user: {
-    id: number
-    full_name?: string | null
-    email: string
-    phone?: string | null
-    location?: string | null
-    team?: string | null
-  },
-  teams: { value: string; label: string }[]
-): EditableAdminUser => ({
-  id: user.id,
-  fullName: normalizeValue(user.full_name),
-  email: normalizeValue(user.email),
-  phone: normalizeValue(user.phone),
-  location: normalizeValue(user.location),
-  team: resolveTeamValue(user.team, teams),
-})
-
 export default function UsersMain() {
+  const [page, setPage] = useState(0)
+  const [search, setSearch] = useState("")
+  const deferredSearch = useDeferredValue(search)
+  const searchQuery = deferredSearch.trim() || undefined
+  const isEmailQuery = searchQuery?.includes("@") ?? false
+
   const {
     data: usersData,
     isPending: isUsersPending,
     isError: isUsersError,
   } = useAdminUsers({
-    page: 0,
-    size: DISABLE_PAGINATION_PAGE_SIZE,
-    sortBy: "id",
-    sortDir: "asc",
+    email: isEmailQuery ? searchQuery : undefined,
+    name: isEmailQuery ? undefined : searchQuery,
+    page,
+    size: TABLE_PAGE_SIZE,
   })
   const {
     data: teamsData,
     isPending: isTeamsPending,
     isError: isTeamsError,
   } = useAdminUserTeams()
+  const { data: totalUsersData } = useAdminUsers({
+    page: 0,
+    size: 1,
+  })
+  const { data: activeUsersData } = useAdminUsers({
+    page: 0,
+    size: 1,
+    status: "ACTIVE",
+  })
+
   const updateProfileMutation = useUpdateAdminUserProfile()
   const changeEmailMutation = useChangeAdminUserEmail()
   const deleteUserMutation = useDeleteAdminUser()
 
   const users = usersData?.content ?? []
-  const teams = useMemo(() => {
-    return isTeamsPending ? [] : (teamsData ?? [])
-  }, [teamsData, isTeamsPending])
+  const teams = useMemo(
+    () => (isTeamsPending ? [] : (teamsData ?? [])),
+    [teamsData, isTeamsPending]
+  )
 
-  const [search, setSearch] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [userIdToDelete, setUserIdToDelete] = useState<number | null>(null)
-  const [page, setPage] = useState(1)
-  const prevSearch = useRef(search)
-
-  useEffect(() => {
-    if (prevSearch.current !== search) {
-      prevSearch.current = search
-      setPage(1)
-    }
-  }, [search])
 
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId),
@@ -176,45 +91,35 @@ export default function UsersMain() {
   }, [selectedUser, teams])
 
   const stats = useMemo(() => {
-    const activeCount = users.filter(
-      (user) => user.account_status === "ACTIVE"
-    ).length
-    const total = usersData?.totalElements ?? users.length
+    const total = totalUsersData?.totalElements ?? 0
+    const active = activeUsersData?.totalElements ?? 0
+
     return {
       total,
-      active: activeCount,
-      inactive: Math.max(0, total - activeCount),
+      active,
+      inactive: Math.max(0, total - active),
     }
-  }, [users, usersData?.totalElements])
+  }, [activeUsersData?.totalElements, totalUsersData?.totalElements])
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) {
-      return users
-    }
+  const totalPages = Math.max(usersData?.totalPages ?? 1, 1)
+  const totalElements = usersData?.totalElements ?? 0
+  const currentPage = page + 1
+  const firstVisible = users.length > 0 ? page * TABLE_PAGE_SIZE + 1 : 0
+  const lastVisible = page * TABLE_PAGE_SIZE + users.length
+  let paginationSummaryText: string | null = null
+  if (isUsersPending) {
+    paginationSummaryText = "Ładowanie..."
+  }
 
-    const normalizedSearch = search.toLowerCase()
-    return users.filter((user) => {
-      const fullName = normalizeValue(user.full_name).toLowerCase()
-      const email = normalizeValue(user.email).toLowerCase()
-      const team = normalizeValue(user.team).toLowerCase()
-      return (
-        fullName.includes(normalizedSearch) ||
-        email.includes(normalizedSearch) ||
-        team.includes(normalizedSearch)
-      )
-    })
-  }, [users, search])
+  const handleSetPage = (nextPage: number) => {
+    const boundedPage = Math.min(Math.max(nextPage, 1), totalPages)
+    setPage(boundedPage - 1)
+  }
 
-  const { totalPages, currentPage } = useMemo(() => {
-    const total = Math.max(1, Math.ceil(filtered.length / TABLE_PAGE_SIZE))
-    const current = Math.min(page, total)
-    return { totalPages: total, currentPage: current }
-  }, [filtered.length, page])
-
-  const paginated = useMemo(() => {
-    const start = (currentPage - 1) * TABLE_PAGE_SIZE
-    return filtered.slice(start, start + TABLE_PAGE_SIZE)
-  }, [filtered, currentPage])
+  const handleSearchChange = (value: string) => {
+    setSearch(value)
+    setPage(0)
+  }
 
   const handleEditUser = (userId: number) => {
     if (isTeamsError) {
@@ -323,132 +228,6 @@ export default function UsersMain() {
     }
   }
 
-  const renderTableRows = () => {
-    if (isUsersPending) {
-      return (
-        <TableRow>
-          <TableCell
-            className="py-12 text-center text-muted-foreground"
-            colSpan={6}
-          >
-            Ładowanie użytkowników...
-          </TableCell>
-        </TableRow>
-      )
-    }
-
-    if (isUsersError) {
-      return (
-        <TableRow>
-          <TableCell
-            className="py-12 text-center text-muted-foreground"
-            colSpan={6}
-          >
-            Nie udało się pobrać użytkowników.
-          </TableCell>
-        </TableRow>
-      )
-    }
-
-    if (paginated.length === 0) {
-      return (
-        <TableRow>
-          <TableCell
-            className="py-12 text-center text-muted-foreground"
-            colSpan={6}
-          >
-            <div className="flex flex-col items-center gap-2">
-              <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                <HugeiconsIcon
-                  className="size-6 text-muted-foreground"
-                  icon={UserMultiple02Icon}
-                />
-              </div>
-              <p className="font-medium">Brak użytkowników</p>
-              <p className="text-sm">
-                {search
-                  ? "Nie znaleziono użytkowników pasujących do wyszukiwania"
-                  : "Brak danych użytkowników do wyświetlenia"}
-              </p>
-            </div>
-          </TableCell>
-        </TableRow>
-      )
-    }
-
-    return paginated.map((user) => (
-      <TableRow
-        className="group cursor-default transition-colors"
-        key={user.id}
-      >
-        <TableCell className="font-medium">
-          {normalizeValue(user.full_name) || "—"}
-        </TableCell>
-        <TableCell className="text-muted-foreground">{user.email}</TableCell>
-        <TableCell>
-          <Badge
-            className="capitalize"
-            variant={getStatusVariant(user.account_status)}
-          >
-            {getStatusLabel(user.account_status)}
-          </Badge>
-        </TableCell>
-        <TableCell>
-          <Badge
-            className="capitalize"
-            variant={user.role === "ADMIN" ? "default" : "outline"}
-          >
-            {user.role}
-          </Badge>
-        </TableCell>
-        <TableCell className="text-muted-foreground">
-          {normalizeValue(user.team) || "—"}
-        </TableCell>
-        <TableCell>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              aria-label="Akcje użytkownika"
-              className={cn(
-                "flex size-8 items-center justify-center rounded-md opacity-0 transition-all hover:bg-muted group-hover:opacity-100",
-                "focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
-              )}
-            >
-              <HugeiconsIcon
-                className="size-5"
-                icon={MoreHorizontalCircle01FreeIcons}
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleEditUser(user.id)
-                }}
-              >
-                <HugeiconsIcon
-                  className="mr-2 size-4"
-                  icon={PencilEdit01Icon}
-                />
-                Edytuj
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer text-destructive focus:text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDeleteUser(user.id)
-                }}
-              >
-                <HugeiconsIcon className="mr-2 size-4" icon={Delete02Icon} />
-                Usuń
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </TableCell>
-      </TableRow>
-    ))
-  }
-
   return (
     <div className="space-y-6">
       <AdminPageHeader
@@ -460,143 +239,59 @@ export default function UsersMain() {
         }))}
         title="Użytkownicy"
       >
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
-            <span className="font-mono font-semibold text-primary">
-              {stats.total}
-            </span>
-            <span className="text-muted-foreground text-xs">łącznie</span>
-          </div>
-          <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-1.5">
-            <HugeiconsIcon
-              className="size-3.5 text-emerald-500"
-              icon={CheckmarkBadge01Icon}
-            />
-            <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
-              {stats.active}
-            </span>
-            <span className="text-muted-foreground text-xs">aktywnych</span>
-          </div>
-          <div className="flex items-center gap-2 rounded-lg border border-orange-500/20 bg-orange-500/5 px-3 py-1.5">
-            <HugeiconsIcon
-              className="size-3.5 text-orange-500"
-              icon={Cancel01Icon}
-            />
-            <span className="font-mono font-semibold text-orange-600 dark:text-orange-400">
-              {stats.inactive}
-            </span>
-            <span className="text-muted-foreground text-xs">pozostałych</span>
-          </div>
-        </div>
+        <UsersStats
+          active={stats.active}
+          inactive={stats.inactive}
+          total={stats.total}
+        />
       </AdminPageHeader>
 
       <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
         <div className="border-b bg-muted/30 p-4">
           <Input
             className="max-w-sm"
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(event) => handleSearchChange(event.target.value)}
             placeholder="Szukaj użytkowników..."
             type="search"
             value={search}
           />
         </div>
 
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/20 hover:bg-muted/20">
-                <TableHead className="font-semibold">Imię i nazwisko</TableHead>
-                <TableHead className="font-semibold">Email</TableHead>
-                <TableHead className="font-semibold">Status</TableHead>
-                <TableHead className="font-semibold">Rola</TableHead>
-                <TableHead className="font-semibold">Zespół</TableHead>
-                <TableHead className="w-12" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>{renderTableRows()}</TableBody>
-          </Table>
-        </div>
+        <UsersTable
+          isError={isUsersError}
+          isPending={isUsersPending}
+          onDeleteUser={handleDeleteUser}
+          onEditUser={handleEditUser}
+          users={users}
+        />
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/20 px-4 py-3">
           <p className="text-muted-foreground text-sm">
-            {filtered.length > 0 ? (
+            {paginationSummaryText ? (
+              paginationSummaryText
+            ) : (
               <>
                 Wyświetlanie{" "}
                 <span className="font-medium text-foreground">
-                  {(currentPage - 1) * TABLE_PAGE_SIZE + 1}
+                  {firstVisible}
                 </span>
                 –
                 <span className="font-medium text-foreground">
-                  {Math.min(currentPage * TABLE_PAGE_SIZE, filtered.length)}
+                  {lastVisible}
                 </span>{" "}
                 z{" "}
                 <span className="font-medium text-foreground">
-                  {filtered.length}
+                  {totalElements}
                 </span>{" "}
                 użytkowników
               </>
-            ) : (
-              "Brak wyników"
             )}
           </p>
-          <div className="flex items-center gap-2">
-            <button
-              className={cn(
-                "inline-flex items-center justify-center rounded-md border px-3 py-1.5 font-medium text-sm transition-colors",
-                currentPage === 1
-                  ? "cursor-not-allowed opacity-50"
-                  : "hover:bg-muted"
-              )}
-              disabled={currentPage === 1}
-              onClick={() => setPage((p) => p - 1)}
-              type="button"
-            >
-              Poprzednia
-            </button>
-            <div className="flex items-center gap-1 px-2">
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                let pageNum: number
-                if (totalPages <= 5) {
-                  pageNum = i + 1
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i
-                } else {
-                  pageNum = currentPage - 2 + i
-                }
-
-                return (
-                  <button
-                    className={cn(
-                      "flex size-8 items-center justify-center rounded-md text-sm transition-colors",
-                      pageNum === currentPage
-                        ? "bg-primary font-medium text-primary-foreground"
-                        : "hover:bg-muted"
-                    )}
-                    key={pageNum}
-                    onClick={() => setPage(pageNum)}
-                    type="button"
-                  >
-                    {pageNum}
-                  </button>
-                )
-              })}
-            </div>
-            <button
-              className={cn(
-                "inline-flex items-center justify-center rounded-md border px-3 py-1.5 font-medium text-sm transition-colors",
-                currentPage === totalPages
-                  ? "cursor-not-allowed opacity-50"
-                  : "hover:bg-muted"
-              )}
-              disabled={currentPage === totalPages}
-              onClick={() => setPage((p) => p + 1)}
-              type="button"
-            >
-              Następna
-            </button>
-          </div>
+          <PaginationFull
+            currentPage={currentPage}
+            setPage={handleSetPage}
+            totalPages={totalPages}
+          />
         </div>
       </div>
 

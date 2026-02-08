@@ -76,6 +76,11 @@ export const navigationItems: NavigationItem[] = [
         href: "/admin/alerts",
         icon: Alert01Icon,
       },
+      {
+        title: "Audyt operacji",
+        href: "/admin/audit",
+        icon: Analytics01Icon,
+      },
     ],
   },
 ] as const
