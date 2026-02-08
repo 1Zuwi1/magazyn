@@ -37,8 +37,9 @@ public class RackImportService extends AbstractImportService<RackDto, RackImport
 
     /**
      * Import racks from CSV file and assign them to specified warehouse
+     *
      * @param warehouseId ID of the warehouse to assign all racks to
-     * @param file CSV file with rack data
+     * @param file        CSV file with rack data
      * @return Import report with statistics
      */
     public RackImportReport importFromCsv(Long warehouseId, MultipartFile file) {

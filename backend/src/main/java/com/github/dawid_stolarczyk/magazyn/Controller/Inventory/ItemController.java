@@ -478,17 +478,17 @@ public class ItemController {
                     Batch generates image embeddings for all items with photos.
                     This operation runs asynchronously in the background.
                     Check server logs for progress and completion status.
-
+                    
                     **forceRegenerate parameter:**
                     - `false` (default): Only generate embeddings for items that don't have them yet
                     - `true`: Regenerate embeddings for ALL items with photos (useful after model updates)
-
+                    
                     **Process:**
                     1. Finds all items with photo_url (filtered by forceRegenerate flag)
                     2. Downloads each photo from S3
                     3. Generates embedding using the AI model with background removal
                     4. Saves embedding to database
-
+                    
                     Returns 202 Accepted immediately. The operation continues in the background.
                     """
     )

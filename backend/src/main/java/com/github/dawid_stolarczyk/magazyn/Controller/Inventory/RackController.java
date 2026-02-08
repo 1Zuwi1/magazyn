@@ -131,13 +131,13 @@ public class RackController {
             description = """
                     Import regałów z pliku CSV ze **stałą kolejnością kolumn** (bez nagłówka).
                     Wszystkie importowane regały będą przypisane do magazynu określonego przez parametr warehouseId.
-
+                    
                     **Format CSV:**
                     - Separator: **średnik (;)**
                     - Kodowanie: **UTF-8**
                     - Bez nagłówka (pierwsza linia to już dane)
                     - Linie zaczynające się od '#' są ignorowane (komentarze)
-
+                    
                     **Kolejność kolumn (STAŁA):**
                     1. **Marker** (String) - Oznaczenie regału (np. R-01, A-01)
                        - WYMAGANE, automatycznie normalizowane do wielkich liter
@@ -164,7 +164,7 @@ public class RackController {
                         - OPCJONALNE (domyślnie FALSE)
                     11. **Komentarz** (String) - Dodatkowy opis
                         - OPCJONALNE
-
+                    
                     **Przykład pliku CSV:**
                     ```
                     #Marker;M;N;TempMin;TempMax;MaxWagaKg;MaxSzerokoscMm;MaxWysokoscMm;MaxGlebokoscMm;AcceptsDangerous;Komentarz
@@ -173,19 +173,19 @@ public class RackController {
                     R-03;6;12;-20;-5;1500;180;350;600;FALSE;Regał mroźniczy
                     R-04;3;6;10;60;500;300;400;700;TRUE;Regał na materiały niebezpieczne
                     ```
-
+                    
                     **Uwagi:**
                     - Marker jest automatycznie normalizowany (uppercase, usunięcie znaków specjalnych)
                     - Marker musi być unikalny w ramach jednego magazynu
                     - Wszystkie regały będą przypisane do magazynu określonego parametrem warehouseId
                     - Wartości NULL lub puste dla kolumn opcjonalnych są ignorowane
-
+                    
                     **Walidacja pliku:**
                     - Tylko pliki CSV (rozszerzenia: .csv, .txt)
                     - Content-Type: text/csv, text/plain, application/csv
                     - Maksymalny rozmiar: 5MB
                     - Plik nie może być pusty
-
+                    
                     **Odpowiedź:**
                     - `processedLines` - liczba przetworzonych linii
                     - `imported` - liczba zaimportowanych regałów

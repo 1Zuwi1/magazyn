@@ -4,7 +4,10 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertType;
-import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.*;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AlertRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AssortmentRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserNotificationRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -163,5 +169,6 @@ public class ExpirationAlertTask {
                 rackInfo, count, item.getName(), item.getId(), days);
     }
 
-    private record RackItemKey(Long rackId, Long itemId) {}
+    private record RackItemKey(Long rackId, Long itemId) {
+    }
 }

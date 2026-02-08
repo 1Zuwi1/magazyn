@@ -1,8 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Auth;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ForgotPasswordRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResetPasswordRequest;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Services.Auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -114,7 +112,7 @@ public class AuthController {
     })
     @PostMapping("/forgot-password")
     public ResponseEntity<ResponseTemplate<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request,
-                                                                  HttpServletRequest httpRequest) {
+                                                                 HttpServletRequest httpRequest) {
         try {
             authService.forgotPassword(request.getEmail(), httpRequest);
             return ResponseEntity.ok(ResponseTemplate.success());
@@ -136,7 +134,7 @@ public class AuthController {
     })
     @PostMapping("/reset-password")
     public ResponseEntity<ResponseTemplate<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request,
-                                                                 HttpServletRequest httpRequest) {
+                                                                HttpServletRequest httpRequest) {
         try {
             authService.resetPassword(request.getToken(), request.getNewPassword(), httpRequest);
             return ResponseEntity.ok(ResponseTemplate.success());

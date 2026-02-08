@@ -22,6 +22,7 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long>, J
     Optional<Assortment> findByCode(String code);
 
     long countByRack_WarehouseId(Long warehouseId);
+
     long countByRackId(Long rackId);
 
     Page<Assortment> findAll(Pageable pageable);
