@@ -5,6 +5,8 @@ import {
   UserGroupIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { format } from "date-fns"
+import { pl } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -34,7 +36,6 @@ function ProfileDetailRow({ detail }: { detail: ProfileDetail }) {
 }
 
 function buildProfileDetails(user: User): ProfileDetail[] {
-  console.log(user)
   return [
     {
       label: "Status konta",
@@ -46,11 +47,9 @@ function buildProfileDetails(user: User): ProfileDetail[] {
     },
     {
       label: "Ostatnie logowanie",
-      value: "Dziś, 08:42",
-    },
-    {
-      label: "Strefa czasowa",
-      value: "Europe/Warsaw",
+      value: format(new Date(user.last_login ?? Date.now()), "EEEE, H:mm", {
+        locale: pl,
+      }),
     },
   ]
 }
