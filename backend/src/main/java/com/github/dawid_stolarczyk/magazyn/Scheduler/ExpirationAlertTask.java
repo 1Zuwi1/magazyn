@@ -40,7 +40,6 @@ public class ExpirationAlertTask {
     private int closeToExpiryDays;
 
     @Scheduled(cron = "${app.expiration.check-cron:0 0 6 * * *}")
-    @Transactional(rollbackFor = Exception.class)
     public void checkExpirations() {
         try {
             log.info("Starting scheduled expiration alert check");
@@ -55,6 +54,7 @@ public class ExpirationAlertTask {
         }
     }
 
+    @Transactional
     private int processExpiredAssortments() {
         List<Assortment> expired = assortmentRepository.findAllExpired();
         if (expired.isEmpty()) {
@@ -84,6 +84,7 @@ public class ExpirationAlertTask {
         return alertsCreated;
     }
 
+    @Transactional
     private int processCloseToExpiryAssortments() {
         Timestamp threshold = Timestamp.from(Instant.now().plus(closeToExpiryDays, ChronoUnit.DAYS));
         List<Assortment> closeToExpiry = assortmentRepository.findAllCloseToExpiry(threshold);

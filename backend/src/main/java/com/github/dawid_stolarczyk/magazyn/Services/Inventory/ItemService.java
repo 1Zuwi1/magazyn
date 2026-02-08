@@ -16,6 +16,8 @@ import com.github.dawid_stolarczyk.magazyn.Services.Storage.StorageService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,8 +27,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -41,6 +45,8 @@ public class ItemService {
     private final Bucket4jRateLimiter rateLimiter;
     private final ImageEmbeddingService imageEmbeddingService;
     private final BackgroundRemovalService backgroundRemovalService;
+    @Qualifier("asyncTaskExecutor")
+    private final AsyncTaskExecutor asyncTaskExecutor;
 
     public Page<ItemDto> getAllItemsPaged(
             HttpServletRequest request,
@@ -144,9 +150,6 @@ public class ItemService {
 
         String previousPhoto = item.getPhoto_url();
         String fileName = UUID.randomUUID() + ".enc";
-        AtomicReference<Exception> encryptionError = new AtomicReference<>();
-        CountDownLatch encryptionStarted = new CountDownLatch(1);
-        CountDownLatch encryptionFinished = new CountDownLatch(1);
 
         // Create final reference for use in lambda
         final byte[] finalImageBytes = imageBytes;
@@ -154,76 +157,42 @@ public class ItemService {
         try (PipedInputStream pipedIn = new PipedInputStream(1024 * 64);
              PipedOutputStream pipedOut = new PipedOutputStream(pipedIn)) {
 
-            Thread encryptThread = new Thread(() -> {
-                try (InputStream rawIn = new ByteArrayInputStream(finalImageBytes)) {
-                    encryptionStarted.countDown();
-                    fileCryptoService.encrypt(rawIn, pipedOut);
-                } catch (Exception ex) {
-                    encryptionError.set(ex);
-                    try {
-                        pipedIn.close();
-                    } catch (IOException ignored) {
-                    }
-                } finally {
-                    encryptionFinished.countDown();
-                    try {
-                        pipedOut.close();
-                    } catch (IOException ignored) {
-                    }
-                }
-            }, "item-photo-encrypt");
-
-            encryptThread.setDaemon(true);
-            encryptThread.start();
+            // Start encryption in background thread using CompletableFuture
+            CompletableFuture<Void> encryptionFuture = CompletableFuture.runAsync(
+                    () -> encryptToStream(finalImageBytes, pipedOut),
+                    asyncTaskExecutor
+            );
 
             try {
-                // Czekaj na start szyfrowania (max 5 sekund)
-                if (!encryptionStarted.await(5, java.util.concurrent.TimeUnit.SECONDS)) {
-                    throw new IllegalStateException("Encryption thread failed to start");
-                }
-
-                // Sprawdź czy nie było błędu podczas startu
-                if (encryptionError.get() != null) {
-                    throw encryptionError.get();
-                }
-
+                // Upload encrypted stream to storage
                 storageService.uploadStream(fileName, pipedIn, "image/png");
-            } catch (InterruptedException ex) {
-                encryptThread.interrupt();
-                Thread.currentThread().interrupt();
-                throw ex;
-            } catch (Exception ex) {
-                // Jeśli upload się nie uda, przerwij szyfrowanie i posprzątaj
-                encryptThread.interrupt();
-                try {
-                    pipedIn.close();
-                } catch (IOException ignored) {
-                }
-                try {
-                    storageService.delete(fileName);
-                } catch (Exception ignored) {
-                }
-                throw ex;
-            } finally {
-                // Poczekaj na zakończenie szyfrowania (max 30 sekund)
-                try {
-                    if (!encryptionFinished.await(30, java.util.concurrent.TimeUnit.SECONDS)) {
-                        log.warn("Encryption thread did not finish within timeout for item {}", id);
-                        encryptThread.interrupt();
-                    }
-                } catch (InterruptedException e) {
-                    encryptThread.interrupt();
-                    Thread.currentThread().interrupt();
-                }
-            }
 
-            // Sprawdź czy podczas szyfrowania wystąpił błąd
-            if (encryptionError.get() != null) {
-                try {
-                    storageService.delete(fileName);
-                } catch (Exception ignored) {
+                // Wait for encryption to complete (max 30 seconds)
+                encryptionFuture.get(30, TimeUnit.SECONDS);
+            } catch (InterruptedException ex) {
+                // Cancel encryption and restore interrupt status
+                encryptionFuture.cancel(true);
+                Thread.currentThread().interrupt();
+                cleanupFailedUpload(fileName);
+                throw ex;
+            } catch (ExecutionException ex) {
+                // Encryption failed - unwrap and rethrow the actual exception
+                cleanupFailedUpload(fileName);
+                Throwable cause = ex.getCause();
+                if (cause instanceof Exception) {
+                    throw (Exception) cause;
                 }
-                throw encryptionError.get();
+                throw ex;
+            } catch (TimeoutException ex) {
+                log.warn("Encryption thread did not finish within timeout for item {}", id);
+                encryptionFuture.cancel(true);
+                cleanupFailedUpload(fileName);
+                throw new IllegalStateException("Encryption timed out", ex);
+            } catch (Exception ex) {
+                // Upload failed - cancel encryption and cleanup
+                encryptionFuture.cancel(true);
+                cleanupFailedUpload(fileName);
+                throw ex;
             }
         }
 
@@ -244,10 +213,7 @@ public class ItemService {
             itemRepository.save(item);
         } catch (Exception ex) {
             // Compensating transaction: if DB save fails, delete the uploaded file
-            try {
-                storageService.delete(fileName);
-            } catch (Exception ignored) {
-            }
+            cleanupFailedUpload(fileName);
             throw ex;
         }
 
@@ -311,6 +277,51 @@ public class ItemService {
         item.setExpireAfterDays(request.getExpireAfterDays());
         item.setDangerous(request.isDangerous());
         item.setName(request.getName());
+    }
+
+    /**
+     * Encrypts the given image bytes to the provided output stream.
+     * This method runs in a separate thread via CompletableFuture.
+     * It properly handles interruptions and ensures CipherOutputStream is finalized.
+     *
+     * @param imageBytes The image bytes to encrypt
+     * @param pipedOut   The output stream to write encrypted data to
+     * @throws RuntimeException if encryption fails or thread is interrupted
+     */
+    private void encryptToStream(byte[] imageBytes, PipedOutputStream pipedOut) {
+        try (InputStream rawIn = new ByteArrayInputStream(imageBytes)) {
+            // FileCryptoService.encrypt handles CipherOutputStream internally and ensures proper flush/close
+            fileCryptoService.encrypt(rawIn, pipedOut);
+        } catch (Exception ex) {
+            // Check if thread was interrupted during encryption
+            if (Thread.currentThread().isInterrupted()) {
+                log.debug("Encryption interrupted for item photo upload");
+                throw new RuntimeException("Encryption interrupted", ex);
+            }
+            log.error("Failed to encrypt image", ex);
+            throw new RuntimeException("Encryption failed", ex);
+        } finally {
+            // Ensure PipedOutputStream is closed to signal EOF to the reader
+            try {
+                pipedOut.close();
+            } catch (IOException e) {
+                log.debug("Error closing piped output stream", e);
+            }
+        }
+    }
+
+    /**
+     * Cleans up a failed upload by deleting the file from storage.
+     * Suppresses any exceptions during cleanup to avoid masking the original error.
+     *
+     * @param fileName The name of the file to delete
+     */
+    private void cleanupFailedUpload(String fileName) {
+        try {
+            storageService.delete(fileName);
+        } catch (Exception ignored) {
+            log.debug("Failed to cleanup file {} after upload failure", fileName);
+        }
     }
 
     /**
