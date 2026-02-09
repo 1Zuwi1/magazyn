@@ -178,29 +178,29 @@ public class RackReportService {
 
         if (existingAlert.isPresent()) {
             Alert alert = existingAlert.get();
-            
+
             // Check if new value is more severe and update if needed
             if (shouldUpdateAlert(alertType, alert.getActualValue(), actualValue)) {
-                log.debug("Updating alert {} with more severe actualValue: {} -> {}", 
+                log.debug("Updating alert {} with more severe actualValue: {} -> {}",
                         alert.getId(), alert.getActualValue(), actualValue);
-                
+
                 alert.setActualValue(actualValue);
                 alert.setTriggeringReport(report);
                 alertRepository.save(alert);
-                
+
                 // Update message with new value
                 String updatedMessage = buildAlertMessage(alertType, rack, thresholdValue, actualValue);
                 alert.setMessage(updatedMessage);
                 alertRepository.save(alert);
-                
+
                 // Mark all existing notifications as unread so users see the update
                 redistributeNotifications(alert);
             } else {
-                log.debug("Active alert of type {} already exists for rack {} with same or more severe value, skipping", 
+                log.debug("Active alert of type {} already exists for rack {} with same or more severe value, skipping",
                         alertType, rack.getId());
                 redistributeNotifications(alert);
             }
-            
+
             return false;
         }
 
@@ -241,21 +241,21 @@ public class RackReportService {
 
         if (existingAlert.isPresent()) {
             Alert alert = existingAlert.get();
-            
+
             // Check if new value is more severe and update if needed
             if (shouldUpdateAlert(alertType, alert.getActualValue(), actualValue)) {
-                log.debug("Updating item alert {} with more severe actualValue: {} -> {}", 
+                log.debug("Updating item alert {} with more severe actualValue: {} -> {}",
                         alert.getId(), alert.getActualValue(), actualValue);
-                
+
                 alert.setActualValue(actualValue);
                 alert.setTriggeringReport(report);
                 alertRepository.save(alert);
-                
+
                 // Update message with new value
                 String updatedMessage = buildAlertMessageForItem(alertType, rack, item, thresholdValue, actualValue);
                 alert.setMessage(updatedMessage);
                 alertRepository.save(alert);
-                
+
                 // Mark all existing notifications as unread so users see the update
                 redistributeNotifications(alert);
             } else {
@@ -263,7 +263,7 @@ public class RackReportService {
                         alertType, rack.getId(), item.getId());
                 redistributeNotifications(alert);
             }
-            
+
             return false;
         }
 
@@ -283,7 +283,7 @@ public class RackReportService {
                 .build();
 
         alert = alertRepository.save(alert);
-        log.info("Created new item alert: type={}, rack={}, item={}, alertId={}, message={}", 
+        log.info("Created new item alert: type={}, rack={}, item={}, alertId={}, message={}",
                 alertType, rack.getId(), item.getId(), alert.getId(), message);
 
         distributeNotifications(alert);
@@ -304,29 +304,29 @@ public class RackReportService {
 
         if (existingAlert.isPresent()) {
             Alert alert = existingAlert.get();
-            
+
             // Check if new value is more severe and update if needed
             if (shouldUpdateAlert(alertType, alert.getActualValue(), actualValue)) {
-                log.debug("Updating weight alert {} with more severe actualValue: {} -> {}", 
+                log.debug("Updating weight alert {} with more severe actualValue: {} -> {}",
                         alert.getId(), alert.getActualValue(), actualValue);
-                
+
                 alert.setActualValue(actualValue);
                 alert.setTriggeringReport(report);
                 alertRepository.save(alert);
-                
+
                 // Update message with new value
                 String updatedMessage = buildAlertMessageForWeight(alertType, rack, thresholdValue, actualValue);
                 alert.setMessage(updatedMessage);
                 alertRepository.save(alert);
-                
+
                 // Mark all existing notifications as unread so users see the update
                 redistributeNotifications(alert);
             } else {
-                log.debug("Active alert of type {} already exists for rack {} with same or more severe value, skipping", 
+                log.debug("Active alert of type {} already exists for rack {} with same or more severe value, skipping",
                         alertType, rack.getId());
                 redistributeNotifications(alert);
             }
-            
+
             return false;
         }
 
@@ -345,7 +345,7 @@ public class RackReportService {
                 .build();
 
         alert = alertRepository.save(alert);
-        log.info("Created new weight alert: type={}, rack={}, alertId={}, message={}", 
+        log.info("Created new weight alert: type={}, rack={}, alertId={}, message={}",
                 alertType, rack.getId(), alert.getId(), message);
 
         distributeNotifications(alert);
@@ -359,22 +359,22 @@ public class RackReportService {
      */
     private void redistributeNotifications(Alert alert) {
         log.info("Redistributing notifications for alert {} - marking all as unread", alert.getId());
-        
+
         Long warehouseId = alert.getWarehouse().getId();
-        
+
         // Get all active users assigned to this warehouse
         List<User> activeUsers = userRepository.findByWarehouseIdAndStatusOrAdmin(warehouseId, AccountStatus.ACTIVE);
-        
+
         // Get existing notifications for this alert
         List<UserNotification> existingNotifications = notificationRepository.findByAlertId(alert.getId());
         Set<Long> usersWithNotifications = existingNotifications.stream()
                 .map(n -> n.getUser().getId())
                 .collect(java.util.stream.Collectors.toSet());
-        
+
         Instant now = Instant.now();
         List<UserNotification> notificationsToUpdate = new ArrayList<>();
         List<UserNotification> newNotifications = new ArrayList<>();
-        
+
         // Mark existing notifications as unread
         existingNotifications.forEach(notification -> {
             if (notification.isRead()) {
@@ -383,7 +383,7 @@ public class RackReportService {
                 log.debug("Marking notification {} as unread for user {}", notification.getId(), notification.getUser().getId());
             }
         });
-        
+
         // Create notifications for users who don't have one yet (e.g., new users in warehouse)
         activeUsers.stream()
                 .filter(user -> !usersWithNotifications.contains(user.getId()))
@@ -397,7 +397,7 @@ public class RackReportService {
                     newNotifications.add(notification);
                     log.debug("Creating new notification for user {} on alert {}", user.getId(), alert.getId());
                 });
-        
+
         // Save all changes
         if (!notificationsToUpdate.isEmpty()) {
             notificationRepository.saveAll(notificationsToUpdate);
@@ -405,7 +405,7 @@ public class RackReportService {
         if (!newNotifications.isEmpty()) {
             notificationRepository.saveAll(newNotifications);
         }
-        
+
         log.info("Redistributed notifications for alert {}: marked {} as unread, created {} new notifications",
                 alert.getId(), notificationsToUpdate.size(), newNotifications.size());
     }
@@ -440,7 +440,7 @@ public class RackReportService {
                         .createdAt(now)
                         .build())
                 .toList();
-        log.info( "Prepared {} new notifications for alert {} after filtering existing ones",
+        log.info("Prepared {} new notifications for alert {} after filtering existing ones",
                 newNotifications.size(), alert.getId());
 
         // Batch insert: save all notifications in one operation
@@ -460,18 +460,15 @@ public class RackReportService {
     private boolean shouldUpdateAlert(AlertType alertType, float existingValue, float newValue) {
         return switch (alertType) {
             // For these alerts, higher values are more severe
-            case WEIGHT_EXCEEDED, TEMPERATURE_TOO_HIGH, ITEM_TEMPERATURE_TOO_HIGH -> 
-                newValue > existingValue;
-            
+            case WEIGHT_EXCEEDED, TEMPERATURE_TOO_HIGH, ITEM_TEMPERATURE_TOO_HIGH -> newValue > existingValue;
+
             // For these alerts, lower values are more severe
-            case TEMPERATURE_TOO_LOW, ITEM_TEMPERATURE_TOO_LOW -> 
-                newValue < existingValue;
-            
+            case TEMPERATURE_TOO_LOW, ITEM_TEMPERATURE_TOO_LOW -> newValue < existingValue;
+
             // For unauthorized outbound, the difference from threshold is what matters
             // If the new value is further from threshold (more negative difference), it's more severe
-            case UNAUTHORIZED_OUTBOUND -> 
-                newValue < existingValue;
-            
+            case UNAUTHORIZED_OUTBOUND -> newValue < existingValue;
+
             // For system alerts, no update logic
             default -> false;
         };
