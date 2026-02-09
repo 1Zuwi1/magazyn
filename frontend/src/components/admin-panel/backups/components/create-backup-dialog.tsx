@@ -24,8 +24,6 @@ import type { AvailableWarehouse } from "../types"
 
 const ALL_WAREHOUSES_ID = "__all__"
 
-
-
 interface CreateBackupDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void

@@ -93,4 +93,3 @@ export const MOCK_SCHEDULES: BackupSchedule[] = [
     nextBackupAt: null,
   },
 ]
-

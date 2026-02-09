@@ -14,9 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type {
+  AvailableWarehouse,
   BackupSchedule,
   ScheduleFrequency,
-  AvailableWarehouse  
 } from "../types"
 import { FREQUENCY_CONFIG } from "../utils"
 

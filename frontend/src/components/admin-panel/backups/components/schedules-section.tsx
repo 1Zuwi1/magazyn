@@ -23,7 +23,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { formatDateTime } from "../../lib/utils"
-import { type BackupSchedule } from "../types"
+import type { BackupSchedule } from "../types"
 import { getFrequencyLabel } from "../utils"
 
 interface SchedulesSectionProps {

@@ -5,9 +5,6 @@ import {
   DatabaseRestoreIcon,
   EyeIcon,
   MoreHorizontalIcon,
-  Search01Icon,
-  FilterIcon,
-  Cancel01Icon,
   Refresh01Icon,
   Trash,
 } from "@hugeicons/core-free-icons"
@@ -46,17 +43,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
-import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { formatDateTime } from "../../lib/utils"
 import type { Backup } from "../types"
-import { BACKUP_STATUS_CONFIG } from "../utils"
 import { BackupStatusBadge } from "./backup-status-badge"
 
 interface BackupsTableProps {
@@ -223,7 +211,7 @@ function getRowClassName(row: Row<Backup>) {
   if (status === "RESTORING") {
     return "bg-primary/[0.03] dark:bg-primary/[0.06]"
   }
-  if(status === "FAILED") {
+  if (status === "FAILED") {
     return "bg-destructive/[0.03] dark:bg-destructive/[0.06]"
   }
   return ""
@@ -242,7 +230,10 @@ export function BackupsTable({
   ])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
-  const columns = useMemo(() => createColumns(onView, onRestore, onRetry, onDelete), [onView, onRestore, onRetry, onDelete])
+  const columns = useMemo(
+    () => createColumns(onView, onRestore, onRetry, onDelete),
+    [onView, onRestore, onRetry, onDelete]
+  )
 
   const table = useReactTable({
     data: backups,
@@ -267,8 +258,8 @@ export function BackupsTable({
   const startItem = totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0
   const endItem = Math.min(currentPage * pageSize, totalItems)
 
-return (
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+  return (
+    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -394,6 +385,6 @@ return (
           </div>
         </div>
       )}
-      </div>
+    </div>
   )
 }

@@ -8,7 +8,7 @@ import {
   DatabaseIcon,
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
@@ -22,8 +22,8 @@ import { BackupsTable } from "./components/backups-table"
 import { CreateBackupDialog } from "./components/create-backup-dialog"
 import { ScheduleDialog } from "./components/schedule-dialog"
 import { SchedulesSection } from "./components/schedules-section"
+import { StatBadge, type StatBadgeConfig } from "./components/stat-badge"
 import { MOCK_BACKUPS, MOCK_SCHEDULES } from "./mock-data"
-import { StatBadge, StatBadgeConfig } from "./components/stat-badge"
 import type { Backup, BackupSchedule, ScheduleFrequency } from "./types"
 import { nextBackupDate } from "./utils"
 

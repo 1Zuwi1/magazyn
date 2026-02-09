@@ -1,7 +1,7 @@
 "use client"
 
 import { Badge } from "@/components/ui/badge"
-import { type BackupStatus } from "../types"
+import type { BackupStatus } from "../types"
 import { getBackupStatusConfig } from "../utils"
 
 interface BackupStatusBadgeProps {

@@ -1,5 +1,5 @@
 import { addDays, addMonths, addWeeks } from "date-fns"
-import { ScheduleFrequency, BackupStatus } from "./types"
+import type { BackupStatus, ScheduleFrequency } from "./types"
 export function nextBackupDate(
   frequency: ScheduleFrequency,
   customDays: number | null,
@@ -20,7 +20,6 @@ export function nextBackupDate(
   return nextDate[frequency].toISOString()
 }
 
-
 export const FREQUENCY_CONFIG: Record<ScheduleFrequency, { label: string }> = {
   DAILY: { label: "Codziennie" },
   WEEKLY: { label: "Co tydzień" },
@@ -36,7 +35,6 @@ export const getFrequencyLabel = (
     ? `Co ${customDays ?? 1} dni`
     : FREQUENCY_CONFIG[frequency].label
 
-
 export const BACKUP_STATUS_CONFIG: Record<
   BackupStatus,
   {
@@ -50,4 +48,5 @@ export const BACKUP_STATUS_CONFIG: Record<
   RESTORING: { label: "Przywracanie", variant: "secondary" },
 }
 
-export const getBackupStatusConfig = (status: BackupStatus) => BACKUP_STATUS_CONFIG[status]
+export const getBackupStatusConfig = (status: BackupStatus) =>
+  BACKUP_STATUS_CONFIG[status]
