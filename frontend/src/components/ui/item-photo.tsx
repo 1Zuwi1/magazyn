@@ -3,9 +3,17 @@
 import { Image01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 
 const DEFAULT_IMAGE_SIZE = 100
+const PREVIEW_IMAGE_SIZE = 960
 
 interface ItemPhotoProps {
   src?: string | null
@@ -15,6 +23,7 @@ interface ItemPhotoProps {
   iconClassName?: string
   width?: number
   height?: number
+  zoomable?: boolean
 }
 
 export function ItemPhoto({
@@ -25,15 +34,22 @@ export function ItemPhoto({
   iconClassName,
   width = DEFAULT_IMAGE_SIZE,
   height = DEFAULT_IMAGE_SIZE,
+  zoomable = false,
 }: ItemPhotoProps) {
-  const parsedSrc = `${process.env.NEXT_PUBLIC_API_URL ?? ""}${src ?? ""}`
+  const normalizedSrc = src?.trim()
+  let parsedSrc: string | null = null
+  if (normalizedSrc) {
+    if (normalizedSrc.startsWith("http")) {
+      parsedSrc = normalizedSrc
+    } else {
+      parsedSrc = `${process.env.NEXT_PUBLIC_API_URL ?? ""}${normalizedSrc}`
+    }
+  }
   const [failedImageSource, setFailedImageSource] = useState<string | null>(
     null
   )
-  const hasLoadingError =
-    parsedSrc !== undefined &&
-    parsedSrc !== null &&
-    failedImageSource === parsedSrc
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const hasLoadingError = parsedSrc !== null && failedImageSource === parsedSrc
 
   if (!parsedSrc || hasLoadingError) {
     return (
@@ -51,7 +67,7 @@ export function ItemPhoto({
     )
   }
 
-  return (
+  const thumbnail = (
     <div
       className={cn("overflow-hidden rounded-lg bg-muted", containerClassName)}
     >
@@ -66,5 +82,42 @@ export function ItemPhoto({
         width={width}
       />
     </div>
+  )
+
+  if (!zoomable) {
+    return thumbnail
+  }
+
+  return (
+    <>
+      <button
+        aria-label={`Powiększ zdjęcie: ${alt}`}
+        className="cursor-zoom-in rounded-lg transition-opacity hover:opacity-90"
+        onClick={() => setPreviewOpen(true)}
+        type="button"
+      >
+        {thumbnail}
+      </button>
+      <Dialog onOpenChange={setPreviewOpen} open={previewOpen}>
+        <DialogContent className="max-w-[calc(100%-1rem)] p-3 sm:max-w-4xl sm:p-4">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Powiększone zdjęcie produktu</DialogTitle>
+            <DialogDescription>{alt}</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[80vh] overflow-hidden rounded-lg bg-muted">
+            {/* biome-ignore lint/performance/noImgElement: img needs authorization */}
+            {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: onError is used only to swap to visual fallback for broken image URLs */}
+            <img
+              alt={alt}
+              className="h-auto max-h-[80vh] w-full object-contain"
+              height={PREVIEW_IMAGE_SIZE}
+              onError={() => setFailedImageSource(parsedSrc)}
+              src={parsedSrc}
+              width={PREVIEW_IMAGE_SIZE}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

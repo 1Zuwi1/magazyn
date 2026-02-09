@@ -82,6 +82,7 @@ function createColumns(
               alt={item.name}
               containerClassName="h-10 w-10 shrink-0 rounded"
               src={`/api/items/${item.id}/photo`}
+              zoomable
             />
             <div>
               <div className="font-medium">{item.name}</div>

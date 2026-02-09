@@ -29,6 +29,7 @@ import {
   FilterResults,
   SearchInput,
 } from "@/components/ui/filter-bar"
+import { ItemPhoto } from "@/components/ui/item-photo"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -88,9 +89,8 @@ function ItemsTableSkeleton() {
                 {/* Name */}
                 <TableCell className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div>
-                      <Skeleton className="h-4 w-32" />
-                    </div>
+                    <Skeleton className="h-10 w-10 rounded" />
+                    <Skeleton className="h-4 w-32" />
                   </div>
                 </TableCell>
                 {/* Category */}
@@ -133,6 +133,20 @@ const itemsColumns: ColumnDef<Item>[] = [
     header: ({ column }) => (
       <SortableHeader column={column}>Nazwa</SortableHeader>
     ),
+    cell: ({ row }) => {
+      const item = row.original
+      return (
+        <div className="flex items-center gap-3">
+          <ItemPhoto
+            alt={item.name}
+            containerClassName="h-10 w-10 shrink-0 rounded"
+            src={`/api/items/${item.id}/photo`}
+            zoomable
+          />
+          <span className="font-medium">{item.name}</span>
+        </div>
+      )
+    },
     enableSorting: true,
   },
   {
