@@ -9,7 +9,6 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
-import { addDays, addMonths, addWeeks } from "date-fns"
 import { useState } from "react"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
@@ -23,51 +22,14 @@ import { CreateBackupDialog } from "./components/create-backup-dialog"
 import { ScheduleDialog } from "./components/schedule-dialog"
 import { SchedulesSection } from "./components/schedules-section"
 import { MOCK_BACKUPS, MOCK_SCHEDULES } from "./mock-data"
+import { StatBadge, StatBadgeConfig } from "./components/stat-badge"
 import type { Backup, BackupSchedule, ScheduleFrequency } from "./types"
+import { nextBackupDate } from "./utils"
 
 const AVAILABLE_WAREHOUSES = MOCK_WAREHOUSES.map((w) => ({
   id: w.id,
   name: w.name,
 }))
-
-interface StatBadgeConfig {
-  icon: IconSvgElement
-  count: number
-  label: string
-  className?: string
-}
-
-function StatBadge({ icon, count, label, className = "" }: StatBadgeConfig) {
-  return (
-    <div
-      className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 backdrop-blur-sm ${className}`}
-    >
-      <HugeiconsIcon className="size-3.5" icon={icon} />
-      <span className="font-mono font-semibold">{count}</span>
-      <span className="text-xs">{label}</span>
-    </div>
-  )
-}
-
-function nextBackupDate(
-  frequency: ScheduleFrequency,
-  customDays: number | null,
-  enabled: boolean
-): string | null {
-  if (!enabled) {
-    return null
-  }
-
-  const now = new Date()
-  const nextDate: Record<ScheduleFrequency, Date> = {
-    DAILY: addDays(now, 1),
-    WEEKLY: addWeeks(now, 1),
-    MONTHLY: addMonths(now, 1),
-    CUSTOM: addDays(now, Math.max(1, customDays ?? 1)),
-  }
-
-  return nextDate[frequency].toISOString()
-}
 
 export function BackupsMain() {
   const [backups, setBackups] = useState<Backup[]>(MOCK_BACKUPS)
