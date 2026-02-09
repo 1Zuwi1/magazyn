@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.sql.Timestamp;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,7 +32,7 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long>, J
      * Batch count assortments by warehouse IDs to avoid N+1 queries
      */
     @Query("SELECT a.rack.warehouse.id, COUNT(a) FROM Assortment a WHERE a.rack.warehouse.id IN :warehouseIds GROUP BY a.rack.warehouse.id")
-    Map<Long, Long> countByRack_WarehouseIdIn(@Param("warehouseIds") Collection<Long> warehouseIds);
+    Map<Long, Long> countByRack_WarehouseIdIn(@Param("warehouseIds") Iterable<Long> warehouseIds);
 
     /**
      * Znajdź assortmenty dla danego produktu w kolejności FIFO (najstarsze najpierw).

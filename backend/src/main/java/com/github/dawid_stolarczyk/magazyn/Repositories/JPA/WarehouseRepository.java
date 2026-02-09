@@ -6,7 +6,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Collection;
 import java.util.List;
 
 public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
@@ -21,6 +20,6 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
     Page<Warehouse> findByNameContaining(String name, Pageable pageable);
 
     @EntityGraph(attributePaths = {"racks"})
-    List<Warehouse> findAllWithRacksByIdIn(Collection<Long> ids);
+    List<Warehouse> findAllWithRacksByIdIn(Iterable<Long> ids);
 }
 
