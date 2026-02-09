@@ -441,9 +441,14 @@ function useRackSelectionFromLink({
   const [selectedRackIdFromLink, setSelectedRackIdFromLink] = useState<
     number | null
   >(requestedRackIdFromSearchParams)
-  const { data: rackFromLink, isPending: isRackFromLinkPending } = useRacks({
-    rackId: selectedRackIdFromLink ?? -1,
-  })
+  const { data: rackFromLink, isPending: isRackFromLinkPending } = useRacks(
+    {
+      rackId: selectedRackIdFromLink as number,
+    },
+    {
+      enabled: selectedRackIdFromLink !== null,
+    }
+  )
 
   useEffect(() => {
     setSelectedRackIdFromLink(requestedRackIdFromSearchParams)

@@ -130,9 +130,6 @@ export default function useItems(
     queryKey: [...ITEMS_QUERY_KEY, params],
     queryFn: async () => {
       if (params && "itemId" in params) {
-        if (params.itemId === -1) {
-          return null
-        }
         return await apiFetch(
           `/api/items/${params.itemId}`,
           ItemDetailsSchema,
@@ -143,9 +140,6 @@ export default function useItems(
       }
 
       if (params && "warehouseId" in params) {
-        if (params.warehouseId === -1) {
-          return null
-        }
         return await apiFetch(
           `/api/warehouses/${params.warehouseId}/items`,
           ItemsSchema,

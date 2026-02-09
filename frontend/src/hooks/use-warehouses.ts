@@ -48,9 +48,6 @@ export default function useWarehouses(
     queryKey: [...WAREHOUSES_QUERY_KEY, params],
     queryFn: async () => {
       if (params && "warehouseId" in params) {
-        if (params.warehouseId === -1) {
-          return null
-        }
         return await apiFetch(
           `/api/warehouses/${params.warehouseId}`,
           WarehouseDetailsSchema

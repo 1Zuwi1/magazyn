@@ -1,5 +1,4 @@
 import {
-  type UseQueryOptions,
   type UseQueryResult,
   useInfiniteQuery,
   useQueries,
@@ -18,6 +17,7 @@ import {
   RackLookupSchema,
   RacksSchema,
 } from "@/lib/schemas"
+import type { SafeQueryOptions } from "./helper"
 import { useApiMutation } from "./use-api-mutation"
 import { useApiQuery } from "./use-api-query"
 
@@ -65,35 +65,32 @@ export function useMultipleRacks({
 }
 
 export default function useRacks(
-  params?: RacksListParams
+  params?: RacksListParams,
+  options?: SafeQueryOptions<RacksList>
 ): UseQueryResult<RacksList, FetchError>
 
 export default function useRacks(
-  params: RacksDetailsParams
+  params: RacksDetailsParams,
+  options?: SafeQueryOptions<RackDetails>
 ): UseQueryResult<RackDetails, FetchError>
 
 export default function useRacks(
-  params: RacksByWarehouseParams
+  params: RacksByWarehouseParams,
+  options?: SafeQueryOptions<RacksList>
 ): UseQueryResult<RacksList, FetchError>
 
 export default function useRacks(
   params?: RacksListParams | RacksDetailsParams | RacksByWarehouseParams,
-  options?: UseQueryOptions
-) {
-  return useApiQuery({
+  options?: SafeQueryOptions<RacksList> | SafeQueryOptions<RackDetails>
+): UseQueryResult<RacksList | RackDetails, FetchError> {
+  const query = useApiQuery({
     queryKey: [...Racks_QUERY_KEY, params],
     queryFn: async () => {
       if (params && "rackId" in params) {
-        if (params.rackId === -1) {
-          return null
-        }
         return await apiFetch(`/api/racks/${params.rackId}`, RackDetailsSchema)
       }
 
       if (params && "warehouseId" in params) {
-        if (params.warehouseId === -1) {
-          return null
-        }
         return await apiFetch(
           `/api/warehouses/${params.warehouseId}/racks`,
           RacksSchema,
@@ -107,8 +104,10 @@ export default function useRacks(
         queryParams: params,
       })
     },
-    ...options,
+    ...(options as SafeQueryOptions<RacksList | RackDetails> | undefined),
   })
+
+  return query as UseQueryResult<RacksList | RackDetails, FetchError>
 }
 
 export function useCreateRack() {
