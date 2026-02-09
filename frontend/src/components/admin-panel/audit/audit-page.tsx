@@ -16,6 +16,7 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
+import { ErrorEmptyState, FilterEmptyState } from "@/components/ui/empty-state"
 import PaginationFull from "@/components/ui/pagination-component"
 import {
   Table,
@@ -127,17 +128,6 @@ function EmptyState({ message }: { message: string }) {
   )
 }
 
-function ErrorState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <p className="font-medium">Nie udalo sie pobrac danych</p>
-      <p className="mt-1 text-muted-foreground text-sm">
-        Sprobuj ponownie za chwile.
-      </p>
-    </div>
-  )
-}
-
 function InboundOperationsTab() {
   const [page, setPage] = useState(1)
   const [startDate, setStartDate] = useState("")
@@ -209,14 +199,18 @@ function InboundOperationsTab() {
             {query.isError && (
               <TableRow>
                 <TableCell colSpan={8}>
-                  <ErrorState />
+                  <ErrorEmptyState
+                    onRetry={() => {
+                      query.refetch()
+                    }}
+                  />
                 </TableCell>
               </TableRow>
             )}
             {!(query.isPending || query.isError) && operations.length === 0 && (
               <TableRow>
                 <TableCell colSpan={8}>
-                  <EmptyState message="Brak operacji przyjecia" />
+                  <FilterEmptyState onClear={handleClearDates} />
                 </TableCell>
               </TableRow>
             )}
@@ -350,7 +344,11 @@ function OutboundOperationsTab() {
             {query.isError && (
               <TableRow>
                 <TableCell colSpan={9}>
-                  <ErrorState />
+                  <ErrorEmptyState
+                    onRetry={() => {
+                      query.refetch()
+                    }}
+                  />
                 </TableCell>
               </TableRow>
             )}

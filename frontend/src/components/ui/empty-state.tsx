@@ -2,6 +2,7 @@
 
 import {
   Add01Icon,
+  Delete02Icon,
   FilterIcon,
   InboxIcon,
   PackageIcon,
@@ -276,6 +277,7 @@ export function FilterEmptyState({
               label: "Wyczyść filtry",
               onClick: onClear,
               variant: "outline",
+              icon: Delete02Icon,
             }
           : undefined
       }

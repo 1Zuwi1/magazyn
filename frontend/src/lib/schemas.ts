@@ -1001,8 +1001,8 @@ export type ScannedAssortment = z.infer<
 >
 
 const OutboundPickSlotSchema = z.object({
-  assortmentId: z.number().int().nonnegative().optional(),
-  assortmentCode: z.string().optional(),
+  assortmentId: z.number().int().nonnegative(),
+  assortmentCode: z.string(),
   rackId: z.number().int().nonnegative(),
   rackMarker: z.string(),
   positionX: z.number().int().nonnegative(),
@@ -1129,8 +1129,7 @@ const InboudOperationSchema = z.object({
   positionX: z.number().int().nonnegative(),
   positionY: z.number().int().nonnegative(),
   quantity: z.number().int().nonnegative(),
-  assortmentId: z.number().int().nonnegative().optional(),
-  assortmentCode: z.string().optional(),
+  assortmentCode: z.string(),
 })
 export const AuditInboudOperationsSchema = createApiSchema({
   GET: {
