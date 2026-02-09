@@ -147,11 +147,7 @@ public class ItemService {
         Item item = new Item();
         updateItemFromRequest(item, request);
         item.setCode(barcodeService.generateUniqueItemCode());
-
-        String qrCodeToUse = determineQrCode(request.getQrCode(), item.getCode());
-        if (qrCodeToUse != null) {
-            item.setQrCode(qrCodeToUse);
-        }
+        item.setQrCode(determineQrCode(request.getQrCode(), item.getCode()));
 
         return mapToDto(itemRepository.save(item));
     }
@@ -170,42 +166,37 @@ public class ItemService {
             item.setCode(barcodeService.generateUniqueItemCode());
         }
 
-        String qrCodeToUse = determineQrCode(dto.getQrCode(), item.getCode());
-        if (qrCodeToUse != null) {
-            item.setQrCode(qrCodeToUse);
-        }
+        item.setQrCode(determineQrCode(dto.getQrCode(), item.getCode()));
 
         mapToDto(itemRepository.save(item));
     }
 
     /**
-     * Determines the QR code to use for an item based on user input and existing data.
+     * Generates the QR code for an item based on user input or defaults to QR-{barcode}.
      * Logic:
      * 1. If user provides QR code and it's unique → use it
      * 2. If user provides QR code but it exists → generate new one from barcode
      * 3. If user provides barcode format (14 or 16 digits) → generate QR-{barcode}
-     * 4. Otherwise → don't set QR code
+     * 4. If no QR code provided → generate QR-{barcode} for compatibility
      */
     private String determineQrCode(String providedQrCode, String itemBarcode) {
         if (providedQrCode == null || providedQrCode.isBlank()) {
-            return null;
+            return generateDefaultQrCode(itemBarcode);
         }
 
         // Case 1: User provides QR code format (QR-XXXXX)
         if (providedQrCode.startsWith("QR-")) {
             if (barcodeService.validateQrCode(providedQrCode)) {
                 if (!itemRepository.existsByQrCode(providedQrCode)) {
-                    // Use provided QR code if unique
                     log.info("Using provided QR code: {}", providedQrCode);
                     return providedQrCode;
                 } else {
-                    // Generate new QR code from barcode if provided one exists
-                    String newQrCode = barcodeService.generateQrCodeFromBarcode(itemBarcode);
+                    String newQrCode = generateDefaultQrCode(itemBarcode);
                     log.info("QR code {} already exists, generating new: {}", providedQrCode, newQrCode);
                     return newQrCode;
                 }
             }
-            return null;
+            return generateDefaultQrCode(itemBarcode);
         }
 
         // Case 2: User provides barcode format (14 or 16 digits)
@@ -215,9 +206,13 @@ public class ItemService {
             return newQrCode;
         }
 
-        // Case 3: Invalid QR code format
-        log.warn("Invalid QR code format provided: {}", providedQrCode);
-        return null;
+        // Case 3: Invalid QR code format - generate default
+        log.warn("Invalid QR code format provided: {}, using default QR-{{}}", providedQrCode);
+        return generateDefaultQrCode(itemBarcode);
+    }
+
+    private String generateDefaultQrCode(String itemBarcode) {
+        return barcodeService.generateQrCodeFromBarcode(itemBarcode);
     }
 
     @Transactional
@@ -365,10 +360,7 @@ public class ItemService {
         item.setName(dto.getName());
 
         if (dto.getQrCode() != null && !dto.getQrCode().isBlank()) {
-            String qrCodeToUse = determineQrCode(dto.getQrCode(), item.getCode());
-            if (qrCodeToUse != null) {
-                item.setQrCode(qrCodeToUse);
-            }
+            item.setQrCode(determineQrCode(dto.getQrCode(), item.getCode()));
         }
     }
 
@@ -385,10 +377,7 @@ public class ItemService {
         item.setName(request.getName());
 
         if (request.getQrCode() != null && !request.getQrCode().isBlank()) {
-            String qrCodeToUse = determineQrCode(request.getQrCode(), item.getCode());
-            if (qrCodeToUse != null) {
-                item.setQrCode(qrCodeToUse);
-            }
+            item.setQrCode(determineQrCode(request.getQrCode(), item.getCode()));
         }
     }
 
@@ -405,10 +394,7 @@ public class ItemService {
         item.setName(request.getName());
 
         if (request.getQrCode() != null && !request.getQrCode().isBlank()) {
-            String qrCodeToUse = determineQrCode(request.getQrCode(), item.getCode());
-            if (qrCodeToUse != null) {
-                item.setQrCode(qrCodeToUse);
-            }
+            item.setQrCode(determineQrCode(request.getQrCode(), item.getCode()));
         }
     }
 

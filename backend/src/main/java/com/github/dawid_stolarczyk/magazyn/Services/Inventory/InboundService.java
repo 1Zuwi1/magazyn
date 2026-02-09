@@ -239,6 +239,7 @@ public class InboundService {
         }
 
         barcodeService.ensureItemCode(item);
+        barcodeService.ensureItemQrCode(item);
 
         for (Map.Entry<Long, List<PlacementSlotRequest>> entry : placementsByRack.entrySet()) {
             Rack rack = rackRepository.findById(entry.getKey())

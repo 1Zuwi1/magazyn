@@ -160,6 +160,7 @@ public class AssortmentService {
         }
 
         barcodeService.ensureItemCode(item);
+        barcodeService.ensureItemQrCode(item);
 
         // Retry logic for race condition in code (barcode) generation
         int maxRetries = 3;

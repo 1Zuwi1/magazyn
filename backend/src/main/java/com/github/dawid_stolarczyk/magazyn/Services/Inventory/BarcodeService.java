@@ -56,6 +56,16 @@ public class BarcodeService {
         itemRepository.save(item);
     }
 
+    public void ensureItemQrCode(Item item) {
+        if (item.getQrCode() != null && !item.getQrCode().isBlank()) {
+            return;
+        }
+
+        String qrCode = generateQrCodeFromBarcode(item.getCode());
+        item.setQrCode(qrCode);
+        itemRepository.save(item);
+    }
+
     public boolean validateQrCode(String qrCode) {
         if (qrCode == null || qrCode.isBlank()) {
             return true;
