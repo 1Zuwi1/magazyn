@@ -18,6 +18,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUserHandle(String userHandle);
 
     Page<User> findByIdNot(Long id, Pageable pageable);
+
     boolean existsByPhone(String phone);
 
     /**

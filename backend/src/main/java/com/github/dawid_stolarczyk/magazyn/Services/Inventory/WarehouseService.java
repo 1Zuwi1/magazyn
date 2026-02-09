@@ -66,9 +66,9 @@ public class WarehouseService {
         int startIndex = pageNumber * pageSize;
         List<WarehouseDto> pagedContent = (int) totalElements > startIndex
                 ? warehouseDtos.stream()
-                    .skip(startIndex)
-                    .limit(pageSize)
-                    .toList()
+                .skip(startIndex)
+                .limit(pageSize)
+                .toList()
                 : List.of();
 
         // Create page with correct pagination metadata

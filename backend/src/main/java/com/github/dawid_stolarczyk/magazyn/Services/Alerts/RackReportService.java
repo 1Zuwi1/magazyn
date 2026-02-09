@@ -12,7 +12,6 @@ import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimi
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -337,7 +336,7 @@ public class RackReportService {
             case EMBEDDING_GENERATION_COMPLETED, EMBEDDING_GENERATION_FAILED,
                  ASSORTMENT_EXPIRED, ASSORTMENT_CLOSE_TO_EXPIRY,
                  BACKUP_COMPLETED, BACKUP_FAILED, ADMIN_MESSAGE ->
-                     throw new IllegalArgumentException("System alert types should not be used in rack reports");
+                    throw new IllegalArgumentException("System alert types should not be used in rack reports");
         };
     }
 

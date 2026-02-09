@@ -6,7 +6,9 @@ import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.concurrent.*;
 
 /**

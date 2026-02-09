@@ -44,10 +44,10 @@ public class AlertController {
                     - `warehouseId` - filter by warehouse
                     - `rackId` - filter by specific rack
                     - `activeOnly=true` - only unresolved alerts (OPEN status)
-
+                    
                     All filters are optional and can be combined.
                     Results ordered by creation date (newest first).
-
+                    
                     Response includes `summary` field with alert statistics (counts by status).
                     """)
     @ApiResponses(value = {

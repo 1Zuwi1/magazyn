@@ -2,7 +2,10 @@ package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
-import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.Assortment;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.OutboundOperation;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.*;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
@@ -15,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -186,7 +188,7 @@ public class OutboundService {
                 .createdAt(assortment.getCreatedAt() != null ? assortment.getCreatedAt().toInstant().toString() : null)
                 .expiresAt(assortment.getExpiresAt() != null ? assortment.getExpiresAt().toInstant().toString() : null)
                 .build();
-        }
+    }
 
     private OutboundOperationDto mapToOperationDto(OutboundOperation operation) {
         OutboundOperationDto dto = new OutboundOperationDto();

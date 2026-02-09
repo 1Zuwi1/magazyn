@@ -63,7 +63,7 @@ public class RackReportController {
                     - `rackId` - filter by specific rack
                     - `warehouseId` - filter by warehouse
                     - `withAlerts=true` - only reports that triggered alerts
-
+                    
                     All filters are optional and can be combined.
                     Results ordered by creation date (newest first).
                     """)

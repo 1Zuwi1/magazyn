@@ -39,7 +39,7 @@ public class UserNotificationController {
                     - `read=false` - only unread notifications
                     - `read` not provided or null - all notifications (read + unread)
                     - `alertId` - notification for specific alert
-
+                    
                     Results ordered by creation date (newest first).
                     """)
     @ApiResponses(value = {

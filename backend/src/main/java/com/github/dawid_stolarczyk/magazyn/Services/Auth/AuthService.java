@@ -33,7 +33,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
@@ -237,12 +236,11 @@ public class AuthService {
         String baseUrl;
         if (webAppUrl != null && !webAppUrl.isEmpty()) {
             baseUrl = webAppUrl + "/verify-mail";
-        }
-        else {
-                baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
-                        .replacePath(null)
-                        .path("/verify-mail")
-                        .toUriString();
+        } else {
+            baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
+                    .replacePath(null)
+                    .path("/verify-mail")
+                    .toUriString();
         }
         emailService.sendVerificationEmail(user.getEmail(), baseUrl + "?token=" + emailVerificationToken);
     }

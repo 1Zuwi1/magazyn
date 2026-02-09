@@ -1,9 +1,10 @@
 package com.github.dawid_stolarczyk.magazyn.Utils;
 
-import java.text.Normalizer;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.text.Normalizer;
 
 @Component
 public class StringUtils {

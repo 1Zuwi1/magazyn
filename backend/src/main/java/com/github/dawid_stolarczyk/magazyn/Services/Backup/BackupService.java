@@ -75,25 +75,30 @@ public class BackupService {
     private record RackBackupData(Long originalId, String marker, String comment, int sizeX, int sizeY,
                                   float maxTemp, float minTemp, float maxWeight,
                                   float maxSizeX, float maxSizeY, float maxSizeZ,
-                                  boolean acceptsDangerous) {}
+                                  boolean acceptsDangerous) {
+    }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     private record ItemBackupData(Long originalId, String name, String code, String photoUrl, String qrCode,
                                   float minTemp, float maxTemp, float weight,
                                   float sizeX, float sizeY, float sizeZ,
-                                  String comment, Long expireAfterDays, boolean isDangerous) {}
+                                  String comment, Long expireAfterDays, boolean isDangerous) {
+    }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     private record AssortmentBackupData(Long originalId, String code, Long originalItemId, Long originalRackId,
                                         Timestamp createdAt, Timestamp expiresAt,
-                                        Integer positionX, Integer positionY) {}
+                                        Integer positionX, Integer positionY) {
+    }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     private record BackupManifest(Long backupId, Long warehouseId, String warehouseName, Instant createdAt,
-                                  int schemaVersion, Map<String, ResourceInfo> resources) {}
+                                  int schemaVersion, Map<String, ResourceInfo> resources) {
+    }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private record ResourceInfo(int count) {}
+    private record ResourceInfo(int count) {
+    }
 
     // --- Backup operations ---
 
@@ -299,15 +304,18 @@ public class BackupService {
             List<AssortmentBackupData> assortmentDataList = null;
 
             if (resourceKeys.contains("racks")) {
-                rackDataList = reader.downloadAndRead(basePath, "racks.enc", new TypeReference<List<RackBackupData>>() {});
+                rackDataList = reader.downloadAndRead(basePath, "racks.enc", new TypeReference<List<RackBackupData>>() {
+                });
             }
 
             if (resourceKeys.contains("items")) {
-                itemDataList = reader.downloadAndRead(basePath, "items.enc", new TypeReference<List<ItemBackupData>>() {});
+                itemDataList = reader.downloadAndRead(basePath, "items.enc", new TypeReference<List<ItemBackupData>>() {
+                });
             }
 
             if (resourceKeys.contains("assortments")) {
-                assortmentDataList = reader.downloadAndRead(basePath, "assortments.enc", new TypeReference<List<AssortmentBackupData>>() {});
+                assortmentDataList = reader.downloadAndRead(basePath, "assortments.enc", new TypeReference<List<AssortmentBackupData>>() {
+                });
             }
 
             // Phase 3 — Atomic DB restore

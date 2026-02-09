@@ -11,7 +11,10 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
     Page<Warehouse> findAll(Pageable pageable);
 
     List<Warehouse> findByNameContainingIgnoreCase(String name);
+
     Page<Warehouse> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
     List<Warehouse> findByNameContaining(String name);
+
     Page<Warehouse> findByNameContaining(String name, Pageable pageable);
 }

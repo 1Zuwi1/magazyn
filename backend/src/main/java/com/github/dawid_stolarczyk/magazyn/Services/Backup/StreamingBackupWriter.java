@@ -5,7 +5,9 @@ import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.concurrent.*;
 
 /**
@@ -23,6 +25,7 @@ public class StreamingBackupWriter {
 
     /**
      * Streams data to S3: Object → JSON → Encrypt → Upload
+     *
      * @return total bytes uploaded
      */
     public long writeAndUpload(String basePath, String fileName, Object data) throws Exception {

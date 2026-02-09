@@ -32,8 +32,6 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
