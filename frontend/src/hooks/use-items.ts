@@ -1,5 +1,4 @@
 import {
-  type UseQueryOptions,
   type UseQueryResult,
   useInfiniteQuery,
   useQueries,
@@ -20,6 +19,7 @@ import {
   UpdateItemSchema,
   UploadItemPhotoSchema,
 } from "@/lib/schemas"
+import type { SafeInfiniteQueryOptions, SafeQueryOptions } from "./helper"
 import { useApiMutation } from "./use-api-mutation"
 import { useApiQuery } from "./use-api-query"
 
@@ -73,10 +73,13 @@ export function useMultipleItems({
   })
 }
 
-export function useInfiniteItems({
-  search = "",
-  staleTime = INFINITE_ITEMS_STALE_TIME_MS,
-}: InfiniteItemsParams = {}) {
+export function useInfiniteItems(
+  {
+    search = "",
+    staleTime = INFINITE_ITEMS_STALE_TIME_MS,
+  }: InfiniteItemsParams = {},
+  options?: SafeInfiniteQueryOptions<ItemsList, number>
+) {
   const infiniteQuery = useInfiniteQuery({
     queryKey: [...ITEMS_QUERY_KEY, "infinite", search],
     initialPageParam: 0,
@@ -94,6 +97,7 @@ export function useInfiniteItems({
       return lastPage.page + 1
     },
     staleTime,
+    ...options,
   })
 
   const items = useMemo(() => {
@@ -110,22 +114,25 @@ export function useInfiniteItems({
   }
 }
 
-export default function useItems(
-  params?: ItemsListParams
-): UseQueryResult<ItemsList, FetchError>
+interface UseItemsHook {
+  (
+    params: ItemDetailsParams,
+    options?: SafeQueryOptions<ItemDetails>
+  ): UseQueryResult<ItemDetails, FetchError>
+  (
+    params: ItemsByWarehouseParams,
+    options?: SafeQueryOptions<ItemsList>
+  ): UseQueryResult<ItemsList, FetchError>
+  (
+    params?: ItemsListParams,
+    options?: SafeQueryOptions<ItemsList>
+  ): UseQueryResult<ItemsList, FetchError>
+}
 
-export default function useItems(
-  params: ItemDetailsParams
-): UseQueryResult<ItemDetails, FetchError>
-
-export default function useItems(
-  params: ItemsByWarehouseParams
-): UseQueryResult<ItemsList, FetchError>
-
-export default function useItems(
+const useItems = (
   params?: ItemsListParams | ItemDetailsParams | ItemsByWarehouseParams,
-  options?: UseQueryOptions
-) {
+  options?: SafeQueryOptions<ItemsList | ItemDetails>
+): UseQueryResult<ItemsList | ItemDetails, FetchError> => {
   return useApiQuery({
     queryKey: [...ITEMS_QUERY_KEY, params],
     queryFn: async () => {
@@ -154,9 +161,11 @@ export default function useItems(
         queryParams: params,
       })
     },
-    ...options,
+    ...(options as SafeQueryOptions<ItemsList | ItemDetails> | undefined),
   })
 }
+
+export default useItems as UseItemsHook
 
 export function useImportItems() {
   return useApiMutation({

@@ -248,6 +248,7 @@ const UserSchema = z.object({
   location: z.string(),
   team: z.string().nullish(),
   last_login: z.string().nullish(),
+  warehouse_ids: z.array(z.number().int().nonnegative()),
 })
 
 export type User = z.infer<typeof UserSchema>

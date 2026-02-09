@@ -1,9 +1,14 @@
 "use client"
 
-import { Search01Icon } from "@hugeicons/core-free-icons"
+import {
+  Building06Icon,
+  Search01Icon,
+  WarehouseIcon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useDebouncedValue } from "@tanstack/react-pacer"
 import { useState } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -52,9 +57,14 @@ export function WarehouseAssignmentDialog({
     isFetchingNextPage,
     isLoading,
     isError,
-  } = useInfiniteWarehouses({
-    nameFilter: debouncedSearch,
-  })
+  } = useInfiniteWarehouses(
+    {
+      nameFilter: debouncedSearch,
+    },
+    {
+      enabled: open,
+    }
+  )
 
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
@@ -90,7 +100,15 @@ export function WarehouseAssignmentDialog({
     <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Przypisz magazyn</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+              <HugeiconsIcon
+                className="size-4 text-primary"
+                icon={Building06Icon}
+              />
+            </span>
+            Przypisz magazyn
+          </DialogTitle>
           <DialogDescription>
             Przypisz magazyn do użytkownika{" "}
             <strong>
@@ -101,7 +119,7 @@ export function WarehouseAssignmentDialog({
         </DialogHeader>
         <Separator />
 
-        <div className="space-y-3 py-1">
+        <div className="space-y-4 py-1">
           <div className="relative">
             <HugeiconsIcon
               className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
@@ -132,27 +150,47 @@ export function WarehouseAssignmentDialog({
           />
 
           {selectedWarehouse ? (
-            <p className="text-muted-foreground text-sm">
-              Wybrany magazyn:{" "}
-              <strong className="text-foreground">
-                {selectedWarehouse.name}
-              </strong>
-            </p>
+            <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5">
+              <HugeiconsIcon
+                className="size-4 shrink-0 text-primary"
+                icon={WarehouseIcon}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-sm">
+                  {selectedWarehouse.name}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {selectedWarehouse.racksCount} regałów &middot;{" "}
+                  {selectedWarehouse.occupancy}% zajętości
+                </p>
+              </div>
+              <Badge className="shrink-0" variant="default">
+                Wybrany
+              </Badge>
+            </div>
           ) : null}
         </div>
 
-        <DialogFooter className="gap-1">
-          <Button onClick={() => handleOpenChange(false)} variant="outline">
-            Anuluj
-          </Button>
+        <Separator />
+
+        <DialogFooter className="flex-col gap-2 sm:flex-row sm:gap-2">
           {selectedWarehouse ? (
-            <Button onClick={handleRemove} variant="destructive">
+            <Button
+              className="w-full sm:w-auto"
+              onClick={handleRemove}
+              variant="destructive"
+            >
               Usuń przypisanie
             </Button>
           ) : null}
-          <Button disabled={!selectedWarehouse} onClick={handleAssign}>
-            Przypisz
-          </Button>
+          <div className="flex flex-1 justify-end gap-2">
+            <Button onClick={() => handleOpenChange(false)} variant="outline">
+              Anuluj
+            </Button>
+            <Button disabled={!selectedWarehouse} onClick={handleAssign}>
+              Przypisz
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

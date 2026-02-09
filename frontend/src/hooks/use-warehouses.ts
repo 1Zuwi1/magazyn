@@ -1,4 +1,4 @@
-import type { UseQueryOptions, UseQueryResult } from "@tanstack/react-query"
+import type { UseQueryResult } from "@tanstack/react-query"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 import {
@@ -15,6 +15,7 @@ import {
   WarehouseImportSchema,
   WarehousesSchema,
 } from "@/lib/schemas"
+import type { SafeInfiniteQueryOptions, SafeQueryOptions } from "./helper"
 import { useApiMutation } from "./use-api-mutation"
 import { useApiQuery } from "./use-api-query"
 
@@ -32,32 +33,29 @@ interface WarehouseDetailsParams {
   warehouseId: number
 }
 
-export default function useWarehouses(
-  params?: WarehousesListParams
-): UseQueryResult<WarehousesList, FetchError>
+type WarehouseParams = WarehousesListParams | WarehouseDetailsParams | undefined
 
-export default function useWarehouses(
-  params: WarehouseDetailsParams
-): UseQueryResult<WarehouseDetails, FetchError>
+type WarehouseResult<TParams extends WarehouseParams> =
+  TParams extends WarehouseDetailsParams ? WarehouseDetails : WarehousesList
 
-export default function useWarehouses(
-  params?: WarehousesListParams | WarehouseDetailsParams,
-  options?: UseQueryOptions
-) {
+export default function useWarehouses<TParams extends WarehouseParams>(
+  params?: TParams,
+  options?: SafeQueryOptions<WarehouseResult<TParams>>
+): UseQueryResult<WarehouseResult<TParams>, FetchError> {
   return useApiQuery({
     queryKey: [...WAREHOUSES_QUERY_KEY, params],
-    queryFn: async () => {
+    queryFn: async (): Promise<WarehouseResult<TParams>> => {
       if (params && "warehouseId" in params) {
-        return await apiFetch(
+        return (await apiFetch(
           `/api/warehouses/${params.warehouseId}`,
           WarehouseDetailsSchema
-        )
+        )) as WarehouseResult<TParams>
       }
-      return await apiFetch("/api/warehouses", WarehousesSchema, {
+      return (await apiFetch("/api/warehouses", WarehousesSchema, {
         queryParams: params,
-      })
+      })) as WarehouseResult<TParams>
     },
-    ...options,
+    ...(options as SafeQueryOptions<WarehouseResult<TParams>> | undefined),
   })
 }
 
@@ -151,22 +149,24 @@ interface UseInfiniteWarehousesParams {
   pageSize?: number
 }
 
-export function useInfiniteWarehouses({
-  nameFilter,
-  pageSize = INFINITE_WAREHOUSES_DEFAULT_PAGE_SIZE,
-}: UseInfiniteWarehousesParams = {}) {
+export function useInfiniteWarehouses(
+  {
+    nameFilter,
+    pageSize = INFINITE_WAREHOUSES_DEFAULT_PAGE_SIZE,
+  }: UseInfiniteWarehousesParams = {},
+  options?: SafeInfiniteQueryOptions<WarehousesList, number>
+) {
   const query = useInfiniteQuery({
     queryKey: [...WAREHOUSES_QUERY_KEY, "infinite", nameFilter, pageSize],
     initialPageParam: 0,
-    queryFn: async ({ pageParam }) => {
-      return await apiFetch("/api/warehouses", WarehousesSchema, {
+    queryFn: ({ pageParam }) =>
+      apiFetch("/api/warehouses", WarehousesSchema, {
         queryParams: {
           page: pageParam,
           size: pageSize,
           nameFilter: nameFilter?.trim() || undefined,
         },
-      })
-    },
+      }),
     getNextPageParam: (lastPage) => {
       if (lastPage.last) {
         return undefined
@@ -174,6 +174,7 @@ export function useInfiniteWarehouses({
       return lastPage.page + 1
     },
     staleTime: 60_000,
+    ...options,
   })
 
   const warehouses = useMemo(

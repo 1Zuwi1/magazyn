@@ -1,3 +1,10 @@
+import {
+  AlertCircleIcon,
+  Search01Icon,
+  Tick02Icon,
+  WarehouseIcon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { useCallback, useEffect, useRef } from "react"
 import { remToPixels } from "@/components/dashboard/utils/helpers"
@@ -64,31 +71,48 @@ export function WarehouseVirtualList({
 
   if (isPending) {
     return (
-      <div className="flex items-center justify-center py-8">
+      <div className="flex h-40 flex-col items-center justify-center gap-3 rounded-lg border border-dashed bg-muted/30">
         <Spinner className="size-5" />
+        <p className="text-muted-foreground text-sm">Ładowanie magazynów...</p>
       </div>
     )
   }
 
   if (isError) {
     return (
-      <p className="text-center text-destructive text-sm">
-        Nie udało się pobrać listy magazynów.
-      </p>
+      <div className="flex h-40 flex-col items-center justify-center gap-3 rounded-lg border border-destructive/30 border-dashed bg-destructive/5">
+        <span className="flex size-10 items-center justify-center rounded-full bg-destructive/10">
+          <HugeiconsIcon
+            className="size-5 text-destructive"
+            icon={AlertCircleIcon}
+          />
+        </span>
+        <p className="text-center text-destructive text-sm">
+          Nie udało się pobrać listy magazynów.
+        </p>
+      </div>
     )
   }
 
   if (warehouses.length === 0) {
     return (
-      <p className="text-center text-muted-foreground text-sm">
-        Nie znaleziono magazynów.
-      </p>
+      <div className="flex h-40 flex-col items-center justify-center gap-3 rounded-lg border border-dashed bg-muted/30">
+        <span className="flex size-10 items-center justify-center rounded-full bg-muted">
+          <HugeiconsIcon
+            className="size-5 text-muted-foreground"
+            icon={Search01Icon}
+          />
+        </span>
+        <p className="text-center text-muted-foreground text-sm">
+          Nie znaleziono magazynów.
+        </p>
+      </div>
     )
   }
 
   return (
     <ScrollArea
-      className="rounded-md border"
+      className="rounded-lg border"
       ref={scrollRef}
       style={{
         height: Math.min(
@@ -105,12 +129,19 @@ export function WarehouseVirtualList({
           {rowVirtualizer.getVirtualItems().map((virtualItem) => {
             const warehouse = warehouses[virtualItem.index]
             const isSelected = selectedWarehouse?.id === warehouse.id
+            const isFirst = virtualItem.index === 0
+            const isLast = virtualItem.index === warehouses.length - 1
 
             return (
               <Button
                 className={cn(
-                  "absolute top-0 left-0 flex w-full items-center gap-3 border-b px-3 py-2.5 text-left",
-                  isSelected && "bg-primary/10 text-primary"
+                  "absolute top-0 left-0 flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors",
+                  !isLast && "border-b",
+                  isFirst && "rounded-t-lg",
+                  isLast && "rounded-b-lg",
+                  isSelected
+                    ? "bg-primary/10 ring-1 ring-primary/20 ring-inset"
+                    : "hover:bg-muted/50"
                 )}
                 key={warehouse.id}
                 onClick={() => onWarehouseSelect(warehouse)}
@@ -120,8 +151,27 @@ export function WarehouseVirtualList({
                 }}
                 variant="ghost"
               >
+                <span
+                  className={cn(
+                    "flex size-8 shrink-0 items-center justify-center rounded-md transition-colors",
+                    isSelected
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  <HugeiconsIcon
+                    className="size-4"
+                    icon={isSelected ? Tick02Icon : WarehouseIcon}
+                    strokeWidth={isSelected ? 2.5 : 1.5}
+                  />
+                </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-sm">
+                  <p
+                    className={cn(
+                      "truncate font-medium text-sm",
+                      isSelected && "text-primary"
+                    )}
+                  >
                     {warehouse.name}
                   </p>
                   <p className="mt-0.5 text-muted-foreground text-xs">

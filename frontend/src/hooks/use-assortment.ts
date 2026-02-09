@@ -44,66 +44,99 @@ interface WarehouseAssortmentsParams
   warehouseId: number
 }
 
-type AssortmentParams =
-  | AssortmentsListParams
-  | AssortmentDetailsParams
-  | WarehouseAssortmentsParams
-  | RackAssortmentsParams
-  | undefined
+interface UseAssortmentsHook {
+  (
+    params: RackAssortmentsParams,
+    options?: SafeQueryOptions<RackAssortmentsList>
+  ): UseQueryResult<RackAssortmentsList, FetchError>
+  (
+    params: WarehouseAssortmentsParams,
+    options?: SafeQueryOptions<WarehouseAssortmentsList>
+  ): UseQueryResult<WarehouseAssortmentsList, FetchError>
+  (
+    params: AssortmentDetailsParams,
+    options?: SafeQueryOptions<AssortmentDetails>
+  ): UseQueryResult<AssortmentDetails, FetchError>
+  (
+    params?: AssortmentsListParams,
+    options?: SafeQueryOptions<AssortmentsList>
+  ): UseQueryResult<AssortmentsList, FetchError>
+}
 
-type AssortmentResult<TParams extends AssortmentParams> =
-  TParams extends RackAssortmentsParams
-    ? RackAssortmentsList
-    : TParams extends WarehouseAssortmentsParams
-      ? WarehouseAssortmentsList
-      : TParams extends AssortmentDetailsParams
-        ? AssortmentDetails
-        : AssortmentsList
-
-export default function useAssortments<TParams extends AssortmentParams>(
-  params?: TParams,
-  options?: SafeQueryOptions<AssortmentResult<TParams>>
-): UseQueryResult<AssortmentResult<TParams>, FetchError> {
+const useAssortments = (
+  params?:
+    | AssortmentsListParams
+    | AssortmentDetailsParams
+    | WarehouseAssortmentsParams
+    | RackAssortmentsParams,
+  options?: SafeQueryOptions<
+    | AssortmentsList
+    | AssortmentDetails
+    | WarehouseAssortmentsList
+    | RackAssortmentsList
+  >
+): UseQueryResult<
+  | AssortmentsList
+  | AssortmentDetails
+  | WarehouseAssortmentsList
+  | RackAssortmentsList,
+  FetchError
+> => {
   const query = useApiQuery({
     queryKey: [...ASSORTMENT_QUERY_KEY, params],
-    queryFn: async (): Promise<AssortmentResult<TParams>> => {
+    queryFn: async () => {
       if (params && "rackId" in params) {
-        return (await apiFetch(
+        return await apiFetch(
           `/api/racks/${params.rackId}/assortments`,
           RackAssortmentsSchema,
           {
             method: "GET",
             queryParams: params,
           }
-        )) as AssortmentResult<TParams>
+        )
       }
 
       if (params && "warehouseId" in params) {
-        return (await apiFetch(
+        return await apiFetch(
           `/api/warehouses/${params.warehouseId}/assortments`,
           WarehouseAssortmentsSchema,
           {
             method: "GET",
             queryParams: params,
           }
-        )) as AssortmentResult<TParams>
+        )
       }
 
       if (params && "assortmentId" in params) {
-        return (await apiFetch(
+        return await apiFetch(
           `/api/assortments/${params.assortmentId}`,
           AssortmentDetailsSchema,
           {
             method: "GET",
           }
-        )) as AssortmentResult<TParams>
+        )
       }
 
-      return (await apiFetch("/api/assortments", AssortmentsSchema, {
+      return await apiFetch("/api/assortments", AssortmentsSchema, {
         queryParams: params,
-      })) as AssortmentResult<TParams>
+      })
     },
-    ...(options as SafeQueryOptions<AssortmentResult<TParams>> | undefined),
+    ...(options as
+      | SafeQueryOptions<
+          | AssortmentsList
+          | AssortmentDetails
+          | WarehouseAssortmentsList
+          | RackAssortmentsList
+        >
+      | undefined),
   })
-  return query as UseQueryResult<AssortmentResult<TParams>, FetchError>
+  return query as UseQueryResult<
+    | AssortmentsList
+    | AssortmentDetails
+    | WarehouseAssortmentsList
+    | RackAssortmentsList,
+    FetchError
+  >
 }
+
+export default useAssortments as UseAssortmentsHook

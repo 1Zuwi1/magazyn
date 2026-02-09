@@ -17,7 +17,7 @@ import {
   RackLookupSchema,
   RacksSchema,
 } from "@/lib/schemas"
-import type { SafeQueryOptions } from "./helper"
+import type { SafeInfiniteQueryOptions, SafeQueryOptions } from "./helper"
 import { useApiMutation } from "./use-api-mutation"
 import { useApiQuery } from "./use-api-query"
 
@@ -45,6 +45,11 @@ interface MultipleRacksParams {
   staleTime?: number
 }
 
+type RackParams = RacksListParams | RacksDetailsParams | RacksByWarehouseParams
+
+type RackResult<TParams extends RackParams | undefined> =
+  TParams extends RacksDetailsParams ? RackDetails : RacksList
+
 export function useMultipleRacks({
   rackIds,
   staleTime = RACK_DETAILS_STALE_TIME_MS,
@@ -64,50 +69,38 @@ export function useMultipleRacks({
   })
 }
 
-export default function useRacks(
-  params?: RacksListParams,
-  options?: SafeQueryOptions<RacksList>
-): UseQueryResult<RacksList, FetchError>
-
-export default function useRacks(
-  params: RacksDetailsParams,
-  options?: SafeQueryOptions<RackDetails>
-): UseQueryResult<RackDetails, FetchError>
-
-export default function useRacks(
-  params: RacksByWarehouseParams,
-  options?: SafeQueryOptions<RacksList>
-): UseQueryResult<RacksList, FetchError>
-
-export default function useRacks(
-  params?: RacksListParams | RacksDetailsParams | RacksByWarehouseParams,
-  options?: SafeQueryOptions<RacksList> | SafeQueryOptions<RackDetails>
-): UseQueryResult<RacksList | RackDetails, FetchError> {
+export default function useRacks<TParams extends RackParams | undefined>(
+  params?: TParams,
+  options?: SafeQueryOptions<RackResult<TParams>>
+): UseQueryResult<RackResult<TParams>, FetchError> {
   const query = useApiQuery({
     queryKey: [...Racks_QUERY_KEY, params],
-    queryFn: async () => {
+    queryFn: async (): Promise<RackResult<TParams>> => {
       if (params && "rackId" in params) {
-        return await apiFetch(`/api/racks/${params.rackId}`, RackDetailsSchema)
+        return (await apiFetch(
+          `/api/racks/${params.rackId}`,
+          RackDetailsSchema
+        )) as RackResult<TParams>
       }
 
       if (params && "warehouseId" in params) {
-        return await apiFetch(
+        return (await apiFetch(
           `/api/warehouses/${params.warehouseId}/racks`,
           RacksSchema,
           {
             queryParams: params,
           }
-        )
+        )) as RackResult<TParams>
       }
 
-      return await apiFetch("/api/racks", RacksSchema, {
+      return (await apiFetch("/api/racks", RacksSchema, {
         queryParams: params,
-      })
+      })) as RackResult<TParams>
     },
-    ...(options as SafeQueryOptions<RacksList | RackDetails> | undefined),
+    ...(options as SafeQueryOptions<RackResult<TParams>> | undefined),
   })
 
-  return query as UseQueryResult<RacksList | RackDetails, FetchError>
+  return query as UseQueryResult<RackResult<TParams>, FetchError>
 }
 
 export function useCreateRack() {
@@ -180,11 +173,14 @@ interface InfiniteRacksParams {
   staleTime?: number
 }
 
-export function useInfiniteRacks({
-  warehouseId,
-  pageSize = INFINITE_RACKS_DEFAULT_PAGE_SIZE,
-  staleTime = 60_000,
-}: InfiniteRacksParams) {
+export function useInfiniteRacks(
+  {
+    warehouseId,
+    pageSize = INFINITE_RACKS_DEFAULT_PAGE_SIZE,
+    staleTime = 60_000,
+  }: InfiniteRacksParams,
+  options?: SafeInfiniteQueryOptions<RacksList, number>
+) {
   const infiniteQuery = useInfiniteQuery({
     queryKey: ["infinite-racks", warehouseId, pageSize],
     enabled: warehouseId !== null,
@@ -213,6 +209,7 @@ export function useInfiniteRacks({
       return lastPage.page + 1
     },
     staleTime,
+    ...options,
   })
 
   const rackOptions = useMemo(() => {

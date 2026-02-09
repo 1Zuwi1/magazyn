@@ -56,7 +56,9 @@ export function TwoFactorVerificationDialog({
     data: methods,
     isPending: isMethodsPending,
     isError: isMethodsError,
-  } = useLinkedMethods()
+  } = useLinkedMethods({
+    enabled: open,
+  })
   const [selectedMethod, setSelectedMethod] = useState<TwoFactorMethod>(
     methods?.defaultMethod ?? "AUTHENTICATOR"
   )
