@@ -25,6 +25,7 @@ import {
   ItemIdentifySchema,
 } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
+import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
 import { buttonVariants } from "../ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog"
 import { ErrorBoundary } from "../ui/error-boundary"
@@ -134,6 +135,7 @@ export function Scanner({
     TAB_TRIGGERS[0].action
   )
   const [open, setOpen] = useState<boolean>(false)
+  const { scannerOpen, closeScanner } = useVoiceCommandStore()
   const armedRef = useRef<boolean>(false)
   const [scannerState, setScannerState] = useState<ScannerState>({
     step: "choose-mode",
@@ -168,6 +170,12 @@ export function Scanner({
   const { warehouseId, isHydrated } = useCurrentWarehouseId()
 
   const { step, isLoading, isSubmitting } = scannerState
+
+  useEffect(() => {
+    if (scannerOpen && !open) {
+      setOpen(true)
+    }
+  }, [scannerOpen, open])
 
   useEffect(() => {
     if (!open) {
@@ -244,8 +252,9 @@ export function Scanner({
       armedRef.current = false
       window.history.back()
     }
+    closeScanner()
     handleReset()
-  }, [open, handleReset])
+  }, [open, handleReset, closeScanner])
 
   const resolveCurrentWarehouseId = useCallback((): number => {
     if (!isHydrated) {

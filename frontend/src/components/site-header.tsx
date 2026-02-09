@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Fragment } from "react/jsx-runtime"
+import { MOCK_WAREHOUSES } from "./dashboard/mock-data"
 import { NotificationInbox } from "./dashboard/notifications/components/notification-icon"
 import { Scanner } from "./scanner/scanner"
 import {
@@ -22,6 +23,7 @@ import {
 } from "./ui/dropdown-menu"
 import { Separator } from "./ui/separator"
 import { SidebarTrigger } from "./ui/sidebar"
+import { VoiceAssistant } from "./voice-assistant/voice-assistant"
 
 // biome-ignore lint/suspicious/noControlCharactersInRegex: This is needed to strip control characters from decoded text
 const CONTROL_CHAR_REGEX = /[\u0000-\u001f\u007f]/g
@@ -161,14 +163,17 @@ export default function SiteHeader() {
         </Breadcrumb>
       </div>
 
-      <NotificationInbox />
-      {pathname.includes("/dashboard/warehouse/") && (
-        <Scanner
-          warehouseName={decodeURIComponent(
-            sanitizeVisibleText(safeDecodeURIComponent(splitted[2] ?? ""))
-          )}
-        />
-      )}
+      <div className="flex standalone:hidden items-center gap-2 pr-3 sm:gap-3 sm:pr-4">
+        {pathname.includes("/dashboard/warehouse/") && (
+          <Scanner
+            warehouseName={decodeURIComponent(
+              sanitizeVisibleText(safeDecodeURIComponent(splitted[2] ?? ""))
+            )}
+          />
+        )}
+        <VoiceAssistant warehouses={MOCK_WAREHOUSES} />
+        <NotificationInbox />
+      </div>
     </header>
   )
 }
