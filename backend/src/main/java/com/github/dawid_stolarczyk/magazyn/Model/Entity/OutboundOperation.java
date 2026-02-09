@@ -15,10 +15,11 @@ import java.time.Instant;
 @Entity
 @Table(name = "outbound_operations",
         indexes = {
-                @Index(name = "idx_outbound_operation_user", columnList = "issued_by"),
+                @Index(name = "idx_outbound_operation_user", columnList = "issued_by_name"),
                 @Index(name = "idx_outbound_operation_date", columnList = "operation_timestamp"),
-                @Index(name = "idx_outbound_operation_rack", columnList = "rack_id"),
-                @Index(name = "idx_outbound_operation_item", columnList = "item_id")
+                @Index(name = "idx_outbound_operation_rack_marker", columnList = "rack_marker"),
+                @Index(name = "idx_outbound_operation_item_code", columnList = "item_code"),
+                @Index(name = "idx_outbound_operation_assortment_code", columnList = "assortment_code")
         }
 )
 @Getter

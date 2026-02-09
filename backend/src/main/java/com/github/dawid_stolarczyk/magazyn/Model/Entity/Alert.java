@@ -43,7 +43,7 @@ public class Alert {
      * The warehouse where the rack is located (optional for system-wide alerts, denormalized for faster queries)
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "warehouse_id")
+    @JoinColumn(name = "warehouse_id", nullable = true)
     private Warehouse warehouse;
 
     /**

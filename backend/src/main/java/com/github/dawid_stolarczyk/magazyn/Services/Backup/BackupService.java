@@ -318,13 +318,6 @@ public class BackupService {
 
             // Clean assortments: null InboundOperation FK, then delete all warehouse assortments
             List<Assortment> existingAssortments = assortmentRepository.findByRack_WarehouseId(warehouseId, Pageable.unpaged()).getContent();
-            for (Assortment assortment : existingAssortments) {
-                List<InboundOperation> ops = inboundOperationRepository.findByAssortmentId(assortment.getId());
-                for (InboundOperation op : ops) {
-                    op.setAssortment(null);
-                    inboundOperationRepository.save(op);
-                }
-            }
             assortmentRepository.deleteAll(existingAssortments);
 
             // Restore racks

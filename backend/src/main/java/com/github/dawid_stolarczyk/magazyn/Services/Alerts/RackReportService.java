@@ -29,8 +29,8 @@ import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientI
  */
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class RackReportService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(RackReportService.class);
 
     private static final List<AlertStatus> ACTIVE_STATUSES = Arrays.asList(AlertStatus.OPEN, AlertStatus.ACTIVE);
 
@@ -336,8 +336,8 @@ public class RackReportService {
                     throw new IllegalArgumentException("UNAUTHORIZED_OUTBOUND should use buildAlertMessageForWeight");
             case EMBEDDING_GENERATION_COMPLETED, EMBEDDING_GENERATION_FAILED,
                  ASSORTMENT_EXPIRED, ASSORTMENT_CLOSE_TO_EXPIRY,
-                 BACKUP_COMPLETED, BACKUP_FAILED ->
-                    throw new IllegalArgumentException("System alert types should not be used in rack reports");
+                 BACKUP_COMPLETED, BACKUP_FAILED, ADMIN_MESSAGE ->
+                     throw new IllegalArgumentException("System alert types should not be used in rack reports");
         };
     }
 

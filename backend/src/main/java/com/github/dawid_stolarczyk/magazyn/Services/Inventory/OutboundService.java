@@ -194,7 +194,7 @@ public class OutboundService {
         dto.setItemName(operation.getItemName());
         dto.setItemCode(operation.getItemCode());
         dto.setRackMarker(operation.getRackMarker());
-        dto.setIssuedByName(operation.getIssuedByName);
+        dto.setIssuedByName(operation.getIssuedByName());
         dto.setOperationTimestamp(operation.getOperationTimestamp().toInstant().toString());
         dto.setPositionX(operation.getPositionX());
         dto.setPositionY(operation.getPositionY());

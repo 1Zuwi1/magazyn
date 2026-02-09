@@ -12,12 +12,12 @@ import java.sql.Timestamp;
 import java.util.List;
 
 /**
- * Repository dla operacji przyjęć towaru (audyt magazynowy)
+ * Repository dla operacji przyjęcia towaru (audyt magazynowy)
  */
 public interface InboundOperationRepository extends JpaRepository<InboundOperation, Long>, JpaSpecificationExecutor<InboundOperation> {
 
     /**
      * Znajdź operację przyjęcia powiązaną z danym assortmentem (do wyczyszczenia FK przed usunięciem)
      */
-    List<InboundOperation> findByAssortmentId(Long assortmentId);
+    List<InboundOperation> findByAssortmentCode(String assortmentCode);
 }

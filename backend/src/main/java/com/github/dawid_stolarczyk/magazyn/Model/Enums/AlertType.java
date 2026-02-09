@@ -18,7 +18,8 @@ public enum AlertType {
     ASSORTMENT_EXPIRED("Assortment wygasł - produkt przekroczył datę ważności"),
     ASSORTMENT_CLOSE_TO_EXPIRY("Assortment bliski wygaśnięcia - zbliża się data ważności"),
     BACKUP_COMPLETED("Backup zakończony pomyślnie"),
-    BACKUP_FAILED("Backup nie powiódł się");
+    BACKUP_FAILED("Backup nie powiódł się"),
+    ADMIN_MESSAGE("Wiadomość od administratora");
 
     private final String description;
 

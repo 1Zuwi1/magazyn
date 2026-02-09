@@ -14,10 +14,11 @@ import java.time.Instant;
 @Entity
 @Table(name = "inbound_operations",
         indexes = {
-                @Index(name = "idx_inbound_operation_user", columnList = "received_by"),
+                @Index(name = "idx_inbound_operation_user", columnList = "received_by_name"),
                 @Index(name = "idx_inbound_operation_date", columnList = "operation_timestamp"),
-                @Index(name = "idx_inbound_operation_rack", columnList = "rack_id"),
-                @Index(name = "idx_inbound_operation_item", columnList = "item_id")
+                @Index(name = "idx_inbound_operation_rack_marker", columnList = "rack_marker"),
+                @Index(name = "idx_inbound_operation_item_code", columnList = "item_code"),
+                @Index(name = "idx_inbound_operation_assortment_code", columnList = "assortment_code")
         }
 )
 @Getter
@@ -35,11 +36,12 @@ public class InboundOperation {
 
     private String assortmentCode;
 
-    private String receivedByName;
-
     /**
      * Data i czas wykonania operacji
      */
+    @Column(name = "received_by_name", nullable = false)
+    private String receivedByName;
+
     @Column(name = "operation_timestamp", nullable = false)
     private Timestamp operationTimestamp;
 
