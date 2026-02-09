@@ -452,12 +452,13 @@ function useTwoFactorSetupFlow({
     }
   }
 
-  const verifySetup = async () => {
+  const verifySetup = async (codeOverride?: string) => {
+    const codeToVerify = codeOverride ?? code
     dispatch({ type: "set_stage", stage: "VERIFYING" })
     dispatch({ type: "set_error", error: "" })
 
     try {
-      const isValid = await verifyOneTimeCode(code, method)
+      const isValid = await verifyOneTimeCode(codeToVerify, method)
 
       if (isValid) {
         dispatch({ type: "set_stage", stage: "SUCCESS" })
@@ -1382,8 +1383,8 @@ export function TwoFactorSetup({
     resendCode()
   }
 
-  const handleVerifyCode = (): void => {
-    verifySetup()
+  const handleVerifyCode = (verificationCode?: string): void => {
+    verifySetup(verificationCode)
   }
 
   return (
@@ -1440,9 +1441,15 @@ export function TwoFactorSetup({
               code={code}
               isBusy={setupStage === "VERIFYING"}
               method={method}
-              onCodeChange={(nextCode) =>
+              onCodeChange={(nextCode) => {
                 dispatch({ type: "set_code", code: nextCode })
-              }
+                const shouldAutoSubmit =
+                  nextCode.length === OTP_LENGTH && !isBusy
+
+                if (shouldAutoSubmit) {
+                  handleVerifyCode(nextCode)
+                }
+              }}
               onResend={handleResendCode}
               onVerify={handleVerifyCode}
               resendCooldown={resendCooldown}
