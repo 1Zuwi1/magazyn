@@ -686,6 +686,17 @@ export const AssortmentDetailsSchema = createApiSchema({
   },
 })
 
+export const UpdateAssortmentSchema = createApiSchema({
+  PUT: {
+    input: AssortmentSchema.pick({
+      itemId: true,
+      rackId: true,
+      expiresAt: true,
+    }),
+    output: AssortmentSchema,
+  },
+})
+
 export const ItemsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
