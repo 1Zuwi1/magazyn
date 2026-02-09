@@ -2,8 +2,9 @@
 
 import {
   Alert01Icon,
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
   CubeIcon,
-  GridViewIcon,
   Layers01Icon,
   PackageIcon,
   RulerIcon,
@@ -11,8 +12,14 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-import { useParams, useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
+import {
+  type Dispatch,
+  type SetStateAction,
+  useEffect,
+  useMemo,
+  useState,
+} from "react"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { ItemDetailsDialog } from "@/components/dashboard/rack-visualization/item-details-dialog"
 import { RackGridView } from "@/components/dashboard/rack-visualization/rack-grid-view"
@@ -311,6 +318,153 @@ const getEncodedName = (name: string | string[] | undefined): string => {
   return name ?? ""
 }
 
+const parseIntegerFromQueryParam = (value: string | null): number | null => {
+  if (!value) {
+    return null
+  }
+
+  const parsedValue = Number.parseInt(value, 10)
+  if (!Number.isInteger(parsedValue) || parsedValue < 0) {
+    return null
+  }
+
+  return parsedValue
+}
+
+const openItemDetailsWhenAvailable = ({
+  selectedItem,
+  setIsItemDetailsOpen,
+}: {
+  selectedItem: unknown
+  setIsItemDetailsOpen: (isOpen: boolean) => void
+}): void => {
+  if (selectedItem) {
+    setIsItemDetailsOpen(true)
+  }
+}
+
+const closeItemDetailsWhenMissing = ({
+  selectedItem,
+  setIsItemDetailsOpen,
+}: {
+  selectedItem: unknown
+  setIsItemDetailsOpen: (isOpen: boolean) => void
+}): void => {
+  if (!selectedItem) {
+    setIsItemDetailsOpen(false)
+  }
+}
+
+const moveToPreviousRack = ({
+  clearRackSelectionFromLink,
+  resetSelection,
+  setCurrentPage,
+  totalPages,
+}: {
+  clearRackSelectionFromLink: () => void
+  resetSelection: () => void
+  setCurrentPage: Dispatch<SetStateAction<number>>
+  totalPages: number
+}): void => {
+  if (totalPages <= 1) {
+    return
+  }
+  clearRackSelectionFromLink()
+  setCurrentPage((prev) => (prev <= 1 ? totalPages : prev - 1))
+  resetSelection()
+}
+
+const moveToNextRack = ({
+  clearRackSelectionFromLink,
+  resetSelection,
+  setCurrentPage,
+  totalPages,
+}: {
+  clearRackSelectionFromLink: () => void
+  resetSelection: () => void
+  setCurrentPage: Dispatch<SetStateAction<number>>
+  totalPages: number
+}): void => {
+  if (totalPages <= 1) {
+    return
+  }
+  clearRackSelectionFromLink()
+  setCurrentPage((prev) => (prev >= totalPages ? 1 : prev + 1))
+  resetSelection()
+}
+
+const activateRackSlot = ({
+  assortments,
+  coordinates,
+  currentRack,
+  setIsItemDetailsOpen,
+  setSelectedSlotCoordinates,
+}: {
+  assortments:
+    | { content: { positionX: number; positionY: number }[] }
+    | null
+    | undefined
+  coordinates: SlotCoordinates
+  currentRack: Rack | null
+  setIsItemDetailsOpen: (isOpen: boolean) => void
+  setSelectedSlotCoordinates: Dispatch<SetStateAction<SlotCoordinates | null>>
+}): void => {
+  if (!currentRack) {
+    return
+  }
+
+  setSelectedSlotCoordinates(coordinates)
+
+  const slotHasContent = assortments?.content.some(
+    (a) => a.positionX === coordinates.x && a.positionY === coordinates.y
+  )
+  if (slotHasContent) {
+    setIsItemDetailsOpen(true)
+  }
+}
+
+function useRackSelectionFromLink({
+  pagedRack,
+  warehouseIdForQuery,
+}: {
+  pagedRack: Rack | null
+  warehouseIdForQuery: number
+}) {
+  const searchParams = useSearchParams()
+  const requestedRackIdFromSearchParams = useMemo(
+    () => parseIntegerFromQueryParam(searchParams.get("rackId")),
+    [searchParams]
+  )
+  const [selectedRackIdFromLink, setSelectedRackIdFromLink] = useState<
+    number | null
+  >(requestedRackIdFromSearchParams)
+  const { data: rackFromLink, isPending: isRackFromLinkPending } = useRacks({
+    rackId: selectedRackIdFromLink ?? -1,
+  })
+
+  useEffect(() => {
+    setSelectedRackIdFromLink(requestedRackIdFromSearchParams)
+  }, [requestedRackIdFromSearchParams])
+
+  const rackFromLinkInCurrentWarehouse =
+    rackFromLink && rackFromLink.warehouseId === warehouseIdForQuery
+      ? rackFromLink
+      : null
+  const currentRack = rackFromLinkInCurrentWarehouse ?? pagedRack
+  const isRackFromLinkLoading =
+    selectedRackIdFromLink !== null &&
+    isRackFromLinkPending &&
+    rackFromLinkInCurrentWarehouse === null &&
+    pagedRack === null
+
+  return {
+    currentRack,
+    isRackFromLinkLoading,
+    isRackFromLinkActive: rackFromLinkInCurrentWarehouse !== null,
+    clearRackSelectionFromLink: () => setSelectedRackIdFromLink(null),
+  }
+}
+
 export default function WarehouseClient() {
   const params = useParams<{ name: string }>()
   const encodedWarehouseName = getEncodedName(params?.name)
@@ -323,6 +477,10 @@ export default function WarehouseClient() {
     useCurrentWarehouseId({
       redirectIfMissingTo: "/dashboard/warehouse",
     })
+  const [selectedSlotCoordinates, setSelectedSlotCoordinates] =
+    useState<SlotCoordinates | null>(null)
+  const [isItemDetailsOpen, setIsItemDetailsOpen] = useState(false)
+  const [is3DWarningOpen, setIs3DWarningOpen] = useState(false)
 
   const {
     data: warehouse,
@@ -343,17 +501,26 @@ export default function WarehouseClient() {
     size: 1,
   })
 
-  const hasFetchError = isWarehousesError || isRacksError
-  const isLoading = !isHydrated || isWarehousesPending || isRacksPending
-  const [selectedSlotCoordinates, setSelectedSlotCoordinates] =
-    useState<SlotCoordinates | null>(null)
-  const [isItemDetailsOpen, setIsItemDetailsOpen] = useState(false)
-  const [is3DWarningOpen, setIs3DWarningOpen] = useState(false)
-  const [is2DWarningOpen, setIs2DWarningOpen] = useState(false)
-  const [is2DViewOpen, setIs2DViewOpen] = useState(false)
+  const pagedRack = rackData?.content[0] ?? null
+  const {
+    currentRack,
+    isRackFromLinkLoading,
+    isRackFromLinkActive,
+    clearRackSelectionFromLink,
+  } = useRackSelectionFromLink({
+    pagedRack,
+    warehouseIdForQuery,
+  })
 
-  const currentRack = rackData?.content[0] ?? null
   const totalPages = rackData?.totalPages ?? 0
+  const rackGridCurrentPage = isRackFromLinkActive ? 1 : currentPage
+  const rackGridTotalPages = isRackFromLinkActive ? 1 : totalPages
+  const hasFetchError = isWarehousesError || isRacksError
+  const isLoading =
+    !isHydrated ||
+    isWarehousesPending ||
+    isRacksPending ||
+    isRackFromLinkLoading
 
   const { data: assortments } = useAssortments({
     rackId: currentRack?.id ?? -1,
@@ -418,22 +585,25 @@ export default function WarehouseClient() {
   }
 
   const handlePreviousRack = () => {
-    if (totalPages <= 1) {
-      return
-    }
-    setCurrentPage((prev) => (prev === 0 ? totalPages - 1 : prev - 1))
-    resetSelection()
+    moveToPreviousRack({
+      clearRackSelectionFromLink,
+      resetSelection,
+      setCurrentPage,
+      totalPages,
+    })
   }
 
   const handleNextRack = () => {
-    if (totalPages <= 1) {
-      return
-    }
-    setCurrentPage((prev) => (prev === totalPages - 1 ? 0 : prev + 1))
-    resetSelection()
+    moveToNextRack({
+      clearRackSelectionFromLink,
+      resetSelection,
+      setCurrentPage,
+      totalPages,
+    })
   }
 
   const handleSetPage = (page: number) => {
+    clearRackSelectionFromLink()
     setCurrentPage(page)
     resetSelection()
   }
@@ -445,32 +615,27 @@ export default function WarehouseClient() {
   }
 
   const handleActivateSlot = (coordinates: SlotCoordinates) => {
-    if (!currentRack) {
-      return
-    }
-
-    setSelectedSlotCoordinates(coordinates)
-
-    // Check if the activated slot has an assortment by looking it up directly,
-    // since selectedAssortment reflects the previous selection at this point
-    const slotHasContent = assortments?.content.some(
-      (a) => a.positionX === coordinates.x && a.positionY === coordinates.y
-    )
-    if (slotHasContent) {
-      setIsItemDetailsOpen(true)
-    }
+    activateRackSlot({
+      assortments,
+      coordinates,
+      currentRack,
+      setIsItemDetailsOpen,
+      setSelectedSlotCoordinates,
+    })
   }
 
   const handleOpenDetails = () => {
-    if (selectedItem) {
-      setIsItemDetailsOpen(true)
-    }
+    openItemDetailsWhenAvailable({
+      selectedItem,
+      setIsItemDetailsOpen,
+    })
   }
 
   useEffect(() => {
-    if (!selectedItem) {
-      setIsItemDetailsOpen(false)
-    }
+    closeItemDetailsWhenMissing({
+      selectedItem,
+      setIsItemDetailsOpen,
+    })
   }, [selectedItem])
 
   const warehouseName = warehouse?.name ?? decodedWarehouseName
@@ -518,7 +683,7 @@ export default function WarehouseClient() {
     )
   }
 
-  return (
+  const renderWarehouseContent = () => (
     <div className="space-y-6">
       <PageHeader
         backHref="/dashboard/warehouse"
@@ -565,38 +730,34 @@ export default function WarehouseClient() {
           <HugeiconsIcon className="size-4" icon={CubeIcon} />
           <span>Widok 3D</span>
         </Button>
-      </div>
-
-      <AlertDialog onOpenChange={setIs2DWarningOpen} open={is2DWarningOpen}>
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogMedia className="bg-amber-500/10">
-              <HugeiconsIcon
-                className="text-amber-500"
-                icon={Alert01Icon}
-                size={24}
-              />
-            </AlertDialogMedia>
-            <AlertDialogTitle>Widok 2D regału</AlertDialogTitle>
-            <AlertDialogDescription>
-              Wizualizacja 2D pobiera dane o wszystkich magazynach, regałach i
-              przedmiotach. Przy dużej ilości danych może to znacząco obciążyć
-              połączenie i zużyć dużo transferu.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Anuluj</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setIs2DViewOpen(true)
-                setIs2DWarningOpen(false)
-              }}
+        {currentRack && totalPages > 1 && (
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <Button
+              className="gap-1.5"
+              onClick={handlePreviousRack}
+              size="sm"
+              type="button"
+              variant="outline"
             >
-              Pokaż widok 2D
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              <HugeiconsIcon className="size-3.5" icon={ArrowLeft01Icon} />
+              <span>Poprzedni regał</span>
+            </Button>
+            <Badge className="font-mono" variant="outline">
+              {currentRack.marker}
+            </Badge>
+            <Button
+              className="gap-1.5"
+              onClick={handleNextRack}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <span>Następny regał</span>
+              <HugeiconsIcon className="size-3.5" icon={ArrowRight01Icon} />
+            </Button>
+          </div>
+        )}
+      </div>
 
       <AlertDialog onOpenChange={setIs3DWarningOpen} open={is3DWarningOpen}>
         <AlertDialogContent size="sm">
@@ -636,32 +797,20 @@ export default function WarehouseClient() {
           {/* Grid Visualization */}
           <div className="order-1">
             <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border bg-card shadow-sm">
-              {is2DViewOpen ? (
-                <RackGridView
-                  cols={currentRack.sizeX}
-                  currentPage={currentPage}
-                  items={items}
-                  onActivateSlot={handleActivateSlot}
-                  onNextRack={handleNextRack}
-                  onPreviousRack={handlePreviousRack}
-                  onSelectSlot={handleSelectSlot}
-                  onSetPage={handleSetPage}
-                  rack={currentRack}
-                  rows={currentRack.sizeY}
-                  selectedSlotCoordinates={selectedSlotCoordinates}
-                  totalPages={totalPages}
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center p-6">
-                  <Button
-                    onClick={() => setIs2DWarningOpen(true)}
-                    variant="outline"
-                  >
-                    <HugeiconsIcon className="size-4" icon={GridViewIcon} />
-                    Otwórz widok 2D
-                  </Button>
-                </div>
-              )}
+              <RackGridView
+                cols={currentRack.sizeX}
+                currentPage={rackGridCurrentPage}
+                items={items}
+                onActivateSlot={handleActivateSlot}
+                onNextRack={handleNextRack}
+                onPreviousRack={handlePreviousRack}
+                onSelectSlot={handleSelectSlot}
+                onSetPage={handleSetPage}
+                rack={currentRack}
+                rows={currentRack.sizeY}
+                selectedSlotCoordinates={selectedSlotCoordinates}
+                totalPages={rackGridTotalPages}
+              />
             </div>
           </div>
 
@@ -712,4 +861,6 @@ export default function WarehouseClient() {
       />
     </div>
   )
+
+  return renderWarehouseContent()
 }

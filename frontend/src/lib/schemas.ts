@@ -769,6 +769,12 @@ const RackSchema = z.object({
 
 export type Rack = z.infer<typeof RackSchema>
 
+export const RackLookupSchema = createApiSchema({
+  GET: {
+    output: RackSchema,
+  },
+})
+
 export const RacksSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput(),

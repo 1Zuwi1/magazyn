@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   type QueryFunction,
   type QueryKey,
   type UseQueryOptions,
@@ -76,6 +77,7 @@ export function useApiQuery<
       : queryFn
 
   const query = useQuery({
+    placeholderData: keepPreviousData,
     ...queryOptions,
     queryFn: wrappedQueryFn,
   })

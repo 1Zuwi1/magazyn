@@ -1,7 +1,6 @@
 export interface FilterState {
   query: string
   minOccupancy: number
-  tempRange: [number, number]
   showEmpty: boolean
 }
 

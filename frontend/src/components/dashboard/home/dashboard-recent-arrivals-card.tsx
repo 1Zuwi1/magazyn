@@ -60,10 +60,7 @@ export function DashboardRecentArrivalsCard() {
         continue
       }
 
-      rackLabelsMap.set(
-        query.data.id,
-        query.data.name?.trim() || query.data.marker.trim()
-      )
+      rackLabelsMap.set(query.data.id, query.data.marker.trim())
     }
 
     return rackLabelsMap

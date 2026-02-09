@@ -8,7 +8,6 @@ type ApiRack = RacksList["content"][number]
 type ApiWarehouse = WarehousesList["content"][number]
 type ApiAssortment = AssortmentsList["content"][number]
 
-const MM_TO_METERS = 0.001
 const RACKS_PER_ROW = 4
 const RACK_SPACING = 0.5
 const ROW_SPACING = 2
@@ -61,9 +60,9 @@ function mapApiRackToRack3D(
     length: totalSlots,
   }).fill(null)
 
-  const cellW = rack.maxSizeX * MM_TO_METERS
-  const cellH = rack.maxSizeY * MM_TO_METERS
-  const cellD = rack.maxSizeZ * MM_TO_METERS
+  const cellW = 1
+  const cellH = 1
+  const cellD = 1
   const minCellDim = Math.min(cellW, cellH)
 
   for (const assortment of rackAssortments) {

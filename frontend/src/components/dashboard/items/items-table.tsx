@@ -14,7 +14,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -123,6 +123,7 @@ function ItemsTableSkeleton() {
 
 interface ItemsTableProps {
   isLoading?: boolean
+  initialSearch?: string
 }
 
 const itemsColumns: ColumnDef<Item>[] = [
@@ -212,12 +213,16 @@ const globalFilterFn: FilterFn<Item> = (row, _columnId, filterValue) => {
   )
 }
 
-export function ItemsTable({ isLoading }: ItemsTableProps) {
+export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
   const { data: items, isPending, isError, refetch } = useItems()
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [globalFilter, setGlobalFilter] = useState("")
+  const [globalFilter, setGlobalFilter] = useState(initialSearch)
   const tableData = items?.content ?? []
+
+  useEffect(() => {
+    setGlobalFilter(initialSearch)
+  }, [initialSearch])
 
   const table = useReactTable({
     data: tableData,

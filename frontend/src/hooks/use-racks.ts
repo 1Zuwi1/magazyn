@@ -1,12 +1,9 @@
 import {
-  keepPreviousData,
   type UseQueryResult,
   useInfiniteQuery,
   useQueries,
 } from "@tanstack/react-query"
 import { useMemo } from "react"
-import z from "zod"
-import { createApiSchema } from "@/lib/create-api-schema"
 import {
   apiFetch,
   type FetchError,
@@ -17,6 +14,7 @@ import {
   DeleteRackSchema,
   RackDetailsSchema,
   RackImportSchema,
+  RackLookupSchema,
   RacksSchema,
 } from "@/lib/schemas"
 import { useApiMutation } from "./use-api-mutation"
@@ -26,16 +24,6 @@ const Racks_QUERY_KEY = ["Racks"] as const
 const RACK_DETAILS_QUERY_KEY = [...Racks_QUERY_KEY, "details"] as const
 const RACK_DETAILS_STALE_TIME_MS = 5 * 60 * 1000
 const INFINITE_RACKS_DEFAULT_PAGE_SIZE = 50
-
-const RackLookupSchema = createApiSchema({
-  GET: {
-    output: z.object({
-      id: z.number().int().nonnegative(),
-      name: z.string().nullish(),
-      marker: z.string(),
-    }),
-  },
-})
 
 export type RacksList = InferApiOutput<typeof RacksSchema, "GET">
 export type RackDetails = InferApiOutput<typeof RackDetailsSchema, "GET">
@@ -117,7 +105,6 @@ export default function useRacks(
         queryParams: params,
       })
     },
-    placeholderData: keepPreviousData,
   })
 }
 

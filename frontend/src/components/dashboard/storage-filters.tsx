@@ -20,7 +20,6 @@ interface WarehouseFiltersProps {
 export const DEFAULT_FILTERS: FilterState = {
   query: "",
   minOccupancy: 0,
-  tempRange: [-30, 30],
   showEmpty: true,
 }
 
@@ -62,29 +61,6 @@ export function WarehouseFilters({
               }}
               step={10}
               value={[filters.minOccupancy]}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label>Zakres temperatur</Label>
-              <span className="text-muted-foreground text-sm">
-                {filters.tempRange[0]}°C - {filters.tempRange[1]}°C
-              </span>
-            </div>
-            <Slider
-              max={50}
-              min={-30}
-              onValueChange={(value) => {
-                if (Array.isArray(value) && value.length === 2) {
-                  onFilterChange({
-                    ...filters,
-                    tempRange: [value[0], value[1]],
-                  })
-                }
-              }}
-              step={5}
-              value={filters.tempRange}
             />
           </div>
 

@@ -2,33 +2,34 @@
 
 import { Alert02Icon, Search } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useDebouncedValue } from "@tanstack/react-pacer"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import useWarehouses from "@/hooks/use-warehouses"
-import type { Warehouse } from "@/lib/schemas"
 import { DEFAULT_FILTERS, WarehouseFilters } from "./storage-filters"
 import { WarehouseGrid } from "./storage-grid"
 import type { FilterState } from "./types"
-import { filterWarehouses } from "./utils/filters"
 import { pluralize } from "./utils/helpers"
 
-const EMPTY_ARRAY: Warehouse[] = []
-
 export const WarehouseContent = () => {
-  const { data: warehouses, isPending, isError, refetch } = useWarehouses()
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
-  const filteredWarehouses = filterWarehouses(
-    warehouses?.content ?? EMPTY_ARRAY,
-    filters
-  )
+  const [debouncedFilters] = useDebouncedValue(filters, { wait: 500 })
+  const {
+    data: warehouses,
+    isPending,
+    isError,
+    refetch,
+  } = useWarehouses({
+    nameFilter: debouncedFilters.query || undefined,
+    minPercentOfOccupiedSlots: debouncedFilters.minOccupancy || undefined,
+    onlyNonEmpty: !debouncedFilters.showEmpty,
+  })
 
   const hasActiveFilters =
     filters.query !== "" ||
     filters.minOccupancy !== DEFAULT_FILTERS.minOccupancy ||
-    filters.tempRange[0] !== DEFAULT_FILTERS.tempRange[0] ||
-    filters.tempRange[1] !== DEFAULT_FILTERS.tempRange[1] ||
     filters.showEmpty !== DEFAULT_FILTERS.showEmpty
 
   if (isError) {
@@ -68,7 +69,7 @@ export const WarehouseContent = () => {
               onChange={(e) => {
                 setFilters((prev) => ({ ...prev, query: e.target.value }))
               }}
-              placeholder="Szukaj magazynu, regału lub ID..."
+              placeholder="Szukaj magazynu..."
               value={filters.query}
             />
           </div>
@@ -83,9 +84,9 @@ export const WarehouseContent = () => {
             </Badge>
           )}
           <span>
-            {filteredWarehouses.length}{" "}
+            {warehouses?.totalElements}{" "}
             {pluralize(
-              filteredWarehouses.length,
+              warehouses?.totalElements ?? 0,
               "magazyn",
               "magazyny",
               "magazynów"
@@ -99,7 +100,10 @@ export const WarehouseContent = () => {
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-lg">Twoje Magazyny</h2>
         </div>
-        <WarehouseGrid isLoading={isPending} warehouses={filteredWarehouses} />
+        <WarehouseGrid
+          isLoading={isPending}
+          warehouses={warehouses?.content ?? []}
+        />
       </section>
     </div>
   )

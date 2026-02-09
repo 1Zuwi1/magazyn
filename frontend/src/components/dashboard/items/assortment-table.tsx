@@ -77,6 +77,10 @@ const EXPIRY_FILTER_OPTIONS: {
 ]
 
 const dateFormatter = new Intl.DateTimeFormat("pl-PL")
+const GS1_WITH_SERIAL_PATTERN = /^11\d{6}01(\d{14})21\d+$/
+const GS1_AI_01_PATTERN = /\(01\)(\d{14})/
+const EAN14_PATTERN = /^\d{14}$/
+const DEFAULT_WAREHOUSE_PATH_SEGMENT = "magazyn"
 
 const formatDateLabel = (value: string): string => {
   const parsedDate = new Date(value)
@@ -92,6 +96,49 @@ const getDaysToExpiry = (value: string): number | undefined => {
     return undefined
   }
   return getDaysUntilExpiry(new Date(), parsedDate)
+}
+
+const extractEan14FromAssortmentCode = (value: string): string | null => {
+  const normalizedCode = value.replace(/\s/g, "")
+  const formattedMatch = GS1_AI_01_PATTERN.exec(normalizedCode)
+  if (formattedMatch?.[1]) {
+    return formattedMatch[1]
+  }
+
+  const rawMatch = GS1_WITH_SERIAL_PATTERN.exec(normalizedCode)
+  if (rawMatch?.[1]) {
+    return rawMatch[1]
+  }
+
+  if (EAN14_PATTERN.test(normalizedCode)) {
+    return normalizedCode
+  }
+
+  return null
+}
+
+const buildItemsCatalogHref = (assortmentCode: string): string => {
+  const ean14 = extractEan14FromAssortmentCode(assortmentCode)
+  const params = new URLSearchParams({
+    tab: "definitions",
+    search: ean14 ?? assortmentCode,
+  })
+
+  return `/dashboard/items?${params.toString()}`
+}
+
+const buildRackWarehouseHref = ({
+  rackId,
+  warehouseId,
+}: {
+  rackId: number
+  warehouseId: number
+}): string => {
+  const params = new URLSearchParams({
+    rackId: rackId.toString(),
+  })
+
+  return `/dashboard/warehouse/id/${warehouseId}/${DEFAULT_WAREHOUSE_PATH_SEGMENT}?${params.toString()}`
 }
 
 function ExpiryStatusBadge({ value }: { value: string }) {
@@ -292,12 +339,22 @@ function AssortmentTableContent({
     const namesMap = new Map<number, string>()
     for (const [index, rackId] of rackIds.entries()) {
       const rack = rackDetailsQueries[index]?.data
-      const rackName = rack?.name?.trim() || rack?.marker.trim()
+      const rackName = rack?.marker.trim()
       if (rackName) {
         namesMap.set(rackId, rackName)
       }
     }
     return namesMap
+  }, [rackDetailsQueries, rackIds])
+  const rackWarehouseIdsById = useMemo(() => {
+    const warehouseIdsMap = new Map<number, number>()
+    for (const [index, rackId] of rackIds.entries()) {
+      const rack = rackDetailsQueries[index]?.data
+      if (typeof rack?.warehouseId === "number") {
+        warehouseIdsMap.set(rackId, rack.warehouseId)
+      }
+    }
+    return warehouseIdsMap
   }, [rackDetailsQueries, rackIds])
 
   const filteredItems = useMemo(
@@ -324,7 +381,7 @@ function AssortmentTableContent({
         cell: ({ row }) => (
           <Link
             className="font-medium text-primary hover:underline"
-            href={`/dashboard/items?itemId=${row.original.itemId}`}
+            href={buildItemsCatalogHref(row.original.code)}
           >
             {itemNamesById.get(row.original.itemId) ?? "Nieznany produkt"}
           </Link>
@@ -337,14 +394,31 @@ function AssortmentTableContent({
         header: ({ column }) => (
           <SortableHeader column={column}>Regał</SortableHeader>
         ),
-        cell: ({ row }) => (
-          <Link
-            className="font-medium text-primary hover:underline"
-            href={`/dashboard/warehouse?rackId=${row.original.rackId}`}
-          >
-            {rackNamesById.get(row.original.rackId) ?? "Nieznany regał"}
-          </Link>
-        ),
+        cell: ({ row }) => {
+          const rackName =
+            rackNamesById.get(row.original.rackId) ?? "Nieznany regał"
+          const rackWarehouseId = rackWarehouseIdsById.get(row.original.rackId)
+
+          if (rackWarehouseId === undefined) {
+            return (
+              <span className="font-medium text-muted-foreground">
+                {rackName}
+              </span>
+            )
+          }
+
+          return (
+            <Link
+              className="font-medium text-primary hover:underline"
+              href={buildRackWarehouseHref({
+                rackId: row.original.rackId,
+                warehouseId: rackWarehouseId,
+              })}
+            >
+              {rackName}
+            </Link>
+          )
+        },
         enableSorting: true,
       },
       {
@@ -396,7 +470,7 @@ function AssortmentTableContent({
         enableSorting: false,
       },
     ],
-    [itemNamesById, rackNamesById]
+    [itemNamesById, rackNamesById, rackWarehouseIdsById]
   )
 
   const table = useReactTable({
