@@ -17,12 +17,14 @@ import Link from "next/link"
 import { type ReactNode, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { ErrorEmptyState } from "@/components/ui/empty-state"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
 import useNotifications, {
   type UserNotification,
   useMarkBulkNotifications,
@@ -82,6 +84,7 @@ export function NotificationInbox() {
     data: notificationsData,
     isPending: isNotificationsPending,
     isError: isNotificationsError,
+    refetch: refetchNotifications,
   } = useNotifications({
     page: 0,
     sortBy: "createdAt",
@@ -119,8 +122,8 @@ export function NotificationInbox() {
     notificationsListContent = (
       <div className="space-y-2 p-3">
         {Array.from({ length: 4 }, (_, index) => (
-          <div
-            className="h-16 animate-pulse rounded-lg border bg-muted/40"
+          <Skeleton
+            className="h-16 rounded-lg"
             key={`notification-skeleton-${index}`}
           />
         ))}
@@ -128,12 +131,7 @@ export function NotificationInbox() {
     )
   } else if (isNotificationsError) {
     notificationsListContent = (
-      <div className="flex h-full flex-col items-center justify-center py-12">
-        <p className="font-medium">Nie udało się pobrać powiadomień</p>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Spróbuj ponownie za chwilę.
-        </p>
-      </div>
+      <ErrorEmptyState onRetry={refetchNotifications} />
     )
   } else if (notifications.length === 0) {
     notificationsListContent = (

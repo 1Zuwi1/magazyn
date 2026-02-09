@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
   TooltipContent,
@@ -66,10 +67,7 @@ function QrCodeImage({ value, size }: { value: string; size: number }) {
 
   if (!dataUrl) {
     return (
-      <div
-        className="animate-pulse rounded bg-muted"
-        style={{ width: size, height: size }}
-      />
+      <Skeleton className="rounded" style={{ width: size, height: size }} />
     )
   }
 

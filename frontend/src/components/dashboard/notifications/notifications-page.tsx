@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import PaginationFull from "@/components/ui/pagination-component"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { UserNotification } from "@/hooks/use-notifications"
 import useNotifications, {
   useMarkBulkNotifications,
@@ -160,8 +161,8 @@ function NotificationListBody({
     return (
       <>
         {Array.from({ length: 5 }, (_, index) => (
-          <div
-            className="h-20 animate-pulse rounded-lg border bg-muted/40"
+          <Skeleton
+            className="h-20 rounded-lg"
             key={`notification-list-skeleton-${index}`}
           />
         ))}

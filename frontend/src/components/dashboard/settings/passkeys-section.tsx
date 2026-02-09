@@ -38,6 +38,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import useDeletePasskey from "@/hooks/use-delete-passkey"
 import { LINKED_2FA_METHODS_QUERY_KEY } from "@/hooks/use-linked-methods"
 import usePasskeys, { PASSKEYS_QUERY_KEY } from "@/hooks/use-passkeys"
@@ -173,10 +174,10 @@ function PasskeysListSkeleton() {
           key={i}
           style={{ animationDelay: `${i * 100}ms` }}
         >
-          <div className="size-11 animate-pulse rounded-xl bg-linear-to-br from-muted to-muted/50" />
+          <Skeleton className="size-11 rounded-xl" />
           <div className="flex-1 space-y-2">
-            <div className="h-4 w-28 animate-pulse rounded-md bg-muted" />
-            <div className="h-3 w-36 animate-pulse rounded-md bg-muted/60" />
+            <Skeleton className="h-4 w-28 rounded-md" />
+            <Skeleton className="h-3 w-36 rounded-md" />
           </div>
         </div>
       ))}

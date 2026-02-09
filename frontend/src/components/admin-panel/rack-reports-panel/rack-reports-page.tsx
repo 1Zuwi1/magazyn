@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import PaginationFull from "@/components/ui/pagination-component"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
 import useRackReports from "@/hooks/use-rack-reports"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type { RackReportsSchema } from "@/lib/schemas"
@@ -101,8 +102,8 @@ function RackReportListBody({
     return (
       <>
         {Array.from({ length: 5 }, (_, index) => (
-          <div
-            className="h-20 animate-pulse rounded-lg border bg-muted/40"
+          <Skeleton
+            className="h-20 rounded-lg"
             key={`report-list-skeleton-${index}`}
           />
         ))}
