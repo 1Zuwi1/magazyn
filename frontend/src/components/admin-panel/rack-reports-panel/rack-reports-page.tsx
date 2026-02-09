@@ -50,7 +50,9 @@ const formatDateTime = (date: string | null | undefined): string => {
   }
 }
 
-const formatValue = (value: number | null | undefined): string =>
+type MetricValue = number | string | null | undefined
+
+const formatValue = (value: MetricValue): string =>
   value == null ? "—" : value.toString()
 
 function MetricCard({
@@ -60,8 +62,8 @@ function MetricCard({
   icon: Icon,
 }: {
   label: string
-  value: number | null | undefined
-  unit: string
+  value: MetricValue
+  unit?: string
   icon: typeof ThermometerIcon
 }) {
   return (
@@ -72,7 +74,9 @@ function MetricCard({
       </div>
       <p className="mt-1 font-semibold">
         {formatValue(value)}{" "}
-        <span className="font-normal text-muted-foreground">{unit}</span>
+        {unit && (
+          <span className="font-normal text-muted-foreground">{unit}</span>
+        )}
       </p>
     </div>
   )
@@ -229,14 +233,12 @@ function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
             <MetricCard
               icon={WarehouseIcon}
               label="Magazyn"
-              unit="ID"
-              value={report.warehouseId}
+              value={report.warehouseName}
             />
             <MetricCard
               icon={PackageIcon}
               label="Regał"
-              unit="ID"
-              value={report.rackId}
+              value={report.rackMarker}
             />
           </div>
         </section>
