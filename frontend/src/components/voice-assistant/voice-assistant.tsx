@@ -9,12 +9,14 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition"
+import useWarehouses from "@/hooks/use-warehouses"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import type { VoiceCommandMatch } from "@/lib/voice/commands"
 import { matchVoiceCommand } from "@/lib/voice/commands"
 import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
 import {
+  findWarehouseByName,
   getCommandLabel,
   handleConfirmCommandAction,
   isCommandMatchValid,
@@ -36,13 +38,11 @@ export type VoiceAssistantViews =
 
 interface VoiceAssistantProps {
   dialogTrigger?: ReactNode
-  warehouses?: Pick<Warehouse, "id" | "name">[]
 }
 
-export function VoiceAssistant({
-  dialogTrigger,
-  warehouses = [],
-}: VoiceAssistantProps) {
+type WarehouseReference = Pick<Warehouse, "id" | "name">
+
+export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
   const listenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isMobile = useIsMobile()
   const router = useRouter()
@@ -55,6 +55,13 @@ export function VoiceAssistant({
   const [matchedCommand, setMatchedCommand] =
     useState<VoiceCommandMatch | null>(null)
   const [manualTranscript, setManualTranscript] = useState<string | null>(null)
+  const [pendingWarehouseLookupMatch, setPendingWarehouseLookupMatch] =
+    useState<VoiceCommandMatch | null>(null)
+  const [warehouseLookupName, setWarehouseLookupName] = useState<string | null>(
+    null
+  )
+  const [resolvedWarehouse, setResolvedWarehouse] =
+    useState<WarehouseReference | null>(null)
 
   const {
     finalTranscript,
@@ -64,6 +71,21 @@ export function VoiceAssistant({
     stop,
     isSupported,
   } = useSpeechRecognition()
+  const warehouseLookupParams = useMemo(
+    () =>
+      warehouseLookupName
+        ? {
+            nameFilter: warehouseLookupName,
+            page: 0,
+            size: 1,
+          }
+        : undefined,
+    [warehouseLookupName]
+  )
+  const { data: warehouseLookupData, isFetching: isWarehouseLookupFetching } =
+    useWarehouses(warehouseLookupParams, {
+      enabled: Boolean(warehouseLookupParams),
+    })
 
   useEffect(() => {
     if (!open) {
@@ -85,6 +107,10 @@ export function VoiceAssistant({
         setView("idle")
         setErrorMessage(null)
         setMatchedCommand(null)
+        setManualTranscript(null)
+        setPendingWarehouseLookupMatch(null)
+        setWarehouseLookupName(null)
+        setResolvedWarehouse(null)
       }
     }
 
@@ -93,7 +119,7 @@ export function VoiceAssistant({
   }, [open, stop, reset])
 
   useEffect(() => {
-    if (view !== "processing") {
+    if (view !== "processing" || pendingWarehouseLookupMatch) {
       return
     }
 
@@ -107,21 +133,82 @@ export function VoiceAssistant({
     }
 
     const match = matchVoiceCommand(resolvedText)
-    if (!(match && isCommandMatchValid(match, warehouses))) {
+    if (!(match && isCommandMatchValid(match))) {
       setErrorMessage("Nie znam tego polecenia.")
       setView("error")
       return
     }
 
+    if (match.command.id === "warehouses:id") {
+      const warehouseName = match.params.warehouseName?.trim()
+      if (!warehouseName) {
+        setErrorMessage("Brak nazwy magazynu w komendzie.")
+        setView("error")
+        return
+      }
+      setMatchedCommand(null)
+      setResolvedWarehouse(null)
+      setPendingWarehouseLookupMatch(match)
+      setWarehouseLookupName(warehouseName)
+      return
+    }
+
+    setPendingWarehouseLookupMatch(null)
+    setWarehouseLookupName(null)
+    setResolvedWarehouse(null)
     setMatchedCommand(match)
     setView("confirm")
-  }, [view, finalTranscript, interimTranscript, warehouses])
+  }, [view, finalTranscript, interimTranscript, pendingWarehouseLookupMatch])
+
+  useEffect(() => {
+    if (
+      view !== "processing" ||
+      !pendingWarehouseLookupMatch ||
+      !warehouseLookupName
+    ) {
+      return
+    }
+
+    if (isWarehouseLookupFetching) {
+      return
+    }
+
+    const warehouse = findWarehouseByName(
+      warehouseLookupName,
+      warehouseLookupData?.content ?? []
+    )
+
+    console.log(warehouseLookupName, warehouseLookupData?.content, warehouse) // Debug log
+
+    if (!warehouse) {
+      setPendingWarehouseLookupMatch(null)
+      setWarehouseLookupName(null)
+      setErrorMessage("Nie znaleziono magazynu o takiej nazwie.")
+      setView("error")
+      return
+    }
+
+    setResolvedWarehouse(warehouse)
+    setMatchedCommand(pendingWarehouseLookupMatch)
+    setPendingWarehouseLookupMatch(null)
+    setWarehouseLookupName(null)
+    setView("confirm")
+  }, [
+    view,
+    pendingWarehouseLookupMatch,
+    warehouseLookupName,
+    isWarehouseLookupFetching,
+    warehouseLookupData,
+  ])
 
   const handleReset = useCallback(() => {
     setView("idle")
     setErrorMessage(null)
     setMatchedCommand(null)
     setManualTranscript(null)
+    setPendingWarehouseLookupMatch(null)
+    setWarehouseLookupName(null)
+    setResolvedWarehouse(null)
     reset()
     stop()
   }, [reset, stop])
@@ -154,8 +241,12 @@ export function VoiceAssistant({
     }
 
     const match = matchVoiceCommand(liveTranscript)
-    return match && isCommandMatchValid(match, warehouses) ? match : null
-  }, [liveTranscript, warehouses])
+    return match && isCommandMatchValid(match) ? match : null
+  }, [liveTranscript])
+  const commandWarehouses = useMemo(
+    () => (resolvedWarehouse ? [resolvedWarehouse] : []),
+    [resolvedWarehouse]
+  )
 
   const handleStopListening = useCallback(() => {
     stop()
@@ -224,27 +315,45 @@ export function VoiceAssistant({
     setView("listening")
   }, [isSupported, reset, start])
 
-  const handleSuggestionSelect = useCallback(
-    (suggestion: string) => {
-      const match = matchVoiceCommand(suggestion)
-      if (!(match && isCommandMatchValid(match, warehouses))) {
-        setErrorMessage("Nie znam tego polecenia.")
+  const handleSuggestionSelect = useCallback((suggestion: string) => {
+    const match = matchVoiceCommand(suggestion)
+    if (!(match && isCommandMatchValid(match))) {
+      setErrorMessage("Nie znam tego polecenia.")
+      setView("error")
+      return
+    }
+
+    if (match.command.id === "warehouses:id") {
+      const warehouseName = match.params.warehouseName?.trim()
+      if (!warehouseName) {
+        setErrorMessage("Brak nazwy magazynu w komendzie.")
         setView("error")
         return
       }
 
       setErrorMessage(null)
-      setMatchedCommand(match)
       setManualTranscript(suggestion)
-      setView("confirm")
-    },
-    [warehouses]
-  )
+      setMatchedCommand(null)
+      setResolvedWarehouse(null)
+      setPendingWarehouseLookupMatch(match)
+      setWarehouseLookupName(warehouseName)
+      setView("processing")
+      return
+    }
+
+    setErrorMessage(null)
+    setPendingWarehouseLookupMatch(null)
+    setWarehouseLookupName(null)
+    setResolvedWarehouse(null)
+    setMatchedCommand(match)
+    setManualTranscript(suggestion)
+    setView("confirm")
+  }, [])
 
   let content: ReactNode
 
   const handleConfirmCommand = useCallback(() => {
-    handleConfirmCommandAction(matchedCommand, warehouses, {
+    handleConfirmCommandAction(matchedCommand, commandWarehouses, {
       navigateAndClose,
       openScanner,
       openAddItemDialog,
@@ -260,7 +369,7 @@ export function VoiceAssistant({
     openScanner,
     setPendingAction,
     closeDialog,
-    warehouses,
+    commandWarehouses,
   ])
 
   switch (view) {
@@ -274,9 +383,7 @@ export function VoiceAssistant({
       break
     case "listening":
       {
-        const liveLabel = liveCommand
-          ? getCommandLabel(liveCommand, warehouses)
-          : null
+        const liveLabel = liveCommand ? getCommandLabel(liveCommand, []) : null
         content = (
           <VoiceAssistantListeningView
             detectedCommandLabel={liveLabel}
@@ -293,7 +400,7 @@ export function VoiceAssistant({
     case "confirm":
       content = matchedCommand ? (
         <VoiceAssistantConfirmView
-          commandLabel={getCommandLabel(matchedCommand, warehouses)}
+          commandLabel={getCommandLabel(matchedCommand, commandWarehouses)}
           onCancel={handleReset}
           onConfirm={handleConfirmCommand}
           transcript={

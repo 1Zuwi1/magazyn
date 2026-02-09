@@ -1,6 +1,7 @@
 "use client"
 
 import { PackageIcon } from "@hugeicons/core-free-icons"
+import { useState } from "react"
 import { AssortmentTableWithData } from "@/components/dashboard/items/assortment-table"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { ErrorEmptyState } from "@/components/ui/empty-state"
@@ -13,6 +14,8 @@ export default function AssortmentClient() {
     useCurrentWarehouseId({
       redirectIfMissingTo: "/dashboard/warehouse",
     })
+
+  const [page, setPage] = useState(1)
 
   const {
     data: warehouse,
@@ -30,6 +33,7 @@ export default function AssortmentClient() {
     refetch: refetchAssortments,
   } = useAssortments({
     warehouseId: warehouse?.id ?? -1,
+    page: page - 1,
   })
 
   const isError = isWarehouseError || isAssortmentsError
@@ -80,6 +84,8 @@ export default function AssortmentClient() {
       <AssortmentTableWithData
         assortmentData={assortments}
         isLoading={isLoading}
+        page={page}
+        setPage={setPage}
       />
     </div>
   )

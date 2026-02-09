@@ -198,7 +198,7 @@ function InboundOperationsTab() {
             {query.isPending && <TableSkeleton columns={8} />}
             {query.isError && (
               <TableRow>
-                <TableCell colSpan={8}>
+                <TableCell className="p-0!" colSpan={8}>
                   <ErrorEmptyState
                     onRetry={() => {
                       query.refetch()
@@ -209,7 +209,7 @@ function InboundOperationsTab() {
             )}
             {!(query.isPending || query.isError) && operations.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8}>
+                <TableCell className="p-0!" colSpan={8}>
                   <FilterEmptyState onClear={handleClearDates} />
                 </TableCell>
               </TableRow>
@@ -343,7 +343,7 @@ function OutboundOperationsTab() {
             {query.isPending && <TableSkeleton columns={9} />}
             {query.isError && (
               <TableRow>
-                <TableCell colSpan={9}>
+                <TableCell className="p-0!" colSpan={9}>
                   <ErrorEmptyState
                     onRetry={() => {
                       query.refetch()
@@ -354,7 +354,7 @@ function OutboundOperationsTab() {
             )}
             {!(query.isPending || query.isError) && operations.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9}>
+                <TableCell className="p-0!" colSpan={9}>
                   <EmptyState message="Brak operacji wydania" />
                 </TableCell>
               </TableRow>

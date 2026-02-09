@@ -6,7 +6,6 @@ import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { ActionDialog } from "@/components/admin-panel/users/components/action-dialog"
 import { StatusChangeDialog } from "@/components/admin-panel/users/components/status-change-dialog"
 import { UsersFilterBar } from "@/components/admin-panel/users/components/users-filter-bar"
-import { UsersPaginationFooter } from "@/components/admin-panel/users/components/users-pagination-footer"
 import { UsersStats } from "@/components/admin-panel/users/components/users-stats"
 import { UsersTable } from "@/components/admin-panel/users/components/users-table"
 import { WarehouseAssignmentDialog } from "@/components/admin-panel/users/components/warehouse-assignment-dialog"
@@ -15,6 +14,7 @@ import { useUsersData } from "@/components/admin-panel/users/hooks/use-users-dat
 import { useUsersDialogState } from "@/components/admin-panel/users/hooks/use-users-dialog-state"
 import { useUsersFilters } from "@/components/admin-panel/users/hooks/use-users-filters"
 import { useUsersPagination } from "@/components/admin-panel/users/hooks/use-users-pagination"
+import PaginationFull from "@/components/ui/pagination-component"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../lib/constants"
 
@@ -80,15 +80,7 @@ export default function UsersMain() {
       setUserIdToDelete(null)
     },
   })
-  const {
-    currentPage,
-    totalPages,
-    totalElements,
-    firstVisible,
-    lastVisible,
-    paginationSummaryText,
-    handleSetPage,
-  } = useUsersPagination({
+  const { currentPage, totalPages } = useUsersPagination({
     page,
     usersCount: users.length,
     usersData,
@@ -153,14 +145,11 @@ export default function UsersMain() {
           users={users}
         />
 
-        <UsersPaginationFooter
+        <PaginationFull
           currentPage={currentPage}
-          firstVisible={firstVisible}
-          lastVisible={lastVisible}
-          onSetPage={handleSetPage}
-          paginationSummaryText={paginationSummaryText}
-          totalElements={totalElements}
+          setPage={setPage}
           totalPages={totalPages}
+          variant="compact"
         />
       </div>
 

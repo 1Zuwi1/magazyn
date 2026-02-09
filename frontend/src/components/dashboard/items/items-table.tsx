@@ -1,7 +1,5 @@
 "use client"
 
-import { ArrowLeft02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -9,7 +7,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   type SortingState,
   useReactTable,
@@ -17,7 +14,6 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   ErrorEmptyState,
   NoItemsEmptyState,
@@ -30,6 +26,7 @@ import {
   SearchInput,
 } from "@/components/ui/filter-bar"
 import { ItemPhoto } from "@/components/ui/item-photo"
+import PaginationFull from "@/components/ui/pagination-component"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -229,7 +226,13 @@ const globalFilterFn: FilterFn<Item> = (row, _columnId, filterValue) => {
 }
 
 export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
-  const { data: items, isPending, isError, refetch } = useItems()
+  const [page, setPage] = useState(1)
+  const {
+    data: items,
+    isPending,
+    isError,
+    refetch,
+  } = useItems({ page: page - 1, size: 10 })
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState(initialSearch)
@@ -250,7 +253,6 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
     data: tableData,
     columns: itemsColumns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -275,8 +277,7 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
   const filteredCount = table.getFilteredRowModel().rows.length
   const totalCount = items?.totalElements ?? tableData.length
   const isFiltered = globalFilter.length > 0
-  const currentPage = table.getState().pagination.pageIndex + 1
-  const totalPages = table.getPageCount()
+  const totalPages = items?.totalPages ?? 1
 
   const itemLabel = {
     singular: "przedmiot",
@@ -350,7 +351,7 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell className="p-0" colSpan={itemsColumns.length}>
+                <TableCell className="p-0!" colSpan={itemsColumns.length}>
                   {isFiltered ? (
                     <SearchEmptyState onClear={() => setGlobalFilter("")} />
                   ) : (
@@ -361,46 +362,15 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
             )}
           </TableBody>
         </Table>
+        {totalPages > 1 && (
+          <PaginationFull
+            currentPage={page}
+            setPage={setPage}
+            totalPages={totalPages}
+            variant="compact"
+          />
+        )}
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-muted-foreground text-sm">
-            Strona{" "}
-            <span className="font-mono font-semibold text-foreground">
-              {currentPage}
-            </span>{" "}
-            z{" "}
-            <span className="font-mono font-semibold text-foreground">
-              {totalPages}
-            </span>
-          </p>
-
-          <div className="flex items-center gap-1">
-            <Button
-              className="gap-1.5"
-              disabled={!table.getCanPreviousPage()}
-              onClick={() => table.previousPage()}
-              size="sm"
-              variant="outline"
-            >
-              <HugeiconsIcon className="size-3.5" icon={ArrowLeft02Icon} />
-              <span className="hidden sm:inline">Poprzednia</span>
-            </Button>
-            <Button
-              className="gap-1.5"
-              disabled={!table.getCanNextPage()}
-              onClick={() => table.nextPage()}
-              size="sm"
-              variant="outline"
-            >
-              <span className="hidden sm:inline">Następna</span>
-              <HugeiconsIcon className="size-3.5" icon={ArrowRight02Icon} />
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

@@ -1,18 +1,12 @@
 "use client"
 
-import {
-  ArrowLeft02Icon,
-  ArrowRight02Icon,
-  Calendar03Icon,
-} from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
+import { Calendar03Icon } from "@hugeicons/core-free-icons"
 import {
   type ColumnDef,
   type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   type SortingState,
   useReactTable,
@@ -20,9 +14,8 @@ import {
 import { formatDate, formatDistanceToNow } from "date-fns"
 import { pl } from "date-fns/locale"
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { type Dispatch, type SetStateAction, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   ErrorEmptyState,
   FilterEmptyState,
@@ -36,6 +29,7 @@ import {
   FilterSelectWrapper,
   SearchInput,
 } from "@/components/ui/filter-bar"
+import PaginationFull from "@/components/ui/pagination-component"
 import {
   Select,
   SelectContent,
@@ -229,12 +223,16 @@ interface AssortmentTableProps {
 
 interface AssortmentTableWithDataProps extends AssortmentTableProps {
   assortmentData: SupportedAssortmentList | null | undefined
+  page: number
+  setPage: Dispatch<SetStateAction<number>>
 }
 
 interface AssortmentTableContentProps extends AssortmentTableProps {
   assortmentData: SupportedAssortmentList | null | undefined
   isError?: boolean
   onRetry?: () => void
+  page: number
+  setPage: (page: number) => void
 }
 
 const SKELETON_ROWS = 5
@@ -338,6 +336,8 @@ function AssortmentTableContent({
   isLoading,
   isError,
   onRetry,
+  page,
+  setPage,
 }: AssortmentTableContentProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -518,7 +518,6 @@ function AssortmentTableContent({
     data: filteredItems,
     columns: assortmentColumns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -552,8 +551,7 @@ function AssortmentTableContent({
   const isSearchFiltered = globalFilter.length > 0
   const isExpiryFiltered = expiryFilter !== "ALL"
   const isFiltered = isSearchFiltered || isExpiryFiltered
-  const currentPage = table.getState().pagination.pageIndex + 1
-  const totalPages = table.getPageCount()
+  const totalPages = assortmentData?.totalPages ?? 1
 
   const clearAllFilters = () => {
     setGlobalFilter("")
@@ -693,7 +691,7 @@ function AssortmentTableContent({
               ))
             ) : (
               <TableRow>
-                <TableCell className="p-0" colSpan={assortmentColumns.length}>
+                <TableCell className="p-0!" colSpan={assortmentColumns.length}>
                   {isFiltered ? (
                     <FilterEmptyState onClear={clearAllFilters} />
                   ) : (
@@ -704,52 +702,28 @@ function AssortmentTableContent({
             )}
           </TableBody>
         </Table>
+        <PaginationFull
+          currentPage={page}
+          setPage={setPage}
+          totalPages={totalPages}
+          variant="compact"
+        />
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-muted-foreground text-sm">
-            Strona{" "}
-            <span className="font-mono font-semibold text-foreground">
-              {currentPage}
-            </span>{" "}
-            z{" "}
-            <span className="font-mono font-semibold text-foreground">
-              {totalPages}
-            </span>
-          </p>
-
-          <div className="flex items-center gap-1">
-            <Button
-              className="gap-1.5"
-              disabled={!table.getCanPreviousPage()}
-              onClick={() => table.previousPage()}
-              size="sm"
-              variant="outline"
-            >
-              <HugeiconsIcon className="size-3.5" icon={ArrowLeft02Icon} />
-              <span className="hidden sm:inline">Poprzednia</span>
-            </Button>
-            <Button
-              className="gap-1.5"
-              disabled={!table.getCanNextPage()}
-              onClick={() => table.nextPage()}
-              size="sm"
-              variant="outline"
-            >
-              <span className="hidden sm:inline">Następna</span>
-              <HugeiconsIcon className="size-3.5" icon={ArrowRight02Icon} />
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
 
 export function AssortmentTable({ isLoading }: AssortmentTableProps) {
-  const { data: assortmentData, isPending, isError, refetch } = useAssortment()
+  const [page, setPage] = useState(1)
+  const {
+    data: assortmentData,
+    isPending,
+    isError,
+    refetch,
+  } = useAssortment({
+    page: page - 1,
+    size: 10,
+  })
 
   return (
     <AssortmentTableContent
@@ -757,6 +731,8 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
       isError={isError}
       isLoading={isLoading || isPending}
       onRetry={() => refetch()}
+      page={page}
+      setPage={setPage}
     />
   )
 }
@@ -764,11 +740,15 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
 export function AssortmentTableWithData({
   assortmentData,
   isLoading,
+  page,
+  setPage,
 }: AssortmentTableWithDataProps) {
   return (
     <AssortmentTableContent
       assortmentData={assortmentData}
       isLoading={isLoading}
+      page={page}
+      setPage={setPage}
     />
   )
 }

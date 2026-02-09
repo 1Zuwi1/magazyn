@@ -321,7 +321,7 @@ export function AdminItemsTable({
               ))
             ) : (
               <TableRow>
-                <TableCell className="p-0" colSpan={columns.length}>
+                <TableCell className="p-0!" colSpan={columns.length}>
                   {isFiltered ? (
                     <FilterEmptyState onClear={clearAllFilters} />
                   ) : (
@@ -332,14 +332,13 @@ export function AdminItemsTable({
             )}
           </TableBody>
         </Table>
+        <PaginationFull
+          currentPage={currentPage}
+          setPage={onSetPage}
+          totalPages={totalPages}
+          variant="compact"
+        />
       </div>
-
-      {/* Pagination */}
-      <PaginationFull
-        currentPage={currentPage}
-        setPage={onSetPage}
-        totalPages={totalPages}
-      />
     </div>
   )
 }

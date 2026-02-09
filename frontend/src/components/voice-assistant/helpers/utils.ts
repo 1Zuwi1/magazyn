@@ -58,7 +58,7 @@ export const getCommandLabel = (
 
 export const isCommandMatchValid = (
   match: NonNullable<ReturnType<typeof matchVoiceCommand>>,
-  warehouses: Pick<Warehouse, "id" | "name">[]
+  warehouses: Pick<Warehouse, "id" | "name">[] = []
 ): boolean => {
   if (match.command.id !== "warehouses:id") {
     return true
@@ -67,6 +67,10 @@ export const isCommandMatchValid = (
   const warehouseName = match.params.warehouseName
   if (!warehouseName) {
     return false
+  }
+
+  if (warehouses.length === 0) {
+    return true
   }
 
   return Boolean(findWarehouseByName(warehouseName, warehouses))
