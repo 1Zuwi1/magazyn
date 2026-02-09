@@ -691,7 +691,7 @@ function AssortmentTableContent({
               ))
             ) : (
               <TableRow>
-                <TableCell className="p-0!" colSpan={assortmentColumns.length}>
+                <TableCell className="p-0" colSpan={assortmentColumns.length}>
                   {isFiltered ? (
                     <FilterEmptyState onClear={clearAllFilters} />
                   ) : (

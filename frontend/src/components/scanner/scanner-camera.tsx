@@ -88,16 +88,20 @@ export function ScannerCamera({
     canvas.height = video.videoHeight
     const ctx = canvas.getContext("2d")
     if (!ctx) {
+      setErrorMsg("Nie udało się przygotować podglądu zdjęcia.")
       return
     }
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     canvas.toBlob(
       (blob) => {
-        if (blob) {
-          const file = new File([blob], "photo.jpg", { type: "image/jpeg" })
-          onTakePhoto(file)
+        if (!blob) {
+          setErrorMsg("Nie udało się wykonać zdjęcia. Spróbuj ponownie.")
+          return
         }
+
+        const file = new File([blob], "photo.jpg", { type: "image/jpeg" })
+        onTakePhoto(file)
       },
       "image/jpeg",
       0.85

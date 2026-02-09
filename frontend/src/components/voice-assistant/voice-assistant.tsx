@@ -178,8 +178,6 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
       warehouseLookupData?.content ?? []
     )
 
-    console.log(warehouseLookupName, warehouseLookupData?.content, warehouse) // Debug log
-
     if (!warehouse) {
       setPendingWarehouseLookupMatch(null)
       setWarehouseLookupName(null)

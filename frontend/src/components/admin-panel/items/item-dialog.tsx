@@ -72,6 +72,21 @@ interface ItemDialogProps {
   onSubmit: (data: ItemFormData) => Promise<number | undefined>
 }
 
+function mapItemToFormData(item: Item): ItemFormData {
+  return {
+    name: item.name,
+    minTemp: item.minTemp,
+    maxTemp: item.maxTemp,
+    weight: item.weight,
+    width: item.width,
+    height: item.height,
+    depth: item.depth,
+    comment: item.comment,
+    daysToExpiry: item.daysToExpiry,
+    isDangerous: item.isDangerous,
+  }
+}
+
 function SectionHeader({
   icon,
   title,
@@ -496,20 +511,10 @@ export function ItemDialog({
   const isEdit = !!currentRow
   const [photoPromptOpen, setPhotoPromptOpen] = useState(false)
   const [createdItemId, setCreatedItemId] = useState<number | null>(null)
+  const [pendingFormReset, setPendingFormReset] = useState(false)
 
   const formValues: ItemFormData = currentRow
-    ? {
-        name: currentRow.name,
-        minTemp: currentRow.minTemp,
-        maxTemp: currentRow.maxTemp,
-        weight: currentRow.weight,
-        width: currentRow.width,
-        height: currentRow.height,
-        depth: currentRow.depth,
-        comment: currentRow.comment,
-        daysToExpiry: currentRow.daysToExpiry,
-        isDangerous: currentRow.isDangerous,
-      }
+    ? mapItemToFormData(currentRow)
     : DEFAULT_ITEM
 
   const form = useForm({
@@ -529,35 +534,32 @@ export function ItemDialog({
       })
 
       onOpenChange(false)
+      setPendingFormReset(true)
 
       if (!isEdit && typeof result === "number") {
         setCreatedItemId(result)
         setPhotoPromptOpen(true)
       }
-
-      form.reset()
     },
   })
 
   useEffect(() => {
     if (currentRow) {
-      form.reset({
-        name: currentRow.name,
-        minTemp: currentRow.minTemp,
-        maxTemp: currentRow.maxTemp,
-        weight: currentRow.weight,
-        width: currentRow.width,
-        height: currentRow.height,
-        depth: currentRow.depth,
-        comment: currentRow.comment,
-        daysToExpiry: currentRow.daysToExpiry,
-        isDangerous: currentRow.isDangerous,
-      })
+      form.reset(mapItemToFormData(currentRow))
       return
     }
 
     form.reset(DEFAULT_ITEM)
   }, [currentRow, form])
+
+  useEffect(() => {
+    if (open || !pendingFormReset) {
+      return
+    }
+
+    form.reset(currentRow ? mapItemToFormData(currentRow) : DEFAULT_ITEM)
+    setPendingFormReset(false)
+  }, [currentRow, form, open, pendingFormReset])
 
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
 
@@ -571,7 +573,7 @@ export function ItemDialog({
         }
         formId="item-form"
         isLoading={isSubmitting}
-        onFormReset={() => form.reset()}
+        onFormReset={() => setPendingFormReset(true)}
         onOpenChange={onOpenChange}
         open={open}
         title={isEdit ? "Edytuj przedmiot" : "Dodaj przedmiot"}

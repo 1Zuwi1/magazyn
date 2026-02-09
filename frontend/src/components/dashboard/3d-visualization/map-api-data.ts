@@ -33,9 +33,7 @@ function getItemStatus(
   if (!Number.isFinite(expiresAtTimestampMs)) {
     return isDangerous ? "dangerous" : "normal"
   }
-  const isExpired =
-    Number.isFinite(expiresAtTimestampMs) &&
-    expiresAtTimestampMs < nowTimestampMs
+  const isExpired = expiresAtTimestampMs < nowTimestampMs
 
   if (isExpired && isDangerous) {
     return "expired-dangerous"

@@ -29,6 +29,9 @@ export default function PaginationFull({
     variant: isCompact ? "outline" : "ghost",
     size: isCompact ? "xs" : "default",
   } satisfies VariantProps<typeof buttonVariants>
+  if (totalPages < 1) {
+    return null
+  }
   return (
     <Pagination
       className={cn(

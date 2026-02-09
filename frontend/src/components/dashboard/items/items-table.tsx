@@ -351,7 +351,7 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell className="p-0!" colSpan={itemsColumns.length}>
+                <TableCell className="p-0" colSpan={itemsColumns.length}>
                   {isFiltered ? (
                     <SearchEmptyState onClear={() => setGlobalFilter("")} />
                   ) : (
@@ -362,14 +362,13 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
             )}
           </TableBody>
         </Table>
-        {totalPages > 1 && (
-          <PaginationFull
-            currentPage={page}
-            setPage={setPage}
-            totalPages={totalPages}
-            variant="compact"
-          />
-        )}
+
+        <PaginationFull
+          currentPage={page}
+          setPage={setPage}
+          totalPages={totalPages}
+          variant="compact"
+        />
       </div>
     </div>
   )

@@ -259,14 +259,12 @@ export function RackGridView({
       </div>
 
       {/* Footer Bar - Rack Pagination */}
-      {totalPages > 1 && (
-        <PaginationFull
-          className="mb-2"
-          currentPage={currentPage}
-          setPage={onSetPage}
-          totalPages={totalPages}
-        />
-      )}
+      <PaginationFull
+        className="mb-2"
+        currentPage={currentPage}
+        setPage={onSetPage}
+        totalPages={totalPages}
+      />
 
       <RackItemsDialog
         onOpenChange={setIsItemsDialogOpen}

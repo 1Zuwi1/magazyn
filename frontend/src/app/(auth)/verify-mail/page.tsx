@@ -44,6 +44,10 @@ function VerifyMailContent() {
         })
       )
 
+      if (abortController.signal.aborted) {
+        return
+      }
+
       if (err) {
         setState("error")
         setErrorMessage(
@@ -56,6 +60,10 @@ function VerifyMailContent() {
     }
 
     verify()
+
+    return () => {
+      abortController.abort()
+    }
   }, [token])
 
   return (

@@ -47,6 +47,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -510,11 +511,20 @@ function ConnectedMethods({
 }) {
   if (isLoading) {
     return (
-      <div className="flex items-center gap-3 rounded-lg border border-muted-foreground/30 border-dashed bg-muted/20 px-4 py-3">
-        <Spinner className="size-4 text-muted-foreground" />
-        <span className="text-muted-foreground text-sm">
-          Ładowanie połączonych metod...
-        </span>
+      <div className="space-y-2">
+        {Array.from({ length: 2 }, (_, i) => (
+          <div
+            className="flex items-center gap-3 rounded-lg border px-4 py-3"
+            key={`skeleton-${i.toString()}`}
+          >
+            <Skeleton className="size-9 shrink-0 rounded-full" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3 w-36" />
+            </div>
+            <Skeleton className="h-5 w-16 rounded-full" />
+          </div>
+        ))}
       </div>
     )
   }

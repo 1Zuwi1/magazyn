@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Spinner } from "@/components/ui/spinner"
+import { Skeleton } from "@/components/ui/skeleton"
 import useLinkedMethods from "@/hooks/use-linked-methods"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
@@ -179,6 +179,62 @@ export function TwoFactorVerificationDialog({
     onVerified?.()
   }
 
+  const getInputContent = () => {
+    if (isMethodsError || isMethodsPending) {
+      return null
+    }
+    if (selectedMethod === "PASSKEYS") {
+      return (
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-muted-foreground text-sm">
+                {passkeyDescription}
+              </p>
+            </div>
+            <Badge variant={isVerified ? "success" : "warning"}>
+              {isVerified ? "Zweryfikowano" : "Wymagane"}
+            </Badge>
+          </div>
+          {isVerified ? (
+            <Alert>
+              <AlertTitle>{passkeyVerifiedTitle}</AlertTitle>
+              <AlertDescription>{passkeyVerifiedDescription}</AlertDescription>
+            </Alert>
+          ) : (
+            <PasskeyLogin
+              label="Zweryfikuj kluczem bezpieczeństwa"
+              onSuccess={handlePasskeyVerified}
+              redirectTo={null}
+              showSeparator={false}
+              showSuccessToast={false}
+            />
+          )}
+        </div>
+      )
+    }
+    return (
+      <PasswordVerificationSection
+        autoVerify
+        code={code}
+        copy={resolvedCopy}
+        isVerified={isVerified}
+        isVerifying={isVerifying}
+        method={selectedMethod}
+        onInputChange={(value) => {
+          setCode(value)
+          if (verificationError) {
+            setVerificationError("")
+          }
+        }}
+        onRequestCode={handleRequestCode}
+        onVerify={handleVerify}
+        showTitle={false}
+        verificationError={verificationError}
+      />
+    )
+  }
+
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className={contentClassName}>
@@ -194,11 +250,16 @@ export function TwoFactorVerificationDialog({
             Metoda weryfikacji
           </Label>
           {isMethodsPending && (
-            <div className="flex items-center gap-3 rounded-lg border border-muted-foreground/30 border-dashed bg-muted/20 px-4 py-3">
-              <Spinner className="size-4 text-muted-foreground" />
-              <span className="text-muted-foreground text-sm">
-                Ładowanie metod weryfikacji...
-              </span>
+            <div className="space-y-2">
+              {Array.from({ length: 3 }, (_, i) => (
+                <div
+                  className="flex items-center gap-3 rounded-lg border px-3 py-2"
+                  key={`skeleton-${i.toString()}`}
+                >
+                  <Skeleton className="size-8 shrink-0 rounded-md" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+              ))}
             </div>
           )}
           {!isMethodsPending && isMethodsError && (
@@ -272,55 +333,7 @@ export function TwoFactorVerificationDialog({
             </RadioGroup>
           )}
         </div>
-        {selectedMethod === "PASSKEYS" ? (
-          <div className="space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <p className="text-muted-foreground text-sm">
-                  {passkeyDescription}
-                </p>
-              </div>
-              <Badge variant={isVerified ? "success" : "warning"}>
-                {isVerified ? "Zweryfikowano" : "Wymagane"}
-              </Badge>
-            </div>
-            {isVerified ? (
-              <Alert>
-                <AlertTitle>{passkeyVerifiedTitle}</AlertTitle>
-                <AlertDescription>
-                  {passkeyVerifiedDescription}
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <PasskeyLogin
-                label="Zweryfikuj kluczem bezpieczeństwa"
-                onSuccess={handlePasskeyVerified}
-                redirectTo={null}
-                showSeparator={false}
-                showSuccessToast={false}
-              />
-            )}
-          </div>
-        ) : (
-          <PasswordVerificationSection
-            autoVerify
-            code={code}
-            copy={resolvedCopy}
-            isVerified={isVerified}
-            isVerifying={isVerifying}
-            method={selectedMethod}
-            onInputChange={(value) => {
-              setCode(value)
-              if (verificationError) {
-                setVerificationError("")
-              }
-            }}
-            onRequestCode={handleRequestCode}
-            onVerify={handleVerify}
-            showTitle={false}
-            verificationError={verificationError}
-          />
-        )}
+        {getInputContent()}
       </DialogContent>
     </Dialog>
   )

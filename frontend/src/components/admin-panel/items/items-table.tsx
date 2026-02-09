@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
+  ErrorEmptyState,
   FilterEmptyState,
   NoItemsEmptyState,
 } from "@/components/ui/empty-state"
@@ -43,6 +44,7 @@ import {
 } from "@/components/ui/filter-bar"
 import { ItemPhoto } from "@/components/ui/item-photo"
 import PaginationFull from "@/components/ui/pagination-component"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -61,6 +63,9 @@ interface AdminItemsTableProps {
   onEdit: (item: Item) => void
   onDelete: (item: Item) => void
   onUploadPhoto: (item: Item) => void
+  isError: boolean
+  isLoading: boolean
+  refetch: () => void
 }
 
 function createColumns(
@@ -205,6 +210,9 @@ export function AdminItemsTable({
   onEdit,
   onDelete,
   onUploadPhoto,
+  isError,
+  isLoading,
+  refetch,
 }: AdminItemsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState("")
@@ -232,6 +240,7 @@ export function AdminItemsTable({
         (item.comment?.toLowerCase().includes(normalizedSearchValue) ?? false)
       )
     },
+
     state: {
       sorting,
       globalFilter,
@@ -250,6 +259,58 @@ export function AdminItemsTable({
     singular: "przedmiot",
     plural: "przedmioty",
     genitive: "przedmiotów",
+  }
+
+  const getTableContent = () => {
+    if (isLoading) {
+      return Array.from({ length: 5 }, (_, i) => (
+        <TableRow key={`skeleton-${i.toString()}`}>
+          {columns.map((column, index) => (
+            <TableCell key={`${column.id}-${index}`}>
+              <Skeleton className="h-4 w-full" />
+            </TableCell>
+          ))}
+        </TableRow>
+      ))
+    }
+    if (isError) {
+      return (
+        <TableRow>
+          <TableCell className="p-0" colSpan={columns.length}>
+            <ErrorEmptyState onRetry={refetch} />
+          </TableCell>
+        </TableRow>
+      )
+    }
+
+    const tableRows = table.getRowModel().rows
+
+    if (tableRows.length === 0) {
+      return (
+        <TableRow>
+          <TableCell className="p-0" colSpan={columns.length}>
+            {isFiltered ? (
+              <FilterEmptyState onClear={clearAllFilters} />
+            ) : (
+              <NoItemsEmptyState itemName="przedmiot" />
+            )}
+          </TableCell>
+        </TableRow>
+      )
+    }
+    return tableRows.map((row) => (
+      <TableRow
+        className="transition-colors hover:bg-muted/50"
+        data-state={row.getIsSelected() && "selected"}
+        key={row.id}
+      >
+        {row.getVisibleCells().map((cell) => (
+          <TableCell className="px-4 py-3" key={cell.id}>
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        ))}
+      </TableRow>
+    ))
   }
 
   return (
@@ -301,36 +362,7 @@ export function AdminItemsTable({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  className="transition-colors hover:bg-muted/50"
-                  data-state={row.getIsSelected() && "selected"}
-                  key={row.id}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell className="px-4 py-3" key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell className="p-0!" colSpan={columns.length}>
-                  {isFiltered ? (
-                    <FilterEmptyState onClear={clearAllFilters} />
-                  ) : (
-                    <NoItemsEmptyState itemName="przedmiot" />
-                  )}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
+          <TableBody>{getTableContent()}</TableBody>
         </Table>
         <PaginationFull
           currentPage={currentPage}

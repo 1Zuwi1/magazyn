@@ -6,7 +6,7 @@ import {
   File01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Dropzone, { type FileRejection } from "react-dropzone"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -35,6 +35,7 @@ export function FileUploader({
 }: FileUploaderProps) {
   const [files, setFiles] = useState<FileWithPreview[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const previousFilesRef = useRef<FileWithPreview[]>([])
 
   useEffect(() => {
     if (value) {
@@ -46,12 +47,25 @@ export function FileUploader({
   }, [value])
 
   useEffect(() => {
+    const previousFiles = previousFilesRef.current
+    const currentPreviews = new Set(files.map((file) => file.preview))
+
+    for (const previousFile of previousFiles) {
+      if (!currentPreviews.has(previousFile.preview)) {
+        URL.revokeObjectURL(previousFile.preview)
+      }
+    }
+
+    previousFilesRef.current = files
+  }, [files])
+
+  useEffect(() => {
     return () => {
-      for (const file of files) {
+      for (const file of previousFilesRef.current) {
         URL.revokeObjectURL(file.preview)
       }
     }
-  }, [files])
+  }, [])
 
   const onDrop = useCallback(
     async (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {

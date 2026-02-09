@@ -9,6 +9,7 @@ import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { ScrollArea } from "../ui/scroll-area"
+import { Skeleton } from "../ui/skeleton"
 import { Spinner } from "../ui/spinner"
 import type { EditablePlacement, RackSelectOption } from "./scanner-types"
 
@@ -193,6 +194,17 @@ function RackSelect({
             </div>
           ) : null}
 
+          {isRackOptionsPending && rackOptions.length === 0 ? (
+            <div className="space-y-1 p-1">
+              {Array.from({ length: 6 }, (_, i) => (
+                <Skeleton
+                  className="h-9 w-full rounded-sm"
+                  key={`skeleton-${i.toString()}`}
+                />
+              ))}
+            </div>
+          ) : null}
+
           {!(isRackOptionsPending || isRackOptionsError) &&
           rackOptions.length === 0 ? (
             <p className="px-2 py-3 text-muted-foreground text-sm">
@@ -207,7 +219,7 @@ function RackSelect({
           ) : null}
         </ScrollArea>
 
-        {(isRackOptionsPending || isFetchingNextRackPage) && (
+        {isFetchingNextRackPage && (
           <div className="flex items-center gap-2 border-t px-2 py-1.5 text-muted-foreground text-xs">
             <Spinner className="size-3.5" />
             <span>Ładowanie regałów...</span>

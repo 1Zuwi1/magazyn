@@ -8,7 +8,9 @@ import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
 import { Button } from "@/components/ui/button"
+import { ErrorEmptyState, FilterEmptyState } from "@/components/ui/empty-state"
 import PaginationFull from "@/components/ui/pagination-component"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useCurrentAdminWarehouseId } from "@/hooks/use-current-admin-warehouse-id"
 import useRacks, {
   useCreateRack,
@@ -64,6 +66,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     data: apiWarehouse,
     isPending: isWarehousePending,
     isError: isWarehouseError,
+    refetch: refetchWarehouse,
   } = useWarehouses({ warehouseId: warehouseIdForQuery })
 
   const [page, setPage] = useState(0)
@@ -72,6 +75,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     data: racksData,
     isPending: isRacksPending,
     isError: isRacksError,
+    refetch: refetchRacks,
   } = useRacks({
     page,
     warehouseId: apiWarehouse?.id ?? -1,
@@ -193,20 +197,48 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
 
   if (isWarehouseMissing) {
     racksContent = (
-      <div className="rounded-2xl border border-dashed bg-muted/20 p-8 text-center text-muted-foreground">
-        Nie znaleziono magazynu o nazwie: {warehouseName}
-      </div>
+      <FilterEmptyState
+        description={`Nie znaleziono magazynu o nazwie: ${warehouseName}`}
+      />
     )
   } else if (isWarehouseError || isRacksError) {
     racksContent = (
-      <div className="rounded-2xl border border-dashed bg-muted/20 p-8 text-center text-muted-foreground">
-        Nie udało się pobrać regałów.
+      <div className="overflow-hidden rounded-2xl border border-dashed">
+        <ErrorEmptyState
+          onRetry={() => {
+            if (isWarehouseError) {
+              refetchWarehouse()
+            }
+
+            if (isRacksError) {
+              refetchRacks()
+            }
+          }}
+        />
       </div>
     )
   } else if (isLoading) {
     racksContent = (
-      <div className="rounded-2xl border border-dashed bg-muted/20 p-8 text-center text-muted-foreground">
-        Ładowanie regałów...
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }, (_, i) => (
+          <div
+            className="rounded-2xl border bg-card p-5"
+            key={`skeleton-${i.toString()}`}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="size-8 rounded-md" />
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-3/4" />
+              <div className="flex items-center gap-2 pt-1">
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     )
   } else {
@@ -279,13 +311,11 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
       {racksContent}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <PaginationFull
-          currentPage={currentPage}
-          setPage={setPage}
-          totalPages={totalPages}
-        />
-      )}
+      <PaginationFull
+        currentPage={currentPage}
+        setPage={setPage}
+        totalPages={totalPages}
+      />
 
       {/* Dialogs */}
       <RackDialog

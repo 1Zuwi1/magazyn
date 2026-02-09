@@ -6,7 +6,7 @@ import {
   Package,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { type ReactNode, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
@@ -176,47 +176,6 @@ export default function ItemsMain() {
     createItemMutation.isPending ||
     updateItemMutation.isPending ||
     deleteItemMutation.isPending
-  let tableContent: ReactNode
-
-  if (isItemsPending) {
-    tableContent = (
-      <div className="rounded-2xl border border-dashed bg-muted/20 p-8 text-center text-muted-foreground">
-        Ładowanie przedmiotów...
-      </div>
-    )
-  } else if (isItemsError) {
-    tableContent = (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-destructive/5 py-16">
-        <p className="font-medium text-foreground">
-          Nie udało się pobrać przedmiotów
-        </p>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Spróbuj ponownie, aby odświeżyć dane.
-        </p>
-        <Button
-          className="mt-4"
-          onClick={async () => {
-            await refetchItems()
-          }}
-          variant="outline"
-        >
-          Spróbuj ponownie
-        </Button>
-      </div>
-    )
-  } else {
-    tableContent = (
-      <AdminItemsTable
-        currentPage={page}
-        items={items}
-        onDelete={handleDeleteItem}
-        onEdit={handleEditItem}
-        onSetPage={handleSetPage}
-        onUploadPhoto={handleUploadPhoto}
-        totalPages={totalPages}
-      />
-    )
-  }
 
   return (
     <div className="space-y-6">
@@ -270,7 +229,18 @@ export default function ItemsMain() {
         </div>
       </AdminPageHeader>
 
-      {tableContent}
+      <AdminItemsTable
+        currentPage={page}
+        isError={isItemsError}
+        isLoading={isItemsPending}
+        items={items}
+        onDelete={handleDeleteItem}
+        onEdit={handleEditItem}
+        onSetPage={handleSetPage}
+        onUploadPhoto={handleUploadPhoto}
+        refetch={refetchItems}
+        totalPages={totalPages}
+      />
 
       <ItemDialog
         currentRow={selectedItem}

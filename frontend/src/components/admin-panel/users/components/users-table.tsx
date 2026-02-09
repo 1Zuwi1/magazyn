@@ -14,6 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ErrorEmptyState, FilterEmptyState } from "@/components/ui/empty-state"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -65,26 +67,38 @@ export function UsersTable({
 }: UsersTableProps) {
   const renderRows = () => {
     if (isPending) {
-      return (
-        <TableRow>
-          <TableCell
-            className="py-12 text-center text-muted-foreground"
-            colSpan={TABLE_COLUMNS_COUNT}
-          >
-            Ładowanie użytkowników...
+      return Array.from({ length: 5 }, (_, i) => (
+        <TableRow key={`skeleton-${i.toString()}`}>
+          <TableCell>
+            <Skeleton className="h-4 w-32" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-4 w-44" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-5 w-16 rounded-full" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-4 w-28" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="size-8 rounded-md" />
           </TableCell>
         </TableRow>
-      )
+      ))
     }
 
     if (isError) {
       return (
         <TableRow>
           <TableCell
-            className="py-12 text-center text-muted-foreground"
+            className="p-0 text-center text-muted-foreground"
             colSpan={TABLE_COLUMNS_COUNT}
           >
-            Nie udało się pobrać użytkowników.
+            <ErrorEmptyState />
           </TableCell>
         </TableRow>
       )
@@ -94,10 +108,10 @@ export function UsersTable({
       return (
         <TableRow>
           <TableCell
-            className="py-12 text-center text-muted-foreground"
+            className="p-0 text-center text-muted-foreground"
             colSpan={TABLE_COLUMNS_COUNT}
           >
-            Brak wyników.
+            <FilterEmptyState />
           </TableCell>
         </TableRow>
       )

@@ -195,7 +195,12 @@ export function EmptyState({
             {title}
           </h3>
           {description && (
-            <p className={cn("text-muted-foreground", sizeStyles.description)}>
+            <p
+              className={cn(
+                "text-wrap text-muted-foreground",
+                sizeStyles.description
+              )}
+            >
               {description}
             </p>
           )}
@@ -265,9 +270,11 @@ export function SearchEmptyState({
 export function FilterEmptyState({
   onClear,
   className,
+  description = "Żadne elementy nie pasują do wybranych filtrów. Spróbuj zmienić ustawienia filtrowania.",
 }: {
   onClear?: () => void
   className?: string
+  description?: string
 }) {
   return (
     <EmptyState
@@ -282,7 +289,7 @@ export function FilterEmptyState({
           : undefined
       }
       className={className}
-      description="Żadne elementy nie pasują do wybranych filtrów. Spróbuj zmienić ustawienia filtrowania."
+      description={description}
       title="Brak pasujących elementów"
       variant="filter"
     />

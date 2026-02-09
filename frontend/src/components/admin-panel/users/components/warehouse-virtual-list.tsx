@@ -11,6 +11,7 @@ import { remToPixels } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
@@ -208,9 +209,19 @@ export function WarehouseVirtualList({
 
   if (isPending) {
     return (
-      <div className="flex h-40 flex-col items-center justify-center gap-3 rounded-lg border border-dashed bg-muted/30">
-        <Spinner className="size-5" />
-        <p className="text-muted-foreground text-sm">Ładowanie magazynów...</p>
+      <div className="space-y-2 rounded-lg border border-dashed bg-muted/30 p-3">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5"
+            key={`skeleton-${i.toString()}`}
+          >
+            <Skeleton className="size-8 shrink-0 rounded-md" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-3.5 w-28" />
+              <Skeleton className="h-3 w-36" />
+            </div>
+          </div>
+        ))}
       </div>
     )
   }
