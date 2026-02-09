@@ -110,6 +110,22 @@ public class RackReportService {
             }
         }
 
+        // Check for unauthorized outbound (weight less than sum of assortments)
+        if (request.getCurrentWeight() != null) {
+            List<Assortment> rackAssortments = assortmentRepository.findByRackId(rack.getId());
+            float totalAssortmentWeight = rackAssortments.stream()
+                    .map(assortment -> assortment.getItem().getWeight())
+                    .reduce(0f, Float::sum);
+
+            if (request.getCurrentWeight() < totalAssortmentWeight) {
+                boolean alertCreated = createAlertIfNotExistsForWeight(rack, report, AlertType.UNAUTHORIZED_OUTBOUND,
+                        totalAssortmentWeight, request.getCurrentWeight());
+                if (alertCreated) {
+                    triggeredAlerts.add(AlertType.UNAUTHORIZED_OUTBOUND);
+                }
+            }
+        }
+
         // Check item temperature tolerances
         float currentTemp = request.getCurrentTemperature();
         List<Assortment> assortments = assortmentRepository.findByRackId(rack.getId());
@@ -224,6 +240,40 @@ public class RackReportService {
     }
 
     /**
+     * Creates a weight-based alert if no active alert of the same type exists for the rack.
+     *
+     * @return true if a new alert was created, false if one already existed
+     */
+    private boolean createAlertIfNotExistsForWeight(Rack rack, RackReport report, AlertType alertType,
+                                                    float thresholdValue, float actualValue) {
+        if (alertRepository.existsActiveAlertForRack(rack.getId(), alertType, ACTIVE_STATUSES)) {
+            log.debug("Active alert of type {} already exists for rack {}, skipping", alertType, rack.getId());
+            return false;
+        }
+
+        String message = buildAlertMessageForWeight(alertType, rack, thresholdValue, actualValue);
+
+        Alert alert = Alert.builder()
+                .rack(rack)
+                .warehouse(rack.getWarehouse())
+                .triggeringReport(report)
+                .alertType(alertType)
+                .status(AlertStatus.OPEN)
+                .message(message)
+                .thresholdValue(thresholdValue)
+                .actualValue(actualValue)
+                .createdAt(Instant.now())
+                .build();
+
+        alertRepository.save(alert);
+        log.info("Created new weight alert: type={}, rack={}, message={}", alertType, rack.getId(), message);
+
+        distributeNotifications(alert);
+
+        return true;
+    }
+
+    /**
      * Distributes notifications for an alert to active users assigned to the alert's warehouse.
      * Uses batch insert and single query check to prevent N+1 problem.
      * <p>
@@ -279,16 +329,31 @@ public class RackReportService {
             case TEMPERATURE_TOO_LOW -> String.format(
                     "%s - Temperatura poniżej minimalnej dopuszczalnej. Limit: %.1f°C, Aktualna: %.1f°C",
                     rackInfo, threshold, actual);
-            case LOW_VISUAL_SIMILARITY -> String.format(
-                    "%s - Niski wynik podobieństwa wizualnego. Próg: %.1f%%, Aktualny: %.1f%%",
-                    rackInfo, threshold * 100, actual * 100);
             case ITEM_TEMPERATURE_TOO_HIGH, ITEM_TEMPERATURE_TOO_LOW -> String.format(
                     "%s - Temperatura regału (%.1f°C) poza zakresem tolerancji przedmiotu",
                     rackInfo, actual);
+            case UNAUTHORIZED_OUTBOUND ->
+                    throw new IllegalArgumentException("UNAUTHORIZED_OUTBOUND should use buildAlertMessageForWeight");
             case EMBEDDING_GENERATION_COMPLETED, EMBEDDING_GENERATION_FAILED,
                  ASSORTMENT_EXPIRED, ASSORTMENT_CLOSE_TO_EXPIRY,
                  BACKUP_COMPLETED, BACKUP_FAILED ->
                     throw new IllegalArgumentException("System alert types should not be used in rack reports");
+        };
+    }
+
+    /**
+     * Builds a human-readable alert message for weight-based alerts (like unauthorized outbound)
+     */
+    private String buildAlertMessageForWeight(AlertType alertType, Rack rack, float threshold, float actual) {
+        String rackInfo = String.format("Regał %s (ID: %d)",
+                rack.getMarker() != null ? rack.getMarker() : "bez oznaczenia", rack.getId());
+
+        return switch (alertType) {
+            case UNAUTHORIZED_OUTBOUND -> String.format(
+                    "%s - Nieautoryzowany outflow. Oczekiwana waga: %.2f kg, Aktualna waga: %.2f kg. " +
+                            "Różnica: %.2f kg",
+                    rackInfo, threshold, actual, threshold - actual);
+            default -> buildAlertMessage(alertType, rack, threshold, actual);
         };
     }
 

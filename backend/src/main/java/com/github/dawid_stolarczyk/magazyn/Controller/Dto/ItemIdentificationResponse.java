@@ -44,9 +44,6 @@ public class ItemIdentificationResponse {
     @Schema(description = "Whether the match needs manual verification before acceptance", example = "false")
     private boolean needsVerification;
 
-    @Schema(description = "Alert generated if similarity is below threshold", example = "false")
-    private boolean alertGenerated;
-
     @Schema(description = "Message providing additional context", example = "Item identified with high confidence")
     private String message;
 

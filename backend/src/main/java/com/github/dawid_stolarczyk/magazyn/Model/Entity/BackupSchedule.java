@@ -37,6 +37,12 @@ public class BackupSchedule {
     @Column(name = "backup_hour", nullable = false)
     private Integer backupHour;
 
+    @Column(name = "day_of_week")
+    private Integer dayOfWeek;
+
+    @Column(name = "day_of_month")
+    private Integer dayOfMonth;
+
     @Column(name = "resource_types", nullable = false)
     private String resourceTypes;
 

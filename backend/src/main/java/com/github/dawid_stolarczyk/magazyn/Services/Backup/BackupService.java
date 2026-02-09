@@ -33,7 +33,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -78,7 +78,7 @@ public class BackupService {
                                   boolean acceptsDangerous) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private record ItemBackupData(Long originalId, String name, String code, String photoUrl,
+    private record ItemBackupData(Long originalId, String name, String code, String photoUrl, String qrCode,
                                   float minTemp, float maxTemp, float weight,
                                   float sizeX, float sizeY, float sizeZ,
                                   String comment, Long expireAfterDays, boolean isDangerous) {}
@@ -158,7 +158,6 @@ public class BackupService {
         return toDto(record);
     }
 
-    @Transactional
     private void executeBackup(Long recordId) {
         BackupRecord record = backupRecordRepository.findById(recordId).orElse(null);
         if (record == null) return;
@@ -182,6 +181,7 @@ public class BackupService {
 
             if (resourceTypes.contains(BackupResourceType.RACKS)) {
                 List<Rack> racks = rackRepository.findByWarehouseId(warehouseId);
+                log.info("Backup {} — found {} racks for warehouse {}", recordId, racks.size(), warehouseId);
                 List<RackBackupData> rackData = racks.stream()
                         .map(r -> new RackBackupData(r.getId(), r.getMarker(), r.getComment(),
                                 r.getSize_x(), r.getSize_y(), r.getMax_temp(), r.getMin_temp(),
@@ -196,15 +196,12 @@ public class BackupService {
             }
 
             if (resourceTypes.contains(BackupResourceType.ITEMS)) {
-                // Get distinct items from warehouse assortments
-                List<Assortment> warehouseAssortments = assortmentRepository.findByRack_WarehouseId(warehouseId, Pageable.unpaged()).getContent();
-                Set<Long> itemIds = warehouseAssortments.stream()
-                        .map(a -> a.getItem().getId())
-                        .collect(Collectors.toSet());
-                List<Item> items = itemIds.isEmpty() ? List.of() : itemRepository.findAllById(itemIds);
+                // Items are global entities — back up all items so restore works on any target database
+                List<Item> items = itemRepository.findAll();
+                log.info("Backup {} — found {} items to back up", recordId, items.size());
 
                 List<ItemBackupData> itemData = items.stream()
-                        .map(i -> new ItemBackupData(i.getId(), i.getName(), i.getCode(), i.getPhoto_url(),
+                        .map(i -> new ItemBackupData(i.getId(), i.getName(), i.getCode(), i.getPhoto_url(), i.getQrCode(),
                                 i.getMin_temp(), i.getMax_temp(), i.getWeight(),
                                 i.getSize_x(), i.getSize_y(), i.getSize_z(),
                                 i.getComment(), i.getExpireAfterDays(), i.isDangerous()))
@@ -218,6 +215,7 @@ public class BackupService {
 
             if (resourceTypes.contains(BackupResourceType.ASSORTMENTS)) {
                 List<Assortment> assortments = assortmentRepository.findByRack_WarehouseId(warehouseId, Pageable.unpaged()).getContent();
+                log.info("Backup {} — found {} assortments for warehouse {}", recordId, assortments.size(), warehouseId);
                 List<AssortmentBackupData> assortmentData = assortments.stream()
                         .map(a -> new AssortmentBackupData(a.getId(), a.getCode(),
                                 a.getItem().getId(), a.getRack().getId(),
@@ -374,6 +372,7 @@ public class BackupService {
                     }
                     item.setName(id.name());
                     item.setPhoto_url(id.photoUrl());
+                    item.setQrCode(id.qrCode());
                     item.setMin_temp(id.minTemp());
                     item.setMax_temp(id.maxTemp());
                     item.setWeight(id.weight());
@@ -493,6 +492,8 @@ public class BackupService {
 
         schedule.setScheduleCode(request.getScheduleCode());
         schedule.setBackupHour(request.getBackupHour());
+        schedule.setDayOfWeek(request.getDayOfWeek());
+        schedule.setDayOfMonth(request.getDayOfMonth());
         schedule.setResourceTypeSet(request.getResourceTypes());
         schedule.setEnabled(request.isEnabled());
         schedule = backupScheduleRepository.save(schedule);
@@ -537,6 +538,8 @@ public class BackupService {
                 .warehouseName(schedule.getWarehouse().getName())
                 .scheduleCode(schedule.getScheduleCode())
                 .backupHour(schedule.getBackupHour())
+                .dayOfWeek(schedule.getDayOfWeek())
+                .dayOfMonth(schedule.getDayOfMonth())
                 .resourceTypes(schedule.getResourceTypeSet())
                 .enabled(schedule.isEnabled())
                 .lastRunAt(schedule.getLastRunAt())

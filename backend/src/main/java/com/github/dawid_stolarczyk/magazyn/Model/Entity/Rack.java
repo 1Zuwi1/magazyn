@@ -26,7 +26,7 @@ public class Rack {
     @Column(nullable = false)
     private String marker;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "warehouse_id")
     private Warehouse warehouse;
 
@@ -52,4 +52,7 @@ public class Rack {
 
     @OneToMany(mappedBy = "rack", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Assortment> assortments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "rack", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RackReport> rackReports = new ArrayList<>();
 }

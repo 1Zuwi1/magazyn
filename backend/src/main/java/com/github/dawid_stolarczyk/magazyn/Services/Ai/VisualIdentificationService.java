@@ -50,7 +50,6 @@ public class VisualIdentificationService {
     private final ImageEmbeddingService imageEmbeddingService;
     private final ItemRepository itemRepository;
     private final AuditLogRepository auditLogRepository;
-    private final VisualIdentificationAlertService alertService;
     private final Bucket4jRateLimiter rateLimiter;
 
     @Value("${app.visual-identification.threshold:0.7}")
@@ -190,23 +189,6 @@ public class VisualIdentificationService {
                 bestItem = itemRepository.findById(candidates.get(0).getItemId()).orElse(null);
             }
 
-            // Alert generation: only for LOW_CONFIDENCE
-            boolean alertGenerated = false;
-            if (confidenceLevel == ConfidenceLevel.LOW_CONFIDENCE && bestItem == null) {
-                // For LOW_CONFIDENCE, fetch the best item for alert purposes
-                Long bestItemId = results.get(0).getId();
-                bestItem = itemRepository.findById(bestItemId).orElse(null);
-            }
-
-            if (confidenceLevel == ConfidenceLevel.LOW_CONFIDENCE && bestItem != null) {
-                log.warn("Low confidence match for item '{}' (id={}): {}% < {}% threshold",
-                        bestItem.getName(), bestItem.getId(),
-                        String.format("%.2f", bestScore * 100),
-                        String.format("%.2f", similarityThreshold * 100));
-                alertGenerated = alertService.createLowSimilarityAlertIfNeeded(
-                        bestItem, bestScore, similarityThreshold, currentUser);
-            }
-
             // Audit log
             logIdentification(currentUser,
                     bestItem != null ? bestItem : itemRepository.findById(results.get(0).getId()).orElse(null),
@@ -225,7 +207,6 @@ public class VisualIdentificationService {
                     .confidentMatch(confidentMatch)
                     .confidenceLevel(confidenceLevel)
                     .needsVerification(needsVerification)
-                    .alertGenerated(alertGenerated)
                     .message(buildMessage(confidenceLevel))
                     .candidates(candidates)
                     .candidateCount(candidates.size())
@@ -304,7 +285,6 @@ public class VisualIdentificationService {
                     .confidentMatch(false)
                     .confidenceLevel(ConfidenceLevel.LOW_CONFIDENCE)
                     .needsVerification(false)
-                    .alertGenerated(false)
                     .message("No alternative candidates found after excluding "
                             + allExcluded.size() + " rejected item(s)")
                     .candidates(List.of())
@@ -327,7 +307,6 @@ public class VisualIdentificationService {
                 .confidentMatch(confidentMatch)
                 .confidenceLevel(level)
                 .needsVerification(level == ConfidenceLevel.NEEDS_VERIFICATION)
-                .alertGenerated(false)
                 .message("Alternative candidates after excluding "
                         + allExcluded.size() + " rejected item(s)")
                 .candidates(candidates)
@@ -419,7 +398,6 @@ public class VisualIdentificationService {
                 .confidentMatch(false)
                 .confidenceLevel(ConfidenceLevel.LOW_CONFIDENCE)
                 .needsVerification(false)
-                .alertGenerated(false)
                 .message("No items found in database for comparison")
                 .candidates(List.of())
                 .candidateCount(0)

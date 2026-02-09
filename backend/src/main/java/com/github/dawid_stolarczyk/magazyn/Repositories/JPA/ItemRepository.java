@@ -30,6 +30,13 @@ public interface ItemRepository extends JpaRepository<Item, Long>, JpaSpecificat
     Page<Item> findByDangerousTrue(Pageable pageable);
 
     /**
+     * Finds all distinct items that have assortments in a given warehouse.
+     * Uses a single query with JOIN through Assortment → Rack → Warehouse.
+     */
+    @Query("SELECT DISTINCT a.item FROM Assortment a WHERE a.rack.warehouse.id = :warehouseId")
+    List<Item> findDistinctByWarehouseId(@Param("warehouseId") Long warehouseId);
+
+    /**
      * Finds items with embeddings that are most similar to the provided vector.
      * Uses PostgreSQL pgvector's cosine distance operator (the {@code <=>} operator).
      * Returns the item ID and cosine distance (0 = identical, 2 = opposite).
