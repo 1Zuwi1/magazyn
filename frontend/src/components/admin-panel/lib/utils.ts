@@ -1,3 +1,5 @@
+import { format } from "date-fns"
+import { pl } from "date-fns/locale"
 import type { Notification } from "@/components/dashboard/types"
 
 export function formatBytes(
@@ -20,6 +22,13 @@ export function formatBytes(
   const size = sizeType === "accurate" ? accurateSizes[i] : sizes[i]
 
   return `${(bytes / 1024 ** i).toFixed(decimals)} ${size}`
+}
+
+export function formatDateTime(dateString: string | null): string {
+  if (!dateString) {
+    return "—"
+  }
+  return format(new Date(dateString), "dd.MM.yyyy, HH:mm", { locale: pl })
 }
 
 export function countUnreadNotifications(
