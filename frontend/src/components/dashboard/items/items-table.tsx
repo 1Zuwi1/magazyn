@@ -20,6 +20,7 @@ import {
   SearchEmptyState,
 } from "@/components/ui/empty-state"
 import {
+  ClearFiltersButton,
   FilterBar,
   FilterGroup,
   FilterResults,
@@ -44,77 +45,74 @@ const SKELETON_ROWS = 5
 
 function ItemsTableSkeleton() {
   return (
-    <div className="space-y-4">
-      {/* Filter Bar Skeleton */}
-      <div className="flex items-center justify-between gap-4">
-        <Skeleton className="h-10 w-72 rounded-lg" />
-        <Skeleton className="h-5 w-32" />
+    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div className="border-b bg-muted/30 px-4 py-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <Skeleton className="h-10 w-full max-w-md rounded-lg" />
+          <Skeleton className="h-5 w-32" />
+        </div>
       </div>
-
-      {/* Table Skeleton */}
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-b bg-muted/30 hover:bg-muted/30">
-              <TableHead className="h-11 px-4">
-                <Skeleton className="h-3 w-16" />
-              </TableHead>
-              <TableHead className="h-11 px-4">
-                <Skeleton className="h-3 w-20" />
-              </TableHead>
-              <TableHead className="h-11 px-4">
-                <Skeleton className="h-3 w-12" />
-              </TableHead>
-              <TableHead className="h-11 px-4">
-                <Skeleton className="h-3 w-28" />
-              </TableHead>
-              <TableHead className="h-11 px-4">
-                <Skeleton className="h-3 w-24" />
-              </TableHead>
-              <TableHead className="h-11 px-4">
-                <Skeleton className="h-3 w-12" />
-              </TableHead>
+      <Table>
+        <TableHeader>
+          <TableRow className="border-b bg-muted/30 hover:bg-muted/30">
+            <TableHead className="h-11 px-4">
+              <Skeleton className="h-3 w-16" />
+            </TableHead>
+            <TableHead className="h-11 px-4">
+              <Skeleton className="h-3 w-20" />
+            </TableHead>
+            <TableHead className="h-11 px-4">
+              <Skeleton className="h-3 w-12" />
+            </TableHead>
+            <TableHead className="h-11 px-4">
+              <Skeleton className="h-3 w-28" />
+            </TableHead>
+            <TableHead className="h-11 px-4">
+              <Skeleton className="h-3 w-24" />
+            </TableHead>
+            <TableHead className="h-11 px-4">
+              <Skeleton className="h-3 w-12" />
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: SKELETON_ROWS }).map((_, index) => (
+            <TableRow
+              className="transition-colors"
+              key={index}
+              style={{ animationDelay: `${index * 75}ms` }}
+            >
+              {/* Name */}
+              <TableCell className="px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              </TableCell>
+              {/* Category */}
+              <TableCell className="px-4 py-3">
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </TableCell>
+              {/* Quantity */}
+              <TableCell className="px-4 py-3">
+                <Skeleton className="h-4 w-14" />
+              </TableCell>
+              {/* Expiry */}
+              <TableCell className="px-4 py-3">
+                <Skeleton className="h-6 w-24 rounded-full" />
+              </TableCell>
+              {/* Danger */}
+              <TableCell className="px-4 py-3">
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </TableCell>
+              {/* Actions */}
+              <TableCell className="px-4 py-3">
+                <Skeleton className="size-7 rounded-md" />
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: SKELETON_ROWS }).map((_, index) => (
-              <TableRow
-                className="transition-colors"
-                key={index}
-                style={{ animationDelay: `${index * 75}ms` }}
-              >
-                {/* Name */}
-                <TableCell className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-10 w-10 rounded" />
-                    <Skeleton className="h-4 w-32" />
-                  </div>
-                </TableCell>
-                {/* Category */}
-                <TableCell className="px-4 py-3">
-                  <Skeleton className="h-6 w-20 rounded-full" />
-                </TableCell>
-                {/* Quantity */}
-                <TableCell className="px-4 py-3">
-                  <Skeleton className="h-4 w-14" />
-                </TableCell>
-                {/* Expiry */}
-                <TableCell className="px-4 py-3">
-                  <Skeleton className="h-6 w-24 rounded-full" />
-                </TableCell>
-                {/* Danger */}
-                <TableCell className="px-4 py-3">
-                  <Skeleton className="h-6 w-20 rounded-full" />
-                </TableCell>
-                {/* Actions */}
-                <TableCell className="px-4 py-3">
-                  <Skeleton className="size-7 rounded-md" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   )
 }
@@ -285,91 +283,90 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
     genitive: "przedmiotów",
   }
 
+  const clearAllFilters = () => {
+    setGlobalFilter("")
+  }
+
   return (
-    <div className="space-y-4">
-      {/* Filter Bar */}
-      <FilterBar>
-        <FilterGroup>
-          <SearchInput
-            aria-label="Szukaj przedmiotów"
-            onChange={setGlobalFilter}
-            placeholder="Szukaj po nazwie, kodzie lub komentarzu..."
-            value={globalFilter}
+    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div className="border-b bg-muted/30 px-4 py-3">
+        <FilterBar className="gap-3">
+          <FilterGroup>
+            <SearchInput
+              aria-label="Szukaj przedmiotów"
+              onChange={setGlobalFilter}
+              placeholder="Szukaj po nazwie, kodzie lub komentarzu..."
+              value={globalFilter}
+            />
+            {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}
+          </FilterGroup>
+          <FilterResults
+            filteredCount={filteredCount}
+            isFiltered={isFiltered}
+            itemLabel={itemLabel}
+            totalCount={totalCount}
           />
-        </FilterGroup>
+        </FilterBar>
+      </div>
 
-        <FilterResults
-          filteredCount={filteredCount}
-          isFiltered={isFiltered}
-          itemLabel={itemLabel}
-          totalCount={totalCount}
-        />
-      </FilterBar>
-
-      {/* Table Card */}
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow
+              className="border-b bg-muted/30 hover:bg-muted/30"
+              key={headerGroup.id}
+            >
+              {headerGroup.headers.map((header) => (
+                <TableHead
+                  className="h-11 px-4 font-semibold text-xs uppercase tracking-wider"
+                  key={header.id}
+                >
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
               <TableRow
-                className="border-b bg-muted/30 hover:bg-muted/30"
-                key={headerGroup.id}
+                className="transition-colors hover:bg-muted/50"
+                data-state={row.getIsSelected() && "selected"}
+                key={row.id}
               >
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    className="h-11 px-4 font-semibold text-xs uppercase tracking-wider"
-                    key={header.id}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell className="px-4 py-3" key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
                 ))}
               </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  className="transition-colors hover:bg-muted/50"
-                  data-state={row.getIsSelected() && "selected"}
-                  key={row.id}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell className="px-4 py-3" key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell className="p-0" colSpan={itemsColumns.length}>
-                  {isFiltered ? (
-                    <SearchEmptyState onClear={() => setGlobalFilter("")} />
-                  ) : (
-                    <NoItemsEmptyState itemName="przedmiot" />
-                  )}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell className="p-0" colSpan={itemsColumns.length}>
+                {isFiltered ? (
+                  <SearchEmptyState onClear={clearAllFilters} />
+                ) : (
+                  <NoItemsEmptyState itemName="przedmiot" />
+                )}
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
 
-        <PaginationFull
-          currentPage={page}
-          setPage={setPage}
-          totalPages={totalPages}
-          variant="compact"
-        />
-      </div>
+      <PaginationFull
+        currentPage={page}
+        setPage={setPage}
+        totalPages={totalPages}
+        variant="compact"
+      />
     </div>
   )
 }

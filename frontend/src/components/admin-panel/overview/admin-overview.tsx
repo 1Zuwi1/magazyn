@@ -12,43 +12,20 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { type ReactNode, useCallback, useMemo } from "react"
-import { getOccupancyPercentage } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import useAdminUsers from "@/hooks/use-admin-users"
 import useAlerts from "@/hooks/use-alerts"
 import useAssortments from "@/hooks/use-assortment"
-import useWarehouses, { type WarehousesList } from "@/hooks/use-warehouses"
+import useWarehouses from "@/hooks/use-warehouses"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ADMIN_NAV_LINKS, THRESHOLD } from "../lib/constants"
 import { AdminStatCard } from "./stat-card"
 
-type ApiWarehouse = WarehousesList["content"][number]
-
-interface WarehouseSummary {
-  id: number
-  name: string
-  used: number
-  capacity: number
-  racksCount: number
-}
-
-const mapWarehouseSummary = (warehouse: ApiWarehouse): WarehouseSummary => {
-  const used = warehouse.occupiedSlots
-  const capacity = warehouse.occupiedSlots + warehouse.freeSlots
-
-  return {
-    id: warehouse.id,
-    name: warehouse.name,
-    used,
-    capacity,
-    racksCount: warehouse.racksCount,
-  }
-}
-
 const ADMIN_OVERVIEW_FETCH_SIZE = 1
+const CRITICAL_WAREHOUSES_FETCH_SIZE = 3
 
 export function AdminOverview() {
   const {
@@ -91,6 +68,18 @@ export function AdminOverview() {
   } = useAssortments({
     size: ADMIN_OVERVIEW_FETCH_SIZE,
   })
+
+  const { data: criticalWarehousesData } = useWarehouses({
+    size: CRITICAL_WAREHOUSES_FETCH_SIZE,
+    sortBy: "occupancy",
+    sortDir: "desc",
+    minPercentOfOccupiedSlots: THRESHOLD,
+  })
+
+  const criticalWarehouses = useMemo(() => {
+    return criticalWarehousesData?.content ?? []
+  }, [criticalWarehousesData])
+
   const {
     data: alertsData,
     isPending: isAlertsPending,
@@ -108,19 +97,14 @@ export function AdminOverview() {
     status: ["OPEN"],
   })
 
-  const warehouses = useMemo(
-    () => (warehousesData?.content ?? []).map(mapWarehouseSummary),
-    [warehousesData?.content]
-  )
   const isAlertsStatsPending = isAlertsPending || isOpenAlertsPending
   const isAlertsStatsError = isAlertsError || isOpenAlertsError
 
   const stats = useMemo(() => {
     const activeUsers = activeUsersData?.totalElements ?? 0
     const totalUsers = usersData?.totalElements ?? 0
-    const totalWarehouses = warehousesData?.totalElements ?? warehouses.length
-    const totalItems =
-      assortmentsData?.totalElements ?? assortmentsData?.content.length ?? 0
+    const totalWarehouses = warehousesData?.totalElements
+    const totalItems = assortmentsData?.totalElements ?? 0
     const openAlerts = openAlertsData?.totalElements ?? 0
     const totalAlerts = alertsData?.totalElements ?? 0
 
@@ -135,24 +119,12 @@ export function AdminOverview() {
     }
   }, [
     activeUsersData?.totalElements,
-    assortmentsData?.content.length,
     assortmentsData?.totalElements,
     alertsData?.totalElements,
     openAlertsData?.totalElements,
     usersData?.totalElements,
-    warehouses,
     warehousesData?.totalElements,
   ])
-
-  const criticalWarehouses = useMemo(() => {
-    return warehouses.filter((warehouse) => {
-      const occupancy = getOccupancyPercentage(
-        warehouse.used,
-        warehouse.capacity
-      )
-      return occupancy >= THRESHOLD
-    })
-  }, [warehouses])
 
   let criticalWarehousesContent: ReactNode
 
@@ -216,11 +188,7 @@ export function AdminOverview() {
     criticalWarehousesContent = (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {criticalWarehouses.map((warehouse) => {
-          const occupancy = getOccupancyPercentage(
-            warehouse.used,
-            warehouse.capacity
-          )
-
+          const capacity = warehouse.freeSlots + warehouse.occupiedSlots
           return (
             <Link
               className="group block"
@@ -241,11 +209,11 @@ export function AdminOverview() {
                         {warehouse.name}
                       </h3>
                       <p className="text-muted-foreground text-sm">
-                        {warehouse.used} / {warehouse.capacity} miejsc zajętych
+                        {warehouse.occupiedSlots} / {capacity} miejsc zajętych
                       </p>
                     </div>
                     <Badge variant="destructive">
-                      {Math.round(occupancy)}%
+                      {Math.round(warehouse.occupancy)}%
                     </Badge>
                   </div>
 
@@ -253,7 +221,9 @@ export function AdminOverview() {
                     <div className="h-2 overflow-hidden rounded-full bg-secondary">
                       <div
                         className="h-full rounded-full bg-destructive transition-all"
-                        style={{ width: `${Math.min(occupancy, 100)}%` }}
+                        style={{
+                          width: `${Math.min(warehouse.occupancy, 100)}%`,
+                        }}
                       />
                     </div>
                     <div className="flex items-center justify-between text-xs">
@@ -263,12 +233,12 @@ export function AdminOverview() {
                       <span
                         className={cn(
                           "font-medium",
-                          occupancy >= 95
+                          warehouse.occupancy >= 95
                             ? "text-destructive"
                             : "text-orange-500"
                         )}
                       >
-                        {occupancy >= 95 ? "Krytyczne" : "Wysokie"}
+                        {warehouse.occupancy >= 95 ? "Krytyczne" : "Wysokie"}
                       </span>
                     </div>
                   </div>
@@ -327,7 +297,7 @@ export function AdminOverview() {
           isLoading={isWarehousesPending}
           onRetry={() => refetchWarehouses()}
           title="Magazyny"
-          value={stats.warehouses.total}
+          value={stats.warehouses.total ?? "—"}
           variant="default"
         />
         <AdminStatCard

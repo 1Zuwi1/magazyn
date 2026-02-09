@@ -2,7 +2,7 @@
 
 import { Search01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useInfiniteItems } from "@/hooks/use-items"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
@@ -62,18 +62,6 @@ export function ScannerSelectItem({
     return () => el.removeEventListener("scroll", handleScroll)
   }, [handleScroll])
 
-  const filteredItems = useMemo(() => {
-    if (!search.trim()) {
-      return items
-    }
-    const lower = search.toLowerCase()
-    return items.filter(
-      (item) =>
-        item.name.toLowerCase().includes(lower) ||
-        item.code.toLowerCase().includes(lower)
-    )
-  }, [items, search])
-
   return (
     <ScannerBody>
       <div className="relative flex h-full flex-col">
@@ -116,7 +104,7 @@ export function ScannerSelectItem({
               </p>
             ) : null}
 
-            {!(isPending || isError) && filteredItems.length === 0 ? (
+            {!(isPending || isError) && items.length === 0 ? (
               <p className="py-8 text-center text-muted-foreground text-sm">
                 Nie znaleziono produktów.
               </p>
@@ -124,7 +112,7 @@ export function ScannerSelectItem({
 
             {isPending || isError
               ? null
-              : filteredItems.map((item) => (
+              : items.map((item) => (
                   <button
                     className="flex w-full items-center gap-3 rounded-xl border bg-card/50 p-3 text-left transition-all hover:border-primary/30 hover:shadow-sm"
                     key={item.id}

@@ -239,90 +239,87 @@ const SKELETON_ROWS = 5
 
 function AssortmentTableSkeleton() {
   return (
-    <div className="space-y-4">
-      {/* Filter Bar Skeleton */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-10 w-72 rounded-lg" />
-          <Skeleton className="h-10 w-44 rounded-lg" />
+    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div className="border-b bg-muted/30 px-4 py-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex w-full max-w-xl flex-col gap-3 sm:flex-row">
+            <Skeleton className="h-10 w-full rounded-lg sm:max-w-sm" />
+            <Skeleton className="h-10 w-full rounded-lg sm:w-44" />
+          </div>
+          <Skeleton className="h-5 w-32" />
         </div>
-        <Skeleton className="h-5 w-32" />
       </div>
-
-      {/* Table Skeleton */}
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-b bg-muted/30 hover:bg-muted/30">
-              <TableHead className="h-11 px-4">
-                <Skeleton className="h-3 w-20" />
-              </TableHead>
-              <TableHead className="h-11 px-4">
-                <Skeleton className="h-3 w-28" />
-              </TableHead>
-              <TableHead className="h-11 px-4">
-                <Skeleton className="h-3 w-14" />
-              </TableHead>
-              <TableHead className="h-11 px-4">
-                <Skeleton className="h-3 w-16" />
-              </TableHead>
-              <TableHead className="h-11 px-4">
-                <Skeleton className="h-3 w-24" />
-              </TableHead>
-              <TableHead className="h-11 px-4">
-                <Skeleton className="h-3 w-28" />
-              </TableHead>
-              <TableHead className="h-11 px-4">
-                <Skeleton className="h-3 w-12" />
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: SKELETON_ROWS }).map((_, index) => (
-              <TableRow
-                className="transition-colors"
-                key={index}
-                style={{ animationDelay: `${index * 75}ms` }}
-              >
-                {/* Category */}
-                <TableCell className="px-4 py-3">
-                  <Skeleton className="h-6 w-20 rounded-full" />
-                </TableCell>
-                {/* Name */}
-                <TableCell className="px-4 py-3">
-                  <Skeleton className="h-4 w-32" />
-                </TableCell>
-                {/* Rack */}
-                <TableCell className="px-4 py-3">
-                  <div className="space-y-1.5">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-3 w-24" />
-                  </div>
-                </TableCell>
-                {/* QR Code */}
-                <TableCell className="px-4 py-3">
-                  <Skeleton className="h-12 w-48 rounded" />
-                </TableCell>
-                {/* Added Date */}
-                <TableCell className="px-4 py-3">
+      <Table>
+        <TableHeader>
+          <TableRow className="border-b bg-muted/30 hover:bg-muted/30">
+            <TableHead className="h-11 px-4">
+              <Skeleton className="h-3 w-20" />
+            </TableHead>
+            <TableHead className="h-11 px-4">
+              <Skeleton className="h-3 w-28" />
+            </TableHead>
+            <TableHead className="h-11 px-4">
+              <Skeleton className="h-3 w-14" />
+            </TableHead>
+            <TableHead className="h-11 px-4">
+              <Skeleton className="h-3 w-16" />
+            </TableHead>
+            <TableHead className="h-11 px-4">
+              <Skeleton className="h-3 w-24" />
+            </TableHead>
+            <TableHead className="h-11 px-4">
+              <Skeleton className="h-3 w-28" />
+            </TableHead>
+            <TableHead className="h-11 px-4">
+              <Skeleton className="h-3 w-12" />
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: SKELETON_ROWS }).map((_, index) => (
+            <TableRow
+              className="transition-colors"
+              key={index}
+              style={{ animationDelay: `${index * 75}ms` }}
+            >
+              {/* Category */}
+              <TableCell className="px-4 py-3">
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </TableCell>
+              {/* Name */}
+              <TableCell className="px-4 py-3">
+                <Skeleton className="h-4 w-32" />
+              </TableCell>
+              {/* Rack */}
+              <TableCell className="px-4 py-3">
+                <div className="space-y-1.5">
                   <Skeleton className="h-4 w-20" />
-                </TableCell>
-                {/* Expiry */}
-                <TableCell className="px-4 py-3">
-                  <div className="space-y-1.5">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-6 w-24 rounded-full" />
-                  </div>
-                </TableCell>
-                {/* Actions */}
-                <TableCell className="px-4 py-3">
-                  <Skeleton className="size-7 rounded-md" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </TableCell>
+              {/* QR Code */}
+              <TableCell className="px-4 py-3">
+                <Skeleton className="h-12 w-48 rounded" />
+              </TableCell>
+              {/* Added Date */}
+              <TableCell className="px-4 py-3">
+                <Skeleton className="h-4 w-20" />
+              </TableCell>
+              {/* Expiry */}
+              <TableCell className="px-4 py-3">
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                </div>
+              </TableCell>
+              {/* Actions */}
+              <TableCell className="px-4 py-3">
+                <Skeleton className="size-7 rounded-md" />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   )
 }
@@ -573,142 +570,135 @@ function AssortmentTableContent({
   }
 
   return (
-    <div className="space-y-4">
-      {/* Filter Bar */}
-      <FilterBar>
-        <FilterGroup>
-          <SearchInput
-            aria-label="Filtruj asortyment po kodzie i identyfikatorach"
-            onChange={setGlobalFilter}
-            placeholder="Szukaj po kodzie kreskowym, nazwie produktu lub regału..."
-            value={globalFilter}
-          />
+    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div className="border-b bg-muted/30 px-4 py-3">
+        <FilterBar className="gap-3">
+          <FilterGroup>
+            <SearchInput
+              aria-label="Filtruj asortyment po kodzie i identyfikatorach"
+              onChange={setGlobalFilter}
+              placeholder="Szukaj po kodzie kreskowym, nazwie produktu lub regału..."
+              value={globalFilter}
+            />
 
-          {/* Expiry Filter */}
-          <FilterSelectWrapper
-            icon={Calendar03Icon}
-            isActive={isExpiryFiltered}
-          >
-            <Select
-              onValueChange={(value) => {
-                if (isExpiryFilterValue(value)) {
-                  setExpiryFilter(value)
-                }
-              }}
-              value={expiryFilter}
+            <FilterSelectWrapper
+              icon={Calendar03Icon}
+              isActive={isExpiryFiltered}
             >
-              <SelectTrigger
-                aria-label="Filtruj według daty ważności"
-                className={cn(
-                  "h-10! w-44 gap-2 pl-9",
-                  isExpiryFiltered &&
-                    "border-primary/50 bg-primary/5 text-primary"
-                )}
-              >
-                <SelectValue
-                  render={
-                    <span className="truncate">
-                      {
-                        EXPIRY_FILTER_OPTIONS.find(
-                          (option) => option.value === expiryFilter
-                        )?.label
-                      }
-                    </span>
+              <Select
+                onValueChange={(value) => {
+                  if (isExpiryFilterValue(value)) {
+                    setExpiryFilter(value)
                   }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {EXPIRY_FILTER_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <span
-                      className={cn(
-                        option.value === "EXPIRED" && "text-destructive",
-                        option.value === "DAYS_3" && "text-orange-500"
-                      )}
-                    >
-                      {option.label}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FilterSelectWrapper>
-
-          {/* Clear all filters */}
-          {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}
-        </FilterGroup>
-
-        <FilterResults
-          filteredCount={filteredCount}
-          isFiltered={isFiltered}
-          itemLabel={itemLabel}
-          totalCount={totalCount}
-        />
-      </FilterBar>
-
-      {/* Table Card */}
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                className="border-b bg-muted/30 hover:bg-muted/30"
-                key={headerGroup.id}
+                }}
+                value={expiryFilter}
               >
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    className="h-11 px-4 font-semibold text-xs uppercase tracking-wider"
-                    key={header.id}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
+                <SelectTrigger
+                  aria-label="Filtruj według daty ważności"
+                  className={cn(
+                    "h-10! w-44 gap-2 pl-9",
+                    isExpiryFiltered &&
+                      "border-primary/50 bg-primary/5 text-primary"
+                  )}
+                >
+                  <SelectValue
+                    render={
+                      <span className="truncate">
+                        {
+                          EXPIRY_FILTER_OPTIONS.find(
+                            (option) => option.value === expiryFilter
+                          )?.label
+                        }
+                      </span>
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPIRY_FILTER_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <span
+                        className={cn(
+                          option.value === "EXPIRED" && "text-destructive",
+                          option.value === "DAYS_3" && "text-orange-500"
                         )}
-                  </TableHead>
+                      >
+                        {option.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FilterSelectWrapper>
+
+            {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}
+          </FilterGroup>
+
+          <FilterResults
+            filteredCount={filteredCount}
+            isFiltered={isFiltered}
+            itemLabel={itemLabel}
+            totalCount={totalCount}
+          />
+        </FilterBar>
+      </div>
+
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow
+              className="border-b bg-muted/30 hover:bg-muted/30"
+              key={headerGroup.id}
+            >
+              {headerGroup.headers.map((header) => (
+                <TableHead
+                  className="h-11 px-4 font-semibold text-xs uppercase tracking-wider"
+                  key={header.id}
+                >
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                className="transition-colors hover:bg-muted/50"
+                data-state={row.getIsSelected() && "selected"}
+                key={row.id}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell className="px-4 py-3" key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
                 ))}
               </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  className="transition-colors hover:bg-muted/50"
-                  data-state={row.getIsSelected() && "selected"}
-                  key={row.id}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell className="px-4 py-3" key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell className="p-0" colSpan={assortmentColumns.length}>
-                  {isFiltered ? (
-                    <FilterEmptyState onClear={clearAllFilters} />
-                  ) : (
-                    <NoItemsEmptyState itemName="przedmiot" />
-                  )}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        <PaginationFull
-          currentPage={page}
-          setPage={setPage}
-          totalPages={totalPages}
-          variant="compact"
-        />
-      </div>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell className="p-0" colSpan={assortmentColumns.length}>
+                {isFiltered ? (
+                  <FilterEmptyState onClear={clearAllFilters} />
+                ) : (
+                  <NoItemsEmptyState itemName="przedmiot" />
+                )}
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+      <PaginationFull
+        currentPage={page}
+        setPage={setPage}
+        totalPages={totalPages}
+        variant="compact"
+      />
     </div>
   )
 }

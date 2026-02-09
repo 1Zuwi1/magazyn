@@ -87,7 +87,7 @@ export default function ItemsClientPage() {
       />
 
       <Tabs
-        className="space-y-6"
+        className="space-y-0"
         onValueChange={(value) => {
           if (isItemsTab(value)) {
             setActiveTab(value)
@@ -95,31 +95,33 @@ export default function ItemsClientPage() {
         }}
         value={activeTab}
       >
-        <div className="flex items-center justify-between gap-4">
-          <TabsList className="p-1">
-            <TabsTrigger className="gap-2 px-4" value="assortment">
-              <HugeiconsIcon className="size-4" icon={GridViewIcon} />
-              <span>Stan Magazynowy</span>
-              <Badge className="ml-1" variant="secondary">
-                {isAssortmentPending ? "..." : totalStock}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger className="gap-2 px-4" value="definitions">
-              <HugeiconsIcon className="size-4" icon={BarCode02Icon} />
-              <span>Katalog produktów</span>
-              <Badge className="ml-1" variant="secondary">
-                {totalItems}
-              </Badge>
-            </TabsTrigger>
-          </TabsList>
-        </div>
+        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+          <div className="border-b px-4">
+            <TabsList className="h-auto" variant="line">
+              <TabsTrigger className="gap-2 py-2.5" value="assortment">
+                <HugeiconsIcon className="size-3.5" icon={GridViewIcon} />
+                <span>Stan Magazynowy</span>
+                <Badge className="ml-1" variant="secondary">
+                  {isAssortmentPending ? "..." : totalStock}
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger className="gap-2 py-2.5" value="definitions">
+                <HugeiconsIcon className="size-3.5" icon={BarCode02Icon} />
+                <span>Katalog produktów</span>
+                <Badge className="ml-1" variant="secondary">
+                  {totalItems}
+                </Badge>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        <TabsContent className="space-y-4" value="assortment">
-          <AssortmentTable />
-        </TabsContent>
-        <TabsContent className="space-y-4" value="definitions">
-          <ItemsTable initialSearch={requestedSearchFromUrl} />
-        </TabsContent>
+          <TabsContent className="p-4" value="assortment">
+            <AssortmentTable />
+          </TabsContent>
+          <TabsContent className="p-4" value="definitions">
+            <ItemsTable initialSearch={requestedSearchFromUrl} />
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   )

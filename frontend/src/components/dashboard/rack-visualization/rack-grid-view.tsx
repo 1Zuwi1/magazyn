@@ -8,10 +8,11 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type * as React from "react"
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import PaginationFull from "@/components/ui/pagination-component"
+import { useElementSize } from "@/hooks/use-element-size"
 import type { Rack } from "@/lib/schemas"
 import { RackItemsDialog } from "../items-visualization/rack-items-dialog"
 import type { ItemSlot, SlotCoordinates } from "../types"
@@ -90,8 +91,8 @@ export function RackGridView({
   const showNavigation = totalPages > 1 && (onPreviousRack || onNextRack)
 
   const containerRef = useRef<HTMLDivElement>(null)
-  const [containerWidth, setContainerWidth] = useState(0)
-  const [containerHeight, setContainerHeight] = useState(0)
+  const { elementHeight: containerHeight, elementWidth: containerWidth } =
+    useElementSize(containerRef)
 
   // Calculate occupancy stats
   const totalSlots = rows * cols
@@ -136,38 +137,6 @@ export function RackGridView({
       })
     }
   }
-
-  useEffect(() => {
-    const element = containerRef.current
-    if (!element) {
-      return
-    }
-
-    const updateSize = (width: number, height: number) => {
-      setContainerWidth(width)
-      setContainerHeight(height)
-    }
-
-    updateSize(element.clientWidth, element.clientHeight)
-
-    if (typeof ResizeObserver === "undefined") {
-      const handleResize = () => {
-        updateSize(element.clientWidth, element.clientHeight)
-      }
-
-      window.addEventListener("resize", handleResize)
-      return () => window.removeEventListener("resize", handleResize)
-    }
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        updateSize(entry.contentRect.width, entry.contentRect.height)
-      }
-    })
-
-    resizeObserver.observe(element)
-    return () => resizeObserver.disconnect()
-  }, [])
 
   return (
     <>

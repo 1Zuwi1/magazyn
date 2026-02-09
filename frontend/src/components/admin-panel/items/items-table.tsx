@@ -314,63 +314,59 @@ export function AdminItemsTable({
   }
 
   return (
-    <div className="space-y-4">
-      {/* Filter Bar */}
-      <FilterBar>
-        <FilterGroup>
-          <SearchInput
-            aria-label="Filtruj przedmioty po nazwie lub ID"
-            onChange={setGlobalFilter}
-            placeholder="Szukaj po nazwie lub ID..."
-            value={globalFilter}
+    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div className="border-b bg-muted/30 px-4 py-3">
+        <FilterBar className="gap-3">
+          <FilterGroup>
+            <SearchInput
+              aria-label="Filtruj przedmioty po nazwie lub ID"
+              onChange={setGlobalFilter}
+              placeholder="Szukaj po nazwie lub ID..."
+              value={globalFilter}
+            />
+            {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}
+          </FilterGroup>
+
+          <FilterResults
+            filteredCount={filteredCount}
+            isFiltered={isFiltered}
+            itemLabel={itemLabel}
+            totalCount={totalCount}
           />
-
-          {/* Clear all filters */}
-          {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}
-        </FilterGroup>
-
-        <FilterResults
-          filteredCount={filteredCount}
-          isFiltered={isFiltered}
-          itemLabel={itemLabel}
-          totalCount={totalCount}
-        />
-      </FilterBar>
-
-      {/* Table Card */}
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                className="border-b bg-muted/30 hover:bg-muted/30"
-                key={headerGroup.id}
-              >
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    className="h-11 px-4 font-semibold text-xs uppercase tracking-wider"
-                    key={header.id}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>{getTableContent()}</TableBody>
-        </Table>
-        <PaginationFull
-          currentPage={currentPage}
-          setPage={onSetPage}
-          totalPages={totalPages}
-          variant="compact"
-        />
+        </FilterBar>
       </div>
+
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow
+              className="border-b bg-muted/30 hover:bg-muted/30"
+              key={headerGroup.id}
+            >
+              {headerGroup.headers.map((header) => (
+                <TableHead
+                  className="h-11 px-4 font-semibold text-xs uppercase tracking-wider"
+                  key={header.id}
+                >
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>{getTableContent()}</TableBody>
+      </Table>
+      <PaginationFull
+        currentPage={currentPage}
+        setPage={onSetPage}
+        totalPages={totalPages}
+        variant="compact"
+      />
     </div>
   )
 }
