@@ -1,12 +1,11 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-import type { ComponentProps, ReactNode } from "react"
+import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-
-type IconComponent = ComponentProps<typeof HugeiconsIcon>["icon"]
+import type { IconComponent } from "./types"
 
 interface StatItem {
   label: string

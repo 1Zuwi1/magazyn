@@ -10,6 +10,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import type { IconComponent } from "../types"
 import { useWarehouseStore } from "./store"
 import type { Item3D, Rack3D, Warehouse3D } from "./types"
 import { RACK_ZONE_SIZE } from "./types"
@@ -109,7 +110,7 @@ function StatCard({
   color,
   bgColor,
 }: {
-  icon: React.ComponentProps<typeof HugeiconsIcon>["icon"]
+  icon: IconComponent
   label: string
   value: number | string
   color: string

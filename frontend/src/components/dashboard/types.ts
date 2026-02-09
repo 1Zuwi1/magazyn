@@ -1,3 +1,8 @@
+import type { HugeiconsIcon } from "@hugeicons/react"
+import type { ComponentProps } from "react"
+
+export type IconComponent = ComponentProps<typeof HugeiconsIcon>["icon"]
+
 export interface FilterState {
   query: string
   minOccupancy: number

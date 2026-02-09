@@ -26,7 +26,10 @@ import { RackGridView } from "@/components/dashboard/rack-visualization/rack-gri
 import { RackParametersCard } from "@/components/dashboard/rack-visualization/rack-parameters-card"
 import { RackShelfDetailsCard } from "@/components/dashboard/rack-visualization/rack-shelf-details-card"
 import { RackStatusCard } from "@/components/dashboard/rack-visualization/rack-status-card"
-import type { SlotCoordinates } from "@/components/dashboard/types"
+import type {
+  IconComponent,
+  SlotCoordinates,
+} from "@/components/dashboard/types"
 import { buildItemsGrid } from "@/components/dashboard/utils/helpers"
 import {
   AlertDialog,
@@ -55,7 +58,7 @@ const OCCUPANCY_CRITICAL_THRESHOLD = 90
 interface HeaderStat {
   label: string
   value: string | number
-  icon?: typeof Layers01Icon
+  icon?: IconComponent
   variant?: "default" | "warning" | "destructive"
 }
 

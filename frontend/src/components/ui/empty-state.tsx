@@ -5,15 +5,14 @@ import {
   FilterIcon,
   InboxIcon,
   PackageIcon,
+  ReloadIcon,
   Search01Icon,
   Settings01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import type { ComponentProps } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-
-type IconComponent = ComponentProps<typeof HugeiconsIcon>["icon"]
+import type { IconComponent } from "../dashboard/types"
 
 type EmptyStateVariant =
   | "default"
@@ -32,6 +31,7 @@ interface EmptyStateProps {
     label: string
     onClick: () => void
     variant?: "default" | "outline" | "ghost"
+    icon?: IconComponent
   }
   secondaryAction?: {
     label: string
@@ -210,7 +210,10 @@ export function EmptyState({
                 variant={action.variant ?? "default"}
               >
                 {action.variant !== "ghost" && (
-                  <HugeiconsIcon className="mr-1.5 size-4" icon={Add01Icon} />
+                  <HugeiconsIcon
+                    className="mr-1.5 size-4"
+                    icon={action.icon ?? Add01Icon}
+                  />
                 )}
                 {action.label}
               </Button>
@@ -337,6 +340,7 @@ export function ErrorEmptyState({
               label: "Spróbuj ponownie",
               onClick: onRetry,
               variant: "outline",
+              icon: ReloadIcon,
             }
           : undefined
       }

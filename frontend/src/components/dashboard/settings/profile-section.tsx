@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import type { User } from "@/lib/schemas"
+import type { IconComponent } from "../types"
 import { ROLE_LABELS, STATUS_CONFIG } from "./constants"
 import type { ProfileDetail } from "./types"
 
@@ -55,7 +56,7 @@ function buildProfileDetails(user: User): ProfileDetail[] {
 }
 
 interface InfoFieldProps {
-  icon: typeof Mail01Icon
+  icon: IconComponent
   label: string
   value: string
 }

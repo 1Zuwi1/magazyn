@@ -6,11 +6,12 @@ import {
   Search01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import type { ComponentProps, ReactNode } from "react"
+import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import type { IconComponent } from "../dashboard/types"
 
 interface FilterBarProps {
   children?: ReactNode
@@ -179,7 +180,7 @@ export function ActiveFiltersBadge({
 }
 
 interface FilterSelectProps {
-  icon?: ComponentProps<typeof HugeiconsIcon>["icon"]
+  icon?: IconComponent
   isActive?: boolean
   className?: string
   children: ReactNode

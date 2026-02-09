@@ -11,6 +11,7 @@ import { useEffect, useMemo } from "react"
 import { toast } from "sonner"
 import z from "zod"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
+import type { IconComponent } from "@/components/dashboard/types"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldContent, FieldGroup } from "@/components/ui/field"
@@ -77,7 +78,7 @@ function SectionHeader({
   icon,
   title,
 }: {
-  icon: typeof Tag01Icon
+  icon: IconComponent
   title: string
 }) {
   return (

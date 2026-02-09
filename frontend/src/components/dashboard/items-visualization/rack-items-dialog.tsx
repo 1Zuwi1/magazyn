@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { ErrorEmptyState } from "@/components/ui/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
 import useAssortments from "@/hooks/use-assortment"
 import type { Rack } from "@/lib/schemas"
@@ -23,7 +24,12 @@ export function RackItemsDialog({
   onOpenChange,
   rack,
 }: RackItemsDialogProps) {
-  const { data: assortments, isLoading } = useAssortments({
+  const {
+    data: assortments,
+    isLoading,
+    isError,
+    refetch,
+  } = useAssortments({
     rackId: rack?.id ?? -1,
   })
 
@@ -33,6 +39,25 @@ export function RackItemsDialog({
 
   const occupiedSlots = assortments?.totalElements ?? 0
 
+  const renderDialogContent = () => {
+    if (isLoading) {
+      return <RackItemsDialogSkeleton />
+    }
+
+    if (isError) {
+      return <ErrorEmptyState onRetry={() => refetch()} />
+    }
+
+    return (
+      <>
+        <RackItemsStats occupiedSlots={occupiedSlots} rack={rack} />
+        <div className="min-h-0 flex-1">
+          <RackItemsTable items={assortments?.content ?? []} />
+        </div>
+      </>
+    )
+  }
+
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="flex h-[90vh] max-h-[90vh] w-full max-w-[95vw] flex-col overflow-hidden sm:h-auto sm:max-w-[85vw] lg:max-w-5xl xl:max-w-6xl">
@@ -41,16 +66,7 @@ export function RackItemsDialog({
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col gap-4">
-          {isLoading ? (
-            <RackItemsDialogSkeleton />
-          ) : (
-            <>
-              <RackItemsStats occupiedSlots={occupiedSlots} rack={rack} />
-              <div className="min-h-0 flex-1">
-                <RackItemsTable items={assortments?.content ?? []} />
-              </div>
-            </>
-          )}
+          {renderDialogContent()}
         </div>
       </DialogContent>
     </Dialog>

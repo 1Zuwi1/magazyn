@@ -1,8 +1,8 @@
-import type { Mail01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { AnyFieldApi } from "@tanstack/react-form"
 import type { ZodError } from "zod"
 import { cn } from "@/lib/utils"
+import type { IconComponent } from "../dashboard/types"
 import { Field, FieldContent, FieldError, FieldLabel } from "../ui/field"
 import { Input } from "../ui/input"
 
@@ -54,7 +54,7 @@ export function FieldWithState({
 }: {
   field: AnyFieldApi
   label: string
-  icon?: typeof Mail01Icon
+  icon?: IconComponent
   additionalNode?: React.ReactNode
   layout?: "stacked" | "grid"
   fieldClassName?: string

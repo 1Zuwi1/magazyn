@@ -5,6 +5,7 @@ import {
   SecurityKeyUsbIcon,
 } from "@hugeicons/core-free-icons"
 import type { TwoFactorMethod } from "@/lib/schemas"
+import type { IconComponent } from "../types"
 
 export const STATUS_CONFIG = {
   LOCKED: { label: "Zablokowane", variant: "destructive" },
@@ -45,7 +46,7 @@ export const TWO_FACTOR_METHODS = [
   },
 ] as const
 
-export const METHOD_ICONS: Record<TwoFactorMethod, typeof Key01Icon> = {
+export const METHOD_ICONS: Record<TwoFactorMethod, IconComponent> = {
   AUTHENTICATOR: Key01Icon,
   EMAIL: Mail01Icon,
   PASSKEYS: SecurityKeyUsbIcon,

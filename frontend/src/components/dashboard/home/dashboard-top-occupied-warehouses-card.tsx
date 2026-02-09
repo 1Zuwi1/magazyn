@@ -2,6 +2,8 @@ import { Package } from "@hugeicons/core-free-icons"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
+import { ErrorEmptyState } from "@/components/ui/empty-state"
+import { Skeleton } from "@/components/ui/skeleton"
 import useWarehouses from "@/hooks/use-warehouses"
 import { cn } from "@/lib/utils"
 import { InsightCard } from "../stat-card"
@@ -10,6 +12,7 @@ import { formatNumber } from "./dashboard-home.constants"
 type OccupancyBadgeVariant = "secondary" | "warning" | "destructive"
 const OCCUPANCY_WARNING_THRESHOLD = 75
 const OCCUPANCY_CRITICAL_THRESHOLD = 90
+const TOP_WAREHOUSES_COUNT = 3
 
 const getOccupancyBadgeVariant = (occupancy: number): OccupancyBadgeVariant => {
   if (occupancy >= OCCUPANCY_CRITICAL_THRESHOLD) {
@@ -31,19 +34,47 @@ const getOccupancyBarClassName = (occupancy: number): string => {
   return "bg-primary"
 }
 
+function TopOccupiedWarehousesSkeleton() {
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: TOP_WAREHOUSES_COUNT }, (_, i) => (
+        <div className="space-y-2" key={`warehouse-skeleton-${i.toString()}`}>
+          <div className="flex items-center justify-between gap-3">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-5 w-12 rounded-full" />
+          </div>
+          <Skeleton className="h-2 w-full rounded-full" />
+          <Skeleton className="h-3 w-24" />
+        </div>
+      ))}
+      <Skeleton className="mt-2 h-9 w-full rounded-md" />
+    </div>
+  )
+}
+
 export default function DashboardTopOccupiedWarehousesCard() {
-  const { data: topWarehouses } = useWarehouses({
-    size: 3,
+  const {
+    data: topWarehouses,
+    isPending,
+    isError,
+    refetch,
+  } = useWarehouses({
+    size: TOP_WAREHOUSES_COUNT,
     page: 0,
     sortBy: "occupancy",
     sortDir: "desc",
   })
-  return (
-    <InsightCard
-      description="Najbardziej wypełnione lokalizacje."
-      icon={Package}
-      title="Obłożenie magazynów"
-    >
+
+  const renderContent = () => {
+    if (isPending) {
+      return <TopOccupiedWarehousesSkeleton />
+    }
+
+    if (isError) {
+      return <ErrorEmptyState onRetry={() => refetch()} />
+    }
+
+    return (
       <div className="space-y-4">
         {topWarehouses?.content.map((warehouse) => (
           <div className="space-y-2" key={warehouse.id}>
@@ -80,6 +111,16 @@ export default function DashboardTopOccupiedWarehousesCard() {
           Zobacz wszystkie magazyny
         </Link>
       </div>
+    )
+  }
+
+  return (
+    <InsightCard
+      description="Najbardziej wypełnione lokalizacje."
+      icon={Package}
+      title="Obłożenie magazynów"
+    >
+      {renderContent()}
     </InsightCard>
   )
 }

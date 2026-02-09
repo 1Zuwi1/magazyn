@@ -18,7 +18,7 @@ import { useForm, useStore } from "@tanstack/react-form"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
-import type { Item } from "@/components/dashboard/types"
+import type { IconComponent, Item } from "@/components/dashboard/types"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -76,7 +76,7 @@ function SectionHeader({
   icon,
   title,
 }: {
-  icon: typeof Tag01Icon
+  icon: IconComponent
   title: string
 }) {
   return (

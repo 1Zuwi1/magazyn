@@ -6,6 +6,8 @@ import { pl } from "date-fns/locale"
 import { useMemo } from "react"
 import { InsightCard } from "@/components/dashboard/stat-card"
 import { Badge } from "@/components/ui/badge"
+import { ErrorEmptyState } from "@/components/ui/empty-state"
+import { Skeleton } from "@/components/ui/skeleton"
 import useAssortments from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import useWarehouses from "@/hooks/use-warehouses"
@@ -17,14 +19,54 @@ import {
   RECENT_ITEMS_LIMIT,
 } from "./dashboard-home.constants"
 
+function OperationalAlertsSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        {Array.from({ length: 3 }, (_, i) => (
+          <div
+            className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2"
+            key={`alert-skeleton-${i.toString()}`}
+          >
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-5 w-10 rounded-full" />
+          </div>
+        ))}
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-3 w-28" />
+        {Array.from({ length: 3 }, (_, i) => (
+          <div
+            className="flex items-center justify-between gap-3 rounded-lg border bg-card/50 p-2"
+            key={`expiry-skeleton-${i.toString()}`}
+          >
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function DashboardOperationalAlertsCard() {
-  const { data: criticalWarehousesData } = useWarehouses({
+  const {
+    data: criticalWarehousesData,
+    isPending: isCriticalWarehousesPending,
+    isError: isCriticalWarehousesError,
+    refetch: refetchCriticalWarehouses,
+  } = useWarehouses({
     minPercentOfOccupiedSlots: OCCUPANCY_CRITICAL_THRESHOLD,
     size: 1,
     page: 0,
   })
 
-  const { data: expiringSoonItemsData } = useAssortments({
+  const {
+    data: expiringSoonItemsData,
+    isPending: isExpiringPending,
+    isError: isExpiringError,
+    refetch: refetchExpiring,
+  } = useAssortments({
     page: 0,
     size: EXPIRING_ITEMS_LIMIT,
     sortBy: "expiresAt",
@@ -32,7 +74,12 @@ export function DashboardOperationalAlertsCard() {
     weekToExpire: true,
   })
 
-  const { data: assortmentsData } = useAssortments({
+  const {
+    data: assortmentsData,
+    isPending: isAssortmentsPending,
+    isError: isAssortmentsError,
+    refetch: refetchAssortments,
+  } = useAssortments({
     page: 0,
     size: RECENT_ITEMS_LIMIT,
     sortBy: "createdAt",
@@ -76,12 +123,33 @@ export function DashboardOperationalAlertsCard() {
     return dangerousCount
   }, [assortments, itemDefinitionsById])
 
-  return (
-    <InsightCard
-      description="Zestawienie ryzyk wymagających uwagi."
-      icon={AlertCircleIcon}
-      title="Alerty operacyjne"
-    >
+  const isPending =
+    isCriticalWarehousesPending || isExpiringPending || isAssortmentsPending
+  const isError =
+    isCriticalWarehousesError || isExpiringError || isAssortmentsError
+
+  const handleRetry = () => {
+    if (isCriticalWarehousesError) {
+      refetchCriticalWarehouses()
+    }
+    if (isExpiringError) {
+      refetchExpiring()
+    }
+    if (isAssortmentsError) {
+      refetchAssortments()
+    }
+  }
+
+  const renderContent = () => {
+    if (isPending) {
+      return <OperationalAlertsSkeleton />
+    }
+
+    if (isError) {
+      return <ErrorEmptyState onRetry={handleRetry} />
+    }
+
+    return (
       <div className="space-y-4">
         <div className="space-y-2 text-sm">
           <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
@@ -160,6 +228,16 @@ export function DashboardOperationalAlertsCard() {
           </div>
         )}
       </div>
+    )
+  }
+
+  return (
+    <InsightCard
+      description="Zestawienie ryzyk wymagających uwagi."
+      icon={AlertCircleIcon}
+      title="Alerty operacyjne"
+    >
+      {renderContent()}
     </InsightCard>
   )
 }

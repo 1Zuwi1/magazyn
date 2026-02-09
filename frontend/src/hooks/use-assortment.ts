@@ -60,20 +60,6 @@ export default function useAssortments(
   return useApiQuery({
     queryKey: [...ASSORTMENT_QUERY_KEY, params],
     queryFn: async () => {
-      if (params && "assortmentId" in params) {
-        if (params.assortmentId === -1) {
-          // This is a workaround to prevent the query from running when assortmentId is not yet available.
-          return null
-        }
-        return await apiFetch(
-          `/api/assortments/${params.assortmentId}`,
-          AssortmentDetailsSchema,
-          {
-            method: "GET",
-          }
-        )
-      }
-
       if (params && "rackId" in params) {
         if (params.rackId === -1) {
           // This is a workaround to prevent the query from running when rackId is not yet available.
@@ -84,9 +70,7 @@ export default function useAssortments(
           RackAssortmentsSchema,
           {
             method: "GET",
-            queryParams: {
-              ...params,
-            },
+            queryParams: params,
           }
         )
       }
@@ -101,17 +85,23 @@ export default function useAssortments(
           WarehouseAssortmentsSchema,
           {
             method: "GET",
-            queryParams: {
-              ...params,
-            },
+            queryParams: params,
+          }
+        )
+      }
+
+      if (params && "assortmentId" in params) {
+        return await apiFetch(
+          `/api/assortments/${params.assortmentId}`,
+          AssortmentDetailsSchema,
+          {
+            method: "GET",
           }
         )
       }
 
       return await apiFetch("/api/assortments", AssortmentsSchema, {
-        queryParams: {
-          ...params,
-        },
+        queryParams: params,
       })
     },
   })

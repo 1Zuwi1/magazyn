@@ -12,6 +12,7 @@ import { formatDistanceToNow } from "date-fns"
 import { pl } from "date-fns/locale"
 import Link from "next/link"
 import { useMemo, useState } from "react"
+import type { IconComponent } from "@/components/dashboard/types"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
@@ -65,7 +66,7 @@ function MetricCard({
   label: string
   value: MetricValue
   unit?: string
-  icon: typeof ThermometerIcon
+  icon: IconComponent
 }) {
   return (
     <div className="rounded-lg border bg-muted/20 p-3">

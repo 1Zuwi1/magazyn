@@ -9,15 +9,16 @@ import {
   WarehouseIcon,
   WaveTriangleIcon,
 } from "@hugeicons/core-free-icons"
+import type { IconComponent } from "@/components/dashboard/types"
 
 export interface NavigationItem {
   title: string
   href: string
-  icon: typeof Analytics01Icon
+  icon: IconComponent
   items?: {
     title: string
     href: string
-    icon: typeof Analytics01Icon
+    icon: IconComponent
   }[]
   adminOnly?: boolean
 }

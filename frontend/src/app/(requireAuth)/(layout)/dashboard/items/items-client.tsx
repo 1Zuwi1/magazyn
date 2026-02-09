@@ -42,6 +42,7 @@ export default function ItemsClientPage() {
 
   const {
     data: assortment,
+    isPending: isAssortmentPending,
     isError: isAssortmentError,
     error: assortmentError,
   } = useAssortment({
@@ -49,8 +50,14 @@ export default function ItemsClientPage() {
     size: DEFAULT_ASSORTMENT_SIZE,
   })
 
-  const { data: items, isError: isItemsError, error: itemsError } = useItems()
+  const {
+    data: items,
+    isPending: isItemsPending,
+    isError: isItemsError,
+    error: itemsError,
+  } = useItems()
 
+  const isPending = isAssortmentPending || isItemsPending
   const totalItems = items?.totalElements ?? items?.content.length ?? 0
   const totalStock =
     assortment?.totalElements ?? assortment?.content.length ?? 0
@@ -58,11 +65,11 @@ export default function ItemsClientPage() {
   const headerStats = [
     {
       label: "Na stanie",
-      value: totalStock.toLocaleString("pl-PL"),
+      value: isPending ? "..." : totalStock.toLocaleString("pl-PL"),
     },
     {
       label: "Produkty",
-      value: totalItems,
+      value: isPending ? "..." : totalItems,
     },
   ]
 
@@ -71,7 +78,7 @@ export default function ItemsClientPage() {
       <PageHeader
         description="Przeglądaj katalog produktów i monitoruj aktualne stany magazynowe w czasie rzeczywistym."
         icon={PackageIcon}
-        iconBadge={totalItems}
+        iconBadge={isPending ? undefined : totalItems}
         stats={headerStats}
         title="Zarządzanie przedmiotami"
       />
@@ -113,14 +120,14 @@ export default function ItemsClientPage() {
               <HugeiconsIcon className="size-4" icon={GridViewIcon} />
               <span>Stan Magazynowy</span>
               <Badge className="ml-1" variant="secondary">
-                {totalStock}
+                {isAssortmentPending ? "..." : totalStock}
               </Badge>
             </TabsTrigger>
             <TabsTrigger className="gap-2 px-4" value="definitions">
               <HugeiconsIcon className="size-4" icon={BarCode02Icon} />
               <span>Katalog produktów</span>
               <Badge className="ml-1" variant="secondary">
-                {totalItems}
+                {isItemsPending ? "..." : totalItems}
               </Badge>
             </TabsTrigger>
           </TabsList>
