@@ -2,6 +2,8 @@
 
 import { Clock01Icon, DatabaseIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { formatDuration, intervalToDuration } from "date-fns"
+import { pl } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
@@ -12,7 +14,8 @@ import {
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { formatBytes, formatDateTime } from "../lib/utils"
-import { type Backup, getBackupStatusConfig } from "./types"
+import { BackupStatusBadge } from "./backup-status-badge"
+import type { Backup } from "./types"
 
 interface DetailRowProps {
   label: string
@@ -26,6 +29,22 @@ function DetailRow({ label, children }: DetailRowProps) {
       <span className="font-medium text-sm">{children}</span>
     </div>
   )
+}
+
+function formatBackupDuration(
+  createdAt: string,
+  completedAt: string | null
+): string {
+  if (!completedAt) {
+    return "—"
+  }
+
+  const duration = intervalToDuration({
+    start: new Date(createdAt),
+    end: new Date(completedAt),
+  })
+
+  return formatDuration(duration, { locale: pl }) || "< 1 sek."
 }
 
 interface BackupDetailDialogProps {
@@ -55,9 +74,7 @@ export function BackupDetailDialog({
           </div>
           <div className="space-y-1.5">
             <DialogTitle>{backup.name}</DialogTitle>
-            <DialogDescription>
-              Szczegóły kopii zapasowej #{backup.id}
-            </DialogDescription>
+            <DialogDescription>Szczegóły kopii zapasowej</DialogDescription>
           </div>
         </DialogHeader>
 
@@ -65,8 +82,11 @@ export function BackupDetailDialog({
 
         <div className="space-y-1">
           <DetailRow label="Status">
-            <Badge variant={getBackupStatusConfig(backup.status).variant}>
-              {getBackupStatusConfig(backup.status).label}
+            <BackupStatusBadge status={backup.status} />
+          </DetailRow>
+          <DetailRow label="Typ">
+            <Badge variant="outline">
+              {backup.type === "MANUAL" ? "Ręczny" : "Zaplanowany"}
             </Badge>
           </DetailRow>
           <DetailRow label="Magazyn">
@@ -86,6 +106,9 @@ export function BackupDetailDialog({
           </DetailRow>
           <DetailRow label="Ukończony">
             {formatDateTime(backup.completedAt)}
+          </DetailRow>
+          <DetailRow label="Czas tworzenia kopii">
+            {formatBackupDuration(backup.createdAt, backup.completedAt)}
           </DetailRow>
         </div>
       </DialogContent>

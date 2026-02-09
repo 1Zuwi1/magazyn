@@ -16,6 +16,23 @@ export const BACKUP_STATUS_CONFIG: Record<
 export const getBackupStatusConfig = (status: BackupStatus) =>
   BACKUP_STATUS_CONFIG[status]
 
+export type ScheduleFrequency = "DAILY" | "WEEKLY" | "MONTHLY" | "CUSTOM"
+
+export const FREQUENCY_CONFIG: Record<ScheduleFrequency, { label: string }> = {
+  DAILY: { label: "Codziennie" },
+  WEEKLY: { label: "Co tydzień" },
+  MONTHLY: { label: "Co miesiąc" },
+  CUSTOM: { label: "Własne" },
+}
+
+export const getFrequencyLabel = (
+  frequency: ScheduleFrequency,
+  customDays?: number | null
+): string =>
+  frequency === "CUSTOM"
+    ? `Co ${customDays ?? 1} dni`
+    : FREQUENCY_CONFIG[frequency].label
+
 export interface Backup {
   id: number
   name: string
@@ -27,8 +44,6 @@ export interface Backup {
   warehouseId: string | null
   warehouseName: string | null
 }
-
-export type ScheduleFrequency = "DAILY" | "WEEKLY" | "MONTHLY" | "CUSTOM"
 
 export interface BackupSchedule {
   warehouseId: string | null

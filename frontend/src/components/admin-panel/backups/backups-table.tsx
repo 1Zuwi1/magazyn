@@ -5,6 +5,7 @@ import {
   DatabaseRestoreIcon,
   EyeIcon,
   MoreHorizontalIcon,
+  Refresh01Icon,
   Trash,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -24,7 +25,6 @@ import {
   SortableHeader,
   StaticHeader,
 } from "@/components/dashboard/items/sortable-header"
-import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -42,18 +42,15 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
-import { formatBytes, formatDateTime } from "../lib/utils"
-import { type Backup, getBackupStatusConfig } from "./types"
-
-function StatusBadge({ status }: { status: Backup["status"] }) {
-  const { label, variant } = getBackupStatusConfig(status)
-  return <Badge variant={variant}>{label}</Badge>
-}
+import { formatDateTime } from "../lib/utils"
+import { BackupStatusBadge } from "./backup-status-badge"
+import type { Backup } from "./types"
 
 interface BackupsTableProps {
   backups: Backup[]
   onView: (backup: Backup) => void
   onRestore: (backup: Backup) => void
+  onRetry: (backup: Backup) => void
   onDelete: (backup: Backup) => void
   onCreateManual: () => void
 }
@@ -61,6 +58,7 @@ interface BackupsTableProps {
 function createColumns(
   onView: (backup: Backup) => void,
   onRestore: (backup: Backup) => void,
+  onRetry: (backup: Backup) => void,
   onDelete: (backup: Backup) => void
 ): ColumnDef<Backup>[] {
   return [
@@ -87,7 +85,7 @@ function createColumns(
       header: ({ column }) => (
         <SortableHeader column={column}>Status</SortableHeader>
       ),
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      cell: ({ row }) => <BackupStatusBadge status={row.original.status} />,
       enableSorting: true,
     },
     {
@@ -99,20 +97,6 @@ function createColumns(
         </span>
       ),
       enableSorting: false,
-    },
-    {
-      accessorKey: "sizeBytes",
-      header: ({ column }) => (
-        <SortableHeader column={column}>Rozmiar</SortableHeader>
-      ),
-      cell: ({ row }) => (
-        <span className="font-mono text-sm">
-          {row.original.sizeBytes != null
-            ? formatBytes(row.original.sizeBytes)
-            : "—"}
-        </span>
-      ),
-      enableSorting: true,
     },
     {
       accessorKey: "createdAt",
@@ -161,6 +145,15 @@ function createColumns(
                   Przywróć
                 </DropdownMenuItem>
               )}
+              {backup.status === "FAILED" && (
+                <DropdownMenuItem onClick={() => onRetry(backup)}>
+                  <HugeiconsIcon
+                    className="mr-2 h-4 w-4"
+                    icon={Refresh01Icon}
+                  />
+                  Spróbuj ponownie
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 className="text-destructive"
                 onClick={() => onDelete(backup)}
@@ -181,6 +174,7 @@ export function BackupsTable({
   backups,
   onView,
   onRestore,
+  onRetry,
   onDelete,
   onCreateManual,
 }: BackupsTableProps) {
@@ -189,7 +183,7 @@ export function BackupsTable({
   ])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
-  const columns = createColumns(onView, onRestore, onDelete)
+  const columns = createColumns(onView, onRestore, onRetry, onDelete)
 
   const table = useReactTable({
     data: backups,

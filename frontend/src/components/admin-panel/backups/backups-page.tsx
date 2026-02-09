@@ -136,6 +136,22 @@ export function BackupsMain() {
     setBackups((prev) => [...prev, newBackup])
   }
 
+  const handleRetryBackup = (backup: Backup) => {
+    setBackups((prev) =>
+      prev.map((b) =>
+        b.id === backup.id
+          ? {
+              ...b,
+              status: "PENDING" as const,
+              createdAt: new Date().toISOString(),
+              completedAt: null,
+              sizeBytes: null,
+            }
+          : b
+      )
+    )
+  }
+
   const handleAddSchedule = () => {
     setSelectedSchedule(undefined)
     setScheduleDialogOpen(true)
@@ -230,7 +246,7 @@ export function BackupsMain() {
     {
       icon: DatabaseIcon,
       count: backups.length,
-      label: "kopii",
+      label: `${pluralize(backups.length, "kopia", "kopie", "kopii")}`,
       className: "bg-background/50 text-muted-foreground",
       show: true,
     },
@@ -315,6 +331,7 @@ export function BackupsMain() {
         onCreateManual={handleCreateManual}
         onDelete={handleDeleteBackup}
         onRestore={handleRestoreBackup}
+        onRetry={handleRetryBackup}
         onView={handleViewBackup}
       />
 

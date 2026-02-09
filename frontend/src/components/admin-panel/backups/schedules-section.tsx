@@ -23,17 +23,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { formatDateTime } from "../lib/utils"
-import type { BackupSchedule, ScheduleFrequency } from "./types"
-
-function frequencyLabel(schedule: BackupSchedule): string {
-  const map: Record<ScheduleFrequency, string> = {
-    DAILY: "Codziennie",
-    WEEKLY: "Co tydzień",
-    MONTHLY: "Co miesiąc",
-    CUSTOM: `Co ${schedule.customDays} dni`,
-  }
-  return map[schedule.frequency]
-}
+import { type BackupSchedule, getFrequencyLabel } from "./types"
 
 interface SchedulesSectionProps {
   schedules: BackupSchedule[]
@@ -138,14 +128,14 @@ export function SchedulesSection({
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                       <HugeiconsIcon className="size-3" icon={Calendar03Icon} />
-                      {frequencyLabel(schedule)}
+                      {getFrequencyLabel(
+                        schedule.frequency,
+                        schedule.customDays
+                      )}
                     </div>
                     <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                       <HugeiconsIcon className="size-3" icon={Clock01Icon} />
-                      Ostatnia:{" "}
-                      {schedule.lastBackupAt
-                        ? formatDateTime(schedule.lastBackupAt)
-                        : "Brak"}
+                      Ostatnia: {formatDateTime(schedule.lastBackupAt)}
                     </div>
                     {schedule.nextBackupAt && (
                       <div className="flex items-center gap-1.5 text-muted-foreground text-xs">

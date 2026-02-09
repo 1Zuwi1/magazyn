@@ -13,16 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { BackupSchedule, ScheduleFrequency } from "./types"
+import {
+  type BackupSchedule,
+  FREQUENCY_CONFIG,
+  type ScheduleFrequency,
+} from "./types"
 
 const ALL_WAREHOUSES_ID = "__all__"
 
-const frequencies: { label: string; value: ScheduleFrequency }[] = [
-  { label: "Codziennie", value: "DAILY" },
-  { label: "Co tydzień", value: "WEEKLY" },
-  { label: "Co miesiąc", value: "MONTHLY" },
-  { label: "Własne", value: "CUSTOM" },
-]
+const frequencyOptions = (
+  Object.keys(FREQUENCY_CONFIG) as ScheduleFrequency[]
+).map((value) => ({ label: FREQUENCY_CONFIG[value].label, value }))
 
 export interface AvailableWarehouse {
   id: string
@@ -101,8 +102,7 @@ export function ScheduleDialog({
   const form = useForm({
     defaultValues: getFormValues(),
     onSubmit: ({ value }) => {
-      const customDays =
-        value.frequency === "CUSTOM" ? value.customDays : null
+      const customDays = value.frequency === "CUSTOM" ? value.customDays : null
 
       if (isEdit && schedule) {
         onSubmit(buildEditPayload(schedule, value.frequency, customDays))
@@ -225,12 +225,13 @@ export function ScheduleDialog({
                       id={id}
                     >
                       <SelectValue>
-                        {frequencies.find((f) => f.value === field.state.value)
-                          ?.label ?? "Wybierz częstotliwość"}
+                        {frequencyOptions.find(
+                          (f) => f.value === field.state.value
+                        )?.label ?? "Wybierz częstotliwość"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {frequencies.map((freq) => (
+                      {frequencyOptions.map((freq) => (
                         <SelectItem key={freq.value} value={freq.value}>
                           {freq.label}
                         </SelectItem>

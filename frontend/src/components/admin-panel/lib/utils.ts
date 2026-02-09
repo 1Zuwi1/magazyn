@@ -26,7 +26,7 @@ export function formatBytes(
 
 export function formatDateTime(dateString: string | null): string {
   if (!dateString) {
-    return "—"
+    return "Brak"
   }
   return format(new Date(dateString), "dd.MM.yyyy, HH:mm", { locale: pl })
 }
