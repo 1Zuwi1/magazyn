@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from "@tanstack/react-query"
 import { apiFetch, type InferApiInput } from "@/lib/fetcher"
 import {
   AlertsSchema,
@@ -8,7 +9,8 @@ import { useApiMutation } from "./use-api-mutation"
 import { useApiQuery } from "./use-api-query"
 
 export default function useAlerts(
-  params: InferApiInput<typeof AlertsSchema, "GET">
+  params: InferApiInput<typeof AlertsSchema, "GET">,
+  options?: UseQueryOptions
 ) {
   return useApiQuery({
     queryKey: ["alerts", params],
@@ -17,6 +19,7 @@ export default function useAlerts(
         method: "GET",
         queryParams: params,
       }),
+    ...options,
   })
 }
 

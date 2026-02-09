@@ -1,4 +1,8 @@
-import type { QueryClient, UseQueryResult } from "@tanstack/react-query"
+import type {
+  QueryClient,
+  UseQueryOptions,
+  UseQueryResult,
+} from "@tanstack/react-query"
 import {
   apiFetch,
   type FetchError,
@@ -14,6 +18,7 @@ import {
   AdminUsersWarehouseAssignmentSchema,
   AdminUserTeamsSchema,
 } from "@/lib/schemas"
+import type { SafeQueryOptions } from "./helper"
 import { useApiMutation } from "./use-api-mutation"
 import { useApiQuery } from "./use-api-query"
 import { SESSION_QUERY_KEY } from "./use-session"
@@ -35,48 +40,42 @@ export type ChangeAdminUserEmailInput = InferApiInput<
   typeof AdminChangeUserEmailSchema,
   "PATCH"
 >
-
-type UseAdminUsersParams = InferApiInput<typeof AdminUsersSchema, "GET">
-
-const normalizeAdminUsersParams = (
-  params: UseAdminUsersParams
-): UseAdminUsersParams => {
-  const normalizedName = params.name?.trim() || undefined
-  const normalizedEmail = params.email?.trim() || undefined
-
-  return {
-    ...params,
-    page: params.page ?? 0,
-    size: params.size ?? 20,
-    sortBy: params.sortBy ?? "id",
-    sortDir: params.sortDir ?? "asc",
-    name: normalizedName,
-    email: normalizedEmail,
-  }
-}
+type AdminUsersParams = InferApiInput<typeof AdminUsersSchema, "GET">
+type AdminUserTeamsQueryKey = typeof ADMIN_USER_TEAMS_QUERY_KEY
 
 export default function useAdminUsers(
-  params: UseAdminUsersParams = {}
+  params: AdminUsersParams,
+  options?: SafeQueryOptions<AdminUsersList>
 ): UseQueryResult<AdminUsersList, FetchError> {
-  const queryParams = normalizeAdminUsersParams(params)
-
   return useApiQuery({
-    queryKey: [...ADMIN_USERS_QUERY_KEY, queryParams],
+    queryKey: [...ADMIN_USERS_QUERY_KEY, params],
     queryFn: () =>
       apiFetch("/api/users", AdminUsersSchema, {
         method: "GET",
-        queryParams,
+        queryParams: params,
       }),
+    ...options,
   })
 }
 
-export function useAdminUserTeams() {
+export function useAdminUserTeams(
+  options?: Omit<
+    UseQueryOptions<
+      AdminTeamOption[],
+      FetchError,
+      AdminTeamOption[],
+      AdminUserTeamsQueryKey
+    >,
+    "queryKey" | "queryFn"
+  >
+): UseQueryResult<AdminTeamOption[], FetchError> {
   return useApiQuery({
     queryKey: ADMIN_USER_TEAMS_QUERY_KEY,
     queryFn: () =>
       apiFetch("/api/users/teams", AdminUserTeamsSchema, {
         method: "GET",
       }),
+    ...options,
   })
 }
 

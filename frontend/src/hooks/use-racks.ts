@@ -1,4 +1,5 @@
 import {
+  type UseQueryOptions,
   type UseQueryResult,
   useInfiniteQuery,
   useQueries,
@@ -76,7 +77,8 @@ export default function useRacks(
 ): UseQueryResult<RacksList, FetchError>
 
 export default function useRacks(
-  params?: RacksListParams | RacksDetailsParams | RacksByWarehouseParams
+  params?: RacksListParams | RacksDetailsParams | RacksByWarehouseParams,
+  options?: UseQueryOptions
 ) {
   return useApiQuery({
     queryKey: [...Racks_QUERY_KEY, params],
@@ -105,6 +107,7 @@ export default function useRacks(
         queryParams: params,
       })
     },
+    ...options,
   })
 }
 

@@ -1,4 +1,5 @@
 import {
+  type UseQueryOptions,
   type UseQueryResult,
   useInfiniteQuery,
   useQueries,
@@ -122,7 +123,8 @@ export default function useItems(
 ): UseQueryResult<ItemsList, FetchError>
 
 export default function useItems(
-  params?: ItemsListParams | ItemDetailsParams | ItemsByWarehouseParams
+  params?: ItemsListParams | ItemDetailsParams | ItemsByWarehouseParams,
+  options?: UseQueryOptions
 ) {
   return useApiQuery({
     queryKey: [...ITEMS_QUERY_KEY, params],
@@ -158,6 +160,7 @@ export default function useItems(
         queryParams: params,
       })
     },
+    ...options,
   })
 }
 

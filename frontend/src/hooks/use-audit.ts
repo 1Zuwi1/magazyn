@@ -1,3 +1,4 @@
+import type { UseQueryOptions } from "@tanstack/react-query"
 import { apiFetch, type InferApiInput } from "@/lib/fetcher"
 import {
   AuditInboudOperationsSchema,
@@ -6,7 +7,8 @@ import {
 import { useApiQuery } from "./use-api-query"
 
 export function useAuditInboundOperations(
-  params: InferApiInput<typeof AuditInboudOperationsSchema, "GET">
+  params: InferApiInput<typeof AuditInboudOperationsSchema, "GET">,
+  options?: UseQueryOptions
 ) {
   return useApiQuery({
     queryKey: ["audit", "inbound-operations", params],
@@ -20,11 +22,13 @@ export function useAuditInboundOperations(
         }
       )
     },
+    ...options,
   })
 }
 
 export function useAuditOutboundOperations(
-  params: InferApiInput<typeof AuditOutboundOperationsSchema, "GET">
+  params: InferApiInput<typeof AuditOutboundOperationsSchema, "GET">,
+  options?: UseQueryOptions
 ) {
   return useApiQuery({
     queryKey: ["audit", "outbound-operations", params],
@@ -38,5 +42,6 @@ export function useAuditOutboundOperations(
         }
       )
     },
+    ...options,
   })
 }

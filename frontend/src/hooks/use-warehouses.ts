@@ -1,4 +1,4 @@
-import type { UseQueryResult } from "@tanstack/react-query"
+import type { UseQueryOptions, UseQueryResult } from "@tanstack/react-query"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 import {
@@ -41,7 +41,8 @@ export default function useWarehouses(
 ): UseQueryResult<WarehouseDetails, FetchError>
 
 export default function useWarehouses(
-  params?: WarehousesListParams | WarehouseDetailsParams
+  params?: WarehousesListParams | WarehouseDetailsParams,
+  options?: UseQueryOptions
 ) {
   return useApiQuery({
     queryKey: [...WAREHOUSES_QUERY_KEY, params],
@@ -59,6 +60,7 @@ export default function useWarehouses(
         queryParams: params,
       })
     },
+    ...options,
   })
 }
 

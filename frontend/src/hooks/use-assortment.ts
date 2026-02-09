@@ -1,4 +1,4 @@
-import type { UseQueryResult } from "@tanstack/react-query"
+import type { UseQueryOptions, UseQueryResult } from "@tanstack/react-query"
 import {
   apiFetch,
   type FetchError,
@@ -55,7 +55,8 @@ export default function useAssortments(
     | AssortmentsListParams
     | AssortmentDetailsParams
     | WarehouseAssortmentsParams
-    | RackAssortmentsParams
+    | RackAssortmentsParams,
+  options?: UseQueryOptions
 ) {
   return useApiQuery({
     queryKey: [...ASSORTMENT_QUERY_KEY, params],
@@ -104,5 +105,6 @@ export default function useAssortments(
         queryParams: params,
       })
     },
+    ...options,
   })
 }

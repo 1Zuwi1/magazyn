@@ -6,6 +6,7 @@ import {
   ApiMarkNotificationSchema,
   ApiNotificationsSchema,
 } from "@/lib/schemas/monitoring-schemas"
+import type { SafeQueryOptions } from "./helper"
 import { useApiMutation } from "./use-api-mutation"
 import { useApiQuery } from "./use-api-query"
 
@@ -40,7 +41,8 @@ export type NotificationsList = InferApiOutput<
 export type UserNotification = NotificationsList["content"][number]
 
 export default function useNotifications(
-  params?: NotificationsListParams
+  params?: NotificationsListParams,
+  options?: SafeQueryOptions<NotificationsList>
 ): UseQueryResult<NotificationsList, FetchError> {
   const queryParams = normalizeNotificationsParams(params)
 
@@ -51,6 +53,7 @@ export default function useNotifications(
         method: "GET",
         queryParams,
       }),
+    ...options,
   })
 }
 
