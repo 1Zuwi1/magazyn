@@ -8,7 +8,6 @@ type ApiRack = RacksList["content"][number]
 type ApiWarehouse = WarehousesList["content"][number]
 type ApiAssortment = AssortmentsList["content"][number]
 
-const RACKS_PER_ROW = 4
 const RACK_SPACING = 0.5
 const ROW_SPACING = 2
 
@@ -60,9 +59,9 @@ function mapApiRackToRack3D(
     length: totalSlots,
   }).fill(null)
 
-  const cellW = 1
-  const cellH = 1
-  const cellD = 1
+  const cellW = 0.1
+  const cellH = 0.1
+  const cellD = 0.1
   const minCellDim = Math.min(cellW, cellH)
 
   for (const assortment of rackAssortments) {
@@ -173,10 +172,12 @@ function layoutRacks(racks: Rack3D[]): void {
     return
   }
 
+  const racksPerRow = Math.max(1, Math.ceil(Math.sqrt(racks.length)))
+
   const rowDepths: number[] = []
 
   for (let i = 0; i < racks.length; i++) {
-    const row = Math.floor(i / RACKS_PER_ROW)
+    const row = Math.floor(i / racksPerRow)
     const { depth } = getRackDimensions(racks[i])
     rowDepths[row] = Math.max(rowDepths[row] ?? 0, depth)
   }
@@ -192,7 +193,7 @@ function layoutRacks(racks: Rack3D[]): void {
   const rowXOffsets: number[] = []
 
   for (let i = 0; i < racks.length; i++) {
-    const row = Math.floor(i / RACKS_PER_ROW)
+    const row = Math.floor(i / racksPerRow)
     const rack = racks[i]
     const { width, height } = getRackDimensions(rack)
     const currentRowX = rowXOffsets[row] ?? 0
