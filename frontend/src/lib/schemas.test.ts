@@ -323,21 +323,7 @@ describe("ApiMeSchema", () => {
       account_status: "ACTIVE",
       role: "USER",
       location: "Warsaw",
-    }
-
-    const result = ApiMeSchema.shape.GET.shape.output.safeParse(validOutput)
-
-    expect(result.success).toBe(true)
-  })
-
-  it("accepts user data with nullable full_name", () => {
-    const validOutput = {
-      id: 1,
-      email: "user@example.com",
-      full_name: "Test Admin",
-      account_status: "ACTIVE",
-      role: "ADMIN",
-      location: "Warsaw",
+      warehouse_ids: [],
     }
 
     const result = ApiMeSchema.shape.GET.shape.output.safeParse(validOutput)

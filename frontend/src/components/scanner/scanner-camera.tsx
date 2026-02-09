@@ -383,7 +383,7 @@ export function ScannerCamera({
                 variant="ghost"
               >
                 <HugeiconsIcon className="size-4" icon={Camera01Icon} />
-                Zrób zdjęcie
+                Rozpoznaj produkt
               </Button>
             </div>
           )}

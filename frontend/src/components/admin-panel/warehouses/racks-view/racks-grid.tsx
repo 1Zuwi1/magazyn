@@ -28,7 +28,6 @@ interface RackCardProps {
   onDelete?: (rack: Rack) => void
 }
 
-// TODO: Remove commented out code related to weight once we have the actual weight data available and decide how to use it in the UI
 function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
   const hasActions = onEdit || onDelete
   const isCritical = rack.occupiedSlots / rack.totalSlots >= THRESHOLD

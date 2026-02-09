@@ -2,8 +2,6 @@
 
 import {
   Alert01Icon,
-  ArrowLeft01Icon,
-  ArrowRight01Icon,
   CubeIcon,
   Layers01Icon,
   PackageIcon,
@@ -738,33 +736,6 @@ export default function WarehouseClient() {
           <HugeiconsIcon className="size-4" icon={CubeIcon} />
           <span>Widok 3D</span>
         </Button>
-        {currentRack && totalPages > 1 && (
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            <Button
-              className="gap-1.5"
-              onClick={handlePreviousRack}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              <HugeiconsIcon className="size-3.5" icon={ArrowLeft01Icon} />
-              <span>Poprzedni regał</span>
-            </Button>
-            <Badge className="font-mono" variant="outline">
-              {currentRack.marker}
-            </Badge>
-            <Button
-              className="gap-1.5"
-              onClick={handleNextRack}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              <span>Następny regał</span>
-              <HugeiconsIcon className="size-3.5" icon={ArrowRight01Icon} />
-            </Button>
-          </div>
-        )}
       </div>
 
       <AlertDialog onOpenChange={setIs3DWarningOpen} open={is3DWarningOpen}>

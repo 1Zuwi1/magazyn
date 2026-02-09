@@ -33,11 +33,14 @@ function VerifyMailContent() {
       return
     }
 
+    const abortController = new AbortController()
+
     const verify = async () => {
       const [err] = await tryCatch(
         apiFetch("/api/auth/verify-email", VerifyMailSchema, {
           method: "POST",
           body: { token },
+          signal: abortController.signal,
         })
       )
 
