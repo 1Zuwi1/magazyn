@@ -276,7 +276,7 @@ export function BackupsMain() {
         actions={
           <Button onClick={handleCreateManual}>
             <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-            Utwórz kopię
+            Utwórz kopię zapasową
           </Button>
         }
         description="Zarządzaj kopiami zapasowymi i harmonogramami"
