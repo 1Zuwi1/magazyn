@@ -9,6 +9,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
+import { ItemPhoto } from "@/components/ui/item-photo"
 import { cn } from "@/lib/utils"
 import type { IconComponent } from "../types"
 import { useWarehouseStore } from "./store"
@@ -409,39 +410,17 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                       <span className="font-mono">{selectedItem.id}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Etykieta</span>
+                      <span className="text-muted-foreground">Nazwa</span>
                       <span className="font-medium">{selectedItem.label}</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Typ</span>
-                      <span className="font-medium">{selectedItem.type}</span>
-                    </div>
-
-                    {selectedItem.meta && (
-                      <div className="mt-3 rounded-lg bg-muted/50 p-2">
-                        <p className="mb-1 font-semibold text-[10px] text-muted-foreground uppercase tracking-wider">
-                          Metadane
-                        </p>
-                        {Object.entries(selectedItem.meta).map(
-                          ([key, value]) => (
-                            <div
-                              className="flex items-center justify-between font-mono text-[10px]"
-                              key={key}
-                            >
-                              <span className="text-muted-foreground">
-                                {key}:
-                              </span>
-                              <span>{String(value)}</span>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    )}
                   </div>
 
-                  <Button className="mt-4 w-full" size="sm" variant="outline">
-                    Edytuj etykietę
-                  </Button>
+                  <ItemPhoto
+                    alt={selectedItem.label}
+                    containerClassName="mt-4 min-h-20"
+                    src={selectedItem.imageUrl}
+                    zoomable
+                  />
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 p-6 text-center">

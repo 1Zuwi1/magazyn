@@ -1,7 +1,7 @@
 import { Instance, Instances, useTexture } from "@react-three/drei"
 import { useEffect, useMemo, useState } from "react"
 import * as THREE from "three"
-import { GLOW_SETTINGS, VISUALIZATION_CONSTANTS } from "../constants"
+import { VISUALIZATION_CONSTANTS } from "../constants"
 import type { FocusWindow, Item3D, ItemStatus, Rack3D } from "../types"
 import { getItemVisuals, ITEM_STATUS_ORDER } from "../types"
 import {
@@ -205,19 +205,6 @@ function ItemsWithImages({
   )
 }
 
-function getItemImageUrl(item: Item3D): string | null {
-  if (item.imageUrl && item.imageUrl.trim() !== "") {
-    return item.imageUrl
-  }
-
-  const metaUrl = item.meta?.imageUrl
-  if (typeof metaUrl === "string" && metaUrl.trim() !== "") {
-    return metaUrl
-  }
-
-  return null
-}
-
 interface ItemsFocusProps {
   rack: Rack3D
   metrics?: RackMetrics
@@ -258,20 +245,8 @@ const processRackItems = (
       }
 
       const position: [number, number, number] = [x, y, 0]
-      const imageUrl = getItemImageUrl(item)
-      const glowSettings = GLOW_SETTINGS[item.status] ?? GLOW_SETTINGS.normal
 
-      if (imageUrl) {
-        withImages.push({
-          position,
-          status: item.status,
-          imageUrl,
-          glowOpacity: glowSettings.glowOpacity,
-          emissiveIntensity: glowSettings.emissiveIntensity,
-        })
-      } else {
-        solid[item.status].push({ position, status: item.status })
-      }
+      solid[item.status].push({ position, status: item.status })
     }
   }
   return { withImages, solid }

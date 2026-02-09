@@ -18,7 +18,7 @@ const ASSORTMENT_QUERY_KEY = ["assortments"] as const
 
 export type AssortmentsList = InferApiOutput<typeof AssortmentsSchema, "GET">
 type RackAssortmentsList = InferApiOutput<typeof RackAssortmentsSchema, "GET">
-type WarehouseAssortmentsList = InferApiOutput<
+export type WarehouseAssortmentsList = InferApiOutput<
   typeof WarehouseAssortmentsSchema,
   "GET"
 >

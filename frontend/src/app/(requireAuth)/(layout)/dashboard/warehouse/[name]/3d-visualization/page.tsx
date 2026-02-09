@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/sheet"
 import { DISABLE_PAGINATION_PAGE_SIZE } from "@/config/constants"
 import useAssortments from "@/hooks/use-assortment"
-import { type ItemDetails, useMultipleItems } from "@/hooks/use-items"
 import useRacks from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
 import { cn } from "@/lib/utils"
@@ -228,11 +227,16 @@ export default function ThreeDVisualizationPage() {
     data: racksData,
     isError: isRacksError,
     isPending: isRacksPending,
-  } = useRacks({
-    page: 0,
-    size: DISABLE_PAGINATION_PAGE_SIZE,
-    warehouseId: apiWarehouse?.id ?? -1,
-  })
+  } = useRacks(
+    {
+      page: 0,
+      size: DISABLE_PAGINATION_PAGE_SIZE,
+      warehouseId: apiWarehouse?.id,
+    },
+    {
+      enabled: !!apiWarehouse,
+    }
+  )
 
   const assortmentsPageSize = useMemo(() => {
     if (!racksData?.content) {
@@ -257,32 +261,6 @@ export default function ThreeDVisualizationPage() {
     warehouseId: apiWarehouse?.id ?? -1,
   })
 
-  const assortmentItemIds = useMemo(() => {
-    if (!assortmentsData?.content) {
-      return [] as number[]
-    }
-
-    return [
-      ...new Set(
-        assortmentsData.content.map((assortment) => assortment.itemId)
-      ),
-    ]
-  }, [assortmentsData?.content])
-
-  const itemDefinitionQueries = useMultipleItems({
-    itemIds: assortmentItemIds,
-  })
-
-  const itemDefinitionsMap = useMemo<ReadonlyMap<number, ItemDetails>>(() => {
-    const map = new Map<number, ItemDetails>()
-    for (const query of itemDefinitionQueries) {
-      if (query.data) {
-        map.set(query.data.id, query.data)
-      }
-    }
-    return map
-  }, [itemDefinitionQueries])
-
   const warehouse = useMemo(() => {
     if (!(apiWarehouse && racksData)) {
       return null
@@ -290,10 +268,9 @@ export default function ThreeDVisualizationPage() {
     return buildWarehouse3DFromApi(
       apiWarehouse,
       racksData.content,
-      assortmentsData?.content ?? [],
-      itemDefinitionsMap
+      assortmentsData?.content ?? []
     )
-  }, [apiWarehouse, racksData, assortmentsData?.content, itemDefinitionsMap])
+  }, [apiWarehouse, racksData, assortmentsData?.content])
 
   const router = useRouter()
   const {

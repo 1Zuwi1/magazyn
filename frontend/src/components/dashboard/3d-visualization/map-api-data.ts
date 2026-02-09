@@ -1,12 +1,12 @@
-import type { AssortmentsList } from "@/hooks/use-assortment"
-import type { ItemDetails } from "@/hooks/use-items"
+import { parseImageSrc } from "@/components/ui/item-photo"
+import type { WarehouseAssortmentsList } from "@/hooks/use-assortment"
 import type { RacksList } from "@/hooks/use-racks"
 import type { WarehousesList } from "@/hooks/use-warehouses"
 import type { Item3D, Rack3D, Warehouse3D } from "./types"
 
 type ApiRack = RacksList["content"][number]
 type ApiWarehouse = WarehousesList["content"][number]
-type ApiAssortment = AssortmentsList["content"][number]
+type ApiAssortment = WarehouseAssortmentsList["content"][number]
 
 const RACK_SPACING = 0.5
 const ROW_SPACING = 2
@@ -52,7 +52,6 @@ function getItemStatus(
 function mapApiRackToRack3D(
   rack: ApiRack,
   rackAssortments: readonly ApiAssortment[],
-  itemDefinitionsMap: ReadonlyMap<number, ItemDetails>,
   nowTimestampMs: number
 ): Rack3D {
   const rows = Math.max(1, rack.sizeY)
@@ -75,25 +74,18 @@ function mapApiRackToRack3D(
       continue
     }
 
-    const itemDefinition = itemDefinitionsMap.get(assortment.itemId)
-
     const index = row * cols + col
     items[index] = {
       id: String(assortment.id),
-      type: itemDefinition?.code ?? "assortment",
       status: getItemStatus(
         assortment.expiresAt,
-        itemDefinition?.dangerous ?? false,
+        assortment.item.dangerous ?? false,
         nowTimestampMs
       ),
-      label: itemDefinition?.name ?? assortment.code,
-      imageUrl: itemDefinition?.photoUrl ?? undefined,
-      meta: {
-        assortmentCode: assortment.code,
-        expiresAt: assortment.expiresAt,
-        itemCode: itemDefinition?.code ?? null,
-        itemId: assortment.itemId,
-      },
+      label: assortment.item.name,
+      imageUrl: assortment.item.photoUrl
+        ? (parseImageSrc(`/api/items/${assortment.item.id}/photo`) ?? undefined)
+        : undefined,
     }
   }
 
@@ -245,8 +237,7 @@ function computeCenter(racks: Rack3D[]): {
 export function buildWarehouse3DFromApi(
   apiWarehouse: ApiWarehouse,
   apiRacks: ApiRack[],
-  apiAssortments: readonly ApiAssortment[] = [],
-  itemDefinitionsMap: ReadonlyMap<number, ItemDetails> = new Map()
+  apiAssortments: readonly ApiAssortment[] = []
 ): Warehouse3D {
   const assortmentByRack = groupAssortmentsByRack(apiAssortments)
   const nowTimestampMs = Date.now()
@@ -254,7 +245,6 @@ export function buildWarehouse3DFromApi(
     mapApiRackToRack3D(
       rack,
       assortmentByRack.get(rack.id) ?? [],
-      itemDefinitionsMap,
       nowTimestampMs
     )
   )

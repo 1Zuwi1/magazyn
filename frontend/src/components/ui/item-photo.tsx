@@ -26,6 +26,19 @@ interface ItemPhotoProps {
   zoomable?: boolean
 }
 
+export const parseImageSrc = (src?: string | null): string | null => {
+  const normalizedSrc = src?.trim()
+
+  if (normalizedSrc) {
+    if (normalizedSrc.startsWith("http")) {
+      return normalizedSrc
+    }
+    return `${process.env.NEXT_PUBLIC_API_URL ?? ""}${normalizedSrc}`
+  }
+
+  return null
+}
+
 export function ItemPhoto({
   src,
   alt,
@@ -36,18 +49,10 @@ export function ItemPhoto({
   height = DEFAULT_IMAGE_SIZE,
   zoomable = false,
 }: ItemPhotoProps) {
-  const normalizedSrc = src?.trim()
-  let parsedSrc: string | null = null
-  if (normalizedSrc) {
-    if (normalizedSrc.startsWith("http")) {
-      parsedSrc = normalizedSrc
-    } else {
-      parsedSrc = `${process.env.NEXT_PUBLIC_API_URL ?? ""}${normalizedSrc}`
-    }
-  }
   const [failedImageSource, setFailedImageSource] = useState<string | null>(
     null
   )
+  const parsedSrc = parseImageSrc(src)
   const [previewOpen, setPreviewOpen] = useState(false)
   const hasLoadingError = parsedSrc !== null && failedImageSource === parsedSrc
 
