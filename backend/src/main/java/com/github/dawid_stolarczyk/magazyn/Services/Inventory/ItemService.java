@@ -26,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -43,6 +44,7 @@ public class ItemService {
     private final StorageService storageService;
     private final BarcodeService barcodeService;
     private final Bucket4jRateLimiter rateLimiter;
+    private final SmartCodeService smartCodeService;
     private final ImageEmbeddingService imageEmbeddingService;
     private final BackgroundRemovalService backgroundRemovalService;
     @Qualifier("asyncTaskExecutor")
@@ -79,9 +81,64 @@ public class ItemService {
 
     public ItemDto getItemByCode(String code, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        Item item = itemRepository.findByCode(code)
-                .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
+        Item item = findItemBySmartCode(code);
         return mapToDto(item);
+    }
+
+    /**
+     * Intelligently finds an item by trying multiple code format variations.
+     * Handles:
+     * 1. Direct match (exact code or QR code)
+     * 2. 14-digit code without "01" prefix → tries with "01" prefix
+     * 3. 16-digit code with "01" prefix → tries without "01" prefix
+     * 4. QR codes
+     *
+     * @param code The code/identifier to search for
+     * @return Found item or throws ITEM_NOT_FOUND
+     */
+    private Item findItemBySmartCode(String code) {
+        log.debug("Searching for item with smart code: {}", code);
+
+        // Strategy 1: Try direct match first (fastest)
+        Optional<Item> item = itemRepository.findByCodeOrQrCode(code);
+        if (item.isPresent()) {
+            log.debug("Item found by direct match: {}", code);
+            return item.get();
+        }
+
+        // Strategy 2: Handle 14-digit codes without "01" prefix
+        if (code.matches("\\d{14}")) {
+            String codeWithPrefix = "01" + code;
+            item = itemRepository.findByCodeOrQrCode(codeWithPrefix);
+            if (item.isPresent()) {
+                log.info("Item found by 14-digit code with added 01 prefix: {} -> {}", code, codeWithPrefix);
+                return item.get();
+            }
+        }
+
+        // Strategy 3: Handle 16-digit codes - try removing "01" prefix
+        if (code.matches("\\d{16}")) {
+            String codeWithoutPrefix = code.substring(2);
+            item = itemRepository.findByCodeOrQrCode(codeWithoutPrefix);
+            if (item.isPresent()) {
+                log.info("Item found by 16-digit code without 01 prefix: {} -> {}", code, codeWithoutPrefix);
+                return item.get();
+            }
+        }
+
+        // Strategy 4: If 14-digit with 01 prefix was tried, try the 14-digit part
+        if (code.matches("01\\d{14}")) {
+            String codePart = code.substring(2);
+            item = itemRepository.findByCodeOrQrCode(codePart);
+            if (item.isPresent()) {
+                log.info("Item found by 16-digit code using 14-digit part: {} -> {}", code, codePart);
+                return item.get();
+            }
+        }
+
+        // If all strategies fail, throw not found error
+        log.warn("Item not found after trying all code variations: {}", code);
+        throw new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name());
     }
 
     @Transactional
@@ -90,6 +147,12 @@ public class ItemService {
         Item item = new Item();
         updateItemFromRequest(item, request);
         item.setCode(barcodeService.generateUniqueItemCode());
+
+        String qrCodeToUse = determineQrCode(request.getQrCode(), item.getCode());
+        if (qrCodeToUse != null) {
+            item.setQrCode(qrCodeToUse);
+        }
+
         return mapToDto(itemRepository.save(item));
     }
 
@@ -100,12 +163,61 @@ public class ItemService {
     public void createItemInternal(ItemDto dto) {
         Item item = new Item();
         updateItemFromDto(item, dto);
+
         if (dto.getCode() != null && !dto.getCode().isBlank() && barcodeService.checkUniqueItemCode(dto.getCode())) {
             item.setCode(dto.getCode());
         } else {
             item.setCode(barcodeService.generateUniqueItemCode());
         }
+
+        String qrCodeToUse = determineQrCode(dto.getQrCode(), item.getCode());
+        if (qrCodeToUse != null) {
+            item.setQrCode(qrCodeToUse);
+        }
+
         mapToDto(itemRepository.save(item));
+    }
+
+    /**
+     * Determines the QR code to use for an item based on user input and existing data.
+     * Logic:
+     * 1. If user provides QR code and it's unique → use it
+     * 2. If user provides QR code but it exists → generate new one from barcode
+     * 3. If user provides barcode format (14 or 16 digits) → generate QR-{barcode}
+     * 4. Otherwise → don't set QR code
+     */
+    private String determineQrCode(String providedQrCode, String itemBarcode) {
+        if (providedQrCode == null || providedQrCode.isBlank()) {
+            return null;
+        }
+
+        // Case 1: User provides QR code format (QR-XXXXX)
+        if (providedQrCode.startsWith("QR-")) {
+            if (barcodeService.validateQrCode(providedQrCode)) {
+                if (!itemRepository.existsByQrCode(providedQrCode)) {
+                    // Use provided QR code if unique
+                    log.info("Using provided QR code: {}", providedQrCode);
+                    return providedQrCode;
+                } else {
+                    // Generate new QR code from barcode if provided one exists
+                    String newQrCode = barcodeService.generateQrCodeFromBarcode(itemBarcode);
+                    log.info("QR code {} already exists, generating new: {}", providedQrCode, newQrCode);
+                    return newQrCode;
+                }
+            }
+            return null;
+        }
+
+        // Case 2: User provides barcode format (14 or 16 digits)
+        if (providedQrCode.matches("\\d{14}") || providedQrCode.matches("\\d{16}")) {
+            String newQrCode = barcodeService.generateQrCodeFromBarcode(providedQrCode);
+            log.info("User provided barcode format, generating QR code: {}", newQrCode);
+            return newQrCode;
+        }
+
+        // Case 3: Invalid QR code format
+        log.warn("Invalid QR code format provided: {}", providedQrCode);
+        return null;
     }
 
     @Transactional
@@ -251,6 +363,13 @@ public class ItemService {
         item.setExpireAfterDays(dto.getExpireAfterDays());
         item.setDangerous(dto.isDangerous());
         item.setName(dto.getName());
+
+        if (dto.getQrCode() != null && !dto.getQrCode().isBlank()) {
+            String qrCodeToUse = determineQrCode(dto.getQrCode(), item.getCode());
+            if (qrCodeToUse != null) {
+                item.setQrCode(qrCodeToUse);
+            }
+        }
     }
 
     private void updateItemFromRequest(Item item, ItemCreateRequest request) {
@@ -264,6 +383,13 @@ public class ItemService {
         item.setExpireAfterDays(request.getExpireAfterDays());
         item.setDangerous(request.isDangerous());
         item.setName(request.getName());
+
+        if (request.getQrCode() != null && !request.getQrCode().isBlank()) {
+            String qrCodeToUse = determineQrCode(request.getQrCode(), item.getCode());
+            if (qrCodeToUse != null) {
+                item.setQrCode(qrCodeToUse);
+            }
+        }
     }
 
     private void updateItemFromRequest(Item item, ItemUpdateRequest request) {
@@ -277,6 +403,13 @@ public class ItemService {
         item.setExpireAfterDays(request.getExpireAfterDays());
         item.setDangerous(request.isDangerous());
         item.setName(request.getName());
+
+        if (request.getQrCode() != null && !request.getQrCode().isBlank()) {
+            String qrCodeToUse = determineQrCode(request.getQrCode(), item.getCode());
+            if (qrCodeToUse != null) {
+                item.setQrCode(qrCodeToUse);
+            }
+        }
     }
 
     /**

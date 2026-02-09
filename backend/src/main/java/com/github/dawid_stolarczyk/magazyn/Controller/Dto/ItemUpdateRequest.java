@@ -16,9 +16,13 @@ import lombok.NoArgsConstructor;
 @Schema(description = "Request to update an item")
 public class ItemUpdateRequest {
 
-    @Schema(description = "Optional name of the item", example = "Laptop Updated")
+    @Schema(description = "Optional name of item", example = "Laptop Updated")
     @Size(max = 255, message = "Name cannot exceed 255 characters")
     private String name;
+
+    @Schema(description = "Optional QR code for item identification (format: QR-XXXXX)", example = "QR-12345")
+    @Size(max = 32, message = "QR code cannot exceed 32 characters")
+    private String qrCode;
 
     @DecimalMin(value = "-273.15", message = "Minimum temperature cannot be below absolute zero")
     @Schema(description = "Minimum temperature requirement in Celsius", example = "5.0", required = true)

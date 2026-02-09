@@ -32,6 +32,8 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -44,6 +46,7 @@ public class AssortmentService {
     private final RackRepository rackRepository;
     private final UserRepository userRepository;
     private final BarcodeService barcodeService;
+    private final SmartCodeService smartCodeService;
     private final Bucket4jRateLimiter rateLimiter;
 
     private static final double EPS = 1e-6;
@@ -125,8 +128,7 @@ public class AssortmentService {
 
     public AssortmentDto getAssortmentByCode(String code, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        Assortment assortment = assortmentRepository.findByCode(code)
-                .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
+        Assortment assortment = smartCodeService.findAssortmentBySmartCode(code);
         return mapToDto(assortment);
     }
 

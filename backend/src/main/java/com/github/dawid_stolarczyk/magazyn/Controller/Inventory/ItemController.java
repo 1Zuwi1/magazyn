@@ -87,7 +87,7 @@ public class ItemController {
         }
     }
 
-    @Operation(summary = "Get item by code (16-digit GS1-128 barcode with 01 prefix)")
+    @Operation(summary = "Get item by code or QR code", description = "Accepts either 16-digit GS1-128 barcode with 01 prefix or QR code (format: QR-XXXXX)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),

@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Utils;
 
+import java.text.Normalizer;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -63,6 +64,10 @@ public class StringUtils {
 
         // Trim and convert to uppercase
         String normalized = marker.trim().toUpperCase();
+
+        // Normalize Polish characters to their base equivalents (Ł→L, Ą→A, Ć→C, Ę→E, Ń→N, Ó→O, Ś→S, Ź→Z, Ż→Z)
+        normalized = Normalizer.normalize(normalized, Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
 
         // Remove any characters except alphanumeric, dashes, underscores, and spaces
         normalized = normalized.replaceAll("[^A-Z0-9_\\-\\s]", "");

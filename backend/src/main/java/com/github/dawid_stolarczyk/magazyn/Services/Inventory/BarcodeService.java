@@ -20,7 +20,6 @@ public class BarcodeService {
     private static final DateTimeFormatter GS1_DATE_FORMAT = DateTimeFormatter.ofPattern("yyMMdd");
     private static final int SERIAL_LENGTH = 6;
     private static final int ITEM_CODE_LENGTH = 16;
-    private static final int GTIN_14_LENGTH = 14;
     private static final int MAX_RETRY_ATTEMPTS = 100; // Maksymalna liczba prób generowania unikalnego kodu
     private final ItemRepository itemRepository;
     private final AssortmentRepository assortmentRepository;
@@ -32,7 +31,7 @@ public class BarcodeService {
             if (attempts >= MAX_RETRY_ATTEMPTS) {
                 throw new IllegalStateException(InventoryError.BARCODE_GENERATION_FAILED.name() + ": Unable to generate unique barcode after " + MAX_RETRY_ATTEMPTS + " attempts");
             }
-            code = CodeGenerator.generateWithNumbers(ITEM_CODE_LENGTH-1);
+            code = CodeGenerator.generateWithNumbers(13);
             int checksum = CodeGenerator.calculateGTIN14Checksum(code);
             code += checksum;
             code = "01" + code; // Dodaj prefiks AI 01 do kodu GTIN-14
@@ -46,16 +45,26 @@ public class BarcodeService {
     }
 
     public void ensureItemCode(Item item) {
-        if ((item.getCode() != null
-                && !item.getCode().isBlank())
-                && ((item.getCode().length() == ITEM_CODE_LENGTH
-                && item.getCode().startsWith("01"))
-                || (item.getCode().startsWith("QR")))) {
+        if (item.getCode() != null
+                && !item.getCode().isBlank()
+                && item.getCode().length() == ITEM_CODE_LENGTH
+                && item.getCode().startsWith("01")) {
             return;
         }
 
         item.setCode(generateUniqueItemCode());
         itemRepository.save(item);
+    }
+
+    public boolean validateQrCode(String qrCode) {
+        if (qrCode == null || qrCode.isBlank()) {
+            return true;
+        }
+        return qrCode.startsWith("QR-") && qrCode.length() > 3;
+    }
+
+    public String generateQrCodeFromBarcode(String barcode) {
+        return "QR-" + barcode;
     }
 
     /**

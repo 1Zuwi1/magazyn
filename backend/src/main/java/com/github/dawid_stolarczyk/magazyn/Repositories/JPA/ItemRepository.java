@@ -9,13 +9,21 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import jakarta.persistence.NamedQuery;
 import java.util.List;
 import java.util.Optional;
 
 public interface ItemRepository extends JpaRepository<Item, Long>, JpaSpecificationExecutor<Item> {
     boolean existsByCode(String code);
 
+    boolean existsByQrCode(String qrCode);
+
     Optional<Item> findByCode(String code);
+
+    Optional<Item> findByQrCode(String qrCode);
+
+    @Query("SELECT i FROM Item i WHERE i.code = :identifier OR i.qrCode = :identifier")
+    Optional<Item> findByCodeOrQrCode(@Param("identifier") String identifier);
 
     Page<Item> findAll(Pageable pageable);
 

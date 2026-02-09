@@ -18,6 +18,9 @@ public class ItemDto {
     @Schema(description = "Unique auto-generated GS1-128 barcode (16 digits with 01 prefix)", example = "0112345678901234")
     private String code;
 
+    @Schema(description = "Optional QR code for item identification (format: QR-XXXXX)", example = "QR-12345")
+    private String qrCode;
+
     @Schema(description = "Name of the item", example = "Laptop")
     private String name;
 

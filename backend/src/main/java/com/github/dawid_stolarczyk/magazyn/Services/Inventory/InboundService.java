@@ -18,6 +18,7 @@ import java.sql.Timestamp;
 import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.*;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
@@ -38,6 +39,7 @@ public class InboundService {
     private final UserRepository userRepository;
     private final WarehouseRepository warehouseRepository;
     private final BarcodeService barcodeService;
+    private final SmartCodeService smartCodeService;
     private final PositionReservationRepository reservationRepository;
     private final InboundOperationRepository inboundOperationRepository;
     private final Bucket4jRateLimiter rateLimiter;
@@ -214,11 +216,11 @@ public class InboundService {
             item = itemRepository.findById(request.getItemId())
                     .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
         } else {
-            item = itemRepository.findByCode(request.getCode())
-                    .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
+            item = smartCodeService.findItemBySmartCode(request.getCode());
         }
 
-        User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
+ 
+    User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.USER_NOT_FOUND.name()));
 
         Timestamp now = Timestamp.from(Instant.now());

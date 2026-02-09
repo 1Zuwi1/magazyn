@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
@@ -29,6 +30,7 @@ public class OutboundService {
     private final InboundOperationRepository inboundOperationRepository;
     private final OutboundOperationRepository outboundOperationRepository;
     private final Bucket4jRateLimiter rateLimiter;
+    private final SmartCodeService smartCodeService;
 
     /**
      * Plan: zwraca FIFO-ordered pick list dla podanego produktu.
@@ -80,8 +82,7 @@ public class OutboundService {
     public OutboundCheckResponse check(OutboundPickPosition request, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
 
-        Assortment assortment = assortmentRepository.findByCode(request.getCode())
-                .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
+        Assortment assortment = smartCodeService.findAssortmentBySmartCode(request.getCode());
 
         // Sprawdź czy assortment jest wygasły
         boolean isExpired = assortment.getExpiresAt() != null &&
@@ -193,7 +194,7 @@ public class OutboundService {
                 .createdAt(assortment.getCreatedAt() != null ? assortment.getCreatedAt().toInstant().toString() : null)
                 .expiresAt(assortment.getExpiresAt() != null ? assortment.getExpiresAt().toInstant().toString() : null)
                 .build();
-    }
+        }
 
     private OutboundOperationDto mapToOperationDto(OutboundOperation operation) {
         OutboundOperationDto dto = new OutboundOperationDto();

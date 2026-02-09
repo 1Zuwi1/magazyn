@@ -30,42 +30,54 @@ public class WarehouseService {
     public WarehousePagedResponse getAllWarehousesPaged(HttpServletRequest request, Pageable pageable, String nameFilter, Integer minPercentOfOccupiedSlots, boolean onlyNonEmpty) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
 
-        Page<WarehouseDto> warehousePage;
-        if (nameFilter != null && !nameFilter.isEmpty()) {
-            warehousePage = warehouseRepository.findByNameContaining(nameFilter, pageable)
-                    .map(this::mapToDto);
-        } else {
-            warehousePage = warehouseRepository.findAll(pageable)
-                    .map(this::mapToDto);
-        }
+        // Fetch all warehouses once (with name filter if provided)
+        List<Warehouse> warehouses = (nameFilter != null && !nameFilter.isEmpty())
+                ? warehouseRepository.findByNameContainingIgnoreCase(nameFilter)
+                : warehouseRepository.findAll();
 
+        // Map to DTOs once
+        List<WarehouseDto> warehouseDtos = warehouses.stream()
+                .map(this::mapToDto)
+                .toList();
+
+        // Apply filters in memory
         if (minPercentOfOccupiedSlots != null) {
-            warehousePage = new PageImpl<>(
-                    warehousePage.getContent().stream()
-                            .filter(dto -> {
-                                if (dto.getTotalSlots() == 0) return false;
-                                int occupiedSlotsPercentage = (int) ((double) dto.getOccupiedSlots() / dto.getTotalSlots() * 100);
-                                return occupiedSlotsPercentage >= minPercentOfOccupiedSlots;
-                            }).toList(),
-                    pageable,
-                    warehousePage.getTotalElements()
-            );
+            int threshold = minPercentOfOccupiedSlots;
+            warehouseDtos = warehouseDtos.stream()
+                    .filter(dto -> {
+                        if (dto.getTotalSlots() == 0) return false;
+                        int occupiedSlotsPercentage = (int) ((double) dto.getOccupiedSlots() / dto.getTotalSlots() * 100);
+                        return occupiedSlotsPercentage >= threshold;
+                    })
+                    .toList();
         }
 
         if (onlyNonEmpty) {
-            warehousePage = new PageImpl<>(
-                    warehousePage.getContent().stream()
-                            .filter(dto -> dto.getOccupiedSlots() > 0)
-                            .toList(),
-                    pageable,
-                    warehousePage.getTotalElements()
-            );
+            warehouseDtos = warehouseDtos.stream()
+                    .filter(dto -> dto.getOccupiedSlots() > 0)
+                    .toList();
         }
+
+        long totalElements = warehouseDtos.size();
+
+        // Apply pagination to filtered results
+        int pageNumber = pageable.getPageNumber();
+        int pageSize = pageable.getPageSize();
+        int startIndex = pageNumber * pageSize;
+        List<WarehouseDto> pagedContent = (int) totalElements > startIndex
+                ? warehouseDtos.stream()
+                    .skip(startIndex)
+                    .limit(pageSize)
+                    .toList()
+                : List.of();
+
+        // Create page with correct pagination metadata
+        Page<WarehouseDto> warehousePage = new PageImpl<>(pagedContent, pageable, totalElements);
 
         warehousePage = applySorting(warehousePage, pageable);
 
-        // Calculate cumulative summary across ALL warehouses (not just current page)
-        WarehouseSummaryDto summary = calculateWarehouseSummary();
+        Iterable<Long> warehouseIds = warehousePage.getContent().stream().map(WarehouseDto::getId).toList();
+        WarehouseSummaryDto summary = calculateWarehouseSummary(warehouseIds);
 
         return WarehousePagedResponse.from(warehousePage, summary);
     }
@@ -157,9 +169,9 @@ public class WarehouseService {
         warehouseRepository.delete(warehouse);
     }
 
-    private WarehouseSummaryDto calculateWarehouseSummary() {
+    private WarehouseSummaryDto calculateWarehouseSummary(Iterable<Long> warehouseIds) {
         // Get all warehouses to calculate cumulative statistics
-        var allWarehouses = warehouseRepository.findAll();
+        var allWarehouses = warehouseRepository.findAllById(warehouseIds);
 
         int totalCapacity = 0;
         int totalOccupiedSlots = 0;
@@ -174,7 +186,7 @@ public class WarehouseService {
 
             // Count occupied slots (assortments)
             long warehouseOccupied = assortmentRepository.countByRack_WarehouseId(warehouse.getId());
-            totalOccupiedSlots += warehouseOccupied;
+            totalOccupiedSlots += Long.valueOf(warehouseOccupied).intValue();
 
             // Count racks
             totalRacks += warehouse.getRacks().size();
@@ -188,7 +200,7 @@ public class WarehouseService {
                 .freeSlots(totalFreeSlots)
                 .occupiedSlots(totalOccupiedSlots)
                 .occupancy(occupancy)
-                .totalWarehouses((int) allWarehouses.size())
+                .totalWarehouses(allWarehouses.size())
                 .totalRacks(totalRacks)
                 .build();
     }
