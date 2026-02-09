@@ -1,8 +1,6 @@
 "use client"
 
 import {
-  ArrowLeft02Icon,
-  ArrowRight02Icon,
   ImageUploadIcon,
   MoreHorizontalIcon,
   PencilIcon,
@@ -11,11 +9,9 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   type ColumnDef,
-  type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   type SortingState,
   useReactTable,
@@ -27,7 +23,7 @@ import {
 } from "@/components/dashboard/items/sortable-header"
 import type { Item } from "@/components/dashboard/types"
 import { Badge } from "@/components/ui/badge"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +42,7 @@ import {
   SearchInput,
 } from "@/components/ui/filter-bar"
 import { ItemPhoto } from "@/components/ui/item-photo"
+import PaginationFull from "@/components/ui/pagination-component"
 import {
   Table,
   TableBody,
@@ -57,7 +54,10 @@ import {
 import { cn } from "@/lib/utils"
 
 interface AdminItemsTableProps {
+  currentPage: number
+  totalPages: number
   items: Item[]
+  onSetPage: (nextPage: number) => void
   onEdit: (item: Item) => void
   onDelete: (item: Item) => void
   onUploadPhoto: (item: Item) => void
@@ -198,13 +198,15 @@ function createColumns(
 }
 
 export function AdminItemsTable({
+  currentPage,
+  totalPages,
   items,
+  onSetPage,
   onEdit,
   onDelete,
   onUploadPhoto,
 }: AdminItemsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
 
   const columns = createColumns(onEdit, onDelete, onUploadPhoto)
@@ -213,11 +215,9 @@ export function AdminItemsTable({
     data: items,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, _columnId, filterValue) => {
       const searchValue = filterValue?.toString().trim()
@@ -234,7 +234,6 @@ export function AdminItemsTable({
     },
     state: {
       sorting,
-      columnFilters,
       globalFilter,
     },
   })
@@ -242,8 +241,6 @@ export function AdminItemsTable({
   const filteredCount = table.getFilteredRowModel().rows.length
   const totalCount = items.length
   const isFiltered = globalFilter.length > 0
-  const currentPage = table.getState().pagination.pageIndex + 1
-  const totalPages = table.getPageCount()
 
   const clearAllFilters = () => {
     setGlobalFilter("")
@@ -338,43 +335,11 @@ export function AdminItemsTable({
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-muted-foreground text-sm">
-            Strona{" "}
-            <span className="font-mono font-semibold text-foreground">
-              {currentPage}
-            </span>{" "}
-            z{" "}
-            <span className="font-mono font-semibold text-foreground">
-              {totalPages}
-            </span>
-          </p>
-
-          <div className="flex items-center gap-1">
-            <Button
-              className="gap-1.5"
-              disabled={!table.getCanPreviousPage()}
-              onClick={() => table.previousPage()}
-              size="sm"
-              variant="outline"
-            >
-              <HugeiconsIcon className="size-3.5" icon={ArrowLeft02Icon} />
-              <span className="hidden sm:inline">Poprzednia</span>
-            </Button>
-            <Button
-              className="gap-1.5"
-              disabled={!table.getCanNextPage()}
-              onClick={() => table.nextPage()}
-              size="sm"
-              variant="outline"
-            >
-              <span className="hidden sm:inline">Następna</span>
-              <HugeiconsIcon className="size-3.5" icon={ArrowRight02Icon} />
-            </Button>
-          </div>
-        </div>
-      )}
+      <PaginationFull
+        currentPage={currentPage}
+        setPage={onSetPage}
+        totalPages={totalPages}
+      />
     </div>
   )
 }

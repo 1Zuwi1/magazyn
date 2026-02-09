@@ -6,13 +6,12 @@ import {
   Package,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { type ReactNode, useMemo, useState } from "react"
+import { type ReactNode, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
 import type { Item as DashboardItem } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
-import { DISABLE_PAGINATION_PAGE_SIZE } from "@/config/constants"
 import useItems, {
   type Item as ApiItem,
   useCreateItem,
@@ -63,12 +62,13 @@ const buildItemMutationData = (data: ItemFormData) => {
 }
 
 export default function ItemsMain() {
+  const [page, setPage] = useState(1)
   const {
     data: itemsData,
     isPending: isItemsPending,
     isError: isItemsError,
     refetch: refetchItems,
-  } = useItems({ page: 0, size: DISABLE_PAGINATION_PAGE_SIZE })
+  } = useItems({ page: page - 1 })
 
   const createItemMutation = useCreateItem()
   const updateItemMutation = useUpdateItem()
@@ -90,10 +90,23 @@ export default function ItemsMain() {
   const items = useMemo(() => {
     return (itemsData?.content ?? []).map(mapApiItemToViewModel)
   }, [itemsData?.content])
+  const totalPages = Math.max(itemsData?.totalPages ?? 1, 1)
+  const totalItemsCount = itemsData?.totalElements ?? 0
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages)
+    }
+  }, [page, totalPages])
 
   const handleAddItem = () => {
     setSelectedItem(undefined)
     setDialogOpen(true)
+  }
+
+  const handleSetPage = (nextPage: number) => {
+    const boundedPage = Math.min(Math.max(nextPage, 1), totalPages)
+    setPage(boundedPage)
   }
 
   const handleEditItem = (item: DashboardItem) => {
@@ -194,10 +207,13 @@ export default function ItemsMain() {
   } else {
     tableContent = (
       <AdminItemsTable
+        currentPage={page}
         items={items}
         onDelete={handleDeleteItem}
         onEdit={handleEditItem}
+        onSetPage={handleSetPage}
         onUploadPhoto={handleUploadPhoto}
+        totalPages={totalPages}
       />
     )
   }
@@ -233,7 +249,7 @@ export default function ItemsMain() {
               icon={Package}
             />
             <span className="font-mono font-semibold text-primary">
-              {items.length}
+              {totalItemsCount}
             </span>
             <span className="text-muted-foreground text-xs">przedmiotów</span>
           </div>
