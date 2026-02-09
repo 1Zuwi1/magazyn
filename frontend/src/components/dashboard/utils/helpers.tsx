@@ -109,3 +109,18 @@ export function buildItemsGrid(
 
   return slots
 }
+
+/**
+ * Translates a value in rem units to pixels based on the current document's root font size.
+ * This is useful for calculating dynamic heights or widths in virtualized lists where pixel values are needed.
+ * @param rem Value you want to parse into pixels
+ * @returns Value of rems in pixels
+ */
+export const remToPixels = (rem: number) => {
+  if (typeof window === "undefined" || !window.getComputedStyle) {
+    return rem * 16 // Default to 16px if window is not available (e.g. during SSR)
+  }
+  return (
+    rem * Number.parseFloat(getComputedStyle(document.documentElement).fontSize)
+  )
+}

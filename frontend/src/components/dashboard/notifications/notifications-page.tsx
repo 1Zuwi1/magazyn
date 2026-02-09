@@ -26,6 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import PaginationFull from "@/components/ui/pagination-component"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { UserNotification } from "@/hooks/use-notifications"
 import useNotifications, {
@@ -485,13 +486,13 @@ function AlertTypeFilterDropdown({
 export default function NotificationsMain() {
   const [feedFilter, setFeedFilter] = useState<FeedFilter>("ALL")
   const [alertTypeFilter, setAlertTypeFilter] = useState<string[]>([])
-  const [page, setPage] = useState(0)
+  const [page, setPage] = useState(1)
   const [selectedNotificationId, setSelectedNotificationId] = useState<
     number | null
   >(null)
 
   const allNotificationsQuery = useNotifications({
-    page,
+    page: page - 1,
     sortBy: "createdAt",
     sortDir: "desc",
     alertType: alertTypeFilter.length > 0 ? alertTypeFilter : undefined,
@@ -542,7 +543,6 @@ export default function NotificationsMain() {
     [notifications, selectedNotificationId]
   )
 
-  const currentPage = (notificationsData?.page ?? page) + 1
   const totalPages = notificationsData?.totalPages ?? 1
 
   const handleSelectNotification = (notification: UserNotification) => {
@@ -574,7 +574,7 @@ export default function NotificationsMain() {
 
   const handleFeedFilterChange = (nextFilter: FeedFilter) => {
     setFeedFilter(nextFilter)
-    setPage(0)
+    setPage(1)
   }
 
   const handleToggleAlertType = (alertType: string) => {
@@ -584,12 +584,12 @@ export default function NotificationsMain() {
         : [...previous, alertType]
       return next
     })
-    setPage(0)
+    setPage(1)
   }
 
   const handleClearAlertTypeFilter = () => {
     setAlertTypeFilter([])
-    setPage(0)
+    setPage(1)
   }
 
   return (
@@ -710,39 +710,13 @@ export default function NotificationsMain() {
               </div>
             </ScrollArea>
 
-            <div className="flex items-center justify-between border-t bg-muted/20 px-3 py-2">
-              <p className="text-muted-foreground text-xs">
-                Strona {currentPage} z {Math.max(totalPages, 1)}
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  className={cn(
-                    "rounded-md border px-2.5 py-1 text-xs transition-colors",
-                    page === 0 || isNotificationsPending
-                      ? "cursor-not-allowed opacity-50"
-                      : "hover:bg-muted"
-                  )}
-                  disabled={page === 0 || isNotificationsPending}
-                  onClick={() => setPage((previousPage) => previousPage - 1)}
-                  type="button"
-                >
-                  Poprzednia
-                </button>
-                <button
-                  className={cn(
-                    "rounded-md border px-2.5 py-1 text-xs transition-colors",
-                    page + 1 >= totalPages || isNotificationsPending
-                      ? "cursor-not-allowed opacity-50"
-                      : "hover:bg-muted"
-                  )}
-                  disabled={page + 1 >= totalPages || isNotificationsPending}
-                  onClick={() => setPage((previousPage) => previousPage + 1)}
-                  type="button"
-                >
-                  Następna
-                </button>
-              </div>
-            </div>
+            <PaginationFull
+              className="border-t"
+              currentPage={page}
+              setPage={setPage}
+              totalPages={totalPages}
+              variant="compact"
+            />
           </div>
         </div>
 

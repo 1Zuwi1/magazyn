@@ -16,6 +16,7 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
+import PaginationFull from "@/components/ui/pagination-component"
 import {
   Table,
   TableBody,
@@ -34,7 +35,6 @@ import type {
   AuditInboudOperationsSchema,
   AuditOutboundOperationsSchema,
 } from "@/lib/schemas"
-import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../lib/constants"
 
@@ -139,70 +139,13 @@ function ErrorState() {
   )
 }
 
-function PaginationControls({
-  page,
-  totalPages,
-  totalElements,
-  isPending,
-  onPreviousPage,
-  onNextPage,
-}: {
-  page: number
-  totalPages: number
-  totalElements: number
-  isPending: boolean
-  onPreviousPage: () => void
-  onNextPage: () => void
-}) {
-  const currentPage = page + 1
-
-  return (
-    <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-3">
-      <p className="text-muted-foreground text-xs">
-        Strona {currentPage} z {Math.max(totalPages, 1)}
-        <span className="ml-2 text-foreground/50">
-          ({totalElements} wynikow)
-        </span>
-      </p>
-      <div className="flex items-center gap-2">
-        <button
-          className={cn(
-            "rounded-md border px-2.5 py-1 text-xs transition-colors",
-            page === 0 || isPending
-              ? "cursor-not-allowed opacity-50"
-              : "hover:bg-muted"
-          )}
-          disabled={page === 0 || isPending}
-          onClick={onPreviousPage}
-          type="button"
-        >
-          Poprzednia
-        </button>
-        <button
-          className={cn(
-            "rounded-md border px-2.5 py-1 text-xs transition-colors",
-            currentPage >= totalPages || isPending
-              ? "cursor-not-allowed opacity-50"
-              : "hover:bg-muted"
-          )}
-          disabled={currentPage >= totalPages || isPending}
-          onClick={onNextPage}
-          type="button"
-        >
-          Nastepna
-        </button>
-      </div>
-    </div>
-  )
-}
-
 function InboundOperationsTab() {
-  const [page, setPage] = useState(0)
+  const [page, setPage] = useState(1)
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
 
   const query = useAuditInboundOperations({
-    page,
+    page: page - 1,
     size: PAGE_SIZE,
     sortBy: "operationTimestamp",
     sortDir: "desc",
@@ -217,17 +160,17 @@ function InboundOperationsTab() {
   const handleClearDates = () => {
     setStartDate("")
     setEndDate("")
-    setPage(0)
+    setPage(1)
   }
 
   const handleStartDateChange = (value: string) => {
     setStartDate(value)
-    setPage(0)
+    setPage(1)
   }
 
   const handleEndDateChange = (value: string) => {
     setEndDate(value)
-    setPage(0)
+    setPage(1)
   }
 
   return (
@@ -325,13 +268,11 @@ function InboundOperationsTab() {
           </TableBody>
         </Table>
 
-        <PaginationControls
-          isPending={query.isPending}
-          onNextPage={() => setPage((p) => p + 1)}
-          onPreviousPage={() => setPage((p) => p - 1)}
-          page={page}
-          totalElements={totalElements}
+        <PaginationFull
+          currentPage={page}
+          setPage={setPage}
           totalPages={totalPages}
+          variant="compact"
         />
       </div>
     </div>
@@ -339,12 +280,12 @@ function InboundOperationsTab() {
 }
 
 function OutboundOperationsTab() {
-  const [page, setPage] = useState(0)
+  const [page, setPage] = useState(1)
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
 
   const query = useAuditOutboundOperations({
-    page,
+    page: page - 1,
     size: PAGE_SIZE,
     sortBy: "operationTimestamp",
     sortDir: "desc",
@@ -359,17 +300,17 @@ function OutboundOperationsTab() {
   const handleClearDates = () => {
     setStartDate("")
     setEndDate("")
-    setPage(0)
+    setPage(1)
   }
 
   const handleStartDateChange = (value: string) => {
     setStartDate(value)
-    setPage(0)
+    setPage(1)
   }
 
   const handleEndDateChange = (value: string) => {
     setEndDate(value)
-    setPage(0)
+    setPage(1)
   }
 
   return (
@@ -473,13 +414,11 @@ function OutboundOperationsTab() {
           </TableBody>
         </Table>
 
-        <PaginationControls
-          isPending={query.isPending}
-          onNextPage={() => setPage((p) => p + 1)}
-          onPreviousPage={() => setPage((p) => p - 1)}
-          page={page}
-          totalElements={totalElements}
+        <PaginationFull
+          currentPage={page}
+          setPage={setPage}
           totalPages={totalPages}
+          variant="compact"
         />
       </div>
     </div>

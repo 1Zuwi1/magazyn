@@ -1,4 +1,7 @@
+import type { VariantProps } from "class-variance-authority"
 import type { Dispatch, SetStateAction } from "react"
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "./button"
 import {
   Pagination,
   PaginationContent,
@@ -13,42 +16,76 @@ export default function PaginationFull({
   totalPages,
   setPage,
   className,
+  variant = "default",
 }: {
   currentPage: number
   totalPages: number
   setPage: Dispatch<SetStateAction<number>> | ((page: number) => void)
   className?: string
+  variant?: "default" | "compact"
 }) {
+  const isCompact = variant === "compact"
+  const buttonVariantsProps = {
+    variant: isCompact ? "outline" : "ghost",
+    size: isCompact ? "xs" : "default",
+  } satisfies VariantProps<typeof buttonVariants>
   return (
-    <Pagination className={className}>
+    <Pagination
+      className={cn(
+        {
+          "flex items-center justify-between border-t bg-muted/20 px-3 py-2":
+            isCompact,
+        },
+        className
+      )}
+    >
+      {isCompact && (
+        <p className="text-muted-foreground text-xs">
+          Strona {currentPage} z {Math.max(totalPages, 1)}
+        </p>
+      )}
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious
-            disabled={currentPage === 1}
+            className={cn(buttonVariants(buttonVariantsProps), {
+              "rounded-md border px-2.5 py-1 text-xs transition-colors":
+                isCompact,
+            })}
+            disabled={currentPage <= 1}
             onClick={() => setPage(currentPage - 1)}
+            showIcon={!isCompact}
           />
         </PaginationItem>
-        {currentPage > 1 && (
-          <PaginationItem>
-            <PaginationLink onClick={() => setPage(currentPage - 1)}>
-              {currentPage - 1}
-            </PaginationLink>
-          </PaginationItem>
-        )}
-        <PaginationItem>
-          <PaginationLink isActive>{currentPage}</PaginationLink>
-        </PaginationItem>
-        {currentPage !== totalPages && (
-          <PaginationItem>
-            <PaginationLink onClick={() => setPage(currentPage + 1)}>
-              {currentPage + 1}
-            </PaginationLink>
-          </PaginationItem>
+        {!isCompact && (
+          <>
+            {currentPage > 1 && (
+              <PaginationItem>
+                <PaginationLink onClick={() => setPage(currentPage - 1)}>
+                  {currentPage - 1}
+                </PaginationLink>
+              </PaginationItem>
+            )}
+            <PaginationItem>
+              <PaginationLink isActive>{currentPage}</PaginationLink>
+            </PaginationItem>
+            {currentPage !== totalPages && (
+              <PaginationItem>
+                <PaginationLink onClick={() => setPage(currentPage + 1)}>
+                  {currentPage + 1}
+                </PaginationLink>
+              </PaginationItem>
+            )}
+          </>
         )}
         <PaginationItem>
           <PaginationNext
-            disabled={currentPage === totalPages}
+            className={cn(buttonVariants(buttonVariantsProps), {
+              "rounded-md border px-2.5 py-1 text-xs transition-colors":
+                isCompact,
+            })}
+            disabled={currentPage >= totalPages}
             onClick={() => setPage(currentPage + 1)}
+            showIcon={!isCompact}
           />
         </PaginationItem>
       </PaginationContent>

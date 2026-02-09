@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useRef } from "react"
+import { useElementSize } from "@/hooks/use-element-size"
 import type { RackAssortment } from "@/lib/schemas"
 import Virtualized from "./components/virtualized"
 
@@ -12,8 +13,8 @@ const ROW_HEIGHT = 64
 
 export function RackItemsTable({ items }: RackItemsTableProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [containerWidth, setContainerWidth] = useState(0)
-  const [containerHeight, setContainerHeight] = useState(0)
+  const { elementWidth: containerWidth, elementHeight: containerHeight } =
+    useElementSize(containerRef)
 
   const handleView = (_itemId: number) => {
     // TODO: implement view
@@ -26,19 +27,6 @@ export function RackItemsTable({ items }: RackItemsTableProps) {
   const handleDelete = (_itemId: number) => {
     // TODO: implement delete
   }
-
-  useEffect(() => {
-    const updateSize = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth)
-        setContainerHeight(containerRef.current.offsetHeight)
-      }
-    }
-
-    updateSize()
-    window.addEventListener("resize", updateSize)
-    return () => window.removeEventListener("resize", updateSize)
-  }, [])
 
   if (items.length === 0) {
     return (

@@ -6,7 +6,7 @@ export default function useRackReports(
   params: InferApiInput<typeof RackReportsSchema, "GET">
 ) {
   return useApiQuery({
-    queryKey: ["rack-reports"],
+    queryKey: ["rack-reports", params],
     queryFn: async () =>
       await apiFetch("/api/rack-reports", RackReportsSchema, {
         method: "GET",

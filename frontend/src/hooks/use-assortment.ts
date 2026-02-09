@@ -46,12 +46,8 @@ export default function useAssortments(
 export default function useAssortments(
   params: AssortmentDetailsParams
 ): UseQueryResult<AssortmentDetails, FetchError>
-
 export default function useAssortments(
-  params: WarehouseAssortmentsParams
-): UseQueryResult<AssortmentsList, FetchError>
-export default function useAssortments(
-  params: RackAssortmentsParams
+  params: RackAssortmentsParams | WarehouseAssortmentsParams
 ): UseQueryResult<RackAssortmentsList, FetchError>
 
 export default function useAssortments(

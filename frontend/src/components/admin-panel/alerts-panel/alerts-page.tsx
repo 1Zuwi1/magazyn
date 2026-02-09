@@ -27,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import PaginationFull from "@/components/ui/pagination-component"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import useAlerts, { usePatchAlert } from "@/hooks/use-alerts"
 import type { InferApiOutput } from "@/lib/fetcher"
@@ -713,39 +714,12 @@ export default function AlertsMain() {
               </div>
             </ScrollArea>
 
-            <div className="flex items-center justify-between border-t bg-muted/20 px-3 py-2">
-              <p className="text-muted-foreground text-xs">
-                Strona {currentPage} z {Math.max(totalPages, 1)}
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  className={cn(
-                    "rounded-md border px-2.5 py-1 text-xs transition-colors",
-                    page === 0 || isAlertsPending
-                      ? "cursor-not-allowed opacity-50"
-                      : "hover:bg-muted"
-                  )}
-                  disabled={page === 0 || isAlertsPending}
-                  onClick={() => setPage((previousPage) => previousPage - 1)}
-                  type="button"
-                >
-                  Poprzednia
-                </button>
-                <button
-                  className={cn(
-                    "rounded-md border px-2.5 py-1 text-xs transition-colors",
-                    page + 1 >= totalPages || isAlertsPending
-                      ? "cursor-not-allowed opacity-50"
-                      : "hover:bg-muted"
-                  )}
-                  disabled={page + 1 >= totalPages || isAlertsPending}
-                  onClick={() => setPage((previousPage) => previousPage + 1)}
-                  type="button"
-                >
-                  Następna
-                </button>
-              </div>
-            </div>
+            <PaginationFull
+              currentPage={currentPage}
+              setPage={setPage}
+              totalPages={totalPages}
+              variant="compact"
+            />
           </div>
         </div>
 

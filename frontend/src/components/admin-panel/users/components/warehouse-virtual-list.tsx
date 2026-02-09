@@ -1,5 +1,6 @@
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { useCallback, useEffect, useRef } from "react"
+import { remToPixels } from "@/components/dashboard/utils/helpers"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Spinner } from "@/components/ui/spinner"
@@ -61,12 +62,6 @@ export function WarehouseVirtualList({
     return () => el.removeEventListener("scroll", handleScroll)
   }, [handleScroll])
 
-  const remToPixels = (rem: number) => {
-    return (
-      rem *
-      Number.parseFloat(getComputedStyle(document.documentElement).fontSize)
-    )
-  }
   if (isPending) {
     return (
       <div className="flex items-center justify-center py-8">

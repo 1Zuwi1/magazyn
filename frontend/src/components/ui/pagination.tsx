@@ -59,8 +59,12 @@ function PaginationLink({
 function PaginationPrevious({
   className,
   text = "Poprzednia",
+  showIcon = true,
   ...props
-}: React.ComponentProps<typeof PaginationLink> & { text?: string }) {
+}: React.ComponentProps<typeof PaginationLink> & {
+  text?: string
+  showIcon?: boolean
+}) {
   return (
     <PaginationLink
       aria-label="Przejdź do poprzedniej strony"
@@ -68,11 +72,13 @@ function PaginationPrevious({
       size="default"
       {...props}
     >
-      <HugeiconsIcon
-        data-icon="inline-start"
-        icon={ArrowLeft01Icon}
-        strokeWidth={2}
-      />
+      {showIcon && (
+        <HugeiconsIcon
+          data-icon="inline-start"
+          icon={ArrowLeft01Icon}
+          strokeWidth={2}
+        />
+      )}
       <span className="hidden sm:block">{text}</span>
     </PaginationLink>
   )
@@ -81,8 +87,12 @@ function PaginationPrevious({
 function PaginationNext({
   className,
   text = "Następna",
+  showIcon = true,
   ...props
-}: React.ComponentProps<typeof PaginationLink> & { text?: string }) {
+}: React.ComponentProps<typeof PaginationLink> & {
+  text?: string
+  showIcon?: boolean
+}) {
   return (
     <PaginationLink
       aria-label="Przejdź do następnej strony"
@@ -91,11 +101,13 @@ function PaginationNext({
       {...props}
     >
       <span className="hidden sm:block">{text}</span>
-      <HugeiconsIcon
-        data-icon="inline-end"
-        icon={ArrowRight01Icon}
-        strokeWidth={2}
-      />
+      {showIcon && (
+        <HugeiconsIcon
+          data-icon="inline-end"
+          icon={ArrowRight01Icon}
+          strokeWidth={2}
+        />
+      )}
     </PaginationLink>
   )
 }

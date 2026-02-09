@@ -99,6 +99,11 @@ interface ScannerState {
   isSubmitting: boolean
 }
 
+interface CameraReturnState {
+  step: Step
+  outboundShowsCamera: boolean
+}
+
 const getScannerErrorMessage = (error: unknown, fallback: string): string => {
   if (!FetchError.isError(error)) {
     return fallback
@@ -157,6 +162,7 @@ export function Scanner({
   const [pendingOutboundScanCode, setPendingOutboundScanCode] = useState<
     string | null
   >(null)
+  const cameraReturnStateRef = useRef<CameraReturnState | null>(null)
 
   const placementIdRef = useRef<number>(0)
   const { warehouseId, isHydrated } = useCurrentWarehouseId()
@@ -219,6 +225,7 @@ export function Scanner({
     setIsReportingMismatch(false)
     setPendingOutboundScanCode(null)
     setOutboundShowsCamera(true)
+    cameraReturnStateRef.current = null
     placementIdRef.current = 0
   }, [])
 
@@ -689,6 +696,7 @@ export function Scanner({
     setLastManualCode("")
     setPendingOutboundScanCode(null)
     setOutboundShowsCamera(true)
+    cameraReturnStateRef.current = null
     setScannerState({
       step: "choose-method",
       isLoading: false,
@@ -716,20 +724,33 @@ export function Scanner({
   }, [resetScannerFlow])
 
   const handleChooseMethodScan = useCallback(() => {
+    cameraReturnStateRef.current = {
+      step,
+      outboundShowsCamera,
+    }
+    setPendingOutboundScanCode(null)
+    setOutboundShowsCamera(true)
     setScannerState({
       step: "camera",
       isLoading: false,
       isSubmitting: false,
     })
     setError(null)
-  }, [])
+  }, [outboundShowsCamera, step])
 
   const handleCameraRequestClose = useCallback(() => {
+    const fallbackReturnState: CameraReturnState = {
+      step: "choose-method",
+      outboundShowsCamera: true,
+    }
+    const returnState = cameraReturnStateRef.current ?? fallbackReturnState
+
     setError(null)
     setPendingOutboundScanCode(null)
-    setOutboundShowsCamera(true)
+    setOutboundShowsCamera(returnState.outboundShowsCamera)
+    cameraReturnStateRef.current = null
     setScannerState({
-      step: "choose-method",
+      step: returnState.step,
       isLoading: false,
       isSubmitting: false,
     })
@@ -815,6 +836,10 @@ export function Scanner({
   }, [])
 
   const handleOutboundRequestCamera = useCallback(() => {
+    cameraReturnStateRef.current = {
+      step,
+      outboundShowsCamera,
+    }
     setPendingOutboundScanCode(null)
     setOutboundShowsCamera(true)
     setScannerState({
@@ -822,7 +847,7 @@ export function Scanner({
       isLoading: false,
       isSubmitting: false,
     })
-  }, [])
+  }, [outboundShowsCamera, step])
 
   const handleOutboundScanCodeHandled = useCallback(() => {
     setPendingOutboundScanCode(null)
@@ -982,6 +1007,16 @@ export function Scanner({
   // ── Content resolution ──────────────────────────────────────────────
 
   let content: ReactNode
+  const outboundFlowContent = (
+    <OutboundFlow
+      onClose={closeDialog}
+      onRequestCamera={handleOutboundRequestCamera}
+      onReset={handleReset}
+      onScanCodeHandled={handleOutboundScanCodeHandled}
+      pendingScanCode={pendingOutboundScanCode}
+      selectedItem={scannedItem}
+    />
+  )
 
   if (children) {
     content = <ScannerBody>{children}</ScannerBody>
@@ -1037,33 +1072,31 @@ export function Scanner({
           title="Wybierz produkt"
         />
       )
-    } else if (step === "camera" && outboundShowsCamera) {
+    } else if (step === "camera") {
       content = (
-        <ScannerCamera
-          constraints={constraints}
-          isLoading={isLoading}
-          isMobile={isMobile}
-          isOpen={open}
-          mode={mode}
-          onRequestClose={handleCameraRequestClose}
-          onScan={queueOutboundScanCode}
-          onTakePhoto={onTakePhoto}
-          scanDelayMs={scanDelayMs}
-          stopOnScan={stopOnScan}
-          warehouseName={warehouseName}
-        />
+        <div className="relative h-full">
+          <div className={cn("h-full", outboundShowsCamera ? "hidden" : "")}>
+            {outboundFlowContent}
+          </div>
+          <div hidden={!outboundShowsCamera}>
+            <ScannerCamera
+              constraints={constraints}
+              isLoading={isLoading}
+              isMobile={isMobile}
+              isOpen={open && outboundShowsCamera}
+              mode={mode}
+              onRequestClose={handleCameraRequestClose}
+              onScan={queueOutboundScanCode}
+              onTakePhoto={onTakePhoto}
+              scanDelayMs={scanDelayMs}
+              stopOnScan={stopOnScan}
+              warehouseName={warehouseName}
+            />
+          </div>
+        </div>
       )
     } else {
-      content = (
-        <OutboundFlow
-          onClose={closeDialog}
-          onRequestCamera={handleOutboundRequestCamera}
-          onReset={handleReset}
-          onScanCodeHandled={handleOutboundScanCodeHandled}
-          pendingScanCode={pendingOutboundScanCode}
-          selectedItem={scannedItem}
-        />
-      )
+      content = outboundFlowContent
     }
   } else {
     content = resolveInboundContent()

@@ -22,6 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import PaginationFull from "@/components/ui/pagination-component"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import useRackReports from "@/hooks/use-rack-reports"
 import type { InferApiOutput } from "@/lib/fetcher"
@@ -294,11 +295,11 @@ export default function RackReportsMain() {
   const [withAlertsFilter, setWithAlertsFilter] = useState<boolean | undefined>(
     undefined
   )
-  const [page, setPage] = useState(0)
+  const [page, setPage] = useState(1)
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null)
 
   const reportsQuery = useRackReports({
-    page,
+    page: page - 1,
     size: RACK_REPORTS_PAGE_SIZE,
     sortBy: "createdAt",
     sortDir: "desc",
@@ -322,7 +323,6 @@ export default function RackReportsMain() {
     [reports, selectedReportId]
   )
 
-  const currentPage = (reportsData?.page ?? page) + 1
   const totalPages = reportsData?.totalPages ?? 1
 
   const handleSelectReport = (report: RackReportItem) => {
@@ -331,7 +331,7 @@ export default function RackReportsMain() {
 
   const handleToggleAlertsFilter = (value: boolean) => {
     setWithAlertsFilter((previous) => (previous === value ? undefined : value))
-    setPage(0)
+    setPage(1)
   }
 
   return (
@@ -376,7 +376,7 @@ export default function RackReportsMain() {
                   )}
                 >
                   <HugeiconsIcon className="size-4" icon={FilterIcon} />
-                  Alerty
+                  Filtry
                   {withAlertsFilter !== undefined && (
                     <Badge className="ml-1" variant="secondary">
                       {withAlertsFilter ? "Tylko" : "Wszystkie"}
@@ -423,39 +423,13 @@ export default function RackReportsMain() {
               </div>
             </ScrollArea>
 
-            <div className="flex items-center justify-between border-t bg-muted/20 px-3 py-2">
-              <p className="text-muted-foreground text-xs">
-                Strona {currentPage} z {Math.max(totalPages, 1)}
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  className={cn(
-                    "rounded-md border px-2.5 py-1 text-xs transition-colors",
-                    page === 0 || isReportsPending
-                      ? "cursor-not-allowed opacity-50"
-                      : "hover:bg-muted"
-                  )}
-                  disabled={page === 0 || isReportsPending}
-                  onClick={() => setPage((previousPage) => previousPage - 1)}
-                  type="button"
-                >
-                  Poprzednia
-                </button>
-                <button
-                  className={cn(
-                    "rounded-md border px-2.5 py-1 text-xs transition-colors",
-                    page + 1 >= totalPages || isReportsPending
-                      ? "cursor-not-allowed opacity-50"
-                      : "hover:bg-muted"
-                  )}
-                  disabled={page + 1 >= totalPages || isReportsPending}
-                  onClick={() => setPage((previousPage) => previousPage + 1)}
-                  type="button"
-                >
-                  Następna
-                </button>
-              </div>
-            </div>
+            <PaginationFull
+              className="border-t"
+              currentPage={page}
+              setPage={setPage}
+              totalPages={totalPages}
+              variant="compact"
+            />
           </div>
         </div>
 

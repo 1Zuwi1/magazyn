@@ -56,7 +56,7 @@ import useAssortment from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import { useMultipleRacks } from "@/hooks/use-racks"
 import type { InferApiOutput } from "@/lib/fetcher"
-import type { AssortmentsSchema } from "@/lib/schemas"
+import type { AssortmentsSchema, RackAssortmentsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { getDaysUntilExpiry } from "../utils/helpers"
 import { CodeCell } from "./components/code-cell"
@@ -64,8 +64,12 @@ import { SortableHeader } from "./sortable-header"
 
 type ExpiryFilters = "DAYS_14" | "DAYS_7" | "DAYS_3" | "EXPIRED" | "ALL"
 
+type RackAssortmentList = InferApiOutput<typeof RackAssortmentsSchema, "GET">
 type AssortmentList = InferApiOutput<typeof AssortmentsSchema, "GET">
-type AssortmentItem = AssortmentList["content"][number]
+type SupportedAssortmentList = RackAssortmentList | AssortmentList
+type RackAssortmentItem = RackAssortmentList["content"][number]
+type AssortmentItemWithItemId = AssortmentList["content"][number]
+type AssortmentItem = SupportedAssortmentList["content"][number]
 
 const EXPIRY_FILTER_OPTIONS: {
   value: ExpiryFilters
@@ -195,16 +199,40 @@ function matchesExpiryFilter(
   }
 }
 
+const hasEmbeddedItem = (item: AssortmentItem): item is RackAssortmentItem =>
+  "item" in item
+
+const hasItemId = (item: AssortmentItem): item is AssortmentItemWithItemId =>
+  "itemId" in item
+
+const getItemId = (item: AssortmentItem): number =>
+  hasEmbeddedItem(item) ? item.item.id : item.itemId
+
+const getItemName = (
+  item: AssortmentItem,
+  itemNamesById: Map<number, string>
+): string => {
+  const itemId = getItemId(item)
+  if (hasEmbeddedItem(item)) {
+    const embeddedName = item.item.name.trim()
+    if (embeddedName) {
+      return embeddedName
+    }
+  }
+
+  return itemNamesById.get(itemId) ?? `Produkt #${itemId}`
+}
+
 interface AssortmentTableProps {
   isLoading?: boolean
 }
 
 interface AssortmentTableWithDataProps extends AssortmentTableProps {
-  assortmentData: AssortmentList | null | undefined
+  assortmentData: SupportedAssortmentList | null | undefined
 }
 
 interface AssortmentTableContentProps extends AssortmentTableProps {
-  assortmentData: AssortmentList | null | undefined
+  assortmentData: SupportedAssortmentList | null | undefined
   isError?: boolean
   onRetry?: () => void
 }
@@ -316,29 +344,44 @@ function AssortmentTableContent({
   const [globalFilter, setGlobalFilter] = useState("")
   const [expiryFilter, setExpiryFilter] = useState<ExpiryFilters>("ALL")
   const assortmentItems = assortmentData?.content ?? []
+  const itemIdsToFetch = useMemo(
+    () => [
+      ...new Set(assortmentItems.filter(hasItemId).map((item) => item.itemId)),
+    ],
+    [assortmentItems]
+  )
+
   const rackIds = useMemo(
     () => [...new Set(assortmentItems.map((item) => item.rackId))],
     [assortmentItems]
   )
 
+  const itemDetailsQueries = useMultipleItems({ itemIds: itemIdsToFetch })
   const rackDetailsQueries = useMultipleRacks({ rackIds })
-  const itemIds = useMemo(
-    () => [...new Set(assortmentItems.map((item) => item.itemId))],
-    [assortmentItems]
-  )
-  const itemDetailsQueries = useMultipleItems({ itemIds })
 
   const itemNamesById = useMemo(() => {
     const namesMap = new Map<number, string>()
-    for (const [index, itemId] of itemIds.entries()) {
-      const item = itemDetailsQueries[index]?.data
-      const itemName = item?.name.trim()
-      if (itemName) {
-        namesMap.set(itemId, itemName)
+
+    for (const item of assortmentItems) {
+      if (!hasEmbeddedItem(item)) {
+        continue
+      }
+
+      const embeddedName = item.item.name.trim()
+      if (embeddedName) {
+        namesMap.set(item.item.id, embeddedName)
       }
     }
+
+    for (const [index, itemId] of itemIdsToFetch.entries()) {
+      const fetchedName = itemDetailsQueries[index]?.data?.name.trim()
+      if (fetchedName && !namesMap.has(itemId)) {
+        namesMap.set(itemId, fetchedName)
+      }
+    }
+
     return namesMap
-  }, [itemDetailsQueries, itemIds])
+  }, [assortmentItems, itemDetailsQueries, itemIdsToFetch])
 
   const rackNamesById = useMemo(() => {
     const namesMap = new Map<number, string>()
@@ -351,6 +394,7 @@ function AssortmentTableContent({
     }
     return namesMap
   }, [rackDetailsQueries, rackIds])
+
   const rackWarehouseIdsById = useMemo(() => {
     const warehouseIdsMap = new Map<number, number>()
     for (const [index, rackId] of rackIds.entries()) {
@@ -379,7 +423,7 @@ function AssortmentTableContent({
       },
       {
         id: "itemName",
-        accessorFn: (row) => itemNamesById.get(row.itemId) ?? "",
+        accessorFn: (row) => getItemName(row, itemNamesById),
         header: ({ column }) => (
           <SortableHeader column={column}>Produkt</SortableHeader>
         ),
@@ -388,7 +432,7 @@ function AssortmentTableContent({
             className="font-medium text-primary hover:underline"
             href={buildItemsCatalogHref(row.original.code)}
           >
-            {itemNamesById.get(row.original.itemId) ?? "Nieznany produkt"}
+            {getItemName(row.original, itemNamesById)}
           </Link>
         ),
         enableSorting: true,
@@ -485,8 +529,7 @@ function AssortmentTableContent({
       if (!searchValue) {
         return true
       }
-      const itemName =
-        itemNamesById.get(row.original.itemId)?.toLowerCase() ?? ""
+      const itemName = getItemName(row.original, itemNamesById).toLowerCase()
       const rackName =
         rackNamesById.get(row.original.rackId)?.toLowerCase() ?? ""
 
