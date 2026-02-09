@@ -267,6 +267,19 @@ export function PhotoPromptDialog({
   const [preview, setPreview] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [step, setStep] = useState<PhotoStep>("prompt")
+  const previewsRef = useRef<string[]>([])
+
+  useEffect(() => {
+    previewsRef.current.push(preview ?? "")
+    return () => {
+      for (const url of previewsRef.current) {
+        if (url) {
+          URL.revokeObjectURL(url)
+        }
+      }
+      previewsRef.current = []
+    }
+  }, [preview])
 
   const cleanup = useCallback(() => {
     if (preview) {
@@ -514,13 +527,15 @@ export function ItemDialog({
         daysToExpiry: value.daysToExpiry || 30,
         isDangerous: value.isDangerous,
       })
-      form.reset()
+
       onOpenChange(false)
 
       if (!isEdit && typeof result === "number") {
         setCreatedItemId(result)
         setPhotoPromptOpen(true)
       }
+
+      form.reset()
     },
   })
 

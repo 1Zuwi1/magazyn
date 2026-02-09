@@ -29,7 +29,10 @@ function getItemStatus(
   isDangerous: boolean,
   nowTimestampMs: number
 ): Item3D["status"] {
-  const expiresAtTimestampMs = Date.parse(expiresAt)
+  const expiresAtTimestampMs = new Date(expiresAt).getTime()
+  if (!Number.isFinite(expiresAtTimestampMs)) {
+    return isDangerous ? "dangerous" : "normal"
+  }
   const isExpired =
     Number.isFinite(expiresAtTimestampMs) &&
     expiresAtTimestampMs < nowTimestampMs
