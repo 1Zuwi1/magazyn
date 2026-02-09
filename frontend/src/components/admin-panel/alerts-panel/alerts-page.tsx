@@ -2,6 +2,7 @@
 
 import {
   Alert01Icon,
+  AlertCircleIcon,
   ArrowRight02Icon,
   CheckmarkBadge01Icon,
   FilterIcon,
@@ -15,7 +16,7 @@ import { pl } from "date-fns/locale"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -115,6 +116,14 @@ function getStatusConfig(status: string): {
       badgeVariant: "secondary",
       cardClassName: "bg-muted text-muted-foreground",
       label: "Odrzucone",
+    }
+  }
+
+  if (normalizedStatus === "ACTIVE") {
+    return {
+      badgeVariant: "default",
+      cardClassName: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
+      label: "Aktywne",
     }
   }
 
@@ -275,6 +284,25 @@ function AlertListBody({
   )
 }
 
+const STATUSES = {
+  OPEN: {
+    label: "Oznacz jako otwarte",
+    icon: Time01Icon,
+  },
+  ACTIVE: {
+    label: "Oznacz jako aktywne",
+    icon: AlertCircleIcon,
+  },
+  RESOLVED: {
+    label: "Oznacz jako rozwiązane",
+    icon: CheckmarkBadge01Icon,
+  },
+  DISMISSED: {
+    label: "Odrzuć alert",
+    icon: Alert01Icon,
+  },
+}
+
 function AlertDetailsPanel({
   alert,
   onStatusChange,
@@ -365,15 +393,15 @@ function AlertDetailsPanel({
           <div className="grid gap-3 sm:grid-cols-2">
             <DetailsCard
               label="Utworzono"
-              value={formatDateTime(alert.createdAt)}
+              value={formatDateTime(alert.createdAt?.toString())}
             />
             <DetailsCard
               label="Aktualizacja"
-              value={formatDateTime(alert.updatedAt)}
+              value={formatDateTime(alert.updatedAt?.toString())}
             />
             <DetailsCard
               label="Rozwiązano"
-              value={formatDateTime(alert.resolvedAt)}
+              value={formatDateTime(alert.resolvedAt?.toString())}
             />
           </div>
         </section>
@@ -410,33 +438,34 @@ function AlertDetailsPanel({
           </Link>
         ) : null}
 
-        {alert.status !== "RESOLVED" && alert.status !== "DISMISSED" && (
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Button size="sm" variant="default">
-                Zmień status
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className={cn(
+              buttonVariants({
+                size: "sm",
+                variant: "default",
+              })
+            )}
+          >
+            Zmień status
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="w-fit" side="top">
+            <DropdownMenuGroup>
               <DropdownMenuLabel>Akcje</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="gap-2"
-                onClick={() => onStatusChange("RESOLVED")}
-              >
-                <HugeiconsIcon className="size-4" icon={CheckmarkBadge01Icon} />
-                Oznacz jako rozwiązane
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="gap-2"
-                onClick={() => onStatusChange("DISMISSED")}
-              >
-                <HugeiconsIcon className="size-4" icon={Alert01Icon} />
-                Odrzuć alert
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+              {Object.entries(STATUSES).map(([status, config]) => (
+                <DropdownMenuItem
+                  className="gap-2"
+                  key={status}
+                  onClick={() => onStatusChange(status as AlertStatusValue)}
+                >
+                  <HugeiconsIcon className="size-4" icon={config.icon} />
+                  {config.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   )
@@ -454,7 +483,7 @@ export default function AlertsMain() {
     page,
     sortBy: "createdAt",
     sortDir: "desc",
-    alertType: alertTypeFilter.length > 0 ? alertTypeFilter : undefined,
+    type: alertTypeFilter.length > 0 ? alertTypeFilter : undefined,
     status: statusFilter.length > 0 ? statusFilter : undefined,
   })
 
@@ -731,7 +760,8 @@ export default function AlertsMain() {
       {selectedAlert ? (
         <div className="rounded-lg border border-dashed p-3 text-muted-foreground text-xs">
           <HugeiconsIcon className="mr-1 inline size-3.5" icon={Time01Icon} />
-          Ostatnia aktualizacja: {formatDateTime(selectedAlert.updatedAt)}
+          Ostatnia aktualizacja:{" "}
+          {formatDateTime(selectedAlert.updatedAt?.toString())}
         </div>
       ) : null}
     </div>

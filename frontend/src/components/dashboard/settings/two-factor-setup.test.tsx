@@ -10,6 +10,7 @@ const mockUseQuery = vi.fn()
 const mockUseMutation = vi.fn()
 
 vi.mock("@tanstack/react-query", () => ({
+  keepPreviousData: true,
   useQuery: (...args: unknown[]) => mockUseQuery(...args),
   useMutation: (...args: unknown[]) => mockUseMutation(...args),
 }))

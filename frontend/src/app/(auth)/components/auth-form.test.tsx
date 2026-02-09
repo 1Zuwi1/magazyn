@@ -10,6 +10,7 @@ const EMAIL_REGEX = /email/i
 const FULLNAME_REGEX = /pełne imię i nazwisko/i
 const LOGIN_BUTTON_REGEX = /zaloguj się/i
 const REGISTER_BUTTON_REGEX = /zarejestruj się/i
+const PHONE_REGEX = /numer telefonu/i
 const MISMATCH_ERROR_REGEX = /hasła nie są zgodne/i
 
 // Mock next/navigation
@@ -179,12 +180,22 @@ describe("AuthForm", () => {
       fireEvent.change(screen.getByLabelText(FULLNAME_REGEX), {
         target: { value: "Test User" },
       })
+      fireEvent.change(screen.getByLabelText(PHONE_REGEX), {
+        target: { value: "+48123456789" },
+      })
       fireEvent.change(screen.getAllByLabelText(PASSWORD_REGEX)[0], {
         // Password field
         target: { value: "Password123!" },
       })
       fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_REGEX), {
         target: { value: "Password123!" },
+      })
+
+      await waitFor(() => {
+        const submitButton = screen.getByRole("button", {
+          name: REGISTER_BUTTON_REGEX,
+        })
+        expect(submitButton).not.toBeDisabled()
       })
 
       fireEvent.click(
@@ -220,6 +231,9 @@ describe("AuthForm", () => {
       fireEvent.change(screen.getByLabelText(FULLNAME_REGEX), {
         target: { value: "Test User" },
       })
+      fireEvent.change(screen.getByLabelText(PHONE_REGEX), {
+        target: { value: "+48123456789" },
+      })
 
       fireEvent.change(screen.getByLabelText(EXACT_PASSWORD_REGEX), {
         target: { value: "Password123!" },
@@ -249,6 +263,9 @@ describe("AuthForm", () => {
       })
       fireEvent.change(screen.getByLabelText(FULLNAME_REGEX), {
         target: { value: "Test User" },
+      })
+      fireEvent.change(screen.getByLabelText(PHONE_REGEX), {
+        target: { value: "+48123456789" },
       })
       fireEvent.change(screen.getByLabelText(EXACT_PASSWORD_REGEX), {
         target: { value: "Password123!" },

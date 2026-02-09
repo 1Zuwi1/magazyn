@@ -1,6 +1,7 @@
 import z from "zod"
 import { OTP_LENGTH } from "@/config/constants"
 import { createApiSchema } from "./create-api-schema"
+import { AlertSchema } from "./schemas/monitoring-schemas"
 
 const txtEncoder = new TextEncoder()
 
@@ -97,6 +98,7 @@ export const RegisterSchema = createApiSchema({
         .min(2, "Imię i nazwisko musi mieć co najmniej 2 znaki"),
       email: z.email("Nieprawidłowy adres email"),
       password: PasswordSchema,
+      phoneNumber: z.e164("Nieprawidłowy numer telefonu"),
     }),
     output: z.null(),
   },
@@ -184,7 +186,6 @@ export const WebAuthnFinishAssertionSchema = createApiSchema({
 export const FormRegisterSchema = RegisterSchema.shape.POST.shape.input
   .extend({
     confirmPassword: PasswordSchema,
-    phoneNumber: z.e164("Nieprawidłowy numer telefonu"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Hasła nie są zgodne",
@@ -439,13 +440,13 @@ const UserAccountStatusSchema = z.enum([
 
 const AdminUserSchema = z.object({
   id: z.number().int().nonnegative(),
-  full_name: z.string().nullable().optional(),
+  full_name: z.string().nullish(),
   email: z.string().min(1),
   role: z.enum(["USER", "ADMIN"]),
   account_status: UserAccountStatusSchema,
-  phone: z.string().nullable().optional(),
-  location: z.string().nullable().optional(),
-  team: z.string().nullable().optional(),
+  phone: z.string().nullish(),
+  location: z.string().nullish(),
+  team: z.string().nullish(),
 })
 
 const TeamOptionSchema = z.object({
@@ -1008,7 +1009,7 @@ export const OutboundCheckSchema = createApiSchema({
       fifoCompliant: z.boolean(),
       requestedAssortment: OutboundPickSlotSchema,
       olderAssortments: z.array(OutboundPickSlotSchema),
-      warning: z.string().nullable().optional(),
+      warning: z.string().nullish(),
     }),
   },
 })
@@ -1029,7 +1030,7 @@ export const OutboundPlanSchema = createApiSchema({
       requestedQuantity: z.number().int().nonnegative(),
       availableQuantity: z.number().int().nonnegative(),
       expiredQuantity: z.number().int().nonnegative(),
-      warning: z.string().nullable().optional(),
+      warning: z.string().nullish(),
       pickSlots: z.array(OutboundPickSlotSchema),
     }),
   },
@@ -1146,44 +1147,23 @@ export const AuditOutboundOperationsSchema = createApiSchema({
 
 // --- Alerts ---
 
-const AlertSchema = z.object({
-  id: z.number().int().nonnegative(),
-  rackId: z.number().int().nonnegative(),
-  rackMarker: z.string(),
-  warehouseId: z.number().int().nonnegative(),
-  warehouseName: z.string(),
-  alertType: z.string(),
-  alertTypeDescription: z.string(),
-  status: z.string(),
-  message: z.string(),
-  thresholdValue: z.number().nonnegative(),
-  actualValue: z.number().nonnegative(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  resolvedAt: z.string().nullable().optional(),
-  resolvedByName: z.string().nullable().optional(),
-  resolutionNotes: z.string().nullable().optional(),
-})
+const AlertTypeSchema = z.enum([
+  "WEIGHT_EXCEEDED",
+  "TEMPERATURE_TOO_HIGH",
+  "TEMPERATURE_TOO_LOW",
+  "LOW_VISUAL_SIMILARITY",
+  "ITEM_TEMPERATURE_TOO_HIGH",
+  "ITEM_TEMPERATURE_TOO_LOW",
+  "EMBEDDING_GENERATION_COMPLETED",
+  "EMBEDDING_GENERATION_FAILED",
+  "ASSORTMENT_EXPIRED",
+  "ASSORTMENT_CLOSE_TO_EXPIRY",
+])
 
 export const AlertsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
-      alertType: z
-        .array(
-          z.enum([
-            "WEIGHT_EXCEEDED",
-            "TEMPERATURE_TOO_HIGH",
-            "TEMPERATURE_TOO_LOW",
-            "LOW_VISUAL_SIMILARITY",
-            "ITEM_TEMPERATURE_TOO_HIGH",
-            "ITEM_TEMPERATURE_TOO_LOW",
-            "EMBEDDING_GENERATION_COMPLETED",
-            "EMBEDDING_GENERATION_FAILED",
-            "ASSORTMENT_EXPIRED",
-            "ASSORTMENT_CLOSE_TO_EXPIRY",
-          ])
-        )
-        .optional(),
+      type: z.array(AlertTypeSchema).optional(),
       warehouseId: z.number().int().nonnegative().optional(),
       status: z
         .array(z.enum(["OPEN", "ACTIVE", "RESOLVED", "DISMISSED"]))
@@ -1209,6 +1189,6 @@ export const ApiAlertsStatusSchema = createApiSchema({
       status: z.enum(["OPEN", "ACTIVE", "RESOLVED", "DISMISSED"]),
       resolutionNotes: z.string().optional(),
     }),
-    output: z.null(),
+    output: z.array(AlertSchema),
   },
 })

@@ -180,7 +180,6 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
     clearTimeout(timeoutId)
   }
 }
-
 // ----------------- Small utilities (typed, no any) -----------------
 
 function assertMethod(m: string): asserts m is ApiMethod {
@@ -399,7 +398,10 @@ function buildRequestUrl(
   method: ApiMethod,
   queryParams?: Record<string, unknown>
 ): URL {
-  const url = new URL(resolveRequestUrl(path, baseUrl))
+  const resolvedPath = resolveRequestUrl(path, baseUrl)
+  const url = baseUrl
+    ? new URL(resolvedPath, baseUrl)
+    : new URL(`http://localhost${resolvedPath}`)
 
   if (method !== "GET" || !queryParams) {
     return url

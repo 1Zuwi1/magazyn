@@ -40,5 +40,8 @@ export function usePatchAlert() {
         method: "PATCH",
         body: params,
       }),
+    onSuccess: (_, __, ___, context) => {
+      context.client.invalidateQueries({ queryKey: ["alerts"] })
+    },
   })
 }

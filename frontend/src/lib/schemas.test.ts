@@ -140,6 +140,7 @@ describe("RegisterSchema", () => {
       email: "user@example.com",
       password: "Password123!",
       confirmPassword: "Password123!",
+      phoneNumber: "+48123456789",
     }
 
     const result = FormRegisterSchema.safeParse(validInput)
@@ -153,6 +154,7 @@ describe("RegisterSchema", () => {
       email: "user@example.com",
       password: "Password123!",
       confirmPassword: "Different123!",
+      phoneNumber: "+48123456789",
     }
 
     const result = FormRegisterSchema.safeParse(invalidInput)
@@ -320,6 +322,7 @@ describe("ApiMeSchema", () => {
       full_name: "Test User",
       account_status: "ACTIVE",
       role: "USER",
+      location: "Warsaw",
     }
 
     const result = ApiMeSchema.shape.GET.shape.output.safeParse(validOutput)
@@ -331,9 +334,10 @@ describe("ApiMeSchema", () => {
     const validOutput = {
       id: 1,
       email: "user@example.com",
-      full_name: null,
+      full_name: "Test Admin",
       account_status: "ACTIVE",
       role: "ADMIN",
+      location: "Warsaw",
     }
 
     const result = ApiMeSchema.shape.GET.shape.output.safeParse(validOutput)
@@ -345,7 +349,7 @@ describe("ApiMeSchema", () => {
     const invalidOutput = {
       id: 1,
       email: "not-an-email",
-      full_name: null,
+      full_name: "Test User",
       account_status: "ACTIVE",
       role: "USER",
     }
