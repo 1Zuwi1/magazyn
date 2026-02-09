@@ -13,7 +13,7 @@ public class BackupSchedulerConfig {
     @Bean(name = "backupTaskScheduler")
     public ThreadPoolTaskScheduler backupTaskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(2);
+        scheduler.setPoolSize(10);
         scheduler.setThreadNamePrefix("backup-scheduler-");
         scheduler.setWaitForTasksToCompleteOnShutdown(true);
         scheduler.setAwaitTerminationSeconds(60);

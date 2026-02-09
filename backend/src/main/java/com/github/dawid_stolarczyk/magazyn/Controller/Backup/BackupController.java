@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,7 @@ import java.util.List;
 @Tag(name = "Backup Management", description = "Endpoints for managing encrypted backups and schedules")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
+@Slf4j
 public class BackupController {
 
     private final BackupService backupService;
@@ -149,7 +151,8 @@ public class BackupController {
             if (userId != null) {
                 return userRepository.findById(userId).orElse(null);
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("Failed to resolve current user: {}", e.getMessage());
         }
         return null;
     }

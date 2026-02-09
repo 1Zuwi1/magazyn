@@ -7,9 +7,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.time.Instant;
+import java.util.List;
+
 public interface BackupRecordRepository extends JpaRepository<BackupRecord, Long>, JpaSpecificationExecutor<BackupRecord> {
 
     boolean existsByWarehouseIdAndStatus(Long warehouseId, BackupStatus status);
 
     Page<BackupRecord> findByWarehouseId(Long warehouseId, Pageable pageable);
+
+    List<BackupRecord> findByStatusAndCreatedAtBefore(BackupStatus status, Instant createdAt);
 }

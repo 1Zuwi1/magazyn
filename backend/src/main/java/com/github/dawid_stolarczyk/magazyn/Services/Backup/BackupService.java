@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -264,7 +266,7 @@ public class BackupService {
                 backupStorageService.deleteBackup(record.getR2BasePath());
             }
         } finally {
-            AtomicBoolean lock = warehouseLocks.get(warehouseId);
+            AtomicBoolean lock = warehouseLocks.remove(warehouseId);
             if (lock != null) {
                 lock.set(false);
             }
@@ -324,9 +326,18 @@ public class BackupService {
             int itemsRestored = 0;
             int assortmentsRestored = 0;
 
-            // Clean assortments: null InboundOperation FK, then delete all warehouse assortments
+            // Clean existing data: delete assortments, then racks for the warehouse
             List<Assortment> existingAssortments = assortmentRepository.findByRack_WarehouseId(warehouseId, Pageable.unpaged()).getContent();
-            assortmentRepository.deleteAll(existingAssortments);
+            if (!existingAssortments.isEmpty()) {
+                log.info("Deleting {} existing assortments for warehouse {}", existingAssortments.size(), warehouseId);
+                assortmentRepository.deleteAll(existingAssortments);
+            }
+
+            List<Rack> existingRacks = rackRepository.findByWarehouseId(warehouseId);
+            if (!existingRacks.isEmpty()) {
+                log.info("Deleting {} existing racks for warehouse {}", existingRacks.size(), warehouseId);
+                rackRepository.deleteAll(existingRacks);
+            }
 
             // Restore racks
             Map<Long, Long> rackIdMapping = new HashMap<>();
@@ -391,13 +402,26 @@ public class BackupService {
             // Restore assortments
             if (assortmentDataList != null) {
                 for (AssortmentBackupData ad : assortmentDataList) {
-                    Long newRackId = rackIdMapping.getOrDefault(ad.originalRackId(), ad.originalRackId());
-                    Long newItemId = itemIdMapping.getOrDefault(ad.originalItemId(), ad.originalItemId());
+                    Long newRackId = rackIdMapping.get(ad.originalRackId());
+                    Long newItemId = itemIdMapping.get(ad.originalItemId());
+
+                    if (newRackId == null) {
+                        throw new IllegalStateException(String.format(
+                                "Cannot restore assortment: rack ID mapping not found for original rack ID %d. " +
+                                        "This may indicate corrupted backup data or missing rack in the backup.",
+                                ad.originalRackId()));
+                    }
+                    if (newItemId == null) {
+                        throw new IllegalStateException(String.format(
+                                "Cannot restore assortment: item ID mapping not found for original item ID %d. " +
+                                        "This may indicate corrupted backup data or missing item in the backup.",
+                                ad.originalItemId()));
+                    }
 
                     Rack rack = rackRepository.findById(newRackId)
-                            .orElseThrow(() -> new IllegalStateException("RACK_NOT_FOUND_DURING_RESTORE"));
+                            .orElseThrow(() -> new IllegalStateException("RACK_NOT_FOUND_DURING_RESTORE: ID=" + newRackId));
                     Item item = itemRepository.findById(newItemId)
-                            .orElseThrow(() -> new IllegalStateException("ITEM_NOT_FOUND_DURING_RESTORE"));
+                            .orElseThrow(() -> new IllegalStateException("ITEM_NOT_FOUND_DURING_RESTORE: ID=" + newItemId));
 
                     Assortment assortment = Assortment.builder()
                             .code(ad.code())
@@ -606,6 +630,42 @@ public class BackupService {
         if (!notifications.isEmpty()) {
             userNotificationRepository.saveAll(notifications);
             log.info("Distributed {} backup notifications to admin users", notifications.size());
+        }
+    }
+
+    @Transactional
+    @Scheduled(fixedRate = 1800000, initialDelay = 60000)
+    public void cleanupStuckBackups() {
+        Instant oneHourAgo = Instant.now().minus(1, ChronoUnit.HOURS);
+        List<BackupRecord> stuckBackups = backupRecordRepository.findByStatusAndCreatedAtBefore(BackupStatus.IN_PROGRESS, oneHourAgo);
+
+        if (!stuckBackups.isEmpty()) {
+            log.warn("Found {} stuck backup(s) older than 1 hour", stuckBackups.size());
+            for (BackupRecord record : stuckBackups) {
+                Long warehouseId = record.getWarehouse().getId();
+                log.warn("Marking stuck backup {} (warehouse {}) as FAILED", record.getId(), warehouseId);
+                record.setStatus(BackupStatus.FAILED);
+                record.setErrorMessage("Backup timed out - stuck in IN_PROGRESS status for over 1 hour");
+                record.setCompletedAt(Instant.now());
+                backupRecordRepository.save(record);
+
+                // Release lock if held
+                AtomicBoolean lock = warehouseLocks.remove(warehouseId);
+                if (lock != null) {
+                    lock.set(false);
+                    log.info("Released lock for warehouse {}", warehouseId);
+                }
+
+                // Best-effort R2 cleanup
+                if (record.getR2BasePath() != null) {
+                    try {
+                        backupStorageService.deleteBackup(record.getR2BasePath());
+                        log.info("Cleaned up R2 path for stuck backup {}", record.getId());
+                    } catch (Exception e) {
+                        log.error("Failed to cleanup R2 path for stuck backup {}", record.getId(), e);
+                    }
+                }
+            }
         }
     }
 }
