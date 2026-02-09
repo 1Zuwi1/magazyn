@@ -11,14 +11,11 @@ import { useEffect, useMemo, useState } from "react"
 import { AssortmentTable } from "@/components/dashboard/items/assortment-table"
 import { ItemsTable } from "@/components/dashboard/items/items-table"
 import { PageHeader } from "@/components/dashboard/page-header"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import useAssortment from "@/hooks/use-assortment"
 import useItems from "@/hooks/use-items"
 
-const DEFAULT_ASSORTMENT_PAGE = 0
-const DEFAULT_ASSORTMENT_SIZE = 100
 type ItemsTab = "assortment" | "definitions"
 
 const isItemsTab = (value: string | null): value is ItemsTab =>
@@ -37,39 +34,45 @@ export default function ItemsClientPage() {
   const [activeTab, setActiveTab] = useState<ItemsTab>(requestedTabFromUrl)
 
   useEffect(() => {
-    setActiveTab(requestedTabFromUrl)
-  }, [requestedTabFromUrl])
+    if (requestedSearchFromUrl) {
+      setActiveTab(requestedTabFromUrl)
+    }
+  }, [requestedTabFromUrl, requestedSearchFromUrl])
 
   const {
     data: assortment,
     isPending: isAssortmentPending,
     isError: isAssortmentError,
-    error: assortmentError,
   } = useAssortment({
-    page: DEFAULT_ASSORTMENT_PAGE,
-    size: DEFAULT_ASSORTMENT_SIZE,
+    page: 0,
+    size: 1,
   })
 
   const {
     data: items,
     isPending: isItemsPending,
     isError: isItemsError,
-    error: itemsError,
-  } = useItems()
+  } = useItems({
+    search: requestedSearchFromUrl,
+    page: 0,
+    size: 1,
+  })
 
   const isPending = isAssortmentPending || isItemsPending
-  const totalItems = items?.totalElements ?? items?.content.length ?? 0
-  const totalStock =
-    assortment?.totalElements ?? assortment?.content.length ?? 0
+  const totalItems = items?.totalElements ?? 0
+  const totalStock = assortment?.totalElements ?? 0
 
   const headerStats = [
     {
       label: "Na stanie",
-      value: isPending ? "..." : totalStock.toLocaleString("pl-PL"),
+      value:
+        isPending || isAssortmentError
+          ? "..."
+          : totalStock.toLocaleString("pl-PL"),
     },
     {
       label: "Produkty",
-      value: isPending ? "..." : totalItems,
+      value: isPending || isItemsError ? "..." : totalItems,
     },
   ]
 
@@ -82,28 +85,6 @@ export default function ItemsClientPage() {
         stats={headerStats}
         title="Zarządzanie przedmiotami"
       />
-
-      {isAssortmentError && (
-        <Alert variant="destructive">
-          <AlertTitle>Nie udało się pobrać asortymentu</AlertTitle>
-          <AlertDescription>
-            {assortmentError instanceof Error
-              ? assortmentError.message
-              : "Spróbuj ponownie za chwilę."}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {isItemsError && (
-        <Alert variant="destructive">
-          <AlertTitle>Nie udało się pobrać katalogu produktów</AlertTitle>
-          <AlertDescription>
-            {itemsError instanceof Error
-              ? itemsError.message
-              : "Spróbuj ponownie za chwilę."}
-          </AlertDescription>
-        </Alert>
-      )}
 
       <Tabs
         className="space-y-6"
@@ -127,7 +108,7 @@ export default function ItemsClientPage() {
               <HugeiconsIcon className="size-4" icon={BarCode02Icon} />
               <span>Katalog produktów</span>
               <Badge className="ml-1" variant="secondary">
-                {isItemsPending ? "..." : totalItems}
+                {totalItems}
               </Badge>
             </TabsTrigger>
           </TabsList>

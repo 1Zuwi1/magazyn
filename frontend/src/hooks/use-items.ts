@@ -145,7 +145,6 @@ const useItems = (
           }
         )
       }
-
       if (params && "warehouseId" in params) {
         return await apiFetch(
           `/api/warehouses/${params.warehouseId}/items`,
