@@ -1001,8 +1001,8 @@ export type ScannedAssortment = z.infer<
 >
 
 const OutboundPickSlotSchema = z.object({
-  assortmentId: z.number().int().nonnegative(),
-  assortmentCode: z.string(),
+  assortmentId: z.number().int().nonnegative().optional(),
+  assortmentCode: z.string().optional(),
   rackId: z.number().int().nonnegative(),
   rackMarker: z.string(),
   positionX: z.number().int().nonnegative(),
