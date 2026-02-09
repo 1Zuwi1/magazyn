@@ -4,7 +4,6 @@ import {
   Alert01Icon,
   ArrowRight02Icon,
   CheckmarkBadge01Icon,
-  FilterIcon,
   InboxIcon,
   Notification01Icon,
   Time01Icon,
@@ -17,15 +16,6 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import PaginationFull from "@/components/ui/pagination-component"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -35,38 +25,9 @@ import useNotifications, {
   useMarkNotification,
 } from "@/hooks/use-notifications"
 import { cn } from "@/lib/utils"
+import { getNotificationTitle, toTitleCase } from "../utils/helpers"
 
 type FeedFilter = "ALL" | "UNREAD"
-
-const ALERT_TYPE_OPTIONS = [
-  { value: "WEIGHT_EXCEEDED", label: "Przekroczenie wagi" },
-  { value: "TEMPERATURE_TOO_HIGH", label: "Temp. za wysoka" },
-  { value: "TEMPERATURE_TOO_LOW", label: "Temp. za niska" },
-  { value: "LOW_VISUAL_SIMILARITY", label: "Niska zgodność wizualna" },
-  { value: "ITEM_TEMPERATURE_TOO_HIGH", label: "Temp. produktu za wysoka" },
-  { value: "ITEM_TEMPERATURE_TOO_LOW", label: "Temp. produktu za niska" },
-  {
-    value: "EMBEDDING_GENERATION_COMPLETED",
-    label: "Generowanie embeddingów ukończone",
-  },
-  {
-    value: "EMBEDDING_GENERATION_FAILED",
-    label: "Generowanie embeddingów nieudane",
-  },
-  { value: "ASSORTMENT_EXPIRED", label: "Asortyment przeterminowany" },
-  { value: "ASSORTMENT_CLOSE_TO_EXPIRY", label: "Asortyment bliski terminu" },
-] as const
-
-const toTitleCase = (value: string): string =>
-  value
-    .split("_")
-    .filter(Boolean)
-    .map((part) => `${part.slice(0, 1)}${part.slice(1).toLowerCase()}`)
-    .join(" ")
-
-const getNotificationTitle = (notification: UserNotification): string =>
-  notification.alert.alertTypeDescription?.trim() ||
-  toTitleCase(notification.alert.alertType)
 
 function getNotificationIcon(alertType: string): IconSvgElement {
   switch (alertType) {
@@ -426,67 +387,8 @@ function NotificationDetailsPanel({
   )
 }
 
-function AlertTypeFilterDropdown({
-  selected,
-  onToggle,
-  onClear,
-}: {
-  selected: string[]
-  onToggle: (alertType: string) => void
-  onClear: () => void
-}) {
-  return (
-    <div className="flex items-center justify-between border-b p-2">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          className={cn(
-            "flex items-center gap-2 rounded-md px-3 py-2 font-medium text-sm transition-colors hover:bg-muted",
-            selected.length > 0 && "text-primary"
-          )}
-        >
-          <HugeiconsIcon className="size-4" icon={FilterIcon} />
-          Typ alertu
-          {selected.length > 0 && (
-            <Badge className="ml-1" variant="secondary">
-              {selected.length}
-            </Badge>
-          )}
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-64" side="bottom">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>Filtruj po typie alertu</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {ALERT_TYPE_OPTIONS.map((option) => (
-              <DropdownMenuCheckboxItem
-                checked={selected.includes(option.value)}
-                key={option.value}
-                onClick={() => onToggle(option.value)}
-              >
-                {option.label}
-              </DropdownMenuCheckboxItem>
-            ))}
-            {selected.length > 0 && (
-              <>
-                <DropdownMenuSeparator />
-                <button
-                  className="w-full rounded-sm px-2 py-1.5 text-center text-muted-foreground text-sm hover:bg-muted"
-                  onClick={onClear}
-                  type="button"
-                >
-                  Wyczyść filtry
-                </button>
-              </>
-            )}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  )
-}
-
 export default function NotificationsMain() {
   const [feedFilter, setFeedFilter] = useState<FeedFilter>("ALL")
-  const [alertTypeFilter, setAlertTypeFilter] = useState<string[]>([])
   const [page, setPage] = useState(1)
   const [selectedNotificationId, setSelectedNotificationId] = useState<
     number | null
@@ -496,7 +398,6 @@ export default function NotificationsMain() {
     page: page - 1,
     sortBy: "createdAt",
     sortDir: "desc",
-    alertType: alertTypeFilter.length > 0 ? alertTypeFilter : undefined,
   })
 
   const markBulkNotifications = useMarkBulkNotifications()
@@ -575,21 +476,6 @@ export default function NotificationsMain() {
 
   const handleFeedFilterChange = (nextFilter: FeedFilter) => {
     setFeedFilter(nextFilter)
-    setPage(1)
-  }
-
-  const handleToggleAlertType = (alertType: string) => {
-    setAlertTypeFilter((previous) => {
-      const next = previous.includes(alertType)
-        ? previous.filter((t) => t !== alertType)
-        : [...previous, alertType]
-      return next
-    })
-    setPage(1)
-  }
-
-  const handleClearAlertTypeFilter = () => {
-    setAlertTypeFilter([])
     setPage(1)
   }
 
@@ -692,12 +578,6 @@ export default function NotificationsMain() {
                 </button>
               </div>
             </div>
-
-            <AlertTypeFilterDropdown
-              onClear={handleClearAlertTypeFilter}
-              onToggle={handleToggleAlertType}
-              selected={alertTypeFilter}
-            />
 
             <ScrollArea className="h-112">
               <div className="space-y-2 p-2">

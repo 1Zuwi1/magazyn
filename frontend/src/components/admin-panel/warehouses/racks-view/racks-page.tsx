@@ -3,7 +3,7 @@
 import { Add01Icon, GridIcon, Package } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
-import { type ReactNode, useMemo, useState } from "react"
+import { type ReactNode, useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
@@ -84,16 +84,6 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
   const updateRackMutation = useUpdateRack()
   const deleteRackMutation = useDeleteRack()
   const importRacksMutation = useImportRacks()
-
-  const mappedRacks = useMemo(() => {
-    if (!apiWarehouse) {
-      return []
-    }
-
-    return (racksData?.content ?? []).filter(
-      (rack) => rack.warehouseId === apiWarehouse.id
-    )
-  }, [apiWarehouse, racksData?.content])
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedRack, setSelectedRack] = useState<Rack | undefined>(undefined)
@@ -246,7 +236,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
       <RackGrid
         onDelete={handleDeleteRack}
         onEdit={handleEditRack}
-        racks={mappedRacks}
+        racks={racksData?.content ?? []}
       />
     )
   }

@@ -15,6 +15,7 @@ import { format, formatDistanceToNow } from "date-fns"
 import { pl } from "date-fns/locale"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
+import { toTitleCase } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -71,13 +72,6 @@ const ALERT_STATUS_OPTIONS: {
   { value: "RESOLVED", label: "Rozwiązane" },
   { value: "DISMISSED", label: "Odrzucone" },
 ]
-
-const toTitleCase = (value: string): string =>
-  value
-    .split("_")
-    .filter(Boolean)
-    .map((part) => `${part.slice(0, 1)}${part.slice(1).toLowerCase()}`)
-    .join(" ")
 
 function getAlertIcon(alertType: string): IconSvgElement {
   switch (alertType) {

@@ -9,7 +9,6 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import type * as React from "react"
 import { useRef, useState } from "react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import PaginationFull from "@/components/ui/pagination-component"
 import { useElementSize } from "@/hooks/use-element-size"
@@ -31,18 +30,6 @@ interface RackGridViewProps {
   onSelectSlot?: (coordinates: SlotCoordinates) => void
   selectedSlotCoordinates?: SlotCoordinates | null
   rack?: Rack
-}
-
-function getOccupancyBadgeVariant(
-  occupancy: number
-): "secondary" | "warning" | "destructive" {
-  if (occupancy >= 90) {
-    return "destructive"
-  }
-  if (occupancy >= 75) {
-    return "warning"
-  }
-  return "secondary"
 }
 
 const ARROW_MOVES = {
@@ -96,8 +83,6 @@ export function RackGridView({
 
   // Calculate occupancy stats
   const totalSlots = rows * cols
-  const occupiedSlots = items.filter((item) => item !== null).length
-  const occupancyPercentage = Math.round((occupiedSlots / totalSlots) * 100)
 
   const handleSlotKeyDown = (
     event: React.KeyboardEvent<HTMLButtonElement>,
@@ -158,12 +143,6 @@ export function RackGridView({
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge
-            className="font-mono"
-            variant={getOccupancyBadgeVariant(occupancyPercentage)}
-          >
-            {occupancyPercentage}% zajęte
-          </Badge>
           <Button
             className="gap-1.5"
             onClick={() => setIsItemsDialogOpen(true)}

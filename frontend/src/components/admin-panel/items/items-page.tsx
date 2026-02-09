@@ -69,6 +69,7 @@ export default function ItemsMain() {
     isError: isItemsError,
     refetch: refetchItems,
   } = useItems({ page: page - 1 })
+  const { data: dangerousItemsData } = useItems({ size: 1, dangerous: true })
 
   const createItemMutation = useCreateItem()
   const updateItemMutation = useUpdateItem()
@@ -171,7 +172,7 @@ export default function ItemsMain() {
     toast.success(`Zaimportowano ${report.imported} produktów`)
   }
 
-  const dangerousCount = items.filter((i) => i.isDangerous).length
+  const dangerousCount = dangerousItemsData?.totalElements ?? 0
   const isMutating =
     createItemMutation.isPending ||
     updateItemMutation.isPending ||

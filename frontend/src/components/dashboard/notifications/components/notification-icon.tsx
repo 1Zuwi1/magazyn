@@ -14,7 +14,7 @@ import { formatDistanceToNow } from "date-fns"
 import { pl } from "date-fns/locale"
 import { AnimatePresence, motion } from "framer-motion"
 import Link from "next/link"
-import { type ReactNode, useMemo, useState } from "react"
+import { type ReactNode, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { ErrorEmptyState } from "@/components/ui/empty-state"
@@ -31,6 +31,7 @@ import useNotifications, {
   useMarkNotification,
 } from "@/hooks/use-notifications"
 import { cn } from "@/lib/utils"
+import { getNotificationTitle } from "../../utils/helpers"
 
 function getNotificationIcon(alertType: string): IconSvgElement {
   switch (alertType) {
@@ -67,17 +68,6 @@ function getStatusConfig(status: string) {
   }
 }
 
-const toTitleCase = (value: string): string =>
-  value
-    .split("_")
-    .filter(Boolean)
-    .map((part) => `${part.slice(0, 1)}${part.slice(1).toLowerCase()}`)
-    .join(" ")
-
-const getNotificationTitle = (notification: UserNotification): string =>
-  notification.alert.alertTypeDescription?.trim() ||
-  toTitleCase(notification.alert.alertType)
-
 export function NotificationInbox() {
   const [open, setOpen] = useState(false)
   const {
@@ -96,14 +86,21 @@ export function NotificationInbox() {
     }
   )
 
+  const { data: unreadNotificationsData } = useNotifications(
+    {
+      read: false,
+      size: 1,
+    },
+    {
+      enabled: open,
+    }
+  )
+
   const markBulkNotifications = useMarkBulkNotifications()
   const markNotification = useMarkNotification()
 
   const notifications = notificationsData?.content ?? []
-  const unreadCount = useMemo(
-    () => notifications.filter((notification) => !notification.read).length,
-    [notifications]
-  )
+  const unreadCount = unreadNotificationsData?.totalElements ?? 0
 
   const handleMarkAllRead = () => {
     markBulkNotifications.mutate({

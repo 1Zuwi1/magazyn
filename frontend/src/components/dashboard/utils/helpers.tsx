@@ -1,6 +1,7 @@
 import { differenceInCalendarDays, format, parseISO } from "date-fns"
 import { pl } from "date-fns/locale"
 import { toast } from "sonner"
+import type { UserNotification } from "@/hooks/use-notifications"
 import { FetchError } from "@/lib/fetcher"
 import type { RackAssortment } from "@/lib/schemas"
 import type { Item, ItemSlot } from "../types"
@@ -124,3 +125,13 @@ export const remToPixels = (rem: number) => {
     rem * Number.parseFloat(getComputedStyle(document.documentElement).fontSize)
   )
 }
+
+export const toTitleCase = (value: string): string =>
+  value
+    .split("_")
+    .filter(Boolean)
+    .map((part) => `${part.slice(0, 1)}${part.slice(1).toLowerCase()}`)
+    .join(" ")
+export const getNotificationTitle = (notification: UserNotification): string =>
+  notification.alert.alertTypeDescription?.trim() ||
+  toTitleCase(notification.alert.alertType)

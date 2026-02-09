@@ -312,13 +312,17 @@ export default function RackReportsMain() {
   const reports = reportsData?.content ?? []
   const isReportsPending = reportsQuery.isPending
   const isReportsError = reportsQuery.isError
-
   const totalReports = reportsData?.totalElements ?? 0
 
-  const alertCount = useMemo(
-    () => reports.filter((report) => report.alertTriggered).length,
-    [reports]
-  )
+  const alertReportsQuery = useRackReports({
+    page: 0,
+    size: 1,
+    sortBy: "createdAt",
+    sortDir: "desc",
+    withAlerts: true,
+  })
+
+  const alertCount = alertReportsQuery.data?.totalElements ?? 0
 
   const selectedReport = useMemo(
     () => reports.find((report) => report.id === selectedReportId) ?? null,
