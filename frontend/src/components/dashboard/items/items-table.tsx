@@ -14,6 +14,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -219,10 +220,17 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState(initialSearch)
   const tableData = items?.content ?? []
-
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   useEffect(() => {
-    setGlobalFilter(initialSearch)
-  }, [initialSearch])
+    if (initialSearch) {
+      setGlobalFilter(initialSearch)
+      const sp = new URLSearchParams(searchParams)
+      sp.delete("search")
+      router.push(`${pathname}?${sp.toString()}`)
+    }
+  }, [initialSearch, router, pathname, searchParams])
 
   const table = useReactTable({
     data: tableData,
