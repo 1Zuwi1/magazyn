@@ -44,6 +44,7 @@ export function DatePicker({
       <PopoverContent align="start" className="w-auto p-0">
         <Calendar
           defaultMonth={date}
+          locale={pl}
           mode="single"
           onSelect={(date) => {
             if (date) {

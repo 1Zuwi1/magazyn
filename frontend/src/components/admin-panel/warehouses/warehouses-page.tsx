@@ -108,7 +108,7 @@ export default function WarehousesMain() {
 
   if (isWarehousesPending) {
     warehousesContent = (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid @2xl:grid-cols-2 @5xl:grid-cols-3 gap-4">
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             className="overflow-hidden rounded-xl border bg-card"
@@ -184,7 +184,7 @@ export default function WarehousesMain() {
     )
   } else {
     warehousesContent = (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid @2xl:grid-cols-2 @5xl:grid-cols-3 gap-4">
         {warehouses.map((warehouse) => (
           <WarehouseCard
             key={warehouse.id}
@@ -198,7 +198,7 @@ export default function WarehousesMain() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="@container space-y-6">
       {/* Page Header */}
       <AdminPageHeader
         actions={

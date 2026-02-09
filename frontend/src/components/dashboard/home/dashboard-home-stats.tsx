@@ -36,8 +36,11 @@ const getOccupancyCardVariant = (
 
 function DashboardHomeStatsSkeleton() {
   return (
-    <section aria-label="Ładowanie statystyk magazynowych">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <section
+      aria-label="Ładowanie statystyk magazynowych"
+      className="@container"
+    >
+      <div className="grid @5xl:grid-cols-4 @lg:grid-cols-2 gap-4">
         {Array.from({ length: 4 }, (_, i) => (
           <div
             className="relative overflow-hidden rounded-2xl border bg-card p-5 shadow-sm"
@@ -155,12 +158,12 @@ export function DashboardHomeStats() {
   }
 
   return (
-    <section aria-labelledby="dashboard-stats">
+    <section aria-labelledby="dashboard-stats" className="@container">
       <h2 className="sr-only" id="dashboard-stats">
         Statystyki magazynowe
       </h2>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid @5xl:grid-cols-4 @lg:grid-cols-2 gap-4">
         <StatCard
           hint={`${formatNumber(totalRacks)} ${pluralize(totalRacks, "regał", "regały", "regałów")}`}
           icon={Package}

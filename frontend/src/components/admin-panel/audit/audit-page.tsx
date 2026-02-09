@@ -3,7 +3,7 @@
 import {
   Analytics01Icon,
   Calendar03Icon,
-  InboxIcon,
+  Cancel01Icon,
   PackageIcon,
   PackageReceiveIcon,
   Time01Icon,
@@ -16,7 +16,11 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
-import { ErrorEmptyState, FilterEmptyState } from "@/components/ui/empty-state"
+import {
+  EmptyState,
+  ErrorEmptyState,
+  FilterEmptyState,
+} from "@/components/ui/empty-state"
 import PaginationFull from "@/components/ui/pagination-component"
 import {
   Table,
@@ -71,24 +75,31 @@ function DateRangeFilter({
   const hasFilter = startDate !== "" || endDate !== ""
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <HugeiconsIcon
-        className="size-4 text-muted-foreground"
-        icon={Calendar03Icon}
-      />
-      <DatePicker
-        date={startDate ? new Date(startDate) : undefined}
-        onDateChange={onStartDateChange}
-      />
-      <span className="text-muted-foreground text-xs">&ndash;</span>
-      <DatePicker
-        date={endDate ? new Date(endDate) : undefined}
-        onDateChange={onEndDateChange}
-        setTimeToEndOfDay
-      />
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <HugeiconsIcon className="size-3.5" icon={Calendar03Icon} />
+        <span className="hidden text-xs sm:inline">Zakres dat</span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <DatePicker
+          date={startDate ? new Date(startDate) : undefined}
+          onDateChange={onStartDateChange}
+        />
+        <span className="text-muted-foreground text-xs">&ndash;</span>
+        <DatePicker
+          date={endDate ? new Date(endDate) : undefined}
+          onDateChange={onEndDateChange}
+          setTimeToEndOfDay
+        />
+      </div>
       {hasFilter && (
-        <Button onClick={onClear} size="xs" variant="ghost">
-          Wyczysc
+        <Button
+          className="size-6 text-muted-foreground hover:text-destructive"
+          onClick={onClear}
+          size="icon-xs"
+          variant="ghost"
+        >
+          <HugeiconsIcon className="size-3" icon={Cancel01Icon} />
         </Button>
       )}
     </div>
@@ -111,27 +122,20 @@ function TableSkeleton({ columns }: { columns: number }) {
   )
 }
 
-function EmptyState({ message }: { message: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-        <HugeiconsIcon
-          className="size-6 text-muted-foreground"
-          icon={InboxIcon}
-        />
-      </div>
-      <p className="mt-3 font-medium">{message}</p>
-      <p className="mt-1 text-muted-foreground text-sm">
-        Zmien filtry lub zakres dat, aby zobaczyc wyniki
-      </p>
-    </div>
-  )
-}
-
-function InboundOperationsTab() {
+function InboundTableContent({
+  startDate,
+  endDate,
+  onStartDateChange,
+  onEndDateChange,
+  onClearDates,
+}: {
+  startDate: string
+  endDate: string
+  onStartDateChange: (value: string) => void
+  onEndDateChange: (value: string) => void
+  onClearDates: () => void
+}) {
   const [page, setPage] = useState(1)
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
 
   const query = useAuditInboundOperations({
     page: page - 1,
@@ -146,136 +150,135 @@ function InboundOperationsTab() {
   const totalPages = query.data?.totalPages ?? 1
   const totalElements = query.data?.totalElements ?? 0
 
-  const handleClearDates = () => {
-    setStartDate("")
-    setEndDate("")
-    setPage(1)
-  }
-
-  const handleStartDateChange = (value: string) => {
-    setStartDate(value)
-    setPage(1)
-  }
-
-  const handleEndDateChange = (value: string) => {
-    setEndDate(value)
-    setPage(1)
-  }
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5">
         <DateRangeFilter
           endDate={endDate}
-          onClear={handleClearDates}
-          onEndDateChange={handleEndDateChange}
-          onStartDateChange={handleStartDateChange}
+          onClear={onClearDates}
+          onEndDateChange={onEndDateChange}
+          onStartDateChange={onStartDateChange}
           startDate={startDate}
         />
-        <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
-          <span className="font-mono font-semibold text-primary">
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono font-semibold text-primary text-sm tabular-nums">
             {totalElements}
           </span>
           <span className="text-muted-foreground text-xs">operacji</span>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/30">
-              <TableHead>Data</TableHead>
-              <TableHead>Przedmiot</TableHead>
-              <TableHead>Kod</TableHead>
-              <TableHead>Regal</TableHead>
-              <TableHead>Pozycja</TableHead>
-              <TableHead>Ilosc</TableHead>
-              <TableHead>Asortyment</TableHead>
-              <TableHead>Przyjal</TableHead>
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/30">
+            <TableHead>Data</TableHead>
+            <TableHead>Przedmiot</TableHead>
+            <TableHead>Kod</TableHead>
+            <TableHead>Regal</TableHead>
+            <TableHead>Pozycja</TableHead>
+            <TableHead>Ilosc</TableHead>
+            <TableHead>Asortyment</TableHead>
+            <TableHead>Przyjal</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {query.isPending && <TableSkeleton columns={8} />}
+          {query.isError && (
+            <TableRow>
+              <TableCell className="p-0" colSpan={8}>
+                <ErrorEmptyState
+                  onRetry={() => {
+                    query.refetch()
+                  }}
+                />
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {query.isPending && <TableSkeleton columns={8} />}
-            {query.isError && (
-              <TableRow>
-                <TableCell className="p-0" colSpan={8}>
-                  <ErrorEmptyState
-                    onRetry={() => {
-                      query.refetch()
-                    }}
+          )}
+          {!(query.isPending || query.isError) && operations.length === 0 && (
+            <TableRow>
+              <TableCell className="p-0" colSpan={8}>
+                {startDate || endDate ? (
+                  <FilterEmptyState />
+                ) : (
+                  <EmptyState
+                    description="Nie znaleziono żadnych operacji w bazie danych."
+                    title="Brak operacji przyjęcia"
                   />
-                </TableCell>
-              </TableRow>
-            )}
-            {!(query.isPending || query.isError) && operations.length === 0 && (
-              <TableRow>
-                <TableCell className="p-0" colSpan={8}>
-                  <FilterEmptyState onClear={handleClearDates} />
-                </TableCell>
-              </TableRow>
-            )}
-            {operations.map((op: InboundOperation) => (
-              <TableRow key={op.id}>
-                <TableCell>
-                  <div className="flex items-center gap-1.5">
-                    <HugeiconsIcon
-                      className="size-3.5 text-muted-foreground"
-                      icon={Time01Icon}
-                    />
-                    <span className="text-xs">
-                      {formatDateTime(op.operationTimestamp)}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="font-medium text-sm">{op.itemName}</span>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{op.itemCode}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{op.rackMarker}</Badge>
-                </TableCell>
-                <TableCell>
-                  <span className="font-mono text-muted-foreground text-xs">
-                    [{op.positionX}, {op.positionY}]
+                )}
+              </TableCell>
+            </TableRow>
+          )}
+          {operations.map((op: InboundOperation) => (
+            <TableRow key={op.id}>
+              <TableCell>
+                <div className="flex items-center gap-1.5">
+                  <HugeiconsIcon
+                    className="size-3.5 text-muted-foreground"
+                    icon={Time01Icon}
+                  />
+                  <span className="text-xs">
+                    {formatDateTime(op.operationTimestamp)}
                   </span>
-                </TableCell>
-                <TableCell>
-                  <span className="font-mono font-semibold">{op.quantity}</span>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{op.assortmentCode}</Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1.5">
-                    <HugeiconsIcon
-                      className="size-3.5 text-muted-foreground"
-                      icon={UserIcon}
-                    />
-                    <span className="text-sm">{op.receivedByName}</span>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </div>
+              </TableCell>
+              <TableCell>
+                <span className="font-medium text-sm">{op.itemName}</span>
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline">{op.itemCode}</Badge>
+              </TableCell>
+              <TableCell>
+                <Badge variant="secondary">{op.rackMarker}</Badge>
+              </TableCell>
+              <TableCell>
+                <span className="font-mono text-muted-foreground text-xs">
+                  [{op.positionX}, {op.positionY}]
+                </span>
+              </TableCell>
+              <TableCell>
+                <span className="font-mono font-semibold">{op.quantity}</span>
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline">{op.assortmentCode}</Badge>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1.5">
+                  <HugeiconsIcon
+                    className="size-3.5 text-muted-foreground"
+                    icon={UserIcon}
+                  />
+                  <span className="text-sm">{op.receivedByName}</span>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
-        <PaginationFull
-          currentPage={page}
-          setPage={setPage}
-          totalPages={totalPages}
-          variant="compact"
-        />
-      </div>
-    </div>
+      <PaginationFull
+        currentPage={page}
+        setPage={setPage}
+        totalPages={totalPages}
+        variant="compact"
+      />
+    </>
   )
 }
 
-function OutboundOperationsTab() {
+function OutboundTableContent({
+  startDate,
+  endDate,
+  onStartDateChange,
+  onEndDateChange,
+  onClearDates,
+}: {
+  startDate: string
+  endDate: string
+  onStartDateChange: (value: string) => void
+  onEndDateChange: (value: string) => void
+  onClearDates: () => void
+}) {
   const [page, setPage] = useState(1)
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
 
   const query = useAuditOutboundOperations({
     page: page - 1,
@@ -290,139 +293,143 @@ function OutboundOperationsTab() {
   const totalPages = query.data?.totalPages ?? 1
   const totalElements = query.data?.totalElements ?? 0
 
-  const handleClearDates = () => {
-    setStartDate("")
-    setEndDate("")
-    setPage(1)
-  }
-
-  const handleStartDateChange = (value: string) => {
-    setStartDate(value)
-    setPage(1)
-  }
-
-  const handleEndDateChange = (value: string) => {
-    setEndDate(value)
-    setPage(1)
-  }
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5">
         <DateRangeFilter
           endDate={endDate}
-          onClear={handleClearDates}
-          onEndDateChange={handleEndDateChange}
-          onStartDateChange={handleStartDateChange}
+          onClear={onClearDates}
+          onEndDateChange={onEndDateChange}
+          onStartDateChange={onStartDateChange}
           startDate={startDate}
         />
-        <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
-          <span className="font-mono font-semibold text-primary">
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono font-semibold text-primary text-sm tabular-nums">
             {totalElements}
           </span>
           <span className="text-muted-foreground text-xs">operacji</span>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/30">
-              <TableHead>Data</TableHead>
-              <TableHead>Przedmiot</TableHead>
-              <TableHead>Kod</TableHead>
-              <TableHead>Regal</TableHead>
-              <TableHead>Pozycja</TableHead>
-              <TableHead>Ilosc</TableHead>
-              <TableHead>Asortyment</TableHead>
-              <TableHead>Wydal</TableHead>
-              <TableHead>FIFO</TableHead>
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/30">
+            <TableHead>Data</TableHead>
+            <TableHead>Przedmiot</TableHead>
+            <TableHead>Kod</TableHead>
+            <TableHead>Regal</TableHead>
+            <TableHead>Pozycja</TableHead>
+            <TableHead>Ilosc</TableHead>
+            <TableHead>Asortyment</TableHead>
+            <TableHead>Wydal</TableHead>
+            <TableHead>FIFO</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {query.isPending && <TableSkeleton columns={9} />}
+          {query.isError && (
+            <TableRow>
+              <TableCell className="p-0" colSpan={9}>
+                <ErrorEmptyState
+                  onRetry={() => {
+                    query.refetch()
+                  }}
+                />
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {query.isPending && <TableSkeleton columns={9} />}
-            {query.isError && (
-              <TableRow>
-                <TableCell className="p-0" colSpan={9}>
-                  <ErrorEmptyState
-                    onRetry={() => {
-                      query.refetch()
-                    }}
+          )}
+          {!(query.isPending || query.isError) && operations.length === 0 && (
+            <TableRow>
+              <TableCell className="p-0" colSpan={9}>
+                {startDate || endDate ? (
+                  <FilterEmptyState />
+                ) : (
+                  <EmptyState
+                    description="Nie znaleziono żadnych operacji w bazie danych."
+                    title="Brak operacji wydania"
                   />
-                </TableCell>
-              </TableRow>
-            )}
-            {!(query.isPending || query.isError) && operations.length === 0 && (
-              <TableRow>
-                <TableCell className="p-0" colSpan={9}>
-                  <EmptyState message="Brak operacji wydania" />
-                </TableCell>
-              </TableRow>
-            )}
-            {operations.map((op: OutboundOperation) => (
-              <TableRow key={op.id}>
-                <TableCell>
-                  <div className="flex items-center gap-1.5">
-                    <HugeiconsIcon
-                      className="size-3.5 text-muted-foreground"
-                      icon={Time01Icon}
-                    />
-                    <span className="text-xs">
-                      {formatDateTime(op.operationTimestamp)}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="font-medium text-sm">{op.itemName}</span>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{op.itemCode}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{op.rackMarker}</Badge>
-                </TableCell>
-                <TableCell>
-                  <span className="font-mono text-muted-foreground text-xs">
-                    [{op.positionX}, {op.positionY}]
+                )}
+              </TableCell>
+            </TableRow>
+          )}
+          {operations.map((op: OutboundOperation) => (
+            <TableRow key={op.id}>
+              <TableCell>
+                <div className="flex items-center gap-1.5">
+                  <HugeiconsIcon
+                    className="size-3.5 text-muted-foreground"
+                    icon={Time01Icon}
+                  />
+                  <span className="text-xs">
+                    {formatDateTime(op.operationTimestamp)}
                   </span>
-                </TableCell>
-                <TableCell>
-                  <span className="font-mono font-semibold">{op.quantity}</span>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{op.assortmentCode}</Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1.5">
-                    <HugeiconsIcon
-                      className="size-3.5 text-muted-foreground"
-                      icon={UserIcon}
-                    />
-                    <span className="text-sm">{op.issuedByName}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={op.fifoCompliant ? "success" : "warning"}>
-                    {op.fifoCompliant ? "Tak" : "Nie"}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </div>
+              </TableCell>
+              <TableCell>
+                <span className="font-medium text-sm">{op.itemName}</span>
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline">{op.itemCode}</Badge>
+              </TableCell>
+              <TableCell>
+                <Badge variant="secondary">{op.rackMarker}</Badge>
+              </TableCell>
+              <TableCell>
+                <span className="font-mono text-muted-foreground text-xs">
+                  [{op.positionX}, {op.positionY}]
+                </span>
+              </TableCell>
+              <TableCell>
+                <span className="font-mono font-semibold">{op.quantity}</span>
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline">{op.assortmentCode}</Badge>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1.5">
+                  <HugeiconsIcon
+                    className="size-3.5 text-muted-foreground"
+                    icon={UserIcon}
+                  />
+                  <span className="text-sm">{op.issuedByName}</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <Badge variant={op.fifoCompliant ? "success" : "warning"}>
+                  {op.fifoCompliant ? "Tak" : "Nie"}
+                </Badge>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
-        <PaginationFull
-          currentPage={page}
-          setPage={setPage}
-          totalPages={totalPages}
-          variant="compact"
-        />
-      </div>
-    </div>
+      <PaginationFull
+        currentPage={page}
+        setPage={setPage}
+        totalPages={totalPages}
+        variant="compact"
+      />
+    </>
   )
 }
 
 export default function AuditMain() {
+  const [inboundStartDate, setInboundStartDate] = useState("")
+  const [inboundEndDate, setInboundEndDate] = useState("")
+  const [outboundStartDate, setOutboundStartDate] = useState("")
+  const [outboundEndDate, setOutboundEndDate] = useState("")
+
+  const handleClearInboundDates = () => {
+    setInboundStartDate("")
+    setInboundEndDate("")
+  }
+
+  const handleClearOutboundDates = () => {
+    setOutboundStartDate("")
+    setOutboundEndDate("")
+  }
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
@@ -436,24 +443,48 @@ export default function AuditMain() {
       />
 
       <Tabs defaultValue="inbound">
-        <TabsList>
-          <TabsTrigger value="inbound">
-            <HugeiconsIcon className="size-3.5" icon={PackageReceiveIcon} />
-            Przyjecia
-          </TabsTrigger>
-          <TabsTrigger value="outbound">
-            <HugeiconsIcon className="size-3.5" icon={PackageIcon} />
-            Wydania
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+          <div className="border-b px-4">
+            <TabsList className="h-auto" variant="line">
+              <TabsTrigger className="py-2.5" value="inbound">
+                <HugeiconsIcon className="size-3.5" icon={PackageReceiveIcon} />
+                Przyjecia
+              </TabsTrigger>
+              <TabsTrigger className="py-2.5" value="outbound">
+                <HugeiconsIcon className="size-3.5" icon={PackageIcon} />
+                Wydania
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        <TabsContent value="inbound">
-          <InboundOperationsTab />
-        </TabsContent>
+          <TabsContent value="inbound">
+            <InboundTableContent
+              endDate={inboundEndDate}
+              onClearDates={handleClearInboundDates}
+              onEndDateChange={(v) => {
+                setInboundEndDate(v)
+              }}
+              onStartDateChange={(v) => {
+                setInboundStartDate(v)
+              }}
+              startDate={inboundStartDate}
+            />
+          </TabsContent>
 
-        <TabsContent value="outbound">
-          <OutboundOperationsTab />
-        </TabsContent>
+          <TabsContent value="outbound">
+            <OutboundTableContent
+              endDate={outboundEndDate}
+              onClearDates={handleClearOutboundDates}
+              onEndDateChange={(v) => {
+                setOutboundEndDate(v)
+              }}
+              onStartDateChange={(v) => {
+                setOutboundStartDate(v)
+              }}
+              startDate={outboundStartDate}
+            />
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   )

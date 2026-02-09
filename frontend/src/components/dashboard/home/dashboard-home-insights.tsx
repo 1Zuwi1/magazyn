@@ -4,7 +4,10 @@ import DashboardTopOccupiedWarehousesCard from "./dashboard-top-occupied-warehou
 
 export function DashboardHomeInsights() {
   return (
-    <section aria-labelledby="dashboard-insights" className="space-y-4">
+    <section
+      aria-labelledby="dashboard-insights"
+      className="@container space-y-4"
+    >
       <div>
         <h2 className="font-semibold text-xl" id="dashboard-insights">
           Wgląd operacyjny
@@ -13,7 +16,7 @@ export function DashboardHomeInsights() {
           Najważniejsze alerty, ostatnie przyjęcia i obłożenie magazynów.
         </p>
       </div>
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid @5xl:grid-cols-3 @md:grid-cols-2 gap-6">
         <DashboardOperationalAlertsCard />
         <DashboardRecentArrivalsCard />
         <DashboardTopOccupiedWarehousesCard />

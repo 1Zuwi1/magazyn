@@ -122,7 +122,7 @@ export const WarehouseContent = () => {
       </div>
 
       {/* Warehouse Grid */}
-      <section className="space-y-4">
+      <section className="@container space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-lg">Twoje Magazyny</h2>
         </div>

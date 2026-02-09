@@ -66,7 +66,7 @@ const getOccupancyBadgeVariant = (
 }
 function WarehouseGridSkeleton() {
   return (
-    <div className="grid gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid @5xl:grid-cols-3 @xl:grid-cols-2 gap-4 sm:gap-6">
       {Array.from({ length: 6 }).map((_, index) => (
         <Card
           className="relative overflow-hidden"
@@ -150,7 +150,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
   }
 
   return (
-    <div className="grid gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid @5xl:grid-cols-3 @xl:grid-cols-2 gap-4 sm:gap-6">
       {warehouses.map((warehouse) => {
         const occupancyPercentage = getOccupancyPercentage(
           warehouse.occupiedSlots,
