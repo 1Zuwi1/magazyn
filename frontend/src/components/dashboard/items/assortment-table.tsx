@@ -17,6 +17,8 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
+import { formatDate, formatDistanceToNow } from "date-fns"
+import { pl } from "date-fns/locale"
 import Link from "next/link"
 import { useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
@@ -76,7 +78,6 @@ const EXPIRY_FILTER_OPTIONS: {
   { value: "DAYS_14", label: "Do 14 dni" },
 ]
 
-const dateFormatter = new Intl.DateTimeFormat("pl-PL")
 const GS1_WITH_SERIAL_PATTERN = /^11\d{6}01(\d{14})21\d+$/
 const GS1_AI_01_PATTERN = /\(01\)(\d{14})/
 const EAN14_PATTERN = /^\d{14}$/
@@ -87,7 +88,7 @@ const formatDateLabel = (value: string): string => {
   if (Number.isNaN(parsedDate.getTime())) {
     return "Brak danych"
   }
-  return dateFormatter.format(parsedDate)
+  return formatDate(parsedDate, "dd.MM.yyyy")
 }
 
 const getDaysToExpiry = (value: string): number | undefined => {
@@ -150,17 +151,21 @@ function ExpiryStatusBadge({ value }: { value: string }) {
   if (daysUntilExpiry < 0) {
     return <Badge variant="destructive">Przeterminowane</Badge>
   }
+  const label = formatDistanceToNow(new Date(value), {
+    addSuffix: true,
+    locale: pl,
+  })
   if (daysUntilExpiry <= 3) {
-    return <Badge variant="destructive">za {daysUntilExpiry} dni</Badge>
+    return <Badge variant="destructive">{label}</Badge>
   }
   if (daysUntilExpiry <= 7) {
     return (
       <Badge className="bg-yellow-500 text-white" variant="default">
-        za {daysUntilExpiry} dni
+        {label}
       </Badge>
     )
   }
-  return <Badge variant="outline">za {daysUntilExpiry} dni</Badge>
+  return <Badge variant="outline">{label}</Badge>
 }
 
 function matchesExpiryFilter(
