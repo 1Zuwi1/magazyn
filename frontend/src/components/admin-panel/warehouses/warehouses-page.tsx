@@ -14,6 +14,7 @@ import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
 import { Button } from "@/components/ui/button"
+import PaginationFull from "@/components/ui/pagination-component"
 import { Skeleton } from "@/components/ui/skeleton"
 import useWarehouses, {
   useCreateWarehouse,
@@ -33,11 +34,14 @@ import {
 type ApiWarehouse = WarehousesList["content"][number]
 
 export default function WarehousesMain() {
+  const [page, setPage] = useState(1)
   const {
     data: warehousesData,
     isPending: isWarehousesPending,
     isError: isWarehousesError,
-  } = useWarehouses({ page: 0, size: 1 })
+  } = useWarehouses({
+    page: page - 1,
+  })
   const warehouses = warehousesData?.content ?? []
   const createWarehouseMutation = useCreateWarehouse()
   const updateWarehouseMutation = useUpdateWarehouse()
@@ -248,6 +252,12 @@ export default function WarehousesMain() {
 
       {/* Warehouse Grid */}
       {warehousesContent}
+
+      <PaginationFull
+        currentPage={page}
+        setPage={setPage}
+        totalPages={warehousesData ? warehousesData.totalPages : 1}
+      />
 
       {/* Dialogs */}
       <WarehouseDialog

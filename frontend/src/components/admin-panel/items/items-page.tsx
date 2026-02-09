@@ -272,7 +272,7 @@ export default function ItemsMain() {
       />
 
       <PhotoPromptDialog
-        hasExistingPhoto={!!photoItem?.imageUrl}
+        hasExistingPhoto
         itemId={photoItem ? Number(photoItem.id) : null}
         onOpenChange={setPhotoDialogOpen}
         open={photoDialogOpen}

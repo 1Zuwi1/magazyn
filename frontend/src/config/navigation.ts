@@ -1,6 +1,7 @@
 import {
   Alert01Icon,
   Analytics01Icon,
+  Attachment01Icon,
   Bell,
   Package,
   Settings,
@@ -75,6 +76,11 @@ export const navigationItems: NavigationItem[] = [
         title: "Alerty",
         href: "/admin/alerts",
         icon: Alert01Icon,
+      },
+      {
+        title: "Raporty regałów",
+        href: "/admin/rack-reports",
+        icon: Attachment01Icon,
       },
       {
         title: "Audyt operacji",
