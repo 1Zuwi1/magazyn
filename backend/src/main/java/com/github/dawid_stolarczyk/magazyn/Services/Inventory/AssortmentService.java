@@ -58,7 +58,7 @@ public class AssortmentService {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
 
         var spec = AssortmentSpecifications.withFilters(
-                search, weekToExpire, null, null, null);
+                search, weekToExpire, null, null, null, null);
 
         Page<AssortmentDto> page = assortmentRepository.findAll(spec, pageable)
                 .map(this::mapToDto);
@@ -104,17 +104,50 @@ public class AssortmentService {
         }
 
         var spec = AssortmentSpecifications.withFilters(
-                search, weekToExpire, rackId, positionX, positionY);
+                search, weekToExpire, rackId, positionX, positionY, null);
 
         return assortmentRepository.findAll(spec, pageable)
                 .map(this::mapToDtoWithItem);
     }
 
-    public Page<AssortmentWithItemDto> getAssortmentsByWarehouseIdPaged(Long warehouseId, HttpServletRequest request, Pageable pageable) {
+    public Page<AssortmentWithItemDto> getAssortmentsByWarehouseIdPaged(
+            Long warehouseId,
+            HttpServletRequest request,
+            Pageable pageable,
+            ArrayList<ExpiryFilters> expiryFilters,
+            String search,
+            Boolean weekToExpire) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
 
-        return assortmentRepository.findByRack_WarehouseId(warehouseId, pageable)
+        var spec = AssortmentSpecifications.withFilters(
+                search, weekToExpire, null, null, null, warehouseId);
+
+        Page<AssortmentWithItemDto> page = assortmentRepository.findAll(spec, pageable)
                 .map(this::mapToDtoWithItem);
+
+        if (!expiryFilters.isEmpty() && !expiryFilters.contains(ExpiryFilters.ALL)) {
+            Instant now = Instant.now();
+            int maxDays = expiryFilters.stream()
+                    .filter(f -> f != ExpiryFilters.EXPIRED)
+                    .mapToInt(f -> Integer.parseInt(f.name().split("_")[1]))
+                    .max()
+                    .orElse(0);
+            Instant threshold = now.plus(maxDays, ChronoUnit.DAYS);
+            log.info("Applying expiry filters: {}, threshold date: {}", expiryFilters, threshold);
+
+
+            page = new PageImpl<>(page
+                    .stream()
+                    .filter(dto -> dto.getExpiresAt() != null
+                            && dto.getExpiresAt().toInstant().isBefore(threshold)
+                            && dto.getExpiresAt().toInstant().isAfter(now)
+                            || (dto.getExpiresAt() != null
+                            && expiryFilters.contains(ExpiryFilters.EXPIRED)
+                            && dto.getExpiresAt().toInstant().isBefore(now))
+                    )
+                    .toList(), pageable, page.getTotalElements());
+        }
+        return page;
     }
 
     public AssortmentDto getAssortmentById(Long id, HttpServletRequest request) {

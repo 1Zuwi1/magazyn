@@ -17,7 +17,8 @@ public class AssortmentSpecifications {
             Boolean weekToExpire,
             Long rackId,
             Integer positionX,
-            Integer positionY) {
+            Integer positionY,
+            Long warehouseId) {
 
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -59,6 +60,11 @@ public class AssortmentSpecifications {
             // Position Y filter
             if (positionY != null) {
                 predicates.add(criteriaBuilder.equal(root.get("positionY"), positionY));
+            }
+
+            // Warehouse filter (for /warehouses/{warehouseId}/assortments endpoint)
+            if (warehouseId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("rack").get("warehouse").get("id"), warehouseId));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
