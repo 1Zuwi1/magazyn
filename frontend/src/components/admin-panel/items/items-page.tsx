@@ -6,6 +6,7 @@ import {
   Package,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useDebouncedValue } from "@tanstack/react-pacer"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
@@ -63,12 +64,20 @@ const buildItemMutationData = (data: ItemFormData) => {
 
 export default function ItemsMain() {
   const [page, setPage] = useState(1)
+  const [search, setSearch] = useState("")
+  const [debouncedSearch] = useDebouncedValue(search, {
+    wait: 500,
+  })
+  const searchQuery = debouncedSearch.trim()
   const {
     data: itemsData,
     isPending: isItemsPending,
     isError: isItemsError,
     refetch: refetchItems,
-  } = useItems({ page: page - 1 })
+  } = useItems({
+    page: page - 1,
+    search: searchQuery || undefined,
+  })
   const { data: dangerousItemsData } = useItems({ size: 1, dangerous: true })
 
   const createItemMutation = useCreateItem()
@@ -108,6 +117,11 @@ export default function ItemsMain() {
   const handleSetPage = (nextPage: number) => {
     const boundedPage = Math.min(Math.max(nextPage, 1), totalPages)
     setPage(boundedPage)
+  }
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value)
+    setPage(1)
   }
 
   const handleEditItem = (item: DashboardItem) => {
@@ -232,14 +246,17 @@ export default function ItemsMain() {
 
       <AdminItemsTable
         currentPage={page}
+        debouncedSearch={searchQuery}
         isError={isItemsError}
         isLoading={isItemsPending}
         items={items}
         onDelete={handleDeleteItem}
         onEdit={handleEditItem}
+        onSearchChange={handleSearchChange}
         onSetPage={handleSetPage}
         onUploadPhoto={handleUploadPhoto}
         refetch={refetchItems}
+        search={search}
         totalPages={totalPages}
       />
 

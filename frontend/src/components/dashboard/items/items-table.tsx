@@ -1,12 +1,10 @@
 "use client"
 
+import { useDebouncedValue } from "@tanstack/react-pacer"
 import {
   type ColumnDef,
-  type ColumnFiltersState,
-  type FilterFn,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
   getSortedRowModel,
   type SortingState,
   useReactTable,
@@ -211,56 +209,50 @@ const itemsColumns: ColumnDef<Item>[] = [
   },
 ]
 
-const globalFilterFn: FilterFn<Item> = (row, _columnId, filterValue) => {
-  const searchValue = filterValue?.toString().trim().toLowerCase()
-  if (!searchValue) {
-    return true
-  }
-  return (
-    row.original.name.toLowerCase().includes(searchValue) ||
-    row.original.code.toLowerCase().includes(searchValue) ||
-    (row.original.comment?.toLowerCase().includes(searchValue) ?? false)
-  )
-}
-
 export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
   const [page, setPage] = useState(1)
+  const [search, setSearch] = useState(initialSearch)
+  const [debouncedSearch] = useDebouncedValue(search, { wait: 500 })
+
   const {
     data: items,
     isPending,
     isError,
     refetch,
-  } = useItems({ page: page - 1, size: 10 })
+  } = useItems({
+    page: page - 1,
+    size: 10,
+    search: debouncedSearch.trim() || undefined,
+  })
   const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [globalFilter, setGlobalFilter] = useState(initialSearch)
   const tableData = items?.content ?? []
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
+
   useEffect(() => {
     if (initialSearch) {
-      setGlobalFilter(initialSearch)
+      setSearch(initialSearch)
+      setPage(1)
       const sp = new URLSearchParams(searchParams)
       sp.delete("search")
       router.push(`${pathname}?${sp.toString()}`)
     }
   }, [initialSearch, router, pathname, searchParams])
 
+  const handleSearchChange = (value: string) => {
+    setSearch(value)
+    setPage(1)
+  }
+
   const table = useReactTable({
     data: tableData,
     columns: itemsColumns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn,
     state: {
       sorting,
-      columnFilters,
-      globalFilter,
     },
   })
 
@@ -272,9 +264,9 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
     return <ErrorEmptyState onRetry={() => refetch()} />
   }
 
-  const filteredCount = table.getFilteredRowModel().rows.length
-  const totalCount = items?.totalElements ?? tableData.length
-  const isFiltered = globalFilter.length > 0
+  const filteredCount = tableData.length
+  const totalCount = items?.totalElements ?? filteredCount
+  const isFiltered = debouncedSearch.trim().length > 0
   const totalPages = items?.totalPages ?? 1
 
   const itemLabel = {
@@ -284,7 +276,7 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
   }
 
   const clearAllFilters = () => {
-    setGlobalFilter("")
+    handleSearchChange("")
   }
 
   return (
@@ -294,9 +286,9 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
           <FilterGroup>
             <SearchInput
               aria-label="Szukaj przedmiotów"
-              onChange={setGlobalFilter}
+              onChange={handleSearchChange}
               placeholder="Szukaj po nazwie, kodzie lub komentarzu..."
-              value={globalFilter}
+              value={search}
             />
             {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}
           </FilterGroup>

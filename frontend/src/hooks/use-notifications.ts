@@ -37,29 +37,42 @@ export function useMarkNotification() {
   return useApiMutation({
     mutationFn: ({
       notificationId,
-      ...params
-    }: InferApiInput<typeof ApiMarkNotificationSchema, "PATCH"> & {
+      read,
+    }: {
       notificationId: string
+      read: boolean
     }) =>
       apiFetch(
-        `/api/notifications/${notificationId}/mark`,
+        `/api/notifications/${notificationId}?read=${read}`,
         ApiMarkNotificationSchema,
         {
           method: "PATCH",
-          body: params,
+          body: null,
         }
       ),
+    onSuccess: (_, __, ___, context) => {
+      context.client.invalidateQueries({
+        queryKey: NOTIFICATIONS_QUERY_KEY,
+      })
+    },
   })
 }
 
 export function useMarkBulkNotifications() {
   return useApiMutation({
-    mutationFn: (
-      params: InferApiInput<typeof ApiMarkBulkNotificationsSchema, "PATCH">
-    ) =>
-      apiFetch("/api/notifications/bulk", ApiMarkBulkNotificationsSchema, {
-        method: "PATCH",
-        body: params,
-      }),
+    mutationFn: ({ read }: { read: boolean }) =>
+      apiFetch(
+        `/api/notifications/bulk?read=${read}`,
+        ApiMarkBulkNotificationsSchema,
+        {
+          method: "PATCH",
+          body: null,
+        }
+      ),
+    onSuccess: (_, __, ___, context) => {
+      context.client.invalidateQueries({
+        queryKey: NOTIFICATIONS_QUERY_KEY,
+      })
+    },
   })
 }

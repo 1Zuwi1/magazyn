@@ -394,29 +394,40 @@ export default function NotificationsMain() {
     number | null
   >(null)
 
-  const allNotificationsQuery = useNotifications({
+  const notificationsQuery = useNotifications({
     page: page - 1,
     sortBy: "createdAt",
     sortDir: "desc",
+    read: feedFilter === "UNREAD" ? false : undefined,
   })
+  const { data: totalNotificationsData, refetch: refetchTotalNotifications } =
+    useNotifications({
+      page: 0,
+      size: 1,
+    })
+  const { data: unreadNotificationsData, refetch: refetchUnreadNotifications } =
+    useNotifications({
+      page: 0,
+      size: 1,
+      read: false,
+    })
 
   const markBulkNotifications = useMarkBulkNotifications()
   const markNotification = useMarkNotification()
 
-  const notificationsData = allNotificationsQuery.data
-  const allNotifications = notificationsData?.content ?? []
-  const isNotificationsPending = allNotificationsQuery.isPending
-  const isNotificationsError = allNotificationsQuery.isError
+  const notificationsData = notificationsQuery.data
+  const notifications = notificationsData?.content ?? []
+  const isNotificationsPending = notificationsQuery.isPending
+  const isNotificationsError = notificationsQuery.isError
+  const totalNotifications = totalNotificationsData?.totalElements ?? 0
+  const unreadCount = unreadNotificationsData?.totalElements ?? 0
+  const totalPages = notificationsData?.totalPages ?? 1
 
-  const notifications =
-    feedFilter === "UNREAD"
-      ? allNotifications.filter((notification) => !notification.read)
-      : allNotifications
-
-  const totalNotifications = allNotificationsQuery.data?.totalElements ?? 0
-  const unreadCount = allNotifications.filter(
-    (notification) => !notification.read
-  ).length
+  const refreshNotificationQueries = () => {
+    notificationsQuery.refetch()
+    refetchTotalNotifications()
+    refetchUnreadNotifications()
+  }
 
   useEffect(() => {
     setSelectedNotificationId((currentSelection) => {
@@ -445,15 +456,20 @@ export default function NotificationsMain() {
     [notifications, selectedNotificationId]
   )
 
-  const totalPages = notificationsData?.totalPages ?? 1
-
   const handleSelectNotification = (notification: UserNotification) => {
     setSelectedNotificationId(notification.id)
     if (!notification.read) {
-      markNotification.mutate({
-        notificationId: notification.id.toString(),
-        read: true,
-      })
+      markNotification.mutate(
+        {
+          notificationId: notification.id.toString(),
+          read: true,
+        },
+        {
+          onSuccess: () => {
+            refreshNotificationQueries()
+          },
+        }
+      )
     }
   }
 

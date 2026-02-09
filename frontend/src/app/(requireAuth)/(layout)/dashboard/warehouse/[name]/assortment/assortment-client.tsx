@@ -1,8 +1,13 @@
 "use client"
 
 import { PackageIcon } from "@hugeicons/core-free-icons"
-import { useState } from "react"
-import { AssortmentTableWithData } from "@/components/dashboard/items/assortment-table"
+import { useDebouncedValue } from "@tanstack/react-pacer"
+import type { SortingState } from "@tanstack/react-table"
+import { useMemo, useState } from "react"
+import {
+  AssortmentTableWithData,
+  type ExpiryFilters,
+} from "@/components/dashboard/items/assortment-table"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { ErrorEmptyState } from "@/components/ui/empty-state"
 import useAssortments from "@/hooks/use-assortment"
@@ -16,6 +21,32 @@ export default function AssortmentClient() {
     })
 
   const [page, setPage] = useState(1)
+  const [search, setSearch] = useState("")
+  const [expiryFilter, setExpiryFilter] = useState<ExpiryFilters>("ALL")
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [debouncedSearch] = useDebouncedValue(search, {
+    wait: 500,
+  })
+  const searchQuery = debouncedSearch.trim()
+
+  const sortingParams = useMemo(() => {
+    const primarySorting = sorting[0]
+    if (!primarySorting) {
+      return {
+        sortBy: undefined,
+        sortDir: undefined,
+      }
+    }
+
+    const sortBy = primarySorting.id
+
+    const sortDir: "asc" | "desc" = primarySorting.desc ? "desc" : "asc"
+
+    return {
+      sortBy,
+      sortDir: sortBy ? sortDir : undefined,
+    }
+  }, [sorting])
 
   const {
     data: warehouse,
@@ -34,6 +65,11 @@ export default function AssortmentClient() {
   } = useAssortments({
     warehouseId: warehouse?.id ?? -1,
     page: page - 1,
+    size: 10,
+    search: searchQuery || undefined,
+    expiryFilters: expiryFilter === "ALL" ? undefined : [expiryFilter],
+    sortBy: sortingParams.sortBy,
+    sortDir: sortingParams.sortDir,
   })
 
   const isError = isWarehouseError || isAssortmentsError
@@ -83,9 +119,16 @@ export default function AssortmentClient() {
 
       <AssortmentTableWithData
         assortmentData={assortments}
+        debouncedSearch={searchQuery}
+        expiryFilter={expiryFilter}
         isLoading={isLoading}
+        onExpiryFilterChange={setExpiryFilter}
+        onSearchChange={setSearch}
+        onSortingChange={setSorting}
         page={page}
+        search={search}
         setPage={setPage}
+        sorting={sorting}
       />
     </div>
   )

@@ -1,13 +1,14 @@
 "use client"
 
 import { Calendar03Icon } from "@hugeicons/core-free-icons"
+import { useDebouncedValue } from "@tanstack/react-pacer"
 import {
   type ColumnDef,
-  type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
+  type OnChangeFn,
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
@@ -56,7 +57,7 @@ import { getDaysUntilExpiry } from "../utils/helpers"
 import { CodeCell } from "./components/code-cell"
 import { SortableHeader } from "./sortable-header"
 
-type ExpiryFilters = "DAYS_14" | "DAYS_7" | "DAYS_3" | "EXPIRED" | "ALL"
+export type ExpiryFilters = "DAYS_14" | "DAYS_7" | "DAYS_3" | "EXPIRED" | "ALL"
 
 type RackAssortmentList = InferApiOutput<typeof RackAssortmentsSchema, "GET">
 type AssortmentList = InferApiOutput<typeof AssortmentsSchema, "GET">
@@ -166,33 +167,6 @@ function ExpiryStatusBadge({ value }: { value: string }) {
   return <Badge variant="outline">{label}</Badge>
 }
 
-function matchesExpiryFilter(
-  item: AssortmentItem,
-  filterValue: ExpiryFilters
-): boolean {
-  if (filterValue === "ALL") {
-    return true
-  }
-
-  const daysUntilExpiry = getDaysToExpiry(item.expiresAt)
-  if (typeof daysUntilExpiry !== "number") {
-    return false
-  }
-
-  switch (filterValue) {
-    case "EXPIRED":
-      return daysUntilExpiry < 0
-    case "DAYS_3":
-      return daysUntilExpiry >= 0 && daysUntilExpiry <= 3
-    case "DAYS_7":
-      return daysUntilExpiry >= 0 && daysUntilExpiry <= 7
-    case "DAYS_14":
-      return daysUntilExpiry >= 0 && daysUntilExpiry <= 14
-    default:
-      return true
-  }
-}
-
 const hasEmbeddedItem = (item: AssortmentItem): item is RackAssortmentItem =>
   "item" in item
 
@@ -225,6 +199,13 @@ interface AssortmentTableWithDataProps extends AssortmentTableProps {
   assortmentData: SupportedAssortmentList | null | undefined
   page: number
   setPage: Dispatch<SetStateAction<number>>
+  expiryFilter: ExpiryFilters
+  onExpiryFilterChange: (nextFilter: ExpiryFilters) => void
+  search: string
+  debouncedSearch: string
+  onSearchChange: (value: string) => void
+  sorting: SortingState
+  onSortingChange: (nextSorting: SortingState) => void
 }
 
 interface AssortmentTableContentProps extends AssortmentTableProps {
@@ -233,6 +214,14 @@ interface AssortmentTableContentProps extends AssortmentTableProps {
   onRetry?: () => void
   page: number
   setPage: (page: number) => void
+  expiryFilter: ExpiryFilters
+  onExpiryFilterChange: (nextFilter: ExpiryFilters) => void
+  search: string
+  debouncedSearch: string
+  onSearchChange: (value: string) => void
+  sorting: SortingState
+  onSortingChange: (nextSorting: SortingState) => void
+  manualServerControls?: boolean
 }
 
 const SKELETON_ROWS = 5
@@ -335,11 +324,15 @@ function AssortmentTableContent({
   onRetry,
   page,
   setPage,
+  expiryFilter,
+  onExpiryFilterChange,
+  search,
+  debouncedSearch,
+  onSearchChange,
+  sorting,
+  onSortingChange,
+  manualServerControls = false,
 }: AssortmentTableContentProps) {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [globalFilter, setGlobalFilter] = useState("")
-  const [expiryFilter, setExpiryFilter] = useState<ExpiryFilters>("ALL")
   const assortmentItems = assortmentData?.content ?? []
   const itemIdsToFetch = useMemo(
     () => [
@@ -403,11 +396,6 @@ function AssortmentTableContent({
     return warehouseIdsMap
   }, [rackDetailsQueries, rackIds])
 
-  const filteredItems = useMemo(
-    () =>
-      assortmentItems.filter((item) => matchesExpiryFilter(item, expiryFilter)),
-    [assortmentItems, expiryFilter]
-  )
   const assortmentColumns = useMemo<ColumnDef<AssortmentItem>[]>(
     () => [
       {
@@ -432,7 +420,7 @@ function AssortmentTableContent({
             {getItemName(row.original, itemNamesById)}
           </Link>
         ),
-        enableSorting: true,
+        enableSorting: !manualServerControls,
       },
       {
         id: "rackName",
@@ -465,7 +453,7 @@ function AssortmentTableContent({
             </Link>
           )
         },
-        enableSorting: true,
+        enableSorting: !manualServerControls,
       },
       {
         id: "position",
@@ -478,7 +466,7 @@ function AssortmentTableContent({
             Rząd {row.original.positionX + 1}, Kol. {row.original.positionY + 1}
           </span>
         ),
-        enableSorting: true,
+        enableSorting: !manualServerControls,
       },
       {
         accessorKey: "createdAt",
@@ -508,18 +496,38 @@ function AssortmentTableContent({
         enableSorting: true,
       },
     ],
-    [itemNamesById, rackNamesById, rackWarehouseIdsById]
+    [itemNamesById, manualServerControls, rackNamesById, rackWarehouseIdsById]
   )
 
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    const nextSorting =
+      typeof updater === "function" ? updater(sorting) : updater
+    onSortingChange(nextSorting)
+    if (manualServerControls) {
+      setPage(1)
+    }
+  }
+
+  const handleSearchChange = (value: string) => {
+    onSearchChange(value)
+    if (manualServerControls) {
+      setPage(1)
+    }
+  }
+
   const table = useReactTable({
-    data: filteredItems,
+    data: assortmentItems,
     columns: assortmentColumns,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
+    ...(manualServerControls
+      ? {}
+      : {
+          getSortedRowModel: getSortedRowModel(),
+          getFilteredRowModel: getFilteredRowModel(),
+        }),
+    manualSorting: manualServerControls,
+    manualFiltering: manualServerControls,
+    onSortingChange: handleSortingChange,
     globalFilterFn: (row, _columnId, filterValue) => {
       const searchValue = filterValue?.toString().trim().toLowerCase()
       if (!searchValue) {
@@ -538,21 +546,23 @@ function AssortmentTableContent({
     },
     state: {
       sorting,
-      columnFilters,
-      globalFilter,
+      globalFilter: search,
     },
   })
 
-  const filteredCount = table.getFilteredRowModel().rows.length
+  const filteredCount = manualServerControls
+    ? assortmentItems.length
+    : table.getFilteredRowModel().rows.length
   const totalCount = assortmentData?.totalElements ?? assortmentItems.length
-  const isSearchFiltered = globalFilter.length > 0
+  const isSearchFiltered = debouncedSearch.length > 0
   const isExpiryFiltered = expiryFilter !== "ALL"
   const isFiltered = isSearchFiltered || isExpiryFiltered
   const totalPages = assortmentData?.totalPages ?? 1
 
   const clearAllFilters = () => {
-    setGlobalFilter("")
-    setExpiryFilter("ALL")
+    handleSearchChange("")
+    onExpiryFilterChange("ALL")
+    setPage(1)
   }
 
   const itemLabel = {
@@ -576,9 +586,9 @@ function AssortmentTableContent({
           <FilterGroup>
             <SearchInput
               aria-label="Filtruj asortyment po kodzie i identyfikatorach"
-              onChange={setGlobalFilter}
+              onChange={handleSearchChange}
               placeholder="Szukaj po kodzie kreskowym, nazwie produktu lub regału..."
-              value={globalFilter}
+              value={search}
             />
 
             <FilterSelectWrapper
@@ -588,7 +598,8 @@ function AssortmentTableContent({
               <Select
                 onValueChange={(value) => {
                   if (isExpiryFilterValue(value)) {
-                    setExpiryFilter(value)
+                    onExpiryFilterChange(value)
+                    setPage(1)
                   }
                 }}
                 value={expiryFilter}
@@ -705,6 +716,22 @@ function AssortmentTableContent({
 
 export function AssortmentTable({ isLoading }: AssortmentTableProps) {
   const [page, setPage] = useState(1)
+  const [expiryFilter, setExpiryFilter] = useState<ExpiryFilters>("ALL")
+  const [search, setSearch] = useState("")
+  const [sorting, setSorting] = useState<SortingState>([])
+  const sortParams = useMemo(() => {
+    if (sorting.length === 0) {
+      return {}
+    }
+    return {
+      sortBy: sorting[0].id,
+      sortDir: sorting[0].desc ? ("desc" as const) : ("asc" as const),
+    }
+  }, [sorting])
+  const [debouncedSearch] = useDebouncedValue(search, {
+    wait: 500,
+  })
+  console.log(debouncedSearch)
   const {
     data: assortmentData,
     isPending,
@@ -713,16 +740,26 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
   } = useAssortment({
     page: page - 1,
     size: 10,
+    search: debouncedSearch.trim() || undefined,
+    expiryFilters: expiryFilter === "ALL" ? undefined : [expiryFilter],
+    ...sortParams,
   })
 
   return (
     <AssortmentTableContent
       assortmentData={assortmentData}
+      debouncedSearch={debouncedSearch}
+      expiryFilter={expiryFilter}
       isError={isError}
       isLoading={isLoading || isPending}
+      onExpiryFilterChange={setExpiryFilter}
       onRetry={() => refetch()}
+      onSearchChange={setSearch}
+      onSortingChange={setSorting}
       page={page}
+      search={search}
       setPage={setPage}
+      sorting={sorting}
     />
   )
 }
@@ -732,13 +769,28 @@ export function AssortmentTableWithData({
   isLoading,
   page,
   setPage,
+  expiryFilter,
+  onExpiryFilterChange,
+  search,
+  debouncedSearch,
+  onSearchChange,
+  sorting,
+  onSortingChange,
 }: AssortmentTableWithDataProps) {
   return (
     <AssortmentTableContent
       assortmentData={assortmentData}
+      debouncedSearch={debouncedSearch}
+      expiryFilter={expiryFilter}
       isLoading={isLoading}
+      manualServerControls
+      onExpiryFilterChange={onExpiryFilterChange}
+      onSearchChange={onSearchChange}
+      onSortingChange={onSortingChange}
       page={page}
+      search={search}
       setPage={setPage}
+      sorting={sorting}
     />
   )
 }

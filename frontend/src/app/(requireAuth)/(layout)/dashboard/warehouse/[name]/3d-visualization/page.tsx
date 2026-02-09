@@ -211,7 +211,10 @@ export default function ThreeDVisualizationPage() {
     data: warehousesData,
     isError: isWarehousesError,
     isPending: isWarehousesPending,
-  } = useWarehouses({ page: 0, size: DISABLE_PAGINATION_PAGE_SIZE })
+  } = useWarehouses({
+    page: 0,
+    size: DISABLE_PAGINATION_PAGE_SIZE,
+  })
 
   const apiWarehouse = useMemo(
     () =>

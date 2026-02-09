@@ -650,7 +650,13 @@ export type RackAssortment = z.infer<typeof RackAssortmentSchema>
 
 export const WarehouseAssortmentsSchema = createApiSchema({
   GET: {
-    input: createPaginatedSchemaInput(),
+    input: createPaginatedSchemaInput({
+      expiryFilters: z
+        .array(z.enum(["ALL", "EXPIRED", "DAYS_3", "DAYS_7", "DAYS_14"]))
+        .optional(),
+      search: z.string().optional(),
+      weekToExpire: z.boolean().optional(),
+    }),
     output: createPaginatedSchema(RackAssortmentSchema),
   },
 })

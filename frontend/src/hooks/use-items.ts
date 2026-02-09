@@ -80,13 +80,16 @@ export function useInfiniteItems(
   }: InfiniteItemsParams = {},
   options?: SafeInfiniteQueryOptions<ItemsList, number>
 ) {
+  const normalizedSearch = search.trim()
+
   const infiniteQuery = useInfiniteQuery({
-    queryKey: [...ITEMS_QUERY_KEY, "infinite", search],
+    queryKey: [...ITEMS_QUERY_KEY, "infinite", normalizedSearch],
     initialPageParam: 0,
     queryFn: async ({ pageParam }) =>
       await apiFetch("/api/items", ItemsSchema, {
         queryParams: {
           page: pageParam,
+          search: normalizedSearch || undefined,
         },
       }),
     getNextPageParam: (lastPage) => {

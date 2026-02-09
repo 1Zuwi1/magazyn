@@ -11,7 +11,6 @@ import {
   type ColumnDef,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
   getSortedRowModel,
   type SortingState,
   useReactTable,
@@ -59,7 +58,10 @@ interface AdminItemsTableProps {
   currentPage: number
   totalPages: number
   items: Item[]
+  search: string
+  debouncedSearch: string
   onSetPage: (nextPage: number) => void
+  onSearchChange: (value: string) => void
   onEdit: (item: Item) => void
   onDelete: (item: Item) => void
   onUploadPhoto: (item: Item) => void
@@ -206,7 +208,10 @@ export function AdminItemsTable({
   currentPage,
   totalPages,
   items,
+  search,
+  debouncedSearch,
   onSetPage,
+  onSearchChange,
   onEdit,
   onDelete,
   onUploadPhoto,
@@ -215,7 +220,6 @@ export function AdminItemsTable({
   refetch,
 }: AdminItemsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
-  const [globalFilter, setGlobalFilter] = useState("")
 
   const columns = createColumns(onEdit, onDelete, onUploadPhoto)
 
@@ -224,35 +228,18 @@ export function AdminItemsTable({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const searchValue = filterValue?.toString().trim()
-      if (!searchValue) {
-        return true
-      }
-      const item = row.original
-      const normalizedSearchValue = searchValue.toLowerCase()
-      return (
-        item.name.toLowerCase().includes(normalizedSearchValue) ||
-        item.id.toString().includes(normalizedSearchValue) ||
-        (item.comment?.toLowerCase().includes(normalizedSearchValue) ?? false)
-      )
-    },
-
     state: {
       sorting,
-      globalFilter,
     },
   })
 
-  const filteredCount = table.getFilteredRowModel().rows.length
+  const filteredCount = items.length
   const totalCount = items.length
-  const isFiltered = globalFilter.length > 0
+  const isFiltered = debouncedSearch.trim().length > 0
 
   const clearAllFilters = () => {
-    setGlobalFilter("")
+    onSearchChange("")
   }
 
   const itemLabel = {
@@ -320,9 +307,9 @@ export function AdminItemsTable({
           <FilterGroup>
             <SearchInput
               aria-label="Filtruj przedmioty po nazwie lub ID"
-              onChange={setGlobalFilter}
+              onChange={onSearchChange}
               placeholder="Szukaj po nazwie lub ID..."
-              value={globalFilter}
+              value={search}
             />
             {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}
           </FilterGroup>

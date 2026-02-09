@@ -50,18 +50,14 @@ export const ApiNotificationsSchema = createApiSchema({
 
 export const ApiMarkNotificationSchema = createApiSchema({
   PATCH: {
-    input: z.object({
-      read: z.boolean(),
-    }),
+    input: z.null(),
     output: UserNotificationSchema,
   },
 })
 
 export const ApiMarkBulkNotificationsSchema = createApiSchema({
   PATCH: {
-    input: z.object({
-      read: z.boolean(),
-    }),
+    input: z.null(),
     output: z.number().int().nonnegative(),
   },
 })

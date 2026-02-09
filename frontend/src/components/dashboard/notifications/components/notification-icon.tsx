@@ -86,15 +86,10 @@ export function NotificationInbox() {
     }
   )
 
-  const { data: unreadNotificationsData } = useNotifications(
-    {
-      read: false,
-      size: 1,
-    },
-    {
-      enabled: open,
-    }
-  )
+  const { data: unreadNotificationsData } = useNotifications({
+    read: false,
+    size: 1,
+  })
 
   const markBulkNotifications = useMarkBulkNotifications()
   const markNotification = useMarkNotification()
