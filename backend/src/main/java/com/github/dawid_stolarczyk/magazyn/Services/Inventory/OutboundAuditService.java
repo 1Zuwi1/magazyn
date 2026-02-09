@@ -74,13 +74,10 @@ public class OutboundAuditService {
     private OutboundOperationDto mapToDto(OutboundOperation operation) {
         OutboundOperationDto dto = new OutboundOperationDto();
         dto.setId(operation.getId());
-        dto.setItemId(operation.getItem().getId());
         dto.setItemName(operation.getItemName());
         dto.setItemCode(operation.getItemCode());
-        dto.setRackId(operation.getRack().getId());
-        dto.setRackMarker(operation.getRack().getMarker());
-        dto.setIssuedBy(operation.getIssuedBy().getId());
-        dto.setIssuedByName(operation.getIssuedBy().getFullName());
+        dto.setRackMarker(operation.getRackMarker());
+        dto.setIssuedByName(operation.getIssuedByName());
         dto.setOperationTimestamp(operation.getOperationTimestamp().toInstant().toString());
         dto.setPositionX(operation.getPositionX());
         dto.setPositionY(operation.getPositionY());

@@ -196,9 +196,8 @@ public class BackupService {
             }
 
             if (resourceTypes.contains(BackupResourceType.ITEMS)) {
-                // Items are global entities — back up all items so restore works on any target database
-                List<Item> items = itemRepository.findAll();
-                log.info("Backup {} — found {} items to back up", recordId, items.size());
+                List<Item> items = itemRepository.findDistinctByWarehouseId(warehouseId);
+                log.info("Backup {} — found {} items for warehouse {}", recordId, items.size(), warehouseId);
 
                 List<ItemBackupData> itemData = items.stream()
                         .map(i -> new ItemBackupData(i.getId(), i.getName(), i.getCode(), i.getPhoto_url(), i.getQrCode(),

@@ -55,4 +55,7 @@ public class Rack {
 
     @OneToMany(mappedBy = "rack", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RackReport> rackReports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "rack", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<InboundOperation> inboundOperations = new ArrayList<>();
 }

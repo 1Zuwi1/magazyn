@@ -74,21 +74,15 @@ public class InboundAuditService {
     private InboundOperationDto mapToDto(InboundOperation operation) {
         InboundOperationDto dto = new InboundOperationDto();
         dto.setId(operation.getId());
-        dto.setItemId(operation.getItem().getId());
-        dto.setItemName(operation.getItem().getName());
-        dto.setItemCode(operation.getItem().getCode());
-        dto.setRackId(operation.getRack().getId());
-        dto.setRackMarker(operation.getRack().getMarker());
-        dto.setReceivedBy(operation.getReceivedBy().getId());
-        dto.setReceivedByName(operation.getReceivedBy().getFullName());
+        dto.setItemName(operation.getItemName());
+        dto.setItemCode(operation.getItemCode());
+        dto.setRackMarker(operation.getRackMarker());
+        dto.setReceivedByName(operation.getReceivedByName());
         dto.setOperationTimestamp(operation.getOperationTimestamp().toInstant().toString());
         dto.setPositionX(operation.getPositionX());
         dto.setPositionY(operation.getPositionY());
         dto.setQuantity(operation.getQuantity());
-        if (operation.getAssortment() != null) {
-            dto.setAssortmentId(operation.getAssortment().getId());
-            dto.setAssortmentCode(operation.getAssortment().getCode());
-        }
+        dto.setAssortmentCode(operation.getAssortmentCode());
         return dto;
     }
 

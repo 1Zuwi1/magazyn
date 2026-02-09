@@ -149,9 +149,8 @@ public class OutboundService {
 
             // Utwórz rekord audytu (zdenormalizowane dane, bo assortment zostanie usunięty)
             OutboundOperation operation = new OutboundOperation();
-            operation.setItem(assortment.getItem());
-            operation.setRack(assortment.getRack());
-            operation.setIssuedBy(user);
+            operation.setRackMarker(assortment.getRack().getMarker());
+            operation.setIssuedByName(user.getFullName());
             operation.setPositionX(assortment.getPositionX());
             operation.setPositionY(assortment.getPositionY());
             operation.setQuantity(1);
@@ -161,13 +160,6 @@ public class OutboundService {
             operation.setFifoCompliant(fifoCompliant);
 
             outboundOperationRepository.save(operation);
-
-            // Wyczyść FK w InboundOperation przed usunięciem assortmentu
-            List<InboundOperation> inboundOps = inboundOperationRepository.findByAssortmentId(assortment.getId());
-            for (InboundOperation inboundOp : inboundOps) {
-                inboundOp.setAssortment(null);
-                inboundOperationRepository.save(inboundOp);
-            }
 
             // Usuń assortment
             assortmentRepository.delete(assortment);
@@ -199,13 +191,10 @@ public class OutboundService {
     private OutboundOperationDto mapToOperationDto(OutboundOperation operation) {
         OutboundOperationDto dto = new OutboundOperationDto();
         dto.setId(operation.getId());
-        dto.setItemId(operation.getItem().getId());
         dto.setItemName(operation.getItemName());
         dto.setItemCode(operation.getItemCode());
-        dto.setRackId(operation.getRack().getId());
-        dto.setRackMarker(operation.getRack().getMarker());
-        dto.setIssuedBy(operation.getIssuedBy().getId());
-        dto.setIssuedByName(operation.getIssuedBy().getFullName());
+        dto.setRackMarker(operation.getRackMarker());
+        dto.setIssuedByName(operation.getIssuedByName);
         dto.setOperationTimestamp(operation.getOperationTimestamp().toInstant().toString());
         dto.setPositionX(operation.getPositionX());
         dto.setPositionY(operation.getPositionY());

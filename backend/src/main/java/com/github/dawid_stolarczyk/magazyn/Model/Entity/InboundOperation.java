@@ -27,33 +27,15 @@ public class InboundOperation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * Produkt, który został przyjęty
-     */
-    @ManyToOne
-    @JoinColumn(name = "item_id", nullable = false)
-    private Item item;
+    private String itemName;
 
-    /**
-     * Regał, na który umieszczono towar
-     */
-    @ManyToOne
-    @JoinColumn(name = "rack_id", nullable = false)
-    private Rack rack;
+    private String itemCode;
 
-    /**
-     * Przypisanie (Assortment) stworzone podczas tej operacji
-     */
-    @OneToOne
-    @JoinColumn(name = "assortment_id")
-    private Assortment assortment;
+    private String rackMarker;
 
-    /**
-     * Użytkownik, który wykonał operację przyjęcia
-     */
-    @ManyToOne
-    @JoinColumn(name = "received_by", nullable = false)
-    private User receivedBy;
+    private String assortmentCode;
+
+    private String receivedByName;
 
     /**
      * Data i czas wykonania operacji

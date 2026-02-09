@@ -28,17 +28,11 @@ public class OutboundOperation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "item_id", nullable = false)
-    private Item item;
+    @Column(name = "rack_marker", nullable = false)
+    private String rackMarker;
 
-    @ManyToOne
-    @JoinColumn(name = "rack_id", nullable = false)
-    private Rack rack;
-
-    @ManyToOne
-    @JoinColumn(name = "issued_by", nullable = false)
-    private User issuedBy;
+    @Column(name = "issued_by_name", nullable = false)
+    private String issuedByName;
 
     @Column(name = "operation_timestamp", nullable = false)
     private Timestamp operationTimestamp;

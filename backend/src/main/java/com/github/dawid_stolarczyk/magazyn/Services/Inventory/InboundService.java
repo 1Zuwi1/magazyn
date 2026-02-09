@@ -316,15 +316,7 @@ public class InboundService {
         // Tworzenie wpisów audytowych dla każdego przyjęcia
         List<InboundOperation> inboundOperations = new ArrayList<>();
         for (Assortment assortment : newAssortments) {
-            InboundOperation operation = new InboundOperation();
-            operation.setItem(assortment.getItem());
-            operation.setRack(assortment.getRack());
-            operation.setAssortment(assortment);
-            operation.setReceivedBy(user);
-            operation.setOperationTimestamp(createdAt);
-            operation.setPositionX(assortment.getPositionX());
-            operation.setPositionY(assortment.getPositionY());
-            operation.setQuantity(1);
+            InboundOperation operation = getInboundOperation(assortment, user, createdAt);
             inboundOperations.add(operation);
         }
         inboundOperationRepository.saveAll(inboundOperations);
@@ -346,6 +338,20 @@ public class InboundService {
                 .map(Assortment::getCode)
                 .toList());
         return response;
+    }
+
+    private static InboundOperation getInboundOperation(Assortment assortment, User user, Timestamp createdAt) {
+        InboundOperation operation = new InboundOperation();
+        operation.setItemName(assortment.getItem().getName());
+        operation.setItemCode(assortment.getItem().getCode());
+        operation.setRackMarker(assortment.getRack().getMarker());
+        operation.setAssortmentCode(assortment.getCode());
+        operation.setReceivedByName(user.getFullName());
+        operation.setOperationTimestamp(createdAt);
+        operation.setPositionX(assortment.getPositionX());
+        operation.setPositionY(assortment.getPositionY());
+        operation.setQuantity(1);
+        return operation;
     }
 
     /**
