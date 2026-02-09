@@ -20,11 +20,14 @@ vi.mock("@/lib/fetcher", () => ({
   apiFetch: apiFetchMock,
 }))
 
-vi.mock("./two-factor-verification-dialog-store", () => ({
-  useTwoFactorVerificationDialog: () => ({
-    open: openVerificationDialogMock,
-  }),
-}))
+vi.mock(
+  "@/components/dashboard/settings/two-factor-verification-dialog-store",
+  () => ({
+    useTwoFactorVerificationDialog: () => ({
+      open: openVerificationDialogMock,
+    }),
+  })
+)
 
 const OLD_PASSWORD_REGEX = /obecne hasło/i
 const NEW_PASSWORD_REGEX = /nowe hasło/i
@@ -61,7 +64,7 @@ describe("PasswordSection", () => {
     await waitFor(() => {
       expect(openVerificationDialogMock).toHaveBeenCalledTimes(1)
       expect(apiFetchMock).toHaveBeenCalledWith(
-        "/user/password",
+        "/api/users/password",
         ChangePasswordSchema,
         {
           method: "PATCH",

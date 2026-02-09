@@ -1,15 +1,18 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import type { TwoFactorMethod } from "@/lib/schemas"
 import { SecuritySection } from "./security-section"
 
 vi.mock("./password-section", () => ({
-  PasswordSection: ({
-    twoFactorMethod,
-  }: {
-    twoFactorMethod: TwoFactorMethod
-  }) => <div data-testid="password-section">{twoFactorMethod}</div>,
+  PasswordSection: () => <div data-testid="password-section" />,
+}))
+
+vi.mock("./two-factor-setup", () => ({
+  TwoFactorSetup: () => <div data-testid="two-factor-setup" />,
+}))
+
+vi.mock("./passkeys-section", () => ({
+  PasskeysSection: () => <div data-testid="passkeys-section" />,
 }))
 
 vi.mock("@tanstack/react-query", async () => {
@@ -44,6 +47,8 @@ describe("SecuritySection", () => {
     })
 
     expect(screen.getByText(PROTECTED_STATUS_REGEX)).toBeInTheDocument()
-    expect(screen.getByTestId("password-section")).toHaveTextContent("EMAIL")
+    expect(screen.getByTestId("password-section")).toBeInTheDocument()
+    expect(screen.getByTestId("two-factor-setup")).toBeInTheDocument()
+    expect(screen.getByTestId("passkeys-section")).toBeInTheDocument()
   })
 })

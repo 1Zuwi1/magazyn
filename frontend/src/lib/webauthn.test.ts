@@ -7,6 +7,29 @@ import {
   serializeCredential,
 } from "./webauthn"
 
+const setupWebAuthnGlobals = () => {
+  if (typeof window === "undefined") {
+    global.window = {} as any
+  }
+  if (typeof navigator === "undefined") {
+    global.navigator = {} as any
+  }
+  if (!("PublicKeyCredential" in window)) {
+    Object.defineProperty(window, "PublicKeyCredential", {
+      value: class PublicKeyCredential {},
+      configurable: true,
+    })
+  }
+  if (!("credentials" in navigator)) {
+    Object.defineProperty(navigator, "credentials", {
+      value: {},
+      configurable: true,
+    })
+  }
+}
+
+setupWebAuthnGlobals()
+
 const encodeBase64Url = (value: string): string => {
   if (typeof btoa !== "function") {
     throw new Error("btoa is not available in this environment")

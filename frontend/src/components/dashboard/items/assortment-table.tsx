@@ -58,7 +58,7 @@ import type { AssortmentsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { getDaysUntilExpiry } from "../utils/helpers"
 import { CodeCell } from "./components/code-cell"
-import { SortableHeader, StaticHeader } from "./sortable-header"
+import { SortableHeader } from "./sortable-header"
 
 type ExpiryFilters = "DAYS_14" | "DAYS_7" | "DAYS_3" | "EXPIRED" | "ALL"
 
@@ -460,14 +460,6 @@ function AssortmentTableContent({
           </div>
         ),
         enableSorting: true,
-      },
-      {
-        accessorKey: "userId",
-        header: () => <StaticHeader>Użytkownik ID</StaticHeader>,
-        cell: ({ row }) => (
-          <span className="font-mono">{row.original.userId}</span>
-        ),
-        enableSorting: false,
       },
     ],
     [itemNamesById, rackNamesById, rackWarehouseIdsById]

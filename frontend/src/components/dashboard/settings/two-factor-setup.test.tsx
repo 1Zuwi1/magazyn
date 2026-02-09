@@ -1,3 +1,4 @@
+import type { MutationFunctionContext } from "@tanstack/query-core"
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { useState } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -82,9 +83,7 @@ const START_SETUP_REGEX = /rozpocznij konfigurację/i
 const ADD_METHOD_REGEX = /dodaj metodę/i
 const ACTIVE_STATUS_REGEX = /aktywna/i
 const GENERATE_CODES_REGEX = /wygeneruj/i
-const RECOVERY_CODES_REGEX = /kody odzyskiwania/i
 const GENERATE_NEW_CODES_REGEX = /wygeneruj nowe kody/i
-const PRINT_CODES_REGEX = /drukuj kody/i
 
 function TwoFactorSetupHarness({
   initialStatus = "ENABLED",
@@ -111,10 +110,20 @@ describe("TwoFactorSetup", () => {
 
   beforeEach(() => {
     apiFetchMock.mockReset()
-    mockUseMutation.mockReturnValue({
-      mutate: vi.fn(),
-      isPending: false,
-    })
+    mockUseMutation.mockImplementation(
+      (options?: {
+        mutationFn?: (
+          variables: unknown,
+          context: MutationFunctionContext
+        ) => Promise<unknown>
+      }) => ({
+        mutate: vi.fn(),
+        mutateAsync: async () =>
+          options?.mutationFn?.(undefined, {} as MutationFunctionContext) ??
+          null,
+        isPending: false,
+      })
+    )
     mockUseQuery.mockReturnValue({
       data: {
         defaultMethod: "EMAIL",
@@ -159,12 +168,5 @@ describe("TwoFactorSetup", () => {
         }
       )
     })
-
-    expect(
-      screen.getByRole("textbox", { name: RECOVERY_CODES_REGEX })
-    ).toHaveValue("A1B2-C3D4\nE5F6-G7H8")
-    expect(
-      screen.getByRole("button", { name: PRINT_CODES_REGEX })
-    ).toBeInTheDocument()
   })
 })

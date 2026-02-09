@@ -211,6 +211,7 @@ describe("AuthForm", () => {
             body: {
               email: "test@example.com",
               fullName: "Test User",
+              phoneNumber: "+48123456789",
               password: "Password123!",
             },
           })

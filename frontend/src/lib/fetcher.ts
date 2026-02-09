@@ -338,7 +338,8 @@ function mergeHeaders(
   }
   // Normalize into Headers so we can safely set defaults without clobbering
   const h = new Headers(base ?? {})
-  for (const [k, val] of Object.entries(extra)) {
+  const resolvedExtra = new Headers(extra as HeadersInit)
+  for (const [k, val] of resolvedExtra.entries()) {
     if (!h.has(k)) {
       h.set(k, val)
     }

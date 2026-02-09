@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { z } from "zod"
 
-vi.mock("next/headers", () => ({
-  headers: vi.fn(() => new Headers()),
-}))
-
 const originalFetch = global.fetch
 
 // Mock window object for tests
 global.window = undefined as any
+
+vi.mock("next/headers", () => ({
+  headers: vi.fn(() => new Headers()),
+}))
 
 import { apiFetch, FetchError } from "./fetcher"
 
