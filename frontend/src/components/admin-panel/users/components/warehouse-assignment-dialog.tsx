@@ -7,7 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useDebouncedValue } from "@tanstack/react-pacer"
-import { useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -19,10 +19,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
 import type { AdminUser } from "@/hooks/use-admin-users"
-import { useInfiniteWarehouses } from "@/hooks/use-warehouses"
+import {
+  useInfiniteWarehouses,
+  useMultipleWarehouses,
+} from "@/hooks/use-warehouses"
 import type { Warehouse } from "@/lib/schemas"
+import { cn } from "@/lib/utils"
 import { normalizeValue } from "../lib/user-utils"
 import { WarehouseVirtualList } from "./warehouse-virtual-list"
 
@@ -34,22 +40,20 @@ interface WarehouseAssignmentDialogProps {
   onRemove: (params: { userId: number; warehouseId: number }) => void
 }
 
-export function WarehouseAssignmentDialog({
+interface UseWarehouseAssignmentListStateParams {
+  assignedWarehouseIds: number[]
+  debouncedSearch: string
+  open: boolean
+  showAssignedOnly: boolean
+}
+
+function useWarehouseAssignmentListState({
+  assignedWarehouseIds,
+  debouncedSearch,
   open,
-  onOpenChange,
-  user,
-  onAssign,
-  onRemove,
-}: WarehouseAssignmentDialogProps) {
-  const [search, setSearch] = useState("")
-  const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(
-    null
-  )
-
-  const [debouncedSearch] = useDebouncedValue(search, {
-    wait: 500,
-  })
-
+  showAssignedOnly,
+}: UseWarehouseAssignmentListStateParams) {
+  const normalizedSearch = debouncedSearch.trim().toLocaleLowerCase()
   const {
     warehouses,
     fetchNextPage,
@@ -65,35 +69,152 @@ export function WarehouseAssignmentDialog({
       enabled: open,
     }
   )
+  const assignedWarehouseQueries = useMultipleWarehouses({
+    warehouseIds: showAssignedOnly ? assignedWarehouseIds : [],
+  })
+  const assignedWarehouses = useMemo(
+    () =>
+      assignedWarehouseQueries.flatMap((assignedWarehouseQuery) =>
+        assignedWarehouseQuery.data ? [assignedWarehouseQuery.data] : []
+      ),
+    [assignedWarehouseQueries]
+  )
+  const filteredAssignedWarehouses = useMemo(() => {
+    if (!normalizedSearch) {
+      return assignedWarehouses
+    }
+
+    return assignedWarehouses.filter((warehouse) =>
+      warehouse.name.toLocaleLowerCase().includes(normalizedSearch)
+    )
+  }, [assignedWarehouses, normalizedSearch])
+  const visibleWarehouses = showAssignedOnly
+    ? filteredAssignedWarehouses
+    : warehouses
+  const isAssignedWarehousesPending = assignedWarehouseQueries.some(
+    (assignedWarehouseQuery) => assignedWarehouseQuery.isPending
+  )
+  const isAssignedWarehousesError = assignedWarehouseQueries.some(
+    (assignedWarehouseQuery) => assignedWarehouseQuery.isError
+  )
+  const isListPending = showAssignedOnly
+    ? isAssignedWarehousesPending
+    : isLoading
+  const isListError = showAssignedOnly ? isAssignedWarehousesError : isError
+  const fetchNextWarehouses = useCallback(() => {
+    if (showAssignedOnly) {
+      return
+    }
+
+    fetchNextPage()
+  }, [fetchNextPage, showAssignedOnly])
+
+  return {
+    fetchNextWarehouses,
+    hasNextPage: showAssignedOnly ? false : hasNextPage,
+    isFetchingNextPage: showAssignedOnly ? false : isFetchingNextPage,
+    isListError,
+    isListPending,
+    visibleWarehouses,
+  }
+}
+
+export function WarehouseAssignmentDialog({
+  open,
+  onOpenChange,
+  user,
+  onAssign,
+  onRemove,
+}: WarehouseAssignmentDialogProps) {
+  const [search, setSearch] = useState("")
+  const [showAssignedOnly, setShowAssignedOnly] = useState(false)
+  const [selectedWarehouseIds, setSelectedWarehouseIds] = useState<number[]>([])
+  const [lastSelectedWarehouse, setLastSelectedWarehouse] =
+    useState<Warehouse | null>(null)
+  const assignedWarehouseIds = user?.warehouse_ids ?? []
+  const assignedWarehouseIdSet = useMemo(
+    () => new Set(assignedWarehouseIds),
+    [assignedWarehouseIds]
+  )
+  const selectedAssignedWarehouseIds = selectedWarehouseIds.filter(
+    (warehouseId) => assignedWarehouseIdSet.has(warehouseId)
+  )
+  const selectedUnassignedWarehouseIds = selectedWarehouseIds.filter(
+    (warehouseId) => !assignedWarehouseIdSet.has(warehouseId)
+  )
+  const canAssignSelectedWarehouses = Boolean(
+    user && selectedUnassignedWarehouseIds.length > 0
+  )
+  const canRemoveSelectedWarehouses = Boolean(
+    user && selectedAssignedWarehouseIds.length > 0
+  )
+
+  const [debouncedSearch] = useDebouncedValue(search, {
+    wait: 500,
+  })
+  const {
+    fetchNextWarehouses,
+    hasNextPage: hasNextVisibleWarehousesPage,
+    isFetchingNextPage: isFetchingVisibleWarehousesNextPage,
+    isListError,
+    isListPending,
+    visibleWarehouses,
+  } = useWarehouseAssignmentListState({
+    assignedWarehouseIds,
+    debouncedSearch,
+    open,
+    showAssignedOnly,
+  })
 
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       setSearch("")
-      setSelectedWarehouse(null)
+      setShowAssignedOnly(false)
+      setSelectedWarehouseIds([])
+      setLastSelectedWarehouse(null)
     }
     onOpenChange(isOpen)
   }
 
+  const handleWarehouseToggle = (warehouse: Warehouse) => {
+    setSelectedWarehouseIds((currentSelectedWarehouseIds) => {
+      if (currentSelectedWarehouseIds.includes(warehouse.id)) {
+        return currentSelectedWarehouseIds.filter(
+          (warehouseId) => warehouseId !== warehouse.id
+        )
+      }
+
+      return [...currentSelectedWarehouseIds, warehouse.id]
+    })
+    setLastSelectedWarehouse(warehouse)
+  }
+
   const handleAssign = () => {
-    if (!(user && selectedWarehouse)) {
+    if (!(user && selectedUnassignedWarehouseIds.length > 0)) {
       return
     }
-    onAssign({
-      userId: user.id,
-      warehouseId: selectedWarehouse.id,
-    })
-    handleOpenChange(false)
+    for (const warehouseId of selectedUnassignedWarehouseIds) {
+      onAssign({
+        userId: user.id,
+        warehouseId,
+      })
+    }
+    setSelectedWarehouseIds([])
+    setLastSelectedWarehouse(null)
   }
 
   const handleRemove = () => {
-    if (!(user && selectedWarehouse)) {
+    if (!(user && selectedAssignedWarehouseIds.length > 0)) {
       return
     }
-    onRemove({
-      userId: user.id,
-      warehouseId: selectedWarehouse.id,
-    })
-    handleOpenChange(false)
+    for (const warehouseId of selectedAssignedWarehouseIds) {
+      onRemove({
+        userId: user.id,
+        warehouseId,
+      })
+    }
+    setSelectedWarehouseIds([])
+    setLastSelectedWarehouse(null)
   }
 
   return (
@@ -130,7 +251,6 @@ export function WarehouseAssignmentDialog({
               className="pl-9"
               onChange={(event) => {
                 setSearch(event.target.value)
-                setSelectedWarehouse(null)
               }}
               placeholder="Szukaj magazynu..."
               type="text"
@@ -138,34 +258,74 @@ export function WarehouseAssignmentDialog({
             />
           </div>
 
+          <div className="flex items-center justify-between rounded-lg border bg-muted/20 px-3 py-2">
+            <Label
+              className="cursor-pointer text-sm"
+              htmlFor="show-assigned-warehouses-only"
+            >
+              Tylko przypisane ({assignedWarehouseIds.length})
+            </Label>
+            <Switch
+              checked={showAssignedOnly}
+              id="show-assigned-warehouses-only"
+              onCheckedChange={(checked) => {
+                setShowAssignedOnly(checked)
+                setSelectedWarehouseIds([])
+                setLastSelectedWarehouse(null)
+              }}
+            />
+          </div>
+
           <WarehouseVirtualList
-            fetchNextPage={fetchNextPage}
-            hasNextPage={hasNextPage}
-            isError={isError}
-            isFetchingNextPage={isFetchingNextPage}
-            isPending={isLoading}
-            onWarehouseSelect={setSelectedWarehouse}
-            selectedWarehouse={selectedWarehouse}
-            warehouses={warehouses}
+            assignedWarehouseIds={assignedWarehouseIds}
+            fetchNextPage={fetchNextWarehouses}
+            hasNextPage={hasNextVisibleWarehousesPage}
+            isError={isListError}
+            isFetchingNextPage={isFetchingVisibleWarehousesNextPage}
+            isPending={isListPending}
+            onWarehouseToggle={handleWarehouseToggle}
+            selectedWarehouseIds={selectedWarehouseIds}
+            warehouses={visibleWarehouses}
           />
 
-          {selectedWarehouse ? (
-            <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5">
+          {selectedWarehouseIds.length > 0 ? (
+            <div
+              className={cn(
+                "flex items-center gap-2 rounded-lg border px-3 py-2.5",
+                selectedAssignedWarehouseIds.length > 0
+                  ? "border-emerald-500/20 bg-emerald-500/5"
+                  : "border-primary/20 bg-primary/5"
+              )}
+            >
               <HugeiconsIcon
-                className="size-4 shrink-0 text-primary"
+                className={cn(
+                  "size-4 shrink-0",
+                  selectedAssignedWarehouseIds.length > 0
+                    ? "text-emerald-600"
+                    : "text-primary"
+                )}
                 icon={WarehouseIcon}
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-sm">
-                  {selectedWarehouse.name}
+                  Wybrano {selectedWarehouseIds.length} magazynów
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  {selectedWarehouse.racksCount} regałów &middot;{" "}
-                  {selectedWarehouse.occupancy}% zajętości
+                  Do przypisania: {selectedUnassignedWarehouseIds.length}{" "}
+                  &middot; Przypisane: {selectedAssignedWarehouseIds.length}
                 </p>
               </div>
-              <Badge className="shrink-0" variant="default">
-                Wybrany
+              <Badge
+                className="shrink-0"
+                variant={
+                  selectedAssignedWarehouseIds.length > 0
+                    ? "secondary"
+                    : "default"
+                }
+              >
+                {lastSelectedWarehouse
+                  ? `Ostatni: ${lastSelectedWarehouse.name}`
+                  : "Wybrane"}
               </Badge>
             </div>
           ) : null}
@@ -174,22 +334,28 @@ export function WarehouseAssignmentDialog({
         <Separator />
 
         <DialogFooter className="flex-col gap-2 sm:flex-row sm:gap-2">
-          {selectedWarehouse ? (
+          {canRemoveSelectedWarehouses ? (
             <Button
               className="w-full sm:w-auto"
+              disabled={!canRemoveSelectedWarehouses}
               onClick={handleRemove}
               variant="destructive"
             >
-              Usuń przypisanie
+              Usuń przypisanie ({selectedAssignedWarehouseIds.length})
             </Button>
           ) : null}
           <div className="flex flex-1 justify-end gap-2">
             <Button onClick={() => handleOpenChange(false)} variant="outline">
               Anuluj
             </Button>
-            <Button disabled={!selectedWarehouse} onClick={handleAssign}>
-              Przypisz
-            </Button>
+            {canAssignSelectedWarehouses ? (
+              <Button
+                disabled={!canAssignSelectedWarehouses}
+                onClick={handleAssign}
+              >
+                Przypisz ({selectedUnassignedWarehouseIds.length})
+              </Button>
+            ) : null}
           </div>
         </DialogFooter>
       </DialogContent>

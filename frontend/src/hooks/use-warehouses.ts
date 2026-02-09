@@ -1,5 +1,8 @@
-import type { UseQueryResult } from "@tanstack/react-query"
-import { useInfiniteQuery } from "@tanstack/react-query"
+import {
+  type UseQueryResult,
+  useInfiniteQuery,
+  useQueries,
+} from "@tanstack/react-query"
 import { useMemo } from "react"
 import {
   apiFetch,
@@ -20,6 +23,11 @@ import { useApiMutation } from "./use-api-mutation"
 import { useApiQuery } from "./use-api-query"
 
 const WAREHOUSES_QUERY_KEY = ["warehouses"] as const
+const WAREHOUSE_DETAILS_QUERY_KEY = [
+  ...WAREHOUSES_QUERY_KEY,
+  "details",
+] as const
+const WAREHOUSE_DETAILS_STALE_TIME_MS = 5 * 60 * 1000
 
 export type WarehousesList = InferApiOutput<typeof WarehousesSchema, "GET">
 export type WarehouseDetails = InferApiOutput<
@@ -33,10 +41,40 @@ interface WarehouseDetailsParams {
   warehouseId: number
 }
 
+interface MultipleWarehousesParams {
+  warehouseIds: readonly number[]
+  staleTime?: number
+}
+
 type WarehouseParams = WarehousesListParams | WarehouseDetailsParams | undefined
 
 type WarehouseResult<TParams extends WarehouseParams> =
   TParams extends WarehouseDetailsParams ? WarehouseDetails : WarehousesList
+
+export function useMultipleWarehouses({
+  warehouseIds,
+  staleTime = WAREHOUSE_DETAILS_STALE_TIME_MS,
+}: MultipleWarehousesParams): UseQueryResult<WarehouseDetails, FetchError>[] {
+  const uniqueWarehouseIds = useMemo(
+    () => [...new Set(warehouseIds.filter((warehouseId) => warehouseId >= 0))],
+    [warehouseIds]
+  )
+
+  return useQueries({
+    queries: uniqueWarehouseIds.map((warehouseId) => ({
+      queryKey: [...WAREHOUSE_DETAILS_QUERY_KEY, warehouseId],
+      queryFn: async () =>
+        await apiFetch(
+          `/api/warehouses/${warehouseId}`,
+          WarehouseDetailsSchema,
+          {
+            method: "GET",
+          }
+        ),
+      staleTime,
+    })),
+  })
+}
 
 export default function useWarehouses<TParams extends WarehouseParams>(
   params?: TParams,

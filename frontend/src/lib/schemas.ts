@@ -448,6 +448,7 @@ const AdminUserSchema = z.object({
   phone: z.string().nullish(),
   location: z.string().nullish(),
   team: z.string().nullish(),
+  warehouse_ids: z.array(z.number().int().nonnegative()).default([]),
 })
 
 const TeamOptionSchema = z.object({
