@@ -25,7 +25,6 @@ public class RackReportRequest {
     private Long rackId;
 
     @Positive(message = "Current weight must be positive")
-    @Max(value = 50000, message = "Current weight cannot exceed 50000 kg")
     @Schema(description = "Current measured weight on the rack in kg", example = "150.5")
     private Float currentWeight;
 

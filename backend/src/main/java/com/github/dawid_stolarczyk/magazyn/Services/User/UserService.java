@@ -32,6 +32,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 import static com.github.dawid_stolarczyk.magazyn.Utils.StringUtils.checkPasswordStrength;
@@ -51,16 +52,20 @@ public class UserService {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
-        return new UserInfoResponse(
-                user.getId().intValue(),
-                user.getFullName(),
-                user.getEmail(),
-                user.getRole().name(),
-                user.getStatus().name(),
-                user.getPhone(),
-                user.getLocation(),
-                user.getTeam() != null ? user.getTeam().name() : null,
-                user.getLastLogin() != null ? user.getLastLogin().toInstant().toString() : null);
+        return UserInfoResponse.builder()
+                .id(user.getId().intValue())
+                .full_name(user.getFullName())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .account_status(user.getStatus().name())
+                .phone(user.getPhone())
+                .location(user.getLocation())
+                .team(user.getTeam() != null ? user.getTeam().name() : null)
+                .last_login(user.getLastLogin() != null ? user.getLastLogin().toInstant().toString() : null)
+                .warehouse_ids(user.getAssignedWarehouses().stream()
+                        .map(Warehouse::getId)
+                        .toList())
+                .build();
     }
 
     @Transactional
@@ -122,17 +127,20 @@ public class UserService {
     }
 
     private UserInfoResponse mapToUserInfoResponse(User user) {
-        return new UserInfoResponse(
-                user.getId().intValue(),
-                user.getFullName(),
-                user.getEmail(),
-                user.getRole().name(),
-                user.getStatus().name(),
-                user.getPhone(),
-                user.getLocation(),
-                user.getTeam() != null ? user.getTeam().name() : null,
-                user.getLastLogin() != null ? user.getLastLogin().toInstant().toString() : null
-        );
+        return UserInfoResponse.builder()
+                .id(user.getId().intValue())
+                .full_name(user.getFullName())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .account_status(user.getStatus().name())
+                .phone(user.getPhone())
+                .location(user.getLocation())
+                .team(user.getTeam() != null ? user.getTeam().name() : null)
+                .last_login(user.getLastLogin() != null ? user.getLastLogin().toInstant().toString() : null)
+                .warehouse_ids(user.getAssignedWarehouses().stream()
+                        .map(Warehouse::getId)
+                        .toList())
+                .build();
     }
 
     /**
@@ -288,17 +296,4 @@ public class UserService {
         userRepository.save(user);
     }
 
-    /**
-     * Admin: Get all warehouses assigned to a user
-     */
-    public List<Long> getUserWarehouseIds(Long userId, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
-
-        return user.getAssignedWarehouses().stream()
-                .map(Warehouse::getId)
-                .toList();
-    }
 }

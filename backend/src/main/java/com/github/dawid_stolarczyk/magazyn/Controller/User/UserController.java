@@ -282,26 +282,4 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "Get user's warehouse assignments (ADMIN only)",
-            description = "Returns list of warehouse IDs that the user has access to")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success - warehouse list returned",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
-            @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
-    })
-    @GetMapping("/{userId}/warehouses")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<List<Long>>> getUserWarehouses(
-            @PathVariable Long userId,
-            HttpServletRequest request) {
-        try {
-            List<Long> warehouseIds = userService.getUserWarehouseIds(userId, request);
-            return ResponseEntity.ok(ResponseTemplate.success(warehouseIds));
-        } catch (AuthenticationException e) {
-            log.error("Failed to get user warehouses for user {}", userId, e);
-            HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
-            return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
-        }
-    }
 }

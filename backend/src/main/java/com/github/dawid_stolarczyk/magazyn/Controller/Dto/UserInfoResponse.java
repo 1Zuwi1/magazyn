@@ -3,14 +3,20 @@ package com.github.dawid_stolarczyk.magazyn.Controller.Dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 @Setter
-@Schema(description = "User information response")
+@Builder
+@NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "User information response")
 public class UserInfoResponse {
     @Schema(description = "User ID", example = "1")
     private int id;
@@ -39,7 +45,7 @@ public class UserInfoResponse {
     @Schema(description = "Last login timestamp", example = "2026-02-05T14:30:00Z")
     private String last_login;
 
-    public UserInfoResponse() {
-    }
+    @Schema(description = "List of assigned warehouse IDs", example = "[1, 2, 5]")
+    private List<Long> warehouse_ids;
 
 }

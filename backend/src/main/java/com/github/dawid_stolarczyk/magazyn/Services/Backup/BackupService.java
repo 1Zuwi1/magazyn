@@ -1,6 +1,8 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Backup;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
@@ -47,6 +49,7 @@ public class BackupService {
     private final InboundOperationRepository inboundOperationRepository;
     private final BackupStorageService backupStorageService;
     private final FileCryptoService fileCryptoService;
+    @org.springframework.beans.factory.annotation.Qualifier("backupObjectMapper")
     private final ObjectMapper objectMapper;
     private final Bucket4jRateLimiter rateLimiter;
     private final AsyncTaskExecutor asyncTaskExecutor;
@@ -68,23 +71,28 @@ public class BackupService {
 
     // --- Internal backup data records ---
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private record RackBackupData(Long originalId, String marker, String comment, int sizeX, int sizeY,
                                   float maxTemp, float minTemp, float maxWeight,
                                   float maxSizeX, float maxSizeY, float maxSizeZ,
                                   boolean acceptsDangerous) {}
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private record ItemBackupData(Long originalId, String name, String code, String photoUrl,
                                   float minTemp, float maxTemp, float weight,
                                   float sizeX, float sizeY, float sizeZ,
                                   String comment, Long expireAfterDays, boolean isDangerous) {}
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private record AssortmentBackupData(Long originalId, String code, Long originalItemId, Long originalRackId,
                                         Timestamp createdAt, Timestamp expiresAt,
                                         Integer positionX, Integer positionY) {}
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private record BackupManifest(Long backupId, Long warehouseId, String warehouseName, Instant createdAt,
                                   int schemaVersion, Map<String, ResourceInfo> resources) {}
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private record ResourceInfo(int count) {}
 
     // --- Backup operations ---
@@ -278,23 +286,31 @@ public class BackupService {
             String basePath = record.getR2BasePath();
 
             // Phase 1 — Download + decrypt manifest (GCM verifies integrity automatically)
-            BackupManifest manifest = reader.downloadAndRead(basePath, "manifest.enc", BackupManifest.class);
+            // Read as JsonNode to handle legacy backups that contain @class type metadata
+            JsonNode manifestNode = reader.downloadAndRead(basePath, "manifest.enc", JsonNode.class);
+            JsonNode resourcesNode = manifestNode.get("resources");
+            Set<String> resourceKeys = new HashSet<>();
+            if (resourcesNode != null) {
+                resourcesNode.fieldNames().forEachRemaining(key -> {
+                    if (!key.equals("@class")) resourceKeys.add(key);
+                });
+            }
 
             // Phase 2 — Download + decrypt all resource files (GCM verifies integrity)
             List<RackBackupData> rackDataList = null;
             List<ItemBackupData> itemDataList = null;
             List<AssortmentBackupData> assortmentDataList = null;
 
-            if (manifest.resources().containsKey("racks")) {
-                rackDataList = reader.downloadAndRead(basePath, "racks.enc", new TypeReference<>() {});
+            if (resourceKeys.contains("racks")) {
+                rackDataList = reader.downloadAndRead(basePath, "racks.enc", new TypeReference<List<RackBackupData>>() {});
             }
 
-            if (manifest.resources().containsKey("items")) {
-                itemDataList = reader.downloadAndRead(basePath, "items.enc", new TypeReference<>() {});
+            if (resourceKeys.contains("items")) {
+                itemDataList = reader.downloadAndRead(basePath, "items.enc", new TypeReference<List<ItemBackupData>>() {});
             }
 
-            if (manifest.resources().containsKey("assortments")) {
-                assortmentDataList = reader.downloadAndRead(basePath, "assortments.enc", new TypeReference<>() {});
+            if (resourceKeys.contains("assortments")) {
+                assortmentDataList = reader.downloadAndRead(basePath, "assortments.enc", new TypeReference<List<AssortmentBackupData>>() {});
             }
 
             // Phase 3 — Atomic DB restore
