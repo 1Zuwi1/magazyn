@@ -284,13 +284,47 @@ public class BackupService {
             throw new IllegalStateException("BACKUP_NOT_COMPLETED");
         }
 
+        Long warehouseId = record.getWarehouse().getId();
+        AtomicBoolean lock = warehouseLocks.computeIfAbsent(warehouseId, k -> new AtomicBoolean(false));
+        if (!lock.compareAndSet(false, true)) {
+            throw new IllegalStateException("RESTORE_ALREADY_IN_PROGRESS");
+        }
+
+        record.setStatus(BackupStatus.RESTORING);
+        record.setRestoreStartedAt(Instant.now());
+        record.setRacksRestored(0);
+        record.setItemsRestored(0);
+        record.setAssortmentsRestored(0);
+        record.setRestoreCompletedAt(null);
+        record.setErrorMessage(null);
+        record = backupRecordRepository.save(record);
+
+        Long recordId = record.getId();
+        asyncTaskExecutor.submit(() -> executeRestore(recordId));
+
+        return RestoreResultDto.builder()
+                .backupId(backupId)
+                .warehouseId(warehouseId)
+                .racksRestored(0)
+                .itemsRestored(0)
+                .assortmentsRestored(0)
+                .restoredAt(Instant.now())
+                .build();
+    }
+
+    private void executeRestore(Long recordId) {
+        BackupRecord record = backupRecordRepository.findById(recordId).orElse(null);
+        if (record == null) return;
+
+        Long warehouseId = record.getWarehouse().getId();
+        Long backupId = record.getId();
+
         StreamingBackupReader reader = new StreamingBackupReader(objectMapper, fileCryptoService, backupStorageService, streamingExecutor);
 
         try {
             String basePath = record.getR2BasePath();
 
             // Phase 1 — Download + decrypt manifest (GCM verifies integrity automatically)
-            // Read as JsonNode to handle legacy backups that contain @class type metadata
             JsonNode manifestNode = reader.downloadAndRead(basePath, "manifest.enc", JsonNode.class);
             JsonNode resourcesNode = manifestNode.get("resources");
             Set<String> resourceKeys = new HashSet<>();
@@ -321,7 +355,6 @@ public class BackupService {
             }
 
             // Phase 3 — Atomic DB restore
-            Long warehouseId = record.getWarehouse().getId();
             int racksRestored = 0;
             int itemsRestored = 0;
             int assortmentsRestored = 0;
@@ -437,19 +470,38 @@ public class BackupService {
                 }
             }
 
-            return RestoreResultDto.builder()
-                    .backupId(backupId)
-                    .warehouseId(warehouseId)
-                    .racksRestored(racksRestored)
-                    .itemsRestored(itemsRestored)
-                    .assortmentsRestored(assortmentsRestored)
-                    .restoredAt(Instant.now())
-                    .build();
+            // Update record with restore results
+            record.setStatus(BackupStatus.COMPLETED);
+            record.setRacksRestored(racksRestored);
+            record.setItemsRestored(itemsRestored);
+            record.setAssortmentsRestored(assortmentsRestored);
+            record.setRestoreCompletedAt(Instant.now());
+            backupRecordRepository.save(record);
+
+            log.info("Restore {} completed for warehouse {} — {} racks, {} items, {} assortments",
+                    recordId, warehouseId, racksRestored, itemsRestored, assortmentsRestored);
+
+            createRestoreAlert(record, true);
 
         } catch (SecurityException | IllegalStateException e) {
-            throw e;
+            log.error("Restore {} failed for warehouse {}", recordId, warehouseId, e);
+            record.setStatus(BackupStatus.FAILED);
+            record.setErrorMessage(e.getMessage());
+            record.setRestoreCompletedAt(Instant.now());
+            backupRecordRepository.save(record);
+            createRestoreAlert(record, false);
         } catch (Exception e) {
-            throw new RuntimeException("RESTORE_FAILED: " + e.getMessage(), e);
+            log.error("Restore {} failed for warehouse {}", recordId, warehouseId, e);
+            record.setStatus(BackupStatus.FAILED);
+            record.setErrorMessage(e.getMessage() != null ? e.getMessage().substring(0, Math.min(e.getMessage().length(), 2000)) : "Unknown error");
+            record.setRestoreCompletedAt(Instant.now());
+            backupRecordRepository.save(record);
+            createRestoreAlert(record, false);
+        } finally {
+            AtomicBoolean lock = warehouseLocks.remove(warehouseId);
+            if (lock != null) {
+                lock.set(false);
+            }
         }
     }
 
@@ -552,6 +604,11 @@ public class BackupService {
                 .createdAt(record.getCreatedAt())
                 .completedAt(record.getCompletedAt())
                 .errorMessage(record.getErrorMessage())
+                .restoreStartedAt(record.getRestoreStartedAt())
+                .restoreCompletedAt(record.getRestoreCompletedAt())
+                .racksRestored(record.getRacksRestored())
+                .itemsRestored(record.getItemsRestored())
+                .assortmentsRestored(record.getAssortmentsRestored())
                 .triggeredByName(record.getTriggeredBy() != null ? record.getTriggeredBy().getFullName() : null)
                 .build();
     }
@@ -590,6 +647,43 @@ public class BackupService {
             distributeBackupNotifications(alert, warehouse);
         } catch (Exception e) {
             log.error("Failed to create backup alert for warehouse {}", warehouse.getId(), e);
+        }
+    }
+
+    private void createRestoreAlert(BackupRecord record, boolean success) {
+        try {
+            Warehouse warehouse = record.getWarehouse();
+            AlertType alertType = success ? AlertType.RESTORE_COMPLETED : AlertType.RESTORE_FAILED;
+            String message = buildRestoreAlertMessage(warehouse, record, success);
+
+            Alert alert = Alert.builder()
+                    .warehouse(warehouse)
+                    .alertType(alertType)
+                    .status(AlertStatus.OPEN)
+                    .message(message)
+                    .createdAt(Instant.now())
+                    .build();
+
+            alertRepository.save(alert);
+            log.info("Created restore alert: type={}, warehouse={}, success={}", alertType, warehouse.getId(), success);
+
+            distributeBackupNotifications(alert, warehouse);
+        } catch (Exception e) {
+            log.error("Failed to create restore alert for record {}", record.getId(), e);
+        }
+    }
+
+    private String buildRestoreAlertMessage(Warehouse warehouse, BackupRecord record, boolean success) {
+        if (success) {
+            return String.format("Restore dla magazynu %s (ID: %d) z kopii zapasowej %d zakończony pomyślnie. " +
+                            "Regały: %d, Produkty: %d, Przypisania: %d",
+                    warehouse.getName(), warehouse.getId(), record.getId(),
+                    record.getRacksRestored(), record.getItemsRestored(), record.getAssortmentsRestored());
+        } else {
+            return String.format("Restore dla magazynu %s (ID: %d) z kopii zapasowej %d nie powiódł się. " +
+                            "Błąd: %s",
+                    warehouse.getName(), warehouse.getId(), record.getId(),
+                    record.getErrorMessage() != null ? record.getErrorMessage() : "Nieznany błąd");
         }
     }
 

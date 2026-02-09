@@ -335,7 +335,8 @@ public class RackReportService {
                     throw new IllegalArgumentException("UNAUTHORIZED_OUTBOUND should use buildAlertMessageForWeight");
             case EMBEDDING_GENERATION_COMPLETED, EMBEDDING_GENERATION_FAILED,
                  ASSORTMENT_EXPIRED, ASSORTMENT_CLOSE_TO_EXPIRY,
-                 BACKUP_COMPLETED, BACKUP_FAILED, ADMIN_MESSAGE ->
+                 BACKUP_COMPLETED, BACKUP_FAILED,
+                 RESTORE_COMPLETED, RESTORE_FAILED, ADMIN_MESSAGE ->
                     throw new IllegalArgumentException("System alert types should not be used in rack reports");
         };
     }

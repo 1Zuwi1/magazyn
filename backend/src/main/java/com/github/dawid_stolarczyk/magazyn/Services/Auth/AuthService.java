@@ -51,7 +51,7 @@ public class AuthService {
     private final EmailService emailService;
     private final GeolocationService geolocationService;
 
-    @Value("${app.webapp.url:null}")
+    @Value("${app.webapp.url}")
     private String webAppUrl;
 
 
@@ -147,7 +147,7 @@ public class AuthService {
         }
         User user = emailVerification.getUser();
         user.removeEmailVerifications();
-        user.setStatus(AccountStatus.ACTIVE);
+        user.setEmailStatus(EmailStatus.VERIFIED);
         userRepository.save(user);
     }
 

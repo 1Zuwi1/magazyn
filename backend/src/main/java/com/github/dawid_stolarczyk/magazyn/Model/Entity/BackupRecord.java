@@ -63,6 +63,21 @@ public class BackupRecord {
     @Column(name = "error_message", length = 2000)
     private String errorMessage;
 
+    @Column(name = "restore_started_at")
+    private Instant restoreStartedAt;
+
+    @Column(name = "restore_completed_at")
+    private Instant restoreCompletedAt;
+
+    @Column(name = "racks_restored")
+    private Integer racksRestored;
+
+    @Column(name = "items_restored")
+    private Integer itemsRestored;
+
+    @Column(name = "assortments_restored")
+    private Integer assortmentsRestored;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "triggered_by")
     private User triggeredBy;

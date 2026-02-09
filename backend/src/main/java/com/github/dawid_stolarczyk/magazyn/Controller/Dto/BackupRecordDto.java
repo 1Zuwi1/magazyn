@@ -52,6 +52,21 @@ public class BackupRecordDto {
     @Schema(description = "Error message if backup failed")
     private String errorMessage;
 
+    @Schema(description = "Restore start timestamp")
+    private Instant restoreStartedAt;
+
+    @Schema(description = "Restore completion timestamp")
+    private Instant restoreCompletedAt;
+
+    @Schema(description = "Number of racks restored", example = "10")
+    private Integer racksRestored;
+
+    @Schema(description = "Number of items restored", example = "50")
+    private Integer itemsRestored;
+
+    @Schema(description = "Number of assortments restored", example = "200")
+    private Integer assortmentsRestored;
+
     @Schema(description = "Name of user who triggered the backup")
     private String triggeredByName;
 }

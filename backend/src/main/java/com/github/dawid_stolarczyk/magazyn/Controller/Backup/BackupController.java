@@ -86,15 +86,16 @@ public class BackupController {
     }
 
     @Operation(summary = "Restore from backup",
-            description = "Restores warehouse data from a completed backup. This is a synchronous, transactional operation.")
+            description = "Restores warehouse data from a completed backup. This is an async operation.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Restore completed"),
-            @ApiResponse(responseCode = "400", description = "Error codes: BACKUP_NOT_FOUND, BACKUP_NOT_COMPLETED, MANIFEST_CHECKSUM_MISMATCH",
+            @ApiResponse(responseCode = "202", description = "Restore initiated"),
+            @ApiResponse(responseCode = "400", description = "Error codes: BACKUP_NOT_FOUND, BACKUP_NOT_COMPLETED, RESTORE_ALREADY_IN_PROGRESS",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/{id}/restore")
     public ResponseEntity<ResponseTemplate<RestoreResultDto>> restoreBackup(@PathVariable Long id) {
-        return ResponseEntity.ok(ResponseTemplate.success(backupService.restoreBackup(id)));
+        RestoreResultDto dto = backupService.restoreBackup(id);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ResponseTemplate.success(dto));
     }
 
     @Operation(summary = "Delete a backup",
