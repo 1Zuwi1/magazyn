@@ -128,11 +128,11 @@ describe("voice commands", () => {
   })
 
   it("matches inventory check for specific rack", () => {
-    const match = matchVoiceCommand("Sprawdź stan regału A1")
+    const match = matchVoiceCommand("Sprawdź stan magazynu A1")
 
     expect(match).not.toBeNull()
     expect(match?.command.id).toBe("inventory-check")
-    expect(match?.params.rackName).toBe("A1")
+    expect(match?.params.warehouseName).toBe("A1")
   })
 
   it("matches inventory check for specific item", () => {

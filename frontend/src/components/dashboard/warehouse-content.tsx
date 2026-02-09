@@ -2,9 +2,11 @@
 
 import { Search } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
 import { MOCK_WAREHOUSES } from "./mock-data"
 import { DEFAULT_FILTERS, WarehouseFilters } from "./storage-filters"
 import { WarehouseGrid } from "./storage-grid"
@@ -13,8 +15,32 @@ import { filterWarehouses } from "./utils/filters"
 import { pluralize } from "./utils/helpers"
 
 export const WarehouseContent = () => {
+  const pendingAction = useVoiceCommandStore((state) => state.pendingAction)
+  const clearPendingAction = useVoiceCommandStore(
+    (state) => state.clearPendingAction
+  )
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const filteredWarehouses = filterWarehouses(MOCK_WAREHOUSES, filters)
+
+  useEffect(() => {
+    if (!pendingAction) {
+      return
+    }
+
+    const { warehouseName, itemName } = pendingAction.payload
+    const normalizedWarehouseName = warehouseName?.trim()
+    const normalizedItemName = itemName?.trim()
+    const query = normalizedWarehouseName || normalizedItemName || ""
+
+    if (query) {
+      setFilters((prev) => ({ ...prev, query }))
+      toast.success(`Uruchomiono sprawdzanie stanu dla "${query}"`)
+    } else {
+      toast.success("Uruchomiono sprawdzanie stanu magazynowego")
+    }
+
+    clearPendingAction()
+  }, [pendingAction, clearPendingAction])
 
   const hasActiveFilters =
     filters.query !== "" ||

@@ -44,9 +44,9 @@ export const getCommandLabel = (
   }
 
   if (match.command.id === "inventory-check") {
-    const { rackName, itemName } = match.params
-    if (rackName) {
-      return `Sprawdź stan regału ${rackName}`
+    const { warehouseName, itemName } = match.params
+    if (warehouseName) {
+      return `Sprawdź stan magazynu ${warehouseName}`
     }
     if (itemName) {
       return `Sprawdź stan "${itemName}"`
@@ -152,10 +152,10 @@ export const handleConfirmCommandAction = (
       return
     case "inventory-check":
       {
-        const { rackName, itemName } = matchedCommand.params
+        const { warehouseName, itemName } = matchedCommand.params
         actions.setPendingAction({
           type: "inventory-check",
-          payload: { rackName, itemName },
+          payload: { warehouseName, itemName },
         })
         actions.navigateAndClose("/dashboard/warehouse")
       }

@@ -200,6 +200,7 @@ export default function TwoFactorForm({
                                 <InputOTP
                                   aria-invalid={isInvalid}
                                   autoComplete="one-time-code"
+                                  autoFocus
                                   containerClassName="items-center justify-center gap-4"
                                   disabled={isSubmitting || isResending}
                                   id={id}

@@ -181,12 +181,12 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
     description: "Sprawdź stan magazynowy",
     patterns: [
       {
-        regex: /^sprawdz stan regalu ([a-z0-9 ]+)$/i,
-        paramNames: ["rackName"],
+        regex: /^sprawdz stan magazynu ([a-z0-9 ]+)$/i,
+        paramNames: ["warehouseName"],
       },
       {
-        regex: /^stan regalu ([a-z0-9 ]+)$/i,
-        paramNames: ["rackName"],
+        regex: /^stan magazynu ([a-z0-9 ]+)$/i,
+        paramNames: ["warehouseName"],
       },
       {
         regex: /^ile jest ([a-z0-9 ]+)$/i,

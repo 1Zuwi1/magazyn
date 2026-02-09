@@ -1,7 +1,7 @@
 import { create } from "zustand"
 
 export interface InventoryCheckPayload {
-  rackName?: string
+  warehouseName?: string
   itemName?: string
 }
 

@@ -4,7 +4,13 @@ import { createApiSchema } from "./create-api-schema"
 
 const txtEncoder = new TextEncoder()
 
-export const TFAMethods = z.enum(["AUTHENTICATOR", "SMS", "EMAIL", "PASSKEYS"])
+export const TFAMethods = z.enum([
+  "AUTHENTICATOR",
+  "SMS",
+  "EMAIL",
+  "PASSKEYS",
+  "BACKUP_CODES",
+] as const)
 export type TwoFactorMethod = z.infer<typeof TFAMethods>
 
 export const ResendMethods = TFAMethods.exclude(["AUTHENTICATOR", "PASSKEYS"])
