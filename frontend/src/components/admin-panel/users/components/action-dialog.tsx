@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { AdminTeamOption } from "@/hooks/use-admin-users"
+import { cn } from "@/lib/utils"
 
 const profilePhonePattern = /^[+\d\s()-]*$/
 
@@ -187,7 +188,9 @@ export function ActionDialog({
                     value={field.state.value || ""}
                   >
                     <SelectTrigger
-                      className={isInvalid ? "border-destructive" : ""}
+                      className={cn("w-fit", {
+                        "border-destructive": isInvalid,
+                      })}
                       id={id}
                     >
                       <SelectValue
@@ -202,7 +205,7 @@ export function ActionDialog({
                         }
                       />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="w-fit">
                       {teams.map((teamOption) => (
                         <SelectItem
                           key={teamOption.value}

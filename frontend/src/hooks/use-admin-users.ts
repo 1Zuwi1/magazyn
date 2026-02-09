@@ -9,7 +9,9 @@ import {
   AdminChangeUserEmailSchema,
   AdminDeleteUserSchema,
   AdminUpdateUserProfileSchema,
+  AdminUpdateUserStatusSchema,
   AdminUsersSchema,
+  AdminUsersWarehouseAssignmentSchema,
   AdminUserTeamsSchema,
 } from "@/lib/schemas"
 import { useApiMutation } from "./use-api-mutation"
@@ -100,6 +102,65 @@ export function useUpdateAdminUserProfile() {
         method: "PATCH",
         body,
       }),
+    onSuccess: (_, __, ___, context) => {
+      invalidateAdminUsersCache(context.client)
+    },
+  })
+}
+
+export function useUpdateAdminUserStatus() {
+  return useApiMutation({
+    mutationFn: ({
+      userId,
+      ...params
+    }: InferApiInput<typeof AdminUpdateUserStatusSchema, "PATCH"> & {
+      userId: number
+    }) =>
+      apiFetch(`/api/users/${userId}/status`, AdminUpdateUserStatusSchema, {
+        method: "PATCH",
+        body: params,
+      }),
+    onSuccess: (_, __, ___, context) => {
+      invalidateAdminUsersCache(context.client)
+    },
+  })
+}
+
+export function useUsersWarehouseAssignments() {
+  return useApiMutation({
+    mutationFn: (
+      params: InferApiInput<typeof AdminUsersWarehouseAssignmentSchema, "POST">
+    ) =>
+      apiFetch(
+        "/api/users/warehouse-assignments",
+        AdminUsersWarehouseAssignmentSchema,
+        {
+          method: "POST",
+          body: params,
+        }
+      ),
+    onSuccess: (_, __, ___, context) => {
+      invalidateAdminUsersCache(context.client)
+    },
+  })
+}
+
+export function useUsersWarehouseAssignmentsDelete() {
+  return useApiMutation({
+    mutationFn: (
+      params: InferApiInput<
+        typeof AdminUsersWarehouseAssignmentSchema,
+        "DELETE"
+      >
+    ) =>
+      apiFetch(
+        "/api/users/warehouse-assignments",
+        AdminUsersWarehouseAssignmentSchema,
+        {
+          method: "DELETE",
+          body: params,
+        }
+      ),
     onSuccess: (_, __, ___, context) => {
       invalidateAdminUsersCache(context.client)
     },

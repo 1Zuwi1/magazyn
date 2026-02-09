@@ -1,17 +1,22 @@
 import { useMemo } from "react"
+import type { AdminUser } from "@/hooks/use-admin-users"
 import useAdminUsers, { useAdminUserTeams } from "@/hooks/use-admin-users"
 import { TABLE_PAGE_SIZE } from "../lib/user-utils"
+
+type AccountStatus = AdminUser["account_status"]
 
 interface UseUsersDataParams {
   page: number
   isEmailQuery: boolean
   searchQuery?: string
+  statusFilter?: AccountStatus
 }
 
 export function useUsersData({
   page,
   isEmailQuery,
   searchQuery,
+  statusFilter,
 }: UseUsersDataParams) {
   const {
     data: usersData,
@@ -22,6 +27,7 @@ export function useUsersData({
     name: isEmailQuery ? undefined : searchQuery,
     page,
     size: TABLE_PAGE_SIZE,
+    status: statusFilter,
   })
   const {
     data: teamsData,

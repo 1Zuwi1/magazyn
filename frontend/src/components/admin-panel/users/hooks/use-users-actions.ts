@@ -9,9 +9,14 @@ import {
   useChangeAdminUserEmail,
   useDeleteAdminUser,
   useUpdateAdminUserProfile,
+  useUpdateAdminUserStatus,
+  useUsersWarehouseAssignments,
+  useUsersWarehouseAssignmentsDelete,
 } from "@/hooks/use-admin-users"
 import type { EditUserFormValues } from "../components/action-dialog"
 import { normalizeValue, resolveTeamValue } from "../lib/user-utils"
+
+type AccountStatus = AdminUser["account_status"]
 
 interface UseUsersActionsParams {
   users: AdminUser[]
@@ -55,6 +60,9 @@ export function useUsersActions({
   const updateProfileMutation = useUpdateAdminUserProfile()
   const changeEmailMutation = useChangeAdminUserEmail()
   const deleteUserMutation = useDeleteAdminUser()
+  const updateStatusMutation = useUpdateAdminUserStatus()
+  const assignWarehouseMutation = useUsersWarehouseAssignments()
+  const removeWarehouseMutation = useUsersWarehouseAssignmentsDelete()
 
   const confirmDeleteUser = () => {
     if (userIdToDelete === null) {
@@ -70,6 +78,68 @@ export function useUsersActions({
         toast.error("Nie udało się usunąć użytkownika")
       },
     })
+  }
+
+  const changeUserStatus = ({
+    userId,
+    status,
+    reason,
+  }: {
+    userId: number
+    status: AccountStatus
+    reason?: string
+  }) => {
+    updateStatusMutation.mutate(
+      { userId, status, reason },
+      {
+        onSuccess: () => {
+          toast.success("Status użytkownika został zmieniony")
+        },
+        onError: () => {
+          toast.error("Nie udało się zmienić statusu użytkownika")
+        },
+      }
+    )
+  }
+
+  const assignWarehouse = ({
+    userId,
+    warehouseId,
+  }: {
+    userId: number
+    warehouseId: number
+  }) => {
+    assignWarehouseMutation.mutate(
+      { userId, warehouseId },
+      {
+        onSuccess: () => {
+          toast.success("Magazyn został przypisany do użytkownika")
+        },
+        onError: () => {
+          toast.error("Nie udało się przypisać magazynu")
+        },
+      }
+    )
+  }
+
+  const removeWarehouseAssignment = ({
+    userId,
+    warehouseId,
+  }: {
+    userId: number
+    warehouseId: number
+  }) => {
+    removeWarehouseMutation.mutate(
+      { userId, warehouseId },
+      {
+        onSuccess: () => {
+          toast.success("Przypisanie magazynu zostało usunięte")
+        },
+        onError: () => {
+          toast.error("Nie udało się usunąć przypisania magazynu")
+        },
+      }
+    )
   }
 
   const handleSubmitUser = async ({ id, values }: SubmitUserParams) => {
@@ -145,5 +215,8 @@ export function useUsersActions({
   return {
     confirmDeleteUser,
     handleSubmitUser,
+    changeUserStatus,
+    assignWarehouse,
+    removeWarehouseAssignment,
   }
 }

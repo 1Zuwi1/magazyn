@@ -498,6 +498,33 @@ export const AdminUpdateUserProfileSchema = createApiSchema({
   },
 })
 
+export const AdminUpdateUserStatusSchema = createApiSchema({
+  PATCH: {
+    input: z.object({
+      status: UserAccountStatusSchema,
+      reason: z.string().trim().max(500).optional(),
+    }),
+    output: z.null(),
+  },
+})
+
+export const AdminUsersWarehouseAssignmentSchema = createApiSchema({
+  POST: {
+    input: z.object({
+      userId: z.number().int().nonnegative(),
+      warehouseId: z.number().int().nonnegative(),
+    }),
+    output: z.null(),
+  },
+  DELETE: {
+    input: z.object({
+      userId: z.number().int().nonnegative(),
+      warehouseId: z.number().int().nonnegative(),
+    }),
+    output: z.null(),
+  },
+})
+
 export const AdminChangeUserEmailSchema = createApiSchema({
   PATCH: {
     input: z.object({

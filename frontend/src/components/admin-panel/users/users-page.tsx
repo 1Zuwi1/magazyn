@@ -4,10 +4,12 @@ import { UserMultiple02Icon } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { ActionDialog } from "@/components/admin-panel/users/components/action-dialog"
+import { StatusChangeDialog } from "@/components/admin-panel/users/components/status-change-dialog"
+import { UsersFilterBar } from "@/components/admin-panel/users/components/users-filter-bar"
 import { UsersPaginationFooter } from "@/components/admin-panel/users/components/users-pagination-footer"
-import { UsersSearchInput } from "@/components/admin-panel/users/components/users-search-input"
 import { UsersStats } from "@/components/admin-panel/users/components/users-stats"
 import { UsersTable } from "@/components/admin-panel/users/components/users-table"
+import { WarehouseAssignmentDialog } from "@/components/admin-panel/users/components/warehouse-assignment-dialog"
 import { useUsersActions } from "@/components/admin-panel/users/hooks/use-users-actions"
 import { useUsersData } from "@/components/admin-panel/users/hooks/use-users-data"
 import { useUsersDialogState } from "@/components/admin-panel/users/hooks/use-users-dialog-state"
@@ -22,8 +24,10 @@ export default function UsersMain() {
     search,
     searchQuery,
     isEmailQuery,
+    statusFilter,
     setPage,
     handleSearchChange,
+    handleStatusFilterChange,
   } = useUsersFilters()
   const {
     usersData,
@@ -37,6 +41,7 @@ export default function UsersMain() {
     page,
     isEmailQuery,
     searchQuery,
+    statusFilter,
   })
   const {
     dialogOpen,
@@ -49,11 +54,25 @@ export default function UsersMain() {
     userIdToDelete,
     setUserIdToDelete,
     deleteDescription,
+    statusDialogOpen,
+    statusDialogUser,
+    openStatusDialog,
+    handleStatusDialogOpenChange,
+    warehouseDialogOpen,
+    warehouseDialogUser,
+    openWarehouseDialog,
+    handleWarehouseDialogOpenChange,
   } = useUsersDialogState({
     users,
     teams,
   })
-  const { confirmDeleteUser, handleSubmitUser } = useUsersActions({
+  const {
+    confirmDeleteUser,
+    handleSubmitUser,
+    changeUserStatus,
+    assignWarehouse,
+    removeWarehouseAssignment,
+  } = useUsersActions({
     users,
     teams,
     userIdToDelete,
@@ -90,6 +109,14 @@ export default function UsersMain() {
     openDeleteDialog(userId)
   }
 
+  const handleChangeStatus = (userId: number) => {
+    openStatusDialog(userId)
+  }
+
+  const handleAssignWarehouse = (userId: number) => {
+    openWarehouseDialog(userId)
+  }
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
@@ -109,11 +136,18 @@ export default function UsersMain() {
       </AdminPageHeader>
 
       <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-        <UsersSearchInput onChange={handleSearchChange} value={search} />
+        <UsersFilterBar
+          onSearchChange={handleSearchChange}
+          onStatusFilterChange={handleStatusFilterChange}
+          search={search}
+          statusFilter={statusFilter}
+        />
 
         <UsersTable
           isError={isUsersError}
           isPending={isUsersPending}
+          onAssignWarehouse={handleAssignWarehouse}
+          onChangeStatus={handleChangeStatus}
           onDeleteUser={handleDeleteUser}
           onEditUser={handleEditUser}
           users={users}
@@ -144,6 +178,21 @@ export default function UsersMain() {
         onOpenChange={handleDeleteDialogOpenChange}
         open={deleteDialogOpen}
         title="Usuń użytkownika"
+      />
+
+      <StatusChangeDialog
+        onConfirm={changeUserStatus}
+        onOpenChange={handleStatusDialogOpenChange}
+        open={statusDialogOpen}
+        user={statusDialogUser}
+      />
+
+      <WarehouseAssignmentDialog
+        onAssign={assignWarehouse}
+        onOpenChange={handleWarehouseDialogOpenChange}
+        onRemove={removeWarehouseAssignment}
+        open={warehouseDialogOpen}
+        user={warehouseDialogUser}
       />
     </div>
   )

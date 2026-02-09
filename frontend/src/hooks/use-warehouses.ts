@@ -1,4 +1,6 @@
 import type { UseQueryResult } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
 import {
   apiFetch,
   type FetchError,
@@ -141,4 +143,47 @@ export function useImportWarehouses() {
       })
     },
   })
+}
+
+const INFINITE_WAREHOUSES_DEFAULT_PAGE_SIZE = 20
+
+interface UseInfiniteWarehousesParams {
+  nameFilter?: string
+  pageSize?: number
+}
+
+export function useInfiniteWarehouses({
+  nameFilter,
+  pageSize = INFINITE_WAREHOUSES_DEFAULT_PAGE_SIZE,
+}: UseInfiniteWarehousesParams = {}) {
+  const query = useInfiniteQuery({
+    queryKey: [...WAREHOUSES_QUERY_KEY, "infinite", nameFilter, pageSize],
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
+      return await apiFetch("/api/warehouses", WarehousesSchema, {
+        queryParams: {
+          page: pageParam,
+          size: pageSize,
+          nameFilter: nameFilter?.trim() || undefined,
+        },
+      })
+    },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.last) {
+        return undefined
+      }
+      return lastPage.page + 1
+    },
+    staleTime: 60_000,
+  })
+
+  const warehouses = useMemo(
+    () => query.data?.pages.flatMap((page) => page.content) ?? [],
+    [query.data]
+  )
+
+  return {
+    ...query,
+    warehouses,
+  }
 }

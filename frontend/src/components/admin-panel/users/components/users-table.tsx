@@ -1,7 +1,9 @@
 import {
+  Building06Icon,
   Delete02Icon,
   MoreHorizontalCircle01FreeIcons,
   PencilEdit01Icon,
+  UserShield01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Badge } from "@/components/ui/badge"
@@ -9,6 +11,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -33,9 +36,23 @@ interface UsersTableProps {
   isError: boolean
   onEditUser: (userId: number) => void
   onDeleteUser: (userId: number) => void
+  onChangeStatus: (userId: number) => void
+  onAssignWarehouse: (userId: number) => void
 }
 
 const TABLE_COLUMNS_COUNT = 6
+
+const ADMIN_TABLE_LABELS = {
+  OPERATIONS: "Operacje magazynowe",
+  LOGISTICS: "Logistyka",
+  WAREHOUSE: "Magazyn",
+  INVENTORY: "Inwentaryzacja",
+  QUALITY_CONTROL: "Kontrola jakości",
+  RECEIVING: "Przyjęcia",
+  SHIPPING: "Wysyłka",
+  IT_SUPPORT: "Wsparcie IT",
+  MANAGEMENT: "Zarządzanie",
+}
 
 export function UsersTable({
   users,
@@ -43,6 +60,8 @@ export function UsersTable({
   isError,
   onEditUser,
   onDeleteUser,
+  onChangeStatus,
+  onAssignWarehouse,
 }: UsersTableProps) {
   const renderRows = () => {
     if (isPending) {
@@ -110,7 +129,8 @@ export function UsersTable({
           </Badge>
         </TableCell>
         <TableCell className="text-muted-foreground">
-          {normalizeValue(user.team) || "—"}
+          {ADMIN_TABLE_LABELS[user.team as keyof typeof ADMIN_TABLE_LABELS] ||
+            "—"}
         </TableCell>
         <TableCell>
           <DropdownMenu>
@@ -126,7 +146,7 @@ export function UsersTable({
                 icon={MoreHorizontalCircle01FreeIcons}
               />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem
                 className="cursor-pointer"
                 onClick={(event) => {
@@ -140,6 +160,30 @@ export function UsersTable({
                 />
                 Edytuj
               </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onChangeStatus(user.id)
+                }}
+              >
+                <HugeiconsIcon
+                  className="mr-2 size-4"
+                  icon={UserShield01Icon}
+                />
+                Zmień status
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onAssignWarehouse(user.id)
+                }}
+              >
+                <HugeiconsIcon className="mr-2 size-4" icon={Building06Icon} />
+                Przypisz magazyn
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="cursor-pointer text-destructive focus:text-destructive"
                 onClick={(event) => {
