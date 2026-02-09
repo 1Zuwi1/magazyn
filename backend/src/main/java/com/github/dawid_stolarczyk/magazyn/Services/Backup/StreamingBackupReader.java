@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.InputStream;
 import java.io.PipedInputStream;
@@ -23,6 +24,9 @@ public class StreamingBackupReader {
     private final FileCryptoService fileCryptoService;
     private final BackupStorageService backupStorageService;
     private final ExecutorService executorService;
+
+    @Value("${app.backup.streaming-timeout-minutes:5}")
+    private long streamingTimeoutMinutes;
 
     /**
      * Streams data from S3: Download → Decrypt → JSON → Object
@@ -50,12 +54,13 @@ public class StreamingBackupReader {
 
         // Wait for decrypt task completion
         try {
-            decryptTask.get(5, TimeUnit.MINUTES);
+            decryptTask.get(streamingTimeoutMinutes, TimeUnit.MINUTES);
         } catch (ExecutionException e) {
             throw new Exception("Streaming restore failed", e.getCause());
         } catch (TimeoutException e) {
             decryptTask.cancel(true);
-            throw new Exception("Streaming restore timeout");
+            log.error("Streaming restore timeout after {} minutes for {}/{}", streamingTimeoutMinutes, basePath, fileName);
+            throw new Exception("Streaming restore timeout after " + streamingTimeoutMinutes + " minutes");
         }
 
         return result;
@@ -84,14 +89,16 @@ public class StreamingBackupReader {
         }
 
         try {
-            decryptTask.get(5, TimeUnit.MINUTES);
+            decryptTask.get(streamingTimeoutMinutes, TimeUnit.MINUTES);
         } catch (ExecutionException e) {
             throw new Exception("Streaming restore failed", e.getCause());
         } catch (TimeoutException e) {
             decryptTask.cancel(true);
-            throw new Exception("Streaming restore timeout");
+            log.error("Streaming restore timeout after {} minutes for {}/{}", streamingTimeoutMinutes, basePath, fileName);
+            throw new Exception("Streaming restore timeout after " + streamingTimeoutMinutes + " minutes");
         }
 
         return result;
     }
 }
+

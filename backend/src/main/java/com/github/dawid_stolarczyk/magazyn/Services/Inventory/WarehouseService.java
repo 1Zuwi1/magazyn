@@ -76,6 +76,7 @@ public class WarehouseService {
 
         warehousePage = applySorting(warehousePage, pageable);
 
+        // Get warehouse IDs and fetch with racks eagerly for summary calculation
         Iterable<Long> warehouseIds = warehousePage.getContent().stream().map(WarehouseDto::getId).toList();
         WarehouseSummaryDto summary = calculateWarehouseSummary(warehouseIds);
 
@@ -170,8 +171,11 @@ public class WarehouseService {
     }
 
     private WarehouseSummaryDto calculateWarehouseSummary(Iterable<Long> warehouseIds) {
-        // Get all warehouses to calculate cumulative statistics
-        var allWarehouses = warehouseRepository.findAllById(warehouseIds);
+        // Get all warehouses with racks eagerly loaded to avoid N+1 queries
+        var allWarehouses = warehouseRepository.findAllWithRacksByIdIn(warehouseIds);
+
+        // Batch query all assortment counts to avoid N+1 queries
+        var occupiedSlotsByWarehouse = assortmentRepository.countByRack_WarehouseIdIn(warehouseIds);
 
         int totalCapacity = 0;
         int totalOccupiedSlots = 0;
@@ -184,9 +188,9 @@ public class WarehouseService {
                     .sum();
             totalCapacity += warehouseCapacity;
 
-            // Count occupied slots (assortments)
-            long warehouseOccupied = assortmentRepository.countByRack_WarehouseId(warehouse.getId());
-            totalOccupiedSlots += Long.valueOf(warehouseOccupied).intValue();
+            // Get occupied slots from batched result
+            Long warehouseOccupied = occupiedSlotsByWarehouse.getOrDefault(warehouse.getId(), 0L);
+            totalOccupiedSlots += warehouseOccupied.intValue();
 
             // Count racks
             totalRacks += warehouse.getRacks().size();
@@ -206,7 +210,7 @@ public class WarehouseService {
     }
 
     private WarehouseDto mapToDto(Warehouse warehouse) {
-        // Liczba regałów w magazynie
+        // Liczba regałów w magazynie (lazy loaded - should be eagerly loaded by caller)
         int racksCount = warehouse.getRacks().size();
 
         // Liczba zajętych miejsc (Assortments)

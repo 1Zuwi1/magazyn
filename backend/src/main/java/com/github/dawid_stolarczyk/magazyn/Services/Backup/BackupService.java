@@ -290,9 +290,10 @@ public class BackupService {
                 backupStorageService.deleteBackup(record.getR2BasePath());
             }
         } finally {
-            AtomicBoolean lock = warehouseLocks.remove(warehouseId);
+            AtomicBoolean lock = warehouseLocks.get(warehouseId);
             if (lock != null) {
                 lock.set(false);
+                warehouseLocks.remove(warehouseId);
             }
         }
     }
@@ -300,7 +301,7 @@ public class BackupService {
     // --- Restore ---
 
     @Transactional(rollbackFor = Exception.class)
-    public RestoreResultDto restoreBackup(Long backupId) {
+    public RestoreResultDto restoreBackup(Long backupId, User currentUser) {
         BackupRecord record = backupRecordRepository.findById(backupId)
                 .orElseThrow(() -> new IllegalArgumentException("BACKUP_NOT_FOUND"));
 
@@ -309,6 +310,11 @@ public class BackupService {
         }
 
         Long warehouseId = record.getWarehouse().getId();
+        if (!currentUser.getRole().equals(UserRole.ADMIN) && !currentUser.hasAccessToWarehouse(warehouseId)) {
+            log.warn("User {} (role: {}) attempted to restore backup for unauthorized warehouse {}", currentUser.getId(), currentUser.getRole(), warehouseId);
+            throw new SecurityException("WAREHOUSE_ACCESS_DENIED");
+        }
+
         AtomicBoolean lock = warehouseLocks.computeIfAbsent(warehouseId, k -> new AtomicBoolean(false));
         if (!lock.compareAndSet(false, true)) {
             throw new IllegalStateException("RESTORE_ALREADY_IN_PROGRESS");
@@ -441,7 +447,7 @@ public class BackupService {
             record.setRestoreProgressPercentage(60);
             record = backupRecordRepository.save(record);
 
-            // Restore items (global, not warehouse-scoped)
+            // Restore items (global, not warehouse-scoped) - create if absent only
             Map<Long, Long> itemIdMapping = new HashMap<>();
             if (itemDataList != null) {
                 for (ItemBackupData id : itemDataList) {
@@ -449,25 +455,27 @@ public class BackupService {
                     Item item;
                     if (existingItem.isPresent()) {
                         item = existingItem.get();
+                        log.info("Item with code {} already exists globally, using existing item ID {}", id.code(), item.getId());
                     } else {
                         item = new Item();
                         item.setCode(id.code());
+                        item.setName(id.name());
+                        item.setPhoto_url(id.photoUrl());
+                        item.setQrCode(id.qrCode());
+                        item.setMin_temp(id.minTemp());
+                        item.setMax_temp(id.maxTemp());
+                        item.setWeight(id.weight());
+                        item.setSize_x(id.sizeX());
+                        item.setSize_y(id.sizeY());
+                        item.setSize_z(id.sizeZ());
+                        item.setComment(id.comment());
+                        item.setExpireAfterDays(id.expireAfterDays());
+                        item.setDangerous(id.isDangerous());
+                        item = itemRepository.save(item);
+                        log.info("Created new item with code {} (ID: {}) from backup", id.code(), item.getId());
+                        itemsRestored++;
                     }
-                    item.setName(id.name());
-                    item.setPhoto_url(id.photoUrl());
-                    item.setQrCode(id.qrCode());
-                    item.setMin_temp(id.minTemp());
-                    item.setMax_temp(id.maxTemp());
-                    item.setWeight(id.weight());
-                    item.setSize_x(id.sizeX());
-                    item.setSize_y(id.sizeY());
-                    item.setSize_z(id.sizeZ());
-                    item.setComment(id.comment());
-                    item.setExpireAfterDays(id.expireAfterDays());
-                    item.setDangerous(id.isDangerous());
-                    item = itemRepository.save(item);
                     itemIdMapping.put(id.originalId(), item.getId());
-                    itemsRestored++;
                 }
             }
 
@@ -541,9 +549,10 @@ public class BackupService {
             backupRecordRepository.save(record);
             createRestoreAlert(record, false);
         } finally {
-            AtomicBoolean lock = warehouseLocks.remove(warehouseId);
+            AtomicBoolean lock = warehouseLocks.get(warehouseId);
             if (lock != null) {
                 lock.set(false);
+                warehouseLocks.remove(warehouseId);
             }
         }
     }
@@ -576,16 +585,29 @@ public class BackupService {
         return PagedResponse.fromMapped(page, dtos);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void deleteBackup(Long id, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(httpRequest.getRemoteAddr(), RateLimitOperation.BACKUP_WRITE);
 
         BackupRecord record = backupRecordRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("BACKUP_NOT_FOUND"));
 
-        if (record.getR2BasePath() != null) {
-            backupStorageService.deleteBackup(record.getR2BasePath());
+        String r2BasePath = record.getR2BasePath();
+        try {
+            if (r2BasePath != null) {
+                backupStorageService.deleteBackup(r2BasePath);
+                log.info("Deleted R2 backup files for backup record {}", id);
+            }
+            backupRecordRepository.delete(record);
+            log.info("Deleted database record for backup {}", id);
+        } catch (Exception e) {
+            if (r2BasePath != null) {
+                log.error("R2 files were already deleted for backup {} but database deletion failed. Manual cleanup may be required. Error: {}", id, e.getMessage(), e);
+            } else {
+                log.error("Failed to delete backup {} from database. Error: {}", id, e.getMessage(), e);
+            }
+            throw e;
         }
-        backupRecordRepository.delete(record);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -626,7 +648,7 @@ public class BackupService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public List<RestoreResultDto> restoreAllWarehouses(HttpServletRequest httpRequest) {
+    public List<RestoreResultDto> restoreAllWarehouses(User currentUser, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(httpRequest.getRemoteAddr(), RateLimitOperation.BACKUP_WRITE);
 
         List<Warehouse> warehouses = warehouseRepository.findAll();
@@ -647,7 +669,7 @@ public class BackupService {
                 }
 
                 BackupRecord latestBackup = completedBackups.getContent().get(0);
-                RestoreResultDto dto = restoreBackup(latestBackup.getId());
+                RestoreResultDto dto = restoreBackup(latestBackup.getId(), currentUser);
                 initiatedRestores.add(dto);
             } catch (IllegalStateException e) {
                 if (e.getMessage().equals("RESTORE_ALREADY_IN_PROGRESS")) {
@@ -865,9 +887,10 @@ public class BackupService {
                 backupRecordRepository.save(record);
 
                 // Release lock if held
-                AtomicBoolean lock = warehouseLocks.remove(warehouseId);
+                AtomicBoolean lock = warehouseLocks.get(warehouseId);
                 if (lock != null) {
                     lock.set(false);
+                    warehouseLocks.remove(warehouseId);
                     log.info("Released lock for warehouse {}", warehouseId);
                 }
 

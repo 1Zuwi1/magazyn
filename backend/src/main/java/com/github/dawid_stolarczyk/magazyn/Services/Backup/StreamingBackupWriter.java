@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
@@ -22,6 +23,9 @@ public class StreamingBackupWriter {
     private final FileCryptoService fileCryptoService;
     private final BackupStorageService backupStorageService;
     private final ExecutorService executorService;
+
+    @Value("${app.backup.streaming-timeout-minutes:5}")
+    private long streamingTimeoutMinutes;
 
     /**
      * Streams data to S3: Object → JSON → Encrypt → Upload
@@ -63,16 +67,18 @@ public class StreamingBackupWriter {
 
         // Wait for completion and check for errors
         try {
-            jsonTask.get(5, TimeUnit.MINUTES);
-            encryptTask.get(5, TimeUnit.MINUTES);
+            jsonTask.get(streamingTimeoutMinutes, TimeUnit.MINUTES);
+            encryptTask.get(streamingTimeoutMinutes, TimeUnit.MINUTES);
         } catch (ExecutionException e) {
             throw new Exception("Streaming backup failed", e.getCause());
         } catch (TimeoutException e) {
             jsonTask.cancel(true);
             encryptTask.cancel(true);
-            throw new Exception("Streaming backup timeout");
+            log.error("Streaming backup timeout after {} minutes for {}/{}", streamingTimeoutMinutes, basePath, fileName);
+            throw new Exception("Streaming backup timeout after " + streamingTimeoutMinutes + " minutes");
         }
 
         return bytesUploaded;
     }
 }
+

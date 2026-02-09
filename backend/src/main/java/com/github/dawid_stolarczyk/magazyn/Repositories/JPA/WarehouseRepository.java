@@ -3,8 +3,10 @@ package com.github.dawid_stolarczyk.magazyn.Repositories.JPA;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Warehouse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
@@ -17,4 +19,8 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
     List<Warehouse> findByNameContaining(String name);
 
     Page<Warehouse> findByNameContaining(String name, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"racks"})
+    List<Warehouse> findAllWithRacksByIdIn(Collection<Long> ids);
 }
+

@@ -94,7 +94,8 @@ public class BackupController {
     })
     @PostMapping("/{id}/restore")
     public ResponseEntity<ResponseTemplate<RestoreResultDto>> restoreBackup(@PathVariable Long id) {
-        RestoreResultDto dto = backupService.restoreBackup(id);
+        User currentUser = resolveCurrentUser();
+        RestoreResultDto dto = backupService.restoreBackup(id, currentUser);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(ResponseTemplate.success(dto));
     }
 
@@ -171,7 +172,8 @@ public class BackupController {
     @PostMapping("/restore-all")
     public ResponseEntity<ResponseTemplate<List<RestoreResultDto>>> restoreAllWarehouses(
             HttpServletRequest httpRequest) {
-        List<RestoreResultDto> dtos = backupService.restoreAllWarehouses(httpRequest);
+        User currentUser = resolveCurrentUser();
+        List<RestoreResultDto> dtos = backupService.restoreAllWarehouses(currentUser, httpRequest);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(ResponseTemplate.success(dtos));
     }
 
