@@ -16,7 +16,7 @@ export const findWarehouseByName = (
       const normalizedName = normalizeTranscript(warehouse.name, {
         toLowerCase: true,
       })
-      const normalizedId = normalizeTranscript(warehouse.id, {
+      const normalizedId = normalizeTranscript(String(warehouse.id), {
         toLowerCase: true,
       })
       return (
