@@ -17,6 +17,7 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type Row,
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
@@ -42,9 +43,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
-import { formatDateTime } from "../lib/utils"
+import { formatDateTime } from "../../lib/utils"
+import type { Backup } from "../types"
 import { BackupStatusBadge } from "./backup-status-badge"
-import type { Backup } from "./types"
 
 interface BackupsTableProps {
   backups: Backup[]
@@ -85,7 +86,39 @@ function createColumns(
       header: ({ column }) => (
         <SortableHeader column={column}>Status</SortableHeader>
       ),
-      cell: ({ row }) => <BackupStatusBadge status={row.original.status} />,
+      cell: ({ row }) => {
+        const backup = row.original
+        const isInProgress =
+          backup.status === "PENDING" || backup.status === "RESTORING"
+        const hasProgress = isInProgress && backup.progress != null
+
+        if (hasProgress) {
+          return (
+            <div className="flex items-center gap-2">
+              <div className="w-20">
+                <div className="mb-2 flex items-center justify-between">
+                  <BackupStatusBadge status={backup.status} />
+                </div>
+                <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full bg-primary transition-all duration-500"
+                    style={{ width: `${backup.progress}%` }}
+                  />
+                  <div
+                    className="absolute inset-y-0 left-0 animate-pulse rounded-full bg-primary/30"
+                    style={{ width: `${backup.progress}%` }}
+                  />
+                </div>
+                <span className="mt-0.5 block text-right font-mono text-[10px] text-muted-foreground">
+                  {backup.progress}%
+                </span>
+              </div>
+            </div>
+          )
+        }
+
+        return <BackupStatusBadge status={backup.status} />
+      },
       enableSorting: true,
     },
     {
@@ -170,6 +203,17 @@ function createColumns(
   ]
 }
 
+function getRowClassName(row: Row<Backup>) {
+  const status = row.original.status
+  if (status === "PENDING") {
+    return "bg-orange-500/[0.03] dark:bg-orange-500/[0.06]"
+  }
+  if (status === "RESTORING") {
+    return "bg-primary/[0.03] dark:bg-primary/[0.06]"
+  }
+  return ""
+}
+
 export function BackupsTable({
   backups,
   onView,
@@ -238,7 +282,10 @@ export function BackupsTable({
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
-                  className="transition-colors hover:bg-muted/50"
+                  className={cn(
+                    "transition-all duration-300 hover:bg-muted/50",
+                    getRowClassName(row)
+                  )}
                   key={row.id}
                 >
                   {row.getVisibleCells().map((cell) => (

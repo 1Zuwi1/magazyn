@@ -17,7 +17,7 @@ import {
   type BackupSchedule,
   FREQUENCY_CONFIG,
   type ScheduleFrequency,
-} from "./types"
+} from "../types"
 
 const ALL_WAREHOUSES_ID = "__all__"
 

@@ -17,11 +17,12 @@ import { pluralize } from "@/components/dashboard/utils/helpers"
 import { Button } from "@/components/ui/button"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../lib/constants"
-import { BackupDetailDialog } from "./backup-detail-dialog"
-import { BackupsTable } from "./backups-table"
+import { BackupDetailDialog } from "./components/backup-detail-dialog"
+import { BackupsTable } from "./components/backups-table"
+import { CreateBackupDialog } from "./components/create-backup-dialog"
+import { ScheduleDialog } from "./components/schedule-dialog"
+import { SchedulesSection } from "./components/schedules-section"
 import { MOCK_BACKUPS, MOCK_SCHEDULES } from "./mock-data"
-import { ScheduleDialog } from "./schedule-dialog"
-import { SchedulesSection } from "./schedules-section"
 import type { Backup, BackupSchedule, ScheduleFrequency } from "./types"
 
 const AVAILABLE_WAREHOUSES = MOCK_WAREHOUSES.map((w) => ({
@@ -86,6 +87,8 @@ export function BackupsMain() {
     BackupSchedule | undefined
   >()
 
+  const [createBackupDialogOpen, setCreateBackupDialogOpen] = useState(false)
+
   const handleViewBackup = (backup: Backup) => {
     setSelectedBackup(backup)
     setDetailOpen(true)
@@ -121,7 +124,14 @@ export function BackupsMain() {
     }
   }
 
-  const handleCreateManual = () => {
+  const handleCreateManualClick = () => {
+    setCreateBackupDialogOpen(true)
+  }
+
+  const handleCreateManualConfirm = (
+    warehouseId: string | null,
+    warehouseName: string | null
+  ) => {
     const newBackup: Backup = {
       id: Date.now(),
       name: `backup-${new Date().toISOString().slice(0, 10)}-manual`,
@@ -130,8 +140,8 @@ export function BackupsMain() {
       sizeBytes: null,
       status: "PENDING",
       type: "MANUAL",
-      warehouseId: null,
-      warehouseName: null,
+      warehouseId,
+      warehouseName,
     }
     setBackups((prev) => [...prev, newBackup])
   }
@@ -290,7 +300,7 @@ export function BackupsMain() {
     <div className="space-y-6">
       <AdminPageHeader
         actions={
-          <Button onClick={handleCreateManual}>
+          <Button onClick={handleCreateManualClick}>
             <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
             Utwórz kopię zapasową
           </Button>
@@ -328,7 +338,7 @@ export function BackupsMain() {
 
       <BackupsTable
         backups={backups}
-        onCreateManual={handleCreateManual}
+        onCreateManual={handleCreateManualClick}
         onDelete={handleDeleteBackup}
         onRestore={handleRestoreBackup}
         onRetry={handleRetryBackup}
@@ -365,6 +375,13 @@ export function BackupsMain() {
         onSubmit={handleScheduleSubmit}
         open={scheduleDialogOpen}
         schedule={selectedSchedule}
+      />
+
+      <CreateBackupDialog
+        availableWarehouses={AVAILABLE_WAREHOUSES}
+        onConfirm={handleCreateManualConfirm}
+        onOpenChange={setCreateBackupDialogOpen}
+        open={createBackupDialogOpen}
       />
     </div>
   )

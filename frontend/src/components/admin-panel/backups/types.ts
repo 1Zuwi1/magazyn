@@ -43,6 +43,7 @@ export interface Backup {
   type: "MANUAL" | "SCHEDULED"
   warehouseId: string | null
   warehouseName: string | null
+  progress?: number
 }
 
 export interface BackupSchedule {

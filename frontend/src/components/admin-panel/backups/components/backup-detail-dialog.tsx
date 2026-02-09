@@ -12,10 +12,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import { formatBytes, formatDateTime } from "../lib/utils"
+import { formatBytes, formatDateTime } from "../../lib/utils"
+import type { Backup } from "../types"
 import { BackupStatusBadge } from "./backup-status-badge"
-import type { Backup } from "./types"
 
 interface DetailRowProps {
   label: string
@@ -62,6 +63,9 @@ export function BackupDetailDialog({
     return null
   }
 
+  const isInProgress =
+    backup.status === "PENDING" || backup.status === "RESTORING"
+
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-md">
@@ -79,6 +83,23 @@ export function BackupDetailDialog({
         </DialogHeader>
 
         <Separator />
+
+        {/* Progress section for in-progress backups */}
+        {isInProgress && backup.progress != null && (
+          <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">
+                {backup.status === "PENDING"
+                  ? "Tworzenie kopii..."
+                  : "Przywracanie danych..."}
+              </span>
+              <span className="font-mono text-muted-foreground">
+                {backup.progress}%
+              </span>
+            </div>
+            <Progress className="h-2" value={backup.progress} />
+          </div>
+        )}
 
         <div className="space-y-1">
           <DetailRow label="Status">

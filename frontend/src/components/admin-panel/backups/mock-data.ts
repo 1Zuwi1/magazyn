@@ -47,7 +47,7 @@ export const MOCK_BACKUPS: Backup[] = [
   },
   {
     id: 5,
-    name: "backup-2026-02-08-restore",
+    name: "backup-2026-02-08-pending",
     createdAt: "2026-02-08T10:00:00Z",
     completedAt: null,
     sizeBytes: null,
@@ -55,6 +55,19 @@ export const MOCK_BACKUPS: Backup[] = [
     type: "MANUAL",
     warehouseId: "A1",
     warehouseName: "Magazyn A1",
+    progress: 50,
+  },
+  {
+    id: 6,
+    name: "backup-2026-02-08-restoring",
+    createdAt: "2026-02-08T11:30:00Z",
+    completedAt: null,
+    sizeBytes: 45_000_000,
+    status: "RESTORING",
+    type: "SCHEDULED",
+    warehouseId: "A2",
+    warehouseName: "Magazyn A2",
+    progress: 34,
   },
 ]
 
