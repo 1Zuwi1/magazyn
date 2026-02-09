@@ -2,10 +2,8 @@
 
 import { Search01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useInfiniteQuery } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { apiFetch } from "@/lib/fetcher"
-import { ItemsSchema } from "@/lib/schemas"
+import { useInfiniteItems } from "@/hooks/use-items"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Spinner } from "../ui/spinner"
@@ -32,35 +30,15 @@ export function ScannerSelectItem({
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const {
-    data,
+    items,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     isPending,
     isError,
-  } = useInfiniteQuery({
-    queryKey: ["scanner-items", search],
-    initialPageParam: 0,
-    queryFn: async ({ pageParam }) => {
-      return await apiFetch("/api/items", ItemsSchema, {
-        queryParams: {
-          page: pageParam,
-        },
-      })
-    },
-    getNextPageParam: (lastPage) => {
-      if (lastPage.last) {
-        return undefined
-      }
-      return lastPage.page + 1
-    },
-    staleTime: 60_000,
+  } = useInfiniteItems({
+    search,
   })
-
-  const items = useMemo(
-    () => data?.pages.flatMap((page) => page.content) ?? [],
-    [data]
-  )
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current

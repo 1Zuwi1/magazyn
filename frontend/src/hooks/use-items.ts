@@ -1,4 +1,8 @@
-import { type UseQueryResult, useQueries } from "@tanstack/react-query"
+import {
+  type UseQueryResult,
+  useInfiniteQuery,
+  useQueries,
+} from "@tanstack/react-query"
 import { useMemo } from "react"
 import {
   apiFetch,
@@ -21,6 +25,7 @@ import { useApiQuery } from "./use-api-query"
 const ITEMS_QUERY_KEY = ["items"] as const
 const ITEM_DETAILS_QUERY_KEY = [...ITEMS_QUERY_KEY, "details"] as const
 const ITEM_DETAILS_STALE_TIME_MS = 5 * 60 * 1000
+const INFINITE_ITEMS_STALE_TIME_MS = 60_000
 
 export type ItemsList = InferApiOutput<typeof ItemsSchema, "GET">
 export type Item = ItemsList["content"][number]
@@ -38,6 +43,11 @@ interface ItemsByWarehouseParams extends ItemsListParams {
 
 interface MultipleItemsParams {
   itemIds: readonly number[]
+  staleTime?: number
+}
+
+interface InfiniteItemsParams {
+  search?: string
   staleTime?: number
 }
 
@@ -60,6 +70,43 @@ export function useMultipleItems({
       staleTime,
     })),
   })
+}
+
+export function useInfiniteItems({
+  search = "",
+  staleTime = INFINITE_ITEMS_STALE_TIME_MS,
+}: InfiniteItemsParams = {}) {
+  const infiniteQuery = useInfiniteQuery({
+    queryKey: [...ITEMS_QUERY_KEY, "infinite", search],
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) =>
+      await apiFetch("/api/items", ItemsSchema, {
+        queryParams: {
+          page: pageParam,
+        },
+      }),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.last) {
+        return undefined
+      }
+
+      return lastPage.page + 1
+    },
+    staleTime,
+  })
+
+  const items = useMemo(() => {
+    if (!infiniteQuery.data) {
+      return []
+    }
+
+    return infiniteQuery.data.pages.flatMap((page) => page.content)
+  }, [infiniteQuery.data])
+
+  return {
+    ...infiniteQuery,
+    items,
+  }
 }
 
 export default function useItems(
