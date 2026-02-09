@@ -480,6 +480,17 @@ export default function AlertsMain() {
 
   const patchAlert = usePatchAlert()
 
+  const { data: activeAlerts } = useAlerts({
+    page: 0,
+    size: 1,
+    status: ["OPEN", "ACTIVE"],
+  })
+
+  const { data: allAlerts } = useAlerts({
+    page: 0,
+    size: 1,
+  })
+
   const alertsQuery = useAlerts({
     page,
     sortBy: "createdAt",
@@ -492,14 +503,6 @@ export default function AlertsMain() {
   const alerts = alertsData?.content ?? []
   const isAlertsPending = alertsQuery.isPending
   const isAlertsError = alertsQuery.isError
-
-  const totalAlerts = alertsData?.totalElements ?? 0
-
-  const openCount = useMemo(
-    () =>
-      alerts.filter((alert) => alert.status.toUpperCase() === "OPEN").length,
-    [alerts]
-  )
 
   useEffect(() => {
     setSelectedAlertId((currentSelection) => {
@@ -583,15 +586,15 @@ export default function AlertsMain() {
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <span className="font-mono font-semibold text-primary">
-              {totalAlerts}
+              {allAlerts?.totalElements ?? 0}
             </span>
             <span className="text-muted-foreground text-xs">łącznie</span>
           </div>
-          {openCount > 0 ? (
+          {(activeAlerts?.totalElements ?? 0) > 0 ? (
             <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-1.5">
               <span className="flex size-2 rounded-full bg-destructive" />
               <span className="font-mono font-semibold text-destructive">
-                {openCount}
+                {activeAlerts?.totalElements ?? 0}
               </span>
               <span className="text-muted-foreground text-xs">otwartych</span>
             </div>

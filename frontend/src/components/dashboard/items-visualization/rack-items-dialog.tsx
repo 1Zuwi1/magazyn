@@ -30,8 +30,7 @@ export function RackItemsDialog({
     isError,
     refetch,
   } = useAssortments(
-    // biome-ignore lint/style/noNonNullAssertion: Rack is guaranteed to be non-null when the query is enabled
-    { rackId: rack!.id },
+    { rackId: rack?.id ?? -1 },
     {
       enabled: open && rack !== null,
     }

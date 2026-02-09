@@ -2,7 +2,8 @@
 
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { format } from "date-fns"
+import { format, formatISO } from "date-fns"
+import { pl } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -14,9 +15,11 @@ import {
 export function DatePicker({
   date,
   onDateChange,
+  setTimeToEndOfDay = false,
 }: {
   date?: Date
-  onDateChange: (date?: Date) => void
+  onDateChange: (date: string) => void
+  setTimeToEndOfDay?: boolean
 }) {
   return (
     <Popover>
@@ -27,7 +30,13 @@ export function DatePicker({
             data-empty={!date}
             variant={"outline"}
           >
-            {date ? format(date, "PPP") : <span>Wybierz datę</span>}
+            {date ? (
+              format(date, "PPP", {
+                locale: pl,
+              })
+            ) : (
+              <span>Wybierz datę</span>
+            )}
             <HugeiconsIcon icon={ArrowDown01Icon} />
           </Button>
         }
@@ -36,7 +45,16 @@ export function DatePicker({
         <Calendar
           defaultMonth={date}
           mode="single"
-          onSelect={onDateChange}
+          onSelect={(date) => {
+            if (date) {
+              if (setTimeToEndOfDay) {
+                date.setHours(23, 59, 59, 999)
+              }
+              onDateChange(formatISO(date))
+            } else {
+              onDateChange("")
+            }
+          }}
           selected={date}
         />
       </PopoverContent>

@@ -231,7 +231,7 @@ export default function ThreeDVisualizationPage() {
     {
       page: 0,
       size: DISABLE_PAGINATION_PAGE_SIZE,
-      warehouseId: apiWarehouse?.id,
+      warehouseId: apiWarehouse?.id ?? -1,
     },
     {
       enabled: !!apiWarehouse,

@@ -77,14 +77,13 @@ function DateRangeFilter({
       />
       <DatePicker
         date={startDate ? new Date(startDate) : undefined}
-        onDateChange={(date) =>
-          onStartDateChange(date ? date.toISOString() : "")
-        }
+        onDateChange={onStartDateChange}
       />
       <span className="text-muted-foreground text-xs">&ndash;</span>
       <DatePicker
         date={endDate ? new Date(endDate) : undefined}
-        onDateChange={(date) => onEndDateChange(date ? date.toISOString() : "")}
+        onDateChange={onEndDateChange}
+        setTimeToEndOfDay
       />
       {hasFilter && (
         <Button onClick={onClear} size="xs" variant="ghost">

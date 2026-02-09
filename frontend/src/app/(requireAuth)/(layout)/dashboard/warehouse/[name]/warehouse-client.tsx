@@ -443,7 +443,7 @@ function useRackSelectionFromLink({
   >(requestedRackIdFromSearchParams)
   const { data: rackFromLink, isPending: isRackFromLinkPending } = useRacks(
     {
-      rackId: selectedRackIdFromLink as number,
+      rackId: selectedRackIdFromLink ?? -1,
     },
     {
       enabled: selectedRackIdFromLink !== null,

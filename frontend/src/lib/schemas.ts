@@ -1129,8 +1129,8 @@ const InboudOperationSchema = z.object({
   positionX: z.number().int().nonnegative(),
   positionY: z.number().int().nonnegative(),
   quantity: z.number().int().nonnegative(),
-  assortmentId: z.number().int().nonnegative(),
-  assortmentCode: z.string(),
+  assortmentId: z.number().int().nonnegative().optional(),
+  assortmentCode: z.string().optional(),
 })
 export const AuditInboudOperationsSchema = createApiSchema({
   GET: {
