@@ -85,11 +85,16 @@ export function NotificationInbox() {
     isPending: isNotificationsPending,
     isError: isNotificationsError,
     refetch: refetchNotifications,
-  } = useNotifications({
-    page: 0,
-    sortBy: "createdAt",
-    sortDir: "desc",
-  })
+  } = useNotifications(
+    {
+      page: 0,
+      sortBy: "createdAt",
+      sortDir: "desc",
+    },
+    {
+      enabled: open,
+    }
+  )
 
   const markBulkNotifications = useMarkBulkNotifications()
   const markNotification = useMarkNotification()
