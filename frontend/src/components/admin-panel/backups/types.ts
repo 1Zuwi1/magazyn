@@ -16,6 +16,7 @@ export interface Backup {
 }
 
 export interface BackupSchedule {
+  id: string
   warehouseId: string | null
   warehouseName: string
   frequency: ScheduleFrequency
@@ -23,4 +24,9 @@ export interface BackupSchedule {
   enabled: boolean
   lastBackupAt: string | null
   nextBackupAt: string | null
+}
+
+export interface AvailableWarehouse {
+  id: string
+  name: string
 }

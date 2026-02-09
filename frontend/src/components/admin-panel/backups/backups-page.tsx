@@ -10,6 +10,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import { useState } from "react"
+import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
 import { pluralize } from "@/components/dashboard/utils/helpers"
@@ -64,6 +65,7 @@ export function BackupsMain() {
   const confirmDeleteBackup = () => {
     if (backupToDelete) {
       setBackups((prev) => prev.filter((b) => b.id !== backupToDelete.id))
+      toast.success(`Kopia zapasowa "${backupToDelete.name}" została usunięta`)
       setBackupToDelete(undefined)
     }
   }
@@ -82,6 +84,7 @@ export function BackupsMain() {
             : backup
         )
       )
+      toast.success(`Rozpoczęto przywracanie z kopii "${backupToRestore.name}"`)
       setBackupToRestore(undefined)
     }
   }
@@ -106,6 +109,7 @@ export function BackupsMain() {
       warehouseName,
     }
     setBackups((prev) => [...prev, newBackup])
+    toast.success("Rozpoczęto tworzenie nowej kopii zapasowej")
   }
 
   const handleRetryBackup = (backup: Backup) => {
@@ -122,6 +126,7 @@ export function BackupsMain() {
           : b
       )
     )
+    toast.success("Ponowiono próbę utworzenia kopii zapasowej")
   }
 
   const handleAddSchedule = () => {
@@ -134,10 +139,10 @@ export function BackupsMain() {
     setScheduleDialogOpen(true)
   }
 
-  const handleToggleSchedule = (warehouseId: string | null) => {
+  const handleToggleSchedule = (id: string) => {
     setSchedules((prev) =>
       prev.map((schedule) =>
-        schedule.warehouseId === warehouseId
+        schedule.id === id
           ? {
               ...schedule,
               enabled: !schedule.enabled,
@@ -150,15 +155,29 @@ export function BackupsMain() {
           : schedule
       )
     )
+
+    const schedule = schedules.find((s) => s.id === id)
+    if (schedule) {
+      toast.success(
+        schedule.enabled
+          ? `Harmonogram dla "${schedule.warehouseName}" został wyłączony`
+          : `Harmonogram dla "${schedule.warehouseName}" został włączony`
+      )
+    }
   }
 
-  const handleDeleteSchedule = (warehouseId: string | null) => {
-    setSchedules((prev) =>
-      prev.filter((schedule) => schedule.warehouseId !== warehouseId)
-    )
+  const handleDeleteSchedule = (id: string) => {
+    const scheduleToDelete = schedules.find((s) => s.id === id)
+    setSchedules((prev) => prev.filter((schedule) => schedule.id !== id))
+    if (scheduleToDelete) {
+      toast.success(
+        `Harmonogram dla "${scheduleToDelete.warehouseName}" został usunięty`
+      )
+    }
   }
 
   const handleScheduleSubmit = (data: {
+    id?: string
     warehouseId: string | null
     warehouseName: string
     frequency: ScheduleFrequency
@@ -170,13 +189,11 @@ export function BackupsMain() {
       data.customDays,
       data.enabled
     )
-    const exists = schedules.some(
-      (schedule) => schedule.warehouseId === data.warehouseId
-    )
-    if (exists) {
+
+    if (data.id) {
       setSchedules((prev) =>
         prev.map((schedule) =>
-          schedule.warehouseId === data.warehouseId
+          schedule.id === data.id
             ? {
                 ...schedule,
                 frequency: data.frequency,
@@ -187,8 +204,10 @@ export function BackupsMain() {
             : schedule
         )
       )
+      toast.success(`Zaktualizowano harmonogram dla "${data.warehouseName}"`)
     } else {
       const newSchedule: BackupSchedule = {
+        id: `sched-${Date.now()}`,
         warehouseId: data.warehouseId,
         warehouseName: data.warehouseName,
         frequency: data.frequency,
@@ -198,6 +217,7 @@ export function BackupsMain() {
         nextBackupAt,
       }
       setSchedules((prev) => [...prev, newSchedule])
+      toast.success(`Dodano nowy harmonogram dla "${data.warehouseName}"`)
     }
   }
 

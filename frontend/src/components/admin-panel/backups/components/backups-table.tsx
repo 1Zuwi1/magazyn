@@ -5,6 +5,9 @@ import {
   DatabaseRestoreIcon,
   EyeIcon,
   MoreHorizontalIcon,
+  Search01Icon,
+  FilterIcon,
+  Cancel01Icon,
   Refresh01Icon,
   Trash,
 } from "@hugeicons/core-free-icons"
@@ -21,7 +24,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import {
   SortableHeader,
   StaticHeader,
@@ -43,8 +46,17 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { formatDateTime } from "../../lib/utils"
 import type { Backup } from "../types"
+import { BACKUP_STATUS_CONFIG } from "../utils"
 import { BackupStatusBadge } from "./backup-status-badge"
 
 interface BackupsTableProps {
@@ -95,8 +107,8 @@ function createColumns(
         if (hasProgress) {
           return (
             <div className="flex items-center gap-2">
-              <div className="w-20">
-                <div className="mb-2 flex items-center justify-between">
+              <div className="w-32">
+                <div className="mb-2 flex items-center justify-start">
                   <BackupStatusBadge status={backup.status} />
                 </div>
                 <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -211,6 +223,9 @@ function getRowClassName(row: Row<Backup>) {
   if (status === "RESTORING") {
     return "bg-primary/[0.03] dark:bg-primary/[0.06]"
   }
+  if(status === "FAILED") {
+    return "bg-destructive/[0.03] dark:bg-destructive/[0.06]"
+  }
   return ""
 }
 
@@ -227,7 +242,7 @@ export function BackupsTable({
   ])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
-  const columns = createColumns(onView, onRestore, onRetry, onDelete)
+  const columns = useMemo(() => createColumns(onView, onRestore, onRetry, onDelete), [onView, onRestore, onRetry, onDelete])
 
   const table = useReactTable({
     data: backups,
@@ -252,8 +267,8 @@ export function BackupsTable({
   const startItem = totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0
   const endItem = Math.min(currentPage * pageSize, totalItems)
 
-  return (
-    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+return (
+      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -379,6 +394,6 @@ export function BackupsTable({
           </div>
         </div>
       )}
-    </div>
+      </div>
   )
 }

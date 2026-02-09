@@ -1,5 +1,5 @@
 import { type IconSvgElement, HugeiconsIcon } from "@hugeicons/react"
-
+import { cn } from "@/lib/utils"
 
 export interface StatBadgeConfig {
   icon: IconSvgElement
@@ -11,7 +11,7 @@ export interface StatBadgeConfig {
 export function StatBadge({ icon, count, label, className = "" }: StatBadgeConfig) {
   return (
     <div
-      className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 backdrop-blur-sm ${className}`}
+      className={cn('flex items-center gap-2 rounded-lg border px-3 py-1.5 backdrop-blur-sm', className)}
     >
       <HugeiconsIcon className="size-3.5" icon={icon} />
       <span className="font-mono font-semibold">{count}</span>

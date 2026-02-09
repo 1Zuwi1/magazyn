@@ -30,8 +30,8 @@ interface SchedulesSectionProps {
   schedules: BackupSchedule[]
   onAdd: () => void
   onEdit: (schedule: BackupSchedule) => void
-  onToggle: (warehouseId: string | null) => void
-  onDelete: (warehouseId: string | null) => void
+  onToggle: (id: string) => void
+  onDelete: (id: string) => void
 }
 
 function SchedulesEmptyState({ onAdd }: { onAdd: () => void }) {
@@ -75,7 +75,7 @@ export function SchedulesSection({
 
   const confirmDelete = () => {
     if (scheduleToDelete) {
-      onDelete(scheduleToDelete.warehouseId)
+      onDelete(scheduleToDelete.id)
       setScheduleToDelete(undefined)
     }
   }
@@ -133,7 +133,7 @@ function ScheduleCard({
 }: {
   schedule: BackupSchedule
   onEdit: (schedule: BackupSchedule) => void
-  onToggle: (warehouseId: string | null) => void
+  onToggle: (id: string) => void
   onDelete: (schedule: BackupSchedule) => void
 }) {
   const [justToggled, setJustToggled] = useState(false)
@@ -209,7 +209,7 @@ function ScheduleCard({
           <Switch
             checked={schedule.enabled}
             className="cursor-pointer transition-all duration-300"
-            onCheckedChange={() => onToggle(schedule.warehouseId)}
+            onCheckedChange={() => onToggle(schedule.id)}
             size="sm"
           />
           <DropdownMenu>

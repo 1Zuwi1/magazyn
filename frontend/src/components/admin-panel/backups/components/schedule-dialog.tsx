@@ -13,9 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  type BackupSchedule,
-  type ScheduleFrequency,
+import type {
+  BackupSchedule,
+  ScheduleFrequency,
+  AvailableWarehouse  
 } from "../types"
 import { FREQUENCY_CONFIG } from "../utils"
 
@@ -25,17 +26,13 @@ const frequencyOptions = (
   Object.keys(FREQUENCY_CONFIG) as ScheduleFrequency[]
 ).map((value) => ({ label: FREQUENCY_CONFIG[value].label, value }))
 
-export interface AvailableWarehouse {
-  id: string
-  name: string
-}
-
 interface ScheduleDialogProps {
   schedule: BackupSchedule | undefined
   availableWarehouses: AvailableWarehouse[]
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: {
+    id?: string
     warehouseId: string | null
     warehouseName: string
     frequency: ScheduleFrequency
@@ -45,6 +42,7 @@ interface ScheduleDialogProps {
 }
 
 interface ScheduleSubmitPayload {
+  id?: string
   warehouseId: string | null
   warehouseName: string
   frequency: ScheduleFrequency
@@ -57,6 +55,7 @@ const buildEditPayload = (
   frequency: ScheduleFrequency,
   customDays: number | null
 ): ScheduleSubmitPayload => ({
+  id: schedule.id,
   warehouseId: schedule.warehouseId,
   warehouseName: schedule.warehouseName,
   frequency,

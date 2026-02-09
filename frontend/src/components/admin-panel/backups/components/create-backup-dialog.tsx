@@ -20,13 +20,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
+import type { AvailableWarehouse } from "../types"
 
 const ALL_WAREHOUSES_ID = "__all__"
 
-export interface AvailableWarehouse {
-  id: string
-  name: string
-}
+
 
 interface CreateBackupDialogProps {
   open: boolean

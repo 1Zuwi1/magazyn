@@ -73,6 +73,7 @@ export const MOCK_BACKUPS: Backup[] = [
 
 export const MOCK_SCHEDULES: BackupSchedule[] = [
   {
+    id: "sched-1",
     warehouseId: "A1",
     warehouseName: "Magazyn A1",
     frequency: "DAILY",
@@ -82,6 +83,7 @@ export const MOCK_SCHEDULES: BackupSchedule[] = [
     nextBackupAt: "2026-02-09T03:00:00Z",
   },
   {
+    id: "sched-2",
     warehouseId: "A2",
     warehouseName: "Magazyn A2",
     frequency: "WEEKLY",
@@ -91,3 +93,4 @@ export const MOCK_SCHEDULES: BackupSchedule[] = [
     nextBackupAt: null,
   },
 ]
+
