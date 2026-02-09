@@ -18,8 +18,8 @@ public class PlacementConfirmationRequest {
     @Schema(description = "Item ID (required if code not provided)", example = "1")
     private Long itemId;
 
-    @Schema(description = "Item code - GS1-128 barcode, 16 digits (required if itemId not provided)", example = "0112345678901234")
-    @Pattern(regexp = "^\\d{14}$|^\\d{16}$\n", message = "BARCODE_MUST_BE_16_DIGITS_OR_14_DIGITS")
+    @Schema(description = "Item code - GS1-128 barcode, 14 or 16 digits (required if itemId not provided)", example = "0112345678901234")
+    @Pattern(regexp = "^\\d{14}(\\d{2})?$", message = "BARCODE_MUST_BE_16_DIGITS_OR_14_DIGITS")
     private String code;
 
     @NotEmpty

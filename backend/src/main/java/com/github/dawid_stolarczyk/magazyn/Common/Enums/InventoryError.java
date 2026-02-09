@@ -48,5 +48,9 @@ public enum InventoryError {
     OUTBOUND_ASSORTMENT_EXPIRED,
 
     // Rack update errors
-    RACK_HAS_DANGEROUS_ITEMS
+    RACK_HAS_DANGEROUS_ITEMS,
+
+    // Bulk operation errors
+    NO_WAREHOUSES_FOUND,
+    RESTORE_ALREADY_IN_PROGRESS
 }

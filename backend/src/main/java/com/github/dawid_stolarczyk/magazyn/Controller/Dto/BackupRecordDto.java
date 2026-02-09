@@ -43,6 +43,12 @@ public class BackupRecordDto {
     @Schema(description = "Total size of backup in bytes", example = "524288")
     private Long sizeBytes;
 
+    @Schema(description = "Backup progress percentage (0-100)", example = "50")
+    private Integer backupProgressPercentage;
+
+    @Schema(description = "Restore progress percentage (0-100)", example = "0")
+    private Integer restoreProgressPercentage;
+
     @Schema(description = "Backup creation timestamp")
     private Instant createdAt;
 

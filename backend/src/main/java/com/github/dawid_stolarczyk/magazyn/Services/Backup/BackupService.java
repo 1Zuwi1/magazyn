@@ -21,7 +21,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -127,6 +129,8 @@ public class BackupService {
                 .triggeredBy(triggeredBy)
                 .build();
         record.setResourceTypeSet(request.getResourceTypes());
+        record.setBackupProgressPercentage(0);
+        record.setRestoreProgressPercentage(null);
         record = backupRecordRepository.save(record);
 
         Long recordId = record.getId();
@@ -157,6 +161,8 @@ public class BackupService {
                 .status(BackupStatus.IN_PROGRESS)
                 .build();
         record.setResourceTypeSet(resourceTypes);
+        record.setBackupProgressPercentage(0);
+        record.setRestoreProgressPercentage(null);
         record = backupRecordRepository.save(record);
 
         Long recordId = record.getId();
@@ -180,8 +186,13 @@ public class BackupService {
             String timestamp = TIMESTAMP_FORMAT.format(record.getCreatedAt());
             String basePath = "backups/warehouse-" + warehouseId + "/" + timestamp + "_" + recordId + "/";
             record.setR2BasePath(basePath);
+            record.setBackupProgressPercentage(0);
+            record.setRestoreProgressPercentage(null);
+            record = backupRecordRepository.save(record);
 
             Set<BackupResourceType> resourceTypes = record.getResourceTypeSet();
+            int totalPhases = resourceTypes.size() + 1;
+            int currentPhase = 0;
             Map<String, ResourceInfo> manifestResources = new LinkedHashMap<>();
             int totalRecords = 0;
             long totalSizeBytes = 0;
@@ -200,6 +211,10 @@ public class BackupService {
                 manifestResources.put("racks", new ResourceInfo(rackData.size()));
                 totalRecords += rackData.size();
                 totalSizeBytes += bytesWritten;
+                currentPhase++;
+                int progress = (currentPhase * 100) / totalPhases;
+                record.setBackupProgressPercentage(progress);
+                record = backupRecordRepository.save(record);
             }
 
             if (resourceTypes.contains(BackupResourceType.ITEMS)) {
@@ -217,6 +232,10 @@ public class BackupService {
                 manifestResources.put("items", new ResourceInfo(itemData.size()));
                 totalRecords += itemData.size();
                 totalSizeBytes += bytesWritten;
+                currentPhase++;
+                int progress = (currentPhase * 100) / totalPhases;
+                record.setBackupProgressPercentage(progress);
+                record = backupRecordRepository.save(record);
             }
 
             if (resourceTypes.contains(BackupResourceType.ASSORTMENTS)) {
@@ -233,6 +252,10 @@ public class BackupService {
                 manifestResources.put("assortments", new ResourceInfo(assortmentData.size()));
                 totalRecords += assortmentData.size();
                 totalSizeBytes += bytesWritten;
+                currentPhase++;
+                int progress = (currentPhase * 100) / totalPhases;
+                record.setBackupProgressPercentage(progress);
+                record = backupRecordRepository.save(record);
             }
 
             // Build and upload manifest
@@ -244,6 +267,7 @@ public class BackupService {
             record.setStatus(BackupStatus.COMPLETED);
             record.setTotalRecords(totalRecords);
             record.setSizeBytes(totalSizeBytes);
+            record.setBackupProgressPercentage(100);
             record.setCompletedAt(Instant.now());
             backupRecordRepository.save(record);
 
@@ -319,6 +343,9 @@ public class BackupService {
         Long warehouseId = record.getWarehouse().getId();
         Long backupId = record.getId();
 
+        record.setRestoreProgressPercentage(0);
+        record = backupRecordRepository.save(record);
+
         StreamingBackupReader reader = new StreamingBackupReader(objectMapper, fileCryptoService, backupStorageService, streamingExecutor);
 
         try {
@@ -333,6 +360,9 @@ public class BackupService {
                     if (!key.equals("@class")) resourceKeys.add(key);
                 });
             }
+
+            record.setRestoreProgressPercentage(10);
+            record = backupRecordRepository.save(record);
 
             // Phase 2 — Download + decrypt all resource files (GCM verifies integrity)
             List<RackBackupData> rackDataList = null;
@@ -354,6 +384,9 @@ public class BackupService {
                 });
             }
 
+            record.setRestoreProgressPercentage(30);
+            record = backupRecordRepository.save(record);
+
             // Phase 3 — Atomic DB restore
             int racksRestored = 0;
             int itemsRestored = 0;
@@ -371,6 +404,9 @@ public class BackupService {
                 log.info("Deleting {} existing racks for warehouse {}", existingRacks.size(), warehouseId);
                 rackRepository.deleteAll(existingRacks);
             }
+
+            record.setRestoreProgressPercentage(40);
+            record = backupRecordRepository.save(record);
 
             // Restore racks
             Map<Long, Long> rackIdMapping = new HashMap<>();
@@ -402,6 +438,9 @@ public class BackupService {
                 }
             }
 
+            record.setRestoreProgressPercentage(60);
+            record = backupRecordRepository.save(record);
+
             // Restore items (global, not warehouse-scoped)
             Map<Long, Long> itemIdMapping = new HashMap<>();
             if (itemDataList != null) {
@@ -431,6 +470,9 @@ public class BackupService {
                     itemsRestored++;
                 }
             }
+
+            record.setRestoreProgressPercentage(80);
+            record = backupRecordRepository.save(record);
 
             // Restore assortments
             if (assortmentDataList != null) {
@@ -475,6 +517,7 @@ public class BackupService {
             record.setRacksRestored(racksRestored);
             record.setItemsRestored(itemsRestored);
             record.setAssortmentsRestored(assortmentsRestored);
+            record.setRestoreProgressPercentage(100);
             record.setRestoreCompletedAt(Instant.now());
             backupRecordRepository.save(record);
 
@@ -545,6 +588,82 @@ public class BackupService {
         backupRecordRepository.delete(record);
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public List<BackupRecordDto> backupAllWarehouses(User triggeredBy, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(httpRequest.getRemoteAddr(), RateLimitOperation.BACKUP_WRITE);
+
+        List<Warehouse> warehouses = warehouseRepository.findAll();
+        if (warehouses.isEmpty()) {
+            throw new IllegalStateException("NO_WAREHOUSES_FOUND");
+        }
+
+        Set<BackupResourceType> allResourceTypes = Set.of(
+                BackupResourceType.RACKS,
+                BackupResourceType.ITEMS,
+                BackupResourceType.ASSORTMENTS
+        );
+
+        List<BackupRecordDto> initiatedBackups = new ArrayList<>();
+
+        for (Warehouse warehouse : warehouses) {
+            try {
+                CreateBackupRequest request = new CreateBackupRequest();
+                request.setWarehouseId(warehouse.getId());
+                request.setResourceTypes(allResourceTypes);
+                BackupRecordDto dto = initiateBackup(request, triggeredBy, httpRequest);
+                initiatedBackups.add(dto);
+            } catch (IllegalStateException e) {
+                if (e.getMessage().equals("BACKUP_ALREADY_IN_PROGRESS")) {
+                    log.warn("Backup already in progress for warehouse {}, skipping", warehouse.getId());
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        log.info("Initiated backup for {} warehouses", initiatedBackups.size());
+        return initiatedBackups;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public List<RestoreResultDto> restoreAllWarehouses(HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(httpRequest.getRemoteAddr(), RateLimitOperation.BACKUP_WRITE);
+
+        List<Warehouse> warehouses = warehouseRepository.findAll();
+        if (warehouses.isEmpty()) {
+            throw new IllegalStateException("NO_WAREHOUSES_FOUND");
+        }
+
+        List<RestoreResultDto> initiatedRestores = new ArrayList<>();
+
+        for (Warehouse warehouse : warehouses) {
+            try {
+                Page<BackupRecord> completedBackups = backupRecordRepository.findByWarehouseId(
+                        warehouse.getId(), PageRequest.of(0, 1, Sort.by("completedAt").descending()));
+
+                if (completedBackups.isEmpty()) {
+                    log.warn("No completed backup found for warehouse {}, skipping restore", warehouse.getId());
+                    continue;
+                }
+
+                BackupRecord latestBackup = completedBackups.getContent().get(0);
+                RestoreResultDto dto = restoreBackup(latestBackup.getId());
+                initiatedRestores.add(dto);
+            } catch (IllegalStateException e) {
+                if (e.getMessage().equals("RESTORE_ALREADY_IN_PROGRESS")) {
+                    log.warn("Restore already in progress for warehouse {}, skipping", warehouse.getId());
+                } else {
+                    throw e;
+                }
+            } catch (IllegalArgumentException e) {
+                log.warn("Cannot restore warehouse {}: {}", warehouse.getId(), e.getMessage());
+            }
+        }
+
+        log.info("Initiated restore for {} warehouses", initiatedRestores.size());
+        return initiatedRestores;
+    }
+
     // --- Schedule operations ---
 
     @Transactional(readOnly = true)
@@ -601,6 +720,8 @@ public class BackupService {
                 .resourceTypes(new ArrayList<>(record.getResourceTypeSet()))
                 .totalRecords(record.getTotalRecords())
                 .sizeBytes(record.getSizeBytes())
+                .backupProgressPercentage(record.getBackupProgressPercentage())
+                .restoreProgressPercentage(record.getRestoreProgressPercentage())
                 .createdAt(record.getCreatedAt())
                 .completedAt(record.getCompletedAt())
                 .errorMessage(record.getErrorMessage())

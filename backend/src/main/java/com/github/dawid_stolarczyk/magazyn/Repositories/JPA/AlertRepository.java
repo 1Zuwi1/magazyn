@@ -49,6 +49,18 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
     );
 
     /**
+     * Find active alert of specific type for a rack and item
+     */
+    @Query("SELECT a FROM Alert a WHERE a.rack.id = :rackId AND a.item.id = :itemId " +
+            "AND a.alertType = :alertType AND a.status IN :statuses")
+    Optional<Alert> findActiveAlertForRackAndItem(
+            @Param("rackId") Long rackId,
+            @Param("itemId") Long itemId,
+            @Param("alertType") AlertType alertType,
+            @Param("statuses") List<AlertStatus> statuses
+    );
+
+    /**
      * Find all alerts with pagination
      */
     Page<Alert> findAllByOrderByCreatedAtDesc(Pageable pageable);

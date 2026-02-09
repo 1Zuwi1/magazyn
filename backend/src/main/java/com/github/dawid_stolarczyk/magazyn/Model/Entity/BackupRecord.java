@@ -54,6 +54,12 @@ public class BackupRecord {
     @Column(name = "size_bytes")
     private Long sizeBytes;
 
+    @Column(name = "backup_progress_percentage")
+    private Integer backupProgressPercentage;
+
+    @Column(name = "restore_progress_percentage")
+    private Integer restoreProgressPercentage;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 

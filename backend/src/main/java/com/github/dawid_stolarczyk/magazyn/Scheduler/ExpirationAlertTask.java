@@ -140,7 +140,7 @@ public class ExpirationAlertTask {
     private void distributeNotifications(Alert alert) {
         Long warehouseId = alert.getWarehouse().getId();
 
-        List<User> activeUsers = userRepository.findByWarehouseIdAndStatus(warehouseId, AccountStatus.ACTIVE);
+        List<User> activeUsers = userRepository.findByWarehouseIdAndStatusOrAdmin(warehouseId, AccountStatus.ACTIVE);
         Set<Long> existingUserIds = notificationRepository.findUserIdsWithNotificationForAlert(alert.getId());
 
         Instant now = Instant.now();

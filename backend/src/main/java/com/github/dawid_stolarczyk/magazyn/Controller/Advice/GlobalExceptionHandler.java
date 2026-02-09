@@ -25,6 +25,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseTemplate<String>> handleValidation(
             MethodArgumentNotValidException ex
     ) {
+        log.info("Validation error", ex);
         log.debug("Validation error", ex);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)

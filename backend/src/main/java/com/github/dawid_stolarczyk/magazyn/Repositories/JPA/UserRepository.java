@@ -42,12 +42,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByStatus(AccountStatus status);
 
     /**
-     * Find active users assigned to a specific warehouse.
+     * Find active users assigned to a specific warehouse or admin.
      * Used for warehouse-based notification filtering.
      */
-    @Query("SELECT DISTINCT u FROM User u JOIN u.assignedWarehouses w " +
-            "WHERE w.id = :warehouseId AND u.status = :status")
-    List<User> findByWarehouseIdAndStatus(
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN u.assignedWarehouses w " +
+            "WHERE u.status = :status AND (w.id = :warehouseId OR u.role = 'ADMIN')")
+    List<User> findByWarehouseIdAndStatusOrAdmin(
             @Param("warehouseId") Long warehouseId,
             @Param("status") AccountStatus status);
 
