@@ -37,7 +37,7 @@ const resolveCurrentLocale = (locale?: string): AppLocale => {
     return normalizeAppLocale(locale)
   }
 
-  if (typeof document !== "undefined") {
+  if (typeof window !== "undefined") {
     return getClientAppLocale()
   }
 
