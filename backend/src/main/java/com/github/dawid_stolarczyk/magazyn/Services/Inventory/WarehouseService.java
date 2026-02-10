@@ -189,8 +189,8 @@ public class WarehouseService {
             totalCapacity += warehouseCapacity;
 
             // Get occupied slots from batched result
-            Long warehouseOccupied = occupiedSlotsByWarehouse.getOrDefault(warehouse.getId(), 0L);
-            totalOccupiedSlots += warehouseOccupied.intValue();
+            Long warehouseOccupied = occupiedSlotsByWarehouse.get(warehouse.getId());
+            totalOccupiedSlots += (warehouseOccupied != null ? warehouseOccupied.intValue() : 0);
 
             // Count racks
             totalRacks += warehouse.getRacks().size();
