@@ -43,7 +43,7 @@ import type {
   AuditOutboundOperationsSchema,
 } from "@/lib/schemas"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { ADMIN_NAV_LINKS } from "../lib/constants"
+import { getAdminNavLinks } from "../lib/constants"
 
 type InboundList = InferApiOutput<typeof AuditInboudOperationsSchema, "GET">
 type InboundOperation = InboundList["content"][number]
@@ -459,7 +459,7 @@ export default function AuditMain() {
       <AdminPageHeader
         description={translateMessage("generated.m0189")}
         icon={Analytics01Icon}
-        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+        navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}

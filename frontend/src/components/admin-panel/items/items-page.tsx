@@ -22,7 +22,7 @@ import useItems, {
 } from "@/hooks/use-items"
 import { translateMessage } from "@/i18n/translate-message"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { ADMIN_NAV_LINKS } from "../lib/constants"
+import { getAdminNavLinks } from "../lib/constants"
 import { ItemDialog, type ItemFormData, PhotoPromptDialog } from "./item-dialog"
 import { AdminItemsTable } from "./items-table"
 
@@ -216,7 +216,7 @@ export default function ItemsMain() {
         }
         description={translateMessage("generated.m0223")}
         icon={Package}
-        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+        navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}

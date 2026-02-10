@@ -240,7 +240,7 @@
     "m0218": "Item updated",
     "m0219": "New item added",
     "m0220": "Import partially completed: {value0}/{value1}",
-    "m0221": "{value0} products imported",
+    "m0221": "{value0, plural, one {# product} few {# products} other {# products}} imported",
     "m0222": "Add an item",
     "m0223": "Manage your catalog of inventory items",
     "m0224": "items",
@@ -400,13 +400,13 @@
     "m0378": "Overload",
     "m0379": "Add your first rack to get started",
     "m0380": "Warehouse ID is required to create or update a rack.",
-    "m0381": "Imported {value0} racks",
+    "m0381": "Imported {value0, plural, one {# rack} few {# racks} other {# racks}}",
     "m0382": "Manage racks in warehouse {value0}",
     "m0383": "Racks",
     "m0384": "Total weight:",
     "m0385": "Are you sure you want to delete rack \"{value0}\"? This operation is irreversible.",
     "m0386": "Delete rack",
-    "m0387": "{value0} warehouses imported",
+    "m0387": "{value0, plural, one {# warehouse} few {# warehouses} other {# warehouses}} imported",
     "m0388": "Failed to download warehouses",
     "m0389": "There was a problem loading data. Try refreshing the page.",
     "m0390": "No warehouses",
@@ -897,7 +897,7 @@
     "m0884": "Back to the warehouse list",
     "m0885": "Cancel",
     "m0886": "Warehouses",
-    "m0887": "Monitoring",
+    "m0887": "24/7 availability",
     "m0888": "Login",
     "m0889": "Registration",
     "m0890": "Open",
@@ -1154,6 +1154,8 @@
     "m1153": "Verified",
     "m1154": "Required",
     "m1155": "Key copied",
-    "m1156": "Copy code"
+    "m1156": "Copy code",
+    "m1157": "Administrator",
+    "m1158": "Recommended method for business accounts."
   }
 }

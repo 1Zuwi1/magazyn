@@ -2,6 +2,7 @@
 
 import { Alert02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import PasskeyLogin from "@/app/(auth)/components/passkey-login"
@@ -27,7 +28,7 @@ import {
   type TwoFactorMethod,
 } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
-import { METHOD_ICONS, TWO_FACTOR_METHODS } from "./constants"
+import { getTwoFactorMethods, METHOD_ICONS } from "./constants"
 import {
   type PasswordVerificationCopy,
   PasswordVerificationSection,
@@ -52,6 +53,7 @@ export function TwoFactorVerificationDialog({
   contentClassName = "sm:max-w-lg",
   copy,
 }: TwoFactorVerificationDialogProps) {
+  const locale = useLocale()
   const [code, setCode] = useState("")
   const {
     data: methods,
@@ -89,15 +91,16 @@ export function TwoFactorVerificationDialog({
     return { ...copy, description: defaultDescription }
   })()
 
-  const methodOptions = useMemo(
-    () =>
-      methods?.methods?.length
-        ? TWO_FACTOR_METHODS.filter((method) =>
-            methods?.methods.includes(method.value as TwoFactorMethod)
-          )
-        : TWO_FACTOR_METHODS,
-    [methods?.methods]
-  )
+  const methodOptions = useMemo(() => {
+    const twoFactorMethods = getTwoFactorMethods(locale)
+    if (methods?.methods?.length) {
+      return twoFactorMethods.filter((method) =>
+        methods.methods.includes(method.value as TwoFactorMethod)
+      )
+    }
+
+    return twoFactorMethods
+  }, [locale, methods?.methods])
   const hasInitialMethod = methods?.defaultMethod
     ? methodOptions.some((method) => method.value === methods?.defaultMethod)
     : false

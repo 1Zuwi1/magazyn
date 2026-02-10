@@ -62,48 +62,47 @@ const FloatingElements = () => (
   </>
 )
 
-// Feature data - static, defined at module level
-const features = [
-  {
-    title: translateMessage("generated.m0107"),
-    description: translateMessage("generated.m0108"),
-    icon: PackageIcon,
-  },
-  {
-    title: translateMessage("generated.m0109"),
-    description: translateMessage("generated.m0110"),
-    icon: QrCodeIcon,
-  },
-  {
-    title: translateMessage("generated.m0111"),
-    description: translateMessage("generated.m0112"),
-    icon: Chart01Icon,
-  },
-  {
-    title: translateMessage("generated.m0113"),
-    description: translateMessage("generated.m0114"),
-    icon: Location01Icon,
-  },
-  {
-    title: translateMessage("generated.m0115"),
-    description: translateMessage("generated.m0116"),
-    icon: Clock01Icon,
-  },
-  {
-    title: translateMessage("generated.m0117"),
-    description: translateMessage("generated.m0118"),
-    icon: UserMultipleIcon,
-  },
-]
-
-const benefits = [
-  { value: "99.9%", label: translateMessage("generated.m0119") },
-  { value: "< 1s", label: translateMessage("generated.m0120") },
-  { value: "24/7", label: translateMessage("generated.m0887") },
-  { value: "SSL", label: translateMessage("generated.m0121") },
-]
-
 export default function LandingPage() {
+  const features = [
+    {
+      title: translateMessage("generated.m0107"),
+      description: translateMessage("generated.m0108"),
+      icon: PackageIcon,
+    },
+    {
+      title: translateMessage("generated.m0109"),
+      description: translateMessage("generated.m0110"),
+      icon: QrCodeIcon,
+    },
+    {
+      title: translateMessage("generated.m0111"),
+      description: translateMessage("generated.m0112"),
+      icon: Chart01Icon,
+    },
+    {
+      title: translateMessage("generated.m0113"),
+      description: translateMessage("generated.m0114"),
+      icon: Location01Icon,
+    },
+    {
+      title: translateMessage("generated.m0115"),
+      description: translateMessage("generated.m0116"),
+      icon: Clock01Icon,
+    },
+    {
+      title: translateMessage("generated.m0117"),
+      description: translateMessage("generated.m0118"),
+      icon: UserMultipleIcon,
+    },
+  ] as const
+
+  const benefits = [
+    { value: "99.9%", label: translateMessage("generated.m0119") },
+    { value: "< 1s", label: translateMessage("generated.m0120") },
+    { value: "24/7", label: translateMessage("generated.m0887") },
+    { value: "SSL", label: translateMessage("generated.m0121") },
+  ] as const
+
   return (
     <div className="relative min-h-screen bg-background">
       {/* Background decorations */}

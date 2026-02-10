@@ -20,15 +20,13 @@ import { getDateFnsLocale } from "@/i18n/date-fns-locale"
 import { translateMessage } from "@/i18n/translate-message"
 import type { User } from "@/lib/schemas"
 import type { IconComponent } from "../types"
-import { ROLE_LABELS, STATUS_CONFIG } from "./constants"
+import { getRoleLabels, getStatusConfig } from "./constants"
 import type { ProfileDetail } from "./types"
 
 interface ProfileSectionProps {
   user: User
 }
 type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
-
-const FALLBACK_DISPLAY_NAME = translateMessage("generated.m0570")
 const INITIALS_REGEX = /\s+/
 
 const getInitialsFromName = ({
@@ -66,16 +64,18 @@ function ProfileDetailRow({ detail }: { detail: ProfileDetail }) {
 
 function buildProfileDetails(
   user: User,
-  dateFnsLocale: DateFnsLocale
+  dateFnsLocale: DateFnsLocale,
+  statusConfig: ReturnType<typeof getStatusConfig>,
+  roleLabels: ReturnType<typeof getRoleLabels>
 ): ProfileDetail[] {
   return [
     {
       label: translateMessage("generated.m0571"),
-      value: STATUS_CONFIG[user.account_status].label,
+      value: statusConfig[user.account_status].label,
     },
     {
       label: translateMessage("generated.m0942"),
-      value: ROLE_LABELS[user.role],
+      value: roleLabels[user.role],
     },
     {
       label: translateMessage("generated.m0572"),
@@ -126,9 +126,17 @@ function InfoField({ icon, label, value }: InfoFieldProps) {
 export function ProfileSection({ user }: ProfileSectionProps) {
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)
-  const statusBadge = STATUS_CONFIG[user.account_status]
-  const profileDetails = buildProfileDetails(user, dateFnsLocale)
-  const displayName = user.full_name?.trim() || FALLBACK_DISPLAY_NAME
+  const statusConfig = getStatusConfig()
+  const roleLabels = getRoleLabels()
+  const statusBadge = statusConfig[user.account_status]
+  const profileDetails = buildProfileDetails(
+    user,
+    dateFnsLocale,
+    statusConfig,
+    roleLabels
+  )
+  const displayName =
+    user.full_name?.trim() || translateMessage("generated.m0570")
 
   return (
     <Card>
@@ -141,7 +149,7 @@ export function ProfileSection({ user }: ProfileSectionProps) {
         </div>
         <CardAction>
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline">{ROLE_LABELS[user.role]}</Badge>
+            <Badge variant="outline">{roleLabels[user.role]}</Badge>
             <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
           </div>
         </CardAction>

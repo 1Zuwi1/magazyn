@@ -22,7 +22,7 @@ import useWarehouses from "@/hooks/use-warehouses"
 import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { ADMIN_NAV_LINKS, THRESHOLD } from "../lib/constants"
+import { getAdminNavLinks, THRESHOLD } from "../lib/constants"
 import { AdminStatCard } from "./stat-card"
 
 const ADMIN_OVERVIEW_FETCH_SIZE = 1
@@ -277,7 +277,7 @@ export function AdminOverview() {
       <AdminPageHeader
         description={translateMessage("generated.m0242")}
         icon={Settings02Icon}
-        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+        navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}

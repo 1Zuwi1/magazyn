@@ -22,7 +22,7 @@ import useWarehouses from "@/hooks/use-warehouses"
 import { translateMessage } from "@/i18n/translate-message"
 import type { Rack } from "@/lib/schemas"
 import { AdminPageHeader } from "../../components/admin-page-header"
-import { ADMIN_NAV_LINKS } from "../../lib/constants"
+import { getAdminNavLinks } from "../../lib/constants"
 import type { RackFormData } from "../csv/utils/types"
 import { RackDialog } from "./rack-dialog"
 import { RackGrid } from "./racks-grid"
@@ -148,7 +148,10 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
   }
 
   const handleCsvImport = async ({ file }: { file: File }) => {
-    const report = await importRacksMutation.mutateAsync(file)
+    const report = await importRacksMutation.mutateAsync({
+      file,
+      warehouseId: apiWarehouse?.id ?? -1,
+    })
     if (report.errors.length > 0) {
       toast.warning(
         translateMessage("generated.m0220", {
@@ -269,7 +272,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
           value0: warehouseName,
         })}
         icon={GridIcon}
-        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+        navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}

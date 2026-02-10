@@ -74,8 +74,8 @@ import {
 import {
   AUTHENTICATOR_QR_SIZE,
   COPY_FEEDBACK_TIMEOUT_MS,
+  getTwoFactorMethods,
   METHOD_ICONS,
-  TWO_FACTOR_METHODS,
   TWO_FACTOR_RESEND_SECONDS,
 } from "./constants"
 import { OtpInput } from "./otp-input"
@@ -93,21 +93,21 @@ import {
   verifyOneTimeCode,
 } from "./utils"
 
-const TWO_FACTOR_METHOD_HINTS: Record<TwoFactorMethod, string> = {
-  AUTHENTICATOR: translateMessage("generated.m1124"),
-  EMAIL: translateMessage("generated.m1125"),
-  PASSKEYS: translateMessage("generated.m0588"),
-  BACKUP_CODES: translateMessage("generated.m1126"),
+const getTwoFactorMethodLabels = (): Record<TwoFactorMethod, string> => {
+  const labels = {} as Record<TwoFactorMethod, string>
+  for (const method of getTwoFactorMethods()) {
+    labels[method.value as TwoFactorMethod] = method.label
+  }
+  return labels
 }
 
-const TWO_FACTOR_METHOD_LABELS: Record<TwoFactorMethod, string> =
-  TWO_FACTOR_METHODS.reduce(
-    (acc, current) => {
-      acc[current.value] = current.label
-      return acc
-    },
-    {} as Record<TwoFactorMethod, string>
-  )
+const getTwoFactorMethodHints = (): Record<TwoFactorMethod, string> => {
+  const hints = {} as Record<TwoFactorMethod, string>
+  for (const method of getTwoFactorMethods()) {
+    hints[method.value as TwoFactorMethod] = method.hint
+  }
+  return hints
+}
 
 const isIdleSetupStage = (stage: TwoFactorSetupStage): boolean =>
   stage === "IDLE" || stage === "SUCCESS"
@@ -117,7 +117,7 @@ const getLinkedMethodsState = (
   method: TwoFactorMethod
 ) => {
   const safeLinkedMethods = linkedMethods ?? []
-  const availableMethods = TWO_FACTOR_METHODS.filter(
+  const availableMethods = getTwoFactorMethods().filter(
     (candidate) =>
       candidate.addable &&
       !safeLinkedMethods.includes(candidate.value as TwoFactorMethod)
@@ -273,12 +273,13 @@ function TwoFactorMethodInput({
   disabled?: boolean
   availableMethods?: TwoFactorMethod[]
 }) {
+  const twoFactorMethods = getTwoFactorMethods()
   // If availableMethods is provided, filter to only those; otherwise show all
   const methodsToShow = availableMethods
-    ? TWO_FACTOR_METHODS.filter((m) =>
+    ? twoFactorMethods.filter((m) =>
         availableMethods.includes(m.value as TwoFactorMethod)
       )
-    : TWO_FACTOR_METHODS
+    : twoFactorMethods
 
   return (
     <RadioGroup
@@ -522,6 +523,9 @@ function ConnectedMethods({
   onRemoveMethod: (method: RemovableTwoFactorMethod) => void
   removingMethod: RemovableTwoFactorMethod | null
 }) {
+  const twoFactorMethodLabels = getTwoFactorMethodLabels()
+  const twoFactorMethodHints = getTwoFactorMethodHints()
+
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -602,8 +606,8 @@ function ConnectedMethods({
     <div className="space-y-2">
       {linkedMethods.map((linkedMethod) => {
         const Icon = METHOD_ICONS[linkedMethod]
-        const label = TWO_FACTOR_METHOD_LABELS[linkedMethod] ?? linkedMethod
-        const hint = TWO_FACTOR_METHOD_HINTS[linkedMethod]
+        const label = twoFactorMethodLabels[linkedMethod] ?? linkedMethod
+        const hint = twoFactorMethodHints[linkedMethod]
         const isDefault = linkedMethod === defaultMethod
 
         return (
@@ -700,7 +704,7 @@ function ConnectedMethods({
               {translateMessage("generated.m0604")}{" "}
               <span className="font-medium text-foreground">
                 {defaultMethod
-                  ? (TWO_FACTOR_METHOD_LABELS[defaultMethod] ?? defaultMethod)
+                  ? (twoFactorMethodLabels[defaultMethod] ?? defaultMethod)
                   : "Nie ustawiono"}
               </span>
             </span>
@@ -734,7 +738,7 @@ function ConnectedMethods({
                           icon={MethodIcon}
                           size={16}
                         />
-                        {TWO_FACTOR_METHOD_LABELS[method] ?? method}
+                        {twoFactorMethodLabels[method] ?? method}
                       </DropdownMenuRadioItem>
                     )
                   })}
@@ -1312,6 +1316,7 @@ export function TwoFactorSetup({
   onMethodChange,
   userEmail,
 }: TwoFactorSetupProps) {
+  const twoFactorMethodLabels = getTwoFactorMethodLabels()
   const {
     data: linkedMethods,
     isLoading: isLinkedMethodsLoading,
@@ -1329,7 +1334,7 @@ export function TwoFactorSetup({
       onSuccess: () => {
         toast.success(
           translateMessage("generated.m0637", {
-            value0: TWO_FACTOR_METHOD_LABELS[newDefaultMethod],
+            value0: twoFactorMethodLabels[newDefaultMethod],
           })
         )
       },
@@ -1342,7 +1347,7 @@ export function TwoFactorSetup({
       onSuccess: () => {
         toast.success(
           translateMessage("generated.m0638", {
-            value0: TWO_FACTOR_METHOD_LABELS[methodToRemove],
+            value0: twoFactorMethodLabels[methodToRemove],
           })
         )
         setRemovingMethod(null)
@@ -1355,7 +1360,7 @@ export function TwoFactorSetup({
       return
     }
     if (linkedMethods.methods.includes(method)) {
-      const available = TWO_FACTOR_METHODS.find(
+      const available = getTwoFactorMethods().find(
         (m) => !linkedMethods.methods.includes(m.value)
       )?.value
       if (available) {

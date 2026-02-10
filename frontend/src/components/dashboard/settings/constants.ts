@@ -8,53 +8,56 @@ import { translateMessage } from "@/i18n/translate-message"
 import type { TwoFactorMethod } from "@/lib/schemas"
 import type { IconComponent } from "../types"
 
-export const STATUS_CONFIG = {
-  LOCKED: {
-    label: translateMessage("generated.m0996"),
-    variant: "destructive",
-  },
-  PENDING_VERIFICATION: {
-    label: translateMessage("generated.m0997"),
-    variant: "warning",
-  },
-  DISABLED: {
-    label: translateMessage("generated.m0317"),
-    variant: "destructive",
-  },
-  ACTIVE: { label: translateMessage("generated.m0891"), variant: "success" },
-} as const
+export const getStatusConfig = () =>
+  ({
+    LOCKED: {
+      label: translateMessage("generated.m0996"),
+      variant: "destructive",
+    },
+    PENDING_VERIFICATION: {
+      label: translateMessage("generated.m0997"),
+      variant: "warning",
+    },
+    DISABLED: {
+      label: translateMessage("generated.m0317"),
+      variant: "destructive",
+    },
+    ACTIVE: { label: translateMessage("generated.m0891"), variant: "success" },
+  }) as const
 
-export const ROLE_LABELS = {
-  ADMIN: "Administrator",
-  USER: translateMessage("generated.m0481"),
-} as const
+export const getRoleLabels = () =>
+  ({
+    ADMIN: translateMessage("generated.m1157"),
+    USER: translateMessage("generated.m0481"),
+  }) as const
 
-export const TWO_FACTOR_METHODS = [
-  {
-    value: "AUTHENTICATOR",
-    label: translateMessage("generated.m0510"),
-    hint: "Rekomendowana metoda dla kont firmowych.",
-    addable: true,
-  },
-  {
-    value: "EMAIL",
-    label: translateMessage("generated.m0998"),
-    hint: translateMessage("generated.m0511"),
-    addable: true,
-  },
-  {
-    value: "PASSKEYS",
-    label: translateMessage("generated.m0512"),
-    hint: translateMessage("generated.m0513"),
-    addable: false,
-  },
-  {
-    value: "BACKUP_CODES",
-    label: translateMessage("generated.m0514"),
-    hint: translateMessage("generated.m0515"),
-    addable: false,
-  },
-] as const
+export const getTwoFactorMethods = (locale?: string) =>
+  [
+    {
+      value: "AUTHENTICATOR",
+      label: translateMessage("generated.m0510", undefined, locale),
+      hint: translateMessage("generated.m1158", undefined, locale),
+      addable: true,
+    },
+    {
+      value: "EMAIL",
+      label: translateMessage("generated.m0998", undefined, locale),
+      hint: translateMessage("generated.m0511", undefined, locale),
+      addable: true,
+    },
+    {
+      value: "PASSKEYS",
+      label: translateMessage("generated.m0512", undefined, locale),
+      hint: translateMessage("generated.m0513", undefined, locale),
+      addable: false,
+    },
+    {
+      value: "BACKUP_CODES",
+      label: translateMessage("generated.m0514", undefined, locale),
+      hint: translateMessage("generated.m0515", undefined, locale),
+      addable: false,
+    },
+  ] as const
 
 export const METHOD_ICONS: Record<TwoFactorMethod, IconComponent> = {
   AUTHENTICATOR: Key01Icon,

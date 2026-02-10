@@ -241,7 +241,7 @@
     "m0218": "Zaktualizowano przedmiot",
     "m0219": "Dodano nowy przedmiot",
     "m0220": "Import zakończony częściowo: {value0}/{value1}",
-    "m0221": "Zaimportowano {value0} produktów",
+    "m0221": "Zaimportowano {value0, plural, one {# produkt} few {# produkty} many {# produktów} other {# produktów}}",
     "m0222": "Dodaj przedmiot",
     "m0223": "Zarządzaj katalogiem przedmiotów magazynowych",
     "m0224": "przedmiotów",
@@ -401,13 +401,13 @@
     "m0378": "Przeciążenie",
     "m0379": "Dodaj pierwszy regał, aby rozpocząć",
     "m0380": "Warehouse ID is required to create or update a rack.",
-    "m0381": "Zaimportowano {value0} regałów",
+    "m0381": "Zaimportowano {value0, plural, one {# regał} few {# regały} many {# regałów} other {# regałów}}",
     "m0382": "Zarządzaj regałami w magazynie {value0}",
     "m0383": "Regały",
     "m0384": "Łączna waga:",
     "m0385": "Czy na pewno chcesz usunąć regał \"{value0}\"? Ta operacja jest nieodwracalna.",
     "m0386": "Usuń regał",
-    "m0387": "Zaimportowano {value0} magazynów",
+    "m0387": "Zaimportowano {value0, plural, one {# magazyn} few {# magazyny} many {# magazynów} other {# magazynów}}",
     "m0388": "Nie udało się pobrać magazynów",
     "m0389": "Wystąpił problem podczas ładowania danych. Spróbuj odświeżyć stronę.",
     "m0390": "Brak magazynów",
@@ -898,7 +898,7 @@
     "m0884": "Powrót do listy magazynów",
     "m0885": "Anuluj",
     "m0886": "Magazyny",
-    "m0887": "Monitoring",
+    "m0887": "Dostępność 24/7",
     "m0888": "Logowanie",
     "m0889": "Rejestracja",
     "m0890": "Otwarte",
@@ -1155,6 +1155,8 @@
     "m1153": "Zweryfikowano",
     "m1154": "Wymagane",
     "m1155": "Klucz skopiowany",
-    "m1156": "Skopiuj kod"
+    "m1156": "Skopiuj kod",
+    "m1157": "Administrator",
+    "m1158": "Rekomendowana metoda dla kont firmowych."
   }
 }

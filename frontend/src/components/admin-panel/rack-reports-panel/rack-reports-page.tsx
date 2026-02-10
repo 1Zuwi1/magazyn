@@ -33,7 +33,7 @@ import type { InferApiOutput } from "@/lib/fetcher"
 import type { RackReportsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { ADMIN_NAV_LINKS } from "../lib/constants"
+import { getAdminNavLinks } from "../lib/constants"
 
 type RackReportsList = InferApiOutput<typeof RackReportsSchema, "GET">
 type RackReportItem = RackReportsList["content"][number]
@@ -376,7 +376,7 @@ export default function RackReportsMain() {
       <AdminPageHeader
         description={translateMessage("generated.m0258")}
         icon={PackageIcon}
-        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+        navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}

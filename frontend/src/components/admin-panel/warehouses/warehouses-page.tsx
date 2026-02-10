@@ -25,7 +25,7 @@ import useWarehouses, {
 } from "@/hooks/use-warehouses"
 import { translateMessage } from "@/i18n/translate-message"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { ADMIN_NAV_LINKS } from "../lib/constants"
+import { getAdminNavLinks } from "../lib/constants"
 import { WarehouseCard } from "./components/warehouse-card"
 import {
   WarehouseDialog,
@@ -224,7 +224,7 @@ export default function WarehousesMain() {
         }
         description={translateMessage("generated.m0393")}
         icon={WarehouseIcon}
-        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+        navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}

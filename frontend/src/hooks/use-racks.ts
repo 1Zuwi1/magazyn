@@ -154,14 +154,24 @@ export function useUpdateRack() {
 
 export function useImportRacks() {
   return useApiMutation({
-    mutationFn: async (file: File) => {
-      return await apiFetch("/api/racks/import", RackImportSchema, {
-        method: "POST",
-        body: { file },
-        formData: (formData, data) => {
-          formData.append("file", data.file)
-        },
-      })
+    mutationFn: async ({
+      file,
+      warehouseId,
+    }: {
+      file: File
+      warehouseId: number
+    }) => {
+      return await apiFetch(
+        `/api/racks/import?warehouseId=${warehouseId}`,
+        RackImportSchema,
+        {
+          method: "POST",
+          body: { file },
+          formData: (formData, data) => {
+            formData.append("file", data.file)
+          },
+        }
+      )
     },
     onSuccess: (_, __, ___, context) => {
       context.client.invalidateQueries({ queryKey: Racks_QUERY_KEY })

@@ -17,7 +17,7 @@ import { useUsersPagination } from "@/components/admin-panel/users/hooks/use-use
 import PaginationFull from "@/components/ui/pagination-component"
 import { translateMessage } from "@/i18n/translate-message"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { ADMIN_NAV_LINKS } from "../lib/constants"
+import { getAdminNavLinks } from "../lib/constants"
 
 export default function UsersMain() {
   const {
@@ -113,7 +113,7 @@ export default function UsersMain() {
       <AdminPageHeader
         description={translateMessage("generated.m0319")}
         icon={UserMultiple02Icon}
-        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+        navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}
