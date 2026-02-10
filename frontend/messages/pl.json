@@ -24,11 +24,16 @@
     }
   },
   "inputOtp": {
+    "digitAriaLabel": "Cyfra {value0} kodu",
     "status": {
       "filled": "Wpisano {value0} z {value1} cyfr.",
       "filledWithActivePosition": "Wpisano {value0} z {value1} cyfr. Aktywna pozycja {value2}.",
       "prompt": "Wpisz kod weryfikacyjny."
     }
+  },
+  "search": {
+    "label": "Szukaj",
+    "placeholder": "Szukaj..."
   },
   "passkeys": {
     "support": {

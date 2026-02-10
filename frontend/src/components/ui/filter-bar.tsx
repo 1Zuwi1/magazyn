@@ -61,11 +61,14 @@ interface SearchInputProps {
 export function SearchInput({
   value,
   onChange,
-  placeholder = "Szukaj...",
+  placeholder,
   className,
-  "aria-label": ariaLabel = "Szukaj",
+  "aria-label": ariaLabel,
 }: SearchInputProps) {
   const isFiltered = value.length > 0
+  const resolvedPlaceholder =
+    placeholder ?? translateMessage("search.placeholder")
+  const resolvedAriaLabel = ariaLabel ?? translateMessage("search.label")
 
   return (
     <div className={cn("relative flex-1 sm:min-w-70 sm:max-w-sm", className)}>
@@ -74,10 +77,10 @@ export function SearchInput({
         icon={Search01Icon}
       />
       <Input
-        aria-label={ariaLabel}
+        aria-label={resolvedAriaLabel}
         className="h-10 pr-9 pl-9"
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         value={value}
       />
       {isFiltered && (

@@ -15,9 +15,10 @@ interface SearchProps {
   placeholder?: string
 }
 
-export function Search({ className, placeholder = "Search" }: SearchProps) {
+export function Search({ className, placeholder }: SearchProps) {
   const { openWithQuery } = useSearch()
   const [value, setValue] = useState("")
+  const resolvedPlaceholder = placeholder ?? translateMessage("search.label")
 
   const handleOpenSearch = () => {
     openWithQuery(value)
@@ -37,7 +38,7 @@ export function Search({ className, placeholder = "Search" }: SearchProps) {
         className="border-0 shadow-none focus-visible:ring-0"
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         value={value}
       />
       <InputGroupButton

@@ -23,11 +23,16 @@
     }
   },
   "inputOtp": {
+    "digitAriaLabel": "Digit {value0} of code",
     "status": {
       "filled": "Entered {value0} of {value1} digits.",
       "filledWithActivePosition": "Entered {value0} of {value1} digits. Active position {value2}.",
       "prompt": "Enter the verification code."
     }
+  },
+  "search": {
+    "label": "Search",
+    "placeholder": "Search..."
   },
   "passkeys": {
     "support": {

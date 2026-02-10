@@ -6,6 +6,7 @@ import {
   InputOTPStatus,
 } from "@/components/ui/input-otp"
 import { OTP_LENGTH } from "@/config/constants"
+import { translateMessage } from "@/i18n/translate-message"
 import { sanitizeOtpValue } from "./utils"
 
 interface OtpInputProps {
@@ -17,6 +18,7 @@ interface OtpInputProps {
 
 export function OtpInput({ id, onChange, value, disabled }: OtpInputProps) {
   const statusId = `${id}-status`
+  const halfOtpLength = OTP_LENGTH / 2
 
   return (
     <InputOTP
@@ -31,10 +33,12 @@ export function OtpInput({ id, onChange, value, disabled }: OtpInputProps) {
       value={value}
     >
       <InputOTPGroup className="gap-2 *:data-[slot=input-otp-slot]:h-9 *:data-[slot=input-otp-slot]:w-8 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-sm">
-        {Array.from({ length: OTP_LENGTH / 2 }).map((_, idx) => (
+        {Array.from({ length: halfOtpLength }).map((_, idx) => (
           <InputOTPSlot
             aria-describedby={statusId}
-            aria-label={`Cyfra ${idx + 1} kodu`}
+            aria-label={translateMessage("inputOtp.digitAriaLabel", {
+              value0: idx + 1,
+            })}
             index={idx}
             key={idx}
           />
@@ -42,11 +46,13 @@ export function OtpInput({ id, onChange, value, disabled }: OtpInputProps) {
       </InputOTPGroup>
       <InputOTPSeparator />
       <InputOTPGroup className="gap-2 *:data-[slot=input-otp-slot]:h-9 *:data-[slot=input-otp-slot]:w-8 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-sm">
-        {Array.from({ length: OTP_LENGTH / 2 }).map((_, idx) => (
+        {Array.from({ length: halfOtpLength }).map((_, idx) => (
           <InputOTPSlot
             aria-describedby={statusId}
-            aria-label={`Cyfra ${idx + OTP_LENGTH / 2 + 1} kodu`}
-            index={idx + OTP_LENGTH / 2}
+            aria-label={translateMessage("inputOtp.digitAriaLabel", {
+              value0: idx + halfOtpLength + 1,
+            })}
+            index={idx + halfOtpLength}
             key={idx}
           />
         ))}
