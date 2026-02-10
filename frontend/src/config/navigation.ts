@@ -1,6 +1,7 @@
 import {
   Analytics01Icon,
   Bell,
+  DatabaseIcon,
   Package,
   Settings,
   UserIcon,
@@ -69,6 +70,11 @@ export const navigationItems: NavigationItem[] = [
         title: "Powiadomienia",
         href: "/admin/notifications",
         icon: Bell,
+      },
+      {
+        title: "Raporty",
+        href: "/admin/reports",
+        icon: DatabaseIcon,
       },
     ],
   },

@@ -11,6 +11,7 @@ export const ADMIN_NAV_LINKS = [
   { title: "Magazyny", url: "/admin/warehouses" },
   { title: "Asortyment", url: "/admin/assortment" },
   { title: "Powiadomienia", url: "/admin/notifications" },
+  { title: "Raporty", url: "/admin/reports" },
 ] as const
 
 export const NOTIFICATIONS_NAV_LINKS = [
