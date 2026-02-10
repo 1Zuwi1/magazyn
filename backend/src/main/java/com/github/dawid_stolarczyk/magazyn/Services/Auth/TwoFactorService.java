@@ -115,7 +115,13 @@ public class TwoFactorService {
 
     public TwoFactorAuthenticatorResponse generateTwoFactorGoogleSecret(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_STRICT);
-        User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+
+        if (!authPrincipal.isSudoMode()) {
+            throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
+        }
+
+        User user = userRepository.findById(authPrincipal.getUserId())
                 .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
 
         TwoFactorMethod method = user.getTwoFactorMethods().stream()
@@ -138,6 +144,12 @@ public class TwoFactorService {
 
     public void finishTwoFactorGoogleSecret(FinishTwoFactorAuthenticatorRequest finishTwoFactorAuthenticatorRequest, HttpServletRequest request) throws AuthenticationException {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_VERIFY);
+
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+
+        if (!authPrincipal.isSudoMode()) {
+            throw new AuthenticationException(AuthError.INSUFFICIENT_PERMISSIONS.name());
+        }
         int code;
         try {
             code = Integer.parseInt(finishTwoFactorAuthenticatorRequest.getCode());
@@ -145,7 +157,7 @@ public class TwoFactorService {
             throw new AuthenticationException(AuthError.CODE_FORMAT_INVALID.name());
         }
 
-        User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
+        User user = userRepository.findById(authPrincipal.getUserId())
                 .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
 
         TwoFactorMethod method = user.getTwoFactorMethods().stream()
