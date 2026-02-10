@@ -1,8 +1,12 @@
-import { describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it } from "vitest"
 
 import { matchVoiceCommand, normalizeTranscript } from "./commands"
 
 describe("voice commands", () => {
+  beforeEach(() => {
+    document.documentElement.lang = "pl"
+  })
+
   it("normalizes transcript with diacritics and spaces", () => {
     expect(normalizeTranscript("  Pokaż   magazyn  A1  ")).toBe(
       "Pokaz magazyn A1"
@@ -247,5 +251,50 @@ describe("voice commands", () => {
     expect(match).not.toBeNull()
     expect(match?.command.id).toBe("search-product")
     expect(match?.params.itemName).toBe("Mleko")
+  })
+
+  it("matches warehouse command in english locale", () => {
+    document.documentElement.lang = "en"
+
+    const match = matchVoiceCommand("Show warehouse A3")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("warehouses:id")
+    expect(match?.params.warehouseName).toBe("A3")
+  })
+
+  it("matches product search command in english locale", () => {
+    document.documentElement.lang = "en"
+
+    const match = matchVoiceCommand("Find product Milk")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("search-product")
+    expect(match?.params.itemName).toBe("Milk")
+  })
+
+  it("matches notifications by keyword in english locale", () => {
+    document.documentElement.lang = "en"
+
+    const match = matchVoiceCommand("Please open my notifications now")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("notifications")
+  })
+
+  it("rejects generic english search phrase without a product name", () => {
+    document.documentElement.lang = "en"
+
+    const match = matchVoiceCommand("Find product")
+
+    expect(match).toBeNull()
+  })
+
+  it("does not match polish commands when english locale is active", () => {
+    document.documentElement.lang = "en"
+
+    const match = matchVoiceCommand("Pokaż magazyn A3")
+
+    expect(match).toBeNull()
   })
 })

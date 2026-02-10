@@ -5,6 +5,7 @@ import {
   Home01Icon,
   Package,
 } from "@hugeicons/core-free-icons"
+import { useLocale } from "next-intl"
 import { PageHeader } from "@/components/dashboard/page-header"
 import useWarehouses from "@/hooks/use-warehouses"
 import { translateMessage } from "@/i18n/translate-message"
@@ -15,6 +16,7 @@ import {
 } from "./dashboard-home.constants"
 
 export function DashboardHomeHeader() {
+  const locale = useLocale()
   const { data: warehousesData } = useWarehouses({
     page: 0,
     size: TOP_WAREHOUSES_LIMIT,
@@ -32,7 +34,7 @@ export function DashboardHomeHeader() {
       stats={[
         {
           label: translateMessage("generated.m0886"),
-          value: formatNumber(totalWarehouses),
+          value: formatNumber(totalWarehouses, locale),
           icon: Package,
         },
         {

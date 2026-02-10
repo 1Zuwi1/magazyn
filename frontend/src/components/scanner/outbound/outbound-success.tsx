@@ -1,5 +1,7 @@
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
+import { formatDateTimeLabel } from "@/components/dashboard/utils/helpers"
 import { translateMessage } from "@/i18n/translate-message"
 import type { OutboundExecuteResult } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
@@ -10,22 +12,9 @@ interface OutboundSuccessProps {
   onReset: () => void
 }
 
-const formatDate = (value: string): string => {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat("pl-PL", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date)
-}
-
 export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
+  const locale = useLocale()
+
   return (
     <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
       <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-emerald-500/5 via-transparent to-transparent opacity-50" />
@@ -77,7 +66,7 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
                 <p className="text-muted-foreground text-xs">
                   {translateMessage("generated.m1088", {
                     value0: op.issuedByName,
-                    value1: formatDate(op.operationTimestamp),
+                    value1: formatDateTimeLabel(op.operationTimestamp, locale),
                   })}
                 </p>
               </div>

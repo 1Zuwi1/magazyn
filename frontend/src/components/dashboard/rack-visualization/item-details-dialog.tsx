@@ -2,7 +2,7 @@
 
 import { PackageIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { addDays } from "date-fns"
+import { addDays, formatDate } from "date-fns"
 import Image from "next/image"
 import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
@@ -16,12 +16,7 @@ import {
 import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import type { Item } from "../types"
-import {
-  formatDate,
-  formatDimensions,
-  getDaysUntilExpiry,
-  pluralize,
-} from "../utils/helpers"
+import { formatDimensions, getDaysUntilExpiry } from "../utils/helpers"
 import {
   getItemStatus,
   getStatusColors,
@@ -41,16 +36,16 @@ type BadgeVariant = NonNullable<React.ComponentProps<typeof Badge>["variant"]>
 
 function formatExpiryHint(daysUntilExpiry: number): string {
   if (daysUntilExpiry === 0) {
-    return "Wygasa dzisiaj"
+    return translateMessage("generated.m1112")
   }
 
   const absDays = Math.abs(daysUntilExpiry)
-  const daysLabel = `${absDays} ${pluralize(absDays, translateMessage("generated.m0498"), "dni", "dni")}`
+  const daysLabel = translateMessage("generated.m1105", { value0: absDays })
   if (daysUntilExpiry < 0) {
-    return `Po terminie ${daysLabel}`
+    return translateMessage("generated.m1113", { value0: daysLabel })
   }
 
-  return `Wygasa za ${daysLabel}`
+  return translateMessage("generated.m1114", { value0: daysLabel })
 }
 
 function getStatusBadgeVariant(status: ItemStatus): BadgeVariant {
@@ -180,7 +175,8 @@ export function ItemDetailsDialog({
                     className={cn("font-mono font-semibold", statusColors.text)}
                   >
                     {formatDate(
-                      item.expiryDate ?? addDays(new Date(), item.daysToExpiry)
+                      item.expiryDate ?? addDays(new Date(), item.daysToExpiry),
+                      "dd.MM.yyyy"
                     )}
                   </span>
                 }

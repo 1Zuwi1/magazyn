@@ -1,5 +1,6 @@
 import { Location04Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
 import { useMemo } from "react"
 import { useInfiniteRacks } from "@/hooks/use-racks"
 import { translateMessage } from "@/i18n/translate-message"
@@ -27,7 +28,10 @@ interface ScannerLocationsStepProps {
   ) => void
 }
 
-const formatReservedUntil = (value: string | null): string | null => {
+const formatReservedUntil = (
+  value: string | null,
+  locale: string
+): string | null => {
   if (!value) {
     return null
   }
@@ -37,7 +41,7 @@ const formatReservedUntil = (value: string | null): string | null => {
     return null
   }
 
-  return new Intl.DateTimeFormat("pl-PL", {
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -58,7 +62,8 @@ export function ScannerLocationsStep({
   onRemovePlacement,
   onPlacementChange,
 }: ScannerLocationsStepProps) {
-  const reservedUntilLabel = formatReservedUntil(plan.reservedUntil)
+  const locale = useLocale()
+  const reservedUntilLabel = formatReservedUntil(plan.reservedUntil, locale)
   const {
     fetchNextPage: fetchNextRackPage,
     hasNextPage: hasNextRackPage,

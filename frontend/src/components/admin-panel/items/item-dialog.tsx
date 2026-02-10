@@ -374,13 +374,13 @@ export function PhotoPromptDialog({
             <DialogHeader>
               <DialogTitle>
                 {hasExistingPhoto
-                  ? "Zmien zdjecie przedmiotu"
-                  : "Dodaj zdjecie przedmiotu"}
+                  ? translateMessage("generated.m1120")
+                  : translateMessage("generated.m1121")}
               </DialogTitle>
               <DialogDescription>
                 {hasExistingPhoto
-                  ? "Wybierz nowe zdjecie. Obecne zdjecie zostanie zastapione."
-                  : "Chcesz dodac zdjecie nowo utworzonego przedmiotu? Mozesz to zrobic teraz lub pozniej."}
+                  ? translateMessage("generated.m1122")
+                  : translateMessage("generated.m1123")}
               </DialogDescription>
             </DialogHeader>
 

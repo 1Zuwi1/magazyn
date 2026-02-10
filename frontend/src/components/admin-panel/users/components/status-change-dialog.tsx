@@ -123,7 +123,7 @@ export function StatusChangeDialog({
                       <span>
                         {selectedStatus
                           ? getStatusLabel(selectedStatus)
-                          : "Wybierz nowy status"}
+                          : translateMessage("generated.m0278")}
                       </span>
                     }
                   />

@@ -1,5 +1,13 @@
+import { cookies, headers } from "next/headers"
 import type { Formats } from "next-intl"
 import { getRequestConfig, type RequestConfig } from "next-intl/server"
+import {
+  APP_LOCALES,
+  getAppLocaleFromAcceptLanguageHeader,
+  LOCALE_COOKIE_NAME,
+  normalizeAppLocale,
+  setServerRuntimeLocale,
+} from "@/i18n/locale"
 
 export const formats = {
   dateTime: {
@@ -22,14 +30,23 @@ export const formats = {
   },
 } satisfies Formats
 
-export const locales = ["pl"] as const
+export const locales = APP_LOCALES
 
 export default getRequestConfig(async () => {
-  const locale = "pl"
+  const cookieStore = await cookies()
+  const cookieLocale = cookieStore.get(LOCALE_COOKIE_NAME)?.value
+  const requestHeaders = await headers()
+  const localeFromAcceptLanguage = getAppLocaleFromAcceptLanguageHeader(
+    requestHeaders.get("accept-language")
+  )
+  const resolvedLocale = normalizeAppLocale(
+    cookieLocale ?? localeFromAcceptLanguage
+  )
+  setServerRuntimeLocale(resolvedLocale)
 
   return {
-    locale,
-    messages: (await import(`../../messages/${locale}.json`)).default,
+    locale: resolvedLocale,
+    messages: (await import(`../../messages/${resolvedLocale}.json`)).default,
     // ...
   } satisfies RequestConfig
 })

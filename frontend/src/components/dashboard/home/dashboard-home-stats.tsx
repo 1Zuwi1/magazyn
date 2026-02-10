@@ -6,9 +6,9 @@ import {
   GroupItemsIcon,
   Package,
 } from "@hugeicons/core-free-icons"
+import { useLocale } from "next-intl"
 import { useMemo } from "react"
 import { StatCard } from "@/components/dashboard/stat-card"
-import { pluralize } from "@/components/dashboard/utils/helpers"
 import { ErrorEmptyState } from "@/components/ui/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
 import useAssortments from "@/hooks/use-assortment"
@@ -65,6 +65,7 @@ function DashboardHomeStatsSkeleton() {
 }
 
 export function DashboardHomeStats() {
+  const locale = useLocale()
   const {
     data: warehousesData,
     isPending: isWarehousesPending,
@@ -166,33 +167,48 @@ export function DashboardHomeStats() {
 
       <div className="grid @5xl:grid-cols-4 @lg:grid-cols-2 gap-4">
         <StatCard
-          hint={`${formatNumber(totalRacks)} ${pluralize(totalRacks, translateMessage("generated.m0323"), translateMessage("generated.m0324"), translateMessage("generated.m0241"))}`}
+          hint={translateMessage("generated.m1064", {
+            value0: totalRacks,
+          })}
           icon={Package}
           label={translateMessage("generated.m0438")}
-          value={formatNumber(totalWarehouses)}
+          value={formatNumber(totalWarehouses, locale)}
           variant="primary"
         />
         <StatCard
           hint={translateMessage("generated.m0439", {
-            value0: formatNumber(warehousesData?.summary?.occupiedSlots ?? 0),
+            value0: formatNumber(
+              warehousesData?.summary?.occupiedSlots ?? 0,
+              locale
+            ),
           })}
           icon={Analytics01Icon}
           label={translateMessage("generated.m0440")}
-          value={formatNumber(warehousesData?.summary?.totalCapacity ?? 0)}
+          value={formatNumber(
+            warehousesData?.summary?.totalCapacity ?? 0,
+            locale
+          )}
           variant="default"
         />
         <StatCard
-          hint={`${formatNumber(warehousesData?.summary?.freeSlots ?? 0)} wolnych`}
+          hint={translateMessage("generated.m1115", {
+            value0: formatNumber(
+              warehousesData?.summary?.freeSlots ?? 0,
+              locale
+            ),
+          })}
           icon={Clock01Icon}
           label={translateMessage("generated.m0427")}
           value={`${occupancyPercentage}%`}
           variant={getOccupancyCardVariant(occupancyPercentage)}
         />
         <StatCard
-          hint={`${formatNumber(dangerousItemsCount)} oznaczonych jako niebezpieczne`}
+          hint={translateMessage("generated.m1116", {
+            value0: formatNumber(dangerousItemsCount, locale),
+          })}
           icon={GroupItemsIcon}
           label={translateMessage("generated.m0441")}
-          value={formatNumber(productsInCirculation)}
+          value={formatNumber(productsInCirculation, locale)}
           variant="default"
         />
       </div>

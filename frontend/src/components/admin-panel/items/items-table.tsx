@@ -270,9 +270,9 @@ export function AdminItemsTable({
   }
 
   const itemLabel = {
-    singular: "przedmiot",
-    plural: "przedmioty",
-    genitive: translateMessage("generated.m0224"),
+    singular: translateMessage("generated.m1108"),
+    plural: translateMessage("generated.m1109"),
+    genitive: translateMessage("generated.m1110"),
   }
 
   const getTableContent = () => {

@@ -6,13 +6,13 @@ export const TABLE_PAGE_SIZE = 10
 
 export const getStatusLabel = (status: AdminUser["account_status"]): string => {
   if (status === "ACTIVE") {
-    return "Aktywne"
+    return translateMessage("generated.m0891")
   }
   if (status === "PENDING_VERIFICATION") {
-    return "Oczekuje"
+    return translateMessage("generated.m1119")
   }
   if (status === "LOCKED") {
-    return "Zablokowane"
+    return translateMessage("generated.m0996")
   }
   if (status === "DISABLED") {
     return translateMessage("generated.m0317")
@@ -48,11 +48,6 @@ export const resolveTeamValue = (
   const exactValueMatch = teams.find((team) => team.value === normalizedTeam)
   if (exactValueMatch) {
     return exactValueMatch.value
-  }
-
-  const labelMatch = teams.find((team) => team.label === normalizedTeam)
-  if (labelMatch) {
-    return labelMatch.value
   }
 
   return ""

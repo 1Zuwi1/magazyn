@@ -4,6 +4,7 @@ import Link from "next/link"
 import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { getClientAppLocale } from "@/i18n/locale"
 import { cn } from "@/lib/utils"
 import type { IconComponent } from "./types"
 
@@ -40,6 +41,7 @@ interface PageHeaderProps {
 }
 
 function StatCard({ label, value, icon, variant = "default" }: StatItem) {
+  const numberLocale = getClientAppLocale()
   const valueClassName = cn(
     "font-bold font-mono text-lg",
     variant === "destructive" && "text-destructive",
@@ -63,7 +65,9 @@ function StatCard({ label, value, icon, variant = "default" }: StatItem) {
           />
         )}
         <span className={valueClassName}>
-          {typeof value === "number" ? value.toLocaleString("pl-PL") : value}
+          {typeof value === "number"
+            ? value.toLocaleString(numberLocale)
+            : value}
         </span>
       </div>
       <span className="text-muted-foreground text-xs">{label}</span>

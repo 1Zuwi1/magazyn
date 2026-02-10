@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { Fragment } from "react/jsx-runtime"
 import { translateMessage } from "@/i18n/translate-message"
 import { NotificationInbox } from "./dashboard/notifications/components/notification-icon"
+import { LanguageSwitcher } from "./language-switcher"
 import { Scanner } from "./scanner/scanner"
 import {
   Breadcrumb,
@@ -166,6 +167,7 @@ export default function SiteHeader() {
       </div>
 
       <div className="flex standalone:hidden items-center gap-2 pr-3 sm:gap-3 sm:pr-4">
+        <LanguageSwitcher />
         {pathname.includes("/dashboard/warehouse/") && (
           <Scanner
             warehouseName={decodeURIComponent(

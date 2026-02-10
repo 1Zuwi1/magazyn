@@ -462,7 +462,6 @@ const AdminUserSchema = z.object({
 
 const TeamOptionSchema = z.object({
   value: AdminTeamSchema,
-  label: z.string().min(1),
 })
 
 const ImportErrorSchema = z.object({

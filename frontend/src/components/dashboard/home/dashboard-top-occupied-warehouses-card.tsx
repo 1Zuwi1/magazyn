@@ -1,5 +1,6 @@
 import { Package } from "@hugeicons/core-free-icons"
 import Link from "next/link"
+import { useLocale } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { ErrorEmptyState } from "@/components/ui/empty-state"
@@ -54,6 +55,7 @@ function TopOccupiedWarehousesSkeleton() {
 }
 
 export default function DashboardTopOccupiedWarehousesCard() {
+  const locale = useLocale()
   const {
     data: topWarehouses,
     isPending,
@@ -96,9 +98,10 @@ export default function DashboardTopOccupiedWarehousesCard() {
             </div>
             <p className="font-mono text-muted-foreground text-xs">
               {translateMessage("generated.m1072", {
-                value0: formatNumber(warehouse.occupiedSlots),
+                value0: formatNumber(warehouse.occupiedSlots, locale),
                 value1: formatNumber(
-                  warehouse.occupiedSlots + warehouse.freeSlots
+                  warehouse.occupiedSlots + warehouse.freeSlots,
+                  locale
                 ),
               })}
             </p>

@@ -8,6 +8,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
+import { LanguageSwitcher } from "@/components/language-switcher"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { translateMessage } from "@/i18n/translate-message"
@@ -116,7 +117,8 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 w-full border-border/40 border-b bg-background/70 backdrop-blur-xl">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Logo href="/" />
-          <nav className="flex items-center gap-2">
+          <nav className="flex items-center gap-3">
+            <LanguageSwitcher />
             <Link href="/login">
               <Button size="sm" variant="ghost">
                 {translateMessage("generated.m0014")}

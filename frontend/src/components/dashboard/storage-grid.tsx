@@ -9,6 +9,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useLocale } from "next-intl"
 import { useState } from "react"
 import {
   AlertDialog,
@@ -34,7 +35,7 @@ import { translateMessage } from "@/i18n/translate-message"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { Badge } from "../ui/badge"
-import { getOccupancyPercentage, pluralize } from "./utils/helpers"
+import { getOccupancyPercentage } from "./utils/helpers"
 
 const OCCUPANCY_WARNING_THRESHOLD = 75
 const OCCUPANCY_CRITICAL_THRESHOLD = 90
@@ -122,6 +123,7 @@ function WarehouseGridSkeleton() {
 }
 
 export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
+  const locale = useLocale()
   const router = useRouter()
   const [visualizationTarget, setVisualizationTarget] = useState<{
     id: number
@@ -184,13 +186,9 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                     <CardTitle className="text-lg">{warehouse.name}</CardTitle>
                     <p className="mt-0.5 flex items-center gap-1 text-muted-foreground text-xs">
                       <HugeiconsIcon className="size-3" icon={Layers01Icon} />
-                      {warehouse.racksCount}{" "}
-                      {pluralize(
-                        warehouse.racksCount,
-                        translateMessage("generated.m0323"),
-                        translateMessage("generated.m0324"),
-                        translateMessage("generated.m0241")
-                      )}
+                      {translateMessage("generated.m1064", {
+                        value0: warehouse.racksCount,
+                      })}
                     </p>
                   </div>
                 </div>
@@ -208,10 +206,10 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                     {translateMessage("generated.m0322")}
                   </span>
                   <span className="font-medium font-mono">
-                    {warehouse.occupiedSlots.toLocaleString("pl-PL")} /{" "}
+                    {warehouse.occupiedSlots.toLocaleString(locale)} /{" "}
                     {(
                       warehouse.occupiedSlots + warehouse.freeSlots
-                    ).toLocaleString("pl-PL")}
+                    ).toLocaleString(locale)}
                   </span>
                 </div>
                 <div className="relative h-2 overflow-hidden rounded-full bg-secondary">
@@ -229,7 +227,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="rounded-md bg-muted/50 px-2 py-1.5">
                   <span className="block font-mono font-semibold text-sm">
-                    {warehouse.occupiedSlots.toLocaleString("pl-PL")}
+                    {warehouse.occupiedSlots.toLocaleString(locale)}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
                     {translateMessage("generated.m0409")}
@@ -237,7 +235,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                 </div>
                 <div className="rounded-md bg-muted/50 px-2 py-1.5">
                   <span className="block font-mono font-semibold text-sm">
-                    {warehouse.freeSlots.toLocaleString("pl-PL")}
+                    {warehouse.freeSlots.toLocaleString(locale)}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
                     {translateMessage("generated.m0995")}
@@ -248,12 +246,9 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                     {warehouse.racksCount}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    {pluralize(
-                      warehouse.racksCount,
-                      translateMessage("generated.m0168"),
-                      translateMessage("generated.m0383"),
-                      translateMessage("generated.m0083")
-                    )}
+                    {translateMessage("generated.m1107", {
+                      value0: warehouse.racksCount,
+                    })}
                   </span>
                 </div>
               </div>

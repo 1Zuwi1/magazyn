@@ -1,27 +1,17 @@
 import type { Locale } from "date-fns"
 import { enUS, pl } from "date-fns/locale"
+import {
+  type AppLocale,
+  DEFAULT_APP_LOCALE,
+  normalizeAppLocale,
+} from "@/i18n/locale"
 
-const DEFAULT_DATE_FNS_LOCALE = pl
-
-const DATE_FNS_LOCALES: Readonly<Record<string, Locale>> = {
+const DATE_FNS_LOCALES: Readonly<Record<AppLocale, Locale>> = {
   en: enUS,
   pl,
 }
 
-export const getDateFnsLocale = (locale?: string): Locale => {
-  if (!locale) {
-    return DEFAULT_DATE_FNS_LOCALE
-  }
+const DEFAULT_DATE_FNS_LOCALE = DATE_FNS_LOCALES[DEFAULT_APP_LOCALE]
 
-  const normalizedLocale = locale.toLowerCase()
-
-  if (normalizedLocale.startsWith("en")) {
-    return DATE_FNS_LOCALES.en
-  }
-
-  if (normalizedLocale.startsWith("pl")) {
-    return DATE_FNS_LOCALES.pl
-  }
-
-  return DEFAULT_DATE_FNS_LOCALE
-}
+export const getDateFnsLocale = (locale?: string): Locale =>
+  DATE_FNS_LOCALES[normalizeAppLocale(locale)] ?? DEFAULT_DATE_FNS_LOCALE

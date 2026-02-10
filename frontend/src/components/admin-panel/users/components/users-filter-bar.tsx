@@ -69,7 +69,7 @@ export function UsersFilterBar({
                 <span>
                   {statusFilter
                     ? getStatusLabel(statusFilter)
-                    : "Wszystkie statusy"}
+                    : translateMessage("generated.m0282")}
                 </span>
               }
             />

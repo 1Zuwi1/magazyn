@@ -294,9 +294,9 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
   const totalPages = items?.totalPages ?? 1
 
   const itemLabel = {
-    singular: "przedmiot",
-    plural: "przedmioty",
-    genitive: translateMessage("generated.m0224"),
+    singular: translateMessage("generated.m1108"),
+    plural: translateMessage("generated.m1109"),
+    genitive: translateMessage("generated.m1110"),
   }
 
   const clearAllFilters = () => {

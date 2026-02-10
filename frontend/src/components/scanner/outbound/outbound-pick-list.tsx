@@ -4,6 +4,8 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
+import { formatDateTimeLabel } from "@/components/dashboard/utils/helpers"
 import { translateMessage } from "@/i18n/translate-message"
 import type { OutboundPickSlot, OutboundPlan } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
@@ -20,21 +22,6 @@ interface OutboundPickListProps {
   onCancel: () => void
 }
 
-const formatDate = (value: string): string => {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat("pl-PL", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date)
-}
-
 const isExpired = (expiresAt: string): boolean => {
   return new Date(expiresAt) < new Date()
 }
@@ -47,6 +34,7 @@ export function OutboundPickList({
   onConfirm,
   onCancel,
 }: OutboundPickListProps) {
+  const locale = useLocale()
   const selectedIds = new Set(selectedSlots.map((s) => s.assortmentId))
 
   return (
@@ -177,12 +165,12 @@ export function OutboundPickList({
                     <div className="mt-1 flex gap-3 text-muted-foreground text-xs">
                       <span>
                         {translateMessage("generated.m1085", {
-                          value0: formatDate(slot.createdAt),
+                          value0: formatDateTimeLabel(slot.createdAt, locale),
                         })}
                       </span>
                       <span>
                         {translateMessage("generated.m1086", {
-                          value0: formatDate(slot.expiresAt),
+                          value0: formatDateTimeLabel(slot.expiresAt, locale),
                         })}
                       </span>
                     </div>

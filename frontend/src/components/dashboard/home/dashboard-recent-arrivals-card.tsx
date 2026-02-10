@@ -1,6 +1,7 @@
 "use client"
 
 import { PackageReceiveIcon } from "@hugeicons/core-free-icons"
+import { formatDate } from "date-fns"
 import { useMemo } from "react"
 import { InsightCard } from "@/components/dashboard/stat-card"
 import { Badge } from "@/components/ui/badge"
@@ -10,7 +11,6 @@ import useAssortments from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import { useMultipleRacks } from "@/hooks/use-racks"
 import { translateMessage } from "@/i18n/translate-message"
-import { formatDate } from "../utils/helpers"
 import { RECENT_ITEMS_LIMIT } from "./dashboard-home.constants"
 
 function RecentArrivalsSkeleton() {
@@ -143,7 +143,7 @@ export function DashboardRecentArrivalsCard() {
             </div>
             <div className="flex shrink-0 flex-col items-end gap-2 text-xs">
               <span className="font-mono text-muted-foreground">
-                {formatDate(new Date(item.createdAt))}
+                {formatDate(new Date(item.createdAt), "dd.MM.yyyy")}
               </span>
               <Badge variant={item.dangerous ? "warning" : "secondary"}>
                 {item.dangerous ? "Niebezpieczny" : "Standard"}

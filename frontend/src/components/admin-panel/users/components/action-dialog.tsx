@@ -1,6 +1,7 @@
 "use client"
 
 import { useForm, useStore } from "@tanstack/react-form"
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect } from "react"
 import z from "zod"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
@@ -65,6 +66,7 @@ export function ActionDialog({
   teams,
 }: ActionDialogProps) {
   const formId = "edit-user-form"
+  const teamTranslations = useTranslations("adminUsers.teams")
 
   const getFormValues = useCallback(
     () => ({
@@ -101,6 +103,19 @@ export function ActionDialog({
   }, [open, getFormValues, form])
 
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
+  const getTeamLabel = useCallback(
+    (teamValue: string): string => {
+      const selectedTeam = teams.find(
+        (teamOption) => teamOption.value === teamValue
+      )
+      if (!selectedTeam) {
+        return translateMessage("generated.m0273")
+      }
+
+      return teamTranslations(selectedTeam.value)
+    },
+    [teamTranslations, teams]
+  )
 
   return (
     <FormDialog
@@ -193,8 +208,7 @@ export function ActionDialog({
                         render={
                           <span>
                             {field.state.value
-                              ? teams.find((t) => t.value === field.state.value)
-                                  ?.label
+                              ? getTeamLabel(field.state.value)
                               : translateMessage("generated.m0273")}
                           </span>
                         }
@@ -206,7 +220,7 @@ export function ActionDialog({
                           key={teamOption.value}
                           value={teamOption.value}
                         >
-                          {teamOption.label}
+                          {teamTranslations(teamOption.value)}
                         </SelectItem>
                       ))}
                     </SelectContent>

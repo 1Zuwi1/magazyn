@@ -286,7 +286,11 @@ export function AdminOverview() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <AdminStatCard
           description={
-            isUsersStatsPending ? undefined : `${stats.users.active} aktywnych`
+            isUsersStatsPending
+              ? undefined
+              : translateMessage("generated.m1118", {
+                  value0: stats.users.active,
+                })
           }
           href="/admin/users"
           icon={UserMultiple02Icon}
@@ -310,7 +314,9 @@ export function AdminOverview() {
         />
         <AdminStatCard
           description={
-            isAssortmentsPending ? undefined : "We wszystkich magazynach"
+            isAssortmentsPending
+              ? undefined
+              : translateMessage("generated.m1117")
           }
           href="/dashboard/items"
           icon={Package}

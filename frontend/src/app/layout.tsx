@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono, Inter } from "next/font/google"
 import "./globals.css"
 import { NextIntlClientProvider } from "next-intl"
+import { getLocale, getTranslations } from "next-intl/server"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
-import { translateMessage } from "@/i18n/translate-message"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -18,8 +18,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 })
 
-export const metadata: Metadata = {
-  title: translateMessage("generated.m0106"),
+export const generateMetadata = async (): Promise<Metadata> => {
+  const t = await getTranslations()
+
+  return {
+    title: t("generated.m0106"),
+  }
 }
 
 export const viewport: Viewport = {
@@ -28,13 +32,15 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const locale = await getLocale()
+
   return (
-    <html className={inter.variable} lang="en" suppressHydrationWarning>
+    <html className={inter.variable} lang={locale} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

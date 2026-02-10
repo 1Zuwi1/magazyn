@@ -113,16 +113,6 @@ export function FilterResults({
   itemLabel,
   className,
 }: FilterResultsProps) {
-  const pluralize = (count: number) => {
-    if (count === 1) {
-      return itemLabel.singular
-    }
-    if (count >= 2 && count <= 4) {
-      return itemLabel.plural
-    }
-    return itemLabel.genitive
-  }
-
   return (
     <div className={cn("flex items-center gap-2 text-sm", className)}>
       {isFiltered ? (
@@ -130,12 +120,19 @@ export function FilterResults({
           {translateMessage("generated.m1099", {
             value0: filteredCount,
             value1: totalCount,
-            value2: pluralize(totalCount),
+            singular: itemLabel.singular,
+            plural: itemLabel.plural,
+            genitive: itemLabel.genitive,
           })}
         </span>
       ) : (
         <span className="text-muted-foreground">
-          {totalCount} {pluralize(totalCount)}
+          {translateMessage("generated.m1111", {
+            value0: totalCount,
+            singular: itemLabel.singular,
+            plural: itemLabel.plural,
+            genitive: itemLabel.genitive,
+          })}
         </span>
       )}
     </div>

@@ -1,4 +1,9 @@
-import { differenceInCalendarDays, format, parseISO } from "date-fns"
+import {
+  differenceInCalendarDays,
+  formatDate,
+  isValid,
+  parseISO,
+} from "date-fns"
 import { toast } from "sonner"
 import type { UserNotification } from "@/hooks/use-notifications"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
@@ -16,8 +21,15 @@ export function getSlotCoordinate(index: number, cols: number): string {
   return `${rowLabel}-${colLabel}`
 }
 
-export function formatDate(date: Date, locale = "pl"): string {
-  return format(date, "dd.MM.yyyy", { locale: getDateFnsLocale(locale) })
+export const formatDateTimeLabel = (value: string, locale: string): string => {
+  const parsedDate = parseISO(value)
+  if (!isValid(parsedDate)) {
+    return value
+  }
+
+  return formatDate(parsedDate, "Pp", {
+    locale: getDateFnsLocale(locale),
+  })
 }
 
 export function formatDimensions(item: Item): string {
@@ -26,28 +38,6 @@ export function formatDimensions(item: Item): string {
 
 export function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
   return differenceInCalendarDays(expiryDate, today)
-}
-
-export function pluralize(
-  count: number,
-  singular: string,
-  few: string,
-  many: string
-): string {
-  if (count === 1) {
-    return singular
-  }
-  const lastDigit = count % 10
-  const lastTwoDigits = count % 100
-  if (
-    lastDigit >= 2 &&
-    lastDigit <= 4 &&
-    !(lastTwoDigits >= 12 && lastTwoDigits <= 14)
-  ) {
-    return few
-  }
-
-  return many
 }
 
 export const handleApiError = (err: unknown, fallback?: string) => {

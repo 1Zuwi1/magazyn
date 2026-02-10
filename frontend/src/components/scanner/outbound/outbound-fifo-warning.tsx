@@ -1,5 +1,7 @@
 import { AlertCircleIcon, Location04Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
+import { formatDateTimeLabel } from "@/components/dashboard/utils/helpers"
 import { translateMessage } from "@/i18n/translate-message"
 import type { OutboundCheckResult } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
@@ -15,21 +17,6 @@ interface OutboundFifoWarningProps {
   onCancel: () => void
 }
 
-const formatDate = (value: string): string => {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat("pl-PL", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date)
-}
-
 export function OutboundFifoWarning({
   checkResult,
   isSubmitting,
@@ -37,6 +24,7 @@ export function OutboundFifoWarning({
   onTakeFifoCompliant,
   onCancel,
 }: OutboundFifoWarningProps) {
+  const locale = useLocale()
   const { requestedAssortment, olderAssortments, warning } = checkResult
 
   return (
@@ -89,7 +77,10 @@ export function OutboundFifoWarning({
             </p>
             <p className="mt-1 text-muted-foreground text-xs">
               {translateMessage("generated.m1085", {
-                value0: formatDate(requestedAssortment.createdAt),
+                value0: formatDateTimeLabel(
+                  requestedAssortment.createdAt,
+                  locale
+                ),
               })}
             </p>
           </div>
@@ -130,12 +121,12 @@ export function OutboundFifoWarning({
                   <div className="mt-1 flex gap-3 text-muted-foreground text-xs">
                     <span>
                       {translateMessage("generated.m1085", {
-                        value0: formatDate(slot.createdAt),
+                        value0: formatDateTimeLabel(slot.createdAt, locale),
                       })}
                     </span>
                     <span>
                       {translateMessage("generated.m1086", {
-                        value0: formatDate(slot.expiresAt),
+                        value0: formatDateTimeLabel(slot.expiresAt, locale),
                       })}
                     </span>
                   </div>

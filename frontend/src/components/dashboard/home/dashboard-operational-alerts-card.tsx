@@ -170,7 +170,7 @@ export function DashboardOperationalAlertsCard() {
                   : "success"
               }
             >
-              {formatNumber(criticalWarehousesData?.totalElements ?? 0)}
+              {formatNumber(criticalWarehousesData?.totalElements ?? 0, locale)}
             </Badge>
           </div>
           <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
@@ -186,13 +186,13 @@ export function DashboardOperationalAlertsCard() {
                   : "success"
               }
             >
-              {formatNumber(expiringSoonItemsData?.totalElements ?? 0)}
+              {formatNumber(expiringSoonItemsData?.totalElements ?? 0, locale)}
             </Badge>
           </div>
           <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
             <span>{translateMessage("generated.m0444")}</span>
             <Badge variant={dangerousItemsCount > 0 ? "warning" : "success"}>
-              {formatNumber(dangerousItemsCount)}
+              {formatNumber(dangerousItemsCount, locale)}
             </Badge>
           </div>
         </div>

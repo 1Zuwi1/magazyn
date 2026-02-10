@@ -12,10 +12,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 
-import {
-  getOccupancyPercentage,
-  pluralize,
-} from "@/components/dashboard/utils/helpers"
+import { getOccupancyPercentage } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
@@ -175,13 +172,9 @@ export function WarehouseCard({
             <div className="flex items-center gap-1.5">
               <HugeiconsIcon className="size-4" icon={Package} />
               <span>
-                {warehouse.racksCount}{" "}
-                {pluralize(
-                  warehouse.racksCount,
-                  translateMessage("generated.m0323"),
-                  translateMessage("generated.m0324"),
-                  translateMessage("generated.m0241")
-                )}
+                {translateMessage("generated.m1064", {
+                  value0: warehouse.racksCount,
+                })}
               </span>
             </div>
           </div>

@@ -1,6 +1,5 @@
 "use client"
 
-import { pluralize } from "@/components/dashboard/utils/helpers"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Table,
@@ -114,12 +113,10 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
           ? translateMessage("generated.m0338", {
               value0: previewRows.length,
               value1: rows.length,
-              value2: pluralize(rows.length, "wiersz", "wiersze", "wierszy"),
             })
           : rows.length > 0 &&
             translateMessage("generated.m0339", {
               value0: rows.length,
-              value1: pluralize(rows.length, "wiersz", "wiersze", "wierszy"),
             })}
       </div>
     </div>

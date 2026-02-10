@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { getClientAppLocale } from "@/i18n/locale"
 
 interface SpeechState {
   isListening: boolean
@@ -42,7 +43,7 @@ export function useSpeechRecognition() {
     setIsSupported(true)
 
     const recognition = new SpeechRecognitionCtor()
-    recognition.lang = "pl-PL"
+    recognition.lang = getClientAppLocale()
     recognition.interimResults = true
     recognition.continuous = false
     recognition.maxAlternatives = 1

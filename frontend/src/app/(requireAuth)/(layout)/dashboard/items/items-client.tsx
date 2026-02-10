@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useSearchParams } from "next/navigation"
+import { useLocale } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { AssortmentTable } from "@/components/dashboard/items/assortment-table"
 import { ItemsTable } from "@/components/dashboard/items/items-table"
@@ -23,6 +24,7 @@ const isItemsTab = (value: string | null): value is ItemsTab =>
   value === "assortment" || value === "definitions"
 
 export default function ItemsClientPage() {
+  const locale = useLocale()
   const searchParams = useSearchParams()
   const requestedTabFromUrl = useMemo<ItemsTab>(() => {
     const tabParam = searchParams.get("tab")
@@ -73,7 +75,7 @@ export default function ItemsClientPage() {
       value:
         isPending || isAssortmentError
           ? "..."
-          : totalStock.toLocaleString("pl-PL"),
+          : totalStock.toLocaleString(locale),
     },
     {
       label: translateMessage("generated.m0878"),

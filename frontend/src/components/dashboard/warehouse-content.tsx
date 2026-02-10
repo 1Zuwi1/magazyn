@@ -8,6 +8,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useDebouncedValue } from "@tanstack/react-pacer"
+import { useLocale } from "next-intl"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +22,6 @@ import { PageHeader } from "./page-header"
 import { DEFAULT_FILTERS, WarehouseFilters } from "./storage-filters"
 import { WarehouseGrid } from "./storage-grid"
 import type { FilterState } from "./types"
-import { pluralize } from "./utils/helpers"
 
 const OCCUPANCY_WARNING_THRESHOLD = 75
 const OCCUPANCY_CRITICAL_THRESHOLD = 90
@@ -59,6 +59,7 @@ const isWarehouseMatch = ({
 }
 
 export const WarehouseContent = () => {
+  const locale = useLocale()
   const pendingAction = useVoiceCommandStore((state) => state.pendingAction)
   const clearPendingAction = useVoiceCommandStore(
     (state) => state.clearPendingAction
@@ -164,10 +165,10 @@ export const WarehouseContent = () => {
         statsChildren={
           <div className="flex flex-col items-center rounded-lg border bg-background/50 px-4 py-2 backdrop-blur-sm">
             <span className="font-bold font-mono text-foreground text-lg">
-              {totalUsed.toLocaleString("pl-PL")}
+              {totalUsed.toLocaleString(locale)}
             </span>
             <span className="text-muted-foreground text-xs">
-              / {totalCapacity.toLocaleString("pl-PL")}
+              / {totalCapacity.toLocaleString(locale)}
             </span>
           </div>
         }
@@ -205,13 +206,9 @@ export const WarehouseContent = () => {
                 </Badge>
               )}
               <span>
-                {warehouses?.totalElements}{" "}
-                {pluralize(
-                  warehouses?.totalElements ?? 0,
-                  "magazyn",
-                  "magazyny",
-                  translateMessage("generated.m0294")
-                )}
+                {translateMessage("generated.m1106", {
+                  value0: warehouses?.totalElements ?? 0,
+                })}
               </span>
             </div>
           </div>

@@ -5,6 +5,7 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
 import { type KeyboardEvent, useCallback, useRef, useState } from "react"
 import { remToPixels } from "@/components/dashboard/utils/helpers"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -29,8 +30,8 @@ interface OutboundScanVerificationProps {
   onCancel: () => void
 }
 
-const formatTime = (date: Date): string => {
-  return new Intl.DateTimeFormat("pl-PL", {
+const formatTime = (date: Date, locale: string): string => {
+  return new Intl.DateTimeFormat(locale, {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -46,6 +47,7 @@ export function OutboundScanVerification({
   onConfirm,
   onCancel,
 }: OutboundScanVerificationProps) {
+  const locale = useLocale()
   const scannedCodes = new Set(scannedEntries.map((e) => e.assortmentCode))
   const allScanned = selectedSlots.every((slot) =>
     scannedCodes.has(slot.assortmentCode)
@@ -179,7 +181,7 @@ export function OutboundScanVerification({
                             })}
                           </Badge>
                           <span className="ml-auto text-muted-foreground text-xs">
-                            {formatTime(entry.scannedAt)}
+                            {formatTime(entry.scannedAt, locale)}
                           </span>
                         </div>
                       </div>

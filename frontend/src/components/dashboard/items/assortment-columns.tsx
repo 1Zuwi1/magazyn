@@ -9,6 +9,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { ColumnDef } from "@tanstack/react-table"
+import { formatDate } from "date-fns"
 import Image from "next/image"
 import { useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +22,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
-import { formatDate } from "../utils/helpers"
 import { CodeCell } from "./components/code-cell"
 import { ExpiryBadge } from "./components/expiry-badge"
 import { SortableHeader, StaticHeader } from "./sortable-header"
@@ -109,7 +109,7 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
     ),
     cell: ({ row }) => (
       <span className="font-mono text-sm">
-        {formatDate(row.original.addedDate)}
+        {formatDate(row.original.addedDate, "dd.MM.yyyy")}
       </span>
     ),
     enableSorting: true,
@@ -128,7 +128,7 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
       return (
         <div className="space-y-1">
           <div className="font-mono text-sm">
-            {formatDate(row.original.expiryDate)}
+            {formatDate(row.original.expiryDate, "dd.MM.yyyy")}
           </div>
           {expiryBadge}
         </div>

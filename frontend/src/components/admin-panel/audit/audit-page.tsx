@@ -174,7 +174,9 @@ function InboundTableContent({
             {totalElements}
           </span>
           <span className="text-muted-foreground text-xs">
-            {translateMessage("generated.m0903")}
+            {translateMessage("generated.m0903", {
+              value0: totalElements,
+            })}
           </span>
         </div>
       </div>
@@ -321,7 +323,9 @@ function OutboundTableContent({
             {totalElements}
           </span>
           <span className="text-muted-foreground text-xs">
-            {translateMessage("generated.m0903")}
+            {translateMessage("generated.m0903", {
+              value0: totalElements,
+            })}
           </span>
         </div>
       </div>

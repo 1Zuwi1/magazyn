@@ -7,6 +7,7 @@ import {
   ViewIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -27,8 +28,8 @@ interface TableRowContentProps {
   onDelete: (id: number) => void
 }
 
-function formatDateTime(dateString: string) {
-  return new Date(dateString).toLocaleDateString("pl-PL", {
+function formatDateTime(dateString: string, locale: string) {
+  return new Date(dateString).toLocaleDateString(locale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -47,6 +48,7 @@ export function TableRowContent({
   onEdit,
   onDelete,
 }: TableRowContentProps) {
+  const locale = useLocale()
   const expired = isExpired(assortment.expiresAt)
 
   return (
@@ -58,11 +60,11 @@ export function TableRowContent({
       </TableCell>
       <TableCell>{assortment.userId}</TableCell>
       <TableCell className="text-sm">
-        {formatDateTime(assortment.createdAt)}
+        {formatDateTime(assortment.createdAt, locale)}
       </TableCell>
       <TableCell>
         <span className={expired ? "font-medium text-destructive" : ""}>
-          {formatDateTime(assortment.expiresAt)}
+          {formatDateTime(assortment.expiresAt, locale)}
         </span>
         {expired && (
           <Badge className="ml-2" variant="destructive">

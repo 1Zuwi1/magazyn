@@ -94,10 +94,10 @@ import {
 } from "./utils"
 
 const TWO_FACTOR_METHOD_HINTS: Record<TwoFactorMethod, string> = {
-  AUTHENTICATOR: "Najpewniejsza metoda",
-  EMAIL: "Kod e-mail",
+  AUTHENTICATOR: translateMessage("generated.m1124"),
+  EMAIL: translateMessage("generated.m1125"),
   PASSKEYS: translateMessage("generated.m0588"),
-  BACKUP_CODES: "Jednorazowe kody odzyskiwania",
+  BACKUP_CODES: translateMessage("generated.m1126"),
 }
 
 const TWO_FACTOR_METHOD_LABELS: Record<TwoFactorMethod, string> =
