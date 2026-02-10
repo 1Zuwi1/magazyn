@@ -89,10 +89,6 @@ export function BackupsMain() {
     }
   }
 
-  const handleCreateManualClick = () => {
-    setCreateBackupDialogOpen(true)
-  }
-
   const handleCreateManualConfirm = (
     warehouseId: string | null,
     warehouseName: string | null
@@ -108,7 +104,7 @@ export function BackupsMain() {
       warehouseId,
       warehouseName,
     }
-    setBackups((prev) => [...prev, newBackup])
+    setBackups((prev) => [newBackup, ...prev])
     toast.success("Rozpoczęto tworzenie nowej kopii zapasowej")
   }
 
@@ -282,7 +278,7 @@ export function BackupsMain() {
     <div className="space-y-6">
       <AdminPageHeader
         actions={
-          <Button onClick={handleCreateManualClick}>
+          <Button onClick={() => setCreateBackupDialogOpen(true)}>
             <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
             Utwórz kopię zapasową
           </Button>
@@ -320,7 +316,7 @@ export function BackupsMain() {
 
       <BackupsTable
         backups={backups}
-        onCreateManual={handleCreateManualClick}
+        onCreateManual={() => setCreateBackupDialogOpen(true)}
         onDelete={handleDeleteBackup}
         onRestore={handleRestoreBackup}
         onRetry={handleRetryBackup}

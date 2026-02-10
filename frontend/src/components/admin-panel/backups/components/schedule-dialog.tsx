@@ -245,7 +245,20 @@ export function ScheduleDialog({
           <form.Subscribe selector={(state) => state.values.frequency}>
             {(frequency) =>
               frequency === "CUSTOM" ? (
-                <form.Field name="customDays">
+                <form.Field
+                  name="customDays"
+                  validators={{
+                    onChange: ({ value }) => {
+                      if (value < 1) {
+                        return "Interwał musi wynosić co najmniej 1 dzień"
+                      }
+                      if (!Number.isInteger(value)) {
+                        return "Interwał musi być liczbą całkowitą"
+                      }
+                      return undefined
+                    },
+                  }}
+                >
                   {(field) => (
                     <FieldWithState
                       field={field}

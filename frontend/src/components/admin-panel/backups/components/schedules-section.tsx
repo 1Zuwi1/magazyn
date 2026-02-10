@@ -161,7 +161,7 @@ function ScheduleCard({
           !schedule.enabled &&
           "scale-[0.98] ring-2 ring-muted-foreground/20"
       )}
-      key={schedule.warehouseId}
+      key={schedule.id}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1 space-y-2">

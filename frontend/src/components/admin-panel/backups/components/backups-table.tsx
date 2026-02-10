@@ -153,6 +153,8 @@ function createColumns(
       cell: ({ row }) => {
         const backup = row.original
         const canRestore = backup.status === "COMPLETED"
+        const isInProgress =
+          backup.status === "PENDING" || backup.status === "RESTORING"
 
         return (
           <DropdownMenu>
@@ -189,10 +191,11 @@ function createColumns(
               )}
               <DropdownMenuItem
                 className="text-destructive"
+                disabled={isInProgress}
                 onClick={() => onDelete(backup)}
               >
                 <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
-                Usuń
+                {isInProgress ? "W trakcie" : "Usuń"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
