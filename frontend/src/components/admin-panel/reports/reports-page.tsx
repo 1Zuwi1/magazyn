@@ -13,21 +13,38 @@ import { EXPIRY_REPORT, INVENTORY_REPORT, TEMPERATURE_REPORT } from "./lib/data"
 
 export default function ReportsMain() {
   const summary = useMemo(() => {
-    const urgent = EXPIRY_REPORT.filter((row) => row.daysLeft <= 3).length
+    const expiredCount = EXPIRY_REPORT.filter((row) => row.daysLeft <= 0).length
+    const urgent = EXPIRY_REPORT.filter(
+      (row) => row.daysLeft > 0 && row.daysLeft <= 3
+    ).length
     const soon = EXPIRY_REPORT.filter((row) => row.daysLeft <= 10).length
+    const criticalTempAlerts = TEMPERATURE_REPORT.filter(
+      (row) => row.severity === "CRITICAL"
+    ).length
+    const lowStockCount = INVENTORY_REPORT.filter(
+      (row) => row.status === "LOW"
+    ).length
+
     return {
       totalExpiry: EXPIRY_REPORT.length,
       urgentExpiry: urgent,
       soonExpiry: soon,
+      expiredCount,
       tempAlerts: TEMPERATURE_REPORT.length,
+      criticalTempAlerts,
       inventoryRows: INVENTORY_REPORT.length,
+      lowStockCount,
     }
   }, [])
+
+  const hasExpiryAlerts = summary.expiredCount > 0 || summary.urgentExpiry > 0
+  const hasTempAlerts = summary.criticalTempAlerts > 0
+  const hasStockAlerts = summary.lowStockCount > 0
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description="Generuj raporty dla kontroli dat ważności i odstępstw temperatur."
+        description="Generuj raporty dla kontroli dat ważności, odstępstw temperatur i stanów magazynowych."
         icon={DatabaseIcon}
         navLinks={ADMIN_NAV_LINKS.map((link) => ({
           title: link.title,
@@ -40,9 +57,30 @@ export default function ReportsMain() {
 
       <Tabs className="space-y-4" defaultValue="inventory">
         <TabsList variant="line">
-          <TabsTrigger value="inventory">Pełna inwentaryzacja</TabsTrigger>
-          <TabsTrigger value="expiry">Zbliżające się daty ważności</TabsTrigger>
-          <TabsTrigger value="temperature">Zakresy temperatur</TabsTrigger>
+          <TabsTrigger value="inventory">
+            <span className="flex items-center gap-2">
+              Pełna inwentaryzacja ({INVENTORY_REPORT.length})
+              {hasStockAlerts && (
+                <span className="size-2 rounded-full bg-orange-500" />
+              )}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="expiry">
+            <span className="flex items-center gap-2">
+              Zbliżające się daty ważności ({summary.soonExpiry})
+              {hasExpiryAlerts && (
+                <span className="size-2 rounded-full bg-destructive" />
+              )}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="temperature">
+            <span className="flex items-center gap-2">
+              Zakresy temperatur ({TEMPERATURE_REPORT.length})
+              {hasTempAlerts && (
+                <span className="size-2 rounded-full bg-destructive" />
+              )}
+            </span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="inventory">

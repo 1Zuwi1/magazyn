@@ -8,7 +8,12 @@ export interface ExpiryReportRow {
   expiryDate: string
   daysLeft: number
   batch: string
+  quantity: number
+  unit: string
+  category: string
 }
+
+export type TemperatureSeverity = "CRITICAL" | "WARNING" | "MINOR"
 
 export interface TemperatureReportRow {
   id: string
@@ -16,8 +21,11 @@ export interface TemperatureReportRow {
   targetRange: string
   recordedTemp: string
   location: string
+  warehouse: string
   recordedAt: string
   item?: string
+  severity: TemperatureSeverity
+  deviation: number
 }
 
 export interface InventoryReportRow {
@@ -28,5 +36,9 @@ export interface InventoryReportRow {
   rack: string
   quantity: number
   unit: string
+  minQuantity: number
+  maxQuantity: number
+  category: string
   status: "OK" | "LOW" | "OVERSTOCK"
+  lastUpdated: string
 }

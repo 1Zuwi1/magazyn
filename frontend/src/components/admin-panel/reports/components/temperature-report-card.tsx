@@ -1,12 +1,13 @@
 "use client"
 
 import {
+  Alert01Icon,
   FileDownloadIcon,
   ThermometerIcon,
   Time02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,6 +18,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { SearchEmptyState } from "@/components/ui/empty-state"
+import { SearchInput } from "@/components/ui/filter-bar"
 import {
   Select,
   SelectContent,
@@ -32,31 +35,190 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { REPORT_FORMATS, TEMPERATURE_REPORT } from "../lib/data"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
+import {
+  formatDateTime,
+  getSeverityConfig,
+  REPORT_FORMATS,
+  TEMPERATURE_REPORT,
+} from "../lib/data"
 import type { ReportFormat, TemperatureReportRow } from "../lib/types"
+import { SortableTableHead } from "./sortable-table-head"
+
+type SortField = "deviation" | "recordedAt" | "severity"
+type SortDirection = "asc" | "desc"
+
+const SEVERITY_ORDER = { CRITICAL: 0, WARNING: 1, MINOR: 2 }
 
 const TEMP_RANGE_REGEX = /([\d.-]+)°C\s*–\s*([\d.-]+)°C/
 
-const getTemperatureDeviation = (row: TemperatureReportRow) => {
+type DeviationDirection = "above" | "below" | "in_range"
+
+const getDeviationInfo = (
+  row: TemperatureReportRow
+): { direction: DeviationDirection; label: string } => {
   const rangeMatch = row.targetRange.match(TEMP_RANGE_REGEX)
   if (!rangeMatch) {
-    return { direction: "Poza normą", variant: "destructive" as const }
+    return { direction: "above", label: "Poza normą" }
   }
   const min = Number.parseFloat(rangeMatch[1])
   const max = Number.parseFloat(rangeMatch[2])
   const temp = Number.parseFloat(row.recordedTemp.replace("°C", ""))
-
   if (temp > max) {
-    return { direction: "↑ powyżej normy", variant: "destructive" as const }
+    return { direction: "above", label: "powyżej normy" }
   }
   if (temp < min) {
-    return { direction: "↓ poniżej normy", variant: "destructive" as const }
+    return { direction: "below", label: "poniżej normy" }
   }
-  return { direction: "W normie", variant: "success" as const }
+  return { direction: "in_range", label: "W normie" }
+}
+
+const getRowHighlightBySeverity = (severity: string) => {
+  if (severity === "CRITICAL") {
+    return "bg-destructive/3 hover:bg-destructive/5"
+  }
+  if (severity === "WARNING") {
+    return "bg-orange-500/3 hover:bg-orange-500/5"
+  }
+  return ""
+}
+
+interface TemperatureRowProps {
+  row: TemperatureReportRow
+}
+
+function TemperatureRow({ row }: TemperatureRowProps) {
+  const severity = getSeverityConfig(row.severity)
+  const deviationInfo = getDeviationInfo(row)
+
+  return (
+    <TableRow
+      className={cn(
+        "transition-colors",
+        getRowHighlightBySeverity(row.severity)
+      )}
+    >
+      <TableCell>
+        <Tooltip>
+          <TooltipTrigger className="cursor-default">
+            <Badge variant={severity.variant}>
+              {row.severity === "CRITICAL" && (
+                <HugeiconsIcon className="mr-0.5 size-3" icon={Alert01Icon} />
+              )}
+              {severity.label}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>
+              Odchylenie od normy: {row.deviation}°C {deviationInfo.label}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Badge variant={row.scope === "RACK" ? "secondary" : "outline"}>
+            {row.scope === "RACK" ? "Regał" : "Asortyment"}
+          </Badge>
+          <span className="text-muted-foreground text-xs">
+            {row.targetRange}
+          </span>
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col">
+          <span className="text-sm">{row.location}</span>
+          <span className="text-muted-foreground text-xs">{row.warehouse}</span>
+        </div>
+      </TableCell>
+      <TableCell>
+        {row.item ? (
+          <span className="font-medium text-foreground">{row.item}</span>
+        ) : (
+          <span className="text-muted-foreground italic">Cały regał</span>
+        )}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              "font-mono font-semibold text-sm tabular-nums",
+              severity.color
+            )}
+          >
+            {row.recordedTemp}
+          </span>
+          <span className="text-muted-foreground text-xs tabular-nums">
+            ({deviationInfo.label}, ±{row.deviation}°C)
+          </span>
+        </div>
+      </TableCell>
+      <TableCell className="text-center font-mono text-xs tabular-nums">
+        {formatDateTime(row.recordedAt)}
+      </TableCell>
+    </TableRow>
+  )
 }
 
 export function TemperatureReportCard() {
   const [format, setFormat] = useState<ReportFormat>("xlsx")
+  const [search, setSearch] = useState("")
+  const [sortField, setSortField] = useState<SortField>("severity")
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))
+    } else {
+      setSortField(field)
+      setSortDirection(field === "recordedAt" ? "desc" : "asc")
+    }
+  }
+
+  const filtered = useMemo(() => {
+    let result = [...TEMPERATURE_REPORT]
+
+    if (search.trim()) {
+      const normalizedSearch = search.toLowerCase()
+      result = result.filter(
+        (row) =>
+          row.location.toLowerCase().includes(normalizedSearch) ||
+          row.warehouse.toLowerCase().includes(normalizedSearch) ||
+          (row.item?.toLowerCase().includes(normalizedSearch) ?? false)
+      )
+    }
+
+    result.sort((a, b) => {
+      const multiplier = sortDirection === "asc" ? 1 : -1
+      if (sortField === "deviation") {
+        return multiplier * (a.deviation - b.deviation)
+      }
+      if (sortField === "recordedAt") {
+        return multiplier * a.recordedAt.localeCompare(b.recordedAt)
+      }
+      return (
+        multiplier * (SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity])
+      )
+    })
+
+    return result
+  }, [search, sortField, sortDirection])
+
+  const stats = useMemo(() => {
+    const criticalCount = TEMPERATURE_REPORT.filter(
+      (r) => r.severity === "CRITICAL"
+    ).length
+    const warningCount = TEMPERATURE_REPORT.filter(
+      (r) => r.severity === "WARNING"
+    ).length
+    const maxDeviation = Math.max(...TEMPERATURE_REPORT.map((r) => r.deviation))
+    return { criticalCount, warningCount, maxDeviation }
+  }, [])
 
   return (
     <Card>
@@ -71,8 +233,8 @@ export function TemperatureReportCard() {
               Raport przekroczeń temperatur
             </CardTitle>
             <CardDescription>
-              Naruszenia zakresów temperatur dla regałów i asortymentu z datą i
-              godziną.
+              Naruszenia zakresów temperatur dla regałów i asortymentu z datą,
+              godziną i poziomem krytyczności.
             </CardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -98,64 +260,61 @@ export function TemperatureReportCard() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-6">
-        <div className="overflow-hidden rounded-xl border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Typ i zakres docelowy</TableHead>
-                <TableHead>Lokalizacja</TableHead>
-                <TableHead>Powiązany asortyment</TableHead>
-                <TableHead>Odczyt / Odchylenie</TableHead>
-                <TableHead>Data i godzina</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {TEMPERATURE_REPORT.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant={row.scope === "RACK" ? "secondary" : "outline"}
-                      >
-                        {row.scope === "RACK" ? "Regał" : "Asortyment"}
-                      </Badge>
-                      <span className="text-muted-foreground text-xs">
-                        {row.targetRange}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{row.location}</TableCell>
-                  <TableCell>
-                    {row.item ? (
-                      <span className="font-medium text-foreground">
-                        {row.item}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground italic">
-                        Cały regał
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={getTemperatureDeviation(row).variant}>
-                        {row.recordedTemp}
-                      </Badge>
-                      <span className="text-muted-foreground text-xs">
-                        {getTemperatureDeviation(row).direction}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">
-                    {row.recordedAt}
-                  </TableCell>
+
+      <div className="border-b bg-muted/30 p-4">
+        <SearchInput
+          aria-label="Szukaj lokalizacji lub asortymentu"
+          onChange={setSearch}
+          placeholder="Szukaj po lokalizacji, magazynie, asortymencie..."
+          value={search}
+        />
+      </div>
+
+      <CardContent className="p-0">
+        {filtered.length === 0 ? (
+          <SearchEmptyState onClear={() => setSearch("")} />
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <SortableTableHead
+                    active={sortField === "severity"}
+                    direction={sortDirection}
+                    onSort={() => handleSort("severity")}
+                  >
+                    Poziom
+                  </SortableTableHead>
+                  <TableHead>Typ i zakres</TableHead>
+                  <TableHead>Lokalizacja</TableHead>
+                  <TableHead>Powiązany asortyment</TableHead>
+                  <SortableTableHead
+                    active={sortField === "deviation"}
+                    direction={sortDirection}
+                    onSort={() => handleSort("deviation")}
+                  >
+                    Odczyt / Odchylenie
+                  </SortableTableHead>
+                  <SortableTableHead
+                    active={sortField === "recordedAt"}
+                    className="text-center"
+                    direction={sortDirection}
+                    onSort={() => handleSort("recordedAt")}
+                  >
+                    Data i godzina
+                  </SortableTableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((row) => (
+                  <TemperatureRow key={row.id} row={row} />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </CardContent>
+
       <CardFooter className="border-t">
         <div className="flex flex-wrap items-center gap-4 text-muted-foreground text-xs">
           <div className="flex items-center gap-2">
@@ -163,8 +322,16 @@ export function TemperatureReportCard() {
             Ostatnia aktualizacja: 10.02.2026, 08:55
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="destructive">Alert</Badge>2 naruszenia krytyczne w
-            ostatnich 24h
+            <Badge variant="destructive">Krytyczne</Badge>
+            {stats.criticalCount} naruszeń
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="warning">Ostrzeżenia</Badge>
+            {stats.warningCount} naruszeń
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">Razem</Badge>
+            {TEMPERATURE_REPORT.length} odchyleń • maks. ±{stats.maxDeviation}°C
           </div>
         </div>
       </CardFooter>
