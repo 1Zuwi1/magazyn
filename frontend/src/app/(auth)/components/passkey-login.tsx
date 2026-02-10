@@ -21,13 +21,7 @@ import {
   serializeCredential,
 } from "@/lib/webauthn"
 
-const SUPPORT_LABELS = {
-  checking: "Sprawdzanie",
-  supported: translateMessage("generated.m0018"),
-  unsupported: "Brak wsparcia",
-} as const
-
-type SupportState = keyof typeof SUPPORT_LABELS
+type SupportState = "checking" | "supported" | "unsupported"
 
 interface PasskeyLoginProps {
   disabled?: boolean

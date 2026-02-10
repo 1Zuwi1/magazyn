@@ -23,6 +23,32 @@
       "MANAGEMENT": "Zarządzanie"
     }
   },
+  "inputOtp": {
+    "status": {
+      "filled": "Wpisano {value0} z {value1} cyfr.",
+      "filledWithActivePosition": "Wpisano {value0} z {value1} cyfr. Aktywna pozycja {value2}.",
+      "prompt": "Wpisz kod weryfikacyjny."
+    }
+  },
+  "passkeys": {
+    "support": {
+      "checking": "Sprawdzanie",
+      "unsupported": "Brak wsparcia"
+    }
+  },
+  "warehouseAssignment": {
+    "lastSelected": "Ostatni: {value0}",
+    "selected": "Wybrane"
+  },
+  "warehouseVisualization": {
+    "statusLabels": {
+      "normal": "Normalny",
+      "dangerous": "Niebezpieczny",
+      "expired": "Przeterminowany",
+      "expiredDangerous": "Przeterminowany i niebezpieczny",
+      "empty": "Pusta strefa"
+    }
+  },
   "generated": {
     "m0001": "Wystąpił błąd podczas logowania. Spróbuj ponownie.",
     "m0002": "Zalogowano pomyślnie!",
@@ -1157,6 +1183,6 @@
     "m1155": "Klucz skopiowany",
     "m1156": "Skopiuj kod",
     "m1157": "Administrator",
-    "m1158": "Rekomendowana metoda dla kont firmowych."
+    "m1158": "Rekomendowana metoda."
   }
 }

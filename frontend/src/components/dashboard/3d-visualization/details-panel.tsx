@@ -21,17 +21,15 @@ interface DetailsPanelProps {
   warehouse: Warehouse3D
 }
 
+const STATUS_TEXT_KEYS: Record<Item3D["status"], string> = {
+  normal: "warehouseVisualization.statusLabels.normal",
+  expired: "warehouseVisualization.statusLabels.expired",
+  "expired-dangerous": "warehouseVisualization.statusLabels.expiredDangerous",
+  dangerous: "warehouseVisualization.statusLabels.dangerous",
+}
+
 function getStatusText(status: Item3D["status"]): string {
-  if (status === "normal") {
-    return "Normalny"
-  }
-  if (status === "expired") {
-    return "Przeterminowany"
-  }
-  if (status === "expired-dangerous") {
-    return "Przeterminowany i niebezpieczny"
-  }
-  return "Niebezpieczny"
+  return translateMessage(STATUS_TEXT_KEYS[status])
 }
 
 function getStatusColor(status: Item3D["status"]): {

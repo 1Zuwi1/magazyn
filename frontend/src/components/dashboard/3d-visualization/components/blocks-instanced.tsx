@@ -9,7 +9,7 @@ import {
   type BlockStatusKey,
   HIGHLIGHT_OPACITY,
   HOVER_COLOR,
-  STATUS_LABELS,
+  STATUS_LABEL_KEYS,
   TOOLTIP_OFFSET,
 } from "../constants"
 import { useWarehouseStore } from "../store"
@@ -404,7 +404,9 @@ export function BlocksInstanced({
             </div>
             <div className="text-slate-400">
               {translateMessage("generated.m1080", {
-                value0: STATUS_LABELS[hoveredBlock.status],
+                value0: translateMessage(
+                  STATUS_LABEL_KEYS[hoveredBlock.status]
+                ),
               })}
             </div>
           </div>

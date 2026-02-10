@@ -59,19 +59,19 @@ import {
 } from "@/lib/webauthn"
 import { useTwoFactorVerificationDialog } from "./two-factor-verification-dialog-store"
 
-const SUPPORT_LABELS = {
-  checking: "Sprawdzanie",
-  supported: translateMessage("generated.m0018"),
-  unsupported: "Brak wsparcia",
-} as const
+type SupportState = "checking" | "supported" | "unsupported"
+
+const SUPPORT_LABEL_KEYS: Record<SupportState, string> = {
+  checking: "passkeys.support.checking",
+  supported: "generated.m0018",
+  unsupported: "passkeys.support.unsupported",
+}
 
 const SUPPORT_VARIANTS = {
   checking: "secondary",
   supported: "success",
   unsupported: "warning",
 } as const
-
-type SupportState = keyof typeof SUPPORT_LABELS
 
 interface PasskeyItemProps {
   passkey: Passkey
@@ -508,7 +508,7 @@ export function PasskeysSection() {
               </div>
             </div>
             <Badge className="mt-1" variant={SUPPORT_VARIANTS[supportState]}>
-              {SUPPORT_LABELS[supportState]}
+              {translateMessage(SUPPORT_LABEL_KEYS[supportState])}
             </Badge>
           </div>
         </CardHeader>

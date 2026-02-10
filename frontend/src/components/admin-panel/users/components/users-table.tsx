@@ -45,16 +45,16 @@ interface UsersTableProps {
 
 const TABLE_COLUMNS_COUNT = 6
 
-const ADMIN_TABLE_LABELS = {
-  OPERATIONS: "Operacje magazynowe",
-  LOGISTICS: "Logistyka",
-  WAREHOUSE: "Magazyn",
-  INVENTORY: "Inwentaryzacja",
-  QUALITY_CONTROL: translateMessage("generated.m0284"),
-  RECEIVING: translateMessage("generated.m0285"),
-  SHIPPING: translateMessage("generated.m0286"),
-  IT_SUPPORT: "Wsparcie IT",
-  MANAGEMENT: translateMessage("generated.m0287"),
+const ADMIN_TABLE_LABEL_KEYS = {
+  OPERATIONS: "adminUsers.teams.OPERATIONS",
+  LOGISTICS: "adminUsers.teams.LOGISTICS",
+  WAREHOUSE: "adminUsers.teams.WAREHOUSE",
+  INVENTORY: "adminUsers.teams.INVENTORY",
+  QUALITY_CONTROL: "adminUsers.teams.QUALITY_CONTROL",
+  RECEIVING: "adminUsers.teams.RECEIVING",
+  SHIPPING: "adminUsers.teams.SHIPPING",
+  IT_SUPPORT: "adminUsers.teams.IT_SUPPORT",
+  MANAGEMENT: "adminUsers.teams.MANAGEMENT",
 }
 
 export function UsersTable({
@@ -118,102 +118,109 @@ export function UsersTable({
       )
     }
 
-    return users.map((user) => (
-      <TableRow
-        className="group cursor-default transition-colors"
-        key={user.id}
-      >
-        <TableCell className="font-medium">
-          {normalizeValue(user.full_name) || "—"}
-        </TableCell>
-        <TableCell className="text-muted-foreground">{user.email}</TableCell>
-        <TableCell>
-          <Badge
-            className="capitalize"
-            variant={getStatusVariant(user.account_status)}
-          >
-            {getStatusLabel(user.account_status)}
-          </Badge>
-        </TableCell>
-        <TableCell>
-          <Badge
-            className="capitalize"
-            variant={user.role === "ADMIN" ? "default" : "outline"}
-          >
-            {user.role}
-          </Badge>
-        </TableCell>
-        <TableCell className="text-muted-foreground">
-          {ADMIN_TABLE_LABELS[user.team as keyof typeof ADMIN_TABLE_LABELS] ||
-            "—"}
-        </TableCell>
-        <TableCell>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              aria-label={translateMessage("generated.m0288")}
-              className={cn(
-                "flex size-8 items-center justify-center rounded-md opacity-0 transition-all hover:bg-muted group-hover:opacity-100",
-                "focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
-              )}
+    return users.map((user) => {
+      const teamLabelKey =
+        ADMIN_TABLE_LABEL_KEYS[user.team as keyof typeof ADMIN_TABLE_LABEL_KEYS]
+
+      return (
+        <TableRow
+          className="group cursor-default transition-colors"
+          key={user.id}
+        >
+          <TableCell className="font-medium">
+            {normalizeValue(user.full_name) || "—"}
+          </TableCell>
+          <TableCell className="text-muted-foreground">{user.email}</TableCell>
+          <TableCell>
+            <Badge
+              className="capitalize"
+              variant={getStatusVariant(user.account_status)}
             >
-              <HugeiconsIcon
-                className="size-5"
-                icon={MoreHorizontalCircle01FreeIcons}
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  onEditUser(user.id)
-                }}
+              {getStatusLabel(user.account_status)}
+            </Badge>
+          </TableCell>
+          <TableCell>
+            <Badge
+              className="capitalize"
+              variant={user.role === "ADMIN" ? "default" : "outline"}
+            >
+              {user.role}
+            </Badge>
+          </TableCell>
+          <TableCell className="text-muted-foreground">
+            {teamLabelKey ? translateMessage(teamLabelKey) : "—"}
+          </TableCell>
+          <TableCell>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-label={translateMessage("generated.m0288")}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-md opacity-0 transition-all hover:bg-muted group-hover:opacity-100",
+                  "focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
+                )}
               >
                 <HugeiconsIcon
-                  className="mr-2 size-4"
-                  icon={PencilEdit01Icon}
+                  className="size-5"
+                  icon={MoreHorizontalCircle01FreeIcons}
                 />
-                {translateMessage("generated.m0934")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  onChangeStatus(user.id)
-                }}
-              >
-                <HugeiconsIcon
-                  className="mr-2 size-4"
-                  icon={UserShield01Icon}
-                />
-                {translateMessage("generated.m0176")}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  onAssignWarehouse(user.id)
-                }}
-              >
-                <HugeiconsIcon className="mr-2 size-4" icon={Building06Icon} />
-                {translateMessage("generated.m0289")}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="cursor-pointer text-destructive focus:text-destructive"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  onDeleteUser(user.id)
-                }}
-              >
-                <HugeiconsIcon className="mr-2 size-4" icon={Delete02Icon} />
-                {translateMessage("generated.m0230")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </TableCell>
-      </TableRow>
-    ))
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onEditUser(user.id)
+                  }}
+                >
+                  <HugeiconsIcon
+                    className="mr-2 size-4"
+                    icon={PencilEdit01Icon}
+                  />
+                  {translateMessage("generated.m0934")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onChangeStatus(user.id)
+                  }}
+                >
+                  <HugeiconsIcon
+                    className="mr-2 size-4"
+                    icon={UserShield01Icon}
+                  />
+                  {translateMessage("generated.m0176")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onAssignWarehouse(user.id)
+                  }}
+                >
+                  <HugeiconsIcon
+                    className="mr-2 size-4"
+                    icon={Building06Icon}
+                  />
+                  {translateMessage("generated.m0289")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onDeleteUser(user.id)
+                  }}
+                >
+                  <HugeiconsIcon className="mr-2 size-4" icon={Delete02Icon} />
+                  {translateMessage("generated.m0230")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </TableCell>
+        </TableRow>
+      )
+    })
   }
 
   return (

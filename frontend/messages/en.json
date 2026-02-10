@@ -22,6 +22,32 @@
       "MANAGEMENT": "Management"
     }
   },
+  "inputOtp": {
+    "status": {
+      "filled": "Entered {value0} of {value1} digits.",
+      "filledWithActivePosition": "Entered {value0} of {value1} digits. Active position {value2}.",
+      "prompt": "Enter the verification code."
+    }
+  },
+  "passkeys": {
+    "support": {
+      "checking": "Checking",
+      "unsupported": "Not supported"
+    }
+  },
+  "warehouseAssignment": {
+    "lastSelected": "Last: {value0}",
+    "selected": "Selected"
+  },
+  "warehouseVisualization": {
+    "statusLabels": {
+      "normal": "Normal",
+      "dangerous": "Dangerous",
+      "expired": "Expired",
+      "expiredDangerous": "Expired and dangerous",
+      "empty": "Empty zone"
+    }
+  },
   "generated": {
     "m0001": "An error occurred while logging in. Please try again.",
     "m0002": "Successfully logged in!",
@@ -1156,6 +1182,6 @@
     "m1155": "Key copied",
     "m1156": "Copy code",
     "m1157": "Administrator",
-    "m1158": "Recommended method for business accounts."
+    "m1158": "Recommended method."
   }
 }

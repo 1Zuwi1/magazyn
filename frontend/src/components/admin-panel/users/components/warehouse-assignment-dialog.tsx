@@ -331,8 +331,10 @@ export function WarehouseAssignmentDialog({
                 }
               >
                 {lastSelectedWarehouse
-                  ? `Ostatni: ${lastSelectedWarehouse.name}`
-                  : "Wybrane"}
+                  ? translateMessage("warehouseAssignment.lastSelected", {
+                      value0: lastSelectedWarehouse.name,
+                    })
+                  : translateMessage("warehouseAssignment.selected")}
               </Badge>
             </div>
           ) : null}

@@ -10,7 +10,7 @@ const METHOD_TITLES: Record<TwoFactorMethod, string> = {
   AUTHENTICATOR: translateMessage("generated.m0034"),
   EMAIL: translateMessage("generated.m0035"),
   PASSKEYS: translateMessage("generated.m0036"),
-  BACKUP_CODES: "Wpisz kod odzyskiwania",
+  BACKUP_CODES: translateMessage("generated.m0040"),
 }
 
 const METHOD_SWITCH_LABELS: Record<TwoFactorMethod, string> = {

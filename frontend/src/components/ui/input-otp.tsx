@@ -4,6 +4,7 @@ import { MinusSignIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { OTPInput, OTPInputContext } from "input-otp"
 import * as React from "react"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 function InputOTP({
@@ -86,12 +87,25 @@ function InputOTPStatus({ className, id }: { className?: string; id: string }) {
   )
   const activeIndex = slots.findIndex((slot) => slot.isActive)
   const activePosition = activeIndex >= 0 ? activeIndex + 1 : null
-  const statusMessage =
-    totalSlots > 0
-      ? `Wpisano ${filledCount} z ${totalSlots} cyfr.${
-          activePosition ? ` Aktywna pozycja ${activePosition}.` : ""
-        }`
-      : "Wpisz kod weryfikacyjny."
+  let statusMessage = translateMessage("inputOtp.status.prompt")
+
+  if (totalSlots > 0) {
+    if (activePosition) {
+      statusMessage = translateMessage(
+        "inputOtp.status.filledWithActivePosition",
+        {
+          value0: filledCount,
+          value1: totalSlots,
+          value2: activePosition,
+        }
+      )
+    } else {
+      statusMessage = translateMessage("inputOtp.status.filled", {
+        value0: filledCount,
+        value1: totalSlots,
+      })
+    }
+  }
 
   return (
     <span aria-live="polite" className={cn("sr-only", className)} id={id}>
