@@ -2,6 +2,7 @@
 
 import { useForm } from "@tanstack/react-form"
 import { useCallback, useEffect } from "react"
+import { toast } from "sonner"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { FieldGroup } from "@/components/ui/field"
@@ -17,6 +18,7 @@ import type {
   AvailableWarehouse,
   BackupSchedule,
   ScheduleFrequency,
+  ScheduleSubmitPayload,
 } from "../types"
 import { FREQUENCY_CONFIG } from "../utils"
 
@@ -31,23 +33,7 @@ interface ScheduleDialogProps {
   availableWarehouses: AvailableWarehouse[]
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: {
-    id?: string
-    warehouseId: string | null
-    warehouseName: string
-    frequency: ScheduleFrequency
-    customDays: number | null
-    enabled: boolean
-  }) => void
-}
-
-interface ScheduleSubmitPayload {
-  id?: string
-  warehouseId: string | null
-  warehouseName: string
-  frequency: ScheduleFrequency
-  customDays: number | null
-  enabled: boolean
+  onSubmit: (data: ScheduleSubmitPayload) => void
 }
 
 const buildEditPayload = (
@@ -114,10 +100,14 @@ export function ScheduleDialog({
         availableWarehouses
       )
       if (!warehouse) {
+        toast.error(
+          "Nie znaleziono wybranego magazynu. Odśwież listę i spróbuj ponownie."
+        )
         return
       }
 
       onSubmit({
+        id: crypto.randomUUID(),
         warehouseId: warehouse.id,
         warehouseName: warehouse.name,
         frequency: value.frequency,

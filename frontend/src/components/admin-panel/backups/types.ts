@@ -26,6 +26,10 @@ export interface BackupSchedule {
   nextBackupAt: string | null
 }
 
+export type ScheduleSubmitPayload = Omit<
+  BackupSchedule,
+  "nextBackupAt" | "lastBackupAt"
+>
 export interface AvailableWarehouse {
   id: string
   name: string

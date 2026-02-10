@@ -137,16 +137,18 @@ function ScheduleCard({
   onDelete: (schedule: BackupSchedule) => void
 }) {
   const [justToggled, setJustToggled] = useState(false)
-  const prevEnabledRef = useRef(schedule.enabled)
+  const isFirstRender = useRef(true)
 
   useEffect(() => {
-    if (prevEnabledRef.current !== schedule.enabled) {
-      prevEnabledRef.current = schedule.enabled
-      setJustToggled(true)
-      const timeout = setTimeout(() => setJustToggled(false), 600)
-      return () => clearTimeout(timeout)
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
     }
-  }, [schedule.enabled])
+
+    setJustToggled(true)
+    const timeout = setTimeout(() => setJustToggled(false), 600)
+    return () => clearTimeout(timeout)
+  }, [])
 
   return (
     <Card

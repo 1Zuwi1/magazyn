@@ -24,7 +24,7 @@ import { ScheduleDialog } from "./components/schedule-dialog"
 import { SchedulesSection } from "./components/schedules-section"
 import { StatBadge, type StatBadgeConfig } from "./components/stat-badge"
 import { MOCK_BACKUPS, MOCK_SCHEDULES } from "./mock-data"
-import type { Backup, BackupSchedule, ScheduleFrequency } from "./types"
+import type { Backup, BackupSchedule, ScheduleSubmitPayload } from "./types"
 import { nextBackupDate } from "./utils"
 
 const AVAILABLE_WAREHOUSES = MOCK_WAREHOUSES.map((w) => ({
@@ -136,29 +136,36 @@ export function BackupsMain() {
   }
 
   const handleToggleSchedule = (id: string) => {
-    setSchedules((prev) =>
-      prev.map((schedule) =>
-        schedule.id === id
+    let toastMessage: string | null = null
+
+    setSchedules((prev) => {
+      const schedule = prev.find((item) => item.id === id)
+      if (!schedule) {
+        return prev
+      }
+
+      const nextEnabled = !schedule.enabled
+      toastMessage = nextEnabled
+        ? `Harmonogram dla "${schedule.warehouseName}" został włączony`
+        : `Harmonogram dla "${schedule.warehouseName}" został wyłączony`
+
+      return prev.map((item) =>
+        item.id === id
           ? {
-              ...schedule,
-              enabled: !schedule.enabled,
+              ...item,
+              enabled: nextEnabled,
               nextBackupAt: nextBackupDate(
-                schedule.frequency,
-                schedule.customDays ?? null,
-                !schedule.enabled
+                item.frequency,
+                item.customDays ?? null,
+                nextEnabled
               ),
             }
-          : schedule
+          : item
       )
-    )
+    })
 
-    const schedule = schedules.find((s) => s.id === id)
-    if (schedule) {
-      toast.success(
-        schedule.enabled
-          ? `Harmonogram dla "${schedule.warehouseName}" został wyłączony`
-          : `Harmonogram dla "${schedule.warehouseName}" został włączony`
-      )
+    if (toastMessage) {
+      toast.success(toastMessage)
     }
   }
 
@@ -172,17 +179,11 @@ export function BackupsMain() {
     }
   }
 
-  const handleScheduleSubmit = (data: {
-    id?: string
-    warehouseId: string | null
-    warehouseName: string
-    frequency: ScheduleFrequency
-    customDays: number | null
-    enabled: boolean
-  }) => {
+  const handleScheduleSubmit = (data: ScheduleSubmitPayload) => {
+    const customDays: number | null = data.customDays ?? null
     const nextBackupAt = nextBackupDate(
       data.frequency,
-      data.customDays,
+      customDays,
       data.enabled
     )
 
@@ -193,7 +194,7 @@ export function BackupsMain() {
             ? {
                 ...schedule,
                 frequency: data.frequency,
-                customDays: data.customDays,
+                customDays,
                 enabled: data.enabled,
                 nextBackupAt,
               }
@@ -207,7 +208,7 @@ export function BackupsMain() {
         warehouseId: data.warehouseId,
         warehouseName: data.warehouseName,
         frequency: data.frequency,
-        customDays: data.customDays,
+        customDays,
         enabled: data.enabled,
         lastBackupAt: null,
         nextBackupAt,
