@@ -935,7 +935,6 @@ const IdentificationResultSchema = z.object({
   confidentMatch: z.boolean(),
   confidenceLevel: z.string(),
   needsVerification: z.boolean(),
-  alertGenerated: z.boolean(),
   message: z.string(),
   candidates: z.array(IdentificationCandidateSchema),
   candidateCount: z.number().int().nonnegative(),

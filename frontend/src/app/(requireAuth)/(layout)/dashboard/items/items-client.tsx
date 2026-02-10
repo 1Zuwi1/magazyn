@@ -31,6 +31,10 @@ export default function ItemsClientPage() {
     const searchParam = searchParams.get("search")
     return searchParam?.trim() ?? ""
   }, [searchParams])
+  const initialAssortmentSearch =
+    requestedTabFromUrl === "assortment" ? requestedSearchFromUrl : ""
+  const initialDefinitionsSearch =
+    requestedTabFromUrl === "definitions" ? requestedSearchFromUrl : ""
   const [activeTab, setActiveTab] = useState<ItemsTab>(requestedTabFromUrl)
 
   useEffect(() => {
@@ -116,10 +120,10 @@ export default function ItemsClientPage() {
           </div>
 
           <TabsContent className="p-4" value="assortment">
-            <AssortmentTable />
+            <AssortmentTable initialSearch={initialAssortmentSearch} />
           </TabsContent>
           <TabsContent className="p-4" value="definitions">
-            <ItemsTable initialSearch={requestedSearchFromUrl} />
+            <ItemsTable initialSearch={initialDefinitionsSearch} />
           </TabsContent>
         </div>
       </Tabs>

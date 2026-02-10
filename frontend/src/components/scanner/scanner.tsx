@@ -11,6 +11,7 @@ import {
   useRef,
   useState,
 } from "react"
+import { toast } from "sonner"
 import { SCAN_DELAY_MS, SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -312,6 +313,9 @@ export function Scanner({
           "Nie udało się pobrać danych produktu dla zeskanowanego kodu."
         )
       )
+      toast.error(
+        "Nie udało się pobrać danych produktu dla zeskanowanego kodu."
+      )
       setScannerState({
         step: "camera",
         isLoading: false,
@@ -377,7 +381,6 @@ export function Scanner({
       ...current,
       isLoading: true,
     }))
-
     try {
       const result = await apiFetch("/api/items/identify", ItemIdentifySchema, {
         method: "POST",
@@ -389,6 +392,7 @@ export function Scanner({
 
       if (!result.itemId) {
         setError("Nie udało się rozpoznać przedmiotu ze zdjęcia.")
+        toast.error("Nie udało się rozpoznać przedmiotu ze zdjęcia.")
         setScannerState({
           step: "camera",
           isLoading: false,

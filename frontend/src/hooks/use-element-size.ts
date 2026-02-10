@@ -21,8 +21,8 @@ export function useElementSize<T extends HTMLElement>(
     }
 
     const updateSize = () => {
-      const nextWidth = element.offsetWidth
-      const nextHeight = element.offsetHeight
+      const nextWidth = element.clientWidth
+      const nextHeight = element.clientHeight
 
       setSize((currentSize) => {
         if (

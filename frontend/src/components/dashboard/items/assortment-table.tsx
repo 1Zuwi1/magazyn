@@ -15,7 +15,14 @@ import {
 import { formatDate, formatDistanceToNow } from "date-fns"
 import { pl } from "date-fns/locale"
 import Link from "next/link"
-import { type Dispatch, type SetStateAction, useMemo, useState } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import {
+  type Dispatch,
+  type SetStateAction,
+  useEffect,
+  useMemo,
+  useState,
+} from "react"
 import { Badge } from "@/components/ui/badge"
 import {
   ErrorEmptyState,
@@ -193,6 +200,7 @@ const getItemName = (
 
 interface AssortmentTableProps {
   isLoading?: boolean
+  initialSearch?: string
 }
 
 interface AssortmentTableWithDataProps extends AssortmentTableProps {
@@ -528,22 +536,6 @@ function AssortmentTableContent({
     manualSorting: manualServerControls,
     manualFiltering: manualServerControls,
     onSortingChange: handleSortingChange,
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const searchValue = filterValue?.toString().trim().toLowerCase()
-      if (!searchValue) {
-        return true
-      }
-      const itemName = getItemName(row.original, itemNamesById).toLowerCase()
-      const rackName =
-        rackNamesById.get(row.original.rackId)?.toLowerCase() ?? ""
-
-      return (
-        row.original.code.toLowerCase().includes(searchValue) ||
-        itemName.includes(searchValue) ||
-        rackName.includes(searchValue) ||
-        row.original.userId.toString().includes(searchValue)
-      )
-    },
     state: {
       sorting,
       globalFilter: search,
@@ -714,11 +706,17 @@ function AssortmentTableContent({
   )
 }
 
-export function AssortmentTable({ isLoading }: AssortmentTableProps) {
+export function AssortmentTable({
+  isLoading,
+  initialSearch = "",
+}: AssortmentTableProps) {
   const [page, setPage] = useState(1)
   const [expiryFilter, setExpiryFilter] = useState<ExpiryFilters>("ALL")
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState(initialSearch)
   const [sorting, setSorting] = useState<SortingState>([])
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const sortParams = useMemo(() => {
     if (sorting.length === 0) {
       return {}
@@ -731,6 +729,20 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
   const [debouncedSearch] = useDebouncedValue(search, {
     wait: 500,
   })
+
+  useEffect(() => {
+    if (!initialSearch) {
+      return
+    }
+
+    setSearch(initialSearch)
+    setPage(1)
+
+    const nextSearchParams = new URLSearchParams(searchParams)
+    nextSearchParams.delete("search")
+    router.push(`${pathname}?${nextSearchParams.toString()}`)
+  }, [initialSearch, pathname, router, searchParams])
+
   const {
     data: assortmentData,
     isPending,
@@ -751,6 +763,7 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
       expiryFilter={expiryFilter}
       isError={isError}
       isLoading={isLoading || isPending}
+      manualServerControls
       onExpiryFilterChange={setExpiryFilter}
       onRetry={() => refetch()}
       onSearchChange={setSearch}

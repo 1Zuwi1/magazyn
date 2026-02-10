@@ -82,6 +82,13 @@ describe("voice commands", () => {
     expect(match?.command.id).toBe("settings")
   })
 
+  it("matches settings by keyword in longer sentence", () => {
+    const match = matchVoiceCommand("Przejdź proszę do ustawień konta")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("settings")
+  })
+
   it("matches add item command", () => {
     const match = matchVoiceCommand("Dodaj produkt")
 
@@ -89,11 +96,11 @@ describe("voice commands", () => {
     expect(match?.command.id).toBe("add-item")
   })
 
-  it("matches search item command", () => {
+  it("matches search product command", () => {
     const match = matchVoiceCommand("Znajdź produkt Mleko")
 
     expect(match).not.toBeNull()
-    expect(match?.command.id).toBe("search-item")
+    expect(match?.command.id).toBe("search-product")
     expect(match?.params.itemName).toBe("Mleko")
   })
 
@@ -101,7 +108,7 @@ describe("voice commands", () => {
     const match = matchVoiceCommand("Gdzie jest Cukier")
 
     expect(match).not.toBeNull()
-    expect(match?.command.id).toBe("search-item")
+    expect(match?.command.id).toBe("search-product")
     expect(match?.params.itemName).toBe("Cukier")
   })
 
@@ -109,8 +116,32 @@ describe("voice commands", () => {
     const match = matchVoiceCommand("Wyszukaj produkt Sok pomarańczowy")
 
     expect(match).not.toBeNull()
-    expect(match?.command.id).toBe("search-item")
+    expect(match?.command.id).toBe("search-product")
     expect(match?.params.itemName).toBe("Sok pomaranczowy")
+  })
+
+  it("matches assortment synonym for search", () => {
+    const match = matchVoiceCommand("Wyszukaj asortyment Czekolada Gorzka")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("search-assortment")
+    expect(match?.params.itemName).toBe("Czekolada Gorzka")
+  })
+
+  it("matches szukaj asortymentu synonym for search", () => {
+    const match = matchVoiceCommand("Szukaj asortymentu Kod 123")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("search-assortment")
+    expect(match?.params.itemName).toBe("Kod 123")
+  })
+
+  it("removes spaces from numeric assortment code", () => {
+    const match = matchVoiceCommand("Wyszukaj asortyment 01 23 4567")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("search-assortment")
+    expect(match?.params.itemName).toBe("01234567")
   })
 
   it("matches notifications command", () => {
@@ -120,11 +151,39 @@ describe("voice commands", () => {
     expect(match?.command.id).toBe("notifications")
   })
 
-  it("matches alerty synonym for notifications", () => {
-    const match = matchVoiceCommand("Alerty")
+  it("matches notifications by keyword in longer sentence", () => {
+    const match = matchVoiceCommand("Chcę zobaczyć moje powiadomienia")
 
     expect(match).not.toBeNull()
     expect(match?.command.id).toBe("notifications")
+  })
+
+  it("matches alerty command", () => {
+    const match = matchVoiceCommand("Alerty")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("alerts")
+  })
+
+  it("matches extended notifications command synonym", () => {
+    const match = matchVoiceCommand("Otwórz centrum powiadomień")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("notifications")
+  })
+
+  it("matches admin panel command", () => {
+    const match = matchVoiceCommand("Otwórz panel administracyjny")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("admin-panel")
+  })
+
+  it("matches admin panel by admin keyword", () => {
+    const match = matchVoiceCommand("Przenieś mnie do admin")
+
+    expect(match).not.toBeNull()
+    expect(match?.command.id).toBe("admin-panel")
   })
 
   it("matches inventory check for specific rack", () => {
@@ -178,7 +237,7 @@ describe("voice commands", () => {
     const match = matchVoiceCommand("Znajdź produkt Mleko")
 
     expect(match).not.toBeNull()
-    expect(match?.command.id).toBe("search-item")
+    expect(match?.command.id).toBe("search-product")
     expect(match?.params.itemName).toBe("Mleko")
   })
 
@@ -186,7 +245,7 @@ describe("voice commands", () => {
     const match = matchVoiceCommand("Znajdź Mleko")
 
     expect(match).not.toBeNull()
-    expect(match?.command.id).toBe("search-item")
+    expect(match?.command.id).toBe("search-product")
     expect(match?.params.itemName).toBe("Mleko")
   })
 })

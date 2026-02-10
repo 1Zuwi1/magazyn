@@ -56,7 +56,12 @@ export function VoiceAssistantNormalView({
             Przykładowe polecenia
           </p>
           <div className="flex flex-wrap justify-center gap-2">
-            {["Pokaż magazyn A1", "Dodaj przedmiot"].map((suggestion) => (
+            {[
+              "Pokaż magazyn A1",
+              "Dodaj przedmiot",
+              "Pokaż powiadomienia",
+              "Otwórz panel administracyjny",
+            ].map((suggestion) => (
               <Button
                 className="h-8 rounded-full px-4 text-xs transition-colors duration-200"
                 key={suggestion}

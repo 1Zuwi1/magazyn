@@ -39,7 +39,10 @@ export const getCommandLabel = (
     }
   }
 
-  if (match.command.id === "search-item") {
+  if (
+    match.command.id === "search-product" ||
+    match.command.id === "search-assortment"
+  ) {
     return `Wyszukaj "${match.params.itemName}"`
   }
 
@@ -138,7 +141,7 @@ export const handleConfirmCommandAction = (
       actions.openAddItemDialog()
       actions.navigateAndClose("/admin/assortment")
       return
-    case "search-item":
+    case "search-product":
       {
         const { itemName } = matchedCommand.params
         if (!itemName) {
@@ -147,12 +150,31 @@ export const handleConfirmCommandAction = (
           return
         }
         actions.navigateAndClose(
-          `/dashboard/items?search=${encodeURIComponent(itemName)}`
+          `/dashboard/items?search=${encodeURIComponent(itemName)}&tab=definitions`
+        )
+      }
+      return
+    case "search-assortment":
+      {
+        const { itemName } = matchedCommand.params
+        if (!itemName) {
+          actions.setErrorMessage("Brak nazwy asortymentu do wyszukania.")
+          actions.setView("error")
+          return
+        }
+        actions.navigateAndClose(
+          `/dashboard/items?search=${encodeURIComponent(itemName)}&tab=assortment`
         )
       }
       return
     case "notifications":
-      actions.navigateAndClose("/admin/notifications")
+      actions.navigateAndClose("/dashboard/notifications")
+      return
+    case "alerts":
+      actions.navigateAndClose("/admin/alerts")
+      return
+    case "admin-panel":
+      actions.navigateAndClose("/admin")
       return
     case "inventory-check":
       {

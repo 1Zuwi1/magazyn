@@ -6,8 +6,11 @@ export type VoiceCommandId =
   | "settings"
   | "open-scanner"
   | "add-item"
-  | "search-item"
+  | "search-product"
+  | "search-assortment"
   | "notifications"
+  | "alerts"
+  | "admin-panel"
   | "inventory-check"
 
 export interface VoiceCommand {
@@ -17,6 +20,7 @@ export interface VoiceCommand {
     regex: RegExp
     paramNames?: string[]
   }[]
+  keywords?: string[]
 }
 
 export interface VoiceCommandMatch {
@@ -68,11 +72,13 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       { regex: /^strona glowna$/i },
       { regex: /^dashboard$/i },
     ],
+    keywords: ["dashboard", "strona glowna", "panel glowny"],
   },
   {
     id: "warehouses",
     description: "Pokaż magazyny",
     patterns: [{ regex: /^pokaz magazyny$/i }, { regex: /^otworz magazyny$/i }],
+    keywords: ["magazyny"],
   },
   {
     id: "warehouses:id",
@@ -106,11 +112,13 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       { regex: /^asortyment$/i },
       { regex: /^przedmioty$/i },
     ],
+    keywords: ["produkty", "asortyment", "przedmioty"],
   },
   {
     id: "settings",
     description: "Ustawienia",
     patterns: [{ regex: /^ustawienia$/i }, { regex: /^otworz ustawienia$/i }],
+    keywords: ["ustawienia", "ustawien"],
   },
   {
     id: "open-scanner",
@@ -123,6 +131,7 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       { regex: /^zdejmij produkt$/i },
       { regex: /^przyjmij produkt$/i },
     ],
+    keywords: ["skaner"],
   },
   {
     id: "add-item",
@@ -136,7 +145,29 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
     ],
   },
   {
-    id: "search-item",
+    id: "search-assortment",
+    description: "Wyszukaj asortyment",
+    patterns: [
+      {
+        regex: /^znajdz asortyment ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      {
+        regex: /^wyszukaj asortyment ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      {
+        regex: /^szukaj asortymentu ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      {
+        regex: /^gdzie jest asortyment ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+    ],
+  },
+  {
+    id: "search-product",
     description: "Wyszukaj produkt",
     patterns: [
       {
@@ -149,6 +180,22 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
       },
       {
         regex: /^szukaj produktu ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      {
+        regex: /^znajdz przedmiot ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      {
+        regex: /^wyszukaj przedmiot ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      {
+        regex: /^szukaj przedmiotu ([a-z0-9 ]+)$/i,
+        paramNames: ["itemName"],
+      },
+      {
+        regex: /^gdzie jest produkt ([a-z0-9 ]+)$/i,
         paramNames: ["itemName"],
       },
       {
@@ -170,11 +217,35 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
     description: "Pokaż powiadomienia",
     patterns: [
       { regex: /^pokaz powiadomienia$/i },
+      { regex: /^pokaz moje powiadomienia$/i },
       { regex: /^otworz powiadomienia$/i },
+      { regex: /^otworz moje powiadomienia$/i },
       { regex: /^powiadomienia$/i },
+      { regex: /^pokaz centrum powiadomien$/i },
+      { regex: /^otworz centrum powiadomien$/i },
+    ],
+    keywords: ["powiadomienia", "centrum powiadomien"],
+  },
+  {
+    id: "alerts",
+    description: "Pokaż alerty",
+    patterns: [
       { regex: /^pokaz alerty$/i },
+      { regex: /^otworz alerty$/i },
       { regex: /^alerty$/i },
     ],
+    keywords: ["alerty"],
+  },
+  {
+    id: "admin-panel",
+    description: "Otwórz panel administracyjny",
+    patterns: [
+      { regex: /^otworz panel administracyjny$/i },
+      { regex: /^pokaz panel administracyjny$/i },
+      { regex: /^przejdz do panelu administracyjnego$/i },
+      { regex: /^panel administracyjny$/i },
+    ],
+    keywords: ["panel administracyjny", "admin"],
   },
   {
     id: "inventory-check",
@@ -203,6 +274,8 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
   },
 ]
 
+const NUMERIC_REGEX = /^[0-9 ]+$/
+
 const extractParams = (
   match: RegExpMatchArray,
   paramNames?: string[]
@@ -218,10 +291,16 @@ const extractParams = (
     if (!value) {
       continue
     }
-    if (IGNORED_PARAM_VALUES.has(value.toLowerCase().trim())) {
+    const normalizedValue = value.trim()
+    if (IGNORED_PARAM_VALUES.has(normalizedValue.toLowerCase())) {
       return null
     }
-    params[name] = value
+
+    // Barcode speech transcription may insert spaces between digits.
+    const isNumericWithOptionalSpaces = NUMERIC_REGEX.test(normalizedValue)
+    params[name] = isNumericWithOptionalSpaces
+      ? normalizedValue.replace(/\s+/g, "")
+      : normalizedValue
   }
 
   return params
@@ -231,6 +310,7 @@ export const matchVoiceCommand = (
   transcript: string
 ): VoiceCommandMatch | null => {
   const normalized = normalizeTranscript(transcript)
+  const normalizedLower = normalizeTranscript(transcript, { toLowerCase: true })
 
   for (const command of VOICE_COMMANDS) {
     for (const pattern of command.patterns) {
@@ -245,6 +325,19 @@ export const matchVoiceCommand = (
       }
 
       return { command, params }
+    }
+  }
+
+  for (const command of VOICE_COMMANDS) {
+    if (!command.keywords?.length) {
+      continue
+    }
+
+    for (const keyword of command.keywords) {
+      const keywordPattern = new RegExp(`(^| )${keyword}( |$)`, "i")
+      if (keywordPattern.test(normalizedLower)) {
+        return { command, params: {} }
+      }
     }
   }
 

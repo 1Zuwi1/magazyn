@@ -275,7 +275,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     setView("processing")
   }, [stop])
 
-  const AUTO_STOP_DELAY = 600
+  const AUTO_STOP_DELAY = 1500
   const SILENCE_TIMEOUT = 3000
 
   useEffect(() => {

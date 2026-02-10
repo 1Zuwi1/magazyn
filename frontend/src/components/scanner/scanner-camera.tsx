@@ -10,7 +10,9 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser"
 import {
   BarcodeFormat,
+  ChecksumException,
   DecodeHintType,
+  FormatException,
   NotFoundException,
   type Result,
 } from "@zxing/library"
@@ -19,20 +21,49 @@ import { cn } from "@/lib/utils"
 import { Button } from "../ui/button"
 import { TAB_TRIGGERS } from "./scanner"
 
-const CODE_FORMATS = [BarcodeFormat.QR_CODE, BarcodeFormat.CODE_128] as const
+const CODE_FORMATS = [
+  BarcodeFormat.QR_CODE,
+  BarcodeFormat.CODE_128,
+  BarcodeFormat.EAN_13,
+  BarcodeFormat.EAN_8,
+  BarcodeFormat.UPC_A,
+  BarcodeFormat.UPC_E,
+  BarcodeFormat.CODE_39,
+  BarcodeFormat.ITF,
+] as const
+
+const DEFAULT_MEDIA_CONSTRAINTS = {
+  video: {
+    facingMode: { ideal: "environment" },
+    width: { ideal: 1920 },
+    height: { ideal: 1080 },
+    frameRate: { ideal: 24, max: 30 },
+  },
+  audio: false,
+} satisfies MediaStreamConstraints
 
 const TAKE_DECODE_HINTS: Map<DecodeHintType, unknown> = new Map()
 TAKE_DECODE_HINTS.set(DecodeHintType.POSSIBLE_FORMATS, CODE_FORMATS)
 TAKE_DECODE_HINTS.set(DecodeHintType.ASSUME_GS1, false)
+TAKE_DECODE_HINTS.set(DecodeHintType.TRY_HARDER, true)
 
 const REMOVE_DECODE_HINTS: Map<DecodeHintType, unknown> = new Map()
 REMOVE_DECODE_HINTS.set(DecodeHintType.POSSIBLE_FORMATS, CODE_FORMATS)
 REMOVE_DECODE_HINTS.set(DecodeHintType.ASSUME_GS1, true)
+REMOVE_DECODE_HINTS.set(DecodeHintType.TRY_HARDER, true)
 
 const getDecodeHints = (
   mode: (typeof TAB_TRIGGERS)[number]["action"]
 ): Map<DecodeHintType, unknown> => {
   return mode === "remove" ? REMOVE_DECODE_HINTS : TAKE_DECODE_HINTS
+}
+
+const isRecoverableDecodeError = (error: unknown): boolean => {
+  return (
+    error instanceof NotFoundException ||
+    error instanceof ChecksumException ||
+    error instanceof FormatException
+  )
 }
 
 interface ScannerCameraProps {
@@ -155,7 +186,7 @@ export function ScannerCamera({
         return
       }
 
-      if (err && !(err instanceof NotFoundException)) {
+      if (err && !isRecoverableDecodeError(err)) {
         const msg =
           err instanceof Error ? err.message : "Unexpected scanner error."
         setErrorMsg(msg)
@@ -191,22 +222,13 @@ export function ScannerCamera({
         currentVideo.setAttribute("muted", "true")
 
         const reader = new BrowserMultiFormatReader(getDecodeHints(mode), {
-          delayBetweenScanAttempts: 300,
+          delayBetweenScanAttempts: 120,
+          delayBetweenScanSuccess: 250,
         })
         readerRef.current = reader
 
         const mediaConstraints: MediaStreamConstraints =
-          constraints ??
-          ({
-            video: {
-              facingMode: { ideal: "environment" },
-              width: { ideal: 1080 },
-              height: { ideal: 1920 },
-              aspectRatio: { ideal: 9 / 16 },
-              frameRate: { ideal: 30, max: 60 },
-            },
-            audio: false,
-          } satisfies MediaStreamConstraints)
+          constraints ?? DEFAULT_MEDIA_CONSTRAINTS
 
         const controls = await reader.decodeFromConstraints(
           mediaConstraints,
