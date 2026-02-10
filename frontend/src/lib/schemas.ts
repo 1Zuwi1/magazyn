@@ -678,7 +678,7 @@ export const RackAssortmentsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
       search: z.string().optional(),
-      positonX: z.number().int().nonnegative().optional(),
+      positionX: z.number().int().nonnegative().optional(),
       positionY: z.number().int().nonnegative().optional(),
       weekToExpire: z.boolean().optional(),
     }),
@@ -1076,11 +1076,11 @@ const OutboundOperationSchema = z.object({
 export const OutboundExecuteSchema = createApiSchema({
   POST: {
     input: z.object({
-      assortments: [
-        {
+      assortments: z.array(
+        z.object({
           code: z.string().min(1, "Kod jest wymagany"),
-        },
-      ],
+        })
+      ),
       skipFifo: z.boolean(),
     }),
     output: z.object({
