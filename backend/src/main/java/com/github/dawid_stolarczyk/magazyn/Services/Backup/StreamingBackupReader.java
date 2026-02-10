@@ -26,7 +26,7 @@ public class StreamingBackupReader {
     private final BackupStorageService backupStorageService;
     private final ExecutorService executorService;
 
-    @Value("${app.backup.streaming-timeout-minutes:5}")
+    @Value("${app.backup.streaming-timeout-minutes:15}")
     private long streamingTimeoutMinutes;
 
     /**

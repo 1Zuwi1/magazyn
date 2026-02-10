@@ -27,12 +27,12 @@ public class BackupStorageService {
     private String backupsPrefix;
 
     private static final int MULTIPART_THRESHOLD = 5 * 1024 * 1024; // 5MB
-    private static final int PART_SIZE = 5 * 1024 * 1024; // 5MB per part
+    private static final int PART_SIZE = 2 * 1024 * 1024; // 2MB per part
     private static final int INITIAL_CHECK_SIZE = 64 * 1024; // 64KB for initial size check
 
     /**
      * Upload backup file from InputStream using streaming (no full buffering in RAM).
-     * Uses multipart upload for files larger than 5MB.
+     * Uses multipart upload for files larger than 2MB.
      */
     public long uploadBackupFileStream(String basePath, String fileName, InputStream inputStream) throws IOException {
         String key = basePath + fileName;
