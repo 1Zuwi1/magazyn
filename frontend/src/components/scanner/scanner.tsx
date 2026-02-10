@@ -1088,24 +1088,19 @@ export function Scanner({
     } else if (step === "camera") {
       content = (
         <div className="relative h-full">
-          <div className={cn("h-full", outboundShowsCamera ? "hidden" : "")}>
-            {outboundFlowContent}
-          </div>
-          <div hidden={!outboundShowsCamera}>
-            <ScannerCamera
-              constraints={constraints}
-              isLoading={isLoading}
-              isMobile={isMobile}
-              isOpen={open && outboundShowsCamera}
-              mode={mode}
-              onRequestClose={handleCameraRequestClose}
-              onScan={queueOutboundScanCode}
-              onTakePhoto={onTakePhoto}
-              scanDelayMs={scanDelayMs}
-              stopOnScan={stopOnScan}
-              warehouseName={warehouseName}
-            />
-          </div>
+          <ScannerCamera
+            constraints={constraints}
+            isLoading={isLoading}
+            isMobile={isMobile}
+            isOpen={open && outboundShowsCamera}
+            mode={mode}
+            onRequestClose={handleCameraRequestClose}
+            onScan={queueOutboundScanCode}
+            onTakePhoto={onTakePhoto}
+            scanDelayMs={scanDelayMs}
+            stopOnScan={stopOnScan}
+            warehouseName={warehouseName}
+          />
         </div>
       )
     } else {

@@ -20,13 +20,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
 const GS1_BARCODE_PATTERN = /^11(\d{6})01(\d{14})21(\d+)$/
 const EAN14_WITH_AI01_PATTERN = /^01(\d{14})$/
 const COPY_FEEDBACK_TIMEOUT_MS = 2000
 const QR_PREFIX = "QR-"
 const QR_CODE_SIZE_SMALL = 64
-const QR_CODE_SIZE_LARGE = 256
+const QR_CODE_SIZE_MEDIUM = 120
 
 const isQrCode = (value: string): boolean => value.startsWith(QR_PREFIX)
 
@@ -126,6 +127,75 @@ function useCopyToClipboard(value: string) {
   return { copied, handleCopy }
 }
 
+export interface PrintableCodeLabel {
+  id: string
+  subtitle?: string
+  title?: string
+  value: string
+}
+
+interface CodeLabelCardProps {
+  label: PrintableCodeLabel
+}
+
+function CodeLabelCard({ label }: CodeLabelCardProps) {
+  const isQr = isQrCode(label.value)
+
+  return (
+    <article
+      className={cn("print-label-card space-y-2 rounded-xl border shadow-sm")}
+    >
+      {(label.title || label.subtitle) && (
+        <header className="space-y-0.5">
+          {label.title && (
+            <p className="font-semibold text-sm text-zinc-900 leading-tight">
+              {label.title}
+            </p>
+          )}
+          {label.subtitle && (
+            <p className="text-xs text-zinc-500 leading-tight">
+              {label.subtitle}
+            </p>
+          )}
+        </header>
+      )}
+
+      <div
+        className={cn(
+          "flex w-full items-center justify-center overflow-hidden rounded-lg bg-white"
+        )}
+      >
+        {isQr ? (
+          <QrCodeImage size={QR_CODE_SIZE_MEDIUM} value={label.value} />
+        ) : (
+          <Barcode
+            background="white"
+            className="w-full"
+            displayValue={false}
+            ean128
+            format="CODE128"
+            height={120}
+            lineColor="#000000"
+            margin={20}
+            value={label.value}
+            width={2.5}
+          />
+        )}
+      </div>
+    </article>
+  )
+}
+
+function LabelGrid({ labels }: { labels: readonly PrintableCodeLabel[] }) {
+  return (
+    <div className={cn("print-label-grid grid gap-3")}>
+      {labels.map((label) => (
+        <CodeLabelCard key={label.id} label={label} />
+      ))}
+    </div>
+  )
+}
+
 interface CodeDialogProps {
   formatted: string
   isQr: boolean
@@ -145,33 +215,21 @@ function CodeDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isQr ? "Kod QR" : "Kod kreskowy"}</DialogTitle>
-          <DialogDescription className="sr-only">
-            Powiększony widok kodu: {formatted}
+          <DialogDescription>
+            Powiększony widok kodu i szybki wydruk etykiety.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col items-center gap-4 py-4">
-          <div className="w-full overflow-hidden rounded-lg border border-border/50 bg-white p-4 dark:bg-white/95 [&>svg]:h-auto [&>svg]:w-full">
-            {isQr ? (
-              <QrCodeImage size={QR_CODE_SIZE_LARGE} value={value} />
-            ) : (
-              <Barcode
-                background="transparent"
-                displayValue={false}
-                format="CODE128"
-                height={80}
-                lineColor="#18181b"
-                margin={0}
-                value={value}
-                width={2.5}
-              />
-            )}
-          </div>
-          <span className="select-all break-all text-center font-mono text-sm text-zinc-600">
+
+        <div className="space-y-4 py-1">
+          <LabelGrid labels={[{ id: value, value }]} />
+
+          <p className="select-all break-all text-center font-mono text-sm text-zinc-600">
             {formatted}
-          </span>
+          </p>
+
           <Button className="w-full" onClick={handleCopy} variant="outline">
             <HugeiconsIcon
               className="mr-2 size-4"
@@ -208,7 +266,7 @@ export function CodeCell({ value }: CodeCellProps) {
               background="transparent"
               displayValue={false}
               format="CODE128"
-              height={32}
+              height={40}
               lineColor="#18181b"
               margin={0}
               value={value}
