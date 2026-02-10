@@ -332,30 +332,6 @@ const parseIntegerFromQueryParam = (value: string | null): number | null => {
   return parsedValue
 }
 
-const openItemDetailsWhenAvailable = ({
-  selectedItem,
-  setIsItemDetailsOpen,
-}: {
-  selectedItem: unknown
-  setIsItemDetailsOpen: (isOpen: boolean) => void
-}): void => {
-  if (selectedItem) {
-    setIsItemDetailsOpen(true)
-  }
-}
-
-const closeItemDetailsWhenMissing = ({
-  selectedItem,
-  setIsItemDetailsOpen,
-}: {
-  selectedItem: unknown
-  setIsItemDetailsOpen: (isOpen: boolean) => void
-}): void => {
-  if (!selectedItem) {
-    setIsItemDetailsOpen(false)
-  }
-}
-
 const moveToPreviousRack = ({
   clearRackSelectionFromLink,
   resetSelection,
@@ -630,20 +606,6 @@ export default function WarehouseClient() {
     })
   }
 
-  const handleOpenDetails = () => {
-    openItemDetailsWhenAvailable({
-      selectedItem,
-      setIsItemDetailsOpen,
-    })
-  }
-
-  useEffect(() => {
-    closeItemDetailsWhenMissing({
-      selectedItem,
-      setIsItemDetailsOpen,
-    })
-  }, [selectedItem])
-
   const warehouseName = warehouse?.name ?? decodedWarehouseName
   const warehouseId = warehouse?.id
 
@@ -823,7 +785,6 @@ export default function WarehouseClient() {
             <RackShelfDetailsCard
               assortment={selectedAssortment}
               onClearSelection={() => setSelectedSlotCoordinates(null)}
-              onOpenDetails={handleOpenDetails}
               rack={currentRack}
               selectedSlotCoordinates={selectedSlotCoordinates}
             />

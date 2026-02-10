@@ -94,8 +94,7 @@ export function RackGridView({
 
     if (event.key === "Enter") {
       onActivateSlot?.({
-        x: coordinates.x - 1,
-        y: coordinates.y - 1,
+        ...coordinates,
       })
       event.preventDefault()
       return
@@ -117,8 +116,7 @@ export function RackGridView({
       nextCoordinates.y !== coordinates.y
     ) {
       onSelectSlot({
-        x: nextCoordinates.x - 1,
-        y: nextCoordinates.y - 1,
+        ...nextCoordinates,
       })
     }
   }

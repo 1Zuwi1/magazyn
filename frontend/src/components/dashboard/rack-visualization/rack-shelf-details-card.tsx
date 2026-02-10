@@ -4,6 +4,7 @@ import {
   Tag01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { format } from "date-fns"
 import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -16,7 +17,6 @@ interface RackShelfDetailsCardProps {
   selectedSlotCoordinates: SlotCoordinates | null
   assortment: RackAssortment | null
   onClearSelection: () => void
-  onOpenDetails?: () => void
 }
 
 function DetailRow({
@@ -39,7 +39,6 @@ export function RackShelfDetailsCard({
   selectedSlotCoordinates,
   assortment,
   onClearSelection,
-  onOpenDetails,
 }: RackShelfDetailsCardProps) {
   const hasSelection = selectedSlotCoordinates !== null
   const selectedPosition = selectedSlotCoordinates
@@ -127,9 +126,11 @@ export function RackShelfDetailsCard({
         <div className="space-y-3 p-4">
           <div className="space-y-2 text-xs">
             <DetailRow
-              label="ID"
+              label="Nazwa przedmiotu"
               value={
-                <span className="font-mono font-semibold">{assortment.id}</span>
+                <span className="font-mono font-semibold">
+                  {assortment.item.name}
+                </span>
               }
             />
             <DetailRow
@@ -137,14 +138,6 @@ export function RackShelfDetailsCard({
               value={
                 <span className="font-mono font-semibold">
                   {assortment.code}
-                </span>
-              }
-            />
-            <DetailRow
-              label="ID przedmiotu"
-              value={
-                <span className="font-mono font-semibold">
-                  {assortment.item.id}
                 </span>
               }
             />
@@ -160,7 +153,10 @@ export function RackShelfDetailsCard({
               label="Utworzono"
               value={
                 <span className="font-mono font-semibold">
-                  {assortment.createdAt}
+                  {format(
+                    new Date(assortment.createdAt),
+                    "yyyy-MM-dd HH:mm:ss"
+                  )}
                 </span>
               }
             />
@@ -168,21 +164,14 @@ export function RackShelfDetailsCard({
               label="Wygasa"
               value={
                 <span className="font-mono font-semibold">
-                  {assortment.expiresAt}
+                  {format(
+                    new Date(assortment.expiresAt),
+                    "yyyy-MM-dd HH:mm:ss"
+                  )}
                 </span>
               }
             />
           </div>
-
-          <Button
-            className="w-full"
-            disabled={!onOpenDetails}
-            onClick={onOpenDetails}
-            size="sm"
-            variant="outline"
-          >
-            Podgląd elementu
-          </Button>
         </div>
       )}
     </div>

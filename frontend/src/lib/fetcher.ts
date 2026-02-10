@@ -157,11 +157,8 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
 ): Promise<InferApiOutput<S, M>> {
   // Abort after 15s. Yes, the server should be faster. No, it usually isn't.
   const abortController = new AbortController()
-  const timeoutId = setTimeout(
-    abortController.abort,
-    15_000,
-    "Request timed out"
-  )
+  const abort = abortController.abort.bind(abortController)
+  const timeoutId = setTimeout(abort, 15_000, "Request timed out")
 
   try {
     return await performApiFetch(path, dataSchema, init, abortController.signal)
@@ -400,9 +397,7 @@ function buildRequestUrl(
   queryParams?: Record<string, unknown>
 ): URL {
   const resolvedPath = resolveRequestUrl(path, baseUrl)
-  const url = baseUrl
-    ? new URL(resolvedPath, baseUrl)
-    : new URL(`http://localhost${resolvedPath}`)
+  const url = new URL(resolvedPath, baseUrl)
 
   if (method !== "GET" || !queryParams) {
     return url
