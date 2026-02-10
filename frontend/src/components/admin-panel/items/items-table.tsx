@@ -236,7 +236,8 @@ export function AdminItemsTable({
 
   const filteredCount = items.length
   const totalCount = items.length
-  const isFiltered = debouncedSearch.trim().length > 0
+  const isFiltered =
+    debouncedSearch.trim().length > 0 || search.trim().length > 0
 
   const clearAllFilters = () => {
     onSearchChange("")

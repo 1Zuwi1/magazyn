@@ -1061,12 +1061,9 @@ export type OutboundPlan = z.infer<
 
 const OutboundOperationSchema = z.object({
   id: z.number().int().nonnegative(),
-  itemId: z.number().int().nonnegative(),
   itemName: z.string(),
   itemCode: z.string(),
-  rackId: z.number().int().nonnegative(),
   rackMarker: z.string(),
-  issuedBy: z.number().int().nonnegative(),
   issuedByName: z.string(),
   operationTimestamp: z.string(),
   positionX: z.number().int().nonnegative(),
@@ -1124,12 +1121,9 @@ export const RackReportsSchema = createApiSchema({
 // --- AUDIT ---
 const InboudOperationSchema = z.object({
   id: z.number().int().nonnegative(),
-  itemId: z.number().int().nonnegative(),
   itemName: z.string(),
   itemCode: z.string(),
-  rackId: z.number().int().nonnegative(),
   rackMarker: z.string(),
-  receivedBy: z.number().int().nonnegative(),
   receivedByName: z.string(),
   operationTimestamp: z.string(),
   positionX: z.number().int().nonnegative(),

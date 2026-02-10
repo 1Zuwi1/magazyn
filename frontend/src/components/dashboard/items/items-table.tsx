@@ -266,7 +266,8 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
 
   const filteredCount = tableData.length
   const totalCount = items?.totalElements ?? filteredCount
-  const isFiltered = debouncedSearch.trim().length > 0
+  const isFiltered =
+    debouncedSearch.trim().length > 0 || search.trim().length > 0
   const totalPages = items?.totalPages ?? 1
 
   const itemLabel = {

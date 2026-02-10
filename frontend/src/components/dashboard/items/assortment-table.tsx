@@ -554,7 +554,7 @@ function AssortmentTableContent({
     ? assortmentItems.length
     : table.getFilteredRowModel().rows.length
   const totalCount = assortmentData?.totalElements ?? assortmentItems.length
-  const isSearchFiltered = debouncedSearch.length > 0
+  const isSearchFiltered = debouncedSearch.length > 0 || search.length > 0
   const isExpiryFiltered = expiryFilter !== "ALL"
   const isFiltered = isSearchFiltered || isExpiryFiltered
   const totalPages = assortmentData?.totalPages ?? 1
