@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
+import com.github.dawid_stolarczyk.magazyn.Exceptions.BackupAlreadyInProgressException;
+import com.github.dawid_stolarczyk.magazyn.Exceptions.RestoreAlreadyInProgressException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.*;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.*;
@@ -123,12 +125,12 @@ public class BackupService {
                 .orElseThrow(() -> new IllegalArgumentException("WAREHOUSE_NOT_FOUND"));
 
         if (backupRecordRepository.existsByWarehouseIdAndStatus(warehouse.getId(), BackupStatus.IN_PROGRESS)) {
-            throw new IllegalStateException("BACKUP_ALREADY_IN_PROGRESS");
+            throw new BackupAlreadyInProgressException();
         }
 
         AtomicBoolean lock = warehouseLocks.computeIfAbsent(warehouse.getId(), k -> new AtomicBoolean(false));
         if (!lock.compareAndSet(false, true)) {
-            throw new IllegalStateException("BACKUP_ALREADY_IN_PROGRESS");
+            throw new BackupAlreadyInProgressException();
         }
 
         BackupRecord record = BackupRecord.builder()
@@ -326,7 +328,7 @@ public class BackupService {
 
         AtomicBoolean lock = warehouseLocks.computeIfAbsent(warehouseId, k -> new AtomicBoolean(false));
         if (!lock.compareAndSet(false, true)) {
-            throw new IllegalStateException("RESTORE_ALREADY_IN_PROGRESS");
+            throw new RestoreAlreadyInProgressException();
         }
 
         record.setStatus(BackupStatus.RESTORING);
@@ -571,7 +573,7 @@ public class BackupService {
     @Transactional(readOnly = true)
     public BackupRecordDto getBackup(Long id, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(httpRequest.getRemoteAddr(), RateLimitOperation.BACKUP_READ);
-        BackupRecord record = backupRecordRepository.findById(id)
+        BackupRecord record = backupRecordRepository.findWithEagerById(id)
                 .orElseThrow(() -> new IllegalArgumentException("BACKUP_NOT_FOUND"));
         return toDto(record);
     }
@@ -584,7 +586,7 @@ public class BackupService {
         if (warehouseId != null) {
             page = backupRecordRepository.findByWarehouseId(warehouseId, pageable);
         } else {
-            page = backupRecordRepository.findAll(pageable);
+            page = backupRecordRepository.findAllWithEager(pageable);
         }
 
         List<BackupRecordDto> dtos = page.getContent().stream()
@@ -643,12 +645,10 @@ public class BackupService {
                 request.setResourceTypes(allResourceTypes);
                 BackupRecordDto dto = initiateBackup(request, triggeredBy, httpRequest);
                 initiatedBackups.add(dto);
+            } catch (BackupAlreadyInProgressException e) {
+                log.warn("Backup already in progress for warehouse {}, skipping", warehouse.getId());
             } catch (IllegalStateException e) {
-                if (e.getMessage().equals("BACKUP_ALREADY_IN_PROGRESS")) {
-                    log.warn("Backup already in progress for warehouse {}, skipping", warehouse.getId());
-                } else {
-                    throw e;
-                }
+                throw e;
             }
         }
 
@@ -657,7 +657,7 @@ public class BackupService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public List<RestoreResultDto> restoreAllWarehouses(User currentUser, HttpServletRequest httpRequest) {
+    public RestoreAllWarehousesResult restoreAllWarehouses(User currentUser, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(httpRequest.getRemoteAddr(), RateLimitOperation.BACKUP_WRITE);
 
         List<Warehouse> warehouses = warehouseRepository.findAll();
@@ -665,7 +665,8 @@ public class BackupService {
             throw new IllegalStateException("NO_WAREHOUSES_FOUND");
         }
 
-        List<RestoreResultDto> initiatedRestores = new ArrayList<>();
+        List<RestoreResultDto> successfulRestores = new ArrayList<>();
+        List<RestoreAllWarehousesResult.SkippedWarehouse> skippedWarehouses = new ArrayList<>();
 
         for (Warehouse warehouse : warehouses) {
             try {
@@ -674,25 +675,40 @@ public class BackupService {
 
                 if (completedBackups.isEmpty()) {
                     log.warn("No completed backup found for warehouse {}, skipping restore", warehouse.getId());
+                    skippedWarehouses.add(RestoreAllWarehousesResult.SkippedWarehouse.builder()
+                            .warehouseId(warehouse.getId())
+                            .warehouseName(warehouse.getName())
+                            .reason("NO_COMPLETED_BACKUP")
+                            .build());
                     continue;
                 }
 
                 BackupRecord latestBackup = completedBackups.getContent().get(0);
                 RestoreResultDto dto = restoreBackup(latestBackup.getId(), currentUser);
-                initiatedRestores.add(dto);
-            } catch (IllegalStateException e) {
-                if (e.getMessage().equals("RESTORE_ALREADY_IN_PROGRESS")) {
-                    log.warn("Restore already in progress for warehouse {}, skipping", warehouse.getId());
-                } else {
-                    throw e;
-                }
-            } catch (IllegalArgumentException e) {
+                successfulRestores.add(dto);
+            } catch (RestoreAlreadyInProgressException e) {
+                log.warn("Restore already in progress for warehouse {}, skipping", warehouse.getId());
+                skippedWarehouses.add(RestoreAllWarehousesResult.SkippedWarehouse.builder()
+                        .warehouseId(warehouse.getId())
+                        .warehouseName(warehouse.getName())
+                        .reason("RESTORE_ALREADY_IN_PROGRESS")
+                        .build());
+            } catch (IllegalArgumentException | SecurityException e) {
                 log.warn("Cannot restore warehouse {}: {}", warehouse.getId(), e.getMessage());
+                skippedWarehouses.add(RestoreAllWarehousesResult.SkippedWarehouse.builder()
+                        .warehouseId(warehouse.getId())
+                        .warehouseName(warehouse.getName())
+                        .reason(e.getClass().getSimpleName() + ": " + e.getMessage())
+                        .build());
             }
         }
 
-        log.info("Initiated restore for {} warehouses", initiatedRestores.size());
-        return initiatedRestores;
+        log.info("Initiated restore for {} warehouses, skipped {} warehouses",
+                successfulRestores.size(), skippedWarehouses.size());
+        return RestoreAllWarehousesResult.builder()
+                .successful(successfulRestores)
+                .skipped(skippedWarehouses)
+                .build();
     }
 
     // --- Schedule operations ---

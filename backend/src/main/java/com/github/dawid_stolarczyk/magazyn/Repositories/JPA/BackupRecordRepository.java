@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 public interface BackupRecordRepository extends JpaRepository<BackupRecord, Long>, JpaSpecificationExecutor<BackupRecord> {
 
@@ -22,6 +23,12 @@ public interface BackupRecordRepository extends JpaRepository<BackupRecord, Long
     List<BackupRecord> findByStatusAndCreatedAtBefore(BackupStatus status, Instant createdAt);
 
     List<BackupRecord> findByWarehouseIdAndStatusOrderByCompletedAtDesc(Long warehouseId, BackupStatus status);
+
+    @Query("SELECT b FROM BackupRecord b LEFT JOIN FETCH b.warehouse w LEFT JOIN FETCH b.triggeredBy u WHERE b.id = :id")
+    Optional<BackupRecord> findWithEagerById(@Param("id") Long id);
+
+    @Query("SELECT b FROM BackupRecord b LEFT JOIN FETCH b.warehouse w LEFT JOIN FETCH b.triggeredBy u")
+    Page<BackupRecord> findAllWithEager(Pageable pageable);
 
     @Modifying
     @Query("DELETE FROM BackupRecord b WHERE b.status IN :statuses AND b.completedAt < :cutoffDate")

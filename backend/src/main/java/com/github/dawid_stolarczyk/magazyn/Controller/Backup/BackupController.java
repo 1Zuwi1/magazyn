@@ -170,11 +170,11 @@ public class BackupController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/restore-all")
-    public ResponseEntity<ResponseTemplate<List<RestoreResultDto>>> restoreAllWarehouses(
+    public ResponseEntity<ResponseTemplate<RestoreAllWarehousesResult>> restoreAllWarehouses(
             HttpServletRequest httpRequest) {
         User currentUser = resolveCurrentUser();
-        List<RestoreResultDto> dtos = backupService.restoreAllWarehouses(currentUser, httpRequest);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ResponseTemplate.success(dtos));
+        RestoreAllWarehousesResult result = backupService.restoreAllWarehouses(currentUser, httpRequest);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ResponseTemplate.success(result));
     }
 
     private User resolveCurrentUser() {
