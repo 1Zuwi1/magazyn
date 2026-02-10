@@ -2,7 +2,7 @@ import type { Backup, BackupSchedule } from "./types"
 
 export const MOCK_BACKUPS: Backup[] = [
   {
-    id: 1,
+    id: "b1a2c3d4-0001-4000-8000-000000000001",
     name: "backup-2026-02-08-auto",
     createdAt: "2026-02-08T03:00:00Z",
     completedAt: "2026-02-08T03:12:34Z",
@@ -13,7 +13,7 @@ export const MOCK_BACKUPS: Backup[] = [
     warehouseName: "Magazyn A1",
   },
   {
-    id: 2,
+    id: "b1a2c3d4-0002-4000-8000-000000000002",
     name: "backup-2026-02-07-manual",
     createdAt: "2026-02-07T14:30:00Z",
     completedAt: "2026-02-07T14:35:12Z",
@@ -24,7 +24,7 @@ export const MOCK_BACKUPS: Backup[] = [
     warehouseName: null,
   },
   {
-    id: 3,
+    id: "b1a2c3d4-0003-4000-8000-000000000003",
     name: "backup-2026-02-06-auto",
     createdAt: "2026-02-06T03:00:00Z",
     completedAt: null,
@@ -35,7 +35,7 @@ export const MOCK_BACKUPS: Backup[] = [
     warehouseName: "Magazyn A2",
   },
   {
-    id: 4,
+    id: "b1a2c3d4-0004-4000-8000-000000000004",
     name: "backup-2026-02-05-auto",
     createdAt: "2026-02-05T03:00:00Z",
     completedAt: "2026-02-05T03:08:45Z",
@@ -46,7 +46,7 @@ export const MOCK_BACKUPS: Backup[] = [
     warehouseName: "Magazyn A1",
   },
   {
-    id: 5,
+    id: "b1a2c3d4-0005-4000-8000-000000000005",
     name: "backup-2026-02-08-pending",
     createdAt: "2026-02-08T10:00:00Z",
     completedAt: null,
@@ -58,7 +58,7 @@ export const MOCK_BACKUPS: Backup[] = [
     progress: 50,
   },
   {
-    id: 6,
+    id: "b1a2c3d4-0006-4000-8000-000000000006",
     name: "backup-2026-02-08-restoring",
     createdAt: "2026-02-08T11:30:00Z",
     completedAt: null,

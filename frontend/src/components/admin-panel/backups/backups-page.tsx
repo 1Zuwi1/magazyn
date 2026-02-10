@@ -94,7 +94,7 @@ export function BackupsMain() {
     warehouseName: string | null
   ) => {
     const newBackup: Backup = {
-      id: Date.now(),
+      id: crypto.randomUUID(),
       name: `backup-${new Date().toISOString().slice(0, 10)}-manual`,
       createdAt: new Date().toISOString(),
       completedAt: null,
@@ -188,7 +188,9 @@ export function BackupsMain() {
       data.enabled
     )
 
-    if (data.id) {
+    const isExisting = schedules.some((s) => s.id === data.id)
+
+    if (isExisting) {
       setSchedules((prev) =>
         prev.map((schedule) =>
           schedule.id === data.id
@@ -205,7 +207,7 @@ export function BackupsMain() {
       toast.success(`Zaktualizowano harmonogram dla "${data.warehouseName}"`)
     } else {
       const newSchedule: BackupSchedule = {
-        id: `sched-${Date.now()}`,
+        id: data.id,
         warehouseId: data.warehouseId,
         warehouseName: data.warehouseName,
         frequency: data.frequency,

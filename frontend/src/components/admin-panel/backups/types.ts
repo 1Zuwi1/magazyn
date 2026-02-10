@@ -3,7 +3,7 @@ export type BackupStatus = "COMPLETED" | "FAILED" | "PENDING" | "RESTORING"
 export type ScheduleFrequency = "DAILY" | "WEEKLY" | "MONTHLY" | "CUSTOM"
 
 export interface Backup {
-  id: number
+  id: string
   name: string
   createdAt: string
   completedAt: string | null
