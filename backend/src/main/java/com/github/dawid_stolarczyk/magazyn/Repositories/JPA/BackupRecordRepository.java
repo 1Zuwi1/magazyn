@@ -6,6 +6,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
@@ -17,4 +20,10 @@ public interface BackupRecordRepository extends JpaRepository<BackupRecord, Long
     Page<BackupRecord> findByWarehouseId(Long warehouseId, Pageable pageable);
 
     List<BackupRecord> findByStatusAndCreatedAtBefore(BackupStatus status, Instant createdAt);
+
+    List<BackupRecord> findByWarehouseIdAndStatusOrderByCompletedAtDesc(Long warehouseId, BackupStatus status);
+
+    @Modifying
+    @Query("DELETE FROM BackupRecord b WHERE b.status IN :statuses AND b.completedAt < :cutoffDate")
+    int deleteByStatusInAndCompletedAtBefore(@Param("statuses") List<BackupStatus> statuses, @Param("cutoffDate") Instant cutoffDate);
 }

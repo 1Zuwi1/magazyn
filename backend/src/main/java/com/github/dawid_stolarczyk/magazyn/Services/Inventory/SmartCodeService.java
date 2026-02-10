@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Smart code finding service for items and assortments.
@@ -23,6 +24,62 @@ public class SmartCodeService {
     private final AssortmentRepository assortmentRepository;
 
     /**
+     * Generic helper to find entities by smart code variations.
+     * Handles multiple code format strategies to improve lookup success rate.
+     *
+     * @param code       The input code to search
+     * @param finder     Function that tries to find by code variation
+     * @param entityName Name of entity type for logging
+     * @param <T>        Entity type
+     * @return Found entity
+     * @throws IllegalArgumentException if not found
+     */
+    private <T> T findByCodeVariations(String code, Function<String, Optional<T>> finder, String entityName) {
+        log.debug("Searching for {} with smart code: {}", entityName, code);
+
+        // Strategy 1: Try direct match first (fastest)
+        Optional<T> entity = finder.apply(code);
+        if (entity.isPresent()) {
+            log.debug("{} found by direct match: {}", entityName, code);
+            return entity.get();
+        }
+
+        // Strategy 2: Handle 14-digit codes without "01" prefix
+        if (code.matches("\\d{14}")) {
+            String codeWithPrefix = "01" + code;
+            entity = finder.apply(codeWithPrefix);
+            if (entity.isPresent()) {
+                log.info("{} found by 14-digit code with added 01 prefix: {} -> {}", entityName, code, codeWithPrefix);
+                return entity.get();
+            }
+        }
+
+        // Strategy 3: Handle 16-digit codes - try removing "01" prefix
+        if (code.matches("\\d{16}")) {
+            String codeWithoutPrefix = code.substring(2);
+            entity = finder.apply(codeWithoutPrefix);
+            if (entity.isPresent()) {
+                log.info("{} found by 16-digit code without 01 prefix: {} -> {}", entityName, code, codeWithoutPrefix);
+                return entity.get();
+            }
+        }
+
+        // Strategy 4: If 16-digit with 01 prefix was tried, try 14-digit part
+        if (code.matches("01\\d{14}")) {
+            String codePart = code.substring(2);
+            entity = finder.apply(codePart);
+            if (entity.isPresent()) {
+                log.info("{} found by 16-digit code using 14-digit part: {} -> {}", entityName, code, codePart);
+                return entity.get();
+            }
+        }
+
+        // If all strategies fail, throw not found error
+        log.warn("{} not found after trying all code variations: {}", entityName, code);
+        throw new IllegalArgumentException(entityName.toUpperCase() + "_NOT_FOUND");
+    }
+
+    /**
      * Intelligently finds an item by trying multiple code format variations.
      * Handles:
      * 1. Direct match (exact code or QR code via findByCodeOrQrCode)
@@ -33,48 +90,7 @@ public class SmartCodeService {
      * @return Found item or throws exception
      */
     public Item findItemBySmartCode(String code) {
-        log.debug("Searching for item with smart code: {}", code);
-
-        // Strategy 1: Try direct match first (fastest)
-        Optional<Item> item = itemRepository.findByCodeOrQrCode(code);
-        if (item.isPresent()) {
-            log.debug("Item found by direct match: {}", code);
-            return item.get();
-        }
-
-        // Strategy 2: Handle 14-digit codes without "01" prefix
-        if (code.matches("\\d{14}")) {
-            String codeWithPrefix = "01" + code;
-            item = itemRepository.findByCodeOrQrCode(codeWithPrefix);
-            if (item.isPresent()) {
-                log.info("Item found by 14-digit code with added 01 prefix: {} -> {}", code, codeWithPrefix);
-                return item.get();
-            }
-        }
-
-        // Strategy 3: Handle 16-digit codes - try removing "01" prefix
-        if (code.matches("\\d{16}")) {
-            String codeWithoutPrefix = code.substring(2);
-            item = itemRepository.findByCodeOrQrCode(codeWithoutPrefix);
-            if (item.isPresent()) {
-                log.info("Item found by 16-digit code without 01 prefix: {} -> {}", code, codeWithoutPrefix);
-                return item.get();
-            }
-        }
-
-        // Strategy 4: If 14-digit with 01 prefix was tried, try  14-digit part
-        if (code.matches("01\\d{14}")) {
-            String codePart = code.substring(2);
-            item = itemRepository.findByCodeOrQrCode(codePart);
-            if (item.isPresent()) {
-                log.info("Item found by 16-digit code using 14-digit part: {} -> {}", code, codePart);
-                return item.get();
-            }
-        }
-
-        // If all strategies fail, throw not found error
-        log.warn("Item not found after trying all code variations: {}", code);
-        throw new IllegalArgumentException("ITEM_NOT_FOUND");
+        return findByCodeVariations(code, itemRepository::findByCodeOrQrCode, "item");
     }
 
     /**
@@ -88,47 +104,6 @@ public class SmartCodeService {
      * @return Found assortment or throws exception
      */
     public Assortment findAssortmentBySmartCode(String code) {
-        log.debug("Searching for assortment with smart code: {}", code);
-
-        // Strategy 1: Try direct match first (fastest)
-        Optional<Assortment> assortment = assortmentRepository.findByCode(code);
-        if (assortment.isPresent()) {
-            log.debug("Assortment found by direct match: {}", code);
-            return assortment.get();
-        }
-
-        // Strategy 2: Handle 14-digit codes without "01" prefix
-        if (code.matches("\\d{14}")) {
-            String codeWithPrefix = "01" + code;
-            assortment = assortmentRepository.findByCode(codeWithPrefix);
-            if (assortment.isPresent()) {
-                log.info("Assortment found by 14-digit code with added 01 prefix: {} -> {}", code, codeWithPrefix);
-                return assortment.get();
-            }
-        }
-
-        // Strategy 3: Handle 16-digit codes - try removing "01" prefix
-        if (code.matches("\\d{16}")) {
-            String codeWithoutPrefix = code.substring(2);
-            assortment = assortmentRepository.findByCode(codeWithoutPrefix);
-            if (assortment.isPresent()) {
-                log.info("Assortment found by 16-digit code without 01 prefix: {} -> {}", code, codeWithoutPrefix);
-                return assortment.get();
-            }
-        }
-
-        // Strategy 4: If 14-digit with 01 prefix was tried, try 14-digit part
-        if (code.matches("01\\d{14}")) {
-            String codePart = code.substring(2);
-            assortment = assortmentRepository.findByCode(codePart);
-            if (assortment.isPresent()) {
-                log.info("Assortment found by 16-digit code using 14-digit part: {} -> {}", code, codePart);
-                return assortment.get();
-            }
-        }
-
-        // If all strategies fail, throw not found error
-        log.warn("Assortment not found after trying all code variations: {}", code);
-        throw new IllegalArgumentException("ASSORTMENT_NOT_FOUND");
+        return findByCodeVariations(code, assortmentRepository::findByCode, "assortment");
     }
 }

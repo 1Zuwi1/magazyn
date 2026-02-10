@@ -58,34 +58,11 @@ public class BackupSchedulerManager {
         }
 
         try {
-            if (schedule.getScheduleCode() == BackupScheduleCode.MONTHLY && schedule.getDayOfMonth() != null && schedule.getDayOfMonth() > 28) {
-                scheduleFixedRateSchedule(schedule);
-            } else {
-                scheduleCronSchedule(schedule);
-            }
+            scheduleCronSchedule(schedule);
         } catch (IllegalArgumentException e) {
             log.error("Invalid schedule configuration for warehouse {}: code={}, hour={}, error={}",
                     warehouseId, schedule.getScheduleCode(), schedule.getBackupHour(), e.getMessage());
         }
-    }
-
-    private void scheduleFixedRateSchedule(BackupSchedule schedule) {
-        ZoneId zoneId = ZoneId.systemDefault();
-        LocalDateTime now = LocalDateTime.now(zoneId);
-        LocalDateTime scheduledTime = now.withHour(schedule.getBackupHour()).withMinute(0).withSecond(0);
-
-        if (scheduledTime.isBefore(now) || scheduledTime.isEqual(now)) {
-            scheduledTime = scheduledTime.plusDays(1);
-        }
-
-        ScheduledFuture<?> future = taskScheduler.scheduleAtFixedRate(
-                () -> executeScheduledBackupWithCheck(schedule),
-                scheduledTime.atZone(zoneId).toInstant(),
-                java.time.Duration.ofDays(1)
-        );
-        scheduledTasks.put(schedule.getWarehouse().getId(), future);
-        log.info("Registered fixed-rate backup schedule for warehouse {} - code: {}, hour: {}",
-                schedule.getWarehouse().getId(), schedule.getScheduleCode(), schedule.getBackupHour());
     }
 
     private void scheduleCronSchedule(BackupSchedule schedule) {
@@ -100,21 +77,6 @@ public class BackupSchedulerManager {
                 schedule.getWarehouse().getId(), schedule.getScheduleCode(), schedule.getBackupHour(), cronExpression);
     }
 
-    private void executeScheduledBackupWithCheck(BackupSchedule schedule) {
-        LocalDateTime now = LocalDateTime.now();
-        int currentDayOfMonth = now.getDayOfMonth();
-        int lastDayOfMonth = now.withDayOfMonth(1).plusMonths(1).minusDays(1).getDayOfMonth();
-        int targetDay = schedule.getDayOfMonth();
-
-        if (targetDay > lastDayOfMonth) {
-            targetDay = lastDayOfMonth;
-        }
-
-        if (currentDayOfMonth == targetDay) {
-            executeScheduledBackup(schedule);
-        }
-    }
-
     private String buildCronExpression(BackupSchedule schedule) {
         BackupScheduleCode code = schedule.getScheduleCode();
         Integer hour = schedule.getBackupHour();
@@ -124,7 +86,7 @@ public class BackupSchedulerManager {
             case WEEKLY -> {
                 Integer dayOfWeek = schedule.getDayOfWeek();
                 if (dayOfWeek == null || dayOfWeek < 1 || dayOfWeek > 7) {
-                    throw new IllegalArgumentException("dayOfWeek must be between 1 and 7 for WEEKLY schedule");
+                    throw new IllegalArgumentException("dayOfWeek must be between1 and 7 for WEEKLY schedule");
                 }
                 String cronDay = java.time.DayOfWeek.of(dayOfWeek).name();
                 yield String.format("0 0 %d ? * %s", hour, cronDay);
@@ -133,6 +95,9 @@ public class BackupSchedulerManager {
                 Integer dayOfMonth = schedule.getDayOfMonth();
                 if (dayOfMonth == null || dayOfMonth < 1 || dayOfMonth > 31) {
                     dayOfMonth = 1;
+                }
+                if (dayOfMonth > 28) {
+                    yield String.format("0 0 %d L * *", hour);
                 }
                 yield String.format("0 0 %d %d * *", hour, dayOfMonth);
             }

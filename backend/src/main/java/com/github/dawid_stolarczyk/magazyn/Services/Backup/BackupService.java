@@ -18,6 +18,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.data.domain.Page;
@@ -69,9 +70,17 @@ public class BackupService {
 
     private final ConcurrentHashMap<Long, AtomicBoolean> warehouseLocks = new ConcurrentHashMap<>();
 
+    @Value("${app.backup.retention-days:30}")
+    private int backupRetentionDays;
+
+    @Value("${app.backup.min-keep-count:3}")
+    private int minBackupKeepCount;
+
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter
             .ofPattern("yyyyMMdd'T'HHmmss")
             .withZone(ZoneOffset.UTC);
+
+    private static final int MAX_ERROR_MESSAGE_LENGTH = 2000;
 
     // --- Internal backup data records ---
 
@@ -279,7 +288,7 @@ public class BackupService {
         } catch (Exception e) {
             log.error("Backup {} failed for warehouse {}", recordId, warehouseId, e);
             record.setStatus(BackupStatus.FAILED);
-            record.setErrorMessage(e.getMessage() != null ? e.getMessage().substring(0, Math.min(e.getMessage().length(), 2000)) : "Unknown error");
+            record.setErrorMessage(e.getMessage() != null ? e.getMessage().substring(0, Math.min(e.getMessage().length(), MAX_ERROR_MESSAGE_LENGTH)) : "Unknown error");
             record.setCompletedAt(Instant.now());
             backupRecordRepository.save(record);
 
@@ -544,7 +553,7 @@ public class BackupService {
         } catch (Exception e) {
             log.error("Restore {} failed for warehouse {}", recordId, warehouseId, e);
             record.setStatus(BackupStatus.FAILED);
-            record.setErrorMessage(e.getMessage() != null ? e.getMessage().substring(0, Math.min(e.getMessage().length(), 2000)) : "Unknown error");
+            record.setErrorMessage(e.getMessage() != null ? e.getMessage().substring(0, Math.min(e.getMessage().length(), MAX_ERROR_MESSAGE_LENGTH)) : "Unknown error");
             record.setRestoreCompletedAt(Instant.now());
             backupRecordRepository.save(record);
             createRestoreAlert(record, false);
@@ -905,5 +914,64 @@ public class BackupService {
                 }
             }
         }
+    }
+
+    @Transactional
+    @Scheduled(cron = "0 0 2 * * ?")
+    public void cleanupOldBackups() {
+        Instant cutoffDate = Instant.now().minus(backupRetentionDays, ChronoUnit.DAYS);
+        log.info("Starting cleanup of backups older than {} days (before {}), keeping minimum {} per warehouse",
+                backupRetentionDays, cutoffDate, minBackupKeepCount);
+
+        // Get all completed backups, grouped by warehouse
+        List<Warehouse> warehouses = warehouseRepository.findAll();
+
+        int totalDeleted = 0;
+        int totalFailed = 0;
+
+        for (Warehouse warehouse : warehouses) {
+            try {
+                List<BackupRecord> warehouseBackups = backupRecordRepository
+                        .findByWarehouseIdAndStatusOrderByCompletedAtDesc(warehouse.getId(), BackupStatus.COMPLETED);
+
+                if (warehouseBackups.size() <= minBackupKeepCount) {
+                    log.debug("Warehouse {} has {} backups (<= min keep count), skipping cleanup",
+                            warehouse.getId(), warehouseBackups.size());
+                    continue;
+                }
+
+                // Delete backups older than cutoff date, but keep at least minBackupKeepCount
+                List<BackupRecord> toDelete = warehouseBackups.stream()
+                        .skip(minBackupKeepCount)  // Keep the N most recent
+                        .filter(backup -> backup.getCompletedAt() != null && backup.getCompletedAt().isBefore(cutoffDate))
+                        .toList();
+
+                if (toDelete.isEmpty()) {
+                    log.debug("No eligible backups to delete for warehouse {}", warehouse.getId());
+                    continue;
+                }
+
+                log.info("Deleting {} old backups for warehouse {}", toDelete.size(), warehouse.getId());
+
+                for (BackupRecord record : toDelete) {
+                    try {
+                        if (record.getR2BasePath() != null) {
+                            backupStorageService.deleteBackup(record.getR2BasePath());
+                            log.debug("Deleted R2 backup files for record {}", record.getId());
+                        }
+                        backupRecordRepository.delete(record);
+                        totalDeleted++;
+                    } catch (Exception e) {
+                        log.error("Failed to delete old backup record {} (warehouse {}): {}",
+                                record.getId(), warehouse.getId(), e.getMessage(), e);
+                        totalFailed++;
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Error processing cleanup for warehouse {}", warehouse.getId(), e);
+            }
+        }
+
+        log.info("Backup cleanup completed: {} deleted, {} failed", totalDeleted, totalFailed);
     }
 }
