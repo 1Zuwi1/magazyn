@@ -146,7 +146,9 @@ export function DashboardRecentArrivalsCard() {
                 {formatDate(new Date(item.createdAt), "dd.MM.yyyy")}
               </span>
               <Badge variant={item.dangerous ? "warning" : "secondary"}>
-                {item.dangerous ? "Niebezpieczny" : "Standard"}
+                {item.dangerous
+                  ? translateMessage("generated.m0976")
+                  : translateMessage("generated.m0974")}
               </Badge>
             </div>
           </li>
