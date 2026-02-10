@@ -5,7 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useLocale } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
-import PasskeyLogin from "@/app/(auth)/components/passkey-login"
+import PasskeyLogin from "@/app/[locale]/(auth)/components/passkey-login"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -28,6 +28,7 @@ import {
   type TwoFactorMethod,
 } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
+import { translateZodMessage } from "@/lib/zod-message"
 import { getTwoFactorMethods, METHOD_ICONS } from "./constants"
 import {
   type PasswordVerificationCopy,
@@ -155,9 +156,10 @@ export function TwoFactorVerificationDialog({
 
       onVerified?.()
     } catch (e) {
-      const message = FetchError.isError(e)
+      const rawMessage = FetchError.isError(e)
         ? e.message
         : t("generated.dashboard.settings.codeInvalidAgain")
+      const message = translateZodMessage(rawMessage, t)
       setIsVerified(false)
       setVerificationError(message)
       toast.error(message)

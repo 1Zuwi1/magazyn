@@ -3,6 +3,7 @@ import { OTP_LENGTH } from "@/config/constants"
 import { translateMessage } from "@/i18n/translate-message"
 import { createApiSchema } from "./create-api-schema"
 import { AlertSchema } from "./schemas/monitoring-schemas"
+import { createZodMessage } from "./zod-message"
 
 const txtEncoder = new TextEncoder()
 
@@ -20,29 +21,29 @@ export type ResendType = z.infer<typeof ResendMethods>
 
 export const PasswordSchema = z
   .string()
-  .min(8, translateMessage("generated.validation.passwordMustLeast8Characters"))
+  .min(8, createZodMessage("generated.validation.passwordMustLeast8Characters"))
   .regex(
     /[A-Z]/,
-    translateMessage("generated.validation.passwordMustContainLeastOne")
+    createZodMessage("generated.validation.passwordMustContainLeastOne")
   )
   .regex(
     /[a-z]/,
-    translateMessage(
+    createZodMessage(
       "generated.validation.passwordMustContainLeastOneLowercase"
     )
   )
   .regex(
     /[0-9]/,
-    translateMessage("generated.validation.passwordMustContainLeastOneDigit")
+    createZodMessage("generated.validation.passwordMustContainLeastOneDigit")
   )
   .regex(
     /[!@#$%^&*()_\-+=[\]{};':"\\|,.<>/?]/,
-    translateMessage("generated.validation.passwordMustContainLeastOneSpecial")
+    createZodMessage("generated.validation.passwordMustContainLeastOneSpecial")
   )
   .refine((value) => {
     const bytes = txtEncoder.encode(value).length
     return bytes <= 72
-  }, translateMessage("generated.validation.passwordCannotExceed72Bytes"))
+  }, createZodMessage("generated.validation.passwordCannotExceed72Bytes"))
 
 const OTPSchema = z
   .string()
@@ -54,7 +55,7 @@ const OTPSchema = z
       }
       return val.length === OTP_LENGTH
     },
-    translateMessage("generated.validation.value2faCodeMustExactly", {
+    createZodMessage("generated.validation.value2faCodeMustExactly", {
       value0: OTP_LENGTH,
     })
   )
@@ -81,16 +82,16 @@ export const ChangePasswordFormSchema = z
     newPassword: PasswordSchema,
     oldPassword: z
       .string()
-      .min(1, translateMessage("generated.validation.currentPasswordRequired")),
+      .min(1, createZodMessage("generated.validation.currentPasswordRequired")),
     confirmPassword: z
       .string()
       .min(
         1,
-        translateMessage("generated.validation.passwordConfirmationRequired")
+        createZodMessage("generated.validation.passwordConfirmationRequired")
       ),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: translateMessage("generated.shared.passwordsMatch"),
+    message: createZodMessage("generated.shared.passwordsMatch"),
     path: ["confirmPassword"],
   })
 
@@ -102,7 +103,7 @@ export const ChangePasswordSchema = createApiSchema({
         .string()
         .min(
           1,
-          translateMessage("generated.validation.currentPasswordRequired")
+          createZodMessage("generated.validation.currentPasswordRequired")
         ),
     }),
     output: z.null(),
@@ -113,7 +114,7 @@ export const LoginSchema = createApiSchema({
   POST: {
     input: z.object({
       email: z.email(
-        translateMessage("generated.validation.invalidEmailAddress")
+        createZodMessage("generated.validation.invalidEmailAddress")
       ),
       password: PasswordSchema,
       rememberMe: z.boolean(),
@@ -126,13 +127,13 @@ export const RegisterSchema = createApiSchema({
     input: z.object({
       fullName: z
         .string()
-        .min(2, translateMessage("generated.validation.fullNameMustLeast2")),
+        .min(2, createZodMessage("generated.validation.fullNameMustLeast2")),
       email: z.email(
-        translateMessage("generated.validation.invalidEmailAddress")
+        createZodMessage("generated.validation.invalidEmailAddress")
       ),
       password: PasswordSchema,
       phoneNumber: z.e164(
-        translateMessage("generated.validation.invalidPhoneNumber")
+        createZodMessage("generated.validation.invalidPhoneNumber")
       ),
     }),
     output: z.null(),
@@ -194,7 +195,7 @@ export const WebAuthnFinishRegistrationSchema = createApiSchema({
       keyName: z
         .string()
         .min(1, "Nazwa klucza jest wymagana")
-        .max(50, translateMessage("generated.validation.nameTooLong")),
+        .max(50, createZodMessage("generated.validation.nameTooLong")),
     }),
     output: z.null(),
   },
@@ -223,7 +224,7 @@ export const FormRegisterSchema = RegisterSchema.shape.POST.shape.input
     confirmPassword: PasswordSchema,
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: translateMessage("generated.shared.passwordsMatch"),
+    message: createZodMessage("generated.shared.passwordsMatch"),
     path: ["confirmPassword"],
   })
 
@@ -235,7 +236,7 @@ export const Verify2FASchema = createApiSchema({
         .string()
         .length(
           6,
-          translateMessage("generated.validation.codeMustExactly6Digits")
+          createZodMessage("generated.validation.codeMustExactly6Digits")
         ),
     }),
     output: z.null(),
@@ -271,7 +272,7 @@ export const TFAAuthenticatorFinishSchema = createApiSchema({
         .string()
         .length(
           6,
-          translateMessage("generated.validation.codeMustExactly6Digits")
+          createZodMessage("generated.validation.codeMustExactly6Digits")
         ),
     }),
     output: z.null(),
@@ -365,7 +366,7 @@ export const PasskeyRenameSchema = createApiSchema({
       name: z
         .string()
         .min(1, "Nazwa jest wymagana")
-        .max(50, translateMessage("generated.validation.nameTooLong")),
+        .max(50, createZodMessage("generated.validation.nameTooLong")),
     }),
     output: z.null(),
   },

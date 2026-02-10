@@ -6,8 +6,10 @@ import {
 } from "date-fns"
 import { toast } from "sonner"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { translateMessage } from "@/i18n/translate-message"
 import { FetchError } from "@/lib/fetcher"
 import type { RackAssortment } from "@/lib/schemas"
+import { translateZodMessage } from "@/lib/zod-message"
 import type { Item, ItemSlot } from "../types"
 
 // Helper function to convert index to coordinate (R01-P01, R02-P03, etc.)
@@ -40,9 +42,11 @@ export function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
 
 export const handleApiError = (err: unknown, fallback?: string) => {
   const defaultMessage = fallback ?? "Unexpected error occurred"
-  toast.error(
-    FetchError.isError(err) ? err.message || defaultMessage : defaultMessage
-  )
+  const message = FetchError.isError(err)
+    ? err.message || defaultMessage
+    : defaultMessage
+
+  toast.error(translateZodMessage(message, translateMessage))
 }
 export const getOccupancyPercentage = (
   used: number,

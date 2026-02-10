@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 
-import { translateMessage } from "@/i18n/translate-message"
 import {
   ApiMeSchema,
   FormRegisterSchema,
@@ -24,7 +23,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translateMessage("generated.validation.passwordMustContainLeastOne")
+        "generated.validation.passwordMustContainLeastOne"
       )
     }
   })
@@ -35,9 +34,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translateMessage(
-          "generated.validation.passwordMustContainLeastOneLowercase"
-        )
+        "generated.validation.passwordMustContainLeastOneLowercase"
       )
     }
   })
@@ -48,9 +45,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translateMessage(
-          "generated.validation.passwordMustContainLeastOneDigit"
-        )
+        "generated.validation.passwordMustContainLeastOneDigit"
       )
     }
   })
@@ -61,9 +56,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translateMessage(
-          "generated.validation.passwordMustContainLeastOneSpecial"
-        )
+        "generated.validation.passwordMustContainLeastOneSpecial"
       )
     }
   })
@@ -94,7 +87,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translateMessage("generated.validation.passwordMustLeast8Characters")
+        "generated.validation.passwordMustLeast8Characters"
       )
     }
   })
@@ -110,7 +103,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translateMessage("generated.validation.invalidEmailAddress")
+        "generated.validation.invalidEmailAddress"
       )
     }
   })
@@ -171,7 +164,7 @@ describe("RegisterSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translateMessage("generated.shared.passwordsMatch")
+        "generated.shared.passwordsMatch"
       )
     }
   })
@@ -202,7 +195,7 @@ describe("RegisterSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translateMessage("generated.validation.fullNameMustLeast2")
+        "generated.validation.fullNameMustLeast2"
       )
     }
   })
@@ -261,7 +254,7 @@ describe("Verify2FASchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        translateMessage("generated.validation.codeMustExactly6Digits")
+        "generated.validation.codeMustExactly6Digits"
       )
     }
   })

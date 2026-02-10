@@ -1,5 +1,5 @@
 import z from "zod"
-import { translateMessage } from "@/i18n/translate-message"
+import { createZodMessage } from "../zod-message"
 
 export const WarehouseCsvSchema = z.object({
   name: z.string().trim().min(1, "Nazwa magazynu jest wymagana"),
@@ -68,15 +68,15 @@ const usernameSchema = z
   .string()
   .min(
     3,
-    translateMessage("generated.validation.csv.usernameMustLeast3Characters")
+    createZodMessage("generated.validation.csv.usernameMustLeast3Characters")
   )
   .max(
     20,
-    translateMessage("generated.validation.csv.username20CharactersLong")
+    createZodMessage("generated.validation.csv.username20CharactersLong")
   )
   .regex(
     /^[a-zA-Z0-9_]+$/,
-    translateMessage(
+    createZodMessage(
       "generated.validation.csv.usernameOnlyContainLettersNumbers"
     )
   )

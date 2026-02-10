@@ -5,6 +5,7 @@ import {
   RackCsvSchema,
   WarehouseCsvSchema,
 } from "@/lib/schemas/csv-schemas"
+import { translateZodMessage } from "@/lib/zod-message"
 import {
   DEFAULT_CONFIG,
   ITEM_COLUMNS,
@@ -470,7 +471,7 @@ function appendSchemaIssues(
       row: rowNumber,
       message: translateMessage("generated.admin.warehouses.formattedValue", {
         value0: issue.path.map(String).join("."),
-        value1: issue.message,
+        value1: translateZodMessage(issue.message, translateMessage),
       }),
     })
   }
