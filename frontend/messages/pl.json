@@ -105,7 +105,8 @@
     "ALERT_NOT_FOUND": "Nie znaleziono alertu.",
     "PHOTO_UPLOAD_FAILED": "Przesyłanie zdjęcia nie powiodło się.",
     "IDENTIFICATION_FAILED": "Identyfikacja nie powiodła się.",
-    "MISMATCH_FEEDBACK_FAILED": "Nie udało się zapisać informacji zwrotnej o niezgodności."
+    "MISMATCH_FEEDBACK_FAILED": "Nie udało się zapisać informacji zwrotnej o niezgodności.",
+    "UNEXPECTED_ERROR": "Wystąpił nieoczekiwany błąd."
   },
   "adminUsers": {
     "teams": {

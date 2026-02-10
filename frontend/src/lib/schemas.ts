@@ -295,7 +295,6 @@ const UserSchema = z.object({
   team: z.string().nullish(),
   last_login: z.string().nullish(),
   warehouse_ids: z.array(z.number().int().nonnegative()),
-  backup_codes_refresh_needed: z.boolean(),
 })
 
 export type User = z.infer<typeof UserSchema>

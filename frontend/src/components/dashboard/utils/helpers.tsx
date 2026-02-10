@@ -40,17 +40,55 @@ export function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
   return differenceInCalendarDays(expiryDate, today)
 }
 
+const ERROR_CODE_PATTERN = /^[A-Z0-9_]+$/
+const DEFAULT_ERROR_CODE = "UNEXPECTED_ERROR"
+
+const getErrorCode = (value: string | undefined): string | undefined => {
+  if (!value) {
+    return undefined
+  }
+
+  return ERROR_CODE_PATTERN.test(value) ? value : undefined
+}
+
+const translateErrorCode = (
+  t: AppTranslate,
+  errorCode: string,
+  fallback?: string
+): string => {
+  try {
+    return t(`errorCodes.${errorCode}`)
+  } catch {
+    return fallback ?? errorCode
+  }
+}
+
 export const handleApiError = (
   err: unknown,
-  fallback?: string,
-  t?: AppTranslate
+  fallback: string | undefined,
+  t: AppTranslate
 ) => {
-  const defaultMessage = fallback ?? "Unexpected error occurred"
-  const message = FetchError.isError(err)
-    ? err.message || defaultMessage
-    : defaultMessage
+  const rawMessage = err instanceof Error ? err.message : undefined
+  const resolvedCode =
+    (FetchError.isError(err) ? err.message : undefined) ??
+    getErrorCode(rawMessage)
 
-  toast.error(translateZodMessage(message, t ?? ((key) => key)))
+  if (resolvedCode) {
+    toast.error(translateErrorCode(t, resolvedCode, fallback))
+    return
+  }
+
+  if (rawMessage) {
+    toast.error(translateZodMessage(rawMessage, t))
+    return
+  }
+
+  if (fallback) {
+    toast.error(fallback)
+    return
+  }
+
+  toast.error(translateErrorCode(t, DEFAULT_ERROR_CODE))
 }
 export const getOccupancyPercentage = (
   used: number,

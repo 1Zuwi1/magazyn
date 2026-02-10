@@ -105,7 +105,8 @@
     "ALERT_NOT_FOUND": "Alert was not found.",
     "PHOTO_UPLOAD_FAILED": "Photo upload failed.",
     "IDENTIFICATION_FAILED": "Identification failed.",
-    "MISMATCH_FEEDBACK_FAILED": "Failed to save mismatch feedback."
+    "MISMATCH_FEEDBACK_FAILED": "Failed to save mismatch feedback.",
+    "UNEXPECTED_ERROR": "An unexpected error occurred."
   },
   "adminUsers": {
     "teams": {
