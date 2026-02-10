@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/tooltip"
 
 const GS1_BARCODE_PATTERN = /^11(\d{6})01(\d{14})21(\d+)$/
+const EAN14_WITH_AI01_PATTERN = /^01(\d{14})$/
 const COPY_FEEDBACK_TIMEOUT_MS = 2000
 const QR_PREFIX = "QR-"
 const QR_CODE_SIZE_SMALL = 64
@@ -30,6 +31,12 @@ const QR_CODE_SIZE_LARGE = 256
 const isQrCode = (value: string): boolean => value.startsWith(QR_PREFIX)
 
 const formatGs1Code = (code: string): string => {
+  const ean14Match = EAN14_WITH_AI01_PATTERN.exec(code)
+  if (ean14Match) {
+    const [, payload] = ean14Match
+    return `(01)${payload}`
+  }
+
   const match = GS1_BARCODE_PATTERN.exec(code)
   if (!match) {
     return code
