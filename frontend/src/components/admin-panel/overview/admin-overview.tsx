@@ -282,7 +282,7 @@ export function AdminOverview() {
           "generated.admin.overview.manageUsersWarehousesSystemNotifications"
         )}
         icon={Settings02Icon}
-        navLinks={getAdminNavLinks().map((link) => ({
+        navLinks={getAdminNavLinks(t).map((link) => ({
           title: link.title,
           url: link.url,
         }))}

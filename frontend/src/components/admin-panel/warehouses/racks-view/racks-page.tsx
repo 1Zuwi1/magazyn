@@ -279,7 +279,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
           value0: warehouseName,
         })}
         icon={GridIcon}
-        navLinks={getAdminNavLinks().map((link) => ({
+        navLinks={getAdminNavLinks(t).map((link) => ({
           title: link.title,
           url: link.url,
         }))}

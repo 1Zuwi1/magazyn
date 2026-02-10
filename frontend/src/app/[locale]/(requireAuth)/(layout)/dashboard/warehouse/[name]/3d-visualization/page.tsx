@@ -280,9 +280,10 @@ export default function ThreeDVisualizationPage() {
     return buildWarehouse3DFromApi(
       apiWarehouse,
       racksData.content,
+      t,
       assortmentsData?.content ?? []
     )
-  }, [apiWarehouse, racksData, assortmentsData?.content])
+  }, [apiWarehouse, racksData, assortmentsData?.content, t])
 
   const router = useRouter()
   const {

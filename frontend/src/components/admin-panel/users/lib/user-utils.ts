@@ -1,21 +1,24 @@
 import type { EditableAdminUser } from "@/components/admin-panel/users/components/action-dialog"
 import type { AdminTeamOption, AdminUser } from "@/hooks/use-admin-users"
-import { translateMessage } from "@/i18n/translate-message"
+import type { AppTranslate } from "@/i18n/use-translations"
 
 export const TABLE_PAGE_SIZE = 10
 
-export const getStatusLabel = (status: AdminUser["account_status"]): string => {
+export const getStatusLabel = (
+  status: AdminUser["account_status"],
+  t: AppTranslate
+): string => {
   if (status === "ACTIVE") {
-    return translateMessage("generated.shared.active")
+    return t("generated.shared.active")
   }
   if (status === "PENDING_VERIFICATION") {
-    return translateMessage("generated.admin.users.pending")
+    return t("generated.admin.users.pending")
   }
   if (status === "LOCKED") {
-    return translateMessage("generated.shared.blocked")
+    return t("generated.shared.blocked")
   }
   if (status === "DISABLED") {
-    return translateMessage("generated.shared.disabled")
+    return t("generated.shared.disabled")
   }
   return status
 }

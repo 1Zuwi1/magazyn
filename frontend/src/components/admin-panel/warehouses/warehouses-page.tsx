@@ -228,7 +228,7 @@ export default function WarehousesMain() {
         }
         description={t("generated.admin.warehouses.manageWarehousesRacks")}
         icon={WarehouseIcon}
-        navLinks={getAdminNavLinks().map((link) => ({
+        navLinks={getAdminNavLinks(t).map((link) => ({
           title: link.title,
           url: link.url,
         }))}

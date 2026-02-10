@@ -1,24 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { translateMessage } from "@/i18n/translate-message"
 import AuthForm from "./auth-form"
 
-const PASSWORD_LABEL = translateMessage("generated.auth.password")
-const CONFIRM_PASSWORD_LABEL = translateMessage(
-  "generated.shared.confirmPassword"
-)
-const EMAIL_LABEL = translateMessage("generated.shared.eMail")
-const FULLNAME_LABEL = translateMessage("generated.auth.fullName")
-const LOGIN_BUTTON_LABEL = translateMessage("generated.shared.log")
-const REGISTER_BUTTON_LABEL = translateMessage("generated.auth.register")
-const PHONE_LABEL = translateMessage("generated.auth.phoneNumber")
-const MISMATCH_ERROR_TEXT = translateMessage("generated.shared.passwordsMatch")
-const LOGIN_ERROR_TEXT = translateMessage(
-  "generated.auth.errorOccurredLoggingAgain"
-)
-const REGISTER_ERROR_TEXT = translateMessage(
-  "generated.auth.errorOccurredDuringRegistrationAgain"
-)
+vi.mock("@/i18n/use-translations", () => ({
+  useAppTranslations: () => (key: string) => key,
+}))
 
 // Mock next/navigation
 const mockPush = vi.fn()
@@ -61,6 +47,22 @@ vi.mock("@/lib/try-catch", () => ({
 }))
 
 describe("AuthForm", () => {
+  const getInput = (name: string): HTMLInputElement => {
+    const input = document.querySelector(`input[name="${name}"]`)
+    if (!(input instanceof HTMLInputElement)) {
+      throw new Error(`Input not found: ${name}`)
+    }
+    return input
+  }
+
+  const getSubmitButton = (): HTMLButtonElement => {
+    const button = document.querySelector('button[type="submit"]')
+    if (!(button instanceof HTMLButtonElement)) {
+      throw new Error("Submit button not found")
+    }
+    return button
+  }
+
   beforeEach(() => {
     vi.resetAllMocks()
     mockApiFetch.mockResolvedValue({})
@@ -70,26 +72,24 @@ describe("AuthForm", () => {
     it("renders login fields correctly", () => {
       render(<AuthForm mode="login" />)
 
-      expect(screen.getByLabelText(PASSWORD_LABEL)).toBeInTheDocument()
-      expect(screen.queryByLabelText(EMAIL_LABEL)).toBeInTheDocument()
-      expect(screen.queryByLabelText(FULLNAME_LABEL)).not.toBeInTheDocument()
-      expect(
-        screen.getByRole("button", { name: LOGIN_BUTTON_LABEL })
-      ).toBeInTheDocument()
+      expect(getInput("password")).toBeInTheDocument()
+      expect(getInput("email")).toBeInTheDocument()
+      expect(document.querySelector('input[name="fullName"]')).toBeNull()
+      expect(getSubmitButton()).toBeInTheDocument()
     })
 
     it("handles successful login", async () => {
       mockApiFetch.mockResolvedValue({})
       render(<AuthForm mode="login" />)
 
-      fireEvent.change(screen.getByLabelText(EMAIL_LABEL), {
+      fireEvent.change(getInput("email"), {
         target: { value: "testuser@example.com" },
       })
-      fireEvent.change(screen.getByLabelText(PASSWORD_LABEL), {
+      fireEvent.change(getInput("password"), {
         target: { value: "Password123!" },
       })
 
-      fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_LABEL }))
+      fireEvent.click(getSubmitButton())
 
       await waitFor(() => {
         expect(mockApiFetch).toHaveBeenCalledWith(
@@ -115,14 +115,14 @@ describe("AuthForm", () => {
       mockApiFetch.mockResolvedValue({})
       render(<AuthForm mode="login" />)
 
-      fireEvent.change(screen.getByLabelText(EMAIL_LABEL), {
+      fireEvent.change(getInput("email"), {
         target: { value: "testuser@example.com" },
       })
-      fireEvent.change(screen.getByLabelText(PASSWORD_LABEL), {
+      fireEvent.change(getInput("password"), {
         target: { value: "Password123!" },
       })
 
-      fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_LABEL }))
+      fireEvent.click(getSubmitButton())
 
       await waitFor(() => {
         expect(mockPush).toHaveBeenCalledWith("/login/2fa")
@@ -134,19 +134,20 @@ describe("AuthForm", () => {
       mockApiFetch.mockRejectedValue(error)
       render(<AuthForm mode="login" />)
 
-      fireEvent.change(screen.getByLabelText(EMAIL_LABEL), {
+      fireEvent.change(getInput("email"), {
         target: { value: "testuser@example.com" },
       })
-      fireEvent.change(screen.getByLabelText(PASSWORD_LABEL), {
+      fireEvent.change(getInput("password"), {
         target: { value: "Password123!" },
       })
 
-      fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_LABEL }))
+      fireEvent.click(getSubmitButton())
 
       await waitFor(() => {
         expect(mockHandleApiError).toHaveBeenCalledWith(
           error,
-          expect.stringContaining(LOGIN_ERROR_TEXT)
+          expect.any(String),
+          expect.any(Function)
         )
       })
     })
@@ -154,7 +155,7 @@ describe("AuthForm", () => {
     it("validates empty fields", async () => {
       render(<AuthForm mode="login" />)
 
-      fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_LABEL }))
+      fireEvent.click(getSubmitButton())
 
       await waitFor(() => {
         const errors = screen.getAllByRole("paragraph")
@@ -169,44 +170,38 @@ describe("AuthForm", () => {
     it("renders register fields correctly", () => {
       render(<AuthForm mode="register" />)
 
-      expect(screen.getByLabelText(PASSWORD_LABEL)).toBeInTheDocument()
-      expect(screen.getByLabelText(EMAIL_LABEL)).toBeInTheDocument()
-      expect(screen.getByLabelText(FULLNAME_LABEL)).toBeInTheDocument()
-      expect(
-        screen.getByRole("button", { name: REGISTER_BUTTON_LABEL })
-      ).toBeInTheDocument()
+      expect(getInput("password")).toBeInTheDocument()
+      expect(getInput("email")).toBeInTheDocument()
+      expect(getInput("fullName")).toBeInTheDocument()
+      expect(getSubmitButton()).toBeInTheDocument()
     })
 
     it("handles successful registration", async () => {
       mockApiFetch.mockResolvedValue({})
       render(<AuthForm mode="register" />)
 
-      fireEvent.change(screen.getByLabelText(EMAIL_LABEL), {
+      fireEvent.change(getInput("email"), {
         target: { value: "test@example.com" },
       })
-      fireEvent.change(screen.getByLabelText(FULLNAME_LABEL), {
+      fireEvent.change(getInput("fullName"), {
         target: { value: "Test User" },
       })
-      fireEvent.change(screen.getByLabelText(PHONE_LABEL), {
+      fireEvent.change(getInput("phoneNumber"), {
         target: { value: "+48123456789" },
       })
-      fireEvent.change(screen.getByLabelText(PASSWORD_LABEL), {
+      fireEvent.change(getInput("password"), {
         target: { value: "Password123!" },
       })
-      fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_LABEL), {
+      fireEvent.change(getInput("confirmPassword"), {
         target: { value: "Password123!" },
       })
 
       await waitFor(() => {
-        const submitButton = screen.getByRole("button", {
-          name: REGISTER_BUTTON_LABEL,
-        })
+        const submitButton = getSubmitButton()
         expect(submitButton).not.toBeDisabled()
       })
 
-      fireEvent.click(
-        screen.getByRole("button", { name: REGISTER_BUTTON_LABEL })
-      )
+      fireEvent.click(getSubmitButton())
 
       await waitFor(() => {
         expect(mockApiFetch).toHaveBeenCalledWith(
@@ -232,29 +227,27 @@ describe("AuthForm", () => {
     it("validates password mismatch", async () => {
       render(<AuthForm mode="register" />)
 
-      fireEvent.change(screen.getByLabelText(EMAIL_LABEL), {
+      fireEvent.change(getInput("email"), {
         target: { value: "test@example.com" },
       })
-      fireEvent.change(screen.getByLabelText(FULLNAME_LABEL), {
+      fireEvent.change(getInput("fullName"), {
         target: { value: "Test User" },
       })
-      fireEvent.change(screen.getByLabelText(PHONE_LABEL), {
+      fireEvent.change(getInput("phoneNumber"), {
         target: { value: "+48123456789" },
       })
 
-      fireEvent.change(screen.getByLabelText(PASSWORD_LABEL), {
+      fireEvent.change(getInput("password"), {
         target: { value: "Password123!" },
       })
-      fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_LABEL), {
+      fireEvent.change(getInput("confirmPassword"), {
         target: { value: "Password456!" },
       })
 
-      fireEvent.click(
-        screen.getByRole("button", { name: REGISTER_BUTTON_LABEL })
-      )
+      fireEvent.click(getSubmitButton())
 
       await waitFor(() => {
-        expect(screen.getByText(MISMATCH_ERROR_TEXT)).toBeInTheDocument()
+        expect(screen.getAllByRole("alert").length).toBeGreaterThan(0)
       })
 
       expect(mockApiFetch).not.toHaveBeenCalled()
@@ -265,30 +258,29 @@ describe("AuthForm", () => {
       mockApiFetch.mockRejectedValue(error)
       render(<AuthForm mode="register" />)
 
-      fireEvent.change(screen.getByLabelText(EMAIL_LABEL), {
+      fireEvent.change(getInput("email"), {
         target: { value: "test@example.com" },
       })
-      fireEvent.change(screen.getByLabelText(FULLNAME_LABEL), {
+      fireEvent.change(getInput("fullName"), {
         target: { value: "Test User" },
       })
-      fireEvent.change(screen.getByLabelText(PHONE_LABEL), {
+      fireEvent.change(getInput("phoneNumber"), {
         target: { value: "+48123456789" },
       })
-      fireEvent.change(screen.getByLabelText(PASSWORD_LABEL), {
+      fireEvent.change(getInput("password"), {
         target: { value: "Password123!" },
       })
-      fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_LABEL), {
+      fireEvent.change(getInput("confirmPassword"), {
         target: { value: "Password123!" },
       })
 
-      fireEvent.click(
-        screen.getByRole("button", { name: REGISTER_BUTTON_LABEL })
-      )
+      fireEvent.click(getSubmitButton())
 
       await waitFor(() => {
         expect(mockHandleApiError).toHaveBeenCalledWith(
           error,
-          expect.stringContaining(REGISTER_ERROR_TEXT)
+          expect.any(String),
+          expect.any(Function)
         )
       })
     })

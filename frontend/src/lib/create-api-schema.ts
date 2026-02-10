@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { translateMessage } from "@/i18n/translate-message"
 import type { ApiMethod, ApiMethodSchema, ApiSchema } from "./fetcher"
 
 // Example:
@@ -40,10 +39,7 @@ export const createApiSchema = <const C extends ApiSchemaConfig>(
   for (const [method, definition] of Object.entries(config)) {
     if (!VALID_METHODS.includes(method as ApiMethod)) {
       throw new Error(
-        translateMessage(
-          "generated.system.api.unsupportedApiMethodPassedCreateapischema",
-          { value0: method }
-        )
+        `Unsupported API method passed to createApiSchema: ${method}`
       )
     }
 

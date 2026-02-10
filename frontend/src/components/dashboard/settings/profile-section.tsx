@@ -129,8 +129,8 @@ export function ProfileSection({ user }: ProfileSectionProps) {
 
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)
-  const statusConfig = getStatusConfig()
-  const roleLabels = getRoleLabels()
+  const statusConfig = getStatusConfig(t)
+  const roleLabels = getRoleLabels(t)
   const statusBadge = statusConfig[user.account_status]
   const profileDetails = buildProfileDetails(
     t,

@@ -8,6 +8,7 @@ import {
 import { useRef } from "react"
 import { useTwoFactorVerificationDialogStore } from "@/components/dashboard/settings/two-factor-verification-dialog-store"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { FetchError } from "@/lib/fetcher"
 
 export function useApiMutation<
@@ -18,6 +19,7 @@ export function useApiMutation<
 >(
   options: UseMutationOptions<TData, TError, TVariables, TContext>
 ): UseMutationResult<TData, TError, TVariables, TContext> {
+  const t = useAppTranslations()
   const { mutationFn, ...mutationOptions } = options
   const pendingMutateOptionsRef = useRef<MutateOptions<
     TData,
@@ -55,10 +57,10 @@ export function useApiMutation<
                   },
                 })
               } else {
-                handleApiError(error)
+                handleApiError(error, undefined, t)
               }
             } else {
-              handleApiError(error)
+              handleApiError(error, undefined, t)
             }
             throw error
           }

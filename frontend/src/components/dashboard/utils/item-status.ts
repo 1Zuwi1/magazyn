@@ -1,5 +1,5 @@
 import { addDays } from "date-fns"
-import { translateMessage } from "@/i18n/translate-message"
+import type { AppTranslate } from "@/i18n/use-translations"
 import type { Item } from "../types"
 import { getDaysUntilExpiry } from "./helpers"
 
@@ -35,8 +35,8 @@ export function getItemStatus(item: Item): ItemStatus {
   return "normal"
 }
 
-export function getStatusText(status: ItemStatus): string {
-  return translateMessage(STATUS_TEXT_KEYS[status])
+export function getStatusText(status: ItemStatus, t: AppTranslate): string {
+  return t(STATUS_TEXT_KEYS[status])
 }
 
 export function getStatusColors(status: ItemStatus): {

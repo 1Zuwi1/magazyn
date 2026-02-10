@@ -3,45 +3,45 @@ import {
   InboxIcon,
   WeightScale01Icon,
 } from "@hugeicons/core-free-icons"
-import { translateMessage } from "@/i18n/translate-message"
+import type { AppTranslate } from "@/i18n/use-translations"
 
-export const getAdminNavLinks = () =>
+export const getAdminNavLinks = (t: AppTranslate) =>
   [
-    { title: translateMessage("generated.shared.review"), url: "/admin" },
-    { title: translateMessage("generated.shared.users"), url: "/admin/users" },
+    { title: t("generated.shared.review"), url: "/admin" },
+    { title: t("generated.shared.users"), url: "/admin/users" },
     {
-      title: translateMessage("generated.shared.warehouses"),
+      title: t("generated.shared.warehouses"),
       url: "/admin/warehouses",
     },
-    { title: translateMessage("generated.shared.items"), url: "/admin/items" },
+    { title: t("generated.shared.items"), url: "/admin/items" },
     {
-      title: translateMessage("generated.shared.alerts"),
+      title: t("generated.shared.alerts"),
       url: "/admin/alerts",
     },
     {
-      title: translateMessage("generated.shared.rackReports"),
+      title: t("generated.shared.rackReports"),
       url: "/admin/rack-reports",
     },
     {
-      title: translateMessage("generated.shared.operationsAudit"),
+      title: t("generated.shared.operationsAudit"),
       url: "/admin/audit",
     },
   ] as const
 
-export const getNotificationsNavLinks = () =>
+export const getNotificationsNavLinks = (t: AppTranslate) =>
   [
     {
-      title: translateMessage("generated.shared.all"),
+      title: t("generated.shared.all"),
       icon: InboxIcon,
       filterValue: null,
     },
     {
-      title: translateMessage("generated.admin.shared.overloads"),
+      title: t("generated.admin.shared.overloads"),
       icon: WeightScale01Icon,
       filterValue: "RACK_OVERWEIGHT" as const,
     },
     {
-      title: translateMessage("generated.admin.shared.unauthorized"),
+      title: t("generated.admin.shared.unauthorized"),
       icon: Alert01Icon,
       filterValue: "UNAUTHORIZED_REMOVAL" as const,
     },

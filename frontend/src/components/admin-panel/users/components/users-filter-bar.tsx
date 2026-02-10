@@ -71,7 +71,7 @@ export function UsersFilterBar({
               render={
                 <span>
                   {statusFilter
-                    ? getStatusLabel(statusFilter)
+                    ? getStatusLabel(statusFilter, t)
                     : t("generated.admin.users.allStatuses")}
                 </span>
               }
@@ -83,7 +83,7 @@ export function UsersFilterBar({
             </SelectItem>
             {STATUS_OPTIONS.map((status) => (
               <SelectItem key={status} value={status}>
-                {getStatusLabel(status)}
+                {getStatusLabel(status, t)}
               </SelectItem>
             ))}
           </SelectContent>

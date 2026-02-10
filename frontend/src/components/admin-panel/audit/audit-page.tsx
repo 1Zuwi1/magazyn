@@ -473,7 +473,7 @@ export default function AuditMain() {
           "generated.admin.audit.warehouseOperationsHistoryInboundOutbound"
         )}
         icon={Analytics01Icon}
-        navLinks={getAdminNavLinks().map((link) => ({
+        navLinks={getAdminNavLinks(t).map((link) => ({
           title: link.title,
           url: link.url,
         }))}

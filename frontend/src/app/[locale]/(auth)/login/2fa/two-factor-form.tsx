@@ -89,7 +89,7 @@ export default function TwoFactorForm({
         )
         if (err) {
           if (FetchError.isError(err)) {
-            handleApiError(err)
+            handleApiError(err, undefined, t)
           } else {
             toast.error(t("generated.auth.invalidCodeVerificationErrorAgain"))
           }
@@ -99,7 +99,7 @@ export default function TwoFactorForm({
         router.push("/dashboard")
       } catch (e) {
         if (FetchError.isError(e)) {
-          handleApiError(e)
+          handleApiError(e, undefined, t)
           return
         }
         toast.error(t("generated.auth.unexpectedErrorOccurredAgain"))

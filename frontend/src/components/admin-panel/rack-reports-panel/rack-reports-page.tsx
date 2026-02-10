@@ -384,7 +384,7 @@ export default function RackReportsMain() {
       <AdminPageHeader
         description={t("generated.admin.rackReports.viewRackSensorReports")}
         icon={PackageIcon}
-        navLinks={getAdminNavLinks().map((link) => ({
+        navLinks={getAdminNavLinks(t).map((link) => ({
           title: link.title,
           url: link.url,
         }))}

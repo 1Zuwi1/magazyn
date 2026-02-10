@@ -1,4 +1,4 @@
-import { translateMessage } from "@/i18n/translate-message"
+import type { AppTranslate } from "@/i18n/use-translations"
 import type { Warehouse } from "@/lib/schemas"
 import {
   type matchVoiceCommand,
@@ -29,14 +29,15 @@ export const findWarehouseByName = (
 
 export const getCommandLabel = (
   match: NonNullable<ReturnType<typeof matchVoiceCommand>>,
-  warehouses: Pick<Warehouse, "id" | "name">[]
+  warehouses: Pick<Warehouse, "id" | "name">[],
+  t: AppTranslate
 ): string => {
   if (match.command.id === "warehouses:id") {
     const warehouseName = match.params.warehouseName
     if (warehouseName) {
       const warehouse = findWarehouseByName(warehouseName, warehouses)
       const label = warehouse?.name ?? warehouseName
-      return translateMessage("generated.voiceAssistant.openWarehouse", {
+      return t("generated.voiceAssistant.openWarehouse", {
         value0: label,
       })
     }
@@ -52,18 +53,18 @@ export const getCommandLabel = (
   if (match.command.id === "inventory-check") {
     const { warehouseName, itemName } = match.params
     if (warehouseName) {
-      return translateMessage("generated.voiceAssistant.checkStockStatus", {
+      return t("generated.voiceAssistant.checkStockStatus", {
         value0: warehouseName,
       })
     }
     if (itemName) {
-      return translateMessage("generated.voiceAssistant.checkStatus", {
+      return t("generated.voiceAssistant.checkStatus", {
         value0: itemName,
       })
     }
   }
 
-  return match.command.description
+  return t(match.command.description)
 }
 
 export const isCommandMatchValid = (
@@ -99,7 +100,8 @@ export interface VoiceAssistantActions {
 export const handleConfirmCommandAction = (
   matchedCommand: ReturnType<typeof matchVoiceCommand>,
   warehouses: Pick<Warehouse, "id" | "name">[],
-  actions: VoiceAssistantActions
+  actions: VoiceAssistantActions,
+  t: AppTranslate
 ) => {
   if (!matchedCommand) {
     actions.setErrorMessage("Brak komendy do wykonania.")
@@ -194,9 +196,7 @@ export const handleConfirmCommandAction = (
       }
       return
     default:
-      actions.setErrorMessage(
-        translateMessage("generated.voiceAssistant.unsupportedCommand")
-      )
+      actions.setErrorMessage(t("generated.voiceAssistant.unsupportedCommand"))
       actions.setView("error")
       return
   }

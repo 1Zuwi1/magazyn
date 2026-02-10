@@ -19,7 +19,11 @@ export function LogoutSection() {
       router.replace("/login")
       router.refresh()
     } catch (error) {
-      handleApiError(error, t("generated.dashboard.settings.failedLogOutAgain"))
+      handleApiError(
+        error,
+        t("generated.dashboard.settings.failedLogOutAgain"),
+        t
+      )
     }
   }
 

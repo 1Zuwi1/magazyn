@@ -198,7 +198,7 @@ export function NotificationInbox() {
                         notification.read ? "font-medium" : "font-semibold"
                       )}
                     >
-                      {findAlertTitle(notification.alert)}
+                      {findAlertTitle(notification.alert, t)}
                     </span>
                     {!notification.read && (
                       <span className="flex size-2 shrink-0 rounded-full bg-primary" />

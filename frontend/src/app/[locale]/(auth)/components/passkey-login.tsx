@@ -84,7 +84,8 @@ export default function PasskeyLogin({
       if (startError) {
         handleApiError(
           startError,
-          t("generated.auth.failedStartLoginSecurityKey")
+          t("generated.auth.failedStartLoginSecurityKey"),
+          t
         )
         return
       }
@@ -106,7 +107,8 @@ export default function PasskeyLogin({
         toast.error(
           getWebAuthnErrorMessage(
             credentialError,
-            t("generated.auth.securityKeyVerified")
+            t("generated.auth.securityKeyVerified"),
+            t
           )
         )
         return
@@ -133,7 +135,8 @@ export default function PasskeyLogin({
       if (finishError) {
         handleApiError(
           finishError,
-          t("generated.auth.failedCompleteLoginSecurityKey")
+          t("generated.auth.failedCompleteLoginSecurityKey"),
+          t
         )
         return
       }

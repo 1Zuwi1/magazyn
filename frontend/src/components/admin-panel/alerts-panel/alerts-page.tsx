@@ -35,9 +35,10 @@ import { getDateFnsLocale } from "@/i18n/date-fns-locale"
 import { useAppTranslations } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import {
-  ALERT_TYPE_OPTIONS,
   type AlertsSchema,
+  type AlertType,
   findAlertTitle,
+  getAlertTypeOptions,
 } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
@@ -47,7 +48,7 @@ type AlertsList = InferApiOutput<typeof AlertsSchema, "GET">
 type AlertItem = AlertsList["content"][number]
 type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
 
-type AlertTypeValue = (typeof ALERT_TYPE_OPTIONS)[number]["value"]
+type AlertTypeValue = AlertType
 
 type AlertStatusValue = "OPEN" | "ACTIVE" | "RESOLVED" | "DISMISSED"
 
@@ -263,7 +264,7 @@ function AlertListBody({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="truncate font-medium text-sm">
-                  {findAlertTitle(alert)}
+                  {findAlertTitle(alert, t)}
                 </p>
                 <Badge className="shrink-0" variant={statusConfig.badgeVariant}>
                   {statusConfig.label}
@@ -354,7 +355,9 @@ function AlertDetailsPanel({
             {statusConfig.label}
           </Badge>
         </div>
-        <h2 className="mt-3 font-semibold text-xl">{findAlertTitle(alert)}</h2>
+        <h2 className="mt-3 font-semibold text-xl">
+          {findAlertTitle(alert, t)}
+        </h2>
         <p className="mt-1 text-muted-foreground">{alert.message}</p>
       </div>
 
@@ -494,6 +497,7 @@ function AlertDetailsPanel({
 export default function AlertsMain() {
   const t = useAppTranslations()
   const alertStatusOptions = useMemo(() => getAlertStatusOptions(t), [t])
+  const alertTypeOptions = useMemo(() => getAlertTypeOptions(t), [t])
 
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)
@@ -602,7 +606,7 @@ export default function AlertsMain() {
       <AdminPageHeader
         description={t("generated.admin.alerts.viewSystemAlertsWarehouses")}
         icon={Alert01Icon}
-        navLinks={getAdminNavLinks().map((link) => ({
+        navLinks={getAdminNavLinks(t).map((link) => ({
           title: link.title,
           url: link.url,
         }))}
@@ -710,7 +714,7 @@ export default function AlertsMain() {
                       {t("generated.admin.alerts.filterAlertType")}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {ALERT_TYPE_OPTIONS.map((option) => (
+                    {alertTypeOptions.map((option) => (
                       <DropdownMenuCheckboxItem
                         checked={alertTypeFilter.includes(option.value)}
                         key={option.value}

@@ -115,7 +115,7 @@ export default function UsersMain() {
       <AdminPageHeader
         description={t("generated.admin.users.manageUserAccountsProfileData")}
         icon={UserMultiple02Icon}
-        navLinks={getAdminNavLinks().map((link) => ({
+        navLinks={getAdminNavLinks(t).map((link) => ({
           title: link.title,
           url: link.url,
         }))}

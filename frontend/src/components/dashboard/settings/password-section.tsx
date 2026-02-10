@@ -50,7 +50,8 @@ export function PasswordSection() {
       if (error) {
         handleApiError(
           error,
-          t("generated.dashboard.settings.failedChangePasswordAgain")
+          t("generated.dashboard.settings.failedChangePasswordAgain"),
+          t
         )
         return
       }

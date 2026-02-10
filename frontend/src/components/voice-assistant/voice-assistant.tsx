@@ -393,15 +393,20 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
   let content: ReactNode
 
   const handleConfirmCommand = useCallback(() => {
-    handleConfirmCommandAction(matchedCommand, commandWarehouses, {
-      navigateAndClose,
-      openScanner,
-      openAddItemDialog,
-      setPendingAction,
-      closeDialog,
-      setErrorMessage,
-      setView,
-    })
+    handleConfirmCommandAction(
+      matchedCommand,
+      commandWarehouses,
+      {
+        navigateAndClose,
+        openScanner,
+        openAddItemDialog,
+        setPendingAction,
+        closeDialog,
+        setErrorMessage,
+        setView,
+      },
+      t
+    )
   }, [
     matchedCommand,
     navigateAndClose,
@@ -410,6 +415,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     setPendingAction,
     closeDialog,
     commandWarehouses,
+    t,
   ])
 
   switch (view) {
@@ -423,7 +429,9 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
       break
     case "listening":
       {
-        const liveLabel = liveCommand ? getCommandLabel(liveCommand, []) : null
+        const liveLabel = liveCommand
+          ? getCommandLabel(liveCommand, [], t)
+          : null
         content = (
           <VoiceAssistantListeningView
             detectedCommandLabel={liveLabel}
@@ -440,7 +448,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     case "confirm":
       content = matchedCommand ? (
         <VoiceAssistantConfirmView
-          commandLabel={getCommandLabel(matchedCommand, commandWarehouses)}
+          commandLabel={getCommandLabel(matchedCommand, commandWarehouses, t)}
           onCancel={handleReset}
           onConfirm={handleConfirmCommand}
           transcript={

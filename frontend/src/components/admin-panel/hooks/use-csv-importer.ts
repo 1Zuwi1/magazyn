@@ -43,7 +43,7 @@ export function useCsvImporter<T extends CsvImporterType>({
     resetFile()
 
     try {
-      const result = await parseCsvFile(file, type)
+      const result = await parseCsvFile(file, type, t)
       setParseErrors(result.errors)
 
       if (result.errors.length > 0) {

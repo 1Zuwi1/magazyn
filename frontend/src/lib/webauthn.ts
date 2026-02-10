@@ -1,4 +1,4 @@
-import { translateMessage } from "@/i18n/translate-message"
+import type { AppTranslate } from "@/i18n/use-translations"
 
 const BASE64_TO_URL_REPLACEMENTS = [/\+/g, /\//g] as const
 const BASE64_URL_TO_BASE64_REPLACEMENTS = [/-/g, /_/g] as const
@@ -81,11 +81,7 @@ const decodeBase64Url = (value: Base64UrlString): Uint8Array => {
   const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4)
 
   if (typeof atob !== "function") {
-    throw new Error(
-      translateMessage(
-        "generated.security.webauthn.base64DecodingSupportedEnvironment"
-      )
-    )
+    throw new Error("Base64 decoding is not supported in this environment")
   }
 
   const binary = atob(padded)
@@ -108,11 +104,7 @@ const encodeBase64Url = (value: ArrayBufferLike): Base64UrlString => {
   }
 
   if (typeof btoa !== "function") {
-    throw new Error(
-      translateMessage(
-        "generated.security.webauthn.base64EncodingSupportedEnvironment"
-      )
-    )
+    throw new Error("Base64 encoding is not supported in this environment")
   }
 
   const base64 = btoa(binary)
@@ -238,26 +230,19 @@ export const isPublicKeyCredential = (
 
 export const getWebAuthnErrorMessage = (
   error: unknown,
-  fallback: string
+  fallback: string,
+  t: AppTranslate
 ): string => {
   if (typeof DOMException !== "undefined" && error instanceof DOMException) {
     switch (error.name) {
       case "NotAllowedError":
-        return translateMessage(
-          "generated.security.webauthn.operationCanceledTimedOut"
-        )
+        return t("generated.security.webauthn.operationCanceledTimedOut")
       case "InvalidStateError":
-        return translateMessage(
-          "generated.security.webauthn.securityKeyAlreadyAddedDevice"
-        )
+        return t("generated.security.webauthn.securityKeyAlreadyAddedDevice")
       case "NotSupportedError":
-        return translateMessage(
-          "generated.security.webauthn.deviceBrowserSupportSecurityKeys"
-        )
+        return t("generated.security.webauthn.deviceBrowserSupportSecurityKeys")
       case "SecurityError":
-        return translateMessage(
-          "generated.security.webauthn.operationBlockedSecuritySettings"
-        )
+        return t("generated.security.webauthn.operationBlockedSecuritySettings")
       default:
         return fallback
     }

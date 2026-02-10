@@ -2,7 +2,6 @@ import type { MutationFunctionContext } from "@tanstack/query-core"
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { useState } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { translateMessage } from "@/i18n/translate-message"
 import { apiFetch } from "@/lib/fetcher"
 import { BackupCodesGenerateSchema, type TwoFactorMethod } from "@/lib/schemas"
 import { TwoFactorSetup } from "./two-factor-setup"
@@ -19,6 +18,10 @@ vi.mock("@tanstack/react-query", () => ({
 
 vi.mock("next-intl", () => ({
   useLocale: () => "pl",
+}))
+
+vi.mock("@/i18n/use-translations", () => ({
+  useAppTranslations: () => (key: string) => key,
 }))
 
 vi.mock("sonner", () => ({
@@ -80,21 +83,12 @@ vi.mock("./use-countdown", async () => {
   }
 })
 
-const START_SETUP_BUTTON_LABEL = translateMessage(
-  "generated.dashboard.settings.startSetup"
-)
-const ADD_METHOD_BUTTON_LABEL = translateMessage(
-  "generated.dashboard.settings.addMethod"
-)
-const ACTIVE_STATUS_LABEL = translateMessage(
-  "generated.dashboard.settings.active"
-)
-const GENERATE_CODES_BUTTON_LABEL = translateMessage(
-  "generated.dashboard.settings.generate"
-)
-const GENERATE_NEW_CODES_BUTTON_LABEL = translateMessage(
+const START_SETUP_BUTTON_LABEL = "generated.dashboard.settings.startSetup"
+const ADD_METHOD_BUTTON_LABEL = "generated.dashboard.settings.addMethod"
+const ACTIVE_STATUS_LABEL = "generated.dashboard.settings.active"
+const GENERATE_CODES_BUTTON_LABEL = "generated.dashboard.settings.generate"
+const GENERATE_NEW_CODES_BUTTON_LABEL =
   "generated.dashboard.settings.generateNewCodes"
-)
 
 function TwoFactorSetupHarness({
   initialStatus = "ENABLED",

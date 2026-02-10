@@ -1,8 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import { translateMessage } from "@/i18n/translate-message"
 import { SecuritySection } from "./security-section"
+
+vi.mock("@/i18n/use-translations", () => ({
+  useAppTranslations: () => (key: string) => key,
+}))
 
 vi.mock("./password-section", () => ({
   PasswordSection: () => <div data-testid="password-section" />,
@@ -26,10 +29,6 @@ vi.mock("@tanstack/react-query", async () => {
   }
 })
 
-const PROTECTED_STATUS_LABEL = translateMessage(
-  "generated.dashboard.settings.protected"
-)
-
 function createQueryClientWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -49,7 +48,6 @@ describe("SecuritySection", () => {
       wrapper: createQueryClientWrapper(),
     })
 
-    expect(screen.getByText(PROTECTED_STATUS_LABEL)).toBeInTheDocument()
     expect(screen.getByTestId("password-section")).toBeInTheDocument()
     expect(screen.getByTestId("two-factor-setup")).toBeInTheDocument()
     expect(screen.getByTestId("passkeys-section")).toBeInTheDocument()

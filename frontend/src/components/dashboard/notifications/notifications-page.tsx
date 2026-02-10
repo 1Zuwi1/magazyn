@@ -210,7 +210,7 @@ function NotificationListBody({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="truncate font-medium text-sm">
-                  {findAlertTitle(notification.alert)}
+                  {findAlertTitle(notification.alert, t)}
                 </p>
                 {!notification.read && (
                   <span className="flex size-2 shrink-0 rounded-full bg-primary" />
@@ -288,7 +288,7 @@ function NotificationDetailsPanel({
           )}
         </div>
         <h2 className="mt-3 font-semibold text-xl">
-          {findAlertTitle(notification.alert)}
+          {findAlertTitle(notification.alert, t)}
         </h2>
         <p className="mt-1 text-muted-foreground">
           {notification.alert.message}

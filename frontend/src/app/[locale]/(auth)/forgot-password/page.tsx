@@ -47,7 +47,7 @@ export default function ForgotPassword() {
         toast.success(t("generated.auth.accountEmailAddressExistsWill"))
       } catch (e) {
         if (FetchError.isError(e)) {
-          handleApiError(e)
+          handleApiError(e, undefined, t)
           return
         }
         toast.error(t("generated.auth.unexpectedErrorOccurredAgain"))

@@ -1,6 +1,6 @@
 import z from "zod"
 import { OTP_LENGTH } from "@/config/constants"
-import { translateMessage } from "@/i18n/translate-message"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { createApiSchema } from "./create-api-schema"
 import { AlertSchema } from "./schemas/monitoring-schemas"
 import { createZodMessage } from "./zod-message"
@@ -295,6 +295,7 @@ const UserSchema = z.object({
   team: z.string().nullish(),
   last_login: z.string().nullish(),
   warehouse_ids: z.array(z.number().int().nonnegative()),
+  backup_codes_refresh_needed: z.boolean(),
 })
 
 export type User = z.infer<typeof UserSchema>
@@ -1223,51 +1224,64 @@ export const AlertTypeSchema = z.enum([
   "ASSORTMENT_CLOSE_TO_EXPIRY",
 ])
 
-export const ALERT_TYPE_OPTIONS = [
+export type AlertType = z.infer<typeof AlertTypeSchema>
+
+const ALERT_TYPE_OPTION_KEYS: ReadonlyArray<{
+  value: AlertType
+  labelKey: string
+}> = [
   {
     value: "WEIGHT_EXCEEDED",
-    label: translateMessage("generated.validation.exceedingWeight"),
+    labelKey: "generated.validation.exceedingWeight",
   },
   {
     value: "TEMPERATURE_TOO_HIGH",
-    label: translateMessage("generated.validation.temperatureTooHigh"),
+    labelKey: "generated.validation.temperatureTooHigh",
   },
   {
     value: "TEMPERATURE_TOO_LOW",
-    label: translateMessage("generated.validation.temperatureTooLow"),
+    labelKey: "generated.validation.temperatureTooLow",
   },
   {
     value: "LOW_VISUAL_SIMILARITY",
-    label: translateMessage("generated.validation.lowVisualCompatibility"),
+    labelKey: "generated.validation.lowVisualCompatibility",
   },
   {
     value: "ITEM_TEMPERATURE_TOO_HIGH",
-    label: translateMessage("generated.validation.productTemperatureTooHigh"),
+    labelKey: "generated.validation.productTemperatureTooHigh",
   },
   {
     value: "ITEM_TEMPERATURE_TOO_LOW",
-    label: translateMessage("generated.validation.productTemperatureTooLow"),
+    labelKey: "generated.validation.productTemperatureTooLow",
   },
   {
     value: "EMBEDDING_GENERATION_COMPLETED",
-    label: translateMessage("generated.validation.embeddingGenerationComplete"),
+    labelKey: "generated.validation.embeddingGenerationComplete",
   },
   {
     value: "EMBEDDING_GENERATION_FAILED",
-    label: translateMessage("generated.validation.embeddingGenerationFailed"),
+    labelKey: "generated.validation.embeddingGenerationFailed",
   },
   {
     value: "ASSORTMENT_EXPIRED",
-    label: translateMessage("generated.validation.assortmentExpired"),
+    labelKey: "generated.validation.assortmentExpired",
   },
   {
     value: "ASSORTMENT_CLOSE_TO_EXPIRY",
-    label: translateMessage("generated.validation.assortmentCloseExpiration"),
+    labelKey: "generated.validation.assortmentCloseExpiration",
   },
 ] as const
 
-export const findAlertTitle = (alert: { alertType: string }) =>
-  ALERT_TYPE_OPTIONS.find((option) => option.value === alert.alertType)
+export const getAlertTypeOptions = (
+  t: AppTranslate
+): ReadonlyArray<{ value: AlertType; label: string }> =>
+  ALERT_TYPE_OPTION_KEYS.map((option) => ({
+    value: option.value,
+    label: t(option.labelKey),
+  }))
+
+export const findAlertTitle = (alert: { alertType: string }, t: AppTranslate) =>
+  getAlertTypeOptions(t).find((option) => option.value === alert.alertType)
     ?.label || alert.alertType
 
 export const AlertsSchema = createApiSchema({

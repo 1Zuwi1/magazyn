@@ -52,7 +52,7 @@ export default function ResetPassword() {
         redirect("/login")
       } catch (e) {
         if (FetchError.isError(e)) {
-          handleApiError(e)
+          handleApiError(e, undefined, t)
           return
         }
         toast.error(t("generated.auth.unexpectedErrorOccurredAgain"))

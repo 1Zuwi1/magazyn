@@ -93,17 +93,21 @@ import {
   verifyOneTimeCode,
 } from "./utils"
 
-const getTwoFactorMethodLabels = (): Record<TwoFactorMethod, string> => {
+const getTwoFactorMethodLabels = (
+  t: ReturnType<typeof useAppTranslations>
+): Record<TwoFactorMethod, string> => {
   const labels = {} as Record<TwoFactorMethod, string>
-  for (const method of getTwoFactorMethods()) {
+  for (const method of getTwoFactorMethods(t)) {
     labels[method.value as TwoFactorMethod] = method.label
   }
   return labels
 }
 
-const getTwoFactorMethodHints = (): Record<TwoFactorMethod, string> => {
+const getTwoFactorMethodHints = (
+  t: ReturnType<typeof useAppTranslations>
+): Record<TwoFactorMethod, string> => {
   const hints = {} as Record<TwoFactorMethod, string>
-  for (const method of getTwoFactorMethods()) {
+  for (const method of getTwoFactorMethods(t)) {
     hints[method.value as TwoFactorMethod] = method.hint
   }
   return hints
@@ -113,11 +117,12 @@ const isIdleSetupStage = (stage: TwoFactorSetupStage): boolean =>
   stage === "IDLE" || stage === "SUCCESS"
 
 const getLinkedMethodsState = (
+  t: ReturnType<typeof useAppTranslations>,
   linkedMethods: TwoFactorMethod[] | undefined,
   method: TwoFactorMethod
 ) => {
   const safeLinkedMethods = linkedMethods ?? []
-  const availableMethods = getTwoFactorMethods().filter(
+  const availableMethods = getTwoFactorMethods(t).filter(
     (candidate) =>
       candidate.addable &&
       !safeLinkedMethods.includes(candidate.value as TwoFactorMethod)
@@ -274,7 +279,8 @@ function TwoFactorMethodInput({
   disabled?: boolean
   availableMethods?: TwoFactorMethod[]
 }) {
-  const twoFactorMethods = getTwoFactorMethods()
+  const t = useAppTranslations()
+  const twoFactorMethods = getTwoFactorMethods(t)
   // If availableMethods is provided, filter to only those; otherwise show all
   const methodsToShow = availableMethods
     ? twoFactorMethods.filter((m) =>
@@ -532,8 +538,8 @@ function ConnectedMethods({
 }) {
   const t = useAppTranslations()
 
-  const twoFactorMethodLabels = getTwoFactorMethodLabels()
-  const twoFactorMethodHints = getTwoFactorMethodHints()
+  const twoFactorMethodLabels = getTwoFactorMethodLabels(t)
+  const twoFactorMethodHints = getTwoFactorMethodHints(t)
 
   if (isLoading) {
     return (
@@ -1240,7 +1246,7 @@ function TwoFactorConfigurationSection({
   const isIdleStage = isIdleSetupStage(setupStage)
   const isSetupInProgress = !isIdleStage
   const { hasAvailableMethods, isSelectedLinked, availableMethods } =
-    getLinkedMethodsState(linkedMethods, method)
+    getLinkedMethodsState(t, linkedMethods, method)
   const canStartSetup = getCanStartSetup({
     status,
     isIdleStage,
@@ -1353,7 +1359,7 @@ export function TwoFactorSetup({
 }: TwoFactorSetupProps) {
   const t = useAppTranslations()
 
-  const twoFactorMethodLabels = getTwoFactorMethodLabels()
+  const twoFactorMethodLabels = getTwoFactorMethodLabels(t)
   const {
     data: linkedMethods,
     isLoading: isLinkedMethodsLoading,
@@ -1397,14 +1403,14 @@ export function TwoFactorSetup({
       return
     }
     if (linkedMethods.methods.includes(method)) {
-      const available = getTwoFactorMethods().find(
+      const available = getTwoFactorMethods(t).find(
         (m) => !linkedMethods.methods.includes(m.value)
       )?.value
       if (available) {
         onMethodChange(available)
       }
     }
-  }, [linkedMethods, method, onMethodChange])
+  }, [linkedMethods, method, onMethodChange, t])
   const [setupState, dispatch] = useReducer(
     twoFactorSetupReducer,
     initialTwoFactorSetupState

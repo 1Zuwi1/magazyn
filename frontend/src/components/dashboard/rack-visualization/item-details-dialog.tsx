@@ -98,7 +98,7 @@ export function ItemDetailsDialog({
 
   const status = getItemStatus(item)
   const statusColors = getStatusColors(status)
-  const statusText = getStatusText(status)
+  const statusText = getStatusText(status, t)
   const daysUntilExpiry = getDaysUntilExpiry(
     new Date(),
     item.expiryDate ?? addDays(new Date(), item.daysToExpiry)

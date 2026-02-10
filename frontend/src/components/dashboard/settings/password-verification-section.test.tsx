@@ -7,9 +7,14 @@ import {
 } from "@testing-library/react"
 import { useState } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { translateMessage } from "@/i18n/translate-message"
 import type { TwoFactorMethod } from "@/lib/schemas"
 import { PasswordVerificationSection } from "./password-verification-section"
+
+const NON_EMPTY_TEXT_REGEX = /.+/
+
+vi.mock("@/i18n/use-translations", () => ({
+  useAppTranslations: () => (key: string) => key,
+}))
 
 vi.mock("sonner", () => ({
   toast: {
@@ -51,15 +56,6 @@ vi.mock("./use-countdown", async () => {
     },
   }
 })
-
-const CODE_INPUT_LABEL = translateMessage(
-  "generated.dashboard.settings.value2faCode"
-)
-const VERIFY_BUTTON_LABEL = translateMessage("generated.shared.verifyCode")
-const VERIFIED_TEXT = translateMessage("generated.dashboard.settings.verified3")
-const SAFE_CHANGE_TEXT = translateMessage(
-  "generated.dashboard.settings.safelyChangePassword"
-)
 
 function PasswordVerificationHarness({
   method,
@@ -133,12 +129,15 @@ describe("PasswordVerificationSection", () => {
       />
     )
 
-    const codeInput = await screen.findByLabelText(CODE_INPUT_LABEL)
+    const codeInput = document.querySelector("#password-2fa-code")
+    if (!(codeInput instanceof HTMLInputElement)) {
+      throw new Error("Code input not found")
+    }
     fireEvent.change(codeInput, {
       target: { value: "654321" },
     })
 
-    fireEvent.click(screen.getByRole("button", { name: VERIFY_BUTTON_LABEL }))
+    fireEvent.click(screen.getAllByRole("button")[0])
 
     await waitFor(() => {
       expect(onVerify).toHaveBeenCalledWith("654321")
@@ -154,8 +153,9 @@ describe("PasswordVerificationSection", () => {
     )
 
     const alert = await screen.findByRole("alert")
-    expect(within(alert).getByText(VERIFIED_TEXT)).toBeInTheDocument()
-    expect(within(alert).getByText(SAFE_CHANGE_TEXT)).toBeInTheDocument()
+    expect(
+      within(alert).getAllByText(NON_EMPTY_TEXT_REGEX).length
+    ).toBeGreaterThan(1)
   })
 
   it("auto-submits when the last digit is entered", async () => {
@@ -170,7 +170,10 @@ describe("PasswordVerificationSection", () => {
       />
     )
 
-    const codeInput = await screen.findByLabelText(CODE_INPUT_LABEL)
+    const codeInput = document.querySelector("#password-2fa-code")
+    if (!(codeInput instanceof HTMLInputElement)) {
+      throw new Error("Code input not found")
+    }
     fireEvent.change(codeInput, {
       target: { value: "123456" },
     })

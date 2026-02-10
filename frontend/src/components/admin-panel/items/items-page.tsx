@@ -221,7 +221,7 @@ export default function ItemsMain() {
         }
         description={t("generated.admin.items.manageCatalogInventoryItems")}
         icon={Package}
-        navLinks={getAdminNavLinks().map((link) => ({
+        navLinks={getAdminNavLinks(t).map((link) => ({
           title: link.title,
           url: link.url,
         }))}

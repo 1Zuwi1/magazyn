@@ -9,6 +9,7 @@ import {
 import { useRef } from "react"
 import { useTwoFactorVerificationDialogStore } from "@/components/dashboard/settings/two-factor-verification-dialog-store"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { FetchError } from "@/lib/fetcher"
 
 const DEFAULT_RETRY_COUNT = 3
@@ -41,6 +42,7 @@ export function useApiQuery<
 >(
   options: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>
 ): UseQueryResult<TData, TError> {
+  const t = useAppTranslations()
   const { queryFn, ...queryOptions } = options
   const refetchOnVerifiedRef = useRef<(() => Promise<unknown>) | null>(null)
 
@@ -75,7 +77,7 @@ export function useApiQuery<
                 },
               })
             } else if (!willRetry) {
-              handleApiError(error)
+              handleApiError(error, undefined, t)
             }
 
             throw error

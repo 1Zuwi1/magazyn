@@ -2,7 +2,6 @@
 
 import { Alert02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useLocale } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import PasskeyLogin from "@/app/[locale]/(auth)/components/passkey-login"
@@ -55,8 +54,6 @@ export function TwoFactorVerificationDialog({
   copy,
 }: TwoFactorVerificationDialogProps) {
   const t = useAppTranslations()
-
-  const locale = useLocale()
   const [code, setCode] = useState("")
   const {
     data: methods,
@@ -95,7 +92,7 @@ export function TwoFactorVerificationDialog({
   })()
 
   const methodOptions = useMemo(() => {
-    const twoFactorMethods = getTwoFactorMethods(locale)
+    const twoFactorMethods = getTwoFactorMethods(t)
     if (methods?.methods?.length) {
       return twoFactorMethods.filter((method) =>
         methods.methods.includes(method.value as TwoFactorMethod)
@@ -103,7 +100,7 @@ export function TwoFactorVerificationDialog({
     }
 
     return twoFactorMethods
-  }, [locale, methods?.methods])
+  }, [methods?.methods, t])
   const hasInitialMethod = methods?.defaultMethod
     ? methodOptions.some((method) => method.value === methods?.defaultMethod)
     : false

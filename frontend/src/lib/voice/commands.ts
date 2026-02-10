@@ -3,7 +3,6 @@ import {
   DEFAULT_APP_LOCALE,
   getClientAppLocale,
 } from "@/i18n/locale"
-import { translateMessage } from "@/i18n/translate-message"
 
 export type VoiceCommandId =
   | "dashboard"
@@ -477,11 +476,7 @@ const buildVoiceCommands = (locale: AppLocale): VoiceCommand[] =>
 
     return {
       id,
-      description: translateMessage(
-        COMMAND_DESCRIPTION_KEYS[id],
-        undefined,
-        locale
-      ),
+      description: COMMAND_DESCRIPTION_KEYS[id],
       patterns: commandDefinition.patterns,
       keywords: commandDefinition.keywords,
     }

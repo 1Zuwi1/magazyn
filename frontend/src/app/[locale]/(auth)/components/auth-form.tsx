@@ -74,7 +74,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         )
 
         if (err) {
-          handleApiError(err, t("generated.auth.errorOccurredLoggingAgain"))
+          handleApiError(err, t("generated.auth.errorOccurredLoggingAgain"), t)
           return
         }
 
@@ -93,7 +93,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
         if (err) {
           handleApiError(
             err,
-            t("generated.auth.errorOccurredDuringRegistrationAgain")
+            t("generated.auth.errorOccurredDuringRegistrationAgain"),
+            t
           )
           return
         }

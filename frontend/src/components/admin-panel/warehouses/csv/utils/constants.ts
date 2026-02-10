@@ -1,82 +1,107 @@
-import { translateMessage } from "@/i18n/translate-message"
-export const WAREHOUSE_COLUMNS = [
+import type { AppTranslate } from "@/i18n/use-translations"
+
+const WAREHOUSE_COLUMN_KEYS = [
   {
     key: "name",
-    label: translateMessage("generated.admin.warehouses.warehouseName"),
+    labelKey: "generated.admin.warehouses.warehouseName",
   },
 ] as const
 
-export const RACK_COLUMNS = [
+const RACK_COLUMN_KEYS = [
   {
     key: "marker",
-    label: translateMessage("generated.admin.warehouses.designation"),
+    labelKey: "generated.admin.warehouses.designation",
   },
-  { key: "m", label: translateMessage("generated.admin.warehouses.mPoems") },
-  { key: "n", label: translateMessage("generated.admin.warehouses.nColumns") },
+  { key: "m", labelKey: "generated.admin.warehouses.mPoems" },
+  { key: "n", labelKey: "generated.admin.warehouses.nColumns" },
   {
     key: "tempmin",
-    label: translateMessage("generated.admin.warehouses.tempMin"),
+    labelKey: "generated.admin.warehouses.tempMin",
   },
   {
     key: "tempmax",
-    label: translateMessage("generated.admin.warehouses.tempMax"),
+    labelKey: "generated.admin.warehouses.tempMax",
   },
   {
     key: "maxwagakg",
-    label: translateMessage("generated.admin.warehouses.maxWeightKg"),
+    labelKey: "generated.admin.warehouses.maxWeightKg",
   },
   {
     key: "maxszerokoscmm",
-    label: translateMessage("generated.admin.warehouses.maxWidthMm"),
+    labelKey: "generated.admin.warehouses.maxWidthMm",
   },
   {
     key: "maxwysokoscmm",
-    label: translateMessage("generated.admin.warehouses.maxHeightMm"),
+    labelKey: "generated.admin.warehouses.maxHeightMm",
   },
   {
     key: "maxglebokoscmm",
-    label: translateMessage("generated.admin.warehouses.maxDepthMm"),
+    labelKey: "generated.admin.warehouses.maxDepthMm",
   },
   {
     key: "acceptsdangerous",
-    label: translateMessage("generated.admin.warehouses.dangerous"),
+    labelKey: "generated.admin.warehouses.dangerous",
   },
-  { key: "komentarz", label: translateMessage("generated.shared.comment") },
+  { key: "komentarz", labelKey: "generated.shared.comment" },
 ] as const
 
-export const ITEM_COLUMNS = [
-  { key: "nazwa", label: translateMessage("generated.shared.name") },
+const ITEM_COLUMN_KEYS = [
+  { key: "nazwa", labelKey: "generated.shared.name" },
   {
     key: "tempmin",
-    label: translateMessage("generated.admin.warehouses.tempMin"),
+    labelKey: "generated.admin.warehouses.tempMin",
   },
   {
     key: "tempmax",
-    label: translateMessage("generated.admin.warehouses.tempMax"),
+    labelKey: "generated.admin.warehouses.tempMax",
   },
-  { key: "waga", label: translateMessage("generated.shared.weight") },
+  { key: "waga", labelKey: "generated.shared.weight" },
   {
     key: "szerokoscmm",
-    label: translateMessage("generated.admin.warehouses.widthMm"),
+    labelKey: "generated.admin.warehouses.widthMm",
   },
   {
     key: "wysokoscmm",
-    label: translateMessage("generated.admin.warehouses.heightMm"),
+    labelKey: "generated.admin.warehouses.heightMm",
   },
   {
     key: "glebokoscmm",
-    label: translateMessage("generated.admin.warehouses.depthMm"),
+    labelKey: "generated.admin.warehouses.depthMm",
   },
   {
     key: "terminwaznoscidni",
-    label: translateMessage("generated.admin.warehouses.expiryDateDays"),
+    labelKey: "generated.admin.warehouses.expiryDateDays",
   },
   {
     key: "czyniebezpieczny",
-    label: translateMessage("generated.admin.warehouses.dangerous"),
+    labelKey: "generated.admin.warehouses.dangerous",
   },
-  { key: "komentarz", label: translateMessage("generated.shared.comment") },
+  { key: "komentarz", labelKey: "generated.shared.comment" },
 ] as const
+
+const translateColumns = (
+  t: AppTranslate,
+  columns: ReadonlyArray<{ key: string; labelKey: string }>
+): ReadonlyArray<{ key: string; label: string }> =>
+  columns.map((column) => ({
+    key: column.key,
+    label: t(column.labelKey),
+  }))
+
+export const getWarehouseColumns = (t: AppTranslate) =>
+  translateColumns(t, WAREHOUSE_COLUMN_KEYS)
+
+export const getRackColumns = (t: AppTranslate) =>
+  translateColumns(t, RACK_COLUMN_KEYS)
+
+export const getItemColumns = (t: AppTranslate) =>
+  translateColumns(t, ITEM_COLUMN_KEYS)
+
+export const WAREHOUSE_PREVIEW_HEADERS = WAREHOUSE_COLUMN_KEYS.map(
+  (column) => column.key
+)
+export const RACK_PREVIEW_HEADERS = RACK_COLUMN_KEYS.map((column) => column.key)
+export const ITEM_PREVIEW_HEADERS = ITEM_COLUMN_KEYS.map((column) => column.key)
 
 export const DEFAULT_CONFIG = {
   accept: {

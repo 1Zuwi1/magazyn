@@ -2,7 +2,7 @@ import { parseImageSrc } from "@/components/ui/item-photo"
 import type { WarehouseAssortmentsList } from "@/hooks/use-assortment"
 import type { RacksList } from "@/hooks/use-racks"
 import type { WarehousesList } from "@/hooks/use-warehouses"
-import { translateMessage } from "@/i18n/translate-message"
+import type { AppTranslate } from "@/i18n/use-translations"
 import type { Item3D, Rack3D, Warehouse3D } from "./types"
 
 type ApiRack = RacksList["content"][number]
@@ -51,7 +51,8 @@ function getItemStatus(
 function mapApiRackToRack3D(
   rack: ApiRack,
   rackAssortments: readonly ApiAssortment[],
-  nowTimestampMs: number
+  nowTimestampMs: number,
+  t: AppTranslate
 ): Rack3D {
   const rows = Math.max(1, rack.sizeY)
   const cols = Math.max(1, rack.sizeX)
@@ -91,9 +92,7 @@ function mapApiRackToRack3D(
   return {
     id: String(rack.id),
     code: rack.marker ?? `R-${rack.id}`,
-    name:
-      rack.marker ??
-      translateMessage("generated.shared.rack2", { value0: rack.id }),
+    name: rack.marker ?? t("generated.shared.rack2", { value0: rack.id }),
     grid: { rows, cols },
     cell: { w: cellW, h: cellH, d: cellD },
     maxElementSize: {
@@ -238,6 +237,7 @@ function computeCenter(racks: Rack3D[]): {
 export function buildWarehouse3DFromApi(
   apiWarehouse: ApiWarehouse,
   apiRacks: ApiRack[],
+  t: AppTranslate,
   apiAssortments: readonly ApiAssortment[] = []
 ): Warehouse3D {
   const assortmentByRack = groupAssortmentsByRack(apiAssortments)
@@ -246,7 +246,8 @@ export function buildWarehouse3DFromApi(
     mapApiRackToRack3D(
       rack,
       assortmentByRack.get(rack.id) ?? [],
-      nowTimestampMs
+      nowTimestampMs,
+      t
     )
   )
 

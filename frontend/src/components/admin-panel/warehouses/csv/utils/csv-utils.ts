@@ -1,5 +1,5 @@
 import Papa from "papaparse"
-import { translateMessage } from "@/i18n/translate-message"
+import type { AppTranslate } from "@/i18n/use-translations"
 import {
   ItemCsvSchema,
   RackCsvSchema,
@@ -8,9 +8,9 @@ import {
 import { translateZodMessage } from "@/lib/zod-message"
 import {
   DEFAULT_CONFIG,
-  ITEM_COLUMNS,
-  RACK_COLUMNS,
-  WAREHOUSE_COLUMNS,
+  ITEM_PREVIEW_HEADERS,
+  RACK_PREVIEW_HEADERS,
+  WAREHOUSE_PREVIEW_HEADERS,
 } from "./constants"
 import type {
   CsvImporterType,
@@ -129,10 +129,6 @@ const ITEM_FIELD_ORDER = [
   "isDangerous",
   "comment",
 ] as const
-
-const RACK_PREVIEW_HEADERS = RACK_COLUMNS.map((column) => column.key)
-const ITEM_PREVIEW_HEADERS = ITEM_COLUMNS.map((column) => column.key)
-const WAREHOUSE_PREVIEW_HEADERS = WAREHOUSE_COLUMNS.map((column) => column.key)
 
 function normalizeHeader(header: string): string {
   return header
@@ -289,18 +285,16 @@ function appendColumnCountError(
   rowNumber: number,
   valueCount: number,
   minColumns: number,
-  maxColumns: number
+  maxColumns: number,
+  t: AppTranslate
 ) {
   errors.push({
     row: rowNumber,
-    message: translateMessage(
-      "generated.admin.warehouses.invalidNumberColumnsExpected",
-      {
-        value0: valueCount,
-        value1: minColumns,
-        value2: maxColumns,
-      }
-    ),
+    message: t("generated.admin.warehouses.invalidNumberColumnsExpected", {
+      value0: valueCount,
+      value1: minColumns,
+      value2: maxColumns,
+    }),
   })
 }
 
@@ -309,7 +303,8 @@ function appendValidatedRow<T extends "rack" | "item">(
   rowNumber: number,
   schema: typeof RackCsvSchema | typeof ItemCsvSchema,
   validRows: CsvRowType<T>[],
-  errors: CsvParseError[]
+  errors: CsvParseError[],
+  t: AppTranslate
 ) {
   const parsed = schema.safeParse(mapped)
 
@@ -318,7 +313,7 @@ function appendValidatedRow<T extends "rack" | "item">(
     return
   }
 
-  appendSchemaIssues(errors, rowNumber, parsed.error.issues)
+  appendSchemaIssues(errors, rowNumber, parsed.error.issues, t)
 }
 
 function getCommentedHeaderRow(
@@ -342,11 +337,12 @@ function appendHeaderMappedFixedRow<T extends "rack" | "item">(
   schema: typeof RackCsvSchema | typeof ItemCsvSchema,
   validRows: CsvRowType<T>[],
   rawRows: Record<string, string>[],
-  errors: CsvParseError[]
+  errors: CsvParseError[],
+  t: AppTranslate
 ) {
   rawRows.push(buildRawPreviewRow(normalizedHeaders, values))
   const mapped = mapValuesByHeaders(normalizedHeaders, values, headerMap)
-  appendValidatedRow<T>(mapped, rowNumber, schema, validRows, errors)
+  appendValidatedRow<T>(mapped, rowNumber, schema, validRows, errors, t)
 }
 
 function appendPositionalFixedRow<T extends "rack" | "item">(
@@ -359,7 +355,8 @@ function appendPositionalFixedRow<T extends "rack" | "item">(
   schema: typeof RackCsvSchema | typeof ItemCsvSchema,
   validRows: CsvRowType<T>[],
   rawRows: Record<string, string>[],
-  errors: CsvParseError[]
+  errors: CsvParseError[],
+  t: AppTranslate
 ) {
   if (hasInvalidColumnCount(values, minColumns, maxColumns)) {
     appendColumnCountError(
@@ -367,14 +364,15 @@ function appendPositionalFixedRow<T extends "rack" | "item">(
       rowNumber,
       values.length,
       minColumns,
-      maxColumns
+      maxColumns,
+      t
     )
     return
   }
 
   rawRows.push(buildRawPreviewRow(previewHeaders, values))
   const mapped = mapFixedValuesToFields(fieldOrder, values)
-  appendValidatedRow<T>(mapped, rowNumber, schema, validRows, errors)
+  appendValidatedRow<T>(mapped, rowNumber, schema, validRows, errors, t)
 }
 
 function parseFixedRows<T extends "rack" | "item">(
@@ -394,7 +392,8 @@ function parseFixedRows<T extends "rack" | "item">(
     previewHeaders: string[]
     schema: typeof RackCsvSchema | typeof ItemCsvSchema
   },
-  errors: CsvParseError[]
+  errors: CsvParseError[],
+  t: AppTranslate
 ): {
   headers: string[]
   rawRows: Record<string, string>[]
@@ -435,7 +434,8 @@ function parseFixedRows<T extends "rack" | "item">(
         schema,
         validRows,
         rawRows,
-        errors
+        errors,
+        t
       )
       continue
     }
@@ -450,7 +450,8 @@ function parseFixedRows<T extends "rack" | "item">(
       schema,
       validRows,
       rawRows,
-      errors
+      errors,
+      t
     )
   }
 
@@ -464,20 +465,24 @@ function parseFixedRows<T extends "rack" | "item">(
 function appendSchemaIssues(
   errors: CsvParseError[],
   rowNumber: number,
-  issues: { path: PropertyKey[]; message: string }[]
+  issues: { path: PropertyKey[]; message: string }[],
+  t: AppTranslate
 ) {
   for (const issue of issues) {
     errors.push({
       row: rowNumber,
-      message: translateMessage("generated.admin.warehouses.formattedValue", {
+      message: t("generated.admin.warehouses.formattedValue", {
         value0: issue.path.map(String).join("."),
-        value1: translateZodMessage(issue.message, translateMessage),
+        value1: translateZodMessage(issue.message, t),
       }),
     })
   }
 }
 
-function parseWarehouseCsv(file: File): Promise<CsvParseResult<"warehouse">> {
+function parseWarehouseCsv(
+  file: File,
+  t: AppTranslate
+): Promise<CsvParseResult<"warehouse">> {
   const errors: CsvParseError[] = []
 
   return new Promise((resolve, reject) => {
@@ -504,7 +509,7 @@ function parseWarehouseCsv(file: File): Promise<CsvParseResult<"warehouse">> {
           }
 
           const rowNumber = index + 2
-          appendSchemaIssues(errors, rowNumber, parsed.error.issues)
+          appendSchemaIssues(errors, rowNumber, parsed.error.issues, t)
         }
 
         resolve({
@@ -535,7 +540,8 @@ function parseFixedCsv<T extends "rack" | "item">(
     minColumns: number
     previewHeaders: string[]
     schema: typeof RackCsvSchema | typeof ItemCsvSchema
-  }
+  },
+  t: AppTranslate
 ): Promise<CsvParseResult<T>> {
   const errors: CsvParseError[] = []
 
@@ -557,7 +563,8 @@ function parseFixedCsv<T extends "rack" | "item">(
             previewHeaders,
             schema,
           },
-          errors
+          errors,
+          t
         )
 
         resolve({
@@ -572,39 +579,54 @@ function parseFixedCsv<T extends "rack" | "item">(
   })
 }
 
-function parseRackCsv(file: File): Promise<CsvParseResult<"rack">> {
-  return parseFixedCsv<"rack">(file, {
-    fieldOrder: RACK_FIELD_ORDER,
-    headerMap: RACK_HEADER_MAP,
-    minColumns: 10,
-    maxColumns: 12,
-    previewHeaders: RACK_PREVIEW_HEADERS,
-    schema: RackCsvSchema,
-  })
+function parseRackCsv(
+  file: File,
+  t: AppTranslate
+): Promise<CsvParseResult<"rack">> {
+  return parseFixedCsv<"rack">(
+    file,
+    {
+      fieldOrder: RACK_FIELD_ORDER,
+      headerMap: RACK_HEADER_MAP,
+      minColumns: 10,
+      maxColumns: 12,
+      previewHeaders: RACK_PREVIEW_HEADERS,
+      schema: RackCsvSchema,
+    },
+    t
+  )
 }
 
-function parseItemCsv(file: File): Promise<CsvParseResult<"item">> {
-  return parseFixedCsv<"item">(file, {
-    fieldOrder: ITEM_FIELD_ORDER,
-    headerMap: ITEM_HEADER_MAP,
-    minColumns: 9,
-    maxColumns: 12,
-    previewHeaders: ITEM_PREVIEW_HEADERS,
-    schema: ItemCsvSchema,
-  })
+function parseItemCsv(
+  file: File,
+  t: AppTranslate
+): Promise<CsvParseResult<"item">> {
+  return parseFixedCsv<"item">(
+    file,
+    {
+      fieldOrder: ITEM_FIELD_ORDER,
+      headerMap: ITEM_HEADER_MAP,
+      minColumns: 9,
+      maxColumns: 12,
+      previewHeaders: ITEM_PREVIEW_HEADERS,
+      schema: ItemCsvSchema,
+    },
+    t
+  )
 }
 
 export function parseCsvFile<T extends CsvImporterType>(
   file: File,
-  type: T
+  type: T,
+  t: AppTranslate
 ): Promise<CsvParseResult<T>> {
   if (type === "warehouse") {
-    return parseWarehouseCsv(file) as Promise<CsvParseResult<T>>
+    return parseWarehouseCsv(file, t) as Promise<CsvParseResult<T>>
   }
   if (type === "rack") {
-    return parseRackCsv(file) as Promise<CsvParseResult<T>>
+    return parseRackCsv(file, t) as Promise<CsvParseResult<T>>
   }
-  return parseItemCsv(file) as Promise<CsvParseResult<T>>
+  return parseItemCsv(file, t) as Promise<CsvParseResult<T>>
 }
 
 export function normalizeKey(key: string): string {

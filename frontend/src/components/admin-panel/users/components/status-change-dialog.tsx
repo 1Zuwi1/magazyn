@@ -106,7 +106,7 @@ export function StatusChangeDialog({
                 {t("generated.admin.users.currentStatus")}
               </span>
               <Badge variant={getStatusVariant(user.account_status)}>
-                {getStatusLabel(user.account_status)}
+                {getStatusLabel(user.account_status, t)}
               </Badge>
             </div>
 
@@ -126,7 +126,7 @@ export function StatusChangeDialog({
                     render={
                       <span>
                         {selectedStatus
-                          ? getStatusLabel(selectedStatus)
+                          ? getStatusLabel(selectedStatus, t)
                           : t("generated.admin.users.selectNewStatus")}
                       </span>
                     }
@@ -135,7 +135,7 @@ export function StatusChangeDialog({
                 <SelectContent className="w-fit">
                   {availableStatuses.map((status) => (
                     <SelectItem key={status} value={status}>
-                      {getStatusLabel(status)}
+                      {getStatusLabel(status, t)}
                     </SelectItem>
                   ))}
                 </SelectContent>

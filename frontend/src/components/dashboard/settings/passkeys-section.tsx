@@ -360,7 +360,8 @@ export function PasskeysSection() {
         }
         handleApiError(
           startError,
-          t("generated.dashboard.settings.failedStartAddingSecurityKey")
+          t("generated.dashboard.settings.failedStartAddingSecurityKey"),
+          t
         )
         return
       }
@@ -374,7 +375,8 @@ export function PasskeysSection() {
         toast.error(
           getWebAuthnErrorMessage(
             credentialError,
-            t("generated.dashboard.settings.failedCreateSecurityKey")
+            t("generated.dashboard.settings.failedCreateSecurityKey"),
+            t
           )
         )
         return
@@ -429,7 +431,8 @@ export function PasskeysSection() {
       }
       handleApiError(
         finishError,
-        t("generated.dashboard.settings.failedCompleteAddingSecurityKey")
+        t("generated.dashboard.settings.failedCompleteAddingSecurityKey"),
+        t
       )
       return
     }

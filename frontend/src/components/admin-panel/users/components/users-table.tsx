@@ -139,7 +139,7 @@ export function UsersTable({
               className="capitalize"
               variant={getStatusVariant(user.account_status)}
             >
-              {getStatusLabel(user.account_status)}
+              {getStatusLabel(user.account_status, t)}
             </Badge>
           </TableCell>
           <TableCell>

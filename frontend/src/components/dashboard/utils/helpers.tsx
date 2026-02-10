@@ -6,7 +6,7 @@ import {
 } from "date-fns"
 import { toast } from "sonner"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { translateMessage } from "@/i18n/translate-message"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { FetchError } from "@/lib/fetcher"
 import type { RackAssortment } from "@/lib/schemas"
 import { translateZodMessage } from "@/lib/zod-message"
@@ -40,13 +40,17 @@ export function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
   return differenceInCalendarDays(expiryDate, today)
 }
 
-export const handleApiError = (err: unknown, fallback?: string) => {
+export const handleApiError = (
+  err: unknown,
+  fallback?: string,
+  t?: AppTranslate
+) => {
   const defaultMessage = fallback ?? "Unexpected error occurred"
   const message = FetchError.isError(err)
     ? err.message || defaultMessage
     : defaultMessage
 
-  toast.error(translateZodMessage(message, translateMessage))
+  toast.error(translateZodMessage(message, t ?? ((key) => key)))
 }
 export const getOccupancyPercentage = (
   used: number,

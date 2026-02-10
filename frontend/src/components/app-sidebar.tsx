@@ -9,7 +9,8 @@ import {
   SidebarMenuItem,
   sidebarMenuButtonVariants,
 } from "@/components/ui/sidebar"
-import { navigationItems } from "@/config/navigation"
+import { getNavigationItems } from "@/config/navigation"
+import { useAppTranslations } from "@/i18n/use-translations"
 import Logo from "./logo"
 import SidebarButton from "./sidebar-button"
 
@@ -36,6 +37,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 }
 
 function NavMain() {
+  const t = useAppTranslations()
+  const navigationItems = getNavigationItems(t)
+
   return (
     <SidebarMenu className="px-2">
       {navigationItems.map((item) => (

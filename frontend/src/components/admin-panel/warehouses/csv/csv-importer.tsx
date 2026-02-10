@@ -19,9 +19,9 @@ import { useCsvImporter } from "../../hooks/use-csv-importer"
 import { FileUploader } from "./file-uploader"
 import { PreviewTable } from "./preview-table"
 import {
-  ITEM_COLUMNS,
-  RACK_COLUMNS,
-  WAREHOUSE_COLUMNS,
+  getItemColumns,
+  getRackColumns,
+  getWarehouseColumns,
 } from "./utils/constants"
 import type { CsvImporterType, CsvRowType } from "./utils/types"
 
@@ -62,11 +62,11 @@ export function CsvImporter<T extends CsvImporterType>({
     resetFile,
   } = useCsvImporter<T>({ type, onImport: handleImport })
 
-  let columns: ReadonlyArray<{ key: string; label: string }> = ITEM_COLUMNS
+  let columns: ReadonlyArray<{ key: string; label: string }> = getItemColumns(t)
   if (type === "warehouse") {
-    columns = WAREHOUSE_COLUMNS
+    columns = getWarehouseColumns(t)
   } else if (type === "rack") {
-    columns = RACK_COLUMNS
+    columns = getRackColumns(t)
   }
 
   let dialogTitle = "Importuj przedmioty z CSV"
