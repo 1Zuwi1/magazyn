@@ -25,6 +25,31 @@ interface ProfileSectionProps {
   user: User
 }
 
+const FALLBACK_DISPLAY_NAME = "Brak nazwy użytkownika"
+const INITIALS_REGEX = /\s+/
+
+const getInitialsFromName = ({
+  displayName,
+  email,
+}: {
+  displayName: string
+  email: string
+}): string => {
+  const normalizedName = displayName.trim()
+  if (!normalizedName) {
+    return email.charAt(0).toUpperCase() || "U"
+  }
+
+  const initials = normalizedName
+    .split(INITIALS_REGEX)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("")
+    .slice(0, 2)
+
+  return initials || email.charAt(0).toUpperCase() || "U"
+}
+
 function ProfileDetailRow({ detail }: { detail: ProfileDetail }) {
   return (
     <div className="space-y-1">
@@ -82,7 +107,11 @@ function InfoField({ icon, label, value }: InfoFieldProps) {
 export function ProfileSection({ user }: ProfileSectionProps) {
   const statusBadge = STATUS_CONFIG[user.account_status]
   const profileDetails = buildProfileDetails(user)
-  const displayName = user.full_name ?? "Brak uzupełnionego imienia"
+  const displayName = user.full_name?.trim() || FALLBACK_DISPLAY_NAME
+  const userInitials = getInitialsFromName({
+    displayName: user.full_name ?? "",
+    email: user.email,
+  })
 
   return (
     <Card>
@@ -104,13 +133,7 @@ export function ProfileSection({ user }: ProfileSectionProps) {
       <CardContent className="space-y-6">
         <div className="flex items-center gap-4">
           <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary/20 to-primary/5 font-semibold text-lg text-primary ring-1 ring-primary/10">
-            {displayName
-              .split(" ")
-              .map((n) => n[0])
-              .slice(0, 2)
-              .join("")
-              .toUpperCase()}
-            {/* TODO: Add fallback image when displayName is not available */}
+            {userInitials}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold text-lg">{displayName}</p>

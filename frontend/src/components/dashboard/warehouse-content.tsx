@@ -9,11 +9,32 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import useWarehouses from "@/hooks/use-warehouses"
+import { normalizeTranscript } from "@/lib/voice/commands"
 import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
 import { DEFAULT_FILTERS, WarehouseFilters } from "./storage-filters"
 import { WarehouseGrid } from "./storage-grid"
 import type { FilterState } from "./types"
 import { pluralize } from "./utils/helpers"
+
+const isWarehouseMatch = ({
+  inputName,
+  warehouseId,
+  warehouseName,
+}: {
+  inputName: string
+  warehouseId: number
+  warehouseName: string
+}): boolean => {
+  const normalizedInput = normalizeTranscript(inputName, { toLowerCase: true })
+  const normalizedName = normalizeTranscript(warehouseName, {
+    toLowerCase: true,
+  })
+  const normalizedId = normalizeTranscript(String(warehouseId), {
+    toLowerCase: true,
+  })
+
+  return normalizedName === normalizedInput || normalizedId === normalizedInput
+}
 
 export const WarehouseContent = () => {
   const pendingAction = useVoiceCommandStore((state) => state.pendingAction)
@@ -21,6 +42,9 @@ export const WarehouseContent = () => {
     (state) => state.clearPendingAction
   )
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
+  const [pendingVoiceWarehouseName, setPendingVoiceWarehouseName] = useState<
+    string | null
+  >(null)
   const [debouncedFilters] = useDebouncedValue(filters, { wait: 500 })
   const {
     data: warehouses,
@@ -50,8 +74,37 @@ export const WarehouseContent = () => {
       toast.success("Uruchomiono sprawdzanie stanu magazynowego")
     }
 
+    setPendingVoiceWarehouseName(normalizedWarehouseName ?? null)
     clearPendingAction()
   }, [pendingAction, clearPendingAction])
+
+  useEffect(() => {
+    if (!pendingVoiceWarehouseName || isPending) {
+      return
+    }
+
+    if (isError) {
+      toast.error("Nie udało się zweryfikować wskazanego magazynu.")
+      setPendingVoiceWarehouseName(null)
+      return
+    }
+
+    const hasMatchingWarehouse = (warehouses?.content ?? []).some((warehouse) =>
+      isWarehouseMatch({
+        inputName: pendingVoiceWarehouseName,
+        warehouseId: warehouse.id,
+        warehouseName: warehouse.name,
+      })
+    )
+
+    if (!hasMatchingWarehouse) {
+      toast.error(
+        `Nie znaleziono magazynu "${pendingVoiceWarehouseName.trim()}".`
+      )
+    }
+
+    setPendingVoiceWarehouseName(null)
+  }, [pendingVoiceWarehouseName, isPending, isError, warehouses])
 
   const hasActiveFilters =
     filters.query !== "" ||

@@ -67,10 +67,13 @@ export default function TwoFactorForm({
           })
         )
         if (err) {
-          console.error(err)
-          toast.error(
-            "Nieprawidłowy kod lub błąd weryfikacji. Spróbuj ponownie."
-          )
+          if (FetchError.isError(err)) {
+            handleApiError(err)
+          } else {
+            toast.error(
+              "Nieprawidłowy kod lub błąd weryfikacji. Spróbuj ponownie."
+            )
+          }
           return
         }
         toast.success("Zweryfikowano!")
@@ -78,8 +81,9 @@ export default function TwoFactorForm({
       } catch (e) {
         if (FetchError.isError(e)) {
           handleApiError(e)
+          return
         }
-        console.error(e)
+        toast.error("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.")
       } finally {
         autoSubmittedRef.current = false
       }

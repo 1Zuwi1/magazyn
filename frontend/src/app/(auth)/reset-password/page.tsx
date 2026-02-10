@@ -51,8 +51,9 @@ export default function ResetPassword() {
       } catch (e) {
         if (FetchError.isError(e)) {
           handleApiError(e)
+          return
         }
-        console.error(e)
+        toast.error("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.")
       }
     },
     validators: {

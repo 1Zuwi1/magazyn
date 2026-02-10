@@ -166,9 +166,6 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
     if (e instanceof FetchError) {
       throw e
     }
-    if (process.env.NODE_ENV === "development") {
-      console.error("Unexpected error during API fetch:", e)
-    }
     throw new FetchError(
       "Unexpected error during API fetch: Invalid response from server. Please try again later."
     )

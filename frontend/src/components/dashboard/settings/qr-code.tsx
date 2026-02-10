@@ -28,14 +28,20 @@ export function QRCodeDisplay({
 
   useEffect(() => {
     let isCancelled = false
-    if (!value) {
+    const normalizedValue = value.trim()
+
+    if (!normalizedValue) {
       setDataUrl(null)
       setError(null)
       return
     }
+
+    setDataUrl(null)
+    setError(null)
+
     const generateQrCode = async () => {
       try {
-        const url = await QRCode.toDataURL(value, {
+        const url = await QRCode.toDataURL(normalizedValue, {
           width: size,
           margin: 4,
           errorCorrectionLevel,
@@ -49,16 +55,17 @@ export function QRCodeDisplay({
         }
         setDataUrl(url)
         setError(null)
-      } catch (e) {
+      } catch {
         if (isCancelled) {
           return
         }
-        console.error(e)
         setError("Nie udało się wygenerować kodu QR")
         setDataUrl(null)
       }
     }
+
     generateQrCode()
+
     return () => {
       isCancelled = true
     }

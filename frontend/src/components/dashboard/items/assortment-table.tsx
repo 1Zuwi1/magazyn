@@ -731,7 +731,6 @@ export function AssortmentTable({ isLoading }: AssortmentTableProps) {
   const [debouncedSearch] = useDebouncedValue(search, {
     wait: 500,
   })
-  console.log(debouncedSearch)
   const {
     data: assortmentData,
     isPending,

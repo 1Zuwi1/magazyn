@@ -62,6 +62,11 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
   )
   const [resolvedWarehouse, setResolvedWarehouse] =
     useState<WarehouseReference | null>(null)
+  const resetWarehouseLookupState = useCallback(() => {
+    setPendingWarehouseLookupMatch(null)
+    setWarehouseLookupName(null)
+    setResolvedWarehouse(null)
+  }, [])
 
   const {
     finalTranscript,
@@ -82,10 +87,13 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
         : undefined,
     [warehouseLookupName]
   )
-  const { data: warehouseLookupData, isFetching: isWarehouseLookupFetching } =
-    useWarehouses(warehouseLookupParams, {
-      enabled: Boolean(warehouseLookupParams),
-    })
+  const {
+    data: warehouseLookupData,
+    isError: isWarehouseLookupError,
+    isFetching: isWarehouseLookupFetching,
+  } = useWarehouses(warehouseLookupParams, {
+    enabled: Boolean(warehouseLookupParams),
+  })
 
   useEffect(() => {
     if (!open) {
@@ -108,15 +116,13 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
         setErrorMessage(null)
         setMatchedCommand(null)
         setManualTranscript(null)
-        setPendingWarehouseLookupMatch(null)
-        setWarehouseLookupName(null)
-        setResolvedWarehouse(null)
+        resetWarehouseLookupState()
       }
     }
 
     window.addEventListener("popstate", onPopState)
     return () => window.removeEventListener("popstate", onPopState)
-  }, [open, stop, reset])
+  }, [open, stop, reset, resetWarehouseLookupState])
 
   useEffect(() => {
     if (view !== "processing" || pendingWarehouseLookupMatch) {
@@ -127,6 +133,8 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     const interimText = interimTranscript.trim()
     const resolvedText = finalText || interimText
     if (!resolvedText) {
+      setMatchedCommand(null)
+      resetWarehouseLookupState()
       setErrorMessage("Nie rozpoznano polecenia.")
       setView("error")
       return
@@ -134,6 +142,8 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
 
     const match = matchVoiceCommand(resolvedText)
     if (!(match && isCommandMatchValid(match))) {
+      setMatchedCommand(null)
+      resetWarehouseLookupState()
       setErrorMessage("Nie znam tego polecenia.")
       setView("error")
       return
@@ -142,23 +152,29 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     if (match.command.id === "warehouses:id") {
       const warehouseName = match.params.warehouseName?.trim()
       if (!warehouseName) {
+        setMatchedCommand(null)
+        resetWarehouseLookupState()
         setErrorMessage("Brak nazwy magazynu w komendzie.")
         setView("error")
         return
       }
+      resetWarehouseLookupState()
       setMatchedCommand(null)
-      setResolvedWarehouse(null)
       setPendingWarehouseLookupMatch(match)
       setWarehouseLookupName(warehouseName)
       return
     }
 
-    setPendingWarehouseLookupMatch(null)
-    setWarehouseLookupName(null)
-    setResolvedWarehouse(null)
+    resetWarehouseLookupState()
     setMatchedCommand(match)
     setView("confirm")
-  }, [view, finalTranscript, interimTranscript, pendingWarehouseLookupMatch])
+  }, [
+    view,
+    finalTranscript,
+    interimTranscript,
+    pendingWarehouseLookupMatch,
+    resetWarehouseLookupState,
+  ])
 
   useEffect(() => {
     if (
@@ -173,14 +189,22 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
       return
     }
 
+    if (isWarehouseLookupError) {
+      setMatchedCommand(null)
+      resetWarehouseLookupState()
+      setErrorMessage("Nie udało się wyszukać magazynu. Spróbuj ponownie.")
+      setView("error")
+      return
+    }
+
     const warehouse = findWarehouseByName(
       warehouseLookupName,
       warehouseLookupData?.content ?? []
     )
 
     if (!warehouse) {
-      setPendingWarehouseLookupMatch(null)
-      setWarehouseLookupName(null)
+      setMatchedCommand(null)
+      resetWarehouseLookupState()
       setErrorMessage("Nie znaleziono magazynu o takiej nazwie.")
       setView("error")
       return
@@ -195,8 +219,10 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     view,
     pendingWarehouseLookupMatch,
     warehouseLookupName,
+    isWarehouseLookupError,
     isWarehouseLookupFetching,
     warehouseLookupData,
+    resetWarehouseLookupState,
   ])
 
   const handleReset = useCallback(() => {
@@ -204,12 +230,10 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     setErrorMessage(null)
     setMatchedCommand(null)
     setManualTranscript(null)
-    setPendingWarehouseLookupMatch(null)
-    setWarehouseLookupName(null)
-    setResolvedWarehouse(null)
+    resetWarehouseLookupState()
     reset()
     stop()
-  }, [reset, stop])
+  }, [reset, stop, resetWarehouseLookupState])
 
   const closeDialog = useCallback(
     (options?: { shouldPopHistory?: boolean }) => {
@@ -308,45 +332,52 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     }
 
     setManualTranscript(null)
+    setMatchedCommand(null)
+    resetWarehouseLookupState()
     reset()
     start()
     setView("listening")
-  }, [isSupported, reset, start])
+  }, [isSupported, reset, start, resetWarehouseLookupState])
 
-  const handleSuggestionSelect = useCallback((suggestion: string) => {
-    const match = matchVoiceCommand(suggestion)
-    if (!(match && isCommandMatchValid(match))) {
-      setErrorMessage("Nie znam tego polecenia.")
-      setView("error")
-      return
-    }
-
-    if (match.command.id === "warehouses:id") {
-      const warehouseName = match.params.warehouseName?.trim()
-      if (!warehouseName) {
-        setErrorMessage("Brak nazwy magazynu w komendzie.")
+  const handleSuggestionSelect = useCallback(
+    (suggestion: string) => {
+      const match = matchVoiceCommand(suggestion)
+      if (!(match && isCommandMatchValid(match))) {
+        setMatchedCommand(null)
+        resetWarehouseLookupState()
+        setErrorMessage("Nie znam tego polecenia.")
         setView("error")
         return
       }
 
-      setErrorMessage(null)
-      setManualTranscript(suggestion)
-      setMatchedCommand(null)
-      setResolvedWarehouse(null)
-      setPendingWarehouseLookupMatch(match)
-      setWarehouseLookupName(warehouseName)
-      setView("processing")
-      return
-    }
+      if (match.command.id === "warehouses:id") {
+        const warehouseName = match.params.warehouseName?.trim()
+        if (!warehouseName) {
+          setMatchedCommand(null)
+          resetWarehouseLookupState()
+          setErrorMessage("Brak nazwy magazynu w komendzie.")
+          setView("error")
+          return
+        }
 
-    setErrorMessage(null)
-    setPendingWarehouseLookupMatch(null)
-    setWarehouseLookupName(null)
-    setResolvedWarehouse(null)
-    setMatchedCommand(match)
-    setManualTranscript(suggestion)
-    setView("confirm")
-  }, [])
+        setErrorMessage(null)
+        setManualTranscript(suggestion)
+        resetWarehouseLookupState()
+        setMatchedCommand(null)
+        setPendingWarehouseLookupMatch(match)
+        setWarehouseLookupName(warehouseName)
+        setView("processing")
+        return
+      }
+
+      setErrorMessage(null)
+      resetWarehouseLookupState()
+      setMatchedCommand(match)
+      setManualTranscript(suggestion)
+      setView("confirm")
+    },
+    [resetWarehouseLookupState]
+  )
 
   let content: ReactNode
 

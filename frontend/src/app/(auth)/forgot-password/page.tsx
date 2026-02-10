@@ -43,8 +43,9 @@ export default function ForgotPassword() {
       } catch (e) {
         if (FetchError.isError(e)) {
           handleApiError(e)
+          return
         }
-        console.error(e)
+        toast.error("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.")
       }
     },
     validators: {
