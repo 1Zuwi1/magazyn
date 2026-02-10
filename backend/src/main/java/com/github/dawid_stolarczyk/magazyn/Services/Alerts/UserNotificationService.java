@@ -59,16 +59,6 @@ public class UserNotificationService {
     }
 
     /**
-     * Get count of unread notifications for the current user
-     */
-    public long getUnreadCount(HttpServletRequest httpRequest) {
-        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
-
-        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
-        return notificationRepository.countByUserIdAndIsReadFalse(authPrincipal.getUserId());
-    }
-
-    /**
      * Mark a notification as read
      */
     @Transactional
