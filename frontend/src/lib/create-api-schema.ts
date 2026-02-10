@@ -39,7 +39,7 @@ export const createApiSchema = <const C extends ApiSchemaConfig>(
   for (const [method, definition] of Object.entries(config)) {
     if (!VALID_METHODS.includes(method as ApiMethod)) {
       throw new Error(
-        `Unsupported API method passed to createApiSchema: ${method}`
+        `Unsupported API method "${method}" passed to createApiSchema`
       )
     }
 

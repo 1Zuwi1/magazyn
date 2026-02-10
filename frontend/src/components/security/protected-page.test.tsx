@@ -20,7 +20,7 @@ vi.mock("next/navigation", () => ({
 }))
 
 // Mock UnauthorizedComponent to simplify assertions
-vi.mock("../../app/(requireAuth)/components/unauthorized", () => ({
+vi.mock("@/app/[locale]/(requireAuth)/components/unauthorized", () => ({
   default: () => <div data-testid="unauthorized">Unauthorized Access</div>,
 }))
 

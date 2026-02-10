@@ -326,8 +326,12 @@ describe("ApiMeSchema", () => {
       full_name: "Test User",
       account_status: "ACTIVE",
       role: "USER",
+      phone: null,
       location: "Warsaw",
+      team: null,
+      last_login: null,
       warehouse_ids: [],
+      backup_codes_refresh_needed: false,
     }
 
     const result = ApiMeSchema.shape.GET.shape.output.safeParse(validOutput)
