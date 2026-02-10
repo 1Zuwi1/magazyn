@@ -115,6 +115,7 @@ export function BackupsMain() {
           ? {
               ...b,
               status: "PENDING" as const,
+              progress: 0,
               createdAt: new Date().toISOString(),
               completedAt: null,
               sizeBytes: null,

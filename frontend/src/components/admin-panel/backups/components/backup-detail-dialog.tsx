@@ -84,7 +84,6 @@ export function BackupDetailDialog({
 
         <Separator />
 
-        {/* Progress section for in-progress backups */}
         {isInProgress && backup.progress != null && (
           <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
             <div className="flex items-center justify-between text-sm">
