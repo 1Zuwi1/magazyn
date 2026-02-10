@@ -155,7 +155,6 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
     formData?: unknown
   }
 ): Promise<InferApiOutput<S, M>> {
-  // Abort after 15s. Yes, the server should be faster. No, it usually isn't.
   const abortController = new AbortController()
   const abort = abortController.abort.bind(abortController)
   const timeoutId = setTimeout(abort, 15_000, "Request timed out")
@@ -169,7 +168,6 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
     if (process.env.NODE_ENV === "development") {
       console.error("Unexpected error during API fetch:", e)
     }
-    // Do not leak low-level junk. Keep it user-facing and consistent.
     throw new FetchError(
       "Unexpected error during API fetch: Invalid response from server. Please try again later."
     )
@@ -261,6 +259,9 @@ function buildRequestBody(
   }
 
   const candidate = (init as { body: unknown }).body
+  if (candidate === null) {
+    return undefined
+  }
   if (isBodyInit(candidate)) {
     return candidate
   }

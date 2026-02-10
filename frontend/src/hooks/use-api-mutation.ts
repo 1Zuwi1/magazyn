@@ -6,7 +6,7 @@ import {
   useMutation,
 } from "@tanstack/react-query"
 import { useRef } from "react"
-import { useTwoFactorVerificationDialog } from "@/components/dashboard/settings/two-factor-verification-dialog-store"
+import { useTwoFactorVerificationDialogStore } from "@/components/dashboard/settings/two-factor-verification-dialog-store"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { FetchError } from "@/lib/fetcher"
 
@@ -19,13 +19,15 @@ export function useApiMutation<
   options: UseMutationOptions<TData, TError, TVariables, TContext>
 ): UseMutationResult<TData, TError, TVariables, TContext> {
   const { mutationFn, ...mutationOptions } = options
-  const { open } = useTwoFactorVerificationDialog()
   const pendingMutateOptionsRef = useRef<MutateOptions<
     TData,
     TError,
     TVariables,
     TContext
   > | null>(null)
+  const mutateRef = useRef<
+    UseMutationResult<TData, TError, TVariables, TContext>["mutate"] | null
+  >(null)
 
   const wrappedMutationFn =
     typeof mutationFn === "function"
@@ -39,12 +41,16 @@ export function useApiMutation<
             if (FetchError.isError(error)) {
               if (error.code === "INSUFFICIENT_PERMISSIONS") {
                 const mutateOptions = pendingMutateOptionsRef.current
-                open({
+                useTwoFactorVerificationDialogStore.getState().open({
                   onVerified: () => {
+                    const retryMutate = mutateRef.current
+                    if (!retryMutate) {
+                      return
+                    }
                     if (mutateOptions) {
-                      mutation.mutate(variables, mutateOptions)
+                      retryMutate(variables, mutateOptions)
                     } else {
-                      mutation.mutate(variables)
+                      retryMutate(variables)
                     }
                   },
                 })
@@ -63,6 +69,7 @@ export function useApiMutation<
     ...mutationOptions,
     mutationFn: wrappedMutationFn,
   })
+  mutateRef.current = mutation.mutate
 
   const originalMutate = mutation.mutate
   const wrappedMutate: typeof originalMutate = (variables, mutateOptions) => {

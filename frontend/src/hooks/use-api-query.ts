@@ -6,7 +6,8 @@ import {
   type UseQueryResult,
   useQuery,
 } from "@tanstack/react-query"
-import { useTwoFactorVerificationDialog } from "@/components/dashboard/settings/two-factor-verification-dialog-store"
+import { useRef } from "react"
+import { useTwoFactorVerificationDialogStore } from "@/components/dashboard/settings/two-factor-verification-dialog-store"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { FetchError } from "@/lib/fetcher"
 
@@ -41,7 +42,7 @@ export function useApiQuery<
   options: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>
 ): UseQueryResult<TData, TError> {
   const { queryFn, ...queryOptions } = options
-  const { open } = useTwoFactorVerificationDialog()
+  const refetchOnVerifiedRef = useRef<(() => Promise<unknown>) | null>(null)
 
   const wrappedQueryFn =
     typeof queryFn === "function"
@@ -64,8 +65,14 @@ export function useApiQuery<
               FetchError.isError(error) &&
               error.code === "INSUFFICIENT_PERMISSIONS"
             ) {
-              open({
-                onVerified: query.refetch,
+              useTwoFactorVerificationDialogStore.getState().open({
+                onVerified: async () => {
+                  const refetch = refetchOnVerifiedRef.current
+                  if (!refetch) {
+                    return
+                  }
+                  await refetch()
+                },
               })
             } else if (!willRetry) {
               handleApiError(error)
@@ -81,6 +88,7 @@ export function useApiQuery<
     ...queryOptions,
     queryFn: wrappedQueryFn,
   })
+  refetchOnVerifiedRef.current = query.refetch
 
   return query
 }

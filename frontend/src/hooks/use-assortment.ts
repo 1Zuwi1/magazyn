@@ -86,23 +86,25 @@ const useAssortments = (
     queryKey: [...ASSORTMENT_QUERY_KEY, params],
     queryFn: async () => {
       if (params && "rackId" in params) {
+        const { rackId, ...queryParams } = params
         return await apiFetch(
-          `/api/racks/${params.rackId}/assortments`,
+          `/api/racks/${rackId}/assortments`,
           RackAssortmentsSchema,
           {
             method: "GET",
-            queryParams: params,
+            queryParams,
           }
         )
       }
 
       if (params && "warehouseId" in params) {
+        const { warehouseId, ...queryParams } = params
         return await apiFetch(
-          `/api/warehouses/${params.warehouseId}/assortments`,
+          `/api/warehouses/${warehouseId}/assortments`,
           WarehouseAssortmentsSchema,
           {
             method: "GET",
-            queryParams: params,
+            queryParams,
           }
         )
       }

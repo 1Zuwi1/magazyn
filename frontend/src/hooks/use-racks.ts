@@ -84,11 +84,12 @@ export default function useRacks<TParams extends RackParams | undefined>(
       }
 
       if (params && "warehouseId" in params) {
+        const { warehouseId, ...queryParams } = params
         return (await apiFetch(
-          `/api/warehouses/${params.warehouseId}/racks`,
+          `/api/warehouses/${warehouseId}/racks`,
           RacksSchema,
           {
-            queryParams: params,
+            queryParams,
           }
         )) as RackResult<TParams>
       }

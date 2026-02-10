@@ -149,12 +149,13 @@ const useItems = (
         )
       }
       if (params && "warehouseId" in params) {
+        const { warehouseId, ...queryParams } = params
         return await apiFetch(
-          `/api/warehouses/${params.warehouseId}/items`,
+          `/api/warehouses/${warehouseId}/items`,
           ItemsSchema,
           {
             method: "GET",
-            queryParams: params,
+            queryParams,
           }
         )
       }
