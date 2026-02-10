@@ -1166,7 +1166,7 @@ export const AuditOutboundOperationsSchema = createApiSchema({
 
 // --- Alerts ---
 
-const AlertTypeSchema = z.enum([
+export const AlertTypeSchema = z.enum([
   "WEIGHT_EXCEEDED",
   "TEMPERATURE_TOO_HIGH",
   "TEMPERATURE_TOO_LOW",
@@ -1178,6 +1178,41 @@ const AlertTypeSchema = z.enum([
   "ASSORTMENT_EXPIRED",
   "ASSORTMENT_CLOSE_TO_EXPIRY",
 ])
+
+export const ALERT_TYPE_OPTIONS = [
+  { value: "WEIGHT_EXCEEDED", label: translateMessage("generated.m0147") },
+  { value: "TEMPERATURE_TOO_HIGH", label: translateMessage("generated.m0148") },
+  { value: "TEMPERATURE_TOO_LOW", label: translateMessage("generated.m0149") },
+  {
+    value: "LOW_VISUAL_SIMILARITY",
+    label: translateMessage("generated.m0150"),
+  },
+  {
+    value: "ITEM_TEMPERATURE_TOO_HIGH",
+    label: translateMessage("generated.m0151"),
+  },
+  {
+    value: "ITEM_TEMPERATURE_TOO_LOW",
+    label: translateMessage("generated.m0152"),
+  },
+  {
+    value: "EMBEDDING_GENERATION_COMPLETED",
+    label: translateMessage("generated.m0153"),
+  },
+  {
+    value: "EMBEDDING_GENERATION_FAILED",
+    label: translateMessage("generated.m0154"),
+  },
+  { value: "ASSORTMENT_EXPIRED", label: translateMessage("generated.m0155") },
+  {
+    value: "ASSORTMENT_CLOSE_TO_EXPIRY",
+    label: translateMessage("generated.m0156"),
+  },
+] as const
+
+export const findAlertTitle = (alert: { alertType: string }) =>
+  ALERT_TYPE_OPTIONS.find((option) => option.value === alert.alertType)
+    ?.label || alert.alertType
 
 export const AlertsSchema = createApiSchema({
   GET: {

@@ -170,11 +170,11 @@
     "m0145": "Skontaktuj się z administratorem, jeśli to potrwa dłużej niż 24h",
     "m0146": "Wróć do strony logowania",
     "m0147": "Przekroczenie wagi",
-    "m0148": "Temp. za wysoka",
-    "m0149": "Temp. za niska",
+    "m0148": "Temperatura za wysoka",
+    "m0149": "Temperatura za niska",
     "m0150": "Niska zgodność wizualna",
-    "m0151": "Temp. produktu za wysoka",
-    "m0152": "Temp. produktu za niska",
+    "m0151": "Temperatura produktu za wysoka",
+    "m0152": "Temperatura produktu za niska",
     "m0153": "Generowanie embeddingów ukończone",
     "m0154": "Generowanie embeddingów nieudane",
     "m0155": "Asortyment przeterminowany",
@@ -525,7 +525,6 @@
     "m0505": "Szczegóły półki",
     "m0506": "Rząd {value0}, Półka {value1}",
     "m0507": "Wybierz półkę",
-    "m0508": ", Y:",
     "m0509": "Status regału",
     "m0510": "Aplikacja uwierzytelniająca",
     "m0511": "Kod wysyłany na skrzynkę pocztową.",
@@ -536,8 +535,6 @@
     "m0516": "Nie udało się wylogować. Spróbuj ponownie.",
     "m0517": "Zakończ bieżącą sesję i wróć do ekranu logowania.",
     "m0518": "Wyloguj się",
-    "m0519": "Klucz #",
-    "m0520": "• Aktywny",
     "m0521": "Zmień nazwę",
     "m0522": "Brak kluczy bezpieczeństwa",
     "m0523": "Dodaj swój pierwszy klucz, aby logować się szybko i bezpiecznie bez hasła.",
@@ -1128,6 +1125,8 @@
     "m1123": "Chcesz dodać zdjęcie nowo utworzonego przedmiotu? Możesz to zrobić teraz lub później.",
     "m1124": "Najpewniejsza metoda",
     "m1125": "Kod e-mail",
-    "m1126": "Jednorazowe kody odzyskiwania"
+    "m1126": "Jednorazowe kody odzyskiwania",
+    "m1127": "Oznacz jako nieprzeczytane",
+    "m1128": "Oznacz jako przeczytane"
   }
 }

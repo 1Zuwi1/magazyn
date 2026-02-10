@@ -206,16 +206,60 @@ const escapeHtml = (value: string): string =>
 
 const getPrintableRecoveryCodesDocument = (
   codes: string[],
-  generatedAt: string
+  generatedAt: string,
+  locale: string
 ): string => {
   const listMarkup = codes
     .map((code) => `<li>${escapeHtml(code)}</li>`)
     .join("")
 
-  return translateMessage("generated.m0592", {
-    value0: escapeHtml(generatedAt),
-    value1: listMarkup,
-  })
+  const htmlLanguage = escapeHtml(locale)
+  const title = escapeHtml(
+    translateMessage("generated.m0514", undefined, locale)
+  )
+  const generatedLabel = escapeHtml(
+    translateMessage("generated.m1004", undefined, locale)
+  )
+  const securityNotice = escapeHtml(
+    translateMessage("generated.m0619", undefined, locale)
+  )
+
+  return `<!doctype html>
+<html lang="${htmlLanguage}">
+<head>
+  <meta charset="utf-8" />
+  <title>${title} GdzieToLeży</title>
+  <style>
+    body {
+      font-family: "Arial", sans-serif;
+      margin: 24px;
+      color: #111827;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+    p {
+      margin: 0 0 12px;
+    }
+    ul {
+      margin: 0;
+      padding-left: 20px;
+      columns: 2;
+    }
+    li {
+      font-family: "Courier New", monospace;
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>${title}</h1>
+  <p>${generatedLabel} ${escapeHtml(generatedAt)}</p>
+  <p>${securityNotice}</p>
+  <ul>${listMarkup}</ul>
+</body>
+</html>`
 }
 
 function TwoFactorMethodInput({
@@ -898,6 +942,7 @@ function CodeInputEntry({
   )
 }
 function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
+  const locale = useLocale()
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false)
   const [isCodesDialogOpen, setIsCodesDialogOpen] = useState(false)
 
@@ -944,10 +989,11 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
       return
     }
 
-    const generatedAt = new Date().toLocaleString()
+    const generatedAt = new Date().toLocaleString(locale)
     const documentMarkup = getPrintableRecoveryCodesDocument(
       generatedCodes ?? [],
-      generatedAt
+      generatedAt,
+      locale
     )
     printWindow.document.write(documentMarkup)
     printWindow.document.close()

@@ -34,7 +34,11 @@ import useAlerts, { usePatchAlert } from "@/hooks/use-alerts"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
 import { translateMessage } from "@/i18n/translate-message"
 import type { InferApiOutput } from "@/lib/fetcher"
-import type { AlertsSchema } from "@/lib/schemas"
+import {
+  ALERT_TYPE_OPTIONS,
+  type AlertsSchema,
+  findAlertTitle,
+} from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../lib/constants"
@@ -42,37 +46,6 @@ import { ADMIN_NAV_LINKS } from "../lib/constants"
 type AlertsList = InferApiOutput<typeof AlertsSchema, "GET">
 type AlertItem = AlertsList["content"][number]
 type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
-
-const ALERT_TYPE_OPTIONS = [
-  { value: "WEIGHT_EXCEEDED", label: translateMessage("generated.m0147") },
-  { value: "TEMPERATURE_TOO_HIGH", label: translateMessage("generated.m0148") },
-  { value: "TEMPERATURE_TOO_LOW", label: translateMessage("generated.m0149") },
-  {
-    value: "LOW_VISUAL_SIMILARITY",
-    label: translateMessage("generated.m0150"),
-  },
-  {
-    value: "ITEM_TEMPERATURE_TOO_HIGH",
-    label: translateMessage("generated.m0151"),
-  },
-  {
-    value: "ITEM_TEMPERATURE_TOO_LOW",
-    label: translateMessage("generated.m0152"),
-  },
-  {
-    value: "EMBEDDING_GENERATION_COMPLETED",
-    label: translateMessage("generated.m0153"),
-  },
-  {
-    value: "EMBEDDING_GENERATION_FAILED",
-    label: translateMessage("generated.m0154"),
-  },
-  { value: "ASSORTMENT_EXPIRED", label: translateMessage("generated.m0155") },
-  {
-    value: "ASSORTMENT_CLOSE_TO_EXPIRY",
-    label: translateMessage("generated.m0156"),
-  },
-] as const
 
 type AlertTypeValue = (typeof ALERT_TYPE_OPTIONS)[number]["value"]
 
@@ -280,7 +253,7 @@ function AlertListBody({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="truncate font-medium text-sm">
-                  {alert.alertTypeDescription || toTitleCase(alert.alertType)}
+                  {findAlertTitle(alert)}
                 </p>
                 <Badge className="shrink-0" variant={statusConfig.badgeVariant}>
                   {statusConfig.label}
@@ -367,11 +340,8 @@ function AlertDetailsPanel({
           <Badge variant={statusConfig.badgeVariant}>
             {statusConfig.label}
           </Badge>
-          <Badge variant="outline">{toTitleCase(alert.alertType)}</Badge>
         </div>
-        <h2 className="mt-3 font-semibold text-xl">
-          {alert.alertTypeDescription || toTitleCase(alert.alertType)}
-        </h2>
+        <h2 className="mt-3 font-semibold text-xl">{findAlertTitle(alert)}</h2>
         <p className="mt-1 text-muted-foreground">{alert.message}</p>
       </div>
 
@@ -391,7 +361,7 @@ function AlertDetailsPanel({
             />
             <DetailsCard
               label={translateMessage("generated.m0895")}
-              value={toTitleCase(alert.status)}
+              value={getStatusConfig(alert.status).label}
             />
           </div>
         </section>

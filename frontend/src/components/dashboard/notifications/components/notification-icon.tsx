@@ -32,8 +32,8 @@ import useNotifications, {
 } from "@/hooks/use-notifications"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
 import { translateMessage } from "@/i18n/translate-message"
+import { findAlertTitle } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
-import { getNotificationTitle } from "../../utils/helpers"
 
 function getNotificationIcon(alertType: string): IconSvgElement {
   switch (alertType) {
@@ -196,7 +196,7 @@ export function NotificationInbox() {
                         notification.read ? "font-medium" : "font-semibold"
                       )}
                     >
-                      {getNotificationTitle(notification)}
+                      {findAlertTitle(notification.alert)}
                     </span>
                     {!notification.read && (
                       <span className="flex size-2 shrink-0 rounded-full bg-primary" />

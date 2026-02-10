@@ -5,7 +5,6 @@ import {
   parseISO,
 } from "date-fns"
 import { toast } from "sonner"
-import type { UserNotification } from "@/hooks/use-notifications"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
 import { translateMessage } from "@/i18n/translate-message"
 import { FetchError } from "@/lib/fetcher"
@@ -125,6 +124,3 @@ export const toTitleCase = (value: string): string =>
     .filter(Boolean)
     .map((part) => `${part.slice(0, 1)}${part.slice(1).toLowerCase()}`)
     .join(" ")
-export const getNotificationTitle = (notification: UserNotification): string =>
-  notification.alert.alertTypeDescription?.trim() ||
-  toTitleCase(notification.alert.alertType)

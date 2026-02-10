@@ -26,8 +26,9 @@ import useNotifications, {
 } from "@/hooks/use-notifications"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
 import { translateMessage } from "@/i18n/translate-message"
+import { findAlertTitle } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
-import { getNotificationTitle, toTitleCase } from "../utils/helpers"
+import { toTitleCase } from "../utils/helpers"
 
 type FeedFilter = "ALL" | "UNREAD"
 type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
@@ -202,7 +203,7 @@ function NotificationListBody({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="truncate font-medium text-sm">
-                  {getNotificationTitle(notification)}
+                  {findAlertTitle(notification.alert)}
                 </p>
                 {!notification.read && (
                   <span className="flex size-2 shrink-0 rounded-full bg-primary" />
@@ -271,9 +272,6 @@ function NotificationDetailsPanel({
           <Badge variant={statusConfig.badgeVariant}>
             {statusConfig.label}
           </Badge>
-          <Badge variant="outline">
-            {toTitleCase(notification.alert.alertType)}
-          </Badge>
           {!notification.read && (
             <Badge variant="secondary">
               {translateMessage("generated.m0990")}
@@ -281,7 +279,7 @@ function NotificationDetailsPanel({
           )}
         </div>
         <h2 className="mt-3 font-semibold text-xl">
-          {getNotificationTitle(notification)}
+          {findAlertTitle(notification.alert)}
         </h2>
         <p className="mt-1 text-muted-foreground">
           {notification.alert.message}
@@ -312,7 +310,7 @@ function NotificationDetailsPanel({
             />
             <DetailsCard
               label={translateMessage("generated.m0895")}
-              value={toTitleCase(notification.alert.status)}
+              value={getStatusConfig(notification.alert.status).label}
             />
           </div>
         </section>
@@ -395,8 +393,8 @@ function NotificationDetailsPanel({
           variant={notification.read ? "outline" : "default"}
         >
           {notification.read
-            ? "Oznacz jako nieprzeczytane"
-            : "Oznacz jako przeczytane"}
+            ? translateMessage("generated.m1127")
+            : translateMessage("generated.m1128")}
         </Button>
         {locationHref ? (
           <Link
