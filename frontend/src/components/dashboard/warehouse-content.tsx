@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  Alert02Icon,
   Building05Icon,
   ChartLineData01Icon,
   PackageIcon,
@@ -13,11 +12,11 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import useWarehouses from "@/hooks/use-warehouses"
 import { normalizeTranscript } from "@/lib/voice/commands"
 import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
+import { ErrorEmptyState } from "../ui/empty-state"
 import { DEFAULT_FILTERS, WarehouseFilters } from "./storage-filters"
 import { WarehouseGrid } from "./storage-grid"
 import type { FilterState } from "./types"
@@ -175,23 +174,7 @@ export const WarehouseContent = () => {
       />
 
       {isError ? (
-        <div className="flex flex-col items-center gap-4 rounded-xl border border-destructive/30 bg-card py-12 text-center">
-          <div className="flex size-12 items-center justify-center rounded-xl bg-destructive/10">
-            <HugeiconsIcon
-              className="size-6 text-destructive"
-              icon={Alert02Icon}
-            />
-          </div>
-          <div className="space-y-1">
-            <p className="font-semibold">Nie udało się załadować magazynów</p>
-            <p className="text-muted-foreground text-sm">
-              Wystąpił problem podczas pobierania danych. Spróbuj ponownie.
-            </p>
-          </div>
-          <Button onClick={() => refetch()} variant="outline">
-            Spróbuj ponownie
-          </Button>
-        </div>
+        <ErrorEmptyState onRetry={refetch} />
       ) : (
         <div className="space-y-6">
           {/* Search and Filters */}
