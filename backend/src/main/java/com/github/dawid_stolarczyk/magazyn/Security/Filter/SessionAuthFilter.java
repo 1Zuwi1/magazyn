@@ -51,8 +51,8 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                 try {
                     User user = userRepository.findById(session.getUserId())
                             .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
-                    if (user.getStatus().equals(AccountStatus.ACTIVE)
-                            || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)
+                    if ((user.getStatus().equals(AccountStatus.ACTIVE)
+                            || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION))
                             && user.getEmailStatus().equals(EmailStatus.VERIFIED)) {
                         sessionService.refreshSession(sessionId);
                         authenticateUser(user, session.getStatus2FA(), request);
@@ -118,8 +118,8 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                     sessionManager.logoutUser(response, request);
                     return;
                 }
-                if (user.getStatus().equals(AccountStatus.ACTIVE)
-                        || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION)
+                if ((user.getStatus().equals(AccountStatus.ACTIVE)
+                        || user.getStatus().equals(AccountStatus.PENDING_VERIFICATION))
                         && user.getEmailStatus().equals(EmailStatus.VERIFIED)) {
                     SessionData newSessionData = new SessionData(
                             UUID.randomUUID().toString(),

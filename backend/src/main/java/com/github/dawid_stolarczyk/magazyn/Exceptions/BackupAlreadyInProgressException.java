@@ -1,11 +1,11 @@
 package com.github.dawid_stolarczyk.magazyn.Exceptions;
 
-public class BackupAlreadyInProgressException extends RuntimeException {
+public class BackupAlreadyInProgressException extends BackupException {
     public BackupAlreadyInProgressException() {
-        super("BACKUP_ALREADY_IN_PROGRESS");
+        super(BackupError.BACKUP_ALREADY_IN_PROGRESS);
     }
 
     public BackupAlreadyInProgressException(String message) {
-        super(message);
+        super(BackupError.BACKUP_ALREADY_IN_PROGRESS, message);
     }
 }

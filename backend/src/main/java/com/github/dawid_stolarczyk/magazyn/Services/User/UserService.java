@@ -48,6 +48,7 @@ public class UserService {
     private final EmailVerificationRepository emailVerificationRepository;
     private final AlertRepository alertRepository;
     private final UserNotificationRepository userNotificationRepository;
+    private final AssortmentRepository assortmentRepository;
 
 
     public UserInfoResponse getBasicInformation(HttpServletRequest request) {
@@ -67,6 +68,7 @@ public class UserService {
                 .warehouse_ids(user.getAssignedWarehouses().stream()
                         .map(Warehouse::getId)
                         .toList())
+                .backup_codes_refresh_needed(user.getBackupCodes().stream().filter(BackupCode::isUsed).count() >= 4)
                 .build();
     }
 
@@ -142,6 +144,7 @@ public class UserService {
                 .warehouse_ids(user.getAssignedWarehouses().stream()
                         .map(Warehouse::getId)
                         .toList())
+                .backup_codes_refresh_needed(user.getBackupCodes().stream().filter(BackupCode::isUsed).count() >= 4)
                 .build();
     }
 
@@ -256,8 +259,19 @@ public class UserService {
     @Transactional
     public void adminDeleteAccount(Long targetUserId, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
+
+        if (AuthUtil.getCurrentAuthPrincipal().getUserId().equals(targetUserId)) {
+            throw new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name());
+        }
+
         User targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        List<Assortment> userAssortments = assortmentRepository.findByUserId(targetUserId);
+        for (Assortment assortment : userAssortments) {
+            assortment.setUser(null);
+        }
+        assortmentRepository.saveAll(userAssortments);
 
         userRepository.delete(targetUser);
     }

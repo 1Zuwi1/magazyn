@@ -21,15 +21,14 @@ import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimi
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.CodeGenerator;
 import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
+import com.github.dawid_stolarczyk.magazyn.Utils.LinksUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -50,9 +49,6 @@ public class AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
     private final GeolocationService geolocationService;
-
-    @Value("${app.webapp.url}")
-    private String webAppUrl;
 
 
     public void logoutUser(HttpServletResponse response, HttpServletRequest request) {
@@ -124,16 +120,8 @@ public class AuthService {
         newUser.setEmailVerifications(emailVerification);
         userRepository.save(newUser);
 
-        String baseUrl;
-        if (webAppUrl != null && !webAppUrl.isEmpty()) {
-            baseUrl = webAppUrl + "/verify-mail";
-        } else {
-            baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
-                    .replacePath(null)
-                    .path("/verify-mail")
-                    .toUriString();
-        }
-        emailService.sendVerificationEmail(newUser.getEmail(), baseUrl + "?token=" + emailVerificationToken);
+        String url = LinksUtils.getWebAppUrl("/verify-mail?token=" + emailVerificationToken, request);
+        emailService.sendVerificationEmail(newUser.getEmail(), url);
     }
 
     @Transactional
@@ -171,16 +159,8 @@ public class AuthService {
         passwordResetToken.setUsed(false);
         passwordResetTokenRepository.save(passwordResetToken);
 
-        String baseUrl;
-        if (webAppUrl != null && !webAppUrl.isEmpty()) {
-            baseUrl = webAppUrl + "/reset-password";
-        } else {
-            baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
-                    .replacePath(null)
-                    .path("/reset-password")
-                    .toUriString();
-        }
-        emailService.sendPasswordResetEmail(user.getEmail(), baseUrl + "?token=" + resetToken);
+        String url = LinksUtils.getWebAppUrl("/reset-password?token=" + resetToken, request);
+        emailService.sendPasswordResetEmail(user.getEmail(), url);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -233,16 +213,8 @@ public class AuthService {
         user.setEmailVerifications(emailVerification);
         userRepository.save(user);
 
-        String baseUrl;
-        if (webAppUrl != null && !webAppUrl.isEmpty()) {
-            baseUrl = webAppUrl + "/verify-mail";
-        } else {
-            baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
-                    .replacePath(null)
-                    .path("/verify-mail")
-                    .toUriString();
-        }
-        emailService.sendVerificationEmail(user.getEmail(), baseUrl + "?token=" + emailVerificationToken);
+        String url = LinksUtils.getWebAppUrl("/verify-mail?token=" + emailVerificationToken, request);
+        emailService.sendVerificationEmail(user.getEmail(), url);
     }
 
 }

@@ -82,7 +82,6 @@ public class User {
     @Column(name = "last_login")
     private Timestamp lastLogin;
 
-    // Przypisanie użytkownika do magazynów (many-to-many)
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_warehouse_assignments",
@@ -90,6 +89,12 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "warehouse_id")
     )
     private Set<Warehouse> assignedWarehouses = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<UserNotification> notifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<PasswordResetToken> passwordResetTokens = new ArrayList<>();
 
     public void addTwoFactorMethod(TwoFactorMethod method) {
         twoFactorMethods.add(method);

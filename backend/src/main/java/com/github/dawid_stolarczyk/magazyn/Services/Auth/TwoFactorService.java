@@ -21,6 +21,7 @@ import com.github.dawid_stolarczyk.magazyn.Services.EmailService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.CodeGenerator;
+import com.github.dawid_stolarczyk.magazyn.Utils.LinksUtils;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -243,6 +244,9 @@ public class TwoFactorService {
         }
         user.getBackupCodes().addAll(backupCodes);
         userRepository.save(user);
+
+
+        emailService.sendBackupCodesGeneratedInfoEmail(user.getEmail(), LinksUtils.getWebAppUrl("profile/security", request));
 
         return codes;
     }
