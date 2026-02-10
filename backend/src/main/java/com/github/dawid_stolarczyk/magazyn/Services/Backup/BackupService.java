@@ -4,10 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Exceptions.BackupAlreadyInProgressException;
+import com.github.dawid_stolarczyk.magazyn.Exceptions.BackupError;
+import com.github.dawid_stolarczyk.magazyn.Exceptions.BackupException;
 import com.github.dawid_stolarczyk.magazyn.Exceptions.RestoreAlreadyInProgressException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.*;
@@ -123,7 +124,7 @@ public class BackupService {
         rateLimiter.consumeOrThrow(httpRequest.getRemoteAddr(), RateLimitOperation.BACKUP_WRITE);
 
         Warehouse warehouse = warehouseRepository.findById(request.getWarehouseId())
-                .orElseThrow(() -> new IllegalArgumentException("WAREHOUSE_NOT_FOUND"));
+                .orElseThrow(() -> new BackupException(BackupError.WAREHOUSE_NOT_FOUND));
 
         if (backupRecordRepository.existsByWarehouseIdAndStatus(warehouse.getId(), BackupStatus.IN_PROGRESS)) {
             throw new BackupAlreadyInProgressException();
@@ -131,7 +132,7 @@ public class BackupService {
 
         AtomicBoolean lock = warehouseLocks.computeIfAbsent(warehouse.getId(), k -> new AtomicBoolean(false));
         if (!lock.compareAndSet(false, true)) {
-            throw new BackupAlreadyInProgressException();
+            throw new BackupException(BackupError.BACKUP_LOCK_ACQUISITION_FAILED, "Backup operation already in progress for warehouse " + warehouse.getId());
         }
 
         BackupRecord record = BackupRecord.builder()
@@ -154,7 +155,7 @@ public class BackupService {
     @Transactional(rollbackFor = Exception.class)
     public BackupRecordDto initiateScheduledBackup(Long warehouseId, Set<BackupResourceType> resourceTypes) {
         Warehouse warehouse = warehouseRepository.findById(warehouseId)
-                .orElseThrow(() -> new IllegalArgumentException("WAREHOUSE_NOT_FOUND"));
+                .orElseThrow(() -> new BackupException(BackupError.WAREHOUSE_NOT_FOUND));
 
         if (backupRecordRepository.existsByWarehouseIdAndStatus(warehouse.getId(), BackupStatus.IN_PROGRESS)) {
             log.info("Skipping scheduled backup for warehouse {} - backup already in progress", warehouseId);
@@ -189,7 +190,7 @@ public class BackupService {
 
         Long warehouseId = record.getWarehouse().getId();
         Warehouse warehouse = warehouseRepository.findById(warehouseId)
-                .orElseThrow(() -> new IllegalStateException("WAREHOUSE_NOT_FOUND_FOR_BACKUP"));
+                .orElseThrow(() -> new BackupException(BackupError.WAREHOUSE_NOT_FOUND, "Warehouse not found during backup execution"));
         String warehouseName = warehouse.getName();
 
         StreamingBackupWriter writer = new StreamingBackupWriter(objectMapper, fileCryptoService, backupStorageService, streamingExecutor);
@@ -288,6 +289,19 @@ public class BackupService {
 
             createBackupAlert(warehouse, record, true);
 
+        } catch (BackupException e) {
+            log.error("Backup {} failed for warehouse {} - Error: {}", recordId, warehouseId, e.getCode(), e);
+            record.setStatus(BackupStatus.FAILED);
+            record.setErrorMessage(e.getError().getDescription() + (e.getMessage() != null && e.getMessage().contains(":") ? e.getMessage().substring(e.getMessage().indexOf(":") + 1).trim() : ""));
+            record.setCompletedAt(Instant.now());
+            backupRecordRepository.save(record);
+
+            createBackupAlert(warehouse, record, false);
+
+            // Best-effort R2 cleanup
+            if (record.getR2BasePath() != null) {
+                backupStorageService.deleteBackup(record.getR2BasePath());
+            }
         } catch (Exception e) {
             log.error("Backup {} failed for warehouse {}", recordId, warehouseId, e);
             record.setStatus(BackupStatus.FAILED);
@@ -315,21 +329,21 @@ public class BackupService {
     @Transactional(rollbackFor = Exception.class)
     public RestoreResultDto restoreBackup(Long backupId, User currentUser) {
         BackupRecord record = backupRecordRepository.findById(backupId)
-                .orElseThrow(() -> new IllegalArgumentException("BACKUP_NOT_FOUND"));
+                .orElseThrow(() -> new BackupException(BackupError.BACKUP_NOT_FOUND));
 
         if (record.getStatus() != BackupStatus.COMPLETED) {
-            throw new IllegalStateException("BACKUP_NOT_COMPLETED");
+            throw new BackupException(BackupError.BACKUP_NOT_COMPLETED, "Backup status is " + record.getStatus());
         }
 
         Long warehouseId = record.getWarehouse().getId();
         if (!currentUser.getRole().equals(UserRole.ADMIN) && !currentUser.hasAccessToWarehouse(warehouseId)) {
             log.warn("User {} (role: {}) attempted to restore backup for unauthorized warehouse {}", currentUser.getId(), currentUser.getRole(), warehouseId);
-            throw new SecurityException(InventoryError.WAREHOUSE_ACCESS_DENIED.name());
+            throw new BackupException(BackupError.WAREHOUSE_ACCESS_DENIED);
         }
 
         AtomicBoolean lock = warehouseLocks.computeIfAbsent(warehouseId, k -> new AtomicBoolean(false));
         if (!lock.compareAndSet(false, true)) {
-            throw new RestoreAlreadyInProgressException();
+            throw new BackupException(BackupError.RESTORE_LOCK_ACQUISITION_FAILED, "Restore operation already in progress for warehouse " + warehouseId);
         }
 
         record.setStatus(BackupStatus.RESTORING);
@@ -501,22 +515,22 @@ public class BackupService {
                     Long newItemId = itemIdMapping.get(ad.originalItemId());
 
                     if (newRackId == null) {
-                        throw new IllegalStateException(String.format(
-                                "Cannot restore assortment: rack ID mapping not found for original rack ID %d. " +
-                                        "This may indicate corrupted backup data or missing rack in the backup.",
-                                ad.originalRackId()));
+                        throw new BackupException(BackupError.RACK_MAPPING_NOT_FOUND,
+                                String.format("Rack ID mapping not found for original rack ID %d. " +
+                                                "This may indicate corrupted backup data or missing rack in the backup.",
+                                        ad.originalRackId()));
                     }
                     if (newItemId == null) {
-                        throw new IllegalStateException(String.format(
-                                "Cannot restore assortment: item ID mapping not found for original item ID %d. " +
-                                        "This may indicate corrupted backup data or missing item in the backup.",
-                                ad.originalItemId()));
+                        throw new BackupException(BackupError.ITEM_MAPPING_NOT_FOUND,
+                                String.format("Item ID mapping not found for original item ID %d. " +
+                                                "This may indicate corrupted backup data or missing item in the backup.",
+                                        ad.originalItemId()));
                     }
 
                     Rack rack = rackRepository.findById(newRackId)
-                            .orElseThrow(() -> new IllegalStateException("RACK_NOT_FOUND_DURING_RESTORE: ID=" + newRackId));
+                            .orElseThrow(() -> new BackupException(BackupError.RACK_MAPPING_NOT_FOUND, "Rack not found during restore: ID=" + newRackId));
                     Item item = itemRepository.findById(newItemId)
-                            .orElseThrow(() -> new IllegalStateException("ITEM_NOT_FOUND_DURING_RESTORE: ID=" + newItemId));
+                            .orElseThrow(() -> new BackupException(BackupError.ITEM_MAPPING_NOT_FOUND, "Item not found during restore: ID=" + newItemId));
 
                     Assortment assortment = Assortment.builder()
                             .code(ad.code())
@@ -546,10 +560,10 @@ public class BackupService {
 
             createRestoreAlert(record, true);
 
-        } catch (SecurityException | IllegalStateException e) {
-            log.error("Restore {} failed for warehouse {}", recordId, warehouseId, e);
+        } catch (BackupException e) {
+            log.error("Restore {} failed for warehouse {} - Error: {}", recordId, warehouseId, e.getCode(), e);
             record.setStatus(BackupStatus.FAILED);
-            record.setErrorMessage(e.getMessage());
+            record.setErrorMessage(e.getError().getDescription() + (e.getMessage() != null && e.getMessage().contains(":") ? e.getMessage().substring(e.getMessage().indexOf(":") + 1).trim() : ""));
             record.setRestoreCompletedAt(Instant.now());
             backupRecordRepository.save(record);
             createRestoreAlert(record, false);
@@ -575,7 +589,7 @@ public class BackupService {
     public BackupRecordDto getBackup(Long id, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(httpRequest.getRemoteAddr(), RateLimitOperation.BACKUP_READ);
         BackupRecord record = backupRecordRepository.findWithEagerById(id)
-                .orElseThrow(() -> new IllegalArgumentException("BACKUP_NOT_FOUND"));
+                .orElseThrow(() -> new BackupException(BackupError.BACKUP_NOT_FOUND));
         return toDto(record);
     }
 
@@ -602,7 +616,7 @@ public class BackupService {
         rateLimiter.consumeOrThrow(httpRequest.getRemoteAddr(), RateLimitOperation.BACKUP_WRITE);
 
         BackupRecord record = backupRecordRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("BACKUP_NOT_FOUND"));
+                .orElseThrow(() -> new BackupException(BackupError.BACKUP_NOT_FOUND));
 
         String r2BasePath = record.getR2BasePath();
         try {
@@ -612,13 +626,15 @@ public class BackupService {
             }
             backupRecordRepository.delete(record);
             log.info("Deleted database record for backup {}", id);
+        } catch (BackupException e) {
+            throw e;
         } catch (Exception e) {
             if (r2BasePath != null) {
                 log.error("R2 files were already deleted for backup {} but database deletion failed. Manual cleanup may be required. Error: {}", id, e.getMessage(), e);
             } else {
                 log.error("Failed to delete backup {} from database. Error: {}", id, e.getMessage(), e);
             }
-            throw e;
+            throw new BackupException(BackupError.R2_CLEANUP_FAILED, e.getMessage(), e);
         }
     }
 
@@ -628,7 +644,7 @@ public class BackupService {
 
         List<Warehouse> warehouses = warehouseRepository.findAll();
         if (warehouses.isEmpty()) {
-            throw new IllegalStateException("NO_WAREHOUSES_FOUND");
+            throw new BackupException(BackupError.NO_WAREHOUSES_FOUND);
         }
 
         Set<BackupResourceType> allResourceTypes = Set.of(
@@ -663,7 +679,7 @@ public class BackupService {
 
         List<Warehouse> warehouses = warehouseRepository.findAll();
         if (warehouses.isEmpty()) {
-            throw new IllegalStateException("NO_WAREHOUSES_FOUND");
+            throw new BackupException(BackupError.NO_WAREHOUSES_FOUND);
         }
 
         List<RestoreResultDto> successfulRestores = new ArrayList<>();
@@ -724,7 +740,7 @@ public class BackupService {
     @Transactional(rollbackFor = Exception.class)
     public BackupScheduleDto upsertSchedule(Long warehouseId, CreateBackupScheduleRequest request) {
         Warehouse warehouse = warehouseRepository.findById(warehouseId)
-                .orElseThrow(() -> new IllegalArgumentException("WAREHOUSE_NOT_FOUND"));
+                .orElseThrow(() -> new BackupException(BackupError.WAREHOUSE_NOT_FOUND));
 
         BackupSchedule schedule = backupScheduleRepository.findByWarehouseId(warehouseId)
                 .orElseGet(() -> {
@@ -750,7 +766,7 @@ public class BackupService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteSchedule(Long warehouseId) {
         if (backupScheduleRepository.findByWarehouseId(warehouseId).isEmpty()) {
-            throw new IllegalArgumentException("SCHEDULE_NOT_FOUND");
+            throw new BackupException(BackupError.SCHEDULE_NOT_FOUND);
         }
         backupSchedulerManager.cancelSchedule(warehouseId);
         backupScheduleRepository.deleteByWarehouseId(warehouseId);
@@ -908,7 +924,7 @@ public class BackupService {
                 Long warehouseId = record.getWarehouse().getId();
                 log.warn("Marking stuck backup {} (warehouse {}) as FAILED", record.getId(), warehouseId);
                 record.setStatus(BackupStatus.FAILED);
-                record.setErrorMessage("Backup timed out - stuck in IN_PROGRESS status for over 1 hour");
+                record.setErrorMessage(BackupError.BACKUP_TIMEOUT.getDescription() + " - stuck in IN_PROGRESS status for over 1 hour");
                 record.setCompletedAt(Instant.now());
                 backupRecordRepository.save(record);
 

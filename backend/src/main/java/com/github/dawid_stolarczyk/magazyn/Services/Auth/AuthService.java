@@ -26,11 +26,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -51,7 +49,6 @@ public class AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
     private final GeolocationService geolocationService;
-
 
 
     public void logoutUser(HttpServletResponse response, HttpServletRequest request) {

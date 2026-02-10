@@ -36,7 +36,8 @@ public class RackReportService {
 
     private static final List<AlertStatus> ACTIVE_STATUSES = Arrays.asList(AlertStatus.OPEN, AlertStatus.ACTIVE);
 
-    private record AlertNotificationResult(List<User> usersToEmail, String alertMessage) {}
+    private record AlertNotificationResult(List<User> usersToEmail, String alertMessage) {
+    }
 
     private final RackReportRepository reportRepository;
     private final RackRepository rackRepository;
@@ -200,7 +201,7 @@ public class RackReportService {
      * @return Optional with users to email and the alert message (empty if no notifications needed)
      */
     private Optional<AlertNotificationResult> createAlertIfNotExists(Rack rack, RackReport report, AlertType alertType,
-                                           float thresholdValue, float actualValue) {
+                                                                     float thresholdValue, float actualValue) {
         Optional<Alert> existingAlert = alertRepository.findActiveAlertForRack(rack.getId(), alertType, ACTIVE_STATUSES);
 
         if (existingAlert.isPresent()) {
@@ -258,7 +259,7 @@ public class RackReportService {
      * @return Optional with users to email and the alert message (empty if no notifications needed)
      */
     private Optional<AlertNotificationResult> createAlertIfNotExistsForItem(Rack rack, Item item, RackReport report, AlertType alertType,
-                                                  float thresholdValue, float actualValue) {
+                                                                            float thresholdValue, float actualValue) {
         Optional<Alert> existingAlert = alertRepository.findActiveAlertForRackAndItem(
                 rack.getId(), item.getId(), alertType, ACTIVE_STATUSES);
 
@@ -317,7 +318,7 @@ public class RackReportService {
      * @return Optional with users to email and the alert message (empty if no notifications needed)
      */
     private Optional<AlertNotificationResult> createAlertIfNotExistsForWeight(Rack rack, RackReport report, AlertType alertType,
-                                                    float thresholdValue, float actualValue) {
+                                                                              float thresholdValue, float actualValue) {
         Optional<Alert> existingAlert = alertRepository.findActiveAlertForRack(
                 rack.getId(), alertType, ACTIVE_STATUSES);
 
@@ -372,7 +373,7 @@ public class RackReportService {
      * Used when an alert is updated with a more severe value.
      *
      * @return List of users who should receive an email: those whose notifications were re-marked
-     *         (read → unread, meaning alert got worse since they last checked) plus new notification recipients
+     * (read → unread, meaning alert got worse since they last checked) plus new notification recipients
      */
     private List<User> redistributeNotifications(Alert alert) {
         log.info("Redistributing notifications for alert {} - marking all as unread", alert.getId());
