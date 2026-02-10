@@ -104,7 +104,11 @@ export function DashboardRecentArrivalsCard() {
         return {
           ...assortment,
           dangerous: itemDefinition?.dangerous ?? false,
-          itemName: itemDefinition?.name ?? `Produkt #${assortment.itemId}`,
+          itemName:
+            itemDefinition?.name ??
+            translateMessage("generated.m1159", {
+              value0: assortment.itemId,
+            }),
           rackLabel:
             rackLabelsById.get(assortment.rackId) ??
             translateMessage("generated.m0450", { value0: assortment.rackId }),

@@ -705,7 +705,7 @@ function ConnectedMethods({
               <span className="font-medium text-foreground">
                 {defaultMethod
                   ? (twoFactorMethodLabels[defaultMethod] ?? defaultMethod)
-                  : "Nie ustawiono"}
+                  : translateMessage("generated.m1160")}
               </span>
             </span>
           </div>

@@ -7,6 +7,7 @@ import {
   createLocaleCookie,
   normalizeAppLocale,
 } from "@/i18n/locale"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 const LANGUAGES: { locale: AppLocale; label: string; flag: string }[] = [
@@ -53,7 +54,9 @@ export function LanguageSwitcher({ className }: { className?: string }) {
         const isActive = locale === currentLocale
         return (
           <button
-            aria-label={locale === "pl" ? "Polski" : "English"}
+            aria-label={translateMessage(
+              locale === "pl" ? "generated.m1161" : "generated.m1162"
+            )}
             aria-pressed={isActive}
             className={cn(
               "relative z-10 flex cursor-pointer items-center gap-1 rounded-full px-2.5 py-1 font-medium text-xs tracking-wide transition-colors duration-200",
