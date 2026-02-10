@@ -30,15 +30,11 @@ export interface TemperatureReportRow {
 
 export interface InventoryReportRow {
   id: string
-  item: string
-  sku: string
   warehouse: string
   rack: string
+  item: string
+  sku: string
   quantity: number
   unit: string
-  minQuantity: number
-  maxQuantity: number
-  category: string
-  status: "OK" | "LOW" | "OVERSTOCK"
-  lastUpdated: string
+  nearestExpiry: string | null
 }

@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  Alert01Icon,
   FileDownloadIcon,
   ThermometerIcon,
   Time02Icon,
@@ -35,11 +34,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import {
   formatDateTime,
@@ -54,29 +48,6 @@ type SortField = "deviation" | "recordedAt" | "severity"
 type SortDirection = "asc" | "desc"
 
 const SEVERITY_ORDER = { CRITICAL: 0, WARNING: 1, MINOR: 2 }
-
-const TEMP_RANGE_REGEX = /([\d.-]+)°C\s*–\s*([\d.-]+)°C/
-
-type DeviationDirection = "above" | "below" | "in_range"
-
-const getDeviationInfo = (
-  row: TemperatureReportRow
-): { direction: DeviationDirection; label: string } => {
-  const rangeMatch = row.targetRange.match(TEMP_RANGE_REGEX)
-  if (!rangeMatch) {
-    return { direction: "above", label: "Poza normą" }
-  }
-  const min = Number.parseFloat(rangeMatch[1])
-  const max = Number.parseFloat(rangeMatch[2])
-  const temp = Number.parseFloat(row.recordedTemp.replace("°C", ""))
-  if (temp > max) {
-    return { direction: "above", label: "powyżej normy" }
-  }
-  if (temp < min) {
-    return { direction: "below", label: "poniżej normy" }
-  }
-  return { direction: "in_range", label: "W normie" }
-}
 
 const getRowHighlightBySeverity = (severity: string) => {
   if (severity === "CRITICAL") {
@@ -94,7 +65,6 @@ interface TemperatureRowProps {
 
 function TemperatureRow({ row }: TemperatureRowProps) {
   const severity = getSeverityConfig(row.severity)
-  const deviationInfo = getDeviationInfo(row)
 
   return (
     <TableRow
@@ -104,61 +74,30 @@ function TemperatureRow({ row }: TemperatureRowProps) {
       )}
     >
       <TableCell>
-        <Tooltip>
-          <TooltipTrigger className="cursor-default">
-            <Badge variant={severity.variant}>
-              {row.severity === "CRITICAL" && (
-                <HugeiconsIcon className="mr-0.5 size-3" icon={Alert01Icon} />
-              )}
-              {severity.label}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>
-              Odchylenie od normy: {row.deviation}°C {deviationInfo.label}
-            </p>
-          </TooltipContent>
-        </Tooltip>
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <Badge variant={row.scope === "RACK" ? "secondary" : "outline"}>
-            {row.scope === "RACK" ? "Regał" : "Asortyment"}
-          </Badge>
-          <span className="text-muted-foreground text-xs">
-            {row.targetRange}
-          </span>
-        </div>
-      </TableCell>
-      <TableCell>
-        <div className="flex flex-col">
-          <span className="text-sm">{row.location}</span>
-          <span className="text-muted-foreground text-xs">{row.warehouse}</span>
-        </div>
-      </TableCell>
-      <TableCell>
         {row.item ? (
-          <span className="font-medium text-foreground">{row.item}</span>
+          <span className="font-medium">{row.item}</span>
         ) : (
           <span className="text-muted-foreground italic">Cały regał</span>
         )}
       </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              "font-mono font-semibold text-sm tabular-nums",
-              severity.color
-            )}
-          >
-            {row.recordedTemp}
-          </span>
-          <span className="text-muted-foreground text-xs tabular-nums">
-            ({deviationInfo.label}, ±{row.deviation}°C)
-          </span>
-        </div>
+      <TableCell className="font-mono text-xs">{row.location}</TableCell>
+      <TableCell className="text-sm">{row.warehouse}</TableCell>
+      <TableCell className="text-sm">
+        {row.scope === "RACK" ? "Regał" : "Asortyment"}
       </TableCell>
-      <TableCell className="text-center font-mono text-xs tabular-nums">
+      <TableCell className="font-mono text-sm tabular-nums">
+        {row.targetRange}
+      </TableCell>
+      <TableCell className="font-mono font-semibold text-sm tabular-nums">
+        {row.recordedTemp}
+      </TableCell>
+      <TableCell className="font-mono text-sm tabular-nums">
+        ±{row.deviation}°C
+      </TableCell>
+      <TableCell>
+        <Badge variant={severity.variant}>{severity.label}</Badge>
+      </TableCell>
+      <TableCell className="font-mono text-xs tabular-nums">
         {formatDateTime(row.recordedAt)}
       </TableCell>
     </TableRow>
@@ -278,6 +217,19 @@ export function TemperatureReportCard() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Produkt</TableHead>
+                  <TableHead>Regał</TableHead>
+                  <TableHead>Magazyn</TableHead>
+                  <TableHead>Typ</TableHead>
+                  <TableHead>Zakres docelowy</TableHead>
+                  <SortableTableHead
+                    active={sortField === "deviation"}
+                    direction={sortDirection}
+                    onSort={() => handleSort("deviation")}
+                  >
+                    Odczyt
+                  </SortableTableHead>
+                  <TableHead>Odchylenie</TableHead>
                   <SortableTableHead
                     active={sortField === "severity"}
                     direction={sortDirection}
@@ -285,19 +237,8 @@ export function TemperatureReportCard() {
                   >
                     Poziom
                   </SortableTableHead>
-                  <TableHead>Typ i zakres</TableHead>
-                  <TableHead>Lokalizacja</TableHead>
-                  <TableHead>Powiązany asortyment</TableHead>
-                  <SortableTableHead
-                    active={sortField === "deviation"}
-                    direction={sortDirection}
-                    onSort={() => handleSort("deviation")}
-                  >
-                    Odczyt / Odchylenie
-                  </SortableTableHead>
                   <SortableTableHead
                     active={sortField === "recordedAt"}
-                    className="text-center"
                     direction={sortDirection}
                     onSort={() => handleSort("recordedAt")}
                   >
@@ -331,7 +272,8 @@ export function TemperatureReportCard() {
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="secondary">Razem</Badge>
-            {TEMPERATURE_REPORT.length} odchyleń • maks. ±{stats.maxDeviation}°C
+            {TEMPERATURE_REPORT.length} odchyleń • maks. ±{stats.maxDeviation}
+            °C
           </div>
         </div>
       </CardFooter>

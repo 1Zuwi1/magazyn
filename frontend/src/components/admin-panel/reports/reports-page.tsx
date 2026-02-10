@@ -21,10 +21,6 @@ export default function ReportsMain() {
     const criticalTempAlerts = TEMPERATURE_REPORT.filter(
       (row) => row.severity === "CRITICAL"
     ).length
-    const lowStockCount = INVENTORY_REPORT.filter(
-      (row) => row.status === "LOW"
-    ).length
-
     return {
       totalExpiry: EXPIRY_REPORT.length,
       urgentExpiry: urgent,
@@ -33,13 +29,11 @@ export default function ReportsMain() {
       tempAlerts: TEMPERATURE_REPORT.length,
       criticalTempAlerts,
       inventoryRows: INVENTORY_REPORT.length,
-      lowStockCount,
     }
   }, [])
 
   const hasExpiryAlerts = summary.expiredCount > 0 || summary.urgentExpiry > 0
   const hasTempAlerts = summary.criticalTempAlerts > 0
-  const hasStockAlerts = summary.lowStockCount > 0
 
   return (
     <div className="space-y-6">
@@ -58,12 +52,7 @@ export default function ReportsMain() {
       <Tabs className="space-y-4" defaultValue="inventory">
         <TabsList variant="line">
           <TabsTrigger value="inventory">
-            <span className="flex items-center gap-2">
-              Pełna inwentaryzacja ({INVENTORY_REPORT.length})
-              {hasStockAlerts && (
-                <span className="size-2 rounded-full bg-orange-500" />
-              )}
-            </span>
+            Pełna inwentaryzacja ({INVENTORY_REPORT.length})
           </TabsTrigger>
           <TabsTrigger value="expiry">
             <span className="flex items-center gap-2">

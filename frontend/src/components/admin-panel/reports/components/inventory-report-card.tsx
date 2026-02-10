@@ -34,51 +34,36 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-import { formatDateTime, INVENTORY_REPORT, REPORT_FORMATS } from "../lib/data"
+import { formatDate, INVENTORY_REPORT, REPORT_FORMATS } from "../lib/data"
 import type { InventoryReportRow, ReportFormat } from "../lib/types"
 import { SortableTableHead } from "./sortable-table-head"
 
-type SortField = "item" | "quantity" | "status" | "lastUpdated"
+type SortField = "warehouse" | "item" | "quantity" | "nearestExpiry"
 type SortDirection = "asc" | "desc"
 
-const STATUS_ORDER = { LOW: 0, OVERSTOCK: 1, OK: 2 }
-
-const getInventoryStatusBadge = (status: InventoryReportRow["status"]) => {
-  if (status === "LOW") {
-    return { label: "Niski stan", variant: "warning" as const }
-  }
-  if (status === "OVERSTOCK") {
-    return { label: "Nadmiar", variant: "destructive" as const }
-  }
-  return { label: "W normie", variant: "success" as const }
+const getDaysLeft = (expiryDate: string) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const expiry = new Date(expiryDate)
+  return Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 }
 
-const getRowHighlightByStatus = (status: InventoryReportRow["status"]) => {
-  if (status === "LOW") {
-    return "bg-orange-500/3 hover:bg-orange-500/5"
+const getRowHighlight = (nearestExpiry: string | null) => {
+  if (!nearestExpiry) {
+    return ""
   }
-  if (status === "OVERSTOCK") {
+  const daysLeft = getDaysLeft(nearestExpiry)
+  if (daysLeft <= 0) {
+    return "bg-destructive/5 hover:bg-destructive/10"
+  }
+  if (daysLeft <= 3) {
     return "bg-destructive/3 hover:bg-destructive/5"
   }
+  if (daysLeft <= 10) {
+    return "bg-orange-500/3 hover:bg-orange-500/5"
+  }
   return ""
-}
-
-const getStatusTooltip = (row: InventoryReportRow) => {
-  const diff = row.quantity - row.minQuantity
-  if (row.status === "LOW") {
-    return `Brakuje ${Math.abs(diff)} ${row.unit} do minimalnego poziomu (${row.minQuantity} ${row.unit})`
-  }
-  if (row.status === "OVERSTOCK") {
-    const overstock = row.quantity - row.maxQuantity
-    return `Nadmiar: ${overstock} ${row.unit} ponad maksymalny poziom (${row.maxQuantity} ${row.unit})`
-  }
-  return `Stan w normie: ${row.minQuantity}–${row.maxQuantity} ${row.unit}`
 }
 
 interface InventoryRowProps {
@@ -86,54 +71,23 @@ interface InventoryRowProps {
 }
 
 function InventoryRow({ row }: InventoryRowProps) {
-  const badge = getInventoryStatusBadge(row.status)
-
   return (
     <TableRow
-      className={cn("transition-colors", getRowHighlightByStatus(row.status))}
+      className={cn("transition-colors", getRowHighlight(row.nearestExpiry))}
     >
-      <TableCell>
-        <div className="flex flex-col">
-          <span className="font-medium">{row.item}</span>
-          <span className="text-muted-foreground text-xs">{row.category}</span>
-        </div>
-      </TableCell>
+      <TableCell className="font-medium">{row.item}</TableCell>
       <TableCell className="font-mono text-xs">{row.sku}</TableCell>
-      <TableCell>
-        <div className="flex flex-col">
-          <span className="text-sm">{row.warehouse}</span>
-          <span className="text-muted-foreground text-xs">{row.rack}</span>
-        </div>
+      <TableCell className="font-mono text-xs">{row.rack}</TableCell>
+      <TableCell className="text-sm">{row.warehouse}</TableCell>
+      <TableCell className="font-semibold tabular-nums">
+        {row.quantity} {row.unit}
       </TableCell>
-      <TableCell>
-        <Tooltip>
-          <TooltipTrigger className="cursor-default">
-            <span className="font-semibold tabular-nums">
-              {row.quantity} {row.unit}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{getStatusTooltip(row)}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TableCell>
-      <TableCell className="text-center">
-        <span className="font-mono text-muted-foreground text-xs tabular-nums">
-          {row.minQuantity} – {row.maxQuantity} {row.unit}
-        </span>
-      </TableCell>
-      <TableCell>
-        <Tooltip>
-          <TooltipTrigger className="cursor-default">
-            <Badge variant={badge.variant}>{badge.label}</Badge>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{getStatusTooltip(row)}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TableCell>
-      <TableCell className="text-right font-mono text-muted-foreground text-xs tabular-nums">
-        {formatDateTime(row.lastUpdated)}
+      <TableCell className="font-mono text-sm tabular-nums">
+        {row.nearestExpiry ? (
+          formatDate(row.nearestExpiry)
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
       </TableCell>
     </TableRow>
   )
@@ -142,7 +96,7 @@ function InventoryRow({ row }: InventoryRowProps) {
 export function InventoryReportCard() {
   const [format, setFormat] = useState<ReportFormat>("xlsx")
   const [search, setSearch] = useState("")
-  const [sortField, setSortField] = useState<SortField>("item")
+  const [sortField, setSortField] = useState<SortField>("warehouse")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
 
   const handleSort = (field: SortField) => {
@@ -150,7 +104,7 @@ export function InventoryReportCard() {
       setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))
     } else {
       setSortField(field)
-      setSortDirection(field === "lastUpdated" ? "desc" : "asc")
+      setSortDirection("asc")
     }
   }
 
@@ -164,40 +118,34 @@ export function InventoryReportCard() {
           row.item.toLowerCase().includes(normalizedSearch) ||
           row.sku.toLowerCase().includes(normalizedSearch) ||
           row.rack.toLowerCase().includes(normalizedSearch) ||
-          row.category.toLowerCase().includes(normalizedSearch)
+          row.warehouse.toLowerCase().includes(normalizedSearch)
       )
     }
 
     result.sort((a, b) => {
       const multiplier = sortDirection === "asc" ? 1 : -1
+      if (sortField === "warehouse") {
+        const cmp = a.warehouse.localeCompare(b.warehouse)
+        return cmp !== 0 ? multiplier * cmp : a.rack.localeCompare(b.rack)
+      }
       if (sortField === "item") {
         return multiplier * a.item.localeCompare(b.item)
       }
       if (sortField === "quantity") {
         return multiplier * (a.quantity - b.quantity)
       }
-      if (sortField === "lastUpdated") {
-        return multiplier * a.lastUpdated.localeCompare(b.lastUpdated)
-      }
-      return multiplier * (STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
+      const expiryA = a.nearestExpiry ?? "9999-12-31"
+      const expiryB = b.nearestExpiry ?? "9999-12-31"
+      return multiplier * expiryA.localeCompare(expiryB)
     })
 
     return result
   }, [search, sortField, sortDirection])
 
-  const summary = useMemo(() => {
-    const totalQuantity = INVENTORY_REPORT.reduce(
-      (sum, row) => sum + row.quantity,
-      0
-    )
-    const lowCount = INVENTORY_REPORT.filter(
-      (row) => row.status === "LOW"
-    ).length
-    const overstockCount = INVENTORY_REPORT.filter(
-      (row) => row.status === "OVERSTOCK"
-    ).length
-    return { totalQuantity, lowCount, overstockCount }
-  }, [])
+  const totalQuantity = useMemo(
+    () => INVENTORY_REPORT.reduce((sum, row) => sum + row.quantity, 0),
+    []
+  )
 
   return (
     <Card>
@@ -212,8 +160,8 @@ export function InventoryReportCard() {
               Pełna inwentaryzacja magazynu
             </CardTitle>
             <CardDescription>
-              Zestawienie aktualnych stanów magazynowych z progami min/max
-              według lokalizacji i SKU.
+              Zestawienie wszystkich pozycji magazynowych z ilościami i
+              najbliższymi datami przeterminowania.
             </CardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -242,9 +190,9 @@ export function InventoryReportCard() {
 
       <div className="border-b bg-muted/30 p-4">
         <SearchInput
-          aria-label="Szukaj asortymentu, SKU lub regału"
+          aria-label="Szukaj produktu, SKU, regału lub magazynu"
           onChange={setSearch}
-          placeholder="Szukaj po nazwie, SKU, regale, kategorii..."
+          placeholder="Szukaj po nazwie, SKU, regale, magazynie..."
           value={search}
         />
       </div>
@@ -262,32 +210,30 @@ export function InventoryReportCard() {
                     direction={sortDirection}
                     onSort={() => handleSort("item")}
                   >
-                    Asortyment
+                    Produkt
                   </SortableTableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Lokalizacja</TableHead>
+                  <TableHead>Kod</TableHead>
+                  <TableHead>Regał</TableHead>
+                  <SortableTableHead
+                    active={sortField === "warehouse"}
+                    direction={sortDirection}
+                    onSort={() => handleSort("warehouse")}
+                  >
+                    Magazyn
+                  </SortableTableHead>
                   <SortableTableHead
                     active={sortField === "quantity"}
                     direction={sortDirection}
                     onSort={() => handleSort("quantity")}
                   >
-                    Stan magazynowy
-                  </SortableTableHead>
-                  <TableHead className="text-center">Zakresy min/max</TableHead>
-                  <SortableTableHead
-                    active={sortField === "status"}
-                    direction={sortDirection}
-                    onSort={() => handleSort("status")}
-                  >
-                    Status
+                    Ilość
                   </SortableTableHead>
                   <SortableTableHead
-                    active={sortField === "lastUpdated"}
-                    className="text-right"
+                    active={sortField === "nearestExpiry"}
                     direction={sortDirection}
-                    onSort={() => handleSort("lastUpdated")}
+                    onSort={() => handleSort("nearestExpiry")}
                   >
-                    Aktualizacja
+                    Najbliższe przeterminowanie
                   </SortableTableHead>
                 </TableRow>
               </TableHeader>
@@ -308,17 +254,9 @@ export function InventoryReportCard() {
             Ostatnia aktualizacja: 10.02.2026, 10:15
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="warning">Niski stan</Badge>
-            {summary.lowCount} pozycji
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="destructive">Nadmiar</Badge>
-            {summary.overstockCount} pozycji
-          </div>
-          <div className="flex items-center gap-2">
             <Badge variant="secondary">Razem</Badge>
-            {summary.totalQuantity.toLocaleString("pl-PL")} szt. w{" "}
-            {INVENTORY_REPORT.length} pozycjach
+            {INVENTORY_REPORT.length} pozycji •{" "}
+            {totalQuantity.toLocaleString("pl-PL")} szt.
           </div>
         </div>
       </CardFooter>

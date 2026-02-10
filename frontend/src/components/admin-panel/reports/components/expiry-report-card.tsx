@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  Alert01Icon,
   Calendar03Icon,
   FileDownloadIcon,
   Time02Icon,
@@ -35,11 +34,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import {
   EXPIRY_REPORT,
@@ -66,77 +60,28 @@ const getRowHighlight = (daysLeft: number) => {
   return ""
 }
 
-const getExpiryTooltip = (daysLeft: number) => {
-  if (daysLeft <= 0) {
-    return "Produkt przeterminowany — wymagana natychmiastowa reakcja"
-  }
-  if (daysLeft <= 3) {
-    return "Krytycznie krótka data — pilna akcja wymagana"
-  }
-  if (daysLeft <= 10) {
-    return "Zbliżająca się data ważności — zaplanuj rotację"
-  }
-  return "Data ważności w normie"
-}
-
 interface ExpiryRowProps {
   row: ExpiryReportRow
 }
 
 function ExpiryRow({ row }: ExpiryRowProps) {
   const status = getExpiryStatus(row.daysLeft)
-  const daysLabel = row.daysLeft === 1 ? "dzień" : "dni"
 
   return (
     <TableRow
       className={cn("transition-colors", getRowHighlight(row.daysLeft))}
     >
-      <TableCell>
-        <div className="flex flex-col">
-          <span className="font-medium">{row.item}</span>
-          <span className="text-muted-foreground text-xs">{row.category}</span>
-        </div>
-      </TableCell>
-      <TableCell className="font-mono text-xs">{row.batch}</TableCell>
-      <TableCell>
-        <div className="flex flex-col">
-          <span className="text-sm">{row.warehouse}</span>
-          <span className="text-muted-foreground text-xs">{row.rack}</span>
-        </div>
-      </TableCell>
+      <TableCell className="font-medium">{row.item}</TableCell>
+      <TableCell className="font-mono text-xs">{row.rack}</TableCell>
+      <TableCell className="text-sm">{row.warehouse}</TableCell>
       <TableCell className="font-semibold tabular-nums">
         {row.quantity} {row.unit}
       </TableCell>
-      <TableCell>
-        <div className="flex flex-col">
-          <span className="font-mono text-sm tabular-nums">
-            {formatDate(row.expiryDate)}
-          </span>
-          {row.daysLeft <= 0 ? (
-            <span className="font-medium text-destructive text-xs">
-              Przeterminowane
-            </span>
-          ) : (
-            <span className="text-muted-foreground text-xs tabular-nums">
-              za {row.daysLeft} {daysLabel}
-            </span>
-          )}
-        </div>
+      <TableCell className="font-mono text-sm tabular-nums">
+        {formatDate(row.expiryDate)}
       </TableCell>
       <TableCell>
-        <Tooltip>
-          <TooltipTrigger className="cursor-default">
-            <Badge variant={status.variant}>
-              {row.daysLeft <= 0 && (
-                <HugeiconsIcon className="mr-0.5 size-3" icon={Alert01Icon} />
-              )}
-              {status.label}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{getExpiryTooltip(row.daysLeft)}</p>
-          </TooltipContent>
-        </Tooltip>
+        <Badge variant={status.variant}>{status.label}</Badge>
       </TableCell>
     </TableRow>
   )
@@ -169,9 +114,8 @@ export function ExpiryReportCard({ soonExpiry }: ExpiryReportCardProps) {
       result = result.filter(
         (row) =>
           row.item.toLowerCase().includes(normalizedSearch) ||
-          row.batch.toLowerCase().includes(normalizedSearch) ||
           row.rack.toLowerCase().includes(normalizedSearch) ||
-          row.category.toLowerCase().includes(normalizedSearch)
+          row.warehouse.toLowerCase().includes(normalizedSearch)
       )
     }
 
@@ -240,9 +184,9 @@ export function ExpiryReportCard({ soonExpiry }: ExpiryReportCardProps) {
 
       <div className="border-b bg-muted/30 p-4">
         <SearchInput
-          aria-label="Szukaj asortymentu, partii lub regału"
+          aria-label="Szukaj produktu, regału lub magazynu"
           onChange={setSearch}
-          placeholder="Szukaj po nazwie, partii, regale, kategorii..."
+          placeholder="Szukaj po nazwie, regale, magazynie..."
           value={search}
         />
       </div>
@@ -260,10 +204,10 @@ export function ExpiryReportCard({ soonExpiry }: ExpiryReportCardProps) {
                     direction={sortDirection}
                     onSort={() => handleSort("item")}
                   >
-                    Asortyment
+                    Produkt
                   </SortableTableHead>
-                  <TableHead>Partia</TableHead>
-                  <TableHead>Lokalizacja</TableHead>
+                  <TableHead>Regał</TableHead>
+                  <TableHead>Magazyn</TableHead>
                   <SortableTableHead
                     active={sortField === "quantity"}
                     direction={sortDirection}

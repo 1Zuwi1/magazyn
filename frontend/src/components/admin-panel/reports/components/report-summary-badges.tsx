@@ -16,7 +16,6 @@ interface ReportSummary {
   tempAlerts: number
   criticalTempAlerts: number
   inventoryRows: number
-  lowStockCount: number
 }
 
 interface ReportSummaryBadgesProps {
@@ -137,16 +136,10 @@ export function ReportSummaryBadges({ summary }: ReportSummaryBadgesProps) {
         iconColor="text-emerald-600"
         label={pluralize(
           summary.inventoryRows,
-          "pozycja stanu",
-          "pozycje stanu",
-          "pozycji stanu"
+          "pozycja w magazynie",
+          "pozycje w magazynie",
+          "pozycji w magazynie"
         )}
-        sublabel={
-          summary.lowStockCount > 0
-            ? `(${summary.lowStockCount} niski stan)`
-            : undefined
-        }
-        sublabelColor="text-orange-600"
         textColor="text-emerald-600"
       />
     </div>
