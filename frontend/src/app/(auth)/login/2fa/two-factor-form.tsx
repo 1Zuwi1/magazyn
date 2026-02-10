@@ -21,6 +21,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
+import { translateMessage } from "@/i18n/translate-message"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   Resend2FASchema,
@@ -49,7 +50,7 @@ export default function TwoFactorForm({
   otpLength,
 }: TwoFactorFormProps) {
   if (linkedMethods.length === 0) {
-    throw new Error("TwoFactorForm requires at least one linked 2FA method.")
+    throw new Error(translateMessage("generated.m0041"))
   }
   const [defaultMethod] = useState(() => defaultLinkedMethod)
   const [isResending, setIsResending] = useState(false)
@@ -70,20 +71,18 @@ export default function TwoFactorForm({
           if (FetchError.isError(err)) {
             handleApiError(err)
           } else {
-            toast.error(
-              "Nieprawidłowy kod lub błąd weryfikacji. Spróbuj ponownie."
-            )
+            toast.error(translateMessage("generated.m0042"))
           }
           return
         }
-        toast.success("Zweryfikowano!")
+        toast.success(translateMessage("generated.m0043"))
         router.push("/dashboard")
       } catch (e) {
         if (FetchError.isError(e)) {
           handleApiError(e)
           return
         }
-        toast.error("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.")
+        toast.error(translateMessage("generated.m0030"))
       } finally {
         autoSubmittedRef.current = false
       }
@@ -97,7 +96,7 @@ export default function TwoFactorForm({
     async (m: ResendType, showNotSupportedError = true) => {
       if (!resendMethods.includes(m)) {
         if (showNotSupportedError) {
-          toast.error("Nieobsługiwana metoda ponownego wysyłania kodu.")
+          toast.error(translateMessage("generated.m0044"))
         }
         return false
       }
@@ -111,11 +110,11 @@ export default function TwoFactorForm({
       setIsResending(false)
 
       if (err) {
-        toast.error("Nie udało się wysłać kodu ponownie. Spróbuj za chwilę.")
+        toast.error(translateMessage("generated.m0045"))
         return false
       }
 
-      toast.success("Wysłano nowy kod e-mailem.")
+      toast.success(translateMessage("generated.m0046"))
       return true
     },
     [resendMethods]
@@ -154,7 +153,7 @@ export default function TwoFactorForm({
               href="/login"
             >
               <HugeiconsIcon className="size-4" icon={ArrowLeft01Icon} />
-              Cofnij do logowania
+              {translateMessage("generated.m0031")}
             </Link>
           </div>
           <form.Subscribe
@@ -191,7 +190,7 @@ export default function TwoFactorForm({
                     {isPasskey ? (
                       <PasskeyLogin
                         disabled={isSubmitting || isResending}
-                        label="Zweryfikuj kluczem bezpieczeństwa"
+                        label={translateMessage("generated.m0047")}
                         showSeparator={false}
                       />
                     ) : (
@@ -200,7 +199,7 @@ export default function TwoFactorForm({
                           {(field) => (
                             <FieldWithState
                               field={field}
-                              label="Kod weryfikacyjny"
+                              label={translateMessage("generated.m0048")}
                               labelClassName="sr-only"
                               renderInput={({ id, isInvalid }) => (
                                 <InputOTP
@@ -270,7 +269,7 @@ export default function TwoFactorForm({
 
                         {canResend ? (
                           <FieldDescription className="text-center">
-                            Nie dotarło?{" "}
+                            {translateMessage("generated.m0049")}{" "}
                             <Button
                               className="h-auto p-0 align-baseline"
                               isLoading={isResending}
@@ -278,7 +277,7 @@ export default function TwoFactorForm({
                               type="button"
                               variant="link"
                             >
-                              Wyślij ponownie
+                              {translateMessage("generated.m0050")}
                             </Button>
                           </FieldDescription>
                         ) : null}
@@ -288,7 +287,7 @@ export default function TwoFactorForm({
                     {alternatives.length ? (
                       <div className="mt-3">
                         <p className="text-center text-muted-foreground text-sm">
-                          Użyj innej metody
+                          {translateMessage("generated.m0051")}
                         </p>
                         <div className="mt-2 flex flex-col gap-1">
                           {alternatives.map((m) => (
@@ -327,7 +326,7 @@ export default function TwoFactorForm({
                   isLoading={isSubmitting}
                   type="submit"
                 >
-                  Zweryfikuj kod
+                  {translateMessage("generated.m0052")}
                 </Button>
               )
             }

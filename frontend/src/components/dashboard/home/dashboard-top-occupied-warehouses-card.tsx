@@ -5,6 +5,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { ErrorEmptyState } from "@/components/ui/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
 import useWarehouses from "@/hooks/use-warehouses"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { InsightCard } from "../stat-card"
 import { formatNumber } from "./dashboard-home.constants"
@@ -94,9 +95,12 @@ export default function DashboardTopOccupiedWarehousesCard() {
               />
             </div>
             <p className="font-mono text-muted-foreground text-xs">
-              {formatNumber(warehouse.occupiedSlots)} /{" "}
-              {formatNumber(warehouse.occupiedSlots + warehouse.freeSlots)}{" "}
-              miejsc
+              {translateMessage("generated.m1072", {
+                value0: formatNumber(warehouse.occupiedSlots),
+                value1: formatNumber(
+                  warehouse.occupiedSlots + warehouse.freeSlots
+                ),
+              })}
             </p>
           </div>
         ))}
@@ -108,7 +112,7 @@ export default function DashboardTopOccupiedWarehousesCard() {
           })}
           href="/dashboard/warehouse"
         >
-          Zobacz wszystkie magazyny
+          {translateMessage("generated.m0454")}
         </Link>
       </div>
     )
@@ -116,9 +120,9 @@ export default function DashboardTopOccupiedWarehousesCard() {
 
   return (
     <InsightCard
-      description="Najbardziej wypełnione lokalizacje."
+      description={translateMessage("generated.m0455")}
       icon={Package}
-      title="Obłożenie magazynów"
+      title={translateMessage("generated.m0456")}
     >
       {renderContent()}
     </InsightCard>

@@ -1,6 +1,7 @@
 import { Mic01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
+import { translateMessage } from "@/i18n/translate-message"
 
 interface VoiceAssistantIdleViewProps {
   buttonId?: string
@@ -28,7 +29,7 @@ export function VoiceAssistantNormalView({
         <div className="relative">
           <span className="pointer-events-none absolute -inset-3 rounded-full bg-primary/8 blur-xl" />
           <Button
-            aria-label="Rozpocznij nasłuchiwanie"
+            aria-label={translateMessage("generated.m0822")}
             className="relative size-22 rounded-full shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 hover:shadow-primary/30 hover:shadow-xl active:scale-95"
             id={buttonId}
             onClick={onStartListening}
@@ -44,23 +45,23 @@ export function VoiceAssistantNormalView({
 
         <div className="max-w-xs space-y-1.5">
           <h2 className="font-semibold text-foreground text-lg tracking-tight">
-            Asystent głosowy
+            {translateMessage("generated.m0665")}
           </h2>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            Naciśnij mikrofon i powiedz polecenie
+            {translateMessage("generated.m0823")}
           </p>
         </div>
 
         <div className="w-full pt-3">
           <p className="mb-2.5 font-medium text-muted-foreground/70 text-xs uppercase tracking-wider">
-            Przykładowe polecenia
+            {translateMessage("generated.m0824")}
           </p>
           <div className="flex flex-wrap justify-center gap-2">
             {[
-              "Pokaż magazyn A1",
+              translateMessage("generated.m0825"),
               "Dodaj przedmiot",
-              "Pokaż powiadomienia",
-              "Otwórz panel administracyjny",
+              translateMessage("generated.m0826"),
+              translateMessage("generated.m0827"),
             ].map((suggestion) => (
               <Button
                 className="h-8 rounded-full px-4 text-xs transition-colors duration-200"

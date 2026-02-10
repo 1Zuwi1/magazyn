@@ -37,6 +37,7 @@ import { Separator } from "@/components/ui/separator"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { useUploadItemPhoto } from "@/hooks/use-items"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 export interface ItemFormData {
@@ -128,9 +129,7 @@ function useCamera(videoRef: React.RefObject<HTMLVideoElement | null>) {
       }
       setIsActive(true)
     } catch {
-      setError(
-        "Nie udalo sie uzyskac dostepu do kamery. Upewnij sie, ze udzielono pozwolenia."
-      )
+      setError(translateMessage("generated.m0202"))
     }
   }, [videoRef])
 
@@ -240,7 +239,7 @@ function CameraView({
             <p className="text-sm text-white/80">{error}</p>
             <Button onClick={start} size="sm" variant="outline">
               <HugeiconsIcon className="mr-1.5 size-4" icon={RefreshIcon} />
-              Sprobuj ponownie
+              {translateMessage("generated.m0203")}
             </Button>
           </div>
         )}
@@ -249,10 +248,10 @@ function CameraView({
       <div className="flex w-full items-center justify-between">
         <Button onClick={onCancel} size="sm" variant="ghost">
           <HugeiconsIcon className="mr-1.5 size-4" icon={Cancel01Icon} />
-          Anuluj
+          {translateMessage("generated.m0885")}
         </Button>
         <button
-          aria-label="Zrob zdjecie"
+          aria-label={translateMessage("generated.m0204")}
           className="flex size-14 items-center justify-center rounded-full border-4 border-primary bg-primary/10 transition-colors hover:bg-primary/20 active:bg-primary/30 disabled:opacity-50"
           disabled={!isActive}
           onClick={handleCapture}
@@ -392,8 +391,7 @@ export function PhotoPromptDialog({
                   icon={AlertDiamondIcon}
                 />
                 <p className="text-amber-800 text-sm leading-snug dark:text-amber-200">
-                  Obecne zdjecie zostanie nadpisane. Tej operacji nie mozna
-                  cofnac.
+                  {translateMessage("generated.m0205")}
                 </p>
               </div>
             )}
@@ -408,7 +406,9 @@ export function PhotoPromptDialog({
                   className="size-8 text-muted-foreground/60"
                   icon={Camera01Icon}
                 />
-                <span className="font-medium text-sm">Zrob zdjecie</span>
+                <span className="font-medium text-sm">
+                  {translateMessage("generated.m0204")}
+                </span>
               </button>
               <button
                 className="flex flex-col items-center gap-3 rounded-lg border-2 border-muted-foreground/25 border-dashed bg-muted/20 p-6 transition-colors hover:border-primary/40 hover:bg-muted/40"
@@ -419,7 +419,9 @@ export function PhotoPromptDialog({
                   className="size-8 text-muted-foreground/60"
                   icon={ImageUploadIcon}
                 />
-                <span className="font-medium text-sm">Wybierz plik</span>
+                <span className="font-medium text-sm">
+                  {translateMessage("generated.m0206")}
+                </span>
               </button>
             </div>
 
@@ -441,13 +443,13 @@ export function PhotoPromptDialog({
         {step === "preview" && preview && (
           <>
             <DialogHeader>
-              <DialogTitle>Podglad zdjecia</DialogTitle>
+              <DialogTitle>{translateMessage("generated.m0207")}</DialogTitle>
             </DialogHeader>
 
             <div className="overflow-hidden rounded-lg border bg-muted/30">
               {/* biome-ignore lint/performance/noImgElement: blob URLs are not supported by next/image */}
               <img
-                alt="Podglad zdjecia"
+                alt={translateMessage("generated.m0207")}
                 className="mx-auto max-h-64 object-contain"
                 height={256}
                 src={preview}
@@ -469,7 +471,7 @@ export function PhotoPromptDialog({
                     className="mr-1.5 size-4"
                     icon={Camera01Icon}
                   />
-                  Ponow
+                  {translateMessage("generated.m0919")}
                 </Button>
                 <Button
                   onClick={() => fileInputRef.current?.click()}
@@ -480,7 +482,7 @@ export function PhotoPromptDialog({
                     className="mr-1.5 size-4"
                     icon={ImageUploadIcon}
                   />
-                  Zmien
+                  {translateMessage("generated.m0920")}
                 </Button>
               </div>
               <Button
@@ -492,7 +494,7 @@ export function PhotoPromptDialog({
                   className="mr-1.5 size-4"
                   icon={CheckmarkCircle01Icon}
                 />
-                Zapisz
+                {translateMessage("generated.m0915")}
               </Button>
             </DialogFooter>
           </>
@@ -588,16 +590,19 @@ export function ItemDialog({
         >
           {/* -- Identyfikacja -- */}
           <section className="space-y-3">
-            <SectionHeader icon={Tag01Icon} title="Identyfikacja" />
+            <SectionHeader
+              icon={Tag01Icon}
+              title={translateMessage("generated.m0921")}
+            />
             <FieldGroup className="gap-4">
               <form.Field name="name">
                 {(field) => (
                   <FieldWithState
                     autoComplete="off"
                     field={field}
-                    label="Nazwa"
+                    label={translateMessage("generated.m0922")}
                     layout="grid"
-                    placeholder="Mleko 3,2%"
+                    placeholder={translateMessage("generated.m0208")}
                   />
                 )}
               </form.Field>
@@ -608,11 +613,14 @@ export function ItemDialog({
 
           {/* -- Warunki przechowywania -- */}
           <section className="space-y-3">
-            <SectionHeader icon={ThermometerIcon} title="Przechowywanie" />
+            <SectionHeader
+              icon={ThermometerIcon}
+              title={translateMessage("generated.m0923")}
+            />
             <FieldGroup className="gap-4">
               <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
                 <span className="col-span-2 text-start font-medium text-sm">
-                  Temperatura
+                  {translateMessage("generated.m0924")}
                 </span>
                 <div className="col-span-4 flex items-center gap-2">
                   <form.Field name="minTemp">
@@ -624,7 +632,7 @@ export function ItemDialog({
                         onChange={(e) =>
                           field.handleChange(Number(e.target.value))
                         }
-                        placeholder="Min °C"
+                        placeholder={translateMessage("generated.m0209")}
                         type="number"
                         value={field.state.value}
                       />
@@ -640,7 +648,7 @@ export function ItemDialog({
                         onChange={(e) =>
                           field.handleChange(Number(e.target.value))
                         }
-                        placeholder="Max °C"
+                        placeholder={translateMessage("generated.m0210")}
                         type="number"
                         value={field.state.value}
                       />
@@ -653,7 +661,7 @@ export function ItemDialog({
                 {(field) => (
                   <FieldWithState
                     field={field}
-                    label="Ważność (dni)"
+                    label={translateMessage("generated.m0211")}
                     layout="grid"
                     renderInput={({ id, isInvalid }) => (
                       <Input
@@ -680,7 +688,7 @@ export function ItemDialog({
                       className="col-span-2 cursor-pointer text-nowrap text-end"
                       htmlFor={field.name}
                     >
-                      Niebezpieczny
+                      {translateMessage("generated.m0925")}
                     </Label>
                     <FieldContent className="col-span-4 flex items-center gap-2.5">
                       <Checkbox
@@ -693,7 +701,7 @@ export function ItemDialog({
                       {field.state.value && (
                         <span className="flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-destructive text-xs">
                           <HugeiconsIcon className="size-3" icon={DangerIcon} />
-                          Material niebezpieczny
+                          {translateMessage("generated.m0212")}
                         </span>
                       )}
                     </FieldContent>
@@ -707,13 +715,16 @@ export function ItemDialog({
 
           {/* -- Wymiary fizyczne -- */}
           <section className="space-y-3">
-            <SectionHeader icon={RulerIcon} title="Wymiary fizyczne" />
+            <SectionHeader
+              icon={RulerIcon}
+              title={translateMessage("generated.m0213")}
+            />
             <FieldGroup className="gap-4">
               <form.Field name="weight">
                 {(field) => (
                   <FieldWithState
                     field={field}
-                    label="Waga (kg)"
+                    label={translateMessage("generated.m0214")}
                     layout="grid"
                     renderInput={({ id, isInvalid }) => (
                       <Input
@@ -736,7 +747,7 @@ export function ItemDialog({
 
               <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
                 <span className="col-span-2 font-medium text-sm">
-                  Wymiary (mm)
+                  {translateMessage("generated.m0215")}
                 </span>
                 <div className="col-span-4 flex items-center gap-2">
                   <form.Field name="width">
@@ -749,7 +760,7 @@ export function ItemDialog({
                         onChange={(e) =>
                           field.handleChange(Number(e.target.value))
                         }
-                        placeholder="Szer."
+                        placeholder={translateMessage("generated.m0926")}
                         type="number"
                         value={field.state.value}
                       />
@@ -766,7 +777,7 @@ export function ItemDialog({
                         onChange={(e) =>
                           field.handleChange(Number(e.target.value))
                         }
-                        placeholder="Wys."
+                        placeholder={translateMessage("generated.m0927")}
                         type="number"
                         value={field.state.value}
                       />
@@ -783,7 +794,7 @@ export function ItemDialog({
                         onChange={(e) =>
                           field.handleChange(Number(e.target.value))
                         }
-                        placeholder="Gl."
+                        placeholder={translateMessage("generated.m0928")}
                         type="number"
                         value={field.state.value}
                       />
@@ -798,14 +809,17 @@ export function ItemDialog({
 
           {/* -- Komentarz -- */}
           <section className="space-y-3">
-            <SectionHeader icon={Comment01Icon} title="Dodatkowe" />
+            <SectionHeader
+              icon={Comment01Icon}
+              title={translateMessage("generated.m0929")}
+            />
             <FieldGroup className="gap-4">
               <form.Field name="comment">
                 {(field) => (
                   <FieldWithState
                     field={field}
                     fieldClassName="items-start"
-                    label="Komentarz"
+                    label={translateMessage("generated.m0930")}
                     labelClassName="pt-2 text-left"
                     layout="grid"
                     renderInput={({ id, isInvalid }) => (
@@ -816,7 +830,7 @@ export function ItemDialog({
                         id={id}
                         name={field.name}
                         onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder="Opcjonalny komentarz..."
+                        placeholder={translateMessage("generated.m0216")}
                         rows={3}
                         value={field.state.value ?? ""}
                       />

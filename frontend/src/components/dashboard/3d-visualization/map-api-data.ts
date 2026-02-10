@@ -2,6 +2,7 @@ import { parseImageSrc } from "@/components/ui/item-photo"
 import type { WarehouseAssortmentsList } from "@/hooks/use-assortment"
 import type { RacksList } from "@/hooks/use-racks"
 import type { WarehousesList } from "@/hooks/use-warehouses"
+import { translateMessage } from "@/i18n/translate-message"
 import type { Item3D, Rack3D, Warehouse3D } from "./types"
 
 type ApiRack = RacksList["content"][number]
@@ -90,7 +91,8 @@ function mapApiRackToRack3D(
   return {
     id: String(rack.id),
     code: rack.marker ?? `R-${rack.id}`,
-    name: rack.marker ?? `Regał ${rack.id}`,
+    name:
+      rack.marker ?? translateMessage("generated.m0418", { value0: rack.id }),
     grid: { rows, cols },
     cell: { w: cellW, h: cellH, d: cellD },
     maxElementSize: {

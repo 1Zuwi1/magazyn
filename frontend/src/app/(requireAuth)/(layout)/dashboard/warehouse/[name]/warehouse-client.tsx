@@ -47,6 +47,7 @@ import useAssortments from "@/hooks/use-assortment"
 import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
 import useRacks from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
+import { translateMessage } from "@/i18n/translate-message"
 import type { Rack } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 
@@ -92,13 +93,13 @@ const getWarehouseDisplayMessage = ({
   warehouseName: string
 }): string | null => {
   if (hasFetchError) {
-    return "Nie udało się pobrać danych magazynu."
+    return translateMessage("generated.m0080")
   }
   if (!hasWarehouse) {
     return `Nie znaleziono magazynu o nazwie: ${warehouseName}`
   }
   if (!hasRack) {
-    return "Ten magazyn nie ma jeszcze żadnych regałów."
+    return translateMessage("generated.m0093")
   }
 
   return null
@@ -131,17 +132,17 @@ function buildHeaderStats({
 
   return [
     {
-      label: "Regałów",
+      label: translateMessage("generated.m0083"),
       value: warehouseRacksCount,
       icon: Layers01Icon,
     },
     {
-      label: "Obłożenie",
+      label: translateMessage("generated.m0094"),
       value: `${headerOccupancyPercentage}%`,
       variant: getOccupancyVariant(headerOccupancyPercentage),
     },
     {
-      label: "Wolnych",
+      label: translateMessage("generated.m0883"),
       value: headerFreeSlots,
     },
   ]
@@ -156,11 +157,15 @@ function WarehouseLoadingSkeleton({
     <div className="space-y-6">
       <PageHeader
         backHref="/dashboard/warehouse"
-        backTitle="Powrót do listy magazynów"
+        backTitle={translateMessage("generated.m0884")}
         stats={[
-          { label: "Regałów", value: "-", icon: Layers01Icon },
-          { label: "Obłożenie", value: "-" },
-          { label: "Wolnych", value: "-" },
+          {
+            label: translateMessage("generated.m0083"),
+            value: "-",
+            icon: Layers01Icon,
+          },
+          { label: translateMessage("generated.m0094"), value: "-" },
+          { label: translateMessage("generated.m0883"), value: "-" },
         ]}
         title={warehouseName}
       >
@@ -295,7 +300,7 @@ function WarehouseStateView({
     <div className="space-y-6">
       <PageHeader
         backHref="/dashboard/warehouse"
-        backTitle="Powrót do listy magazynów"
+        backTitle={translateMessage("generated.m0884")}
         stats={headerStats}
         title={warehouseName}
         titleBadge={titleBadge}
@@ -655,7 +660,7 @@ export default function WarehouseClient() {
     <div className="space-y-6">
       <PageHeader
         backHref="/dashboard/warehouse"
-        backTitle="Powrót do listy magazynów"
+        backTitle={translateMessage("generated.m0884")}
         stats={headerStats}
         title={warehouseName}
       >
@@ -671,7 +676,10 @@ export default function WarehouseClient() {
             </Badge>
             <Badge className="gap-1.5 font-mono" variant="outline">
               <HugeiconsIcon className="size-3" icon={ThermometerIcon} />
-              {currentRack.minTemp}°C – {currentRack.maxTemp}°C
+              {translateMessage("generated.m0095", {
+                value0: currentRack.minTemp,
+                value1: currentRack.maxTemp,
+              })}
             </Badge>
           </div>
         )}
@@ -687,7 +695,7 @@ export default function WarehouseClient() {
           href={`/dashboard/warehouse/${encodeURIComponent(warehouseName)}/assortment`}
         >
           <HugeiconsIcon className="size-4" icon={PackageIcon} />
-          <span>Asortyment</span>
+          <span>{translateMessage("generated.m0882")}</span>
         </Link>
         <Button
           className="gap-2"
@@ -696,7 +704,7 @@ export default function WarehouseClient() {
           variant="outline"
         >
           <HugeiconsIcon className="size-4" icon={CubeIcon} />
-          <span>Widok 3D</span>
+          <span>{translateMessage("generated.m0097")}</span>
         </Button>
       </div>
 
@@ -710,15 +718,17 @@ export default function WarehouseClient() {
                 size={24}
               />
             </AlertDialogMedia>
-            <AlertDialogTitle>Widok 3D magazynu</AlertDialogTitle>
+            <AlertDialogTitle>
+              {translateMessage("generated.m0098")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Wizualizacja 3D pobiera dane o wszystkich magazynach, regałach i
-              przedmiotach. Przy dużej ilości danych może to znacząco obciążyć
-              połączenie i zużyć dużo transferu.
+              {translateMessage("generated.m0099")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogCancel>
+              {translateMessage("generated.m0885")}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() =>
                 router.push(
@@ -726,7 +736,7 @@ export default function WarehouseClient() {
                 )
               }
             >
-              Otwórz widok 3D
+              {translateMessage("generated.m0100")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

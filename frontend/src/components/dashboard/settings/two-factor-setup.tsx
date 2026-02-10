@@ -62,6 +62,7 @@ import useLinkedMethods, {
 } from "@/hooks/use-linked-methods"
 import useRemoveMethod from "@/hooks/use-remove-method"
 import useSetDefaultMethod from "@/hooks/use-set-default-method"
+import { translateMessage } from "@/i18n/translate-message"
 import { apiFetch } from "@/lib/fetcher"
 import {
   BackupCodesGenerateSchema,
@@ -95,7 +96,7 @@ import {
 const TWO_FACTOR_METHOD_HINTS: Record<TwoFactorMethod, string> = {
   AUTHENTICATOR: "Najpewniejsza metoda",
   EMAIL: "Kod e-mail",
-  PASSKEYS: "Uwierzytelnianie kluczem dostępu",
+  PASSKEYS: translateMessage("generated.m0588"),
   BACKUP_CODES: "Jednorazowe kody odzyskiwania",
 }
 
@@ -180,14 +181,14 @@ const getLinkedMethodsHint = ({
   }
 
   if (!hasAvailableMethods) {
-    return "Wszystkie dostępne metody są już połączone."
+    return translateMessage("generated.m0589")
   }
 
   if (isSelectedLinked) {
-    return "Wybrana metoda jest już połączona. Wybierz inną, aby dodać nową."
+    return translateMessage("generated.m0590")
   }
 
-  return "Wybierz metodę, którą chcesz dodać."
+  return translateMessage("generated.m0591")
 }
 
 const getResendMethod = (method: TwoFactorMethod): ResendType | null => {
@@ -211,42 +212,10 @@ const getPrintableRecoveryCodesDocument = (
     .map((code) => `<li>${escapeHtml(code)}</li>`)
     .join("")
 
-  return `<!doctype html>
-<html lang="pl">
-  <head>
-    <meta charset="utf-8" />
-    <title>Kody odzyskiwania 2FA GdzieToLeży</title>
-    <style>
-      body {
-        font-family: "Arial", sans-serif;
-        margin: 24px;
-        color: #111827;
-      }
-      h1 {
-        margin: 0 0 8px;
-        font-size: 20px;
-      }
-      p {
-        margin: 0 0 12px;
-      }
-      ul {
-        margin: 0;
-        padding-left: 20px;
-        columns: 2;
-      }
-      li {
-        font-family: "Courier New", monospace;
-        margin-bottom: 6px;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Kody odzyskiwania 2FA</h1>
-    <p>Wygenerowano: ${escapeHtml(generatedAt)}</p>
-    <p>Przechowuj ten wydruk w bezpiecznym miejscu.</p>
-    <ul>${listMarkup}</ul>
-  </body>
-</html>`
+  return translateMessage("generated.m0592", {
+    value0: escapeHtml(generatedAt),
+    value1: listMarkup,
+  })
 }
 
 function TwoFactorMethodInput({
@@ -392,7 +361,7 @@ function useTwoFactorSetupFlow({
 
   const startSetup = async () => {
     if (method === "PASSKEYS") {
-      toast.error("Dodaj klucz bezpieczeństwa w sekcji poniżej.")
+      toast.error(translateMessage("generated.m0593"))
       return
     }
 
@@ -414,7 +383,7 @@ function useTwoFactorSetupFlow({
       } else {
         const resendMethod = getResendMethod(method)
         if (!resendMethod) {
-          throw new Error("Unsupported resend method")
+          throw new Error(translateMessage("generated.m0594"))
         }
         dispatch({ type: "set_stage", stage: "SENDING" })
         await sendTwoFactorCode(resendMethod)
@@ -423,8 +392,7 @@ function useTwoFactorSetupFlow({
 
       dispatch({ type: "set_stage", stage: "AWAITING" })
     } catch {
-      const message =
-        "Nie udało się zainicjować konfiguracji. Spróbuj ponownie."
+      const message = translateMessage("generated.m0595")
       dispatch({ type: "set_error", error: message })
       dispatch({ type: "set_stage", stage: "ERROR" })
       toast.error(message)
@@ -445,7 +413,7 @@ function useTwoFactorSetupFlow({
       startTimer(TWO_FACTOR_RESEND_SECONDS)
       dispatch({ type: "set_stage", stage: "AWAITING" })
     } catch {
-      const message = "Nie udało się wysłać kodu. Spróbuj ponownie."
+      const message = translateMessage("generated.m0557")
       dispatch({ type: "set_error", error: message })
       dispatch({ type: "set_stage", stage: "ERROR" })
       toast.error(message)
@@ -466,14 +434,14 @@ function useTwoFactorSetupFlow({
       } else {
         dispatch({
           type: "set_error",
-          error: "Nieprawidłowy kod weryfikacyjny. Spróbuj ponownie.",
+          error: translateMessage("generated.m0596"),
         })
         dispatch({ type: "set_stage", stage: "ERROR" })
       }
     } catch {
       dispatch({
         type: "set_error",
-        error: "Wystąpił błąd podczas weryfikacji. Spróbuj ponownie.",
+        error: translateMessage("generated.m0058"),
       })
       dispatch({ type: "set_stage", stage: "ERROR" })
     }
@@ -542,10 +510,10 @@ function ConnectedMethods({
         </div>
         <div className="space-y-1">
           <p className="font-medium text-foreground/80 text-sm">
-            Nie udało się załadować metod
+            {translateMessage("generated.m0597")}
           </p>
           <p className="text-muted-foreground text-xs">
-            Wystąpił problem podczas pobierania połączonych metod weryfikacji.
+            {translateMessage("generated.m0598")}
           </p>
         </div>
         {onRetry && (
@@ -554,7 +522,7 @@ function ConnectedMethods({
             onClick={onRetry}
             type="button"
           >
-            Spróbuj ponownie
+            {translateMessage("generated.m0075")}
           </button>
         )}
       </div>
@@ -573,10 +541,10 @@ function ConnectedMethods({
         </div>
         <div>
           <p className="font-medium text-muted-foreground text-sm">
-            Brak połączonych metod
+            {translateMessage("generated.m0599")}
           </p>
           <p className="text-muted-foreground/70 text-xs">
-            Dodaj metodę weryfikacji, aby zabezpieczyć konto
+            {translateMessage("generated.m0600")}
           </p>
         </div>
       </div>
@@ -584,6 +552,7 @@ function ConnectedMethods({
   }
 
   const hasMultipleMethods = linkedMethods.length > 1
+  const setDefaultActionLabel = translateMessage("generated.m0605")
 
   return (
     <div className="space-y-2">
@@ -605,7 +574,9 @@ function ConnectedMethods({
             {linkedMethod !== "EMAIL" && linkedMethod !== "PASSKEYS" ? (
               <Tooltip>
                 <TooltipTrigger
-                  aria-label={`Usuń metodę ${label}`}
+                  aria-label={translateMessage("generated.m0601", {
+                    value0: label,
+                  })}
                   className="absolute top-1.5 right-1.5 inline-flex size-5 cursor-pointer items-center justify-center rounded-full text-muted-foreground/50 opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive disabled:pointer-events-none disabled:opacity-50 group-hover:opacity-100"
                   disabled={removingMethod === linkedMethod}
                   onClick={() => onRemoveMethod(linkedMethod)}
@@ -620,7 +591,9 @@ function ConnectedMethods({
                     />
                   )}
                 </TooltipTrigger>
-                <TooltipContent>Usuń</TooltipContent>
+                <TooltipContent>
+                  {translateMessage("generated.m0230")}
+                </TooltipContent>
               </Tooltip>
             ) : null}
             <div
@@ -649,12 +622,12 @@ function ConnectedMethods({
                       <span className="inline-flex cursor-help items-center gap-1 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-amber-600 dark:text-amber-500">
                         <HugeiconsIcon icon={StarIcon} size={12} />
                         <span className="font-medium text-[10px] uppercase tracking-wide">
-                          Domyślna
+                          {translateMessage("generated.m0602")}
                         </span>
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      Ta metoda będzie używana jako pierwsza podczas logowania
+                      {translateMessage("generated.m0603")}
                     </TooltipContent>
                   </Tooltip>
                 ) : null}
@@ -663,7 +636,9 @@ function ConnectedMethods({
             </div>
             <div className="mr-2 flex items-center gap-1.5 rounded-full bg-green-500/10 px-2 py-1 text-green-600 dark:text-green-500">
               <HugeiconsIcon icon={Tick01Icon} size={14} />
-              <span className="font-medium text-xs">Aktywna</span>
+              <span className="font-medium text-xs">
+                {translateMessage("generated.m1003")}
+              </span>
             </div>
           </div>
         )
@@ -678,7 +653,7 @@ function ConnectedMethods({
               size={14}
             />
             <span className="text-muted-foreground text-xs">
-              Domyślna metoda:{" "}
+              {translateMessage("generated.m0604")}{" "}
               <span className="font-medium text-foreground">
                 {defaultMethod
                   ? (TWO_FACTOR_METHOD_LABELS[defaultMethod] ?? defaultMethod)
@@ -692,11 +667,13 @@ function ConnectedMethods({
               disabled={isSettingDefault}
             >
               {isSettingDefault ? <Spinner className="mr-1.5 size-3" /> : null}
-              Zmień
+              {setDefaultActionLabel}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-fit">
               <DropdownMenuGroup>
-                <DropdownMenuLabel>Wybierz domyślną metodę</DropdownMenuLabel>
+                <DropdownMenuLabel>
+                  {translateMessage("generated.m0606")}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuRadioGroup
                   onValueChange={(value) =>
@@ -744,7 +721,7 @@ function AuthenticatorSetup({
 
   const handleCopySecret = async (): Promise<void> => {
     if (!navigator.clipboard) {
-      toast.error("Schowek jest niedostępny w tej przeglądarce.")
+      toast.error(translateMessage("generated.m0607"))
       return
     }
 
@@ -760,7 +737,7 @@ function AuthenticatorSetup({
         false
       )
     } catch {
-      toast.error("Nie udało się skopiować klucza. Skopiuj ręcznie.")
+      toast.error(translateMessage("generated.m0608"))
     }
   }
 
@@ -775,9 +752,9 @@ function AuthenticatorSetup({
   if (!secret) {
     return (
       <Alert variant="destructive">
-        <AlertTitle>Brak danych konfiguracji aplikacji</AlertTitle>
+        <AlertTitle>{translateMessage("generated.m0609")}</AlertTitle>
         <AlertDescription>
-          Odśwież konfigurację i spróbuj ponownie.
+          {translateMessage("generated.m0610")}
         </AlertDescription>
       </Alert>
     )
@@ -788,15 +765,16 @@ function AuthenticatorSetup({
       <div className="flex flex-col items-center gap-3">
         <QRCodeDisplay size={AUTHENTICATOR_QR_SIZE} value={totpUri} />
         <p className="text-center text-muted-foreground text-xs">
-          Zeskanuj kodem QR
+          {translateMessage("generated.m0611")}
         </p>
       </div>
       <div className="space-y-3">
         <div>
-          <p className="font-medium text-sm">Lub wprowadź klucz ręcznie</p>
+          <p className="font-medium text-sm">
+            {translateMessage("generated.m0612")}
+          </p>
           <p className="text-muted-foreground text-sm">
-            Użyj aplikacji uwierzytelniającej (Google Authenticator, Authy,
-            1Password).
+            {translateMessage("generated.m0613")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -817,7 +795,9 @@ function AuthenticatorSetup({
           </Button>
         </div>
         <p className="text-muted-foreground text-xs">
-          Wygenerowano: {authenticatorSetupData?.issuedAt ?? "—"}
+          {translateMessage("generated.m1062", {
+            value0: authenticatorSetupData?.issuedAt ?? "—",
+          })}
         </p>
       </div>
     </div>
@@ -858,18 +838,22 @@ function CodeInputEntry({
         />
       ) : (
         <div className="space-y-2">
-          <p className="font-medium text-sm">Kod jednorazowy</p>
+          <p className="font-medium text-sm">
+            {translateMessage("generated.m0614")}
+          </p>
           <p className="text-muted-foreground text-sm">
-            E-mail z kodem został wysłany na Twoją skrzynkę.
+            {translateMessage("generated.m0615")}
           </p>
           <p className="text-muted-foreground text-xs">
-            Możesz poprosić o ponowną wysyłkę, jeśli kod nie dotarł.
+            {translateMessage("generated.m0616")}
           </p>
         </div>
       )}
 
       <div className="space-y-3">
-        <Label htmlFor="two-factor-code">Kod weryfikacyjny</Label>
+        <Label htmlFor="two-factor-code">
+          {translateMessage("generated.m0048")}
+        </Label>
         <OtpInput id="two-factor-code" onChange={onCodeChange} value={code} />
         <div className="flex flex-wrap items-center gap-2">
           <Button
@@ -878,7 +862,7 @@ function CodeInputEntry({
             onClick={onVerify}
             type="button"
           >
-            Zweryfikuj i aktywuj
+            {translateMessage("generated.m0617")}
           </Button>
           {canSendCode ? (
             <>
@@ -891,8 +875,10 @@ function CodeInputEntry({
                 variant="outline"
               >
                 {resendCooldown > 0
-                  ? `Wyślij ponownie (${formatCountdown(resendCooldown)})`
-                  : "Wyślij ponownie"}
+                  ? translateMessage("generated.m0561", {
+                      value0: formatCountdown(resendCooldown),
+                    })
+                  : translateMessage("generated.m0050")}
               </Button>
               <span
                 aria-atomic="true"
@@ -901,8 +887,8 @@ function CodeInputEntry({
                 id="resend-status"
               >
                 {resendCooldown > 0
-                  ? "Wyślij ponownie będzie dostępne po zakończeniu odliczania."
-                  : "Możesz teraz wysłać ponownie."}
+                  ? translateMessage("generated.m0562")
+                  : translateMessage("generated.m0563")}
               </span>
             </>
           ) : null}
@@ -954,9 +940,7 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
     const printWindow = window.open("", "_blank", "width=720,height=900")
 
     if (!printWindow) {
-      toast.error(
-        "Nie udało się otworzyć podglądu wydruku. Sprawdź blokadę wyskakujących okien."
-      )
+      toast.error(translateMessage("generated.m0618"))
       return
     }
 
@@ -975,9 +959,11 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div className="space-y-1">
-          <p className="font-medium text-sm">Kody odzyskiwania</p>
+          <p className="font-medium text-sm">
+            {translateMessage("generated.m0514")}
+          </p>
           <p className="text-muted-foreground text-sm">
-            Przechowuj je w bezpiecznym miejscu.
+            {translateMessage("generated.m0619")}
           </p>
         </div>
         <Button
@@ -986,14 +972,14 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
           type="button"
           variant="outline"
         >
-          Wygeneruj
+          {translateMessage("generated.m1005")}
         </Button>
       </div>
 
       <p className="text-muted-foreground text-sm">
         {enabled
-          ? "Wygenerowanie nowych kodów unieważni wszystkie poprzednie."
-          : "Włącz 2FA, aby wygenerować kody."}
+          ? translateMessage("generated.m0620")
+          : translateMessage("generated.m0621")}
       </p>
 
       <AlertDialog
@@ -1010,22 +996,21 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
               />
             </AlertDialogMedia>
             <AlertDialogTitle>
-              Wygenerować nowe kody odzyskiwania?
+              {translateMessage("generated.m0622")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Poprzednie kody przestaną działać natychmiast po wygenerowaniu
-              nowych.
+              {translateMessage("generated.m0623")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isGeneratingCodes}>
-              Anuluj
+              {translateMessage("generated.m0885")}
             </AlertDialogCancel>
             <AlertDialogAction
               isLoading={isGeneratingCodes}
               onClick={async () => await handleGenerateCodes()}
             >
-              Wygeneruj nowe kody
+              {translateMessage("generated.m0624")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1037,15 +1022,14 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Nowe kody odzyskiwania</DialogTitle>
+            <DialogTitle>{translateMessage("generated.m0625")}</DialogTitle>
             <DialogDescription>
-              Zapisz je teraz i przechowuj w bezpiecznym miejscu. Po zamknięciu
-              tego okna nie będzie możliwości ponownego podglądu.
+              {translateMessage("generated.m0626")}
             </DialogDescription>
           </DialogHeader>
 
           <Textarea
-            aria-label="Kody odzyskiwania"
+            aria-label={translateMessage("generated.m0514")}
             className="min-h-40 font-mono text-sm"
             readOnly
             value={generatedCodes.join("\n")}
@@ -1053,9 +1037,11 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
 
           <DialogFooter className="gap-2 sm:gap-2">
             <Button onClick={handlePrintCodes} type="button" variant="outline">
-              Drukuj kody
+              {translateMessage("generated.m0627")}
             </Button>
-            <DialogClose render={<Button type="button" />}>Zamknij</DialogClose>
+            <DialogClose render={<Button type="button" />}>
+              {translateMessage("generated.m1006")}
+            </DialogClose>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1109,7 +1095,7 @@ function TwoFactorActionButtons({
         onClick={onStartSetup}
         type="button"
       >
-        Rozpocznij konfigurację
+        {translateMessage("generated.m0628")}
       </Button>
     )
   }
@@ -1117,7 +1103,7 @@ function TwoFactorActionButtons({
   if (status === "ENABLED" && !isSetupInProgress) {
     return (
       <Button disabled={!canStartSetup} onClick={onStartSetup} type="button">
-        Dodaj metodę
+        {translateMessage("generated.m0629")}
       </Button>
     )
   }
@@ -1125,7 +1111,7 @@ function TwoFactorActionButtons({
   if (status === "SETUP" || isSetupInProgress) {
     return (
       <Button onClick={onCancelSetup} type="button" variant="outline">
-        Anuluj konfigurację
+        {translateMessage("generated.m0630")}
       </Button>
     )
   }
@@ -1188,7 +1174,9 @@ function TwoFactorConfigurationSection({
   return (
     <div className="space-y-4 rounded-xl border bg-muted/30 p-4">
       <div className="space-y-2">
-        <p className="font-medium text-sm">Połączone metody</p>
+        <p className="font-medium text-sm">
+          {translateMessage("generated.m0631")}
+        </p>
         <ConnectedMethods
           defaultMethod={defaultMethod}
           isError={isLinkedMethodsError}
@@ -1205,9 +1193,11 @@ function TwoFactorConfigurationSection({
         <>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">
-              <p className="font-semibold">Konfiguracja 2FA</p>
+              <p className="font-semibold">
+                {translateMessage("generated.m0632")}
+              </p>
               <p className="text-muted-foreground text-sm">
-                Dodaj drugi krok weryfikacji i chroń krytyczne działania.
+                {translateMessage("generated.m0633")}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -1229,7 +1219,7 @@ function TwoFactorConfigurationSection({
               >
                 1
               </Badge>
-              <span>Wybierz metodę</span>
+              <span>{translateMessage("generated.m0634")}</span>
             </div>
             <div className="flex items-center gap-2">
               <Badge
@@ -1237,7 +1227,7 @@ function TwoFactorConfigurationSection({
               >
                 2
               </Badge>
-              <span>Potwierdź kod</span>
+              <span>{translateMessage("generated.m0635")}</span>
             </div>
             <div className="flex items-center gap-2">
               <Badge
@@ -1245,7 +1235,7 @@ function TwoFactorConfigurationSection({
               >
                 3
               </Badge>
-              <span>Zapisz kody</span>
+              <span>{translateMessage("generated.m0636")}</span>
             </div>
           </div>
           <TwoFactorMethodInput
@@ -1289,7 +1279,9 @@ export function TwoFactorSetup({
     setDefaultMethodMutation.mutate(newDefaultMethod, {
       onSuccess: () => {
         toast.success(
-          `Metoda ${TWO_FACTOR_METHOD_LABELS[newDefaultMethod]} została ustawiona jako domyślna`
+          translateMessage("generated.m0637", {
+            value0: TWO_FACTOR_METHOD_LABELS[newDefaultMethod],
+          })
         )
       },
     })
@@ -1300,7 +1292,9 @@ export function TwoFactorSetup({
     removeMethodMutation.mutate(methodToRemove, {
       onSuccess: () => {
         toast.success(
-          `Metoda ${TWO_FACTOR_METHOD_LABELS[methodToRemove]} została usunięta`
+          translateMessage("generated.m0638", {
+            value0: TWO_FACTOR_METHOD_LABELS[methodToRemove],
+          })
         )
         setRemovingMethod(null)
       },
@@ -1367,9 +1361,7 @@ export function TwoFactorSetup({
       startTimer,
       onSuccess: () => {
         refetchLinkedMethods().catch(() => {
-          toast.error(
-            "Nie udało się odświeżyć listy metod 2FA. Odśwież stronę, aby zobaczyć nową metodę."
-          )
+          toast.error(translateMessage("generated.m0639"))
         })
         resetFlow()
       },
@@ -1412,9 +1404,9 @@ export function TwoFactorSetup({
           {setupStage === "REQUESTING" ? (
             <Alert>
               <Spinner className="text-muted-foreground" />
-              <AlertTitle>Łączymy się z usługą 2FA</AlertTitle>
+              <AlertTitle>{translateMessage("generated.m0640")}</AlertTitle>
               <AlertDescription>
-                Generujemy klucz i przygotowujemy kolejne kroki.
+                {translateMessage("generated.m0641")}
               </AlertDescription>
             </Alert>
           ) : null}
@@ -1422,14 +1414,16 @@ export function TwoFactorSetup({
           {setupStage === "SENDING" ? (
             <Alert>
               <Spinner className="text-muted-foreground" />
-              <AlertTitle>Wysyłamy kod</AlertTitle>
-              <AlertDescription>Kod trafia na wybraną metodę.</AlertDescription>
+              <AlertTitle>{translateMessage("generated.m0558")}</AlertTitle>
+              <AlertDescription>
+                {translateMessage("generated.m0559")}
+              </AlertDescription>
             </Alert>
           ) : null}
 
           {setupStage === "ERROR" && error ? (
             <Alert variant="destructive">
-              <AlertTitle>Nie udało się aktywować 2FA</AlertTitle>
+              <AlertTitle>{translateMessage("generated.m0642")}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}

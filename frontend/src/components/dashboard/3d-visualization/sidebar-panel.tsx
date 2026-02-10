@@ -6,6 +6,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { useWarehouseStore } from "./store"
 import type { Rack3D } from "./types"
@@ -73,10 +74,10 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
           </div>
           <div>
             <h2 className="font-semibold text-base tracking-tight">
-              Eksplorator 3D
+              {translateMessage("generated.m0419")}
             </h2>
             <p className="text-muted-foreground text-xs">
-              {racks.length} regałów dostępnych
+              {translateMessage("generated.m1097", { value0: racks.length })}
             </p>
           </div>
         </div>
@@ -94,13 +95,16 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
             onChange={(e) => {
               setFilters({ query: e.target.value })
             }}
-            placeholder="Szukaj regałów..."
+            placeholder={translateMessage("generated.m0421")}
             value={filters.query}
           />
         </div>
         {filters.query && (
           <p className="mt-2 text-muted-foreground text-xs">
-            Znaleziono {filteredRacks.length} z {racks.length} regałów
+            {translateMessage("generated.m1081", {
+              value0: filteredRacks.length,
+              value1: racks.length,
+            })}
           </p>
         )}
       </div>
@@ -173,10 +177,16 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
 
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <span className="text-muted-foreground">
-                    Siatka: {rack.grid.rows}×{rack.grid.cols}
+                    {translateMessage("generated.m1082", {
+                      value0: rack.grid.rows,
+                      value1: rack.grid.cols,
+                    })}
                   </span>
                   <span className="text-muted-foreground">
-                    {occupiedCount}/{totalSlots} miejsc
+                    {translateMessage("generated.m1083", {
+                      value0: occupiedCount,
+                      value1: totalSlots,
+                    })}
                   </span>
                 </div>
 
@@ -204,10 +214,10 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
               />
             </div>
             <p className="font-medium text-muted-foreground text-sm">
-              Brak wyników
+              {translateMessage("generated.m0422")}
             </p>
             <p className="text-muted-foreground/70 text-xs">
-              Spróbuj innej frazy wyszukiwania
+              {translateMessage("generated.m0423")}
             </p>
           </div>
         )}
@@ -216,32 +226,44 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
       {/* Legend */}
       <div className="border-t bg-muted/30 p-4">
         <h3 className="mb-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
-          Legenda statusów
+          {translateMessage("generated.m0424")}
         </h3>
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="flex items-center gap-2">
             <div className="size-3 rounded-sm bg-emerald-500 shadow-sm" />
-            <span className="text-muted-foreground">Normalne</span>
+            <span className="text-muted-foreground">
+              {translateMessage("generated.m0974")}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="size-3 rounded-sm bg-orange-500 shadow-sm" />
-            <span className="text-muted-foreground">Przeterminowane</span>
+            <span className="text-muted-foreground">
+              {translateMessage("generated.m0975")}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="size-3 rounded-sm bg-red-500 shadow-sm" />
-            <span className="text-muted-foreground">Niebezpieczne</span>
+            <span className="text-muted-foreground">
+              {translateMessage("generated.m0976")}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="size-3 rounded-sm bg-[linear-gradient(135deg,var(--color-red-500)_50%,var(--color-orange-500)_50%)] shadow-sm" />
-            <span className="text-muted-foreground">Oba statusy</span>
+            <span className="text-muted-foreground">
+              {translateMessage("generated.m0425")}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="size-3 rounded-sm bg-slate-200 shadow-sm dark:bg-slate-700" />
-            <span className="text-muted-foreground">Pusta półka</span>
+            <span className="text-muted-foreground">
+              {translateMessage("generated.m0414")}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="size-3 rounded-sm bg-blue-500 shadow-sm ring-2 ring-blue-500/30" />
-            <span className="text-muted-foreground">Wybrana</span>
+            <span className="text-muted-foreground">
+              {translateMessage("generated.m0977")}
+            </span>
           </div>
         </div>
       </div>

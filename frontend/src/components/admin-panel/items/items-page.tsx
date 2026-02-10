@@ -20,6 +20,7 @@ import useItems, {
   useImportItems,
   useUpdateItem,
 } from "@/hooks/use-items"
+import { translateMessage } from "@/i18n/translate-message"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../lib/constants"
 import { ItemDialog, type ItemFormData, PhotoPromptDialog } from "./item-dialog"
@@ -147,7 +148,7 @@ export default function ItemsMain() {
     const itemId = itemToDelete.id
 
     await deleteItemMutation.mutateAsync(itemId)
-    toast.success("Usunięto przedmiot")
+    toast.success(translateMessage("generated.m0217"))
     setItemToDelete(undefined)
   }
 
@@ -161,7 +162,7 @@ export default function ItemsMain() {
         itemId,
         ...buildItemMutationData(data),
       })
-      toast.success("Zaktualizowano przedmiot")
+      toast.success(translateMessage("generated.m0218"))
       setSelectedItem(undefined)
       return undefined
     }
@@ -169,7 +170,7 @@ export default function ItemsMain() {
     const created = await createItemMutation.mutateAsync(
       buildItemMutationData(data)
     )
-    toast.success("Dodano nowy przedmiot")
+    toast.success(translateMessage("generated.m0219"))
     setSelectedItem(undefined)
     return created.id
   }
@@ -178,12 +179,17 @@ export default function ItemsMain() {
     const report = await importItemsMutation.mutateAsync(file)
     if (report.errors.length > 0) {
       toast.warning(
-        `Import zakończony częściowo: ${report.imported}/${report.processedLines}`
+        translateMessage("generated.m0220", {
+          value0: report.imported,
+          value1: report.processedLines,
+        })
       )
       return
     }
 
-    toast.success(`Zaimportowano ${report.imported} produktów`)
+    toast.success(
+      translateMessage("generated.m0221", { value0: report.imported })
+    )
   }
 
   const dangerousCount = dangerousItemsData?.totalElements ?? 0
@@ -204,17 +210,17 @@ export default function ItemsMain() {
             />
             <Button disabled={isMutating} onClick={handleAddItem}>
               <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-              Dodaj przedmiot
+              {translateMessage("generated.m0222")}
             </Button>
           </div>
         }
-        description="Zarządzaj katalogiem przedmiotów magazynowych"
+        description={translateMessage("generated.m0223")}
         icon={Package}
         navLinks={ADMIN_NAV_LINKS.map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title="Przedmioty"
+        title={translateMessage("generated.m0931")}
       >
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
@@ -225,7 +231,9 @@ export default function ItemsMain() {
             <span className="font-mono font-semibold text-primary">
               {totalItemsCount}
             </span>
-            <span className="text-muted-foreground text-xs">przedmiotów</span>
+            <span className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0224")}
+            </span>
           </div>
           {dangerousCount > 0 && (
             <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-1.5 backdrop-blur-sm">
@@ -237,7 +245,7 @@ export default function ItemsMain() {
                 {dangerousCount}
               </span>
               <span className="text-destructive/80 text-xs">
-                niebezpiecznych
+                {translateMessage("generated.m0932")}
               </span>
             </div>
           )}
@@ -268,11 +276,13 @@ export default function ItemsMain() {
       />
 
       <ConfirmDialog
-        description={`Czy na pewno chcesz usunąć przedmiot "${itemToDelete?.name}"? Ta operacja jest nieodwracalna.`}
+        description={translateMessage("generated.m0225", {
+          value0: itemToDelete?.name,
+        })}
         onConfirm={confirmDeleteItem}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
-        title="Usuń przedmiot"
+        title={translateMessage("generated.m0226")}
       />
 
       <PhotoPromptDialog

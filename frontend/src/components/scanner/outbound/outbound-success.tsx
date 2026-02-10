@@ -1,5 +1,6 @@
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { translateMessage } from "@/i18n/translate-message"
 import type { OutboundExecuteResult } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
 import { Button } from "../../ui/button"
@@ -45,11 +46,12 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
 
         <div className="space-y-2">
           <h2 className="font-semibold text-foreground text-xl">
-            Towar zdjęty z magazynu
+            {translateMessage("generated.m0719")}
           </h2>
           <p className="text-muted-foreground text-sm">
-            Pomyślnie zdjęto {result.issuedCount}{" "}
-            {result.issuedCount === 1 ? "pozycję" : "pozycji"} z magazynu.
+            {translateMessage("generated.m0720", {
+              value0: result.issuedCount,
+            })}
           </p>
         </div>
 
@@ -60,14 +62,23 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
                 <div className="flex items-center justify-between gap-2">
                   <p className="truncate font-medium text-sm">{op.itemName}</p>
                   <Badge variant={op.fifoCompliant ? "default" : "outline"}>
-                    {op.fifoCompliant ? "FIFO" : "Pominięto FIFO"}
+                    {op.fifoCompliant
+                      ? "FIFO"
+                      : translateMessage("generated.m0723")}
                   </Badge>
                 </div>
                 <p className="mt-1 text-muted-foreground text-xs">
-                  Regał {op.rackMarker} — P:{op.positionX} R:{op.positionY}
+                  {translateMessage("generated.m1087", {
+                    value0: op.rackMarker,
+                    value1: op.positionX,
+                    value2: op.positionY,
+                  })}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  Wydał: {op.issuedByName} o {formatDate(op.operationTimestamp)}
+                  {translateMessage("generated.m1088", {
+                    value0: op.issuedByName,
+                    value1: formatDate(op.operationTimestamp),
+                  })}
                 </p>
               </div>
             ))}
@@ -76,7 +87,7 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
 
         <div className="w-full pt-2">
           <Button className="w-full" onClick={onReset} type="button">
-            Zdejmij kolejny
+            {translateMessage("generated.m0726")}
           </Button>
         </div>
       </div>

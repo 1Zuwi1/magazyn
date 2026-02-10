@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { AdminTeamOption } from "@/hooks/use-admin-users"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 const profilePhonePattern = /^[+\d\s()-]*$/
@@ -22,21 +23,15 @@ const EditUserFormSchema = z.object({
   fullName: z
     .string()
     .trim()
-    .min(3, "Imię i nazwisko musi mieć co najmniej 3 znaki")
-    .max(100, "Imię i nazwisko może mieć maksymalnie 100 znaków"),
+    .min(3, translateMessage("generated.m0263"))
+    .max(100, translateMessage("generated.m0264")),
   email: z.email("Podaj poprawny adres email"),
   phone: z
     .string()
     .trim()
-    .max(20, "Numer telefonu może mieć maksymalnie 20 znaków")
-    .regex(
-      profilePhonePattern,
-      "Numer telefonu może zawierać tylko cyfry, spacje i znaki +()-"
-    ),
-  location: z
-    .string()
-    .trim()
-    .max(100, "Lokalizacja może mieć maksymalnie 100 znaków"),
+    .max(20, translateMessage("generated.m0265"))
+    .regex(profilePhonePattern, translateMessage("generated.m0266")),
+  location: z.string().trim().max(100, translateMessage("generated.m0267")),
   team: z.string(),
 })
 
@@ -109,13 +104,13 @@ export function ActionDialog({
 
   return (
     <FormDialog
-      description="Zmień informacje profilowe użytkownika"
+      description={translateMessage("generated.m0268")}
       formId={formId}
       isLoading={isSubmitting}
       onFormReset={() => form.reset(getFormValues())}
       onOpenChange={onOpenChange}
       open={open}
-      title="Edytuj użytkownika"
+      title={translateMessage("generated.m0269")}
     >
       <form
         className="space-y-4 px-0.5"
@@ -131,9 +126,9 @@ export function ActionDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label="Imię i nazwisko"
+                label={translateMessage("generated.m0270")}
                 layout="grid"
-                placeholder="Jan Kowalski"
+                placeholder={translateMessage("generated.m0008")}
               />
             )}
           </form.Field>
@@ -143,9 +138,9 @@ export function ActionDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label="Email"
+                label={translateMessage("generated.m0874")}
                 layout="grid"
-                placeholder="jan.kowalski@example.com"
+                placeholder={translateMessage("generated.m0939")}
                 type="email"
               />
             )}
@@ -156,7 +151,7 @@ export function ActionDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label="Telefon"
+                label={translateMessage("generated.m0940")}
                 layout="grid"
                 placeholder="+48 555 019 203"
                 type="tel"
@@ -169,9 +164,9 @@ export function ActionDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label="Lokalizacja"
+                label={translateMessage("generated.m0893")}
                 layout="grid"
-                placeholder="Gdańsk, Polska"
+                placeholder={translateMessage("generated.m0271")}
               />
             )}
           </form.Field>
@@ -180,7 +175,7 @@ export function ActionDialog({
             {(field) => (
               <FieldWithState
                 field={field}
-                label="Zespół"
+                label={translateMessage("generated.m0272")}
                 layout="grid"
                 renderInput={({ id, isInvalid }) => (
                   <Select
@@ -194,13 +189,13 @@ export function ActionDialog({
                       id={id}
                     >
                       <SelectValue
-                        placeholder="Wybierz zespół"
+                        placeholder={translateMessage("generated.m0273")}
                         render={
                           <span>
                             {field.state.value
                               ? teams.find((t) => t.value === field.state.value)
                                   ?.label
-                              : "Wybierz zespół"}
+                              : translateMessage("generated.m0273")}
                           </span>
                         }
                       />

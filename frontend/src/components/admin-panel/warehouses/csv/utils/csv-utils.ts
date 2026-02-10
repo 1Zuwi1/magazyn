@@ -1,4 +1,5 @@
 import Papa from "papaparse"
+import { translateMessage } from "@/i18n/translate-message"
 import {
   ItemCsvSchema,
   RackCsvSchema,
@@ -291,7 +292,11 @@ function appendColumnCountError(
 ) {
   errors.push({
     row: rowNumber,
-    message: `Nieprawidłowa liczba kolumn: ${valueCount}. Oczekiwano ${minColumns}-${maxColumns}.`,
+    message: translateMessage("generated.m0354", {
+      value0: valueCount,
+      value1: minColumns,
+      value2: maxColumns,
+    }),
   })
 }
 
@@ -460,7 +465,10 @@ function appendSchemaIssues(
   for (const issue of issues) {
     errors.push({
       row: rowNumber,
-      message: `${issue.path.map(String).join(".")}: ${issue.message}`,
+      message: translateMessage("generated.m0332", {
+        value0: issue.path.map(String).join("."),
+        value1: issue.message,
+      }),
     })
   }
 }

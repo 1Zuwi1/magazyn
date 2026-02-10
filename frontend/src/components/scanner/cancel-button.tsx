@@ -1,5 +1,6 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { translateMessage } from "@/i18n/translate-message"
 import { Button } from "../ui/button"
 
 interface CancelButtonProps {
@@ -16,7 +17,7 @@ export function CancelButton({ onClick }: CancelButtonProps) {
       variant="ghost"
     >
       <HugeiconsIcon className="size-5" icon={ArrowLeft02Icon} />
-      <span className="sr-only">Wróć</span>
+      <span className="sr-only">{translateMessage("generated.m0669")}</span>
     </Button>
   )
 }

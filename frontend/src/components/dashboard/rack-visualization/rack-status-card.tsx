@@ -5,6 +5,7 @@ import {
   SquareLock02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 interface RackStatusCardProps {
@@ -25,7 +26,7 @@ function getOccupancyColor(percentage: number): {
       text: "text-destructive",
       bg: "bg-destructive/10",
       bar: "bg-destructive",
-      label: "Krytyczne",
+      label: translateMessage("generated.m0961"),
     }
   }
   if (percentage >= 75) {
@@ -33,7 +34,7 @@ function getOccupancyColor(percentage: number): {
       text: "text-orange-500",
       bg: "bg-orange-500/10",
       bar: "bg-orange-500",
-      label: "Wysokie",
+      label: translateMessage("generated.m0963"),
     }
   }
   if (percentage >= 50) {
@@ -41,14 +42,14 @@ function getOccupancyColor(percentage: number): {
       text: "text-primary",
       bg: "bg-primary/10",
       bar: "bg-primary",
-      label: "Umiarkowane",
+      label: translateMessage("generated.m0965"),
     }
   }
   return {
     text: "text-emerald-500",
     bg: "bg-emerald-500/10",
     bar: "bg-emerald-500",
-    label: "Niskie",
+    label: translateMessage("generated.m0967"),
   }
 }
 
@@ -63,21 +64,21 @@ export function RackStatusCard({
   const stats = [
     {
       icon: SquareLock02Icon,
-      label: "Zajęte",
+      label: translateMessage("generated.m0409"),
       value: occupiedSlots,
       color: "text-muted-foreground",
       bgColor: "bg-muted",
     },
     {
       icon: CheckmarkCircle02Icon,
-      label: "Wolne",
+      label: translateMessage("generated.m0995"),
       value: freeSlots,
       color: "text-emerald-500",
       bgColor: "bg-emerald-500/10",
     },
     {
       icon: PackageIcon,
-      label: "Pojemność",
+      label: translateMessage("generated.m0405"),
       value: totalCapacity,
       color: "text-primary",
       bgColor: "bg-primary/10",
@@ -94,14 +95,18 @@ export function RackStatusCard({
             icon={Analytics01Icon}
           />
         </div>
-        <h3 className="font-semibold text-sm">Status regału</h3>
+        <h3 className="font-semibold text-sm">
+          {translateMessage("generated.m0509")}
+        </h3>
       </div>
 
       {/* Occupancy Gauge */}
       <div className="border-b px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-sm">Obłożenie</span>
+            <span className="text-muted-foreground text-sm">
+              {translateMessage("generated.m0094")}
+            </span>
             <span
               className={cn(
                 "rounded-md px-2 py-0.5 font-medium text-xs",

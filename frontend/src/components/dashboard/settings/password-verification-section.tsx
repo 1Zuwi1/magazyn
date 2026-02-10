@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Spinner } from "@/components/ui/spinner"
 import { OTP_LENGTH } from "@/config/constants"
+import { translateMessage } from "@/i18n/translate-message"
 import type { TwoFactorMethod } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { RESEND_COOLDOWN_SECONDS } from "./constants"
@@ -68,7 +69,7 @@ function usePasswordVerificationFlow({
       }
     } catch {
       onStageChange("ERROR")
-      const message = "Nie udało się wysłać kodu. Spróbuj ponownie."
+      const message = translateMessage("generated.m0557")
       onErrorChange(message)
       toast.error(message)
     }
@@ -81,8 +82,8 @@ function PasswordVerificationAlerts() {
   return (
     <Alert>
       <Spinner className="text-muted-foreground" />
-      <AlertTitle>Wysyłamy kod</AlertTitle>
-      <AlertDescription>Kod trafia na wybraną metodę.</AlertDescription>
+      <AlertTitle>{translateMessage("generated.m0558")}</AlertTitle>
+      <AlertDescription>{translateMessage("generated.m0559")}</AlertDescription>
     </Alert>
   )
 }
@@ -108,7 +109,9 @@ function CodeInputEntry({
 }) {
   return (
     <div className="space-y-3">
-      <Label htmlFor="password-2fa-code">Kod 2FA</Label>
+      <Label htmlFor="password-2fa-code">
+        {translateMessage("generated.m0560")}
+      </Label>
       <OtpInput
         disabled={isBusy}
         id="password-2fa-code"
@@ -122,7 +125,7 @@ function CodeInputEntry({
           onClick={onVerify}
           type="button"
         >
-          Zweryfikuj kod
+          {translateMessage("generated.m0052")}
         </Button>
         {method !== "AUTHENTICATOR" ? (
           <>
@@ -135,8 +138,10 @@ function CodeInputEntry({
               variant="outline"
             >
               {resendCooldown > 0
-                ? `Wyślij ponownie (${formatCountdown(resendCooldown)})`
-                : "Wyślij ponownie"}
+                ? translateMessage("generated.m0561", {
+                    value0: formatCountdown(resendCooldown),
+                  })
+                : translateMessage("generated.m0050")}
             </Button>
             <span
               aria-atomic="true"
@@ -145,8 +150,8 @@ function CodeInputEntry({
               id="resend-status"
             >
               {resendCooldown > 0
-                ? "Wyślij ponownie będzie dostępne po zakończeniu odliczania."
-                : "Możesz teraz wysłać ponownie."}
+                ? translateMessage("generated.m0562")
+                : translateMessage("generated.m0563")}
             </span>
           </>
         ) : null}
@@ -229,7 +234,7 @@ export function PasswordVerificationSection({
     }
 
     if (code.length !== OTP_LENGTH) {
-      const message = "Wpisz pełny kod weryfikacyjny."
+      const message = translateMessage("generated.m0564")
       setState((current) => ({ ...current, error: message }))
       toast.error(message)
       return
@@ -266,10 +271,10 @@ export function PasswordVerificationSection({
     onVerify(code)
   }, [autoVerify, code, complete, isVerifying, onVerify])
 
-  const title = copy?.title ?? "Potwierdź 2FA przed zmianą"
+  const title = copy?.title ?? translateMessage("generated.m0565")
   const verifiedTitle = copy?.verifiedTitle ?? "Zweryfikowano"
   const verifiedDescription =
-    copy?.verifiedDescription ?? "Możesz bezpiecznie zmienić hasło."
+    copy?.verifiedDescription ?? translateMessage("generated.m0566")
   const description = (() => {
     if (copy?.description) {
       return typeof copy.description === "function"
@@ -277,8 +282,8 @@ export function PasswordVerificationSection({
         : copy.description
     }
     return method === "AUTHENTICATOR"
-      ? "Wpisz kod z aplikacji uwierzytelniającej."
-      : "Wyślemy kod na wybraną metodę."
+      ? translateMessage("generated.m0567")
+      : translateMessage("generated.m0568")
   })()
   const resolvedError = verificationError ?? error
 
@@ -303,7 +308,7 @@ export function PasswordVerificationSection({
         <div className="space-y-3">
           {resolvedError ? (
             <Alert variant="destructive">
-              <AlertTitle>Nie udało się zweryfikować</AlertTitle>
+              <AlertTitle>{translateMessage("generated.m0569")}</AlertTitle>
               <AlertDescription>{resolvedError}</AlertDescription>
             </Alert>
           ) : null}

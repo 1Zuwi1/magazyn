@@ -36,6 +36,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import useItems, { type Item } from "@/hooks/use-items"
+import { translateMessage } from "@/i18n/translate-message"
 import { CodeCell } from "./components/code-cell"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 
@@ -124,7 +125,9 @@ const itemsColumns: ColumnDef<Item>[] = [
   {
     accessorKey: "name",
     header: ({ column }) => (
-      <SortableHeader column={column}>Nazwa</SortableHeader>
+      <SortableHeader column={column}>
+        {translateMessage("generated.m0922")}
+      </SortableHeader>
     ),
     cell: ({ row }) => {
       const item = row.original
@@ -145,7 +148,9 @@ const itemsColumns: ColumnDef<Item>[] = [
   {
     accessorKey: "code",
     header: ({ column }) => (
-      <SortableHeader column={column}>Kod</SortableHeader>
+      <SortableHeader column={column}>
+        {translateMessage("generated.m0906")}
+      </SortableHeader>
     ),
     cell: ({ row }) => <CodeCell value={row.original.code} />,
     enableSorting: true,
@@ -154,7 +159,9 @@ const itemsColumns: ColumnDef<Item>[] = [
     id: "dimensions",
     accessorFn: (item) => `${item.sizeX}×${item.sizeY}×${item.sizeZ}`,
     header: ({ column }) => (
-      <SortableHeader column={column}>Wymiary</SortableHeader>
+      <SortableHeader column={column}>
+        {translateMessage("generated.m0985")}
+      </SortableHeader>
     ),
     cell: ({ row }) => (
       <span className="font-mono text-sm">
@@ -166,40 +173,56 @@ const itemsColumns: ColumnDef<Item>[] = [
   {
     accessorKey: "weight",
     header: ({ column }) => (
-      <SortableHeader column={column}>Waga</SortableHeader>
+      <SortableHeader column={column}>
+        {translateMessage("generated.m0948")}
+      </SortableHeader>
     ),
     cell: ({ row }) => (
-      <span className="font-mono">{row.original.weight} kg</span>
+      <span className="font-mono">
+        {row.original.weight} {translateMessage("generated.m0954")}
+      </span>
     ),
     enableSorting: true,
   },
   {
     accessorKey: "expireAfterDays",
     header: ({ column }) => (
-      <SortableHeader column={column}>Ważność</SortableHeader>
+      <SortableHeader column={column}>
+        {translateMessage("generated.m0466")}
+      </SortableHeader>
     ),
     cell: ({ row }) => (
-      <Badge variant="outline">{row.original.expireAfterDays} dni</Badge>
+      <Badge variant="outline">
+        {translateMessage("generated.m1105", {
+          value0: row.original.expireAfterDays,
+        })}
+      </Badge>
     ),
     enableSorting: true,
   },
   {
     accessorKey: "dangerous",
     header: ({ column }) => (
-      <SortableHeader column={column}>Status</SortableHeader>
+      <SortableHeader column={column}>
+        {translateMessage("generated.m0895")}
+      </SortableHeader>
     ),
     cell: ({ row }) =>
       row.original.dangerous ? (
-        <Badge variant="destructive">Niebezpieczny</Badge>
+        <Badge variant="destructive">
+          {translateMessage("generated.m0925")}
+        </Badge>
       ) : (
-        <Badge variant="secondary">Bezpieczny</Badge>
+        <Badge variant="secondary">{translateMessage("generated.m0933")}</Badge>
       ),
     enableSorting: true,
   },
   {
     id: "comment",
     accessorKey: "comment",
-    header: () => <StaticHeader>Komentarz</StaticHeader>,
+    header: () => (
+      <StaticHeader>{translateMessage("generated.m0930")}</StaticHeader>
+    ),
     cell: ({ row }) => (
       <span className="line-clamp-2 text-muted-foreground text-sm">
         {row.original.comment || "Brak"}
@@ -273,7 +296,7 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
   const itemLabel = {
     singular: "przedmiot",
     plural: "przedmioty",
-    genitive: "przedmiotów",
+    genitive: translateMessage("generated.m0224"),
   }
 
   const clearAllFilters = () => {
@@ -286,9 +309,9 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
         <FilterBar className="gap-3">
           <FilterGroup>
             <SearchInput
-              aria-label="Szukaj przedmiotów"
+              aria-label={translateMessage("generated.m0475")}
               onChange={handleSearchChange}
-              placeholder="Szukaj po nazwie, kodzie lub komentarzu..."
+              placeholder={translateMessage("generated.m0476")}
               value={search}
             />
             {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}

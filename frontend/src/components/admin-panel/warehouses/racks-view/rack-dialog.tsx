@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
+import { translateMessage } from "@/i18n/translate-message"
 import type { Rack } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { DEFAULT_RACK } from "../../lib/constants"
@@ -30,35 +31,26 @@ const RackDialogFormSchema = z
       .string()
       .trim()
       .min(1, "Marker jest wymagany")
-      .max(100, "Marker może mieć maksymalnie 100 znaków"),
+      .max(100, translateMessage("generated.m0355")),
     rows: z
       .number()
-      .int("Liczba wierszy musi być liczbą całkowitą")
-      .min(1, "Liczba wierszy musi być większa od 0"),
+      .int(translateMessage("generated.m0356"))
+      .min(1, translateMessage("generated.m0357")),
     cols: z
       .number()
-      .int("Liczba kolumn musi być liczbą całkowitą")
-      .min(1, "Liczba kolumn musi być większa od 0"),
+      .int(translateMessage("generated.m0358"))
+      .min(1, translateMessage("generated.m0359")),
     minTemp: z.number(),
     maxTemp: z.number(),
-    maxWeight: z.number().nonnegative("Maksymalna waga nie może być ujemna"),
-    maxItemWidth: z
-      .number()
-      .positive("Maksymalna szerokość asortymentu musi być większa od 0"),
-    maxItemHeight: z
-      .number()
-      .positive("Maksymalna wysokość asortymentu musi być większa od 0"),
-    maxItemDepth: z
-      .number()
-      .positive("Maksymalna głębokość asortymentu musi być większa od 0"),
+    maxWeight: z.number().nonnegative(translateMessage("generated.m0360")),
+    maxItemWidth: z.number().positive(translateMessage("generated.m0361")),
+    maxItemHeight: z.number().positive(translateMessage("generated.m0362")),
+    maxItemDepth: z.number().positive(translateMessage("generated.m0363")),
     acceptsDangerous: z.boolean(),
-    comment: z
-      .string()
-      .trim()
-      .max(1000, "Komentarz może mieć maksymalnie 1000 znaków"),
+    comment: z.string().trim().max(1000, translateMessage("generated.m0364")),
   })
   .refine((value) => value.maxTemp >= value.minTemp, {
-    message: "Maksymalna temperatura nie może być mniejsza od minimalnej",
+    message: translateMessage("generated.m0365"),
     path: ["maxTemp"],
   })
 
@@ -132,7 +124,11 @@ export function RackDialog({
         acceptsDangerous: value.acceptsDangerous,
         comment: value.comment.length > 0 ? value.comment : undefined,
       })
-      toast.success(isEdit ? "Regał zaktualizowany" : "Regał dodany")
+      toast.success(
+        isEdit
+          ? translateMessage("generated.m0366")
+          : translateMessage("generated.m0367")
+      )
       form.reset(formValues)
       onOpenChange(false)
     },
@@ -152,14 +148,20 @@ export function RackDialog({
   return (
     <FormDialog
       description={
-        isEdit ? "Zmień parametry regału" : "Wprowadź parametry nowego regału."
+        isEdit
+          ? translateMessage("generated.m0368")
+          : translateMessage("generated.m0369")
       }
       formId="rack-form"
       isLoading={isSubmitting}
       onFormReset={() => form.reset(formValues)}
       onOpenChange={onOpenChange}
       open={open}
-      title={isEdit ? "Edytuj regał" : "Dodaj regał"}
+      title={
+        isEdit
+          ? translateMessage("generated.m0370")
+          : translateMessage("generated.m0371")
+      }
     >
       <form
         className="space-y-5 px-0.5 py-4"
@@ -170,16 +172,19 @@ export function RackDialog({
         }}
       >
         <section className="space-y-3">
-          <SectionHeader icon={Tag01Icon} title="Identyfikacja" />
+          <SectionHeader
+            icon={Tag01Icon}
+            title={translateMessage("generated.m0921")}
+          />
           <FieldGroup className="gap-4">
             <form.Field name="marker">
               {(field) => (
                 <FieldWithState
                   autoComplete="off"
                   field={field}
-                  label="Marker"
+                  label={translateMessage("generated.m0950")}
                   layout="grid"
-                  placeholder="A1-01"
+                  placeholder={translateMessage("generated.m0951")}
                 />
               )}
             </form.Field>
@@ -189,11 +194,14 @@ export function RackDialog({
         <Separator />
 
         <section className="space-y-3">
-          <SectionHeader icon={ThermometerIcon} title="Przechowywanie" />
+          <SectionHeader
+            icon={ThermometerIcon}
+            title={translateMessage("generated.m0923")}
+          />
           <FieldGroup className="gap-4">
             <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
               <span className="col-span-2 text-start font-medium text-sm">
-                Temperatura
+                {translateMessage("generated.m0924")}
               </span>
               <div className="col-span-4 flex items-center gap-2">
                 <form.Field name="minTemp">
@@ -206,7 +214,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder="Min °C"
+                      placeholder={translateMessage("generated.m0209")}
                       type="number"
                       value={field.state.value}
                     />
@@ -223,7 +231,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder="Max °C"
+                      placeholder={translateMessage("generated.m0210")}
                       type="number"
                       value={field.state.value}
                     />
@@ -239,7 +247,7 @@ export function RackDialog({
                     className="col-span-2 cursor-pointer text-nowrap text-end"
                     htmlFor={field.name}
                   >
-                    Akceptuje niebezpieczne
+                    {translateMessage("generated.m0372")}
                   </Label>
                   <FieldContent className="col-span-4 flex items-center">
                     <Checkbox
@@ -259,11 +267,14 @@ export function RackDialog({
         <Separator />
 
         <section className="space-y-3">
-          <SectionHeader icon={RulerIcon} title="Wymiary fizyczne" />
+          <SectionHeader
+            icon={RulerIcon}
+            title={translateMessage("generated.m0213")}
+          />
           <FieldGroup className="gap-4">
             <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
               <span className="col-span-2 font-medium text-sm">
-                Wymiary (wiersze × kolumny)
+                {translateMessage("generated.m0373")}
               </span>
               <div className="col-span-4 flex items-center gap-2">
                 <form.Field name="rows">
@@ -277,7 +288,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder="Wiersze"
+                      placeholder={translateMessage("generated.m0952")}
                       type="number"
                       value={field.state.value}
                     />
@@ -295,7 +306,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder="Kolumny"
+                      placeholder={translateMessage("generated.m0953")}
                       type="number"
                       value={field.state.value}
                     />
@@ -308,7 +319,7 @@ export function RackDialog({
               {(field) => (
                 <FieldWithState
                   field={field}
-                  label="Max waga (kg)"
+                  label={translateMessage("generated.m0374")}
                   layout="grid"
                   renderInput={({ id, isInvalid }) => (
                     <Input
@@ -333,7 +344,7 @@ export function RackDialog({
 
             <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
               <span className="col-span-2 font-medium text-sm">
-                Wymiary asortymentu (mm)
+                {translateMessage("generated.m0375")}
               </span>
               <div className="col-span-4 flex items-center gap-2">
                 <form.Field name="maxItemWidth">
@@ -347,7 +358,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder="Szer."
+                      placeholder={translateMessage("generated.m0926")}
                       type="number"
                       value={field.state.value}
                     />
@@ -365,7 +376,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder="Wys."
+                      placeholder={translateMessage("generated.m0927")}
                       type="number"
                       value={field.state.value}
                     />
@@ -383,7 +394,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder="Gł."
+                      placeholder={translateMessage("generated.m0376")}
                       type="number"
                       value={field.state.value}
                     />
@@ -397,14 +408,17 @@ export function RackDialog({
         <Separator />
 
         <section className="space-y-3">
-          <SectionHeader icon={Tag01Icon} title="Dodatkowe" />
+          <SectionHeader
+            icon={Tag01Icon}
+            title={translateMessage("generated.m0929")}
+          />
           <FieldGroup className="gap-4">
             <form.Field name="comment">
               {(field) => (
                 <FieldWithState
                   field={field}
                   fieldClassName="items-start"
-                  label="Komentarz"
+                  label={translateMessage("generated.m0930")}
                   labelClassName="pt-2 text-left"
                   layout="grid"
                   renderInput={({ id, isInvalid }) => (
@@ -416,7 +430,7 @@ export function RackDialog({
                       name={field.name}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="Opcjonalny komentarz..."
+                      placeholder={translateMessage("generated.m0216")}
                       rows={3}
                       value={field.state.value ?? ""}
                     />

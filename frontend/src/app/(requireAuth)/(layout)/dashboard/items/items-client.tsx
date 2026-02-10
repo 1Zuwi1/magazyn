@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import useAssortment from "@/hooks/use-assortment"
 import useItems from "@/hooks/use-items"
+import { translateMessage } from "@/i18n/translate-message"
 
 type ItemsTab = "assortment" | "definitions"
 
@@ -68,14 +69,14 @@ export default function ItemsClientPage() {
 
   const headerStats = [
     {
-      label: "Na stanie",
+      label: translateMessage("generated.m0068"),
       value:
         isPending || isAssortmentError
           ? "..."
           : totalStock.toLocaleString("pl-PL"),
     },
     {
-      label: "Produkty",
+      label: translateMessage("generated.m0878"),
       value: isPending || isItemsError ? "..." : totalItems,
     },
   ]
@@ -83,11 +84,11 @@ export default function ItemsClientPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        description="Przeglądaj katalog produktów i monitoruj aktualne stany magazynowe w czasie rzeczywistym."
+        description={translateMessage("generated.m0069")}
         icon={PackageIcon}
         iconBadge={isPending ? undefined : totalItems}
         stats={headerStats}
-        title="Zarządzanie przedmiotami"
+        title={translateMessage("generated.m0070")}
       />
 
       <Tabs
@@ -104,14 +105,14 @@ export default function ItemsClientPage() {
             <TabsList className="h-auto" variant="line">
               <TabsTrigger className="gap-2 py-2.5" value="assortment">
                 <HugeiconsIcon className="size-3.5" icon={GridViewIcon} />
-                <span>Stan Magazynowy</span>
+                <span>{translateMessage("generated.m0071")}</span>
                 <Badge className="ml-1" variant="secondary">
                   {isAssortmentPending ? "..." : totalStock}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger className="gap-2 py-2.5" value="definitions">
                 <HugeiconsIcon className="size-3.5" icon={BarCode02Icon} />
-                <span>Katalog produktów</span>
+                <span>{translateMessage("generated.m0072")}</span>
                 <Badge className="ml-1" variant="secondary">
                   {totalItems}
                 </Badge>

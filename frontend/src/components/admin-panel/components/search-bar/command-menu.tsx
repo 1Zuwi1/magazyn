@@ -15,6 +15,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { translateMessage } from "@/i18n/translate-message"
 
 export interface NavItem {
   title: string
@@ -56,12 +57,12 @@ export function CommandMenu({
     <CommandDialog onOpenChange={setOpen} open={open}>
       <CommandInput
         onValueChange={setQuery}
-        placeholder="Wyszukuj polecenie"
+        placeholder={translateMessage("generated.m0192")}
         value={query}
       />
       <CommandList>
         <ScrollArea className="h-72 pe-1">
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>{translateMessage("generated.m0193")}</CommandEmpty>
 
           {navGroups.map((group) => (
             <CommandGroup key={group.title}>
@@ -88,7 +89,8 @@ export function CommandMenu({
                 changeTheme("light")
               }}
             >
-              <HugeiconsIcon icon={Sun03Icon} /> <span>Jasny</span>
+              <HugeiconsIcon icon={Sun03Icon} />{" "}
+              <span>{translateMessage("generated.m0916")}</span>
             </CommandItem>
             <CommandItem
               onSelect={() => {
@@ -96,7 +98,7 @@ export function CommandMenu({
               }}
             >
               <HugeiconsIcon className="scale-90" icon={Moon02Icon} />
-              <span>Ciemny</span>
+              <span>{translateMessage("generated.m0917")}</span>
             </CommandItem>
             <CommandItem
               onSelect={() => {
@@ -104,7 +106,7 @@ export function CommandMenu({
               }}
             >
               <HugeiconsIcon icon={LaptopIcon} />
-              <span>System</span>
+              <span>{translateMessage("generated.m0918")}</span>
             </CommandItem>
           </CommandGroup>
         </ScrollArea>

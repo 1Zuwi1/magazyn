@@ -1,5 +1,6 @@
 import { useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
+import { translateMessage } from "@/i18n/translate-message"
 import { getDaysUntilExpiry } from "../../utils/helpers"
 
 interface ExpiryBadgeProps {
@@ -14,20 +15,32 @@ export function ExpiryBadge({ expiryDate }: ExpiryBadgeProps) {
     return getDaysUntilExpiry(new Date(), expiryDate)
   }, [expiryDate])
   if (days === undefined) {
-    return <Badge variant="outline">Brak danych</Badge>
+    return (
+      <Badge variant="outline">{translateMessage("generated.m0472")}</Badge>
+    )
   }
   if (days < 0) {
-    return <Badge variant="destructive">Przeterminowane</Badge>
+    return (
+      <Badge variant="destructive">{translateMessage("generated.m0975")}</Badge>
+    )
   }
   if (days <= 3) {
-    return <Badge variant="destructive">{days} dni</Badge>
+    return (
+      <Badge variant="destructive">
+        {translateMessage("generated.m1105", { value0: days })}
+      </Badge>
+    )
   }
   if (days <= 7) {
     return (
       <Badge className="bg-yellow-500 text-white" variant="default">
-        za {days} dni
+        {translateMessage("generated.m1074", { value0: days })}
       </Badge>
     )
   }
-  return <Badge variant="outline">{days} dni</Badge>
+  return (
+    <Badge variant="outline">
+      {translateMessage("generated.m1105", { value0: days })}
+    </Badge>
+  )
 }

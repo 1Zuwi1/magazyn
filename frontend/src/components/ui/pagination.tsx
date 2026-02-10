@@ -6,12 +6,13 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import type * as React from "react"
 import { Button } from "@/components/ui/button"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
-      aria-label="pagination"
+      aria-label={translateMessage("generated.m1044")}
       className={cn("mx-auto flex w-full justify-center", className)}
       data-slot="pagination"
       {...props}
@@ -67,7 +68,7 @@ function PaginationPrevious({
 }) {
   return (
     <PaginationLink
-      aria-label="Przejdź do poprzedniej strony"
+      aria-label={translateMessage("generated.m0802")}
       className={cn("pl-2!", className)}
       size="default"
       {...props}
@@ -86,7 +87,7 @@ function PaginationPrevious({
 
 function PaginationNext({
   className,
-  text = "Następna",
+  text = translateMessage("generated.m0803"),
   showIcon = true,
   ...props
 }: React.ComponentProps<typeof PaginationLink> & {
@@ -95,7 +96,7 @@ function PaginationNext({
 }) {
   return (
     <PaginationLink
-      aria-label="Przejdź do następnej strony"
+      aria-label={translateMessage("generated.m0804")}
       className={cn("pr-2!", className)}
       size="default"
       {...props}
@@ -127,7 +128,7 @@ function PaginationEllipsis({
       {...props}
     >
       <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} />
-      <span className="sr-only">More pages</span>
+      <span className="sr-only">{translateMessage("generated.m0805")}</span>
     </span>
   )
 }

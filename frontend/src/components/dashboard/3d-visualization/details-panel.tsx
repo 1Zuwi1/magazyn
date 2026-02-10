@@ -10,6 +10,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
 import { ItemPhoto } from "@/components/ui/item-photo"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import type { IconComponent } from "../types"
 import { useWarehouseStore } from "./store"
@@ -77,7 +78,7 @@ function getOccupancyColor(percentage: number): {
       text: "text-destructive",
       bg: "bg-destructive/10",
       bar: "bg-destructive",
-      label: "Krytyczne",
+      label: translateMessage("generated.m0961"),
     }
   }
   if (percentage >= 75) {
@@ -85,7 +86,7 @@ function getOccupancyColor(percentage: number): {
       text: "text-orange-500",
       bg: "bg-orange-500/10",
       bar: "bg-orange-500",
-      label: "Wysokie",
+      label: translateMessage("generated.m0963"),
     }
   }
   if (percentage >= 50) {
@@ -93,14 +94,14 @@ function getOccupancyColor(percentage: number): {
       text: "text-primary",
       bg: "bg-primary/10",
       bar: "bg-primary",
-      label: "Umiarkowane",
+      label: translateMessage("generated.m0965"),
     }
   }
   return {
     text: "text-emerald-500",
     bg: "bg-emerald-500/10",
     bar: "bg-emerald-500",
-    label: "Niskie",
+    label: translateMessage("generated.m0967"),
   }
 }
 
@@ -164,10 +165,10 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
           </div>
           <div>
             <h2 className="font-semibold text-base tracking-tight">
-              Przegląd Magazynu
+              {translateMessage("generated.m0402")}
             </h2>
             <p className="text-muted-foreground text-xs">
-              Statystyki i podsumowanie
+              {translateMessage("generated.m0403")}
             </p>
           </div>
         </div>
@@ -177,7 +178,9 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
       <div className="border-b px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-sm">Obłożenie całkowite</span>
+            <span className="font-medium text-sm">
+              {translateMessage("generated.m0404")}
+            </span>
             <span
               className={cn(
                 "rounded-md px-2 py-0.5 font-medium text-xs",
@@ -218,28 +221,28 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
           bgColor="bg-muted"
           color="text-muted-foreground"
           icon={GridViewIcon}
-          label="Regałów"
+          label={translateMessage("generated.m0083")}
           value={warehouse.racks.length}
         />
         <StatCard
           bgColor="bg-primary/10"
           color="text-primary"
           icon={PackageIcon}
-          label="Pojemność"
+          label={translateMessage("generated.m0405")}
           value={totalSlots}
         />
         <StatCard
           bgColor="bg-muted"
           color="text-muted-foreground"
           icon={SquareLock02Icon}
-          label="Zajętych"
+          label={translateMessage("generated.m0406")}
           value={occupiedSlots}
         />
         <StatCard
           bgColor="bg-emerald-500/10"
           color="text-emerald-500"
           icon={CheckmarkCircle02Icon}
-          label="Wolnych"
+          label={translateMessage("generated.m0883")}
           value={freeSlots}
         />
       </div>
@@ -294,10 +297,10 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
             </div>
             <div>
               <h2 className="font-semibold text-base tracking-tight">
-                Szczegóły Regału
+                {translateMessage("generated.m0090")}
               </h2>
               <p className="text-muted-foreground text-xs">
-                {selectedRack?.name ?? "Wybierz regał"}
+                {selectedRack?.name ?? translateMessage("generated.m0407")}
               </p>
             </div>
           </div>
@@ -337,29 +340,39 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
 
             <div className="space-y-2 p-3 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Siatka</span>
+                <span className="text-muted-foreground">
+                  {translateMessage("generated.m0968")}
+                </span>
                 <span className="font-mono font-semibold">
                   {selectedRack.grid.rows}×{selectedRack.grid.cols}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Wszystkie miejsca</span>
+                <span className="text-muted-foreground">
+                  {translateMessage("generated.m0408")}
+                </span>
                 <span className="font-mono font-semibold">
                   {selectedRack.grid.rows * selectedRack.grid.cols}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Zajęte</span>
+                <span className="text-muted-foreground">
+                  {translateMessage("generated.m0409")}
+                </span>
                 <span className="font-mono font-semibold">
                   {selectedRack.items.filter((item) => item !== null).length}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Max rozmiar</span>
+                <span className="text-muted-foreground">
+                  {translateMessage("generated.m0410")}
+                </span>
                 <span className="font-mono font-semibold">
-                  {selectedRack.maxElementSize.width}×
-                  {selectedRack.maxElementSize.height}×
-                  {selectedRack.maxElementSize.depth} mm
+                  {translateMessage("generated.m1078", {
+                    value0: selectedRack.maxElementSize.width,
+                    value1: selectedRack.maxElementSize.height,
+                    value2: selectedRack.maxElementSize.depth,
+                  })}
                 </span>
               </div>
             </div>
@@ -378,13 +391,15 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                   </div>
                   <div>
                     <h4 className="font-semibold text-sm">
-                      Rząd {selectedShelf.row + 1}, Półka{" "}
-                      {selectedShelf.col + 1}
+                      {translateMessage("generated.m0506", {
+                        value0: selectedShelf.row + 1,
+                        value1: selectedShelf.col + 1,
+                      })}
                     </h4>
                   </div>
                 </div>
                 <Button onClick={clearSelection} size="sm" variant="ghost">
-                  Wyczyść
+                  {translateMessage("generated.m0413")}
                 </Button>
               </div>
 
@@ -406,11 +421,15 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
 
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">ID</span>
+                      <span className="text-muted-foreground">
+                        {translateMessage("generated.m0969")}
+                      </span>
                       <span className="font-mono">{selectedItem.id}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Nazwa</span>
+                      <span className="text-muted-foreground">
+                        {translateMessage("generated.m0922")}
+                      </span>
                       <span className="font-medium">{selectedItem.label}</span>
                     </div>
                   </div>
@@ -431,12 +450,15 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                     />
                   </div>
                   <p className="font-medium text-muted-foreground text-sm">
-                    Pusta półka
+                    {translateMessage("generated.m0414")}
                   </p>
                   <p className="text-muted-foreground/70 text-xs">
-                    Brak elementu na pozycji
+                    {translateMessage("generated.m0415")}
                     <br />
-                    Rząd {selectedShelf.row + 1}, Półka {selectedShelf.col + 1}
+                    {translateMessage("generated.m0506", {
+                      value0: selectedShelf.row + 1,
+                      value1: selectedShelf.col + 1,
+                    })}
                   </p>
                 </div>
               )}
@@ -455,10 +477,10 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
               <p className="font-medium text-muted-foreground text-sm">
                 {showBlockHint
                   ? `Kliknij blok ${RACK_ZONE_SIZE}×${RACK_ZONE_SIZE}`
-                  : "Kliknij na półkę"}
+                  : translateMessage("generated.m0416")}
               </p>
               <p className="text-muted-foreground/70 text-xs">
-                aby zobaczyć szczegóły elementu
+                {translateMessage("generated.m0417")}
               </p>
             </div>
           )}

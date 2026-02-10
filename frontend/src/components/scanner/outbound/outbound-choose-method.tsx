@@ -1,3 +1,4 @@
+import { translateMessage } from "@/i18n/translate-message"
 import { ScannerChooseMethod } from "../scanner-choose-method"
 
 interface OutboundChooseMethodProps {
@@ -13,15 +14,15 @@ export function OutboundChooseMethod({
 }: OutboundChooseMethodProps) {
   return (
     <ScannerChooseMethod
-      description="Wybierz sposób wskazania towaru do zdjęcia z magazynu."
+      description={translateMessage("generated.m0675")}
       onCancel={onCancel}
       onScan={onScan}
       onSelect={onSelect}
-      scanDescription="Zeskanuj kod GS1-128 z etykiety asortymentu."
+      scanDescription={translateMessage("generated.m1012")}
       scanLabel="Zeskanuj kod"
-      selectDescription="Wyszukaj produkt i wskaż ilość do zdjęcia."
+      selectDescription={translateMessage("generated.m1013")}
       selectLabel="Wybierz z listy"
-      title="Zdejmowanie towaru"
+      title={translateMessage("generated.m0676")}
     />
   )
 }

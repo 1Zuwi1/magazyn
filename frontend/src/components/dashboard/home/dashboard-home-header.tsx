@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { PageHeader } from "@/components/dashboard/page-header"
 import useWarehouses from "@/hooks/use-warehouses"
+import { translateMessage } from "@/i18n/translate-message"
 import {
   formatNumber,
   getOccupancyStatVariant,
@@ -26,22 +27,22 @@ export function DashboardHomeHeader() {
   const totalWarehouses = warehousesData?.summary?.totalWarehouses ?? 0
   return (
     <PageHeader
-      description="Bieżący stan magazynów, alerty operacyjne i szybkie przejścia do kluczowych modułów."
+      description={translateMessage("generated.m0426")}
       icon={Home01Icon}
       stats={[
         {
-          label: "Magazyny",
+          label: translateMessage("generated.m0886"),
           value: formatNumber(totalWarehouses),
           icon: Package,
         },
         {
-          label: "Zajętość",
+          label: translateMessage("generated.m0427"),
           value: `${occupancyPercentage}%`,
           icon: ChartLineData01Icon,
           variant: getOccupancyStatVariant(occupancyPercentage),
         },
       ]}
-      title="Panel główny"
+      title={translateMessage("generated.m0428")}
     />
   )
 }

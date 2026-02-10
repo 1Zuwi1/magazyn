@@ -1,5 +1,6 @@
 import { AlertCircleIcon, Location04Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { translateMessage } from "@/i18n/translate-message"
 import type { OutboundCheckResult } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
 import { Button } from "../../ui/button"
@@ -52,34 +53,44 @@ export function OutboundFifoWarning({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              Naruszenie FIFO
+              {translateMessage("generated.m0677")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              Wybrany asortyment nie jest zgodny z zasadą FIFO.
-              {warning ? ` ${warning} starszych pozycji.` : ""}
+              {translateMessage("generated.m0678")}
+              {warning
+                ? ` ${translateMessage("generated.m1057", { value0: warning })}`
+                : ""}
             </p>
           </div>
         </div>
 
         <div className="mb-4 overflow-hidden rounded-xl border bg-card/50">
           <div className="border-b bg-muted/30 px-4 py-2.5">
-            <p className="font-medium text-sm">Zeskanowany asortyment</p>
+            <p className="font-medium text-sm">
+              {translateMessage("generated.m0679")}
+            </p>
           </div>
           <div className="p-4">
             <div className="flex items-center gap-2">
               <p className="font-medium text-sm">
-                Regał {requestedAssortment.rackMarker}
+                {translateMessage("generated.m0418", {
+                  value0: requestedAssortment.rackMarker,
+                })}
               </p>
               <Badge variant="outline">
-                P:{requestedAssortment.positionX} R:
-                {requestedAssortment.positionY}
+                {translateMessage("generated.m1084", {
+                  value0: requestedAssortment.positionX,
+                  value1: requestedAssortment.positionY,
+                })}
               </Badge>
             </div>
             <p className="mt-1 font-mono text-muted-foreground text-xs">
               {requestedAssortment.assortmentCode}
             </p>
             <p className="mt-1 text-muted-foreground text-xs">
-              Przyjęto: {formatDate(requestedAssortment.createdAt)}
+              {translateMessage("generated.m1085", {
+                value0: formatDate(requestedAssortment.createdAt),
+              })}
             </p>
           </div>
         </div>
@@ -89,7 +100,7 @@ export function OutboundFifoWarning({
             <div className="absolute inset-x-0 top-0 z-10 h-4 bg-linear-to-b from-background to-transparent" />
             <div className="h-full space-y-2 overflow-y-auto px-2 py-2">
               <p className="px-1 font-medium text-sm">
-                Starsze pozycje (FIFO-zgodne):
+                {translateMessage("generated.m0681")}
               </p>
               {olderAssortments.map((slot) => (
                 <div
@@ -102,18 +113,31 @@ export function OutboundFifoWarning({
                       icon={Location04Icon}
                     />
                     <p className="font-medium text-sm">
-                      Regał {slot.rackMarker}
+                      {translateMessage("generated.m0418", {
+                        value0: slot.rackMarker,
+                      })}
                     </p>
                     <Badge variant="outline">
-                      P:{slot.positionX} R:{slot.positionY}
+                      {translateMessage("generated.m1084", {
+                        value0: slot.positionX,
+                        value1: slot.positionY,
+                      })}
                     </Badge>
                   </div>
                   <p className="mt-1 font-mono text-muted-foreground text-xs">
                     {slot.assortmentCode}
                   </p>
                   <div className="mt-1 flex gap-3 text-muted-foreground text-xs">
-                    <span>Przyjęto: {formatDate(slot.createdAt)}</span>
-                    <span>Wygasa: {formatDate(slot.expiresAt)}</span>
+                    <span>
+                      {translateMessage("generated.m1085", {
+                        value0: formatDate(slot.createdAt),
+                      })}
+                    </span>
+                    <span>
+                      {translateMessage("generated.m1086", {
+                        value0: formatDate(slot.expiresAt),
+                      })}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -128,7 +152,7 @@ export function OutboundFifoWarning({
             onClick={onTakeFifoCompliant}
             type="button"
           >
-            Pobierz zgodny z FIFO
+            {translateMessage("generated.m0682")}
           </Button>
           <Button
             className="h-12 w-full rounded-xl"
@@ -137,7 +161,7 @@ export function OutboundFifoWarning({
             type="button"
             variant="outline"
           >
-            Kontynuuj mimo to (pomiń FIFO)
+            {translateMessage("generated.m0683")}
           </Button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import type { VariantProps } from "class-variance-authority"
 import type { Dispatch, SetStateAction } from "react"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "./button"
 import {
@@ -44,7 +45,10 @@ export default function PaginationFull({
     >
       {isCompact && (
         <p className="text-muted-foreground text-xs">
-          Strona {currentPage} z {Math.max(totalPages, 1)}
+          {translateMessage("generated.m1059", {
+            value0: currentPage,
+            value1: Math.max(totalPages, 1),
+          })}
         </p>
       )}
       <PaginationContent>

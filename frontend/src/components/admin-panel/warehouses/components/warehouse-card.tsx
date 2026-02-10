@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { WarehousesList } from "@/hooks/use-warehouses"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { THRESHOLD } from "../../lib/constants"
 
@@ -90,7 +91,7 @@ export function WarehouseCard({
             <div>
               <h3 className="font-semibold text-lg">{warehouse.name}</h3>
               <p className="text-muted-foreground text-xs">
-                ID: {warehouse.id}
+                {translateMessage("generated.m1095", { value0: warehouse.id })}
               </p>
             </div>
           </div>
@@ -98,7 +99,7 @@ export function WarehouseCard({
           {(onEdit || onDelete) && (
             <DropdownMenu>
               <DropdownMenuTrigger
-                aria-label="Akcje magazynu"
+                aria-label={translateMessage("generated.m0321")}
                 className={cn(
                   "flex size-8 items-center justify-center rounded-md opacity-0 transition-all hover:bg-muted group-hover:opacity-100",
                   "focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
@@ -119,7 +120,7 @@ export function WarehouseCard({
                       className="mr-2 size-4"
                       icon={PencilEdit01Icon}
                     />
-                    Edytuj
+                    {translateMessage("generated.m0934")}
                   </DropdownMenuItem>
                 )}
                 {onDelete && (
@@ -131,7 +132,7 @@ export function WarehouseCard({
                       className="mr-2 size-4"
                       icon={Delete02Icon}
                     />
-                    Usuń
+                    {translateMessage("generated.m0230")}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -144,7 +145,9 @@ export function WarehouseCard({
           {/* Occupancy */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Zapełnienie</span>
+              <span className="text-muted-foreground">
+                {translateMessage("generated.m0322")}
+              </span>
               <div className="flex items-center gap-2">
                 <span className="font-medium">
                   {usedSlots} / {totalCapacity}
@@ -173,7 +176,12 @@ export function WarehouseCard({
               <HugeiconsIcon className="size-4" icon={Package} />
               <span>
                 {warehouse.racksCount}{" "}
-                {pluralize(warehouse.racksCount, "regał", "regały", "regałów")}
+                {pluralize(
+                  warehouse.racksCount,
+                  translateMessage("generated.m0323"),
+                  translateMessage("generated.m0324"),
+                  translateMessage("generated.m0241")
+                )}
               </span>
             </div>
           </div>
@@ -188,7 +196,7 @@ export function WarehouseCard({
             )}
             href={`/admin/warehouses/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}`}
           >
-            Zarządzaj regałami
+            {translateMessage("generated.m0325")}
             <HugeiconsIcon
               className="size-4 transition-transform group-hover:translate-x-0.5"
               icon={ArrowRight02Icon}

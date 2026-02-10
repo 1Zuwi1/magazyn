@@ -4,6 +4,7 @@ import {
   Search01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { translateMessage } from "@/i18n/translate-message"
 import { Button } from "../ui/button"
 import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
@@ -118,7 +119,7 @@ export function ScannerChooseMethod({
             type="button"
             variant="outline"
           >
-            Anuluj
+            {translateMessage("generated.m0885")}
           </Button>
         </div>
       </div>

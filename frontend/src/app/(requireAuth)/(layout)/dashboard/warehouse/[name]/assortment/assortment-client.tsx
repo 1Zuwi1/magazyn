@@ -13,6 +13,7 @@ import { ErrorEmptyState } from "@/components/ui/empty-state"
 import useAssortments from "@/hooks/use-assortment"
 import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
 import useWarehouses from "@/hooks/use-warehouses"
+import { translateMessage } from "@/i18n/translate-message"
 
 export default function AssortmentClient() {
   const { warehouseIdForQuery, isHydrated, isMissingWarehouseId } =
@@ -77,7 +78,7 @@ export default function AssortmentClient() {
 
   const headerStats = [
     {
-      label: "Produktów",
+      label: translateMessage("generated.m0091"),
       value: assortments?.totalElements ?? 0,
       icon: PackageIcon,
     },
@@ -92,9 +93,9 @@ export default function AssortmentClient() {
       <div className="space-y-8">
         <PageHeader
           backHref="/dashboard/warehouse"
-          backTitle="Powrót do magazynu"
-          description="Przeglądaj wszystkie produkty przechowywane w tym magazynie."
-          title="Asortyment"
+          backTitle={translateMessage("generated.m0881")}
+          description={translateMessage("generated.m0092")}
+          title={translateMessage("generated.m0882")}
         />
         <ErrorEmptyState
           onRetry={() => {
@@ -110,10 +111,10 @@ export default function AssortmentClient() {
     <div className="space-y-8">
       <PageHeader
         backHref={`/dashboard/warehouse/${encodeURIComponent(warehouse?.name ?? "")}`}
-        backTitle="Powrót do magazynu"
-        description="Przeglądaj wszystkie produkty przechowywane w tym magazynie."
+        backTitle={translateMessage("generated.m0881")}
+        description={translateMessage("generated.m0092")}
         stats={headerStats}
-        title="Asortyment"
+        title={translateMessage("generated.m0882")}
         titleBadge={warehouse?.name}
       />
 

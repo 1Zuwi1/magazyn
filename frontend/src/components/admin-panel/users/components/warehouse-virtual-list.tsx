@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
+import { translateMessage } from "@/i18n/translate-message"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 
@@ -144,13 +145,15 @@ function WarehouseRow({
           {warehouse.name}
         </p>
         <p className="mt-0.5 text-muted-foreground text-xs">
-          {warehouse.racksCount} regałów &middot; {warehouse.occupancy}%
-          zajętości
+          {translateMessage("generated.m1065", {
+            value0: warehouse.racksCount,
+            value1: warehouse.occupancy,
+          })}
         </p>
       </div>
       {isAssigned ? (
         <Badge className="shrink-0" variant="secondary">
-          Przypisany
+          {translateMessage("generated.m0944")}
         </Badge>
       ) : null}
     </Button>
@@ -236,7 +239,7 @@ export function WarehouseVirtualList({
           />
         </span>
         <p className="text-center text-destructive text-sm">
-          Nie udało się pobrać listy magazynów.
+          {translateMessage("generated.m0301")}
         </p>
       </div>
     )
@@ -252,7 +255,7 @@ export function WarehouseVirtualList({
           />
         </span>
         <p className="text-center text-muted-foreground text-sm">
-          Nie znaleziono magazynów.
+          {translateMessage("generated.m0302")}
         </p>
       </div>
     )

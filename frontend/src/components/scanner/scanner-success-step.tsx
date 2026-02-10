@@ -1,5 +1,6 @@
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { translateMessage } from "@/i18n/translate-message"
 import { Button } from "../ui/button"
 
 interface ScannerSuccessStepProps {
@@ -33,16 +34,19 @@ export function ScannerSuccessStep({
 
         <div className="max-w-sm space-y-2">
           <h2 className="font-semibold text-foreground text-xl">
-            Rozmieszczenie zapisane
+            {translateMessage("generated.m0765")}
           </h2>
           <p className="text-muted-foreground text-sm">
-            {itemName}: utworzono {placementsCount} pozycji asortymentu.
+            {translateMessage("generated.m0766", {
+              value0: itemName,
+              value1: placementsCount,
+            })}
           </p>
         </div>
 
         <div className="pt-2">
           <Button onClick={onReset} type="button">
-            Zeskanuj kolejny
+            {translateMessage("generated.m0768")}
           </Button>
         </div>
       </div>

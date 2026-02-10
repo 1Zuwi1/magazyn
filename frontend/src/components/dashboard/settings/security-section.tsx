@@ -5,6 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { translateMessage } from "@/i18n/translate-message"
 import type { TwoFactorMethod } from "@/lib/schemas"
 import { PasskeysSection } from "./passkeys-section"
 import { PasswordSection } from "./password-section"
@@ -18,17 +19,17 @@ interface SecuritySectionProps {
 function SecurityStatusIndicator({ status }: { status: TwoFactorStatus }) {
   const config = {
     ENABLED: {
-      label: "Chronione",
+      label: translateMessage("generated.m1000"),
       variant: "success" as const,
       icon: Shield01Icon,
     },
     SETUP: {
-      label: "Konfiguracja",
+      label: translateMessage("generated.m1001"),
       variant: "warning" as const,
       icon: Key01Icon,
     },
     DISABLED: {
-      label: "Podstawowe",
+      label: translateMessage("generated.m1002"),
       variant: "secondary" as const,
       icon: LockIcon,
     },
@@ -64,10 +65,10 @@ export function SecuritySection({ userEmail }: SecuritySectionProps) {
                     size={16}
                   />
                 </div>
-                Weryfikacja dwuetapowa
+                {translateMessage("generated.m0580")}
               </CardTitle>
               <p className="text-muted-foreground text-sm">
-                Chroń swoje konto dodatkową warstwą zabezpieczeń.
+                {translateMessage("generated.m0581")}
               </p>
             </div>
             <SecurityStatusIndicator status="ENABLED" />
@@ -96,9 +97,9 @@ export function SecuritySection({ userEmail }: SecuritySectionProps) {
               />
             </div>
             <div className="space-y-1">
-              <CardTitle>Zmiana hasła</CardTitle>
+              <CardTitle>{translateMessage("generated.m0582")}</CardTitle>
               <p className="text-muted-foreground text-sm">
-                Regularnie aktualizuj hasło dla bezpieczeństwa.
+                {translateMessage("generated.m0583")}
               </p>
             </div>
           </div>

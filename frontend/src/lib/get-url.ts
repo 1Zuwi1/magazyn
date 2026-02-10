@@ -1,5 +1,6 @@
 import { headers } from "next/headers"
 import type { NextRequest } from "next/server"
+import { translateMessage } from "@/i18n/translate-message"
 
 const DEFAULT_PORT = "3001"
 
@@ -39,6 +40,6 @@ export async function getUrl(data: NextRequest | Headers): Promise<URL> {
     return url
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    throw new Error(`Invalid URL construction: ${message}`)
+    throw new Error(translateMessage("generated.m0840", { value0: message }))
   }
 }

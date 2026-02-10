@@ -24,6 +24,7 @@ import { DISABLE_PAGINATION_PAGE_SIZE } from "@/config/constants"
 import useAssortments from "@/hooks/use-assortment"
 import useRacks from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 const HISTORY_STATE_KEY = "__warehouseView"
@@ -175,14 +176,15 @@ const renderVisualizationFallback = (_error: Error, reset: () => void) => (
     role="alert"
   >
     <div>
-      <h2 className="font-semibold text-lg">Wizualizacja 3D niedostępna</h2>
+      <h2 className="font-semibold text-lg">
+        {translateMessage("generated.m0073")}
+      </h2>
       <p className="mt-2 text-muted-foreground text-sm">
-        Wystąpił problem podczas renderowania sceny. Spróbuj ponownie lub wróć
-        do trybu przeglądu.
+        {translateMessage("generated.m0074")}
       </p>
     </div>
     <Button onClick={reset} size="sm" variant="outline">
-      Spróbuj ponownie
+      {translateMessage("generated.m0075")}
     </Button>
   </div>
 )
@@ -307,12 +309,12 @@ export default function ThreeDVisualizationPage() {
 
   const backTitle = useMemo(() => {
     if (focusWindow) {
-      return "Powrót do bloków"
+      return translateMessage("generated.m0076")
     }
     if (isFocusActive) {
-      return "Powrót do przeglądu"
+      return translateMessage("generated.m0077")
     }
-    return "Wróć do panelu magazynu"
+    return translateMessage("generated.m0078")
   }, [focusWindow, isFocusActive])
 
   const skipHistoryRef = useRef(false)
@@ -404,7 +406,7 @@ export default function ThreeDVisualizationPage() {
         }}
       >
         <p className="text-muted-foreground text-sm">
-          Ładowanie wizualizacji 3D...
+          {translateMessage("generated.m0079")}
         </p>
       </div>
     )
@@ -419,7 +421,7 @@ export default function ThreeDVisualizationPage() {
         }}
       >
         <p className="text-muted-foreground text-sm">
-          Nie udało się pobrać danych magazynu.
+          {translateMessage("generated.m0080")}
         </p>
       </div>
     )
@@ -434,7 +436,9 @@ export default function ThreeDVisualizationPage() {
         }}
       >
         <p className="text-muted-foreground text-sm">
-          Nie znaleziono magazynu o nazwie: {decodedWarehouseName}
+          {translateMessage("generated.m1093", {
+            value0: decodedWarehouseName,
+          })}
         </p>
       </div>
     )
@@ -453,11 +457,17 @@ export default function ThreeDVisualizationPage() {
         }}
       >
         <PageHeader
-          backTitle="Wróć do panelu magazynu"
-          description="Interaktywny widok przestrzenny regałów i produktów"
+          backTitle={translateMessage("generated.m0078")}
+          description={translateMessage("generated.m0082")}
           onBack={() => router.push("./")}
-          stats={[{ label: "Regałów", value: 0, icon: Layers01Icon }]}
-          title="Wizualizacja 3D"
+          stats={[
+            {
+              label: translateMessage("generated.m0083"),
+              value: 0,
+              icon: Layers01Icon,
+            },
+          ]}
+          title={translateMessage("generated.m0084")}
         />
         <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-2xl border bg-background">
           <div className="flex max-w-sm flex-col items-center gap-4 p-8 text-center">
@@ -468,10 +478,11 @@ export default function ThreeDVisualizationPage() {
               />
             </div>
             <div className="space-y-2">
-              <h2 className="font-semibold text-lg">Brak regałów</h2>
+              <h2 className="font-semibold text-lg">
+                {translateMessage("generated.m0085")}
+              </h2>
               <p className="text-muted-foreground text-sm">
-                Ten magazyn nie posiada jeszcze żadnych regałów. Dodaj regały,
-                aby zobaczyć wizualizację 3D.
+                {translateMessage("generated.m0086")}
               </p>
             </div>
           </div>
@@ -482,12 +493,15 @@ export default function ThreeDVisualizationPage() {
 
   const headerStats = [
     {
-      label: "Regałów",
+      label: translateMessage("generated.m0083"),
       value: warehouse.racks.length,
     },
     {
-      label: "Tryb",
-      value: mode === "overview" ? "Przegląd" : "Szczegóły",
+      label: translateMessage("generated.m0879"),
+      value:
+        mode === "overview"
+          ? translateMessage("generated.m0087")
+          : translateMessage("generated.m0088"),
     },
   ]
 
@@ -497,11 +511,11 @@ export default function ThreeDVisualizationPage() {
         <SheetTrigger
           className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
         >
-          Eksplorator
+          {translateMessage("generated.m0880")}
         </SheetTrigger>
         <SheetContent className="p-0" side="left">
           <SheetHeader className="border-b">
-            <SheetTitle>Eksplorator Magazynu</SheetTitle>
+            <SheetTitle>{translateMessage("generated.m0089")}</SheetTitle>
           </SheetHeader>
           <div className="min-h-0 flex-1">
             <SidebarPanel racks={warehouse.racks} />
@@ -512,11 +526,11 @@ export default function ThreeDVisualizationPage() {
         <SheetTrigger
           className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
         >
-          Szczegóły
+          {translateMessage("generated.m0088")}
         </SheetTrigger>
         <SheetContent className="p-0" side="right">
           <SheetHeader className="border-b">
-            <SheetTitle>Szczegóły Regału</SheetTitle>
+            <SheetTitle>{translateMessage("generated.m0090")}</SheetTitle>
           </SheetHeader>
           <div className="min-h-0 flex-1">
             <DetailsPanel warehouse={warehouse} />
@@ -535,11 +549,11 @@ export default function ThreeDVisualizationPage() {
     >
       <PageHeader
         backTitle={backTitle}
-        description="Interaktywny widok przestrzenny regałów i produktów"
+        description={translateMessage("generated.m0082")}
         onBack={handleBack}
         stats={headerStats}
         statsChildren={panelButtons}
-        title="Wizualizacja 3D"
+        title={translateMessage("generated.m0084")}
       />
 
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">

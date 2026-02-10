@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useImperativeHandle, useState } from "react"
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
+import { translateMessage } from "@/i18n/translate-message"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   type OutboundCheckResult,
@@ -28,11 +29,9 @@ import { OutboundSelectQuantity } from "./outbound-select-quantity"
 import { OutboundSuccess } from "./outbound-success"
 
 const OUTBOUND_ERROR_MESSAGES: Record<string, string> = {
-  ASSORTMENT_NOT_FOUND:
-    "Nie znaleziono asortymentu dla zeskanowanego kodu. Sprawdź etykietę.",
-  OUTBOUND_FIFO_VIOLATION:
-    "Naruszenie zasady FIFO. Nie można pobrać tego asortymentu bez pominięcia FIFO.",
-  USER_NOT_FOUND: "Nie znaleziono użytkownika. Zaloguj się ponownie.",
+  ASSORTMENT_NOT_FOUND: translateMessage("generated.m0684"),
+  OUTBOUND_FIFO_VIOLATION: translateMessage("generated.m0685"),
+  USER_NOT_FOUND: translateMessage("generated.m0686"),
 }
 
 const getOutboundErrorMessage = (error: unknown, fallback: string): string => {
@@ -153,7 +152,7 @@ export const OutboundFlow = ({
         setError(
           getOutboundErrorMessage(
             executeError,
-            "Nie udało się wykonać operacji zdejmowania."
+            translateMessage("generated.m0687")
           )
         )
       } finally {
@@ -187,7 +186,7 @@ export const OutboundFlow = ({
     (code: string) => {
       const scannedCode = code.trim()
       if (!scannedCode) {
-        setError("Nie udało się odczytać kodu. Spróbuj ponownie.")
+        setError(translateMessage("generated.m0688"))
         return
       }
 
@@ -197,9 +196,7 @@ export const OutboundFlow = ({
       )
 
       if (!matchingSlot) {
-        setError(
-          "Zeskanowany kod nie pasuje do żadnej wybranej pozycji. Sprawdź etykietę."
-        )
+        setError(translateMessage("generated.m0689"))
         return
       }
 
@@ -210,7 +207,7 @@ export const OutboundFlow = ({
         )
 
         if (alreadyScanned) {
-          setError("Ta pozycja została już zeskanowana.")
+          setError(translateMessage("generated.m0690"))
           return current
         }
 
@@ -258,10 +255,7 @@ export const OutboundFlow = ({
       }
     } catch (checkError) {
       setError(
-        getOutboundErrorMessage(
-          checkError,
-          "Nie udało się zweryfikować zgodności FIFO."
-        )
+        getOutboundErrorMessage(checkError, translateMessage("generated.m0691"))
       )
     } finally {
       setIsSubmitting(false)
@@ -274,7 +268,7 @@ export const OutboundFlow = ({
     async (code: string) => {
       const scannedCode = code.trim()
       if (!scannedCode) {
-        setError("Nie udało się odczytać kodu. Spróbuj ponownie.")
+        setError(translateMessage("generated.m0688"))
         return
       }
 
@@ -309,7 +303,7 @@ export const OutboundFlow = ({
         setError(
           getOutboundErrorMessage(
             scanError,
-            "Nie udało się zweryfikować zeskanowanego kodu."
+            translateMessage("generated.m0692")
           )
         )
       } finally {
@@ -371,10 +365,7 @@ export const OutboundFlow = ({
       setStep("pick-list")
     } catch (planError) {
       setError(
-        getOutboundErrorMessage(
-          planError,
-          "Nie udało się wyznaczyć planu pobrania."
-        )
+        getOutboundErrorMessage(planError, translateMessage("generated.m0693"))
       )
     } finally {
       setIsSubmitting(false)

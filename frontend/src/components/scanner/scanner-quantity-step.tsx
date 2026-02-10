@@ -1,4 +1,5 @@
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
+import { translateMessage } from "@/i18n/translate-message"
 import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
@@ -41,10 +42,10 @@ export function ScannerQuantityStep({
 
         <div className="mb-6">
           <h2 className="font-semibold text-xl tracking-tight">
-            Podaj ilość przedmiotów
+            {translateMessage("generated.m0755")}
           </h2>
           <p className="mt-1 text-muted-foreground text-sm">
-            Ile sztuk chcesz dodać do magazynu?
+            {translateMessage("generated.m0756")}
           </p>
         </div>
 
@@ -61,32 +62,39 @@ export function ScannerQuantityStep({
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="truncate font-medium">{scannedItem.name}</h3>
-                  {scannedItem.dangerous ? <Badge>Niebezpieczny</Badge> : null}
+                  {scannedItem.dangerous ? (
+                    <Badge>{translateMessage("generated.m0925")}</Badge>
+                  ) : null}
                 </div>
                 <p className="mt-1 font-mono text-muted-foreground text-xs">
-                  Kod: {scannedItem.code}
+                  {translateMessage("generated.m1100", {
+                    value0: scannedItem.code,
+                  })}
                 </p>
                 <p className="mt-2 text-muted-foreground text-sm">
-                  Wygasa za{" "}
+                  {translateMessage("generated.m0757")}{" "}
                   <span className="font-medium text-foreground">
                     {scannedItem.expireAfterDays}
                   </span>{" "}
-                  dni
+                  {translateMessage("generated.m0978")}
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  Temperatura:{" "}
+                  {translateMessage("generated.m1028")}{" "}
                   <span className="font-medium text-foreground">
-                    {scannedItem.minTemp}°C – {scannedItem.maxTemp}°C
+                    {translateMessage("generated.m0095", {
+                      value0: scannedItem.minTemp,
+                      value1: scannedItem.maxTemp,
+                    })}
                   </span>
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  Waga:{" "}
+                  {translateMessage("generated.m1022")}{" "}
                   <span className="font-medium text-foreground">
-                    {scannedItem.weight} kg
+                    {scannedItem.weight} {translateMessage("generated.m0954")}
                   </span>
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  Wymiary:{" "}
+                  {translateMessage("generated.m1029")}{" "}
                   <span className="font-medium text-foreground">
                     {scannedItem.sizeX} × {scannedItem.sizeY} ×{" "}
                     {scannedItem.sizeZ}
@@ -103,7 +111,7 @@ export function ScannerQuantityStep({
               className="mb-2 block font-medium text-sm"
               htmlFor="quantity"
             >
-              Ilość przedmiotów
+              {translateMessage("generated.m0758")}
             </label>
             <div className="flex items-center gap-3">
               <Button
@@ -152,9 +160,11 @@ export function ScannerQuantityStep({
 
           <div className="flex items-center justify-between rounded-xl border bg-card/30 p-3">
             <div>
-              <Label htmlFor="reserve-toggle">Rezerwuj miejsca</Label>
+              <Label htmlFor="reserve-toggle">
+                {translateMessage("generated.m0759")}
+              </Label>
               <p className="text-muted-foreground text-xs">
-                Zablokuj pozycje do momentu potwierdzenia rozmieszczenia.
+                {translateMessage("generated.m0760")}
               </p>
             </div>
             <Switch
@@ -170,7 +180,7 @@ export function ScannerQuantityStep({
             onClick={onSubmit}
             type="button"
           >
-            Wyznacz lokalizacje
+            {translateMessage("generated.m0761")}
           </Button>
         </div>
       </div>

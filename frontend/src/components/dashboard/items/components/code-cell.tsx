@@ -20,6 +20,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 const GS1_BARCODE_PATTERN = /^11(\d{6})01(\d{14})21(\d+)$/
@@ -219,7 +220,7 @@ function CodeDialog({
         <DialogHeader>
           <DialogTitle>{isQr ? "Kod QR" : "Kod kreskowy"}</DialogTitle>
           <DialogDescription>
-            Powiększony widok kodu i szybki wydruk etykiety.
+            {translateMessage("generated.m0470")}
           </DialogDescription>
         </DialogHeader>
 
@@ -277,7 +278,7 @@ export function CodeCell({ value }: CodeCellProps) {
             {formatted}
           </span>
         </TooltipTrigger>
-        <TooltipContent>Kliknij, aby powiększyć</TooltipContent>
+        <TooltipContent>{translateMessage("generated.m0471")}</TooltipContent>
       </Tooltip>
       <CodeDialog
         formatted={formatted}

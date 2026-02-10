@@ -5,6 +5,7 @@ import { useEffect } from "react"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { FieldGroup } from "@/components/ui/field"
+import { translateMessage } from "@/i18n/translate-message"
 
 export interface WarehouseFormData {
   id: string
@@ -52,8 +53,8 @@ export function WarehouseDialog({
     <FormDialog
       description={
         isEdit
-          ? "Zmień informacje o magazynie"
-          : "Wprowadź informacje o nowym magazynie."
+          ? translateMessage("generated.m0326")
+          : translateMessage("generated.m0327")
       }
       formId={formId}
       isLoading={isSubmitting}
@@ -76,9 +77,9 @@ export function WarehouseDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label="Nazwa"
+                label={translateMessage("generated.m0922")}
                 layout="grid"
-                placeholder="Magazyn A1"
+                placeholder={translateMessage("generated.m0328")}
               />
             )}
           </form.Field>

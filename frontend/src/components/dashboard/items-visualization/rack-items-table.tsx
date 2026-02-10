@@ -2,6 +2,7 @@
 
 import { useRef } from "react"
 import { useElementSize } from "@/hooks/use-element-size"
+import { translateMessage } from "@/i18n/translate-message"
 import type { RackAssortment } from "@/lib/schemas"
 import Virtualized from "./components/virtualized"
 
@@ -31,7 +32,9 @@ export function RackItemsTable({ items }: RackItemsTableProps) {
   if (items.length === 0) {
     return (
       <div className="flex h-32 items-center justify-center rounded-lg border border-dashed">
-        <p className="text-muted-foreground">Brak przedmiotów w tym regale</p>
+        <p className="text-muted-foreground">
+          {translateMessage("generated.m0486")}
+        </p>
       </div>
     )
   }

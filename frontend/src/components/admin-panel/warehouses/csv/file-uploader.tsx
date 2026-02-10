@@ -12,6 +12,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { formatBytes } from "../../lib/utils"
 import { DEFAULT_CONFIG } from "./utils/constants"
@@ -71,21 +72,30 @@ export function FileUploader({
     async (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
       if (acceptedFiles.length > DEFAULT_CONFIG.maxFileCount) {
         toast.error(
-          `Możesz przesłać maksymalnie ${DEFAULT_CONFIG.maxFileCount} plik(ów)`
+          translateMessage("generated.m0331", {
+            value0: DEFAULT_CONFIG.maxFileCount,
+          })
         )
         return
       }
 
       if (files.length + acceptedFiles.length > DEFAULT_CONFIG.maxFileCount) {
         toast.error(
-          `Możesz przesłać maksymalnie ${DEFAULT_CONFIG.maxFileCount} plik(ów)`
+          translateMessage("generated.m0331", {
+            value0: DEFAULT_CONFIG.maxFileCount,
+          })
         )
         return
       }
 
       for (const rejection of rejectedFiles) {
         const errors = rejection.errors.map((e) => e.message).join(", ")
-        toast.error(`${rejection.file.name}: ${errors}`)
+        toast.error(
+          translateMessage("generated.m0332", {
+            value0: rejection.file.name,
+            value1: errors,
+          })
+        )
       }
 
       const newFiles = acceptedFiles.map((file) =>
@@ -103,7 +113,7 @@ export function FileUploader({
           isUploadSuccessful = await onUpload(updatedFiles)
         } catch {
           isUploadSuccessful = false
-          toast.error("Nie udało się przetworzyć pliku")
+          toast.error(translateMessage("generated.m0333"))
         } finally {
           setIsUploading(false)
         }
@@ -160,12 +170,12 @@ export function FileUploader({
             </div>
             {isDragActive ? (
               <p className="font-medium text-muted-foreground">
-                Upuść plik tutaj
+                {translateMessage("generated.m0334")}
               </p>
             ) : (
               <div className="flex flex-col gap-1">
                 <p className="font-medium text-muted-foreground">
-                  Kliknij lub upuść plik CSV
+                  {translateMessage("generated.m0335")}
                 </p>
               </div>
             )}
@@ -202,7 +212,9 @@ export function FileUploader({
                   variant="outline"
                 >
                   <HugeiconsIcon className="size-4" icon={Cancel01Icon} />
-                  <span className="sr-only">Usuń plik</span>
+                  <span className="sr-only">
+                    {translateMessage("generated.m0336")}
+                  </span>
                 </Button>
               </div>
             ))}

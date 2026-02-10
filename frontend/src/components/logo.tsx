@@ -1,5 +1,6 @@
 import Image from "next/image"
 import LogoImage from "@/../public/Logo.png"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 export default function Logo<
@@ -23,13 +24,15 @@ export default function Logo<
       {...props}
     >
       <Image
-        alt="GdzieToLeży Logo"
+        alt={translateMessage("generated.m0668")}
         className="size-6"
         height={24}
         src={LogoImage}
         width={24}
       />
-      <span className="font-bold text-xl">GdzieToLeży</span>
+      <span className="font-bold text-xl">
+        {translateMessage("generated.m0106")}
+      </span>
     </Wrapper>
   )
 }

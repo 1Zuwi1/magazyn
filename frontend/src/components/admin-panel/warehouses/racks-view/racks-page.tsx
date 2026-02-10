@@ -19,6 +19,7 @@ import useRacks, {
   useUpdateRack,
 } from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
+import { translateMessage } from "@/i18n/translate-message"
 import type { Rack } from "@/lib/schemas"
 import { AdminPageHeader } from "../../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../../lib/constants"
@@ -120,7 +121,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
 
   const handleSubmit = async (data: RackFormData) => {
     if (!apiWarehouse) {
-      throw new Error("Warehouse ID is required to create or update a rack.")
+      throw new Error(translateMessage("generated.m0380"))
     }
 
     if (selectedRack === undefined) {
@@ -150,12 +151,17 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     const report = await importRacksMutation.mutateAsync(file)
     if (report.errors.length > 0) {
       toast.warning(
-        `Import zakończony częściowo: ${report.imported}/${report.processedLines}`
+        translateMessage("generated.m0220", {
+          value0: report.imported,
+          value1: report.processedLines,
+        })
       )
       return
     }
 
-    toast.success(`Zaimportowano ${report.imported} regałów`)
+    toast.success(
+      translateMessage("generated.m0381", { value0: report.imported })
+    )
   }
 
   const totalItems =
@@ -254,19 +260,21 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
             />
             <Button disabled={apiWarehouse == null} onClick={handleAddRack}>
               <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-              Dodaj regał
+              {translateMessage("generated.m0371")}
             </Button>
           </div>
         }
-        backTitle="Wróć do magazynów"
-        description={`Zarządzaj regałami w magazynie ${warehouseName}`}
+        backTitle={translateMessage("generated.m0955")}
+        description={translateMessage("generated.m0382", {
+          value0: warehouseName,
+        })}
         icon={GridIcon}
         navLinks={ADMIN_NAV_LINKS.map((link) => ({
           title: link.title,
           url: link.url,
         }))}
         onBack={handleBack}
-        title="Regały"
+        title={translateMessage("generated.m0383")}
       >
         {/* Quick Stats */}
         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -278,7 +286,9 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
             <span className="font-mono font-semibold text-primary">
               {totalRacks}
             </span>
-            <span className="text-muted-foreground text-xs">regałów</span>
+            <span className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0241")}
+            </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <HugeiconsIcon
@@ -286,12 +296,18 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
               icon={Package}
             />
             <span className="font-mono font-semibold">{totalItems}</span>
-            <span className="text-muted-foreground text-xs">przedmiotów</span>
+            <span className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0224")}
+            </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
-            <span className="text-muted-foreground text-xs">Łączna waga:</span>
+            <span className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0384")}
+            </span>
             <span className="font-mono font-semibold">
-              {racksData?.summary.totalWeight} kg
+              {translateMessage("generated.m1089", {
+                value0: racksData?.summary.totalWeight ?? 0,
+              })}
             </span>
           </div>
         </div>
@@ -316,11 +332,13 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
       />
 
       <ConfirmDialog
-        description={`Czy na pewno chcesz usunąć regał "${rackToDelete?.marker}"? Ta operacja jest nieodwracalna.`}
+        description={translateMessage("generated.m0385", {
+          value0: rackToDelete?.marker,
+        })}
         onConfirm={confirmDeleteRack}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
-        title="Usuń regał"
+        title={translateMessage("generated.m0386")}
       />
     </div>
   )

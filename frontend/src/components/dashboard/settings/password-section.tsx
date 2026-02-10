@@ -7,6 +7,7 @@ import { useTwoFactorVerificationDialog } from "@/components/dashboard/settings/
 import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { Button } from "@/components/ui/button"
+import { translateMessage } from "@/i18n/translate-message"
 import { apiFetch } from "@/lib/fetcher"
 import { ChangePasswordFormSchema, ChangePasswordSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -45,12 +46,12 @@ export function PasswordSection() {
       isTwoFactorVerifiedRef.current = false
 
       if (error) {
-        handleApiError(error, "Nie udało się zmienić hasła. Spróbuj ponownie.")
+        handleApiError(error, translateMessage("generated.m0549"))
         return
       }
 
       form.reset()
-      toast.success("Hasło zostało zmienione.")
+      toast.success(translateMessage("generated.m0550"))
     },
     validators: {
       onSubmitAsync: ChangePasswordFormSchema,
@@ -74,8 +75,8 @@ export function PasswordSection() {
                   autoComplete="current-password"
                   field={field}
                   id="current-password"
-                  label="Obecne hasło"
-                  placeholder="Wprowadź obecne hasło"
+                  label={translateMessage("generated.m0551")}
+                  placeholder={translateMessage("generated.m0552")}
                   type="password"
                 />
               </div>
@@ -89,8 +90,8 @@ export function PasswordSection() {
                 autoComplete="new-password"
                 field={field}
                 id="new-password"
-                label="Nowe hasło"
-                placeholder="Co najmniej 8 znaków"
+                label={translateMessage("generated.m0055")}
+                placeholder={translateMessage("generated.m0553")}
                 type="password"
               />
             )
@@ -103,8 +104,8 @@ export function PasswordSection() {
                 autoComplete="new-password"
                 field={field}
                 id="confirm-password"
-                label="Potwierdź hasło"
-                placeholder="Powtórz nowe hasło"
+                label={translateMessage("generated.m0013")}
+                placeholder={translateMessage("generated.m0554")}
                 type="password"
               />
             )
@@ -114,7 +115,7 @@ export function PasswordSection() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground text-xs">
-          Min. 8 znaków, w tym cyfry, znaki specjalne, małe i wielkie litery.
+          {translateMessage("generated.m0555")}
         </p>
         <form.Subscribe
           selector={(state) => [state.canSubmit, state.isSubmitting]}
@@ -125,7 +126,7 @@ export function PasswordSection() {
               isLoading={isSubmitting}
               type="submit"
             >
-              Zmień hasło
+              {translateMessage("generated.m0556")}
             </Button>
           )}
         </form.Subscribe>

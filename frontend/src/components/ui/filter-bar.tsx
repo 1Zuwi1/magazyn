@@ -10,6 +10,7 @@ import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import type { IconComponent } from "../dashboard/types"
 
@@ -81,7 +82,7 @@ export function SearchInput({
       />
       {isFiltered && (
         <button
-          aria-label="Wyczyść wyszukiwanie"
+          aria-label={translateMessage("generated.m0790")}
           className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           onClick={() => onChange("")}
           type="button"
@@ -126,7 +127,11 @@ export function FilterResults({
     <div className={cn("flex items-center gap-2 text-sm", className)}>
       {isFiltered ? (
         <span className="rounded-md bg-primary/10 px-2.5 py-1 font-medium text-primary">
-          {filteredCount} z {totalCount} {pluralize(totalCount)}
+          {translateMessage("generated.m1099", {
+            value0: filteredCount,
+            value1: totalCount,
+            value2: pluralize(totalCount),
+          })}
         </span>
       ) : (
         <span className="text-muted-foreground">
@@ -154,7 +159,7 @@ export function ClearFiltersButton({
       variant="ghost"
     >
       <HugeiconsIcon className="size-3.5" icon={FilterIcon} />
-      <span>Wyczyść</span>
+      <span>{translateMessage("generated.m0413")}</span>
     </Button>
   )
 }
@@ -174,7 +179,7 @@ export function ActiveFiltersBadge({
 
   return (
     <Badge className={cn("font-normal", className)} variant="secondary">
-      {count} {count === 1 ? "filtr" : "filtry"} aktywne
+      {translateMessage("generated.m1060", { value0: count })}
     </Badge>
   )
 }

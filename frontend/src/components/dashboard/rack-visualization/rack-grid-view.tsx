@@ -11,6 +11,7 @@ import { useRef } from "react"
 import { Button } from "@/components/ui/button"
 import PaginationFull from "@/components/ui/pagination-component"
 import { useElementSize } from "@/hooks/use-element-size"
+import { translateMessage } from "@/i18n/translate-message"
 import type { ItemSlot, SlotCoordinates } from "../types"
 import Virtualized from "./components/virtualized"
 
@@ -127,9 +128,15 @@ export function RackGridView({
             />
           </div>
           <div>
-            <h3 className="font-semibold text-sm">Widok siatki</h3>
+            <h3 className="font-semibold text-sm">
+              {translateMessage("generated.m0500")}
+            </h3>
             <p className="text-muted-foreground text-xs">
-              {rows} × {cols} = {totalSlots} miejsc
+              {translateMessage("generated.m1090", {
+                value0: rows,
+                value1: cols,
+                value2: totalSlots,
+              })}
             </p>
           </div>
         </div>

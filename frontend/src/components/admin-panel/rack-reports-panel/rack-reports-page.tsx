@@ -9,8 +9,8 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { formatDistanceToNow } from "date-fns"
-import { pl } from "date-fns/locale"
 import Link from "next/link"
+import { useLocale } from "next-intl"
 import { useMemo, useState } from "react"
 import type { IconComponent } from "@/components/dashboard/types"
 import { Badge } from "@/components/ui/badge"
@@ -27,6 +27,8 @@ import PaginationFull from "@/components/ui/pagination-component"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import useRackReports from "@/hooks/use-rack-reports"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { translateMessage } from "@/i18n/translate-message"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type { RackReportsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
@@ -35,10 +37,14 @@ import { ADMIN_NAV_LINKS } from "../lib/constants"
 
 type RackReportsList = InferApiOutput<typeof RackReportsSchema, "GET">
 type RackReportItem = RackReportsList["content"][number]
+type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
 
 const RACK_REPORTS_PAGE_SIZE = 20
 
-const formatDateTime = (date: string | null | undefined): string => {
+const formatDateTime = (
+  date: string | null | undefined,
+  dateFnsLocale: DateFnsLocale
+): string => {
   if (!date) {
     return "—"
   }
@@ -46,7 +52,7 @@ const formatDateTime = (date: string | null | undefined): string => {
   try {
     return formatDistanceToNow(new Date(date), {
       addSuffix: true,
-      locale: pl,
+      locale: dateFnsLocale,
     })
   } catch {
     return "—"
@@ -91,12 +97,14 @@ function RackReportListBody({
   reports,
   onSelect,
   selectedReportId,
+  dateFnsLocale,
 }: {
   isPending: boolean
   isError: boolean
   reports: RackReportItem[]
   onSelect: (report: RackReportItem) => void
   selectedReportId: number | null
+  dateFnsLocale: DateFnsLocale
 }) {
   if (isPending) {
     return (
@@ -114,9 +122,9 @@ function RackReportListBody({
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <p className="font-medium">Nie udało się pobrać raportów</p>
+        <p className="font-medium">{translateMessage("generated.m0252")}</p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Spróbuj ponownie za chwilę.
+          {translateMessage("generated.m0159")}
         </p>
       </div>
     )
@@ -131,9 +139,11 @@ function RackReportListBody({
             icon={PackageIcon}
           />
         </div>
-        <p className="mt-3 font-medium">Brak raportów</p>
+        <p className="mt-3 font-medium">
+          {translateMessage("generated.m0253")}
+        </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Brak wpisów dla wybranego filtra
+          {translateMessage("generated.m0161")}
         </p>
       </div>
     )
@@ -185,7 +195,7 @@ function RackReportListBody({
                 {report.warehouseName}
               </p>
               <p className="mt-1 text-[11px] text-muted-foreground">
-                {formatDateTime(report.createdAt)}
+                {formatDateTime(report.createdAt, dateFnsLocale)}
               </p>
             </div>
           </button>
@@ -195,7 +205,13 @@ function RackReportListBody({
   )
 }
 
-function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
+function RackReportDetailsPanel({
+  report,
+  dateFnsLocale,
+}: {
+  report: RackReportItem | null
+  dateFnsLocale: DateFnsLocale
+}) {
   if (!report) {
     return (
       <div className="flex h-full flex-col items-center justify-center p-12">
@@ -205,9 +221,11 @@ function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
             icon={PackageIcon}
           />
         </div>
-        <p className="mt-4 font-medium text-lg">Wybierz raport</p>
+        <p className="mt-4 font-medium text-lg">
+          {translateMessage("generated.m0254")}
+        </p>
         <p className="mt-1 text-center text-muted-foreground text-sm">
-          Kliknij wpis na liście, aby zobaczyć szczegóły
+          {translateMessage("generated.m0167")}
         </p>
       </div>
     )
@@ -230,34 +248,36 @@ function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
       <div className="flex-1 space-y-6 p-6">
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            Lokalizacja
+            {translateMessage("generated.m0893")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <MetricCard
               icon={WarehouseIcon}
-              label="Magazyn"
+              label={translateMessage("generated.m0894")}
               value={report.warehouseName}
             />
             <MetricCard
               icon={PackageIcon}
-              label="Regał"
+              label={translateMessage("generated.m0168")}
               value={report.rackMarker}
             />
           </div>
         </section>
 
         <section className="space-y-3">
-          <h3 className="font-medium text-muted-foreground text-sm">Metryki</h3>
+          <h3 className="font-medium text-muted-foreground text-sm">
+            {translateMessage("generated.m0896")}
+          </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <MetricCard
               icon={WeightScale01Icon}
-              label="Aktualna waga"
+              label={translateMessage("generated.m0255")}
               unit="kg"
               value={report.currentWeight}
             />
             <MetricCard
               icon={ThermometerIcon}
-              label="Temperatura"
+              label={translateMessage("generated.m0924")}
               unit="°C"
               value={report.currentTemperature}
             />
@@ -266,16 +286,20 @@ function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
 
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            Informacje
+            {translateMessage("generated.m0937")}
           </h3>
           <div className="rounded-lg border bg-muted/20 p-3">
-            <p className="text-muted-foreground text-xs">ID czujnika</p>
+            <p className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0256")}
+            </p>
             <p className="mt-0.5 font-medium font-mono">{report.sensorId}</p>
           </div>
           <div className="rounded-lg border bg-muted/20 p-3">
-            <p className="text-muted-foreground text-xs">Utworzono</p>
+            <p className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0898")}
+            </p>
             <p className="mt-0.5 font-medium">
-              {formatDateTime(report.createdAt)}
+              {formatDateTime(report.createdAt, dateFnsLocale)}
             </p>
           </div>
         </section>
@@ -286,7 +310,7 @@ function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
           className="inline-flex items-center justify-center rounded-md border px-3 py-1.5 font-medium text-sm transition-colors hover:bg-muted"
           href={warehouseHref}
         >
-          Przejdź do magazynu
+          {translateMessage("generated.m0257")}
         </Link>
       </div>
     </div>
@@ -294,6 +318,9 @@ function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
 }
 
 export default function RackReportsMain() {
+  const locale = useLocale()
+  const dateFnsLocale = getDateFnsLocale(locale)
+
   const [withAlertsFilter, setWithAlertsFilter] = useState<boolean | undefined>(
     undefined
   )
@@ -343,20 +370,22 @@ export default function RackReportsMain() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description="Przeglądaj raporty z czujników regałów"
+        description={translateMessage("generated.m0258")}
         icon={PackageIcon}
         navLinks={ADMIN_NAV_LINKS.map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title="Raporty regałów"
+        title={translateMessage("generated.m0234")}
       >
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <span className="font-mono font-semibold text-primary">
               {totalReports}
             </span>
-            <span className="text-muted-foreground text-xs">łącznie</span>
+            <span className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0178")}
+            </span>
           </div>
           {alertCount > 0 ? (
             <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-1.5">
@@ -364,7 +393,9 @@ export default function RackReportsMain() {
               <span className="font-mono font-semibold text-destructive">
                 {alertCount}
               </span>
-              <span className="text-muted-foreground text-xs">z alertem</span>
+              <span className="text-muted-foreground text-xs">
+                {translateMessage("generated.m0259")}
+              </span>
             </div>
           ) : null}
         </div>
@@ -382,7 +413,7 @@ export default function RackReportsMain() {
                   )}
                 >
                   <HugeiconsIcon className="size-4" icon={FilterIcon} />
-                  Filtry
+                  {translateMessage("generated.m0938")}
                   {withAlertsFilter !== undefined && (
                     <Badge className="ml-1" variant="secondary">
                       {withAlertsFilter ? "Tylko" : "Wszystkie"}
@@ -391,14 +422,16 @@ export default function RackReportsMain() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" side="bottom">
                   <DropdownMenuGroup>
-                    <DropdownMenuLabel>Filtruj po alertach</DropdownMenuLabel>
+                    <DropdownMenuLabel>
+                      {translateMessage("generated.m0260")}
+                    </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuCheckboxItem
                       checked={withAlertsFilter === true}
                       className="text-nowrap"
                       onClick={() => handleToggleAlertsFilter(true)}
                     >
-                      Tylko z alertami
+                      {translateMessage("generated.m0261")}
                     </DropdownMenuCheckboxItem>
                     {withAlertsFilter !== undefined && (
                       <>
@@ -408,7 +441,7 @@ export default function RackReportsMain() {
                           onClick={() => setWithAlertsFilter(undefined)}
                           type="button"
                         >
-                          Wyczyść filtr
+                          {translateMessage("generated.m0262")}
                         </button>
                       </>
                     )}
@@ -420,6 +453,7 @@ export default function RackReportsMain() {
             <ScrollArea className="h-112">
               <div className="space-y-2 p-2">
                 <RackReportListBody
+                  dateFnsLocale={dateFnsLocale}
                   isError={isReportsError}
                   isPending={isReportsPending}
                   onSelect={handleSelectReport}
@@ -440,7 +474,10 @@ export default function RackReportsMain() {
         </div>
 
         <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-          <RackReportDetailsPanel report={selectedReport} />
+          <RackReportDetailsPanel
+            dateFnsLocale={dateFnsLocale}
+            report={selectedReport}
+          />
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import useAssortments from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import { useMultipleRacks } from "@/hooks/use-racks"
+import { translateMessage } from "@/i18n/translate-message"
 import { formatDate } from "../utils/helpers"
 import { RECENT_ITEMS_LIMIT } from "./dashboard-home.constants"
 
@@ -106,7 +107,7 @@ export function DashboardRecentArrivalsCard() {
           itemName: itemDefinition?.name ?? `Produkt #${assortment.itemId}`,
           rackLabel:
             rackLabelsById.get(assortment.rackId) ??
-            `Regał #${assortment.rackId}`,
+            translateMessage("generated.m0450", { value0: assortment.rackId }),
         }
       }),
     [assortments, itemDefinitionsById, rackLabelsById]
@@ -124,7 +125,7 @@ export function DashboardRecentArrivalsCard() {
     if (recentAssortmentEntries.length === 0) {
       return (
         <p className="text-muted-foreground text-sm">
-          Brak ostatnich przyjęć do wyświetlenia.
+          {translateMessage("generated.m0451")}
         </p>
       )
     }
@@ -156,9 +157,9 @@ export function DashboardRecentArrivalsCard() {
 
   return (
     <InsightCard
-      description="Najświeższe dostawy z ostatnich dni."
+      description={translateMessage("generated.m0452")}
       icon={PackageReceiveIcon}
-      title="Ostatnie przyjęcia"
+      title={translateMessage("generated.m0453")}
     >
       {renderContent()}
     </InsightCard>

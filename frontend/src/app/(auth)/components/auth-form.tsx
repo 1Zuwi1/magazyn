@@ -23,6 +23,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { translateMessage } from "@/i18n/translate-message"
 import { apiFetch } from "@/lib/fetcher"
 import { FormRegisterSchema, LoginSchema, RegisterSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -70,14 +71,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
         )
 
         if (err) {
-          handleApiError(
-            err,
-            "Wystąpił błąd podczas logowania. Spróbuj ponownie."
-          )
+          handleApiError(err, translateMessage("generated.m0001"))
           return
         }
 
-        toast.success("Zalogowano pomyślnie!")
+        toast.success(translateMessage("generated.m0002"))
         router.push("/login/2fa")
       } else {
         const { confirmPassword, ...registerValue } =
@@ -90,14 +88,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
         )
 
         if (err) {
-          handleApiError(
-            err,
-            "Wystąpił błąd podczas rejestracji. Spróbuj ponownie."
-          )
+          handleApiError(err, translateMessage("generated.m0003"))
           return
         }
 
-        toast.success("Zarejestrowano pomyślnie! Możesz się teraz zalogować.")
+        toast.success(translateMessage("generated.m0004"))
         router.push("/login")
       }
     },
@@ -128,8 +123,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
             </div>
             <FieldDescription className="mt-2 max-w-70 text-center text-muted-foreground/80">
               {isLogin
-                ? "Wprowadź swój adres email i hasło, aby uzyskać dostęp do konta."
-                : "Utwórz konto, aby korzystać z aplikacji."}
+                ? translateMessage("generated.m0005")
+                : translateMessage("generated.m0006")}
             </FieldDescription>
           </div>
           <div
@@ -141,8 +136,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 <FieldWithState
                   field={field}
                   icon={Mail01Icon}
-                  label="Email"
-                  placeholder="jan@kowalski.pl"
+                  label={translateMessage("generated.m0874")}
+                  placeholder={translateMessage("generated.m0875")}
                   type="email"
                 />
               )}
@@ -154,8 +149,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     <FieldWithState
                       field={field}
                       icon={User03Icon}
-                      label="Pełne imię i nazwisko"
-                      placeholder="Jan Kowalski"
+                      label={translateMessage("generated.m0007")}
+                      placeholder={translateMessage("generated.m0008")}
                       type="text"
                     />
                   )}
@@ -165,7 +160,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     <FieldWithState
                       field={field}
                       icon={TelephoneIcon}
-                      label="Numer telefonu"
+                      label={translateMessage("generated.m0009")}
                       placeholder="+48 123 456 789"
                       type="tel"
                     />
@@ -184,13 +179,13 @@ export default function AuthForm({ mode }: AuthFormProps) {
                           className="font-medium text-foreground/80 text-xs uppercase tracking-wide hover:text-primary hover:underline"
                           href="/forgot-password"
                         >
-                          Zapomniałeś hasła?
+                          {translateMessage("generated.m0010")}
                         </Link>
                       ) : undefined
                     }
                     field={field}
                     icon={LockPasswordIcon}
-                    label="Hasło"
+                    label={translateMessage("generated.m0011")}
                     placeholder="••••••••"
                     type="password"
                   />
@@ -209,7 +204,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     />
                     <FieldContent>
                       <FieldLabel htmlFor={field.name}>
-                        Zapamiętaj mnie
+                        {translateMessage("generated.m0012")}
                       </FieldLabel>
                     </FieldContent>
                   </Field>
@@ -221,7 +216,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                   <FieldWithState
                     field={field}
                     icon={Shield01Icon}
-                    label="Potwierdź hasło"
+                    label={translateMessage("generated.m0013")}
                     placeholder="••••••••"
                     type="password"
                   />
@@ -241,7 +236,9 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     size="lg"
                     type="submit"
                   >
-                    {isLogin ? "Zaloguj się" : "Zarejestruj się"}
+                    {isLogin
+                      ? translateMessage("generated.m0014")
+                      : translateMessage("generated.m0015")}
                   </Button>
                 )}
               </form.Subscribe>
@@ -254,16 +251,16 @@ export default function AuthForm({ mode }: AuthFormProps) {
             <div className="text-center text-sm">
               {isLogin ? (
                 <>
-                  Nie masz konta?{" "}
+                  {translateMessage("generated.m0016")}{" "}
                   <Link className="text-primary underline" href="/register">
-                    Zarejestruj się
+                    {translateMessage("generated.m0015")}
                   </Link>
                 </>
               ) : (
                 <>
-                  Masz już konto?{" "}
+                  {translateMessage("generated.m0017")}{" "}
                   <Link className="text-primary underline" href="/login">
-                    Zaloguj się
+                    {translateMessage("generated.m0014")}
                   </Link>
                 </>
               )}

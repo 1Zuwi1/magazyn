@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition"
 import useWarehouses from "@/hooks/use-warehouses"
+import { translateMessage } from "@/i18n/translate-message"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import type { VoiceCommandMatch } from "@/lib/voice/commands"
@@ -135,7 +136,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     if (!resolvedText) {
       setMatchedCommand(null)
       resetWarehouseLookupState()
-      setErrorMessage("Nie rozpoznano polecenia.")
+      setErrorMessage(translateMessage("generated.m0830"))
       setView("error")
       return
     }
@@ -144,7 +145,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     if (!(match && isCommandMatchValid(match))) {
       setMatchedCommand(null)
       resetWarehouseLookupState()
-      setErrorMessage("Nie znam tego polecenia.")
+      setErrorMessage(translateMessage("generated.m0831"))
       setView("error")
       return
     }
@@ -154,7 +155,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
       if (!warehouseName) {
         setMatchedCommand(null)
         resetWarehouseLookupState()
-        setErrorMessage("Brak nazwy magazynu w komendzie.")
+        setErrorMessage(translateMessage("generated.m0832"))
         setView("error")
         return
       }
@@ -192,7 +193,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     if (isWarehouseLookupError) {
       setMatchedCommand(null)
       resetWarehouseLookupState()
-      setErrorMessage("Nie udało się wyszukać magazynu. Spróbuj ponownie.")
+      setErrorMessage(translateMessage("generated.m0833"))
       setView("error")
       return
     }
@@ -205,7 +206,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     if (!warehouse) {
       setMatchedCommand(null)
       resetWarehouseLookupState()
-      setErrorMessage("Nie znaleziono magazynu o takiej nazwie.")
+      setErrorMessage(translateMessage("generated.m0834"))
       setView("error")
       return
     }
@@ -326,7 +327,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
 
   const handleStartListening = useCallback(() => {
     if (!isSupported) {
-      setErrorMessage("Przeglądarka nie obsługuje rozpoznawania mowy.")
+      setErrorMessage(translateMessage("generated.m0835"))
       setView("error")
       return
     }
@@ -345,7 +346,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
       if (!(match && isCommandMatchValid(match))) {
         setMatchedCommand(null)
         resetWarehouseLookupState()
-        setErrorMessage("Nie znam tego polecenia.")
+        setErrorMessage(translateMessage("generated.m0831"))
         setView("error")
         return
       }
@@ -355,7 +356,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
         if (!warehouseName) {
           setMatchedCommand(null)
           resetWarehouseLookupState()
-          setErrorMessage("Brak nazwy magazynu w komendzie.")
+          setErrorMessage(translateMessage("generated.m0832"))
           setView("error")
           return
         }
@@ -441,7 +442,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     case "error":
       content = (
         <VoiceAssistantErrorView
-          message={errorMessage ?? "Nie udało się przetworzyć polecenia."}
+          message={errorMessage ?? translateMessage("generated.m0836")}
           onReset={handleReset}
         />
       )
@@ -465,14 +466,14 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
         dialogTrigger
       ) : (
         <DialogTrigger
-          aria-label="Asystent głosowy"
+          aria-label={translateMessage("generated.m0665")}
           className={buttonVariants({
             variant: "ghost",
             size: "icon",
             className:
               "relative mr-3 text-muted-foreground transition-colors duration-200 hover:text-primary",
           })}
-          title="Asystent głosowy"
+          title={translateMessage("generated.m0665")}
         >
           <HugeiconsIcon icon={Mic01Icon} strokeWidth={1.75} />
         </DialogTrigger>
@@ -492,7 +493,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
           data-slot="voice-assistant"
         >
           <Button
-            aria-label="Zamknij asystenta głosowego"
+            aria-label={translateMessage("generated.m0837")}
             className={cn(
               "absolute right-3 z-10 rounded-full text-muted-foreground transition-colors hover:text-foreground",
               isMobile ? "top-12" : "top-3"

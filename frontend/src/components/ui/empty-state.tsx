@@ -12,6 +12,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import type { IconComponent } from "../dashboard/types"
 
@@ -253,15 +254,15 @@ export function SearchEmptyState({
       action={
         onClear
           ? {
-              label: "Wyczyść wyszukiwanie",
+              label: translateMessage("generated.m0790"),
               onClick: onClear,
               variant: "outline",
             }
           : undefined
       }
       className={className}
-      description="Spróbuj zmienić kryteria wyszukiwania lub użyj innych słów kluczowych."
-      title="Brak wyników"
+      description={translateMessage("generated.m0791")}
+      title={translateMessage("generated.m0422")}
       variant="search"
     />
   )
@@ -270,7 +271,7 @@ export function SearchEmptyState({
 export function FilterEmptyState({
   onClear,
   className,
-  description = "Żadne elementy nie pasują do wybranych filtrów. Spróbuj zmienić ustawienia filtrowania.",
+  description = translateMessage("generated.m0792"),
 }: {
   onClear?: () => void
   className?: string
@@ -281,7 +282,7 @@ export function FilterEmptyState({
       action={
         onClear
           ? {
-              label: "Wyczyść filtry",
+              label: translateMessage("generated.m0180"),
               onClick: onClear,
               variant: "outline",
               icon: Delete02Icon,
@@ -290,7 +291,7 @@ export function FilterEmptyState({
       }
       className={className}
       description={description}
-      title="Brak pasujących elementów"
+      title={translateMessage("generated.m0793")}
       variant="filter"
     />
   )
@@ -310,14 +311,14 @@ export function NoItemsEmptyState({
       action={
         onAdd
           ? {
-              label: `Dodaj ${itemName}`,
+              label: translateMessage("generated.m0794", { value0: itemName }),
               onClick: onAdd,
             }
           : undefined
       }
       className={className}
-      description={`Nie masz jeszcze żadnych ${itemName}ów. Zacznij od dodania pierwszego.`}
-      title={`Brak ${itemName}ów`}
+      description={translateMessage("generated.m0795", { value0: itemName })}
+      title={translateMessage("generated.m0796", { value0: itemName })}
       variant="noItems"
     />
   )
@@ -327,8 +328,8 @@ export function NoDataEmptyState({ className }: { className?: string }) {
   return (
     <EmptyState
       className={className}
-      description="Dane nie zostały jeszcze załadowane. Spróbuj odświeżyć stronę."
-      title="Brak danych"
+      description={translateMessage("generated.m0797")}
+      title={translateMessage("generated.m0472")}
       variant="noData"
     />
   )
@@ -346,7 +347,7 @@ export function ErrorEmptyState({
       action={
         onRetry
           ? {
-              label: "Spróbuj ponownie",
+              label: translateMessage("generated.m0075"),
               onClick: onRetry,
               variant: "outline",
               icon: ReloadIcon,
@@ -354,8 +355,8 @@ export function ErrorEmptyState({
           : undefined
       }
       className={className}
-      description="Wystąpił problem podczas ładowania danych. Spróbuj ponownie."
-      title="Coś poszło nie tak"
+      description={translateMessage("generated.m0798")}
+      title={translateMessage("generated.m0799")}
       variant="error"
     />
   )

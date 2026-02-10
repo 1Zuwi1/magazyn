@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { translateMessage } from "@/i18n/translate-message"
 import { apiFetch } from "@/lib/fetcher"
 import {
   WebAuthnFinishAssertionSchema,
@@ -22,7 +23,7 @@ import {
 
 const SUPPORT_LABELS = {
   checking: "Sprawdzanie",
-  supported: "Obsługiwane",
+  supported: translateMessage("generated.m0018"),
   unsupported: "Brak wsparcia",
 } as const
 
@@ -40,11 +41,11 @@ interface PasskeyLoginProps {
 
 export default function PasskeyLogin({
   disabled,
-  label = "Zaloguj kluczem bezpieczeństwa",
+  label = translateMessage("generated.m0019"),
   showSeparator = true,
   onSuccess,
   redirectTo = "/dashboard",
-  successMessage = "Zalogowano kluczem bezpieczeństwa.",
+  successMessage = translateMessage("generated.m0020"),
   showSuccessToast = true,
 }: PasskeyLoginProps) {
   const router = useRouter()
@@ -57,12 +58,12 @@ export default function PasskeyLogin({
 
   const handlePasskeyLogin = async () => {
     if (supportState !== "supported") {
-      toast.error("Twoje urządzenie nie obsługuje kluczy bezpieczeństwa.")
+      toast.error(translateMessage("generated.m0021"))
       return
     }
 
     if (!navigator.credentials) {
-      toast.error("Twoja przeglądarka nie obsługuje WebAuthn.")
+      toast.error(translateMessage("generated.m0022"))
       return
     }
 
@@ -81,19 +82,14 @@ export default function PasskeyLogin({
       )
 
       if (startError) {
-        handleApiError(
-          startError,
-          "Nie udało się rozpocząć logowania kluczem bezpieczeństwa."
-        )
+        handleApiError(startError, translateMessage("generated.m0023"))
         return
       }
 
       const publicKeyOptions = parseAuthenticationOptions(startResponse)
 
       if (!publicKeyOptions) {
-        toast.error(
-          "Nie udało się przygotować opcji logowania kluczem bezpieczeństwa."
-        )
+        toast.error(translateMessage("generated.m0024"))
         return
       }
 
@@ -107,14 +103,14 @@ export default function PasskeyLogin({
         toast.error(
           getWebAuthnErrorMessage(
             credentialError,
-            "Nie udało się zweryfikować klucza bezpieczeństwa."
+            translateMessage("generated.m0025")
           )
         )
         return
       }
 
       if (!isPublicKeyCredential(credential)) {
-        toast.error("Nie udało się odczytać danych klucza bezpieczeństwa.")
+        toast.error(translateMessage("generated.m0026"))
         return
       }
 
@@ -132,10 +128,7 @@ export default function PasskeyLogin({
       )
 
       if (finishError) {
-        handleApiError(
-          finishError,
-          "Nie udało się zakończyć logowania kluczem bezpieczeństwa."
-        )
+        handleApiError(finishError, translateMessage("generated.m0027"))
         return
       }
 
@@ -159,7 +152,7 @@ export default function PasskeyLogin({
         <div className="relative">
           <Separator className="bg-border/60" />
           <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-card px-2 text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
-            lub
+            {translateMessage("generated.m0876")}
           </span>
         </div>
       ) : null}

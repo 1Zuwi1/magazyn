@@ -13,6 +13,7 @@ import {
   useUsersWarehouseAssignments,
   useUsersWarehouseAssignmentsDelete,
 } from "@/hooks/use-admin-users"
+import { translateMessage } from "@/i18n/translate-message"
 import type { EditUserFormValues } from "../components/action-dialog"
 import { normalizeValue, resolveTeamValue } from "../lib/user-utils"
 
@@ -72,10 +73,10 @@ export function useUsersActions({
     deleteUserMutation.mutate(userIdToDelete, {
       onSuccess: () => {
         clearUserIdToDelete()
-        toast.success("Użytkownik został usunięty")
+        toast.success(translateMessage("generated.m0303"))
       },
       onError: () => {
-        toast.error("Nie udało się usunąć użytkownika")
+        toast.error(translateMessage("generated.m0304"))
       },
     })
   }
@@ -93,10 +94,10 @@ export function useUsersActions({
       { userId, status, reason },
       {
         onSuccess: () => {
-          toast.success("Status użytkownika został zmieniony")
+          toast.success(translateMessage("generated.m0305"))
         },
         onError: () => {
-          toast.error("Nie udało się zmienić statusu użytkownika")
+          toast.error(translateMessage("generated.m0306"))
         },
       }
     )
@@ -113,10 +114,10 @@ export function useUsersActions({
       { userId, warehouseId },
       {
         onSuccess: () => {
-          toast.success("Magazyn został przypisany do użytkownika")
+          toast.success(translateMessage("generated.m0307"))
         },
         onError: () => {
-          toast.error("Nie udało się przypisać magazynu")
+          toast.error(translateMessage("generated.m0308"))
         },
       }
     )
@@ -133,10 +134,10 @@ export function useUsersActions({
       { userId, warehouseId },
       {
         onSuccess: () => {
-          toast.success("Przypisanie magazynu zostało usunięte")
+          toast.success(translateMessage("generated.m0309"))
         },
         onError: () => {
-          toast.error("Nie udało się usunąć przypisania magazynu")
+          toast.error(translateMessage("generated.m0310"))
         },
       }
     )
@@ -180,10 +181,10 @@ export function useUsersActions({
         },
         {
           onSuccess: () => {
-            toast.success("Email użytkownika został zaktualizowany")
+            toast.success(translateMessage("generated.m0311"))
           },
           onError: () => {
-            toast.error("Nie udało się zaktualizować emaila użytkownika")
+            toast.error(translateMessage("generated.m0312"))
           },
         }
       )
@@ -202,10 +203,10 @@ export function useUsersActions({
         },
         {
           onSuccess: () => {
-            toast.success("Profil użytkownika został zaktualizowany")
+            toast.success(translateMessage("generated.m0313"))
           },
           onError: () => {
-            toast.error("Nie udało się zaktualizować profilu użytkownika")
+            toast.error(translateMessage("generated.m0314"))
           },
         }
       )

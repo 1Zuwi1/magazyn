@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import useWarehouses from "@/hooks/use-warehouses"
+import { translateMessage } from "@/i18n/translate-message"
 import { normalizeTranscript } from "@/lib/voice/commands"
 import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
 import { DEFAULT_FILTERS, WarehouseFilters } from "./storage-filters"
@@ -69,9 +70,9 @@ export const WarehouseContent = () => {
 
     if (query) {
       setFilters((prev) => ({ ...prev, query }))
-      toast.success(`Uruchomiono sprawdzanie stanu dla "${query}"`)
+      toast.success(translateMessage("generated.m0658", { value0: query }))
     } else {
-      toast.success("Uruchomiono sprawdzanie stanu magazynowego")
+      toast.success(translateMessage("generated.m0659"))
     }
 
     setPendingVoiceWarehouseName(normalizedWarehouseName ?? null)
@@ -84,7 +85,7 @@ export const WarehouseContent = () => {
     }
 
     if (isError) {
-      toast.error("Nie udało się zweryfikować wskazanego magazynu.")
+      toast.error(translateMessage("generated.m0660"))
       setPendingVoiceWarehouseName(null)
       return
     }
@@ -99,7 +100,9 @@ export const WarehouseContent = () => {
 
     if (!hasMatchingWarehouse) {
       toast.error(
-        `Nie znaleziono magazynu "${pendingVoiceWarehouseName.trim()}".`
+        translateMessage("generated.m0661", {
+          value0: pendingVoiceWarehouseName.trim(),
+        })
       )
     }
 
@@ -121,13 +124,13 @@ export const WarehouseContent = () => {
           />
         </div>
         <div className="space-y-1">
-          <p className="font-semibold">Nie udało się załadować magazynów</p>
+          <p className="font-semibold">{translateMessage("generated.m0662")}</p>
           <p className="text-muted-foreground text-sm">
-            Wystąpił problem podczas pobierania danych. Spróbuj ponownie.
+            {translateMessage("generated.m0663")}
           </p>
         </div>
         <Button onClick={() => refetch()} variant="outline">
-          Spróbuj ponownie
+          {translateMessage("generated.m0075")}
         </Button>
       </div>
     )
@@ -148,7 +151,7 @@ export const WarehouseContent = () => {
               onChange={(e) => {
                 setFilters((prev) => ({ ...prev, query: e.target.value }))
               }}
-              placeholder="Szukaj magazynu..."
+              placeholder={translateMessage("generated.m0292")}
               value={filters.query}
             />
           </div>
@@ -159,7 +162,7 @@ export const WarehouseContent = () => {
         <div className="flex items-center gap-2 text-muted-foreground text-sm">
           {hasActiveFilters && (
             <Badge className="font-normal" variant="secondary">
-              Filtrowane
+              {translateMessage("generated.m1008")}
             </Badge>
           )}
           <span>
@@ -168,7 +171,7 @@ export const WarehouseContent = () => {
               warehouses?.totalElements ?? 0,
               "magazyn",
               "magazyny",
-              "magazynów"
+              translateMessage("generated.m0294")
             )}
           </span>
         </div>
@@ -177,7 +180,9 @@ export const WarehouseContent = () => {
       {/* Warehouse Grid */}
       <section className="@container space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-lg">Twoje Magazyny</h2>
+          <h2 className="font-semibold text-lg">
+            {translateMessage("generated.m0664")}
+          </h2>
         </div>
         <WarehouseGrid
           isLoading={isPending}

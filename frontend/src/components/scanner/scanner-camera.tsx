@@ -17,6 +17,7 @@ import {
   type Result,
 } from "@zxing/library"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { Button } from "../ui/button"
 import { TAB_TRIGGERS } from "./scanner"
@@ -119,7 +120,7 @@ export function ScannerCamera({
     canvas.height = video.videoHeight
     const ctx = canvas.getContext("2d")
     if (!ctx) {
-      setErrorMsg("Nie udało się przygotować podglądu zdjęcia.")
+      setErrorMsg(translateMessage("generated.m0727"))
       return
     }
 
@@ -127,7 +128,7 @@ export function ScannerCamera({
     canvas.toBlob(
       (blob) => {
         if (!blob) {
-          setErrorMsg("Nie udało się wykonać zdjęcia. Spróbuj ponownie.")
+          setErrorMsg(translateMessage("generated.m0728"))
           return
         }
 
@@ -188,7 +189,9 @@ export function ScannerCamera({
 
       if (err && !isRecoverableDecodeError(err)) {
         const msg =
-          err instanceof Error ? err.message : "Unexpected scanner error."
+          err instanceof Error
+            ? err.message
+            : translateMessage("generated.m1051")
         setErrorMsg(msg)
       }
     },
@@ -248,7 +251,7 @@ export function ScannerCamera({
         }
 
         const msg =
-          e instanceof Error ? e.message : "Could not start the camera scanner."
+          e instanceof Error ? e.message : translateMessage("generated.m1052")
         setErrorMsg(msg)
         stop()
       }
@@ -282,7 +285,7 @@ export function ScannerCamera({
         variant="ghost"
       >
         <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
-        <span className="sr-only">Close</span>
+        <span className="sr-only">{translateMessage("generated.m1021")}</span>
       </Button>
 
       {errorMsg ? (
@@ -307,15 +310,14 @@ export function ScannerCamera({
             {/* Text content */}
             <div className="max-w-sm space-y-2">
               <h2 className="font-semibold text-foreground text-xl">
-                Problem z kamerą
+                {translateMessage("generated.m0729")}
               </h2>
               <p className="text-muted-foreground text-sm">
-                Upewnij się że Twoja kamera jest podłączona i dostępna oraz że
-                udzieliłeś/aś pozwolenia na jej użycie.
+                {translateMessage("generated.m0730")}
               </p>
               <details className="mt-3">
                 <summary className="cursor-pointer text-muted-foreground text-xs hover:text-foreground">
-                  Szczegóły techniczne
+                  {translateMessage("generated.m0731")}
                 </summary>
                 <p className="mt-2 rounded-lg bg-muted/50 p-2 font-mono text-muted-foreground text-xs">
                   {errorMsg}
@@ -335,7 +337,7 @@ export function ScannerCamera({
                 type="button"
                 variant="outline"
               >
-                Spróbuj ponownie
+                {translateMessage("generated.m0075")}
               </Button>
             </div>
           </div>
@@ -351,11 +353,11 @@ export function ScannerCamera({
             )}
           >
             <p className="h-full w-full text-center">
-              Skanujesz w magazynie: {warehouseName}
+              {translateMessage("generated.m1101", { value0: warehouseName })}
             </p>
             {modeLabel ? (
               <p className="rounded-full bg-black/50 px-4 py-3 text-center text-sm text-white backdrop-blur-sm">
-                Jesteś w trybie:{" "}
+                {translateMessage("generated.m0733")}{" "}
                 <span className="font-medium">{modeLabel}</span>.
               </p>
             ) : null}
@@ -409,7 +411,7 @@ export function ScannerCamera({
                 variant="ghost"
               >
                 <HugeiconsIcon className="size-4" icon={Camera01Icon} />
-                Rozpoznaj produkt
+                {translateMessage("generated.m0734")}
               </Button>
             </div>
           )}

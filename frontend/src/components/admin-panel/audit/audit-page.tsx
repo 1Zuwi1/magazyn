@@ -11,7 +11,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { format } from "date-fns"
-import { pl } from "date-fns/locale"
+import { useLocale } from "next-intl"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -35,6 +35,8 @@ import {
   useAuditInboundOperations,
   useAuditOutboundOperations,
 } from "@/hooks/use-audit"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { translateMessage } from "@/i18n/translate-message"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type {
   AuditInboudOperationsSchema,
@@ -48,12 +50,15 @@ type InboundOperation = InboundList["content"][number]
 
 type OutboundList = InferApiOutput<typeof AuditOutboundOperationsSchema, "GET">
 type OutboundOperation = OutboundList["content"][number]
+type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
 
 const PAGE_SIZE = 20
 
-const formatDateTime = (date: string): string => {
+const formatDateTime = (date: string, dateFnsLocale: DateFnsLocale): string => {
   try {
-    return format(new Date(date), "dd MMM yyyy, HH:mm", { locale: pl })
+    return format(new Date(date), "dd MMM yyyy, HH:mm", {
+      locale: dateFnsLocale,
+    })
   } catch {
     return "\u2014"
   }
@@ -78,7 +83,9 @@ function DateRangeFilter({
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-1.5 text-muted-foreground">
         <HugeiconsIcon className="size-3.5" icon={Calendar03Icon} />
-        <span className="hidden text-xs sm:inline">Zakres dat</span>
+        <span className="hidden text-xs sm:inline">
+          {translateMessage("generated.m0184")}
+        </span>
       </div>
       <div className="flex items-center gap-1.5">
         <DatePicker
@@ -128,12 +135,14 @@ function InboundTableContent({
   onStartDateChange,
   onEndDateChange,
   onClearDates,
+  dateFnsLocale,
 }: {
   startDate: string
   endDate: string
   onStartDateChange: (value: string) => void
   onEndDateChange: (value: string) => void
   onClearDates: () => void
+  dateFnsLocale: DateFnsLocale
 }) {
   const [page, setPage] = useState(1)
 
@@ -164,21 +173,23 @@ function InboundTableContent({
           <span className="font-mono font-semibold text-primary text-sm tabular-nums">
             {totalElements}
           </span>
-          <span className="text-muted-foreground text-xs">operacji</span>
+          <span className="text-muted-foreground text-xs">
+            {translateMessage("generated.m0903")}
+          </span>
         </div>
       </div>
 
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/30">
-            <TableHead>Data</TableHead>
-            <TableHead>Przedmiot</TableHead>
-            <TableHead>Kod</TableHead>
-            <TableHead>Regal</TableHead>
-            <TableHead>Pozycja</TableHead>
-            <TableHead>Ilosc</TableHead>
-            <TableHead>Asortyment</TableHead>
-            <TableHead>Przyjal</TableHead>
+            <TableHead>{translateMessage("generated.m0904")}</TableHead>
+            <TableHead>{translateMessage("generated.m0905")}</TableHead>
+            <TableHead>{translateMessage("generated.m0906")}</TableHead>
+            <TableHead>{translateMessage("generated.m0907")}</TableHead>
+            <TableHead>{translateMessage("generated.m0908")}</TableHead>
+            <TableHead>{translateMessage("generated.m0909")}</TableHead>
+            <TableHead>{translateMessage("generated.m0882")}</TableHead>
+            <TableHead>{translateMessage("generated.m0910")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -201,8 +212,8 @@ function InboundTableContent({
                   <FilterEmptyState />
                 ) : (
                   <EmptyState
-                    description="Nie znaleziono żadnych operacji w bazie danych."
-                    title="Brak operacji przyjęcia"
+                    description={translateMessage("generated.m0186")}
+                    title={translateMessage("generated.m0187")}
                   />
                 )}
               </TableCell>
@@ -217,7 +228,7 @@ function InboundTableContent({
                     icon={Time01Icon}
                   />
                   <span className="text-xs">
-                    {formatDateTime(op.operationTimestamp)}
+                    {formatDateTime(op.operationTimestamp, dateFnsLocale)}
                   </span>
                 </div>
               </TableCell>
@@ -271,12 +282,14 @@ function OutboundTableContent({
   onStartDateChange,
   onEndDateChange,
   onClearDates,
+  dateFnsLocale,
 }: {
   startDate: string
   endDate: string
   onStartDateChange: (value: string) => void
   onEndDateChange: (value: string) => void
   onClearDates: () => void
+  dateFnsLocale: DateFnsLocale
 }) {
   const [page, setPage] = useState(1)
 
@@ -307,22 +320,24 @@ function OutboundTableContent({
           <span className="font-mono font-semibold text-primary text-sm tabular-nums">
             {totalElements}
           </span>
-          <span className="text-muted-foreground text-xs">operacji</span>
+          <span className="text-muted-foreground text-xs">
+            {translateMessage("generated.m0903")}
+          </span>
         </div>
       </div>
 
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/30">
-            <TableHead>Data</TableHead>
-            <TableHead>Przedmiot</TableHead>
-            <TableHead>Kod</TableHead>
-            <TableHead>Regal</TableHead>
-            <TableHead>Pozycja</TableHead>
-            <TableHead>Ilosc</TableHead>
-            <TableHead>Asortyment</TableHead>
-            <TableHead>Wydal</TableHead>
-            <TableHead>FIFO</TableHead>
+            <TableHead>{translateMessage("generated.m0904")}</TableHead>
+            <TableHead>{translateMessage("generated.m0905")}</TableHead>
+            <TableHead>{translateMessage("generated.m0906")}</TableHead>
+            <TableHead>{translateMessage("generated.m0907")}</TableHead>
+            <TableHead>{translateMessage("generated.m0908")}</TableHead>
+            <TableHead>{translateMessage("generated.m0909")}</TableHead>
+            <TableHead>{translateMessage("generated.m0882")}</TableHead>
+            <TableHead>{translateMessage("generated.m0911")}</TableHead>
+            <TableHead>{translateMessage("generated.m0912")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -345,8 +360,8 @@ function OutboundTableContent({
                   <FilterEmptyState />
                 ) : (
                   <EmptyState
-                    description="Nie znaleziono żadnych operacji w bazie danych."
-                    title="Brak operacji wydania"
+                    description={translateMessage("generated.m0186")}
+                    title={translateMessage("generated.m0188")}
                   />
                 )}
               </TableCell>
@@ -361,7 +376,7 @@ function OutboundTableContent({
                     icon={Time01Icon}
                   />
                   <span className="text-xs">
-                    {formatDateTime(op.operationTimestamp)}
+                    {formatDateTime(op.operationTimestamp, dateFnsLocale)}
                   </span>
                 </div>
               </TableCell>
@@ -415,6 +430,9 @@ function OutboundTableContent({
 }
 
 export default function AuditMain() {
+  const locale = useLocale()
+  const dateFnsLocale = getDateFnsLocale(locale)
+
   const [inboundStartDate, setInboundStartDate] = useState("")
   const [inboundEndDate, setInboundEndDate] = useState("")
   const [outboundStartDate, setOutboundStartDate] = useState("")
@@ -433,13 +451,13 @@ export default function AuditMain() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description="Historia operacji magazynowych - przyjecia i wydania"
+        description={translateMessage("generated.m0189")}
         icon={Analytics01Icon}
         navLinks={ADMIN_NAV_LINKS.map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title="Audyt operacji"
+        title={translateMessage("generated.m0190")}
       />
 
       <Tabs defaultValue="inbound">
@@ -448,17 +466,18 @@ export default function AuditMain() {
             <TabsList className="h-auto" variant="line">
               <TabsTrigger className="py-2.5" value="inbound">
                 <HugeiconsIcon className="size-3.5" icon={PackageReceiveIcon} />
-                Przyjecia
+                {translateMessage("generated.m0913")}
               </TabsTrigger>
               <TabsTrigger className="py-2.5" value="outbound">
                 <HugeiconsIcon className="size-3.5" icon={PackageIcon} />
-                Wydania
+                {translateMessage("generated.m0914")}
               </TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="inbound">
             <InboundTableContent
+              dateFnsLocale={dateFnsLocale}
               endDate={inboundEndDate}
               onClearDates={handleClearInboundDates}
               onEndDateChange={(v) => {
@@ -473,6 +492,7 @@ export default function AuditMain() {
 
           <TabsContent value="outbound">
             <OutboundTableContent
+              dateFnsLocale={dateFnsLocale}
               endDate={outboundEndDate}
               onClearDates={handleClearOutboundDates}
               onEndDateChange={(v) => {

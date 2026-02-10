@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import type { Item } from "../types"
 import {
@@ -44,7 +45,7 @@ function formatExpiryHint(daysUntilExpiry: number): string {
   }
 
   const absDays = Math.abs(daysUntilExpiry)
-  const daysLabel = `${absDays} ${pluralize(absDays, "dzień", "dni", "dni")}`
+  const daysLabel = `${absDays} ${pluralize(absDays, translateMessage("generated.m0498"), "dni", "dni")}`
   if (daysUntilExpiry < 0) {
     return `Po terminie ${daysLabel}`
   }
@@ -152,16 +153,28 @@ export function ItemDetailsDialog({
             </div>
 
             <div className="space-y-2 text-xs">
-              <DetailRow label="ID" value={item.id} />
-              <DetailRow label="Kod QR" value={item.qrCode} />
-              <DetailRow label="Waga" value={`${item.weight.toFixed(2)} kg`} />
-              <DetailRow label="Wymiary" value={formatDimensions(item)} />
               <DetailRow
-                label="Temperatura"
+                label={translateMessage("generated.m0969")}
+                value={item.id}
+              />
+              <DetailRow
+                label={translateMessage("generated.m0499")}
+                value={item.qrCode}
+              />
+              <DetailRow
+                label={translateMessage("generated.m0948")}
+                value={`${item.weight.toFixed(2)} kg`}
+              />
+              <DetailRow
+                label={translateMessage("generated.m0985")}
+                value={formatDimensions(item)}
+              />
+              <DetailRow
+                label={translateMessage("generated.m0924")}
                 value={`${item.minTemp}°C – ${item.maxTemp}°C`}
               />
               <DetailRow
-                label="Ważność"
+                label={translateMessage("generated.m0466")}
                 value={
                   <span
                     className={cn("font-mono font-semibold", statusColors.text)}
@@ -176,7 +189,9 @@ export function ItemDetailsDialog({
 
             {item.comment && (
               <div className="rounded-lg border bg-muted/30 p-3 text-xs">
-                <p className="font-semibold text-muted-foreground">Uwagi</p>
+                <p className="font-semibold text-muted-foreground">
+                  {translateMessage("generated.m0993")}
+                </p>
                 <p className="mt-1 text-foreground text-sm">{item.comment}</p>
               </div>
             )}

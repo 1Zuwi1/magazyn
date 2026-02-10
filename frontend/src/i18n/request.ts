@@ -25,8 +25,6 @@ export const formats = {
 export const locales = ["pl"] as const
 
 export default getRequestConfig(async () => {
-  // const store = await cookies()
-  // const locale = store.get("locale")?.value || "pl"
   const locale = "pl"
 
   return {

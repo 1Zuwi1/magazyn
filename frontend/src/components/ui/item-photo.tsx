@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 const DEFAULT_IMAGE_SIZE = 100
@@ -96,7 +97,7 @@ export function ItemPhoto({
   return (
     <>
       <button
-        aria-label={`Powiększ zdjęcie: ${alt}`}
+        aria-label={translateMessage("generated.m0800", { value0: alt })}
         className="cursor-zoom-in rounded-lg transition-opacity hover:opacity-90"
         onClick={() => setPreviewOpen(true)}
         type="button"
@@ -106,7 +107,7 @@ export function ItemPhoto({
       <Dialog onOpenChange={setPreviewOpen} open={previewOpen}>
         <DialogContent className="max-w-[calc(100%-1rem)] p-3 sm:max-w-4xl sm:p-4">
           <DialogHeader className="sr-only">
-            <DialogTitle>Powiększone zdjęcie produktu</DialogTitle>
+            <DialogTitle>{translateMessage("generated.m0801")}</DialogTitle>
             <DialogDescription>{alt}</DialogDescription>
           </DialogHeader>
           <div className="max-h-[80vh] overflow-hidden rounded-lg bg-muted">

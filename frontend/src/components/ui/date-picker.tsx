@@ -3,7 +3,7 @@
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { format, formatISO } from "date-fns"
-import { pl } from "date-fns/locale"
+import { useLocale } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -11,6 +11,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { translateMessage } from "@/i18n/translate-message"
 
 export function DatePicker({
   date,
@@ -21,6 +23,9 @@ export function DatePicker({
   onDateChange: (date: string) => void
   setTimeToEndOfDay?: boolean
 }) {
+  const locale = useLocale()
+  const dateFnsLocale = getDateFnsLocale(locale)
+
   return (
     <Popover>
       <PopoverTrigger
@@ -32,10 +37,10 @@ export function DatePicker({
           >
             {date ? (
               format(date, "PPP", {
-                locale: pl,
+                locale: dateFnsLocale,
               })
             ) : (
-              <span>Wybierz datę</span>
+              <span>{translateMessage("generated.m0789")}</span>
             )}
             <HugeiconsIcon icon={ArrowDown01Icon} />
           </Button>
@@ -44,7 +49,7 @@ export function DatePicker({
       <PopoverContent align="start" className="w-auto p-0">
         <Calendar
           defaultMonth={date}
-          locale={pl}
+          locale={dateFnsLocale}
           mode="single"
           onSelect={(date) => {
             if (date) {

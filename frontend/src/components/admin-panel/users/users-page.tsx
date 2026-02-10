@@ -15,6 +15,7 @@ import { useUsersDialogState } from "@/components/admin-panel/users/hooks/use-us
 import { useUsersFilters } from "@/components/admin-panel/users/hooks/use-users-filters"
 import { useUsersPagination } from "@/components/admin-panel/users/hooks/use-users-pagination"
 import PaginationFull from "@/components/ui/pagination-component"
+import { translateMessage } from "@/i18n/translate-message"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../lib/constants"
 
@@ -90,9 +91,7 @@ export default function UsersMain() {
 
   const handleEditUser = (userId: number) => {
     if (isTeamsError) {
-      toast.warning(
-        "Nie udało się załadować listy zespołów. Pole zespołu może być niedostępne."
-      )
+      toast.warning(translateMessage("generated.m0318"))
     }
     openEditDialog(userId)
   }
@@ -112,13 +111,13 @@ export default function UsersMain() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description="Zarządzaj kontami użytkowników i ich danymi profilowymi"
+        description={translateMessage("generated.m0319")}
         icon={UserMultiple02Icon}
         navLinks={ADMIN_NAV_LINKS.map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title="Użytkownicy"
+        title={translateMessage("generated.m0233")}
       >
         <UsersStats
           active={stats.active}
@@ -166,7 +165,7 @@ export default function UsersMain() {
         onConfirm={confirmDeleteUser}
         onOpenChange={handleDeleteDialogOpenChange}
         open={deleteDialogOpen}
-        title="Usuń użytkownika"
+        title={translateMessage("generated.m0320")}
       />
 
       <StatusChangeDialog

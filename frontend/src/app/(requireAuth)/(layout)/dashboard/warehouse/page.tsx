@@ -6,6 +6,7 @@ import {
 import { PageHeader } from "@/components/dashboard/page-header"
 import { WarehouseContent } from "@/components/dashboard/warehouse-content"
 import ProtectedPage from "@/components/security/protected-page"
+import { translateMessage } from "@/i18n/translate-message"
 import { apiFetch } from "@/lib/fetcher"
 import { WarehousesSchema } from "@/lib/schemas"
 
@@ -40,12 +41,12 @@ export default function WarehousePage() {
 
         const headerStats = [
           {
-            label: "Magazyny",
+            label: translateMessage("generated.m0886"),
             value: totalWarehouses,
             icon: PackageIcon,
           },
           {
-            label: "Obłożenie",
+            label: translateMessage("generated.m0094"),
             value: `${overallOccupancy}%`,
             icon: ChartLineData01Icon,
             variant: getOccupancyVariant(overallOccupancy),
@@ -54,7 +55,7 @@ export default function WarehousePage() {
         return (
           <div className="space-y-8">
             <PageHeader
-              description="Wyszukuj lokalizacje, sprawdzaj obłożenie i przechodź do szczegółów regałów."
+              description={translateMessage("generated.m0101")}
               icon={Building05Icon}
               iconBadge={totalWarehouses}
               stats={headerStats}
@@ -68,7 +69,7 @@ export default function WarehousePage() {
                   </span>
                 </div>
               }
-              title="Magazyny"
+              title={translateMessage("generated.m0886")}
             />
 
             <WarehouseContent />

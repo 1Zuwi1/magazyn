@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useCallback, useState } from "react"
+import { translateMessage } from "@/i18n/translate-message"
 import type {
   IdentificationCandidate,
   IdentificationResult,
@@ -19,12 +20,12 @@ import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 
 const CONFIDENCE_LABELS: Record<string, string> = {
-  HIGH_CONFIDENCE: "Wysokie dopasowanie",
-  MEDIUM_CONFIDENCE: "Średnie dopasowanie",
+  HIGH_CONFIDENCE: translateMessage("generated.m1053"),
+  MEDIUM_CONFIDENCE: translateMessage("generated.m0736"),
 }
 
 const getConfidenceLevelLabel = (level: string): string =>
-  CONFIDENCE_LABELS[level] ?? "Niskie dopasowanie"
+  CONFIDENCE_LABELS[level] ?? translateMessage("generated.m1054")
 
 interface ScannerIdentifyStepProps {
   result: IdentificationResult
@@ -66,24 +67,24 @@ function CandidateCard({
           <h4 className="truncate font-medium text-sm">{candidate.itemName}</h4>
           {candidate.isDangerous ? (
             <Badge className="shrink-0" variant="destructive">
-              Niebezpieczny
+              {translateMessage("generated.m0925")}
             </Badge>
           ) : null}
         </div>
         <p className="mt-0.5 font-mono text-muted-foreground text-xs">
-          Kod: {candidate.code}
+          {translateMessage("generated.m1100", { value0: candidate.code })}
         </p>
         <div className="mt-1 flex items-center gap-3 text-muted-foreground text-xs">
           <span>
-            Podobieństwo:{" "}
+            {translateMessage("generated.m0737")}{" "}
             <span className="font-medium text-foreground">
               {Math.round(candidate.similarityScore * 100)}%
             </span>
           </span>
           <span>
-            Waga:{" "}
+            {translateMessage("generated.m1022")}{" "}
             <span className="font-medium text-foreground">
-              {candidate.weight} kg
+              {candidate.weight} {translateMessage("generated.m0954")}
             </span>
           </span>
         </div>
@@ -142,7 +143,7 @@ export function ScannerIdentifyStep({
             </div>
             <div>
               <h2 className="font-semibold text-xl tracking-tight">
-                Rozpoznany przedmiot
+                {translateMessage("generated.m0738")}
               </h2>
               <p className="mt-1 text-muted-foreground text-sm">
                 {result.message}
@@ -161,7 +162,9 @@ export function ScannerIdentifyStep({
               {getConfidenceLevelLabel(result.confidenceLevel)}
             </Badge>
             <span className="text-muted-foreground text-xs">
-              {Math.round(result.similarityScore * 100)}% pewności
+              {translateMessage("generated.m0739", {
+                value0: Math.round(result.similarityScore * 100),
+              })}
             </span>
           </div>
         </div>
@@ -176,11 +179,10 @@ export function ScannerIdentifyStep({
             </div>
             <div className="max-w-sm space-y-2">
               <h3 className="font-semibold text-lg">
-                Brak pasujących przedmiotów
+                {translateMessage("generated.m0740")}
               </h3>
               <p className="text-muted-foreground text-sm">
-                Nie znaleziono przedmiotów pasujących do zdjęcia. Spróbuj
-                zeskanować kod lub wprowadzić go ręcznie.
+                {translateMessage("generated.m0741")}
               </p>
             </div>
           </div>
@@ -207,7 +209,7 @@ export function ScannerIdentifyStep({
               type="button"
               variant="outline"
             >
-              Wróć do skanera
+              {translateMessage("generated.m0742")}
             </Button>
           ) : (
             <>
@@ -218,7 +220,7 @@ export function ScannerIdentifyStep({
                 onClick={handleAccept}
                 type="button"
               >
-                Potwierdź wybór
+                {translateMessage("generated.m0743")}
               </Button>
               <Button
                 className="h-12 w-full rounded-xl"
@@ -228,7 +230,7 @@ export function ScannerIdentifyStep({
                 type="button"
                 variant="outline"
               >
-                To nie ten przedmiot
+                {translateMessage("generated.m0744")}
               </Button>
             </>
           )}

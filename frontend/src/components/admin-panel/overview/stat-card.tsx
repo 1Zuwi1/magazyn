@@ -4,6 +4,7 @@ import { ArrowRight02Icon, RefreshIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 interface AdminStatCardProps {
@@ -122,7 +123,7 @@ export function AdminStatCard({
             <div className="space-y-1">
               <p className="text-muted-foreground text-sm">{title}</p>
               <p className="font-medium text-destructive text-sm">
-                Nie udalo sie pobrac danych
+                {translateMessage("generated.m0250")}
               </p>
             </div>
             <div
@@ -146,11 +147,11 @@ export function AdminStatCard({
                 type="button"
               >
                 <HugeiconsIcon className="size-3.5" icon={RefreshIcon} />
-                Ponów próbę
+                {translateMessage("generated.m0237")}
               </button>
             ) : (
               <p className="text-muted-foreground text-sm">
-                Spróbuj ponownie później
+                {translateMessage("generated.m0251")}
               </p>
             )}
           </div>

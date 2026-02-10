@@ -27,6 +27,7 @@ import {
   useInfiniteWarehouses,
   useMultipleWarehouses,
 } from "@/hooks/use-warehouses"
+import { translateMessage } from "@/i18n/translate-message"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { normalizeValue } from "../lib/user-utils"
@@ -228,14 +229,14 @@ export function WarehouseAssignmentDialog({
                 icon={Building06Icon}
               />
             </span>
-            Przypisz magazyn
+            {translateMessage("generated.m0289")}
           </DialogTitle>
           <DialogDescription>
-            Przypisz magazyn do użytkownika{" "}
+            {translateMessage("generated.m0290")}{" "}
             <strong>
               {normalizeValue(user?.full_name) || user?.email || ""}
             </strong>
-            , aby otrzymywał alerty z tego magazynu.
+            {translateMessage("generated.m0291")}
           </DialogDescription>
         </DialogHeader>
         <Separator />
@@ -252,7 +253,7 @@ export function WarehouseAssignmentDialog({
               onChange={(event) => {
                 setSearch(event.target.value)
               }}
-              placeholder="Szukaj magazynu..."
+              placeholder={translateMessage("generated.m0292")}
               type="text"
               value={search}
             />
@@ -263,7 +264,9 @@ export function WarehouseAssignmentDialog({
               className="cursor-pointer text-sm"
               htmlFor="show-assigned-warehouses-only"
             >
-              Tylko przypisane ({assignedWarehouseIds.length})
+              {translateMessage("generated.m1066", {
+                value0: assignedWarehouseIds.length,
+              })}
             </Label>
             <Switch
               checked={showAssignedOnly}
@@ -308,11 +311,15 @@ export function WarehouseAssignmentDialog({
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-sm">
-                  Wybrano {selectedWarehouseIds.length} magazynów
+                  {translateMessage("generated.m1067", {
+                    value0: selectedWarehouseIds.length,
+                  })}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  Do przypisania: {selectedUnassignedWarehouseIds.length}{" "}
-                  &middot; Przypisane: {selectedAssignedWarehouseIds.length}
+                  {translateMessage("generated.m1068", {
+                    value0: selectedUnassignedWarehouseIds.length,
+                    value1: selectedAssignedWarehouseIds.length,
+                  })}
                 </p>
               </div>
               <Badge
@@ -341,19 +348,23 @@ export function WarehouseAssignmentDialog({
               onClick={handleRemove}
               variant="destructive"
             >
-              Usuń przypisanie ({selectedAssignedWarehouseIds.length})
+              {translateMessage("generated.m1069", {
+                value0: selectedAssignedWarehouseIds.length,
+              })}
             </Button>
           ) : null}
           <div className="flex flex-1 justify-end gap-2">
             <Button onClick={() => handleOpenChange(false)} variant="outline">
-              Anuluj
+              {translateMessage("generated.m0885")}
             </Button>
             {canAssignSelectedWarehouses ? (
               <Button
                 disabled={!canAssignSelectedWarehouses}
                 onClick={handleAssign}
               >
-                Przypisz ({selectedUnassignedWarehouseIds.length})
+                {translateMessage("generated.m1070", {
+                  value0: selectedUnassignedWarehouseIds.length,
+                })}
               </Button>
             ) : null}
           </div>

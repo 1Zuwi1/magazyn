@@ -7,6 +7,7 @@ import { useSearch } from "@/components/admin-panel/components/search-bar/search
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { InputGroup, InputGroupButton } from "@/components/ui/input-group"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 interface SearchProps {
@@ -40,10 +41,10 @@ export function Search({ className, placeholder = "Search" }: SearchProps) {
         value={value}
       />
       <InputGroupButton
-        aria-label="Rozwiń menu wyszukiwania"
+        aria-label={translateMessage("generated.m0195")}
         className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
         onClick={handleOpenSearch}
-        title="Rozwiń menu"
+        title={translateMessage("generated.m0196")}
       >
         <HugeiconsIcon icon={Search01Icon} />
       </InputGroupButton>

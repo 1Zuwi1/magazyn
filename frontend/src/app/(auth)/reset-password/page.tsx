@@ -11,6 +11,7 @@ import { FieldWithState } from "@/components/helpers/field-state"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldGroup } from "@/components/ui/field"
+import { translateMessage } from "@/i18n/translate-message"
 import { createApiSchema } from "@/lib/create-api-schema"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import { PasswordSchema } from "@/lib/schemas"
@@ -44,16 +45,14 @@ export default function ResetPassword() {
           method: "POST",
         })
 
-        toast.success(
-          "Hasło zostało zresetowane. Możesz teraz zalogować się z nowym hasłem."
-        )
+        toast.success(translateMessage("generated.m0053"))
         redirect("/login")
       } catch (e) {
         if (FetchError.isError(e)) {
           handleApiError(e)
           return
         }
-        toast.error("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.")
+        toast.error(translateMessage("generated.m0030"))
       }
     },
     validators: {
@@ -80,7 +79,7 @@ export default function ResetPassword() {
               <Logo className="relative" />
             </div>
             <FieldDescription className="mt-2 max-w-70 text-center text-muted-foreground/80">
-              Wprowadź nowe hasło dla swojego konta.
+              {translateMessage("generated.m0054")}
             </FieldDescription>
           </div>
           <div
@@ -93,7 +92,7 @@ export default function ResetPassword() {
                   <FieldWithState
                     field={field}
                     icon={LockPasswordIcon}
-                    label="Nowe hasło"
+                    label={translateMessage("generated.m0055")}
                     placeholder="••••••••"
                     type="password"
                   />
@@ -113,7 +112,7 @@ export default function ResetPassword() {
                     size="lg"
                     type="submit"
                   >
-                    Zresetuj hasło
+                    {translateMessage("generated.m0056")}
                   </Button>
                 )}
               </form.Subscribe>

@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { translateMessage } from "@/i18n/translate-message"
 
 export default function UnauthorizedComponent() {
   return (
@@ -21,18 +22,21 @@ export default function UnauthorizedComponent() {
               icon={CircleLock01Icon}
             />
           </div>
-          <CardTitle className="mt-4 text-2xl">Brak dostępu</CardTitle>
+          <CardTitle className="mt-4 text-2xl">
+            {translateMessage("generated.m0102")}
+          </CardTitle>
           <CardDescription>
-            Nie masz uprawnień do wyświetlenia tej strony.
+            {translateMessage("generated.m0103")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground text-sm">
-            Ta strona wymaga specjalnych uprawnień. Jeśli uważasz, że to błąd,
-            skontaktuj się z administratorem.
+            {translateMessage("generated.m0104")}
           </p>
           <Link href="/dashboard">
-            <Button className="w-full">Wróć do panelu głównego</Button>
+            <Button className="w-full">
+              {translateMessage("generated.m0105")}
+            </Button>
           </Link>
         </CardContent>
       </Card>

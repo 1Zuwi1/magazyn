@@ -30,6 +30,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { translateMessage } from "@/i18n/translate-message"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { Badge } from "../ui/badge"
@@ -140,10 +141,10 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
           />
         </div>
         <p className="mt-4 font-medium text-muted-foreground">
-          Brak magazynów do wyświetlenia
+          {translateMessage("generated.m0655")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Zmień filtry lub dodaj nowy magazyn
+          {translateMessage("generated.m0656")}
         </p>
       </div>
     )
@@ -186,9 +187,9 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                       {warehouse.racksCount}{" "}
                       {pluralize(
                         warehouse.racksCount,
-                        "regał",
-                        "regały",
-                        "regałów"
+                        translateMessage("generated.m0323"),
+                        translateMessage("generated.m0324"),
+                        translateMessage("generated.m0241")
                       )}
                     </p>
                   </div>
@@ -203,7 +204,9 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
               {/* Occupancy Bar */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Zapełnienie</span>
+                  <span className="text-muted-foreground">
+                    {translateMessage("generated.m0322")}
+                  </span>
                   <span className="font-medium font-mono">
                     {warehouse.occupiedSlots.toLocaleString("pl-PL")} /{" "}
                     {(
@@ -229,7 +232,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                     {warehouse.occupiedSlots.toLocaleString("pl-PL")}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    Zajęte
+                    {translateMessage("generated.m0409")}
                   </span>
                 </div>
                 <div className="rounded-md bg-muted/50 px-2 py-1.5">
@@ -237,7 +240,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                     {warehouse.freeSlots.toLocaleString("pl-PL")}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    Wolne
+                    {translateMessage("generated.m0995")}
                   </span>
                 </div>
                 <div className="rounded-md bg-muted/50 px-2 py-1.5">
@@ -247,9 +250,9 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                   <span className="text-[10px] text-muted-foreground">
                     {pluralize(
                       warehouse.racksCount,
-                      "Regał",
-                      "Regały",
-                      "Regałów"
+                      translateMessage("generated.m0168"),
+                      translateMessage("generated.m0383"),
+                      translateMessage("generated.m0083")
                     )}
                   </span>
                 </div>
@@ -265,7 +268,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                 })}
                 href={`/dashboard/warehouse/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}`}
               >
-                <span>Regały</span>
+                <span>{translateMessage("generated.m0383")}</span>
                 <HugeiconsIcon className="size-3.5" icon={ArrowRight01Icon} />
               </Link>
               <Button
@@ -280,7 +283,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                 variant="outline"
               >
                 <HugeiconsIcon className="size-3.5" icon={CubeIcon} />
-                <span>3D</span>
+                <span>{translateMessage("generated.m1007")}</span>
               </Button>
             </CardFooter>
           </Card>
@@ -304,15 +307,17 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                 size={24}
               />
             </AlertDialogMedia>
-            <AlertDialogTitle>Widok 3D magazynu</AlertDialogTitle>
+            <AlertDialogTitle>
+              {translateMessage("generated.m0098")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Wizualizacja 3D pobiera dane o wszystkich magazynach, regałach i
-              przedmiotach. Przy dużej ilości danych może to znacząco obciążyć
-              połączenie i zużyć dużo transferu.
+              {translateMessage("generated.m0099")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogCancel>
+              {translateMessage("generated.m0885")}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (visualizationTarget) {
@@ -322,7 +327,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                 }
               }}
             >
-              Otwórz widok 3D
+              {translateMessage("generated.m0100")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

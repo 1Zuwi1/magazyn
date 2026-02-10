@@ -1,4 +1,5 @@
 import z from "zod"
+import { translateMessage } from "@/i18n/translate-message"
 
 export const WarehouseCsvSchema = z.object({
   name: z.string().trim().min(1, "Nazwa magazynu jest wymagana"),
@@ -65,12 +66,9 @@ export const ItemCsvSchema = z.object({
 
 const usernameSchema = z
   .string()
-  .min(3, "Nazwa użytkownika musi mieć co najmniej 3 znaki")
-  .max(20, "Nazwa użytkownika może mieć maksymalnie 20 znaków")
-  .regex(
-    /^[a-zA-Z0-9_]+$/,
-    "Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślenia"
-  )
+  .min(3, translateMessage("generated.m0841"))
+  .max(20, translateMessage("generated.m0842"))
+  .regex(/^[a-zA-Z0-9_]+$/, translateMessage("generated.m0843"))
 
 export const UserFormSchema = z.object({
   username: usernameSchema,

@@ -5,6 +5,7 @@ import {
   ThermometerIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { translateMessage } from "@/i18n/translate-message"
 
 interface RackParametersCardProps {
   maxElementSize: { width: number; height: number; depth: number }
@@ -20,7 +21,7 @@ export function RackParametersCard({
   const parameters = [
     {
       icon: RulerIcon,
-      label: "Max rozmiar elementu",
+      label: translateMessage("generated.m0501"),
       value: `${maxElementSize.width} × ${maxElementSize.height} × ${maxElementSize.depth}`,
       unit: "mm",
       color: "text-blue-500",
@@ -28,7 +29,7 @@ export function RackParametersCard({
     },
     {
       icon: ThermometerIcon,
-      label: "Zakres temperatur",
+      label: translateMessage("generated.m0502"),
       value: `${tempRange.min}°C – ${tempRange.max}°C`,
       unit: null,
       color: "text-orange-500",
@@ -36,7 +37,7 @@ export function RackParametersCard({
     },
     {
       icon: GridViewIcon,
-      label: "Wymiary siatki",
+      label: translateMessage("generated.m0503"),
       value: `${gridDimensions.rows} × ${gridDimensions.cols}`,
       unit: "miejsc",
       color: "text-primary",
@@ -54,7 +55,9 @@ export function RackParametersCard({
             icon={Settings01Icon}
           />
         </div>
-        <h3 className="font-semibold text-sm">Parametry regału</h3>
+        <h3 className="font-semibold text-sm">
+          {translateMessage("generated.m0504")}
+        </h3>
       </div>
 
       {/* Parameters List */}

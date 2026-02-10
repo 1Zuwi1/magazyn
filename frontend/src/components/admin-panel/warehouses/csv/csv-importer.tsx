@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { useCsvImporter } from "../../hooks/use-csv-importer"
 import { FileUploader } from "./file-uploader"
@@ -69,7 +70,7 @@ export function CsvImporter<T extends CsvImporterType>({
   if (type === "warehouse") {
     dialogTitle = "Importuj magazyny z CSV"
   } else if (type === "rack") {
-    dialogTitle = "Importuj regały z CSV"
+    dialogTitle = translateMessage("generated.m0329")
   }
 
   const labels = useMemo(() => {
@@ -100,7 +101,7 @@ export function CsvImporter<T extends CsvImporterType>({
       <DialogTrigger
         className={cn(buttonVariants({ variant: "default" }), "w-fit gap-2")}
       >
-        Importuj CSV
+        {translateMessage("generated.m0330")}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] min-w-fit overflow-auto sm:min-w-125">
         <DialogHeader>
@@ -128,7 +129,7 @@ export function CsvImporter<T extends CsvImporterType>({
                 }}
                 variant="destructive"
               >
-                Usuń
+                {translateMessage("generated.m0230")}
               </Button>
               <Button
                 disabled={isImporting}
@@ -136,7 +137,7 @@ export function CsvImporter<T extends CsvImporterType>({
                   await confirmImport()
                 }}
               >
-                Importuj
+                {translateMessage("generated.m0946")}
                 <HugeiconsIcon
                   className="ml-2 size-4"
                   icon={ArrowRight01Icon}
@@ -149,7 +150,7 @@ export function CsvImporter<T extends CsvImporterType>({
               onClick={() => setOpen(false)}
               variant="outline"
             >
-              Anuluj
+              {translateMessage("generated.m0885")}
             </Button>
           )}
         </DialogFooter>

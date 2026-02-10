@@ -4,6 +4,7 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { translateMessage } from "@/i18n/translate-message"
 import type { OutboundPickSlot, OutboundPlan } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
 import { Button } from "../../ui/button"
@@ -62,25 +63,31 @@ export function OutboundPickList({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              Pozycje do pobrania
+              {translateMessage("generated.m0694")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              {plan.itemName} — wybierz pozycje do zdjęcia z regałów.
+              {translateMessage("generated.m0695", { value0: plan.itemName })}
             </p>
           </div>
         </div>
 
         <div className="mb-4 grid grid-cols-3 gap-2">
           <div className="rounded-xl border bg-card/40 p-3 text-center">
-            <p className="text-muted-foreground text-xs">Żądano</p>
+            <p className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0696")}
+            </p>
             <p className="font-semibold text-lg">{plan.requestedQuantity}</p>
           </div>
           <div className="rounded-xl border bg-card/40 p-3 text-center">
-            <p className="text-muted-foreground text-xs">Dostępne</p>
+            <p className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0697")}
+            </p>
             <p className="font-semibold text-lg">{plan.availableQuantity}</p>
           </div>
           <div className="rounded-xl border bg-card/40 p-3 text-center">
-            <p className="text-muted-foreground text-xs">Wybrano</p>
+            <p className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0943")}
+            </p>
             <p className="font-semibold text-lg">{selectedSlots.length}</p>
           </div>
         </div>
@@ -104,7 +111,9 @@ export function OutboundPickList({
               icon={AlertCircleIcon}
             />
             <p className="text-destructive text-sm">
-              {plan.expiredQuantity} pozycji straciło ważność.
+              {translateMessage("generated.m0698", {
+                value0: plan.expiredQuantity,
+              })}
             </p>
           </div>
         ) : null}
@@ -146,21 +155,36 @@ export function OutboundPickList({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-sm">
-                        Regał {slot.rackMarker}
+                        {translateMessage("generated.m0418", {
+                          value0: slot.rackMarker,
+                        })}
                       </p>
                       <Badge variant="outline">
-                        P:{slot.positionX} R:{slot.positionY}
+                        {translateMessage("generated.m1084", {
+                          value0: slot.positionX,
+                          value1: slot.positionY,
+                        })}
                       </Badge>
                       {expired ? (
-                        <Badge variant="destructive">Wygasło</Badge>
+                        <Badge variant="destructive">
+                          {translateMessage("generated.m0482")}
+                        </Badge>
                       ) : null}
                     </div>
                     <p className="mt-1 font-mono text-muted-foreground text-xs">
                       {slot.assortmentCode}
                     </p>
                     <div className="mt-1 flex gap-3 text-muted-foreground text-xs">
-                      <span>Przyjęto: {formatDate(slot.createdAt)}</span>
-                      <span>Wygasa: {formatDate(slot.expiresAt)}</span>
+                      <span>
+                        {translateMessage("generated.m1085", {
+                          value0: formatDate(slot.createdAt),
+                        })}
+                      </span>
+                      <span>
+                        {translateMessage("generated.m1086", {
+                          value0: formatDate(slot.expiresAt),
+                        })}
+                      </span>
                     </div>
                   </div>
                 </button>
@@ -178,7 +202,9 @@ export function OutboundPickList({
             onClick={onConfirm}
             type="button"
           >
-            Potwierdź pobranie ({selectedSlots.length})
+            {translateMessage("generated.m0699", {
+              value0: selectedSlots.length,
+            })}
           </Button>
         </div>
       </div>

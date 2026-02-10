@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Skeleton } from "@/components/ui/skeleton"
 import useLinkedMethods from "@/hooks/use-linked-methods"
+import { translateMessage } from "@/i18n/translate-message"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   Check2FASchema,
@@ -70,12 +71,12 @@ export function TwoFactorVerificationDialog({
     method,
   }) => {
     if (method === "AUTHENTICATOR") {
-      return "Wpisz kod z aplikacji uwierzytelniającej."
+      return translateMessage("generated.m0567")
     }
     if (method === "PASSKEYS") {
-      return "Potwierdź przy użyciu klucza bezpieczeństwa."
+      return translateMessage("generated.m0643")
     }
-    return "Wyślemy jednorazowy kod na wybraną metodę."
+    return translateMessage("generated.m0644")
   }
 
   const resolvedCopy: PasswordVerificationCopy = (() => {
@@ -151,7 +152,7 @@ export function TwoFactorVerificationDialog({
     } catch (e) {
       const message = FetchError.isError(e)
         ? e.message
-        : "Kod jest nieprawidłowy. Spróbuj ponownie."
+        : translateMessage("generated.m0645")
       setIsVerified(false)
       setVerificationError(message)
       toast.error(message)
@@ -160,16 +161,16 @@ export function TwoFactorVerificationDialog({
     }
   }
 
-  const resolvedTitle = title ?? copy?.title ?? "Potwierdź 2FA przed zmianą"
-  const resolvedDescription =
-    "To dodatkowy krok bezpieczeństwa. Potwierdź swoją tożsamość, aby kontynuować."
+  const resolvedTitle =
+    title ?? copy?.title ?? translateMessage("generated.m0565")
+  const resolvedDescription = translateMessage("generated.m0646")
   const passkeyDescription =
     typeof resolvedCopy.description === "function"
       ? resolvedCopy.description({ method: "PASSKEYS" })
       : resolvedCopy.description
   const passkeyVerifiedTitle = copy?.verifiedTitle ?? "Zweryfikowano"
   const passkeyVerifiedDescription =
-    copy?.verifiedDescription ?? "Możesz bezpiecznie kontynuować."
+    copy?.verifiedDescription ?? translateMessage("generated.m0647")
 
   const handlePasskeyVerified = () => {
     setIsVerified(true)
@@ -203,7 +204,7 @@ export function TwoFactorVerificationDialog({
             </Alert>
           ) : (
             <PasskeyLogin
-              label="Zweryfikuj kluczem bezpieczeństwa"
+              label={translateMessage("generated.m0047")}
               onSuccess={handlePasskeyVerified}
               redirectTo={null}
               showSeparator={false}
@@ -247,7 +248,7 @@ export function TwoFactorVerificationDialog({
             className="text-muted-foreground text-xs uppercase tracking-wide"
             id="verification-method-label"
           >
-            Metoda weryfikacji
+            {translateMessage("generated.m0648")}
           </Label>
           {isMethodsPending && (
             <div className="space-y-2">
@@ -270,10 +271,10 @@ export function TwoFactorVerificationDialog({
                 size={20}
               />
               <p className="font-medium text-foreground/80 text-sm">
-                Nie udało się załadować metod weryfikacji
+                {translateMessage("generated.m0649")}
               </p>
               <p className="text-muted-foreground text-xs">
-                Zamknij okno i spróbuj ponownie.
+                {translateMessage("generated.m0650")}
               </p>
             </div>
           )}

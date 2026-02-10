@@ -1,5 +1,6 @@
 import { Edges, Html, useCursor } from "@react-three/drei"
 import { useState } from "react"
+import { translateMessage } from "@/i18n/translate-message"
 import { useWarehouseStore } from "../store"
 import type { Rack3D } from "../types"
 import { RACK_ZONE_SIZE } from "../types"
@@ -152,12 +153,18 @@ function RackInstance({
           <div className="rounded border border-white/10 bg-slate-950/80 px-2 py-1 text-slate-100 text-xs">
             <div className="font-bold">{rack.code}</div>
             <div>
-              {Math.round(occupancy)}% zajęte • {rack.grid.cols}×
-              {rack.grid.rows}
+              {translateMessage("generated.m1077", {
+                value0: Math.round(occupancy),
+                value1: rack.grid.cols,
+                value2: rack.grid.rows,
+              })}
             </div>
             <div className="text-slate-400">
-              Maks: {rack.maxElementSize.width}×{rack.maxElementSize.height}×
-              {rack.maxElementSize.depth} mm
+              {translateMessage("generated.m1078", {
+                value0: rack.maxElementSize.width,
+                value1: rack.maxElementSize.height,
+                value2: rack.maxElementSize.depth,
+              })}
             </div>
           </div>
         </Html>

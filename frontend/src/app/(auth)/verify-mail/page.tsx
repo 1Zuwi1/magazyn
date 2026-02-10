@@ -11,6 +11,7 @@ import { useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
+import { translateMessage } from "@/i18n/translate-message"
 import { apiFetch } from "@/lib/fetcher"
 import { VerifyMailSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -29,7 +30,7 @@ function VerifyMailContent() {
   useEffect(() => {
     if (!token) {
       setState("error")
-      setErrorMessage("Brak tokenu weryfikacyjnego w adresie URL.")
+      setErrorMessage(translateMessage("generated.m0057"))
       return
     }
 
@@ -50,9 +51,7 @@ function VerifyMailContent() {
 
       if (err) {
         setState("error")
-        setErrorMessage(
-          err.message || "Wystąpił błąd podczas weryfikacji. Spróbuj ponownie."
-        )
+        setErrorMessage(err.message || translateMessage("generated.m0058"))
         return
       }
 
@@ -88,8 +87,8 @@ function VerifyMailContent() {
             <Link className="block" href="/login">
               <Button className="w-full" size="lg">
                 {state === "success"
-                  ? "Przejdź do logowania"
-                  : "Wróć do logowania"}
+                  ? translateMessage("generated.m0059")
+                  : translateMessage("generated.m0060")}
               </Button>
             </Link>
           </div>
@@ -108,14 +107,16 @@ function LoadingState() {
         <HugeiconsIcon className="size-7 text-primary" icon={Mail01Icon} />
       </div>
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-lg">Weryfikacja adresu e-mail</h1>
+        <h1 className="font-semibold text-lg">
+          {translateMessage("generated.m0061")}
+        </h1>
         <p className="text-muted-foreground text-sm">
-          Proszę czekać, trwa weryfikacja Twojego adresu e-mail...
+          {translateMessage("generated.m0062")}
         </p>
       </div>
       <div className="flex items-center gap-2 text-muted-foreground text-xs">
         <Spinner className="size-3" />
-        <span>Przetwarzanie</span>
+        <span>{translateMessage("generated.m0877")}</span>
       </div>
     </div>
   )
@@ -131,15 +132,16 @@ function SuccessState() {
         />
       </div>
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-lg">E-mail zweryfikowany</h1>
+        <h1 className="font-semibold text-lg">
+          {translateMessage("generated.m0063")}
+        </h1>
         <p className="text-muted-foreground text-sm">
-          Twój adres e-mail został pomyślnie zweryfikowany. Możesz teraz
-          zalogować się na swoje konto.
+          {translateMessage("generated.m0064")}
         </p>
       </div>
       <div className="w-full rounded-lg bg-emerald-500/5 p-3 ring-1 ring-emerald-500/20">
         <p className="text-emerald-600 text-xs dark:text-emerald-400">
-          Weryfikacja zakończona pomyślnie. Twoje konto jest teraz aktywne.
+          {translateMessage("generated.m0065")}
         </p>
       </div>
     </div>
@@ -156,13 +158,14 @@ function ErrorState({ message }: { message: string }) {
         />
       </div>
       <div className="space-y-1.5">
-        <h1 className="font-semibold text-lg">Weryfikacja nieudana</h1>
+        <h1 className="font-semibold text-lg">
+          {translateMessage("generated.m0066")}
+        </h1>
         <p className="text-muted-foreground text-sm">{message}</p>
       </div>
       <div className="w-full rounded-lg bg-destructive/5 p-3 ring-1 ring-destructive/20">
         <p className="text-destructive text-xs">
-          Jeśli problem się powtarza, skontaktuj się z administratorem lub
-          spróbuj zarejestrować się ponownie.
+          {translateMessage("generated.m0067")}
         </p>
       </div>
     </div>

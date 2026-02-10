@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { translateMessage } from "@/i18n/translate-message"
 
 export default function PendingVerificationPage() {
   return (
@@ -22,33 +23,31 @@ export default function PendingVerificationPage() {
             />
           </div>
           <CardTitle className="mt-4 text-2xl">
-            Oczekiwanie na weryfikację
+            {translateMessage("generated.m0139")}
           </CardTitle>
           <CardDescription>
-            Twoje konto oczekuje na akceptację przez administratora.
+            {translateMessage("generated.m0140")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground text-sm">
-            Twoja rejestracja została przyjęta i oczekuje na weryfikację przez
-            administratora. Zostaniesz powiadomiony, gdy Twoje konto zostanie
-            aktywowane. Prosimy o cierpliwość.
+            {translateMessage("generated.m0141")}
           </p>
           <div className="rounded-md bg-muted p-4">
             <p className="text-sm">
-              <span className="font-semibold">Co teraz?</span>
+              <span className="font-semibold">
+                {translateMessage("generated.m0142")}
+              </span>
             </p>
             <ul className="mt-2 list-inside list-disc text-left text-muted-foreground text-sm">
-              <li>Oczekuj na wiadomość e-mail z potwierdzeniem</li>
-              <li>Sprawdzaj swoją skrzynkę odbiorczą regularnie</li>
-              <li>
-                Skontaktuj się z administratorem, jeśli to potrwa dłużej niż 24h
-              </li>
+              <li>{translateMessage("generated.m0143")}</li>
+              <li>{translateMessage("generated.m0144")}</li>
+              <li>{translateMessage("generated.m0145")}</li>
             </ul>
           </div>
           <Link href="/login">
             <Button className="w-full" variant="outline">
-              Wróć do strony logowania
+              {translateMessage("generated.m0146")}
             </Button>
           </Link>
         </CardContent>

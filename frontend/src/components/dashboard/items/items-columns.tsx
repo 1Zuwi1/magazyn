@@ -16,6 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 import type { ItemStats } from "./types"
@@ -24,7 +25,9 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
   {
     accessorKey: "definition.name",
     header: ({ column }) => (
-      <SortableHeader column={column}>Nazwa</SortableHeader>
+      <SortableHeader column={column}>
+        {translateMessage("generated.m0922")}
+      </SortableHeader>
     ),
     cell: ({ row }) => {
       const definition = row.original.definition
@@ -55,7 +58,9 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
   {
     accessorKey: "definition.category",
     header: ({ column }) => (
-      <SortableHeader column={column}>Kategoria</SortableHeader>
+      <SortableHeader column={column}>
+        {translateMessage("generated.m0979")}
+      </SortableHeader>
     ),
     cell: ({ row }) => (
       <Badge variant="secondary">{row.original.definition.category}</Badge>
@@ -65,11 +70,13 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
   {
     accessorKey: "totalQuantity",
     header: ({ column }) => (
-      <SortableHeader column={column}>Ilość</SortableHeader>
+      <SortableHeader column={column}>
+        {translateMessage("generated.m0473")}
+      </SortableHeader>
     ),
     cell: ({ row }) => (
       <div className="font-medium font-mono">
-        {row.original.totalQuantity} szt.
+        {row.original.totalQuantity} {translateMessage("generated.m0984")}
       </div>
     ),
     enableSorting: true,
@@ -77,36 +84,50 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
   {
     accessorKey: "daysUntilExpiry",
     header: ({ column }) => (
-      <SortableHeader column={column}>Ilość</SortableHeader>
+      <SortableHeader column={column}>
+        {translateMessage("generated.m0473")}
+      </SortableHeader>
     ),
     cell: ({ row }) => {
       const { daysUntilExpiry } = row.original
       if (typeof daysUntilExpiry === "number") {
-        return <Badge variant="secondary">{daysUntilExpiry} dni</Badge>
+        return (
+          <Badge variant="secondary">
+            {translateMessage("generated.m1105", { value0: daysUntilExpiry })}
+          </Badge>
+        )
       }
-      return <Badge variant="outline">Brak daty</Badge>
+      return (
+        <Badge variant="outline">{translateMessage("generated.m0464")}</Badge>
+      )
     },
   },
   {
     accessorKey: "definition.isDangerous",
     header: ({ column }) => (
-      <SortableHeader column={column}>Niebezpieczeństwo</SortableHeader>
+      <SortableHeader column={column}>
+        {translateMessage("generated.m0474")}
+      </SortableHeader>
     ),
     cell: ({ row }) =>
       row.original.definition.isDangerous ? (
-        <Badge variant="destructive">Niebezpieczny</Badge>
+        <Badge variant="destructive">
+          {translateMessage("generated.m0925")}
+        </Badge>
       ) : (
-        <Badge variant="outline">Bezpieczny</Badge>
+        <Badge variant="outline">{translateMessage("generated.m0933")}</Badge>
       ),
     enableSorting: true,
   },
   {
     id: "actions",
-    header: () => <StaticHeader>Akcje</StaticHeader>,
+    header: () => (
+      <StaticHeader>{translateMessage("generated.m0900")}</StaticHeader>
+    ),
     cell: ({ row }) => {
       return (
         <DropdownMenu>
-          <DropdownMenuTrigger aria-label="Otwórz menu">
+          <DropdownMenuTrigger aria-label={translateMessage("generated.m0227")}>
             <HugeiconsIcon
               className={cn(
                 buttonVariants({ variant: "ghost", size: "icon-xs" })
@@ -121,7 +142,7 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
               }}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
-              Edytuj
+              {translateMessage("generated.m0934")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
@@ -130,7 +151,7 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
               }}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
-              Usuń
+              {translateMessage("generated.m0230")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

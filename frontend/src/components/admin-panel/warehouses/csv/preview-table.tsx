@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { MAX_PREVIEW_ROWS } from "./utils/constants"
 import { normalizeKey } from "./utils/csv-utils"
@@ -53,7 +54,7 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
             ))
           ) : (
             <div className="rounded-md border p-6 text-center text-muted-foreground">
-              Brak danych do wyświetlenia
+              {translateMessage("generated.m0337")}
             </div>
           )}
         </div>
@@ -98,7 +99,7 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
                       className="h-24 text-center text-muted-foreground"
                       colSpan={columns.length}
                     >
-                      Brak danych do wyświetlenia
+                      {translateMessage("generated.m0337")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -110,9 +111,16 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
 
       <div className="text-left text-muted-foreground text-sm">
         {hasMoreRows
-          ? `Wyświetlono ${previewRows.length} z ${rows.length} ${pluralize(rows.length, "wiersz", "wiersze", "wierszy")}`
+          ? translateMessage("generated.m0338", {
+              value0: previewRows.length,
+              value1: rows.length,
+              value2: pluralize(rows.length, "wiersz", "wiersze", "wierszy"),
+            })
           : rows.length > 0 &&
-            `Wyświetlono ${rows.length} ${pluralize(rows.length, "wiersz", "wiersze", "wierszy")}`}
+            translateMessage("generated.m0339", {
+              value0: rows.length,
+              value1: pluralize(rows.length, "wiersz", "wiersze", "wierszy"),
+            })}
       </div>
     </div>
   )

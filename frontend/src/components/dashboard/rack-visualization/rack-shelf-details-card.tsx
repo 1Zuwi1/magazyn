@@ -8,6 +8,7 @@ import { format } from "date-fns"
 import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { translateMessage } from "@/i18n/translate-message"
 import type { Rack, RackAssortment } from "@/lib/schemas"
 import type { SlotCoordinates } from "../types"
 import { getSlotCoordinate } from "../utils/helpers"
@@ -61,11 +62,16 @@ export function RackShelfDetailsCard({
             <HugeiconsIcon className="size-4 text-primary" icon={Tag01Icon} />
           </div>
           <div>
-            <h3 className="font-semibold text-sm">Szczegóły półki</h3>
+            <h3 className="font-semibold text-sm">
+              {translateMessage("generated.m0505")}
+            </h3>
             <p className="text-muted-foreground text-xs">
               {selectedPosition
-                ? `Rząd ${selectedPosition.row + 1}, Półka ${selectedPosition.col + 1}`
-                : "Wybierz półkę"}
+                ? translateMessage("generated.m0506", {
+                    value0: selectedPosition.row + 1,
+                    value1: selectedPosition.col + 1,
+                  })
+                : translateMessage("generated.m0507")}
             </p>
           </div>
         </div>
@@ -78,7 +84,7 @@ export function RackShelfDetailsCard({
           )}
           {selectedPosition && (
             <Button onClick={onClearSelection} size="sm" variant="ghost">
-              Wyczyść
+              {translateMessage("generated.m0413")}
             </Button>
           )}
         </div>
@@ -93,10 +99,10 @@ export function RackShelfDetailsCard({
             />
           </div>
           <p className="font-medium text-muted-foreground text-sm">
-            Kliknij na półkę
+            {translateMessage("generated.m0416")}
           </p>
           <p className="text-muted-foreground/70 text-xs">
-            aby zobaczyć szczegóły elementu
+            {translateMessage("generated.m0417")}
           </p>
         </div>
       )}
@@ -110,13 +116,16 @@ export function RackShelfDetailsCard({
             />
           </div>
           <p className="font-medium text-muted-foreground text-sm">
-            Pusta półka
+            {translateMessage("generated.m0414")}
           </p>
           <p className="text-muted-foreground/70 text-xs">
-            Brak elementu na pozycji
+            {translateMessage("generated.m0415")}
             <br />
             {selectedPosition
-              ? `Rząd ${selectedPosition.row + 1}, Półka ${selectedPosition.col + 1}`
+              ? translateMessage("generated.m0506", {
+                  value0: selectedPosition.row + 1,
+                  value1: selectedPosition.col + 1,
+                })
               : ""}
           </p>
         </div>
@@ -126,7 +135,7 @@ export function RackShelfDetailsCard({
         <div className="space-y-3 p-4">
           <div className="space-y-2 text-xs">
             <DetailRow
-              label="Nazwa przedmiotu"
+              label={translateMessage("generated.m0457")}
               value={
                 <span className="font-mono font-semibold">
                   {assortment.item.name}
@@ -134,7 +143,7 @@ export function RackShelfDetailsCard({
               }
             />
             <DetailRow
-              label="Kod"
+              label={translateMessage("generated.m0906")}
               value={
                 <span className="font-mono font-semibold">
                   {assortment.code}
@@ -142,15 +151,18 @@ export function RackShelfDetailsCard({
               }
             />
             <DetailRow
-              label="Pozycja"
+              label={translateMessage("generated.m0908")}
               value={
                 <span className="font-mono font-semibold">
-                  X: {assortment.positionX}, Y: {assortment.positionY}
+                  {translateMessage("generated.m1073", {
+                    value0: assortment.positionX,
+                    value1: assortment.positionY,
+                  })}
                 </span>
               }
             />
             <DetailRow
-              label="Utworzono"
+              label={translateMessage("generated.m0898")}
               value={
                 <span className="font-mono font-semibold">
                   {format(
@@ -161,7 +173,7 @@ export function RackShelfDetailsCard({
               }
             />
             <DetailRow
-              label="Wygasa"
+              label={translateMessage("generated.m0986")}
               value={
                 <span className="font-mono font-semibold">
                   {format(

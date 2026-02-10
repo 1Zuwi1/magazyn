@@ -12,6 +12,7 @@ import { FieldWithState } from "@/components/helpers/field-state"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldGroup } from "@/components/ui/field"
+import { translateMessage } from "@/i18n/translate-message"
 import { createApiSchema } from "@/lib/create-api-schema"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import { getAnimationStyle } from "@/lib/utils"
@@ -19,7 +20,7 @@ import { getAnimationStyle } from "@/lib/utils"
 const ForgotPasswordSchema = createApiSchema({
   POST: {
     input: z.object({
-      email: z.email("Nieprawidłowy format email"),
+      email: z.email(translateMessage("generated.m0028")),
     }),
     output: z.null(),
   },
@@ -37,15 +38,13 @@ export default function ForgotPassword() {
           method: "POST",
         })
 
-        toast.success(
-          "Jeśli konto z podanym emailem istnieje, otrzymasz wiadomość z instrukcjami resetowania hasła."
-        )
+        toast.success(translateMessage("generated.m0029"))
       } catch (e) {
         if (FetchError.isError(e)) {
           handleApiError(e)
           return
         }
-        toast.error("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.")
+        toast.error(translateMessage("generated.m0030"))
       }
     },
     validators: {
@@ -73,7 +72,7 @@ export default function ForgotPassword() {
               href="/login"
             >
               <HugeiconsIcon className="size-4" icon={ArrowLeft01Icon} />
-              Cofnij do logowania
+              {translateMessage("generated.m0031")}
             </Link>
           </div>
           <div
@@ -85,7 +84,7 @@ export default function ForgotPassword() {
               <Logo className="relative" />
             </div>
             <FieldDescription className="mt-2 max-w-70 text-center text-muted-foreground/80">
-              Wprowadź adres email, a wyślemy Ci link do resetowania hasła.
+              {translateMessage("generated.m0032")}
             </FieldDescription>
           </div>
           <div
@@ -97,8 +96,8 @@ export default function ForgotPassword() {
                 <FieldWithState
                   field={field}
                   icon={Mail01Icon}
-                  label="Email"
-                  placeholder="jan@kowalski.pl"
+                  label={translateMessage("generated.m0874")}
+                  placeholder={translateMessage("generated.m0875")}
                   type="email"
                 />
               )}
@@ -110,7 +109,7 @@ export default function ForgotPassword() {
                 size="lg"
                 type="submit"
               >
-                Wyślij link do resetowania
+                {translateMessage("generated.m0033")}
               </Button>
             </Field>
           </div>

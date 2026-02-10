@@ -8,6 +8,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { Column, SortDirection } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 function SortIcon({ isSorted }: { isSorted: false | SortDirection }) {
@@ -60,11 +61,11 @@ export function SortableHeader<TData, TValue>({
     return <span className={className}>{children}</span>
   }
 
-  let sortingTitle = "Wyczyść sortowanie"
+  let sortingTitle = translateMessage("generated.m0477")
   if (nextSortingOrder === "asc") {
-    sortingTitle = "Sortuj rosnąco"
+    sortingTitle = translateMessage("generated.m0478")
   } else if (nextSortingOrder === "desc") {
-    sortingTitle = "Sortuj malejąco"
+    sortingTitle = translateMessage("generated.m0479")
   }
 
   return (

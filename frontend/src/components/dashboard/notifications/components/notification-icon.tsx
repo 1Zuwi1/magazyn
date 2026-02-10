@@ -11,9 +11,9 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import { formatDistanceToNow } from "date-fns"
-import { pl } from "date-fns/locale"
 import { AnimatePresence, motion } from "framer-motion"
 import Link from "next/link"
+import { useLocale } from "next-intl"
 import { type ReactNode, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -30,6 +30,8 @@ import useNotifications, {
   useMarkBulkNotifications,
   useMarkNotification,
 } from "@/hooks/use-notifications"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { getNotificationTitle } from "../../utils/helpers"
 
@@ -69,6 +71,9 @@ function getStatusConfig(status: string) {
 }
 
 export function NotificationInbox() {
+  const locale = useLocale()
+  const dateFnsLocale = getDateFnsLocale(locale)
+
   const [open, setOpen] = useState(false)
   const {
     data: notificationsData,
@@ -143,9 +148,11 @@ export function NotificationInbox() {
             icon={InboxIcon}
           />
         </div>
-        <p className="mt-3 font-medium">Brak powiadomień</p>
+        <p className="mt-3 font-medium">
+          {translateMessage("generated.m0487")}
+        </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Wszystko wygląda dobrze!
+          {translateMessage("generated.m0488")}
         </p>
       </motion.div>
     )
@@ -198,7 +205,7 @@ export function NotificationInbox() {
                   <span className="shrink-0 text-[10px] text-muted-foreground">
                     {formatDistanceToNow(notification.createdAt, {
                       addSuffix: false,
-                      locale: pl,
+                      locale: dateFnsLocale,
                     })}
                   </span>
                 </div>
@@ -232,7 +239,7 @@ export function NotificationInbox() {
           buttonVariants({ variant: "ghost", size: "icon" }),
           "relative mr-2"
         )}
-        title="Powiadomienia"
+        title={translateMessage("generated.m0988")}
       >
         <HugeiconsIcon
           className="size-5 text-muted-foreground transition-colors group-hover:text-foreground"
@@ -262,10 +269,12 @@ export function NotificationInbox() {
 
           <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold">Powiadomienia</h3>
+              <h3 className="font-semibold">
+                {translateMessage("generated.m0988")}
+              </h3>
               {unreadCount > 0 && (
                 <Badge className="h-5 px-1.5 text-[10px]" variant="secondary">
-                  {unreadCount} nowe
+                  {translateMessage("generated.m1098", { value0: unreadCount })}
                 </Badge>
               )}
             </div>
@@ -277,7 +286,7 @@ export function NotificationInbox() {
               variant="ghost"
             >
               <HugeiconsIcon className="size-3.5" icon={TickDouble02Icon} />
-              Przeczytaj wszystkie
+              {translateMessage("generated.m0489")}
             </Button>
           </div>
         </div>
@@ -290,7 +299,7 @@ export function NotificationInbox() {
             href="/dashboard/notifications"
             onClick={() => setOpen(false)}
           >
-            Zobacz wszystkie
+            {translateMessage("generated.m0249")}
             <HugeiconsIcon className="size-3.5" icon={ArrowRight02Icon} />
           </Link>
         </div>

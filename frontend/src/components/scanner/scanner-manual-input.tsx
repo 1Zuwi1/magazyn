@@ -3,6 +3,7 @@
 import { KeyboardIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { translateMessage } from "@/i18n/translate-message"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Label } from "../ui/label"
@@ -10,8 +11,8 @@ import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 
 const MODE_OPTIONS = [
-  { label: "Przyjmowanie", value: "take" },
-  { label: "Zdejmowanie", value: "remove" },
+  { label: translateMessage("generated.m1026"), value: "take" },
+  { label: translateMessage("generated.m1027"), value: "remove" },
 ] as const
 
 type ScannerManualMode = (typeof MODE_OPTIONS)[number]["value"]
@@ -75,7 +76,7 @@ export function ScannerManualInput({
 
         {modeLabel ? (
           <p className="mx-10 mb-4 rounded-xl border border-border/70 bg-muted/30 px-4 py-2 text-center text-muted-foreground text-sm">
-            Jesteś w trybie:{" "}
+            {translateMessage("generated.m0733")}{" "}
             <span className="font-medium text-foreground">{modeLabel}</span>.
           </p>
         ) : null}
@@ -89,10 +90,10 @@ export function ScannerManualInput({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              Wprowadź kod ręcznie
+              {translateMessage("generated.m0750")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              Wpisz kod kreskowy lub QR, jeśli skaner nie może go odczytać.
+              {translateMessage("generated.m0751")}
             </p>
           </div>
         </div>
@@ -104,7 +105,7 @@ export function ScannerManualInput({
                 className="block font-medium text-sm"
                 htmlFor="manual-code"
               >
-                Kod produktu
+                {translateMessage("generated.m0752")}
               </Label>
               <Input
                 autoComplete="off"
@@ -112,7 +113,7 @@ export function ScannerManualInput({
                 id="manual-code"
                 onChange={(event) => setCode(event.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="np. 5901234123457"
+                placeholder={translateMessage("generated.m0753")}
                 ref={inputRef}
                 type="text"
                 value={code}
@@ -134,7 +135,7 @@ export function ScannerManualInput({
             onClick={handleSubmit}
             type="button"
           >
-            Wyszukaj produkt
+            {translateMessage("generated.m0754")}
           </Button>
         </div>
       </div>

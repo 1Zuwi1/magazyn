@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import useAssortments from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import useWarehouses from "@/hooks/use-warehouses"
+import { translateMessage } from "@/i18n/translate-message"
 import {
   formatNumber,
   OCCUPANCY_CRITICAL_THRESHOLD,
@@ -37,7 +38,7 @@ const getOccupancyCardVariant = (
 function DashboardHomeStatsSkeleton() {
   return (
     <section
-      aria-label="Ładowanie statystyk magazynowych"
+      aria-label={translateMessage("generated.m0436")}
       className="@container"
     >
       <div className="grid @5xl:grid-cols-4 @lg:grid-cols-2 gap-4">
@@ -150,7 +151,7 @@ export function DashboardHomeStats() {
     return (
       <section aria-labelledby="dashboard-stats">
         <h2 className="sr-only" id="dashboard-stats">
-          Statystyki magazynowe
+          {translateMessage("generated.m0437")}
         </h2>
         <ErrorEmptyState onRetry={handleRetry} />
       </section>
@@ -160,35 +161,37 @@ export function DashboardHomeStats() {
   return (
     <section aria-labelledby="dashboard-stats" className="@container">
       <h2 className="sr-only" id="dashboard-stats">
-        Statystyki magazynowe
+        {translateMessage("generated.m0437")}
       </h2>
 
       <div className="grid @5xl:grid-cols-4 @lg:grid-cols-2 gap-4">
         <StatCard
-          hint={`${formatNumber(totalRacks)} ${pluralize(totalRacks, "regał", "regały", "regałów")}`}
+          hint={`${formatNumber(totalRacks)} ${pluralize(totalRacks, translateMessage("generated.m0323"), translateMessage("generated.m0324"), translateMessage("generated.m0241"))}`}
           icon={Package}
-          label="Magazyny aktywne"
+          label={translateMessage("generated.m0438")}
           value={formatNumber(totalWarehouses)}
           variant="primary"
         />
         <StatCard
-          hint={`${formatNumber(warehousesData?.summary?.occupiedSlots ?? 0)} zajęte`}
+          hint={translateMessage("generated.m0439", {
+            value0: formatNumber(warehousesData?.summary?.occupiedSlots ?? 0),
+          })}
           icon={Analytics01Icon}
-          label="Łączna pojemność"
+          label={translateMessage("generated.m0440")}
           value={formatNumber(warehousesData?.summary?.totalCapacity ?? 0)}
           variant="default"
         />
         <StatCard
           hint={`${formatNumber(warehousesData?.summary?.freeSlots ?? 0)} wolnych`}
           icon={Clock01Icon}
-          label="Zajętość"
+          label={translateMessage("generated.m0427")}
           value={`${occupancyPercentage}%`}
           variant={getOccupancyCardVariant(occupancyPercentage)}
         />
         <StatCard
           hint={`${formatNumber(dangerousItemsCount)} oznaczonych jako niebezpieczne`}
           icon={GroupItemsIcon}
-          label="Produkty w obiegu"
+          label={translateMessage("generated.m0441")}
           value={formatNumber(productsInCirculation)}
           variant="default"
         />

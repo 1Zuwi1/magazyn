@@ -15,6 +15,7 @@ import { toast } from "sonner"
 import { SCAN_DELAY_MS, SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { translateMessage } from "@/i18n/translate-message"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   type IdentificationCandidate,
@@ -66,22 +67,20 @@ interface ScannerProps {
 
 export const TAB_TRIGGERS = [
   {
-    text: "Przyjmowanie",
+    text: translateMessage("generated.m1026"),
     action: "take",
   },
   {
-    text: "Zdejmowanie",
+    text: translateMessage("generated.m1027"),
     action: "remove",
   },
 ] as const
 
 const SCANNER_ERROR_MESSAGES = {
   ITEM_NOT_FOUND: "Nie znaleziono produktu dla zeskanowanego kodu.",
-  INVALID_INPUT: "Wprowadzono nieprawidłowe dane. Sprawdź i spróbuj ponownie.",
-  PLACEMENT_INVALID:
-    "Wybrany regał nie spełnia wymagań dla tego produktu. Zmień lokalizację.",
-  PLACEMENT_CONFLICT:
-    "Wybrana pozycja jest zajęta. Ustaw inną lokalizację i potwierdź ponownie.",
+  INVALID_INPUT: translateMessage("generated.m0769"),
+  PLACEMENT_INVALID: translateMessage("generated.m0770"),
+  PLACEMENT_CONFLICT: translateMessage("generated.m0771"),
 } as const
 
 type Step =
@@ -259,13 +258,11 @@ export function Scanner({
 
   const resolveCurrentWarehouseId = useCallback((): number => {
     if (!isHydrated) {
-      throw new Error(
-        "Trwa odczytywanie kontekstu magazynu. Spróbuj ponownie za chwilę."
-      )
+      throw new Error(translateMessage("generated.m0772"))
     }
 
     if (warehouseId === null) {
-      throw new Error("Nie znaleziono warehouseId dla bieżącej sesji.")
+      throw new Error(translateMessage("generated.m0773"))
     }
 
     return warehouseId
@@ -274,7 +271,7 @@ export function Scanner({
   const onScan = useCallback(async (rawCode: string) => {
     const code = rawCode.trim()
     if (!code) {
-      setError("Nie udało się odczytać kodu. Spróbuj ponownie.")
+      setError(translateMessage("generated.m0688"))
       return
     }
 
@@ -308,14 +305,9 @@ export function Scanner({
       setCurrentWarehouseId(null)
       setEditablePlacements([])
       setError(
-        getScannerErrorMessage(
-          scanError,
-          "Nie udało się pobrać danych produktu dla zeskanowanego kodu."
-        )
+        getScannerErrorMessage(scanError, translateMessage("generated.m0774"))
       )
-      toast.error(
-        "Nie udało się pobrać danych produktu dla zeskanowanego kodu."
-      )
+      toast.error(translateMessage("generated.m0774"))
       setScannerState({
         step: "camera",
         isLoading: false,
@@ -362,10 +354,7 @@ export function Scanner({
       setCurrentWarehouseId(null)
       setEditablePlacements([])
       setError(
-        getScannerErrorMessage(
-          scanError,
-          "Nie udało się pobrać danych produktu dla wprowadzonego kodu."
-        )
+        getScannerErrorMessage(scanError, translateMessage("generated.m0775"))
       )
       setScannerState({
         step: "manual-input",
@@ -391,8 +380,8 @@ export function Scanner({
       })
 
       if (!result.itemId) {
-        setError("Nie udało się rozpoznać przedmiotu ze zdjęcia.")
-        toast.error("Nie udało się rozpoznać przedmiotu ze zdjęcia.")
+        setError(translateMessage("generated.m0776"))
+        toast.error(translateMessage("generated.m0776"))
         setScannerState({
           step: "camera",
           isLoading: false,
@@ -409,10 +398,7 @@ export function Scanner({
       })
     } catch (photoError) {
       setError(
-        getScannerErrorMessage(
-          photoError,
-          "Nie udało się rozpoznać przedmiotu ze zdjęcia."
-        )
+        getScannerErrorMessage(photoError, translateMessage("generated.m0776"))
       )
       setScannerState({
         step: "camera",
@@ -452,7 +438,7 @@ export function Scanner({
         setError(
           getScannerErrorMessage(
             fetchError,
-            "Nie udało się pobrać danych przedmiotu."
+            translateMessage("generated.m0777")
           )
         )
         setScannerState({
@@ -491,7 +477,7 @@ export function Scanner({
         setError(
           getScannerErrorMessage(
             mismatchError,
-            "Nie udało się zgłosić niezgodności."
+            translateMessage("generated.m0778")
           )
         )
       } finally {
@@ -551,10 +537,7 @@ export function Scanner({
       }))
     } catch (planError) {
       setError(
-        getScannerErrorMessage(
-          planError,
-          "Nie udało się przygotować planu rozmieszczenia dla tego produktu."
-        )
+        getScannerErrorMessage(planError, translateMessage("generated.m0779"))
       )
       setScannerState((current) => ({
         ...current,
@@ -575,7 +558,7 @@ export function Scanner({
     }
 
     if (editablePlacements.length === 0) {
-      setError("Dodaj co najmniej jedną lokalizację przed potwierdzeniem.")
+      setError(translateMessage("generated.m0780"))
       return
     }
 
@@ -621,7 +604,7 @@ export function Scanner({
       setError(
         getScannerErrorMessage(
           confirmError,
-          "Nie udało się potwierdzić rozmieszczenia. Spróbuj ponownie."
+          translateMessage("generated.m0781")
         )
       )
       setScannerState((current) => ({
@@ -795,7 +778,7 @@ export function Scanner({
   const renderScannerFallback = useCallback(
     (_error: Error, reset: () => void) => (
       <ScannerErrorState
-        error="Wystąpił problem z działaniem skanera. Spróbuj ponownie."
+        error={translateMessage("generated.m1030")}
         onRetry={() => {
           handleReset()
           reset()
@@ -872,20 +855,20 @@ export function Scanner({
     if (step === "choose-method") {
       return (
         <ScannerChooseMethod
-          description="Wybierz sposób wskazania towaru do przyjęcia na magazyn."
-          manualDescription="Wpisz kod GS1-128 ręcznie, jeśli nie możesz go zeskanować."
-          manualLabel="Wprowadź kod ręcznie"
+          description={translateMessage("generated.m0782")}
+          manualDescription={translateMessage("generated.m1031")}
+          manualLabel={translateMessage("generated.m0750")}
           onCancel={() =>
             setScannerState((prev) => ({ ...prev, step: "choose-mode" }))
           }
           onManual={handleManualInputOpen}
           onScan={handleChooseMethodScan}
           onSelect={handleChooseMethodSelect}
-          scanDescription="Zeskanuj kod kreskowy lub QR z opakowania produktu."
+          scanDescription={translateMessage("generated.m1032")}
           scanLabel="Zeskanuj kod"
-          selectDescription="Wyszukaj produkt i wskaż ilość do przyjęcia."
+          selectDescription={translateMessage("generated.m1033")}
           selectLabel="Wybierz z listy"
-          title="Przyjmowanie towaru"
+          title={translateMessage("generated.m0783")}
         />
       )
     }
@@ -893,7 +876,7 @@ export function Scanner({
     if (step === "select-item") {
       return (
         <ScannerSelectItem
-          description="Znajdź produkt który chcesz przyjąć na magazyn."
+          description={translateMessage("generated.m0784")}
           onCancel={() =>
             setScannerState({
               step: "choose-method",
@@ -902,7 +885,7 @@ export function Scanner({
             })
           }
           onSelect={handleInboundItemSelected}
-          title="Wybierz produkt"
+          title={translateMessage("generated.m0714")}
         />
       )
     }
@@ -991,15 +974,15 @@ export function Scanner({
     // Default: show choose-method
     return (
       <ScannerChooseMethod
-        description="Wybierz sposób wskazania towaru do przyjęcia na magazyn."
+        description={translateMessage("generated.m0782")}
         onCancel={closeDialog}
         onScan={handleChooseMethodScan}
         onSelect={handleChooseMethodSelect}
-        scanDescription="Zeskanuj kod kreskowy lub QR z opakowania produktu."
+        scanDescription={translateMessage("generated.m1032")}
         scanLabel="Zeskanuj kod"
-        selectDescription="Wyszukaj produkt i wskaż ilość do przyjęcia."
+        selectDescription={translateMessage("generated.m1033")}
         selectLabel="Wybierz z listy"
-        title="Przyjmowanie towaru"
+        title={translateMessage("generated.m0783")}
       />
     )
   }
@@ -1036,15 +1019,15 @@ export function Scanner({
   } else if (step === "choose-mode") {
     content = (
       <ScannerChooseMethod
-        description="Wybierz, czy chcesz przyjąć towar na magazyn, czy zdjąć go z magazynu."
+        description={translateMessage("generated.m0785")}
         onCancel={closeDialog}
         onScan={handleChooseTakeMode}
         onSelect={handleChooseRemoveMode}
-        scanDescription="Rozpocznij przyjmowanie towaru i wskaż metodę działania."
+        scanDescription={translateMessage("generated.m1034")}
         scanLabel="Przyjmowanie"
-        selectDescription="Rozpocznij zdejmowanie towaru i wskaż metodę działania."
+        selectDescription={translateMessage("generated.m1035")}
         selectLabel="Zdejmowanie"
-        title="Wybierz tryb skanera"
+        title={translateMessage("generated.m0786")}
       />
     )
   } else if (step === "manual-input") {
@@ -1054,26 +1037,26 @@ export function Scanner({
     if (step === "choose-method") {
       content = (
         <ScannerChooseMethod
-          description="Wybierz sposób wskazania towaru do zdjęcia z magazynu."
-          manualDescription="Wpisz kod GS1-128 ręcznie, jeśli nie możesz go zeskanować."
-          manualLabel="Wprowadź kod ręcznie"
+          description={translateMessage("generated.m0675")}
+          manualDescription={translateMessage("generated.m1031")}
+          manualLabel={translateMessage("generated.m0750")}
           onCancel={() =>
             setScannerState((prev) => ({ ...prev, step: "choose-mode" }))
           }
           onManual={handleManualInputOpen}
           onScan={handleChooseMethodScan}
           onSelect={handleChooseMethodSelect}
-          scanDescription="Zeskanuj kod GS1-128 z etykiety asortymentu."
+          scanDescription={translateMessage("generated.m1012")}
           scanLabel="Zeskanuj kod"
-          selectDescription="Wyszukaj produkt i wskaż ilość do zdjęcia."
+          selectDescription={translateMessage("generated.m1013")}
           selectLabel="Wybierz z listy"
-          title="Zdejmowanie towaru"
+          title={translateMessage("generated.m0676")}
         />
       )
     } else if (step === "select-item") {
       content = (
         <ScannerSelectItem
-          description="Znajdź produkt który chcesz zdjąć z magazynu."
+          description={translateMessage("generated.m0713")}
           onCancel={() =>
             setScannerState({
               step: "choose-method",
@@ -1082,7 +1065,7 @@ export function Scanner({
             })
           }
           onSelect={handleOutboundItemSelected}
-          title="Wybierz produkt"
+          title={translateMessage("generated.m0714")}
         />
       )
     } else if (step === "camera") {
@@ -1125,13 +1108,13 @@ export function Scanner({
         dialogTrigger
       ) : (
         <DialogTrigger
-          aria-label="Skaner kodów"
+          aria-label={translateMessage("generated.m0666")}
           className={buttonVariants({
             variant: "ghost",
             size: "icon",
             className: "mr-1 ml-auto size-8 rounded-xl sm:size-10",
           })}
-          title="Skaner kodów"
+          title={translateMessage("generated.m0666")}
         >
           <HugeiconsIcon icon={QrCodeIcon} />
         </DialogTrigger>

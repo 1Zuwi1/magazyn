@@ -43,6 +43,7 @@ import useDeletePasskey from "@/hooks/use-delete-passkey"
 import { LINKED_2FA_METHODS_QUERY_KEY } from "@/hooks/use-linked-methods"
 import usePasskeys, { PASSKEYS_QUERY_KEY } from "@/hooks/use-passkeys"
 import useRenamePasskey from "@/hooks/use-rename-passkey"
+import { translateMessage } from "@/i18n/translate-message"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   type Passkey,
@@ -60,7 +61,7 @@ import { useTwoFactorVerificationDialog } from "./two-factor-verification-dialog
 
 const SUPPORT_LABELS = {
   checking: "Sprawdzanie",
-  supported: "Obsługiwane",
+  supported: translateMessage("generated.m0018"),
   unsupported: "Brak wsparcia",
 } as const
 
@@ -116,7 +117,7 @@ function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
             </div>
           </div>
           <p className="text-muted-foreground/70 text-xs">
-            Klucz #{passkey.id} • Aktywny
+            {translateMessage("generated.m1061", { value0: passkey.id })}
           </p>
         </div>
       </div>
@@ -135,7 +136,7 @@ function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
             icon={PencilEdit02Icon}
             size={14}
           />
-          <span className="sr-only">Zmień nazwę</span>
+          <span className="sr-only">{translateMessage("generated.m0521")}</span>
         </Button>
         <Button
           className="size-8 rounded-lg bg-destructive/5 hover:bg-destructive/10"
@@ -149,7 +150,7 @@ function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
             icon={Delete02Icon}
             size={14}
           />
-          <span className="sr-only">Usuń</span>
+          <span className="sr-only">{translateMessage("generated.m0230")}</span>
         </Button>
       </div>
     </div>
@@ -200,11 +201,10 @@ function PasskeysEmptyState() {
       </div>
       <div className="space-y-1">
         <p className="font-medium text-foreground/80 text-sm">
-          Brak kluczy bezpieczeństwa
+          {translateMessage("generated.m0522")}
         </p>
         <p className="max-w-60 text-muted-foreground text-xs">
-          Dodaj swój pierwszy klucz, aby logować się szybko i bezpiecznie bez
-          hasła.
+          {translateMessage("generated.m0523")}
         </p>
       </div>
     </div>
@@ -235,10 +235,10 @@ function PasskeysList({
         </div>
         <div className="space-y-1">
           <p className="font-medium text-foreground/80 text-sm">
-            Nie udało się załadować kluczy
+            {translateMessage("generated.m0524")}
           </p>
           <p className="text-muted-foreground text-xs">
-            Wystąpił problem podczas pobierania danych.
+            {translateMessage("generated.m0525")}
           </p>
         </div>
         {onRetry && (
@@ -247,7 +247,7 @@ function PasskeysList({
             onClick={onRetry}
             type="button"
           >
-            Spróbuj ponownie
+            {translateMessage("generated.m0075")}
           </button>
         )}
       </div>
@@ -312,12 +312,12 @@ export function PasskeysSection() {
 
   const handleAddPasskey = async () => {
     if (supportState !== "supported") {
-      toast.error("Twoje urządzenie nie obsługuje kluczy bezpieczeństwa.")
+      toast.error(translateMessage("generated.m0021"))
       return
     }
 
     if (!navigator.credentials) {
-      toast.error("Twoja przeglądarka nie obsługuje WebAuthn.")
+      toast.error(translateMessage("generated.m0022"))
       return
     }
 
@@ -345,10 +345,7 @@ export function PasskeysSection() {
           })
           return
         }
-        handleApiError(
-          startError,
-          "Nie udało się rozpocząć dodawania klucza bezpieczeństwa."
-        )
+        handleApiError(startError, translateMessage("generated.m0526"))
         return
       }
 
@@ -361,14 +358,14 @@ export function PasskeysSection() {
         toast.error(
           getWebAuthnErrorMessage(
             credentialError,
-            "Nie udało się utworzyć klucza bezpieczeństwa."
+            translateMessage("generated.m0527")
           )
         )
         return
       }
 
       if (!isPublicKeyCredential(credential)) {
-        toast.error("Nie udało się odczytać danych klucza bezpieczeństwa.")
+        toast.error(translateMessage("generated.m0026"))
         return
       }
 
@@ -414,17 +411,14 @@ export function PasskeysSection() {
         // Keep the dialog open, 2FA dialog will open
         return
       }
-      handleApiError(
-        finishError,
-        "Nie udało się zakończyć dodawania klucza bezpieczeństwa."
-      )
+      handleApiError(finishError, translateMessage("generated.m0528"))
       return
     }
 
     setIsNamingDialogOpen(false)
     setPendingCredentialJson(null)
     setNewKeyName("")
-    toast.success("Klucz bezpieczeństwa został dodany.")
+    toast.success(translateMessage("generated.m0529"))
     queryClient.invalidateQueries({ queryKey: PASSKEYS_QUERY_KEY })
     queryClient.invalidateQueries({ queryKey: LINKED_2FA_METHODS_QUERY_KEY })
   }
@@ -433,7 +427,7 @@ export function PasskeysSection() {
     setIsNamingDialogOpen(false)
     setPendingCredentialJson(null)
     setNewKeyName("")
-    toast.info("Dodawanie klucza zostało anulowane.")
+    toast.info(translateMessage("generated.m0530"))
   }
 
   const handleOpenRename = (passkey: Passkey) => {
@@ -454,7 +448,7 @@ export function PasskeysSection() {
           setIsRenameDialogOpen(false)
           setRenamingPasskey(null)
           setRenameValue("")
-          toast.success("Nazwa klucza została zmieniona.")
+          toast.success(translateMessage("generated.m0531"))
         },
       }
     )
@@ -477,7 +471,7 @@ export function PasskeysSection() {
         queryClient.invalidateQueries({
           queryKey: LINKED_2FA_METHODS_QUERY_KEY,
         })
-        toast.success("Klucz bezpieczeństwa został usunięty.")
+        toast.success(translateMessage("generated.m0532"))
       },
     })
   }
@@ -506,10 +500,10 @@ export function PasskeysSection() {
               </div>
               <div className="space-y-1.5">
                 <CardTitle className="text-lg tracking-tight">
-                  Klucze bezpieczeństwa
+                  {translateMessage("generated.m0512")}
                 </CardTitle>
                 <p className="max-w-70 text-muted-foreground text-sm leading-relaxed">
-                  Loguj się szybciej i bezpieczniej bez hasła.
+                  {translateMessage("generated.m0533")}
                 </p>
               </div>
             </div>
@@ -546,10 +540,10 @@ export function PasskeysSection() {
                 </div>
                 <div className="space-y-0.5">
                   <p className="font-semibold text-sm tracking-tight">
-                    Dodaj nowy klucz
+                    {translateMessage("generated.m0534")}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    Biometria, klucz sprzętowy lub PIN
+                    {translateMessage("generated.m0535")}
                   </p>
                 </div>
               </div>
@@ -561,7 +555,7 @@ export function PasskeysSection() {
                 type="button"
               >
                 <HugeiconsIcon icon={Key01Icon} size={16} />
-                Dodaj klucz
+                {translateMessage("generated.m0536")}
               </Button>
             </div>
           </div>
@@ -588,10 +582,10 @@ export function PasskeysSection() {
               />
             </div>
             <DialogTitle className="text-center">
-              Nazwij swój klucz bezpieczeństwa
+              {translateMessage("generated.m0537")}
             </DialogTitle>
             <DialogDescription className="text-center">
-              Nadaj nazwę, która pomoże Ci rozpoznać to urządzenie.
+              {translateMessage("generated.m0538")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 pt-2">
@@ -605,18 +599,18 @@ export function PasskeysSection() {
                   handleSaveNewPasskey()
                 }
               }}
-              placeholder="np. MacBook Pro, iPhone 15"
+              placeholder={translateMessage("generated.m0539")}
               value={newKeyName}
             />
             <p className="text-center text-muted-foreground/70 text-xs">
-              Maksymalnie 50 znaków
+              {translateMessage("generated.m0540")}
             </p>
           </div>
           <DialogFooter className="gap-2 pt-2 sm:gap-2">
             <DialogClose
               render={<Button className="flex-1" variant="outline" />}
             >
-              Anuluj
+              {translateMessage("generated.m0885")}
             </DialogClose>
             <Button
               className="flex-1"
@@ -624,7 +618,7 @@ export function PasskeysSection() {
               isLoading={isSavingName}
               onClick={handleSaveNewPasskey}
             >
-              Zapisz klucz
+              {translateMessage("generated.m0541")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -652,10 +646,10 @@ export function PasskeysSection() {
               />
             </div>
             <DialogTitle className="text-center">
-              Zmień nazwę klucza
+              {translateMessage("generated.m0542")}
             </DialogTitle>
             <DialogDescription className="text-center">
-              Wprowadź nową nazwę dla klucza bezpieczeństwa.
+              {translateMessage("generated.m0543")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 pt-2">
@@ -669,18 +663,18 @@ export function PasskeysSection() {
                   handleRename()
                 }
               }}
-              placeholder="np. MacBook Pro, iPhone 15"
+              placeholder={translateMessage("generated.m0539")}
               value={renameValue}
             />
             <p className="text-center text-muted-foreground/70 text-xs">
-              Maksymalnie 50 znaków
+              {translateMessage("generated.m0540")}
             </p>
           </div>
           <DialogFooter className="gap-2 pt-2 sm:gap-2">
             <DialogClose
               render={<Button className="flex-1" variant="outline" />}
             >
-              Anuluj
+              {translateMessage("generated.m0885")}
             </DialogClose>
             <Button
               className="flex-1"
@@ -688,7 +682,7 @@ export function PasskeysSection() {
               isLoading={renamePasskey.isPending}
               onClick={handleRename}
             >
-              Zapisz zmiany
+              {translateMessage("generated.m0544")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -713,20 +707,25 @@ export function PasskeysSection() {
                 size={24}
               />
             </AlertDialogMedia>
-            <AlertDialogTitle>Usuń klucz bezpieczeństwa?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {translateMessage("generated.m0545")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Klucz &ldquo;{deletingPasskey?.name}&rdquo; zostanie trwale
-              usunięty. Nie będzie można go użyć do logowania.
+              {translateMessage("generated.m0546", {
+                value0: deletingPasskey?.name ?? "",
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogCancel>
+              {translateMessage("generated.m0885")}
+            </AlertDialogCancel>
             <AlertDialogAction
               isLoading={deletePasskey.isPending}
               onClick={handleDelete}
               variant="destructive"
             >
-              Usuń klucz
+              {translateMessage("generated.m0548")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

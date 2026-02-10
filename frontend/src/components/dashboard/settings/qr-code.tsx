@@ -3,6 +3,7 @@
 import Image from "next/image"
 import QRCode from "qrcode"
 import { useEffect, useState } from "react"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { QR_CODE_DEFAULT_SIZE } from "./constants"
 
@@ -59,7 +60,7 @@ export function QRCodeDisplay({
         if (isCancelled) {
           return
         }
-        setError("Nie udało się wygenerować kodu QR")
+        setError(translateMessage("generated.m0578"))
         setDataUrl(null)
       }
     }
@@ -97,7 +98,7 @@ export function QRCodeDisplay({
   return (
     <div className={cn("overflow-hidden rounded-lg border", className)}>
       <Image
-        alt="Kod QR do zeskanowania"
+        alt={translateMessage("generated.m0579")}
         className="block"
         height={size}
         priority

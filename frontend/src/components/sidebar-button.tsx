@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 import type { NavigationItem } from "@/config/navigation"
 import { useSession } from "@/hooks/use-session"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { Button } from "./ui/button"
 import {
@@ -60,7 +61,9 @@ export default function SidebarButton({ item }: { item: NavigationItem }) {
               isActive={isActive}
               render={
                 <Button
-                  aria-label={`Wybierz kategorię ${item.title}`}
+                  aria-label={translateMessage("generated.m0787", {
+                    value0: item.title,
+                  })}
                   id={`button-${item.href}`}
                   onKeyDown={(event) => {
                     if (

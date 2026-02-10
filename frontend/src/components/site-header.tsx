@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Fragment } from "react/jsx-runtime"
+import { translateMessage } from "@/i18n/translate-message"
 import { NotificationInbox } from "./dashboard/notifications/components/notification-icon"
 import { Scanner } from "./scanner/scanner"
 import {
@@ -119,7 +120,9 @@ export default function SiteHeader() {
                   <DropdownMenu>
                     <DropdownMenuTrigger className="flex items-center gap-1">
                       <BreadcrumbEllipsis className="size-4" />
-                      <span className="sr-only">Toggle menu</span>
+                      <span className="sr-only">
+                        {translateMessage("generated.m0788")}
+                      </span>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                       {middleItems.map((item) => (

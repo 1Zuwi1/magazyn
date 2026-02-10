@@ -5,6 +5,7 @@ import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useLogout } from "@/hooks/use-session"
+import { translateMessage } from "@/i18n/translate-message"
 
 export function LogoutSection() {
   const router = useRouter()
@@ -16,16 +17,16 @@ export function LogoutSection() {
       router.replace("/login")
       router.refresh()
     } catch (error) {
-      handleApiError(error, "Nie udało się wylogować. Spróbuj ponownie.")
+      handleApiError(error, translateMessage("generated.m0516"))
     }
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Wylogowanie</CardTitle>
+        <CardTitle>{translateMessage("generated.m0999")}</CardTitle>
         <p className="text-muted-foreground text-sm">
-          Zakończ bieżącą sesję i wróć do ekranu logowania.
+          {translateMessage("generated.m0517")}
         </p>
       </CardHeader>
       <CardContent>
@@ -35,7 +36,7 @@ export function LogoutSection() {
           type="button"
           variant="destructive"
         >
-          Wyloguj się
+          {translateMessage("generated.m0518")}
         </Button>
       </CardContent>
     </Card>

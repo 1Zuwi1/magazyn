@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { AdminUser } from "@/hooks/use-admin-users"
+import { translateMessage } from "@/i18n/translate-message"
 import { getStatusLabel } from "../lib/user-utils"
 
 type AccountStatus = AdminUser["account_status"]
@@ -42,7 +43,7 @@ export function UsersFilterBar({
       <Input
         className="max-w-sm"
         onChange={(event) => onSearchChange(event.target.value)}
-        placeholder="Szukaj użytkowników..."
+        placeholder={translateMessage("generated.m0281")}
         type="search"
         value={search}
       />
@@ -63,7 +64,7 @@ export function UsersFilterBar({
         >
           <SelectTrigger className="w-fit pl-9" size="sm">
             <SelectValue
-              placeholder="Status"
+              placeholder={translateMessage("generated.m0895")}
               render={
                 <span>
                   {statusFilter
@@ -75,7 +76,7 @@ export function UsersFilterBar({
           </SelectTrigger>
           <SelectContent className="w-fit">
             <SelectItem value={ALL_STATUSES_VALUE}>
-              Wszystkie statusy
+              {translateMessage("generated.m0282")}
             </SelectItem>
             {STATUS_OPTIONS.map((status) => (
               <SelectItem key={status} value={status}>

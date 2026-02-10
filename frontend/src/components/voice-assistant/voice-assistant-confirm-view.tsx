@@ -1,6 +1,7 @@
 "use client"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { translateMessage } from "@/i18n/translate-message"
 
 interface VoiceAssistantConfirmViewProps {
   transcript: string
@@ -82,7 +83,9 @@ export function VoiceAssistantConfirmView({
           />
         </svg>
         <span
-          aria-label={`Pozostało ${secondsLeft} sekund`}
+          aria-label={translateMessage("generated.m0813", {
+            value0: secondsLeft,
+          })}
           aria-live="assertive"
           className="absolute font-bold text-foreground text-xl tabular-nums"
           role="timer"
@@ -93,11 +96,13 @@ export function VoiceAssistantConfirmView({
 
       <div className="max-w-xs space-y-1.5">
         <h2 className="font-semibold text-foreground text-lg tracking-tight">
-          Rozpoznano polecenie
+          {translateMessage("generated.m0814")}
         </h2>
         <p className="font-medium text-foreground/90 text-sm">{commandLabel}</p>
         <p className="rounded-lg bg-muted/40 px-3 py-1.5 text-muted-foreground text-xs leading-relaxed">
-          &bdquo;{transcript}&rdquo;
+          &bdquo;
+          {transcript}
+          &rdquo;
         </p>
       </div>
 
@@ -107,7 +112,7 @@ export function VoiceAssistantConfirmView({
           onClick={handleConfirm}
           type="button"
         >
-          Wykonaj teraz
+          {translateMessage("generated.m0817")}
         </Button>
         <Button
           className="rounded-full"
@@ -115,7 +120,7 @@ export function VoiceAssistantConfirmView({
           type="button"
           variant="ghost"
         >
-          Anuluj
+          {translateMessage("generated.m0885")}
         </Button>
       </div>
     </div>

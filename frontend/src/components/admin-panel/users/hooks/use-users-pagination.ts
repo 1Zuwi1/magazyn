@@ -1,4 +1,5 @@
 import type { AdminUsersList } from "@/hooks/use-admin-users"
+import { translateMessage } from "@/i18n/translate-message"
 import { TABLE_PAGE_SIZE } from "../lib/user-utils"
 
 interface UseUsersPaginationParams {
@@ -31,7 +32,9 @@ export function useUsersPagination({
   const currentPage = page + 1
   const firstVisible = usersCount > 0 ? page * TABLE_PAGE_SIZE + 1 : 0
   const lastVisible = page * TABLE_PAGE_SIZE + usersCount
-  const paginationSummaryText = isUsersPending ? "Ładowanie..." : null
+  const paginationSummaryText = isUsersPending
+    ? translateMessage("generated.m0316")
+    : null
 
   const handleSetPage = (nextPage: number) => {
     const boundedPage = Math.min(Math.max(nextPage, 1), totalPages)

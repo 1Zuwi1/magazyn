@@ -2,6 +2,7 @@ import { Location04Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useMemo } from "react"
 import { useInfiniteRacks } from "@/hooks/use-racks"
+import { translateMessage } from "@/i18n/translate-message"
 import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
 import { CancelButton } from "./cancel-button"
@@ -99,36 +100,47 @@ export function ScannerLocationsStep({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              Edytuj rozmieszczenie
+              {translateMessage("generated.m0745")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              Zmień pozycje ręcznie, jeśli chcesz umieścić towar w innych
-              miejscach.
+              {translateMessage("generated.m0746")}
             </p>
           </div>
         </div>
 
         <div className="mb-4 grid grid-cols-3 gap-2">
           <div className="rounded-xl border bg-card/40 p-3 text-center">
-            <p className="text-muted-foreground text-xs">Zgłoszono</p>
+            <p className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0747")}
+            </p>
             <p className="font-semibold text-lg">{plan.requestedQuantity}</p>
           </div>
           <div className="rounded-xl border bg-card/40 p-3 text-center">
-            <p className="text-muted-foreground text-xs">Przydzielono</p>
+            <p className="text-muted-foreground text-xs">
+              {translateMessage("generated.m1023")}
+            </p>
             <p className="font-semibold text-lg">{plan.allocatedQuantity}</p>
           </div>
           <div className="rounded-xl border bg-card/40 p-3 text-center">
-            <p className="text-muted-foreground text-xs">Brakuje</p>
+            <p className="text-muted-foreground text-xs">
+              {translateMessage("generated.m1024")}
+            </p>
             <p className="font-semibold text-lg">{plan.remainingQuantity}</p>
           </div>
         </div>
 
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Badge variant={plan.reserved ? "default" : "outline"}>
-            {plan.reserved ? "Rezerwacja aktywna" : "Bez rezerwacji"}
+            {plan.reserved
+              ? translateMessage("generated.m1055")
+              : translateMessage("generated.m1056")}
           </Badge>
           {reservedUntilLabel ? (
-            <Badge variant="outline">Do: {reservedUntilLabel}</Badge>
+            <Badge variant="outline">
+              {translateMessage("generated.m1102", {
+                value0: reservedUntilLabel,
+              })}
+            </Badge>
           ) : null}
         </div>
 
@@ -161,7 +173,7 @@ export function ScannerLocationsStep({
 
         <div className="space-y-3">
           <Button onClick={onAddPlacement} type="button" variant="outline">
-            Dodaj lokalizację
+            {translateMessage("generated.m0748")}
           </Button>
           <Button
             className="h-12 w-full rounded-xl"
@@ -170,7 +182,7 @@ export function ScannerLocationsStep({
             onClick={onConfirm}
             type="button"
           >
-            Potwierdź rozmieszczenie
+            {translateMessage("generated.m0749")}
           </Button>
         </div>
       </div>

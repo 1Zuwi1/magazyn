@@ -12,8 +12,8 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import { format, formatDistanceToNow } from "date-fns"
-import { pl } from "date-fns/locale"
 import Link from "next/link"
+import { useLocale } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { toTitleCase } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
@@ -31,6 +31,8 @@ import {
 import PaginationFull from "@/components/ui/pagination-component"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import useAlerts, { usePatchAlert } from "@/hooks/use-alerts"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { translateMessage } from "@/i18n/translate-message"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type { AlertsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
@@ -39,24 +41,37 @@ import { ADMIN_NAV_LINKS } from "../lib/constants"
 
 type AlertsList = InferApiOutput<typeof AlertsSchema, "GET">
 type AlertItem = AlertsList["content"][number]
+type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
 
 const ALERT_TYPE_OPTIONS = [
-  { value: "WEIGHT_EXCEEDED", label: "Przekroczenie wagi" },
-  { value: "TEMPERATURE_TOO_HIGH", label: "Temp. za wysoka" },
-  { value: "TEMPERATURE_TOO_LOW", label: "Temp. za niska" },
-  { value: "LOW_VISUAL_SIMILARITY", label: "Niska zgodność wizualna" },
-  { value: "ITEM_TEMPERATURE_TOO_HIGH", label: "Temp. produktu za wysoka" },
-  { value: "ITEM_TEMPERATURE_TOO_LOW", label: "Temp. produktu za niska" },
+  { value: "WEIGHT_EXCEEDED", label: translateMessage("generated.m0147") },
+  { value: "TEMPERATURE_TOO_HIGH", label: translateMessage("generated.m0148") },
+  { value: "TEMPERATURE_TOO_LOW", label: translateMessage("generated.m0149") },
+  {
+    value: "LOW_VISUAL_SIMILARITY",
+    label: translateMessage("generated.m0150"),
+  },
+  {
+    value: "ITEM_TEMPERATURE_TOO_HIGH",
+    label: translateMessage("generated.m0151"),
+  },
+  {
+    value: "ITEM_TEMPERATURE_TOO_LOW",
+    label: translateMessage("generated.m0152"),
+  },
   {
     value: "EMBEDDING_GENERATION_COMPLETED",
-    label: "Generowanie embeddingów ukończone",
+    label: translateMessage("generated.m0153"),
   },
   {
     value: "EMBEDDING_GENERATION_FAILED",
-    label: "Generowanie embeddingów nieudane",
+    label: translateMessage("generated.m0154"),
   },
-  { value: "ASSORTMENT_EXPIRED", label: "Asortyment przeterminowany" },
-  { value: "ASSORTMENT_CLOSE_TO_EXPIRY", label: "Asortyment bliski terminu" },
+  { value: "ASSORTMENT_EXPIRED", label: translateMessage("generated.m0155") },
+  {
+    value: "ASSORTMENT_CLOSE_TO_EXPIRY",
+    label: translateMessage("generated.m0156"),
+  },
 ] as const
 
 type AlertTypeValue = (typeof ALERT_TYPE_OPTIONS)[number]["value"]
@@ -67,10 +82,10 @@ const ALERT_STATUS_OPTIONS: {
   value: AlertStatusValue
   label: string
 }[] = [
-  { value: "OPEN", label: "Otwarte" },
-  { value: "ACTIVE", label: "Aktywne" },
-  { value: "RESOLVED", label: "Rozwiązane" },
-  { value: "DISMISSED", label: "Odrzucone" },
+  { value: "OPEN", label: translateMessage("generated.m0890") },
+  { value: "ACTIVE", label: translateMessage("generated.m0891") },
+  { value: "RESOLVED", label: translateMessage("generated.m0157") },
+  { value: "DISMISSED", label: translateMessage("generated.m0892") },
 ]
 
 function getAlertIcon(alertType: string): IconSvgElement {
@@ -94,7 +109,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "destructive",
       cardClassName: "bg-destructive/10 text-destructive",
-      label: "Otwarte",
+      label: translateMessage("generated.m0890"),
     }
   }
 
@@ -102,7 +117,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "secondary",
       cardClassName: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-      label: "Rozwiązane",
+      label: translateMessage("generated.m0157"),
     }
   }
 
@@ -110,7 +125,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "secondary",
       cardClassName: "bg-muted text-muted-foreground",
-      label: "Odrzucone",
+      label: translateMessage("generated.m0892"),
     }
   }
 
@@ -118,7 +133,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "default",
       cardClassName: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
-      label: "Aktywne",
+      label: translateMessage("generated.m0891"),
     }
   }
 
@@ -129,13 +144,18 @@ function getStatusConfig(status: string): {
   }
 }
 
-const formatDateTime = (date: string | null | undefined): string => {
+const formatDateTime = (
+  date: string | null | undefined,
+  dateFnsLocale: DateFnsLocale
+): string => {
   if (!date) {
     return "—"
   }
 
   try {
-    return format(new Date(date), "dd MMMM yyyy, HH:mm", { locale: pl })
+    return format(new Date(date), "dd MMMM yyyy, HH:mm", {
+      locale: dateFnsLocale,
+    })
   } catch {
     return "—"
   }
@@ -176,12 +196,14 @@ function AlertListBody({
   alerts,
   onSelect,
   selectedAlertId,
+  dateFnsLocale,
 }: {
   isPending: boolean
   isError: boolean
   alerts: AlertItem[]
   onSelect: (alert: AlertItem) => void
   selectedAlertId: number | null
+  dateFnsLocale: DateFnsLocale
 }) {
   if (isPending) {
     return (
@@ -199,9 +221,9 @@ function AlertListBody({
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <p className="font-medium">Nie udało się pobrać alertów</p>
+        <p className="font-medium">{translateMessage("generated.m0158")}</p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Spróbuj ponownie za chwilę.
+          {translateMessage("generated.m0159")}
         </p>
       </div>
     )
@@ -216,9 +238,11 @@ function AlertListBody({
             icon={InboxIcon}
           />
         </div>
-        <p className="mt-3 font-medium">Brak alertów</p>
+        <p className="mt-3 font-medium">
+          {translateMessage("generated.m0160")}
+        </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Brak wpisów dla wybranego filtra
+          {translateMessage("generated.m0161")}
         </p>
       </div>
     )
@@ -268,7 +292,7 @@ function AlertListBody({
               <p className="mt-1 text-[11px] text-muted-foreground">
                 {formatDistanceToNow(new Date(alert.createdAt), {
                   addSuffix: true,
-                  locale: pl,
+                  locale: dateFnsLocale,
                 })}
               </p>
             </div>
@@ -281,19 +305,19 @@ function AlertListBody({
 
 const STATUSES = {
   OPEN: {
-    label: "Oznacz jako otwarte",
+    label: translateMessage("generated.m0162"),
     icon: Time01Icon,
   },
   ACTIVE: {
-    label: "Oznacz jako aktywne",
+    label: translateMessage("generated.m0163"),
     icon: AlertCircleIcon,
   },
   RESOLVED: {
-    label: "Oznacz jako rozwiązane",
+    label: translateMessage("generated.m0164"),
     icon: CheckmarkBadge01Icon,
   },
   DISMISSED: {
-    label: "Odrzuć alert",
+    label: translateMessage("generated.m0165"),
     icon: Alert01Icon,
   },
 }
@@ -301,9 +325,11 @@ const STATUSES = {
 function AlertDetailsPanel({
   alert,
   onStatusChange,
+  dateFnsLocale,
 }: {
   alert: AlertItem | null
   onStatusChange: (status: AlertStatusValue) => void
+  dateFnsLocale: DateFnsLocale
 }) {
   if (!alert) {
     return (
@@ -314,9 +340,11 @@ function AlertDetailsPanel({
             icon={Alert01Icon}
           />
         </div>
-        <p className="mt-4 font-medium text-lg">Wybierz alert</p>
+        <p className="mt-4 font-medium text-lg">
+          {translateMessage("generated.m0166")}
+        </p>
         <p className="mt-1 text-center text-muted-foreground text-sm">
-          Kliknij wpis na liście, aby zobaczyć szczegóły
+          {translateMessage("generated.m0167")}
         </p>
       </div>
     )
@@ -350,53 +378,63 @@ function AlertDetailsPanel({
       <div className="flex-1 space-y-6 p-6">
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            Lokalizacja
+            {translateMessage("generated.m0893")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <DetailsCard
-              label="Magazyn"
+              label={translateMessage("generated.m0894")}
               value={alert.warehouseName ?? alert.warehouseId ?? "—"}
             />
             <DetailsCard
-              label="Regał"
+              label={translateMessage("generated.m0168")}
               value={alert.rackMarker ?? alert.rackId ?? "—"}
             />
-            <DetailsCard label="Status" value={toTitleCase(alert.status)} />
+            <DetailsCard
+              label={translateMessage("generated.m0895")}
+              value={toTitleCase(alert.status)}
+            />
           </div>
         </section>
 
         <section className="space-y-3">
-          <h3 className="font-medium text-muted-foreground text-sm">Metryki</h3>
+          <h3 className="font-medium text-muted-foreground text-sm">
+            {translateMessage("generated.m0896")}
+          </h3>
           <div className="grid gap-3 sm:grid-cols-3">
             <DetailsCard
-              label="Próg"
+              label={translateMessage("generated.m0169")}
               value={formatMetricValue(alert.thresholdValue)}
             />
             <DetailsCard
-              label="Wartość"
+              label={translateMessage("generated.m0170")}
               value={formatMetricValue(alert.actualValue)}
             />
             <DetailsCard
-              label="Różnica"
+              label={translateMessage("generated.m0171")}
               value={differenceValue == null ? "—" : differenceValue.toString()}
             />
           </div>
         </section>
 
         <section className="space-y-3">
-          <h3 className="font-medium text-muted-foreground text-sm">Czas</h3>
+          <h3 className="font-medium text-muted-foreground text-sm">
+            {translateMessage("generated.m0897")}
+          </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <DetailsCard
-              label="Utworzono"
-              value={formatDateTime(alert.createdAt?.toString())}
+              label={translateMessage("generated.m0898")}
+              value={formatDateTime(alert.createdAt?.toString(), dateFnsLocale)}
             />
             <DetailsCard
-              label="Aktualizacja"
-              value={formatDateTime(alert.updatedAt?.toString())}
+              label={translateMessage("generated.m0899")}
+              value={formatDateTime(alert.updatedAt?.toString(), dateFnsLocale)}
             />
             <DetailsCard
-              label="Rozwiązano"
-              value={formatDateTime(alert.resolvedAt?.toString())}
+              label={translateMessage("generated.m0172")}
+              value={formatDateTime(
+                alert.resolvedAt?.toString(),
+                dateFnsLocale
+              )}
             />
           </div>
         </section>
@@ -404,10 +442,12 @@ function AlertDetailsPanel({
         {hasResolutionData ? (
           <section className="space-y-3">
             <h3 className="font-medium text-muted-foreground text-sm">
-              Notatka rozwiązania
+              {translateMessage("generated.m0173")}
             </h3>
             <div className="rounded-lg border bg-muted/20 p-3">
-              <p className="text-muted-foreground text-xs">Rozwiązane przez</p>
+              <p className="text-muted-foreground text-xs">
+                {translateMessage("generated.m0174")}
+              </p>
               <p className="mt-0.5 font-medium">
                 {alert.resolvedByName ?? "—"}
               </p>
@@ -428,7 +468,7 @@ function AlertDetailsPanel({
             })}
             href={locationHref}
           >
-            Przejdź do lokalizacji
+            {translateMessage("generated.m0175")}
             <HugeiconsIcon className="ml-2 size-4" icon={ArrowRight02Icon} />
           </Link>
         ) : null}
@@ -442,11 +482,13 @@ function AlertDetailsPanel({
               })
             )}
           >
-            Zmień status
+            {translateMessage("generated.m0176")}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="center" className="w-fit" side="top">
             <DropdownMenuGroup>
-              <DropdownMenuLabel>Akcje</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                {translateMessage("generated.m0900")}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               {Object.entries(STATUSES).map(([status, config]) => (
                 <DropdownMenuItem
@@ -467,6 +509,9 @@ function AlertDetailsPanel({
 }
 
 export default function AlertsMain() {
+  const locale = useLocale()
+  const dateFnsLocale = getDateFnsLocale(locale)
+
   const [alertTypeFilter, setAlertTypeFilter] = useState<AlertTypeValue[]>([])
   const [statusFilter, setStatusFilter] = useState<AlertStatusValue[]>([])
   const [page, setPage] = useState(0)
@@ -569,20 +614,22 @@ export default function AlertsMain() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description="Przeglądaj alerty systemowe dotyczące magazynów"
+        description={translateMessage("generated.m0177")}
         icon={Alert01Icon}
         navLinks={ADMIN_NAV_LINKS.map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title="Alerty"
+        title={translateMessage("generated.m0901")}
       >
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <span className="font-mono font-semibold text-primary">
               {allAlerts?.totalElements ?? 0}
             </span>
-            <span className="text-muted-foreground text-xs">łącznie</span>
+            <span className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0178")}
+            </span>
           </div>
           {(activeAlerts?.totalElements ?? 0) > 0 ? (
             <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-1.5">
@@ -590,7 +637,9 @@ export default function AlertsMain() {
               <span className="font-mono font-semibold text-destructive">
                 {activeAlerts?.totalElements ?? 0}
               </span>
-              <span className="text-muted-foreground text-xs">otwartych</span>
+              <span className="text-muted-foreground text-xs">
+                {translateMessage("generated.m0902")}
+              </span>
             </div>
           ) : null}
         </div>
@@ -608,7 +657,7 @@ export default function AlertsMain() {
                   )}
                 >
                   <HugeiconsIcon className="size-4" icon={FilterIcon} />
-                  Status
+                  {translateMessage("generated.m0895")}
                   {statusFilter.length > 0 && (
                     <Badge className="ml-1" variant="secondary">
                       {statusFilter.length}
@@ -621,7 +670,9 @@ export default function AlertsMain() {
                   side="bottom"
                 >
                   <DropdownMenuGroup>
-                    <DropdownMenuLabel>Filtruj po statusie</DropdownMenuLabel>
+                    <DropdownMenuLabel>
+                      {translateMessage("generated.m0179")}
+                    </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {ALERT_STATUS_OPTIONS.map((option) => (
                       <DropdownMenuCheckboxItem
@@ -640,7 +691,7 @@ export default function AlertsMain() {
                           onClick={handleClearStatusFilter}
                           type="button"
                         >
-                          Wyczyść filtry
+                          {translateMessage("generated.m0180")}
                         </button>
                       </>
                     )}
@@ -656,7 +707,7 @@ export default function AlertsMain() {
                   )}
                 >
                   <HugeiconsIcon className="size-4" icon={FilterIcon} />
-                  Typ alertu
+                  {translateMessage("generated.m0181")}
                   {alertTypeFilter.length > 0 && (
                     <Badge className="ml-1" variant="secondary">
                       {alertTypeFilter.length}
@@ -670,7 +721,7 @@ export default function AlertsMain() {
                 >
                   <DropdownMenuGroup>
                     <DropdownMenuLabel>
-                      Filtruj po typie alertu
+                      {translateMessage("generated.m0182")}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {ALERT_TYPE_OPTIONS.map((option) => (
@@ -690,7 +741,7 @@ export default function AlertsMain() {
                           onClick={handleClearAlertTypeFilter}
                           type="button"
                         >
-                          Wyczyść filtry
+                          {translateMessage("generated.m0180")}
                         </button>
                       </>
                     )}
@@ -703,6 +754,7 @@ export default function AlertsMain() {
               <div className="space-y-2 p-2">
                 <AlertListBody
                   alerts={alerts}
+                  dateFnsLocale={dateFnsLocale}
                   isError={isAlertsError}
                   isPending={isAlertsPending}
                   onSelect={handleSelectAlert}
@@ -723,6 +775,7 @@ export default function AlertsMain() {
         <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
           <AlertDetailsPanel
             alert={selectedAlert}
+            dateFnsLocale={dateFnsLocale}
             onStatusChange={handleStatusChange}
           />
         </div>
@@ -731,8 +784,12 @@ export default function AlertsMain() {
       {selectedAlert ? (
         <div className="rounded-lg border border-dashed p-3 text-muted-foreground text-xs">
           <HugeiconsIcon className="mr-1 inline size-3.5" icon={Time01Icon} />
-          Ostatnia aktualizacja:{" "}
-          {formatDateTime(selectedAlert.updatedAt?.toString())}
+          {translateMessage("generated.m1058", {
+            value0: formatDateTime(
+              selectedAlert.updatedAt?.toString(),
+              dateFnsLocale
+            ),
+          })}
         </div>
       ) : null}
     </div>

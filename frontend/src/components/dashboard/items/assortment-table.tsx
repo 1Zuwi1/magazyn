@@ -13,9 +13,9 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { formatDate, formatDistanceToNow } from "date-fns"
-import { pl } from "date-fns/locale"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useLocale } from "next-intl"
 import {
   type Dispatch,
   type SetStateAction,
@@ -57,6 +57,8 @@ import {
 import useAssortment from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import { useMultipleRacks } from "@/hooks/use-racks"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { translateMessage } from "@/i18n/translate-message"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type { AssortmentsSchema, RackAssortmentsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
@@ -77,11 +79,11 @@ const EXPIRY_FILTER_OPTIONS: {
   value: ExpiryFilters
   label: string
 }[] = [
-  { value: "ALL", label: "Wszystkie" },
-  { value: "EXPIRED", label: "Przeterminowane" },
-  { value: "DAYS_3", label: "Do 3 dni" },
-  { value: "DAYS_7", label: "Do 7 dni" },
-  { value: "DAYS_14", label: "Do 14 dni" },
+  { value: "ALL", label: translateMessage("generated.m0935") },
+  { value: "EXPIRED", label: translateMessage("generated.m0975") },
+  { value: "DAYS_3", label: translateMessage("generated.m0461") },
+  { value: "DAYS_7", label: translateMessage("generated.m0462") },
+  { value: "DAYS_14", label: translateMessage("generated.m0463") },
 ]
 
 const GS1_WITH_SERIAL_PATTERN = /^11\d{6}01(\d{14})21\d+$/
@@ -149,17 +151,23 @@ const buildRackWarehouseHref = ({
 }
 
 function ExpiryStatusBadge({ value }: { value: string }) {
+  const locale = useLocale()
+  const dateFnsLocale = getDateFnsLocale(locale)
   const daysUntilExpiry = getDaysToExpiry(value)
 
   if (typeof daysUntilExpiry !== "number") {
-    return <Badge variant="outline">Brak daty</Badge>
+    return (
+      <Badge variant="outline">{translateMessage("generated.m0464")}</Badge>
+    )
   }
   if (daysUntilExpiry < 0) {
-    return <Badge variant="destructive">Przeterminowane</Badge>
+    return (
+      <Badge variant="destructive">{translateMessage("generated.m0975")}</Badge>
+    )
   }
   const label = formatDistanceToNow(new Date(value), {
     addSuffix: true,
-    locale: pl,
+    locale: dateFnsLocale,
   })
   if (daysUntilExpiry <= 3) {
     return <Badge variant="destructive">{label}</Badge>
@@ -409,7 +417,9 @@ function AssortmentTableContent({
       {
         accessorKey: "code",
         header: ({ column }) => (
-          <SortableHeader column={column}>Kod</SortableHeader>
+          <SortableHeader column={column}>
+            {translateMessage("generated.m0906")}
+          </SortableHeader>
         ),
         cell: ({ row }) => <CodeCell value={row.original.code} />,
         enableSorting: true,
@@ -418,7 +428,9 @@ function AssortmentTableContent({
         id: "itemName",
         accessorFn: (row) => getItemName(row, itemNamesById),
         header: ({ column }) => (
-          <SortableHeader column={column}>Produkt</SortableHeader>
+          <SortableHeader column={column}>
+            {translateMessage("generated.m0981")}
+          </SortableHeader>
         ),
         cell: ({ row }) => (
           <Link
@@ -434,11 +446,14 @@ function AssortmentTableContent({
         id: "rackName",
         accessorFn: (row) => rackNamesById.get(row.rackId) ?? "",
         header: ({ column }) => (
-          <SortableHeader column={column}>Regał</SortableHeader>
+          <SortableHeader column={column}>
+            {translateMessage("generated.m0168")}
+          </SortableHeader>
         ),
         cell: ({ row }) => {
           const rackName =
-            rackNamesById.get(row.original.rackId) ?? "Nieznany regał"
+            rackNamesById.get(row.original.rackId) ??
+            translateMessage("generated.m0465")
           const rackWarehouseId = rackWarehouseIdsById.get(row.original.rackId)
 
           if (rackWarehouseId === undefined) {
@@ -467,11 +482,16 @@ function AssortmentTableContent({
         id: "position",
         accessorFn: (item) => `${item.positionX + 1}:${item.positionY + 1}`,
         header: ({ column }) => (
-          <SortableHeader column={column}>Pozycja</SortableHeader>
+          <SortableHeader column={column}>
+            {translateMessage("generated.m0908")}
+          </SortableHeader>
         ),
         cell: ({ row }) => (
           <span className="font-mono text-sm">
-            Rząd {row.original.positionX + 1}, Kol. {row.original.positionY + 1}
+            {translateMessage("generated.m1091", {
+              value0: row.original.positionX + 1,
+              value1: row.original.positionY + 1,
+            })}
           </span>
         ),
         enableSorting: !manualServerControls,
@@ -479,7 +499,9 @@ function AssortmentTableContent({
       {
         accessorKey: "createdAt",
         header: ({ column }) => (
-          <SortableHeader column={column}>Dodano</SortableHeader>
+          <SortableHeader column={column}>
+            {translateMessage("generated.m0982")}
+          </SortableHeader>
         ),
         cell: ({ row }) => (
           <span className="font-mono text-sm">
@@ -491,7 +513,9 @@ function AssortmentTableContent({
       {
         accessorKey: "expiresAt",
         header: ({ column }) => (
-          <SortableHeader column={column}>Ważność</SortableHeader>
+          <SortableHeader column={column}>
+            {translateMessage("generated.m0466")}
+          </SortableHeader>
         ),
         cell: ({ row }) => (
           <div className="space-y-1">
@@ -560,7 +584,7 @@ function AssortmentTableContent({
   const itemLabel = {
     singular: "przedmiot",
     plural: "przedmioty",
-    genitive: "przedmiotów",
+    genitive: translateMessage("generated.m0224"),
   }
 
   if (isLoading) {
@@ -577,9 +601,9 @@ function AssortmentTableContent({
         <FilterBar className="gap-3">
           <FilterGroup>
             <SearchInput
-              aria-label="Filtruj asortyment po kodzie i identyfikatorach"
+              aria-label={translateMessage("generated.m0467")}
               onChange={handleSearchChange}
-              placeholder="Szukaj po kodzie kreskowym, nazwie produktu lub regału..."
+              placeholder={translateMessage("generated.m0468")}
               value={search}
             />
 
@@ -597,7 +621,7 @@ function AssortmentTableContent({
                 value={expiryFilter}
               >
                 <SelectTrigger
-                  aria-label="Filtruj według daty ważności"
+                  aria-label={translateMessage("generated.m0469")}
                   className={cn(
                     "h-10! w-44 gap-2 pl-9",
                     isExpiryFiltered &&

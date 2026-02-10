@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 interface ConfirmDialogProps {
@@ -53,10 +54,10 @@ export function ConfirmDialog({
         </DialogHeader>
         <DialogFooter className="mt-4 gap-1">
           <Button onClick={() => onOpenChange(false)} variant="outline">
-            Anuluj
+            {translateMessage("generated.m0885")}
           </Button>
           <Button onClick={handleConfirm} variant="destructive">
-            Potwierdź
+            {translateMessage("generated.m0191")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -107,7 +108,7 @@ export function FormDialog({
         <div className="py-1">{children}</div>
         <DialogFooter>
           <Button form={formId} isLoading={isLoading} type="submit">
-            Zapisz
+            {translateMessage("generated.m0915")}
           </Button>
         </DialogFooter>
       </DialogContent>

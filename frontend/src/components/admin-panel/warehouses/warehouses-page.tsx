@@ -23,6 +23,7 @@ import useWarehouses, {
   useUpdateWarehouse,
   type WarehousesList,
 } from "@/hooks/use-warehouses"
+import { translateMessage } from "@/i18n/translate-message"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ADMIN_NAV_LINKS } from "../lib/constants"
 import { WarehouseCard } from "./components/warehouse-card"
@@ -92,12 +93,17 @@ export default function WarehousesMain() {
     const report = await importWarehousesMutation.mutateAsync(file)
     if (report.errors.length > 0) {
       toast.warning(
-        `Import zakończony częściowo: ${report.imported}/${report.processedLines}`
+        translateMessage("generated.m0220", {
+          value0: report.imported,
+          value1: report.processedLines,
+        })
       )
       return
     }
 
-    toast.success(`Zaimportowano ${report.imported} magazynów`)
+    toast.success(
+      translateMessage("generated.m0387", { value0: report.imported })
+    )
   }
 
   const totalWarehouses = warehousesData?.totalElements
@@ -149,17 +155,17 @@ export default function WarehousesMain() {
           />
         </div>
         <p className="mt-4 font-medium text-foreground">
-          Nie udało się pobrać magazynów
+          {translateMessage("generated.m0388")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Wystąpił problem podczas ładowania danych. Spróbuj odświeżyć stronę.
+          {translateMessage("generated.m0389")}
         </p>
         <Button
           className="mt-4"
           onClick={() => window.location.reload()}
           variant="outline"
         >
-          Spróbuj ponownie
+          {translateMessage("generated.m0075")}
         </Button>
       </div>
     )
@@ -172,13 +178,15 @@ export default function WarehousesMain() {
             icon={WarehouseIcon}
           />
         </div>
-        <p className="mt-4 font-medium text-foreground">Brak magazynów</p>
+        <p className="mt-4 font-medium text-foreground">
+          {translateMessage("generated.m0390")}
+        </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Dodaj pierwszy magazyn, aby rozpocząć
+          {translateMessage("generated.m0391")}
         </p>
         <Button className="mt-4" onClick={handleAddWarehouse}>
           <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-          Dodaj magazyn
+          {translateMessage("generated.m0392")}
         </Button>
       </div>
     )
@@ -210,17 +218,17 @@ export default function WarehousesMain() {
             />
             <Button onClick={handleAddWarehouse}>
               <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-              Dodaj magazyn
+              {translateMessage("generated.m0392")}
             </Button>
           </div>
         }
-        description="Zarządzaj magazynami i ich regałami"
+        description={translateMessage("generated.m0393")}
         icon={WarehouseIcon}
         navLinks={ADMIN_NAV_LINKS.map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title="Magazyny"
+        title={translateMessage("generated.m0886")}
       >
         {/* Quick Stats */}
         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -228,7 +236,9 @@ export default function WarehousesMain() {
             <span className="font-mono font-semibold text-primary">
               {totalWarehouses}
             </span>
-            <span className="text-muted-foreground text-xs">magazynów</span>
+            <span className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0294")}
+            </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <HugeiconsIcon
@@ -236,10 +246,14 @@ export default function WarehousesMain() {
               icon={Package}
             />
             <span className="font-mono font-semibold">{totalRacks}</span>
-            <span className="text-muted-foreground text-xs">regałów</span>
+            <span className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0241")}
+            </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
-            <span className="text-muted-foreground text-xs">Zajętość:</span>
+            <span className="text-muted-foreground text-xs">
+              {translateMessage("generated.m0394")}
+            </span>
             <span className="font-mono font-semibold">
               {(totalCapacity ?? 0) > 0
                 ? Math.round(((totalUsed ?? 0) / (totalCapacity ?? 1)) * 100)
@@ -273,11 +287,13 @@ export default function WarehousesMain() {
       />
 
       <ConfirmDialog
-        description={`Czy na pewno chcesz usunąć magazyn "${warehouseToDelete?.name}"? Wszystkie regały w tym magazynie zostaną również usunięte.`}
+        description={translateMessage("generated.m0395", {
+          value0: warehouseToDelete?.name,
+        })}
         onConfirm={confirmDeleteWarehouse}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
-        title="Usuń magazyn"
+        title={translateMessage("generated.m0396")}
       />
     </div>
   )

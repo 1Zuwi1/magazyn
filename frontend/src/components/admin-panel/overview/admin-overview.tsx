@@ -19,6 +19,7 @@ import useAdminUsers from "@/hooks/use-admin-users"
 import useAlerts from "@/hooks/use-alerts"
 import useAssortments from "@/hooks/use-assortment"
 import useWarehouses from "@/hooks/use-warehouses"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ADMIN_NAV_LINKS, THRESHOLD } from "../lib/constants"
@@ -160,7 +161,7 @@ export function AdminOverview() {
     criticalWarehousesContent = (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-destructive/30 border-dashed bg-destructive/5 py-12">
         <p className="font-medium text-foreground">
-          Nie udało się pobrać danych magazynów
+          {translateMessage("generated.m0236")}
         </p>
         <button
           className="mt-3 flex items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
@@ -168,7 +169,7 @@ export function AdminOverview() {
           type="button"
         >
           <HugeiconsIcon className="size-4" icon={RefreshIcon} />
-          Ponów próbę
+          {translateMessage("generated.m0237")}
         </button>
       </div>
     )
@@ -178,9 +179,11 @@ export function AdminOverview() {
         <div className="flex size-12 items-center justify-center rounded-full bg-emerald-500/10">
           <HugeiconsIcon className="size-6 text-emerald-500" icon={Warehouse} />
         </div>
-        <p className="mt-4 font-medium text-foreground">Wszystko w porządku</p>
+        <p className="mt-4 font-medium text-foreground">
+          {translateMessage("generated.m0238")}
+        </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Brak magazynów wymagających natychmiastowej uwagi
+          {translateMessage("generated.m0239")}
         </p>
       </div>
     )
@@ -209,7 +212,10 @@ export function AdminOverview() {
                         {warehouse.name}
                       </h3>
                       <p className="text-muted-foreground text-sm">
-                        {warehouse.occupiedSlots} / {capacity} miejsc zajętych
+                        {translateMessage("generated.m1063", {
+                          value0: warehouse.occupiedSlots,
+                          value1: capacity,
+                        })}
                       </p>
                     </div>
                     <Badge variant="destructive">
@@ -228,7 +234,9 @@ export function AdminOverview() {
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">
-                        {warehouse.racksCount} regałów
+                        {translateMessage("generated.m1064", {
+                          value0: warehouse.racksCount,
+                        })}
                       </span>
                       <span
                         className={cn(
@@ -265,13 +273,13 @@ export function AdminOverview() {
     <div className="space-y-8">
       {/* Admin Header */}
       <AdminPageHeader
-        description="Zarządzaj użytkownikami, magazynami i powiadomieniami systemowymi"
+        description={translateMessage("generated.m0242")}
         icon={Settings02Icon}
         navLinks={ADMIN_NAV_LINKS.map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title="Panel administracyjny"
+        title={translateMessage("generated.m0243")}
       />
 
       {/* Stats Grid */}
@@ -285,18 +293,18 @@ export function AdminOverview() {
           isError={isUsersStatsError}
           isLoading={isUsersStatsPending}
           onRetry={refetchUsersStats}
-          title="Użytkownicy"
+          title={translateMessage("generated.m0233")}
           value={stats.users.total}
           variant="primary"
         />
         <AdminStatCard
-          description="Wszystkie lokalizacje"
+          description={translateMessage("generated.m0244")}
           href="/admin/warehouses"
           icon={Warehouse}
           isError={isWarehousesError}
           isLoading={isWarehousesPending}
           onRetry={() => refetchWarehouses()}
-          title="Magazyny"
+          title={translateMessage("generated.m0886")}
           value={stats.warehouses.total ?? "—"}
           variant="default"
         />
@@ -309,20 +317,24 @@ export function AdminOverview() {
           isError={isAssortmentsError}
           isLoading={isAssortmentsPending}
           onRetry={() => refetchAssortments()}
-          title="Przedmioty"
+          title={translateMessage("generated.m0931")}
           value={stats.items.total}
           variant="success"
         />
         <AdminStatCard
           description={
-            isAlertsStatsPending ? undefined : `${stats.alerts.total} łącznie`
+            isAlertsStatsPending
+              ? undefined
+              : translateMessage("generated.m0245", {
+                  value0: stats.alerts.total,
+                })
           }
           href="/admin/alerts"
           icon={Alert01Icon}
           isError={isAlertsStatsError}
           isLoading={isAlertsStatsPending}
           onRetry={() => refetchAlerts()}
-          title="Otwarte alerty"
+          title={translateMessage("generated.m0246")}
           value={stats.alerts.open}
           variant={stats.alerts.open > 0 ? "warning" : "default"}
         />
@@ -333,17 +345,17 @@ export function AdminOverview() {
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h2 className="font-semibold text-xl tracking-tight">
-              Magazyny wymagające uwagi
+              {translateMessage("generated.m0247")}
             </h2>
             <p className="text-muted-foreground text-sm">
-              Magazyny z zapełnieniem powyżej {THRESHOLD}%
+              {translateMessage("generated.m1094", { value0: THRESHOLD })}
             </p>
           </div>
           <Link
             className={buttonVariants({ variant: "outline", size: "sm" })}
             href="/admin/warehouses"
           >
-            Zobacz wszystkie
+            {translateMessage("generated.m0249")}
             <HugeiconsIcon className="ml-2 size-4" icon={ArrowRight02Icon} />
           </Link>
         </div>

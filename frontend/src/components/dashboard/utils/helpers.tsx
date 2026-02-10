@@ -1,7 +1,8 @@
 import { differenceInCalendarDays, format, parseISO } from "date-fns"
-import { pl } from "date-fns/locale"
 import { toast } from "sonner"
 import type { UserNotification } from "@/hooks/use-notifications"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { translateMessage } from "@/i18n/translate-message"
 import { FetchError } from "@/lib/fetcher"
 import type { RackAssortment } from "@/lib/schemas"
 import type { Item, ItemSlot } from "../types"
@@ -15,8 +16,8 @@ export function getSlotCoordinate(index: number, cols: number): string {
   return `${rowLabel}-${colLabel}`
 }
 
-export function formatDate(date: Date): string {
-  return format(date, "dd.MM.yyyy", { locale: pl })
+export function formatDate(date: Date, locale = "pl"): string {
+  return format(date, "dd.MM.yyyy", { locale: getDateFnsLocale(locale) })
 }
 
 export function formatDimensions(item: Item): string {
@@ -52,8 +53,10 @@ export function pluralize(
 export const handleApiError = (err: unknown, fallback?: string) => {
   toast.error(
     FetchError.isError(err)
-      ? err.message
-      : (fallback ?? "Wystąpił nieoczekiwany błąd.")
+      ? translateMessage(`errorCodes.${err.code}`) ||
+          fallback ||
+          translateMessage("generated.m0657")
+      : (fallback ?? translateMessage("generated.m0657"))
   )
 }
 export const getOccupancyPercentage = (

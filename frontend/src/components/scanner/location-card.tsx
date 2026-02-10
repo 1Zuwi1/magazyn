@@ -2,6 +2,7 @@ import { Tick02Icon, UnfoldMoreIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { Badge } from "../ui/badge"
 import { Button, buttonVariants } from "../ui/button"
@@ -127,7 +128,7 @@ function RackSelect({
     virtualRackItems,
   ])
 
-  const triggerLabel = selectedRackName || "Wybierz regał"
+  const triggerLabel = selectedRackName || translateMessage("generated.m0407")
 
   return (
     <Popover onOpenChange={setIsRackSelectOpen} open={isRackSelectOpen}>
@@ -146,7 +147,7 @@ function RackSelect({
       </PopoverTrigger>
       <PopoverContent align="start" className="w-(--anchor-width) gap-0 p-0">
         <ScrollArea
-          aria-label="Lista regałów"
+          aria-label={translateMessage("generated.m0670")}
           className="h-56 p-1 pr-3"
           ref={scrollAreaRef}
           role="listbox"
@@ -208,13 +209,13 @@ function RackSelect({
           {!(isRackOptionsPending || isRackOptionsError) &&
           rackOptions.length === 0 ? (
             <p className="px-2 py-3 text-muted-foreground text-sm">
-              Brak regałów do wyboru.
+              {translateMessage("generated.m0671")}
             </p>
           ) : null}
 
           {isRackOptionsError ? (
             <p className="px-2 py-3 text-destructive text-sm">
-              Nie udało się pobrać listy regałów.
+              {translateMessage("generated.m0672")}
             </p>
           ) : null}
         </ScrollArea>
@@ -222,7 +223,7 @@ function RackSelect({
         {isFetchingNextRackPage && (
           <div className="flex items-center gap-2 border-t px-2 py-1.5 text-muted-foreground text-xs">
             <Spinner className="size-3.5" />
-            <span>Ładowanie regałów...</span>
+            <span>{translateMessage("generated.m0673")}</span>
           </div>
         )}
       </PopoverContent>
@@ -264,7 +265,9 @@ export function LocationCard({
           <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 font-bold font-mono text-primary text-sm">
             {index + 1}
           </div>
-          <p className="font-medium text-sm">Lokalizacja</p>
+          <p className="font-medium text-sm">
+            {translateMessage("generated.m0893")}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {rackName ? <Badge variant="outline">{rackName}</Badge> : null}
@@ -275,14 +278,16 @@ export function LocationCard({
             type="button"
             variant="ghost"
           >
-            Usuń
+            {translateMessage("generated.m0230")}
           </Button>
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label htmlFor={`${baseId}-rack`}>Regał</Label>
+          <Label htmlFor={`${baseId}-rack`}>
+            {translateMessage("generated.m0168")}
+          </Label>
           <RackSelect
             disabled={isRackSelectDisabled}
             hasNextRackPage={hasNextRackPage}
@@ -301,7 +306,9 @@ export function LocationCard({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor={`${baseId}-x`}>Półka</Label>
+          <Label htmlFor={`${baseId}-x`}>
+            {translateMessage("generated.m0674")}
+          </Label>
           <Input
             id={`${baseId}-x`}
             max={maxColumn}
@@ -317,12 +324,16 @@ export function LocationCard({
             value={placement.positionX}
           />
           {maxColumn !== undefined ? (
-            <p className="text-muted-foreground text-xs">maks. {maxColumn}</p>
+            <p className="text-muted-foreground text-xs">
+              {translateMessage("generated.m1103", { value0: maxColumn })}
+            </p>
           ) : null}
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor={`${baseId}-y`}>Rząd</Label>
+          <Label htmlFor={`${baseId}-y`}>
+            {translateMessage("generated.m0411")}
+          </Label>
           <Input
             id={`${baseId}-y`}
             max={maxRow}
@@ -338,7 +349,9 @@ export function LocationCard({
             value={placement.positionY}
           />
           {maxRow !== undefined ? (
-            <p className="text-muted-foreground text-xs">maks. {maxRow}</p>
+            <p className="text-muted-foreground text-xs">
+              {translateMessage("generated.m1103", { value0: maxRow })}
+            </p>
           ) : null}
         </div>
       </div>

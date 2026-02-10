@@ -10,6 +10,7 @@ import {
   WaveTriangleIcon,
 } from "@hugeicons/core-free-icons"
 import type { IconComponent } from "@/components/dashboard/types"
+import { translateMessage } from "@/i18n/translate-message"
 
 export interface NavigationItem {
   title: string
@@ -25,66 +26,66 @@ export interface NavigationItem {
 
 export const navigationItems: NavigationItem[] = [
   {
-    title: "Panel główny",
+    title: translateMessage("generated.m0428"),
     href: "/dashboard",
     icon: Analytics01Icon,
     items: [
       {
-        title: "Magazyny",
+        title: translateMessage("generated.m0886"),
         href: "/dashboard/warehouse",
         icon: WarehouseIcon,
       },
       {
-        title: "Asortyment",
+        title: translateMessage("generated.m0882"),
         href: "/dashboard/items",
         icon: Package,
       },
       {
-        title: "Powiadomienia",
+        title: translateMessage("generated.m0988"),
         href: "/dashboard/notifications",
         icon: Bell,
       },
     ],
   },
   {
-    title: "Ustawienia",
+    title: translateMessage("generated.m1010"),
     href: "/settings",
     icon: Settings,
     items: [],
   },
   {
-    title: "Panel administracyjny",
+    title: translateMessage("generated.m0243"),
     href: "/admin",
     icon: WaveTriangleIcon,
     adminOnly: true,
     items: [
       {
-        title: "Użytkownicy",
+        title: translateMessage("generated.m0233"),
         href: "/admin/users",
         icon: UserIcon,
       },
       {
-        title: "Magazyny",
+        title: translateMessage("generated.m0886"),
         href: "/admin/warehouses",
         icon: WarehouseIcon,
       },
       {
-        title: "Przedmioty",
+        title: translateMessage("generated.m0931"),
         href: "/admin/items",
         icon: Package,
       },
       {
-        title: "Alerty",
+        title: translateMessage("generated.m0901"),
         href: "/admin/alerts",
         icon: Alert01Icon,
       },
       {
-        title: "Raporty regałów",
+        title: translateMessage("generated.m0234"),
         href: "/admin/rack-reports",
         icon: Attachment01Icon,
       },
       {
-        title: "Audyt operacji",
+        title: translateMessage("generated.m0190"),
         href: "/admin/audit",
         icon: Analytics01Icon,
       },

@@ -11,8 +11,8 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import { format, formatDistanceToNow } from "date-fns"
-import { pl } from "date-fns/locale"
 import Link from "next/link"
+import { useLocale } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -24,10 +24,13 @@ import useNotifications, {
   useMarkBulkNotifications,
   useMarkNotification,
 } from "@/hooks/use-notifications"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { getNotificationTitle, toTitleCase } from "../utils/helpers"
 
 type FeedFilter = "ALL" | "UNREAD"
+type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
 
 function getNotificationIcon(alertType: string): IconSvgElement {
   switch (alertType) {
@@ -50,7 +53,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "destructive",
       cardClassName: "bg-destructive/10 text-destructive",
-      label: "Otwarte",
+      label: translateMessage("generated.m0890"),
     }
   }
 
@@ -58,7 +61,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "secondary",
       cardClassName: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-      label: "Rozwiązane",
+      label: translateMessage("generated.m0157"),
     }
   }
 
@@ -69,12 +72,15 @@ function getStatusConfig(status: string): {
   }
 }
 
-const formatDateTime = (date: Date | null | undefined): string => {
+const formatDateTime = (
+  date: Date | null | undefined,
+  dateFnsLocale: DateFnsLocale
+): string => {
   if (!date) {
     return "—"
   }
 
-  return format(date, "dd MMMM yyyy, HH:mm", { locale: pl })
+  return format(date, "dd MMMM yyyy, HH:mm", { locale: dateFnsLocale })
 }
 
 const formatMetricValue = (value: number | null | undefined): string =>
@@ -111,12 +117,14 @@ function NotificationListBody({
   notifications,
   onSelect,
   selectedNotificationId,
+  dateFnsLocale,
 }: {
   isPending: boolean
   isError: boolean
   notifications: UserNotification[]
   onSelect: (notification: UserNotification) => void
   selectedNotificationId: number | null
+  dateFnsLocale: DateFnsLocale
 }) {
   if (isPending) {
     return (
@@ -134,9 +142,9 @@ function NotificationListBody({
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <p className="font-medium">Nie udało się pobrać powiadomień</p>
+        <p className="font-medium">{translateMessage("generated.m0490")}</p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Spróbuj ponownie za chwilę.
+          {translateMessage("generated.m0159")}
         </p>
       </div>
     )
@@ -151,9 +159,11 @@ function NotificationListBody({
             icon={InboxIcon}
           />
         </div>
-        <p className="mt-3 font-medium">Brak powiadomień</p>
+        <p className="mt-3 font-medium">
+          {translateMessage("generated.m0487")}
+        </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Brak wpisów dla wybranego filtra
+          {translateMessage("generated.m0161")}
         </p>
       </div>
     )
@@ -204,7 +214,7 @@ function NotificationListBody({
               <p className="mt-1 text-[11px] text-muted-foreground">
                 {formatDistanceToNow(notification.createdAt, {
                   addSuffix: true,
-                  locale: pl,
+                  locale: dateFnsLocale,
                 })}
               </p>
             </div>
@@ -218,9 +228,11 @@ function NotificationListBody({
 function NotificationDetailsPanel({
   notification,
   onToggleReadStatus,
+  dateFnsLocale,
 }: {
   notification: UserNotification | null
   onToggleReadStatus: () => void
+  dateFnsLocale: DateFnsLocale
 }) {
   if (!notification) {
     return (
@@ -231,9 +243,11 @@ function NotificationDetailsPanel({
             icon={Notification01Icon}
           />
         </div>
-        <p className="mt-4 font-medium text-lg">Wybierz powiadomienie</p>
+        <p className="mt-4 font-medium text-lg">
+          {translateMessage("generated.m0491")}
+        </p>
         <p className="mt-1 text-center text-muted-foreground text-sm">
-          Kliknij wpis na liście, aby zobaczyć szczegóły
+          {translateMessage("generated.m0167")}
         </p>
       </div>
     )
@@ -261,7 +275,9 @@ function NotificationDetailsPanel({
             {toTitleCase(notification.alert.alertType)}
           </Badge>
           {!notification.read && (
-            <Badge variant="secondary">Nieprzeczytane</Badge>
+            <Badge variant="secondary">
+              {translateMessage("generated.m0990")}
+            </Badge>
           )}
         </div>
         <h2 className="mt-3 font-semibold text-xl">
@@ -275,11 +291,11 @@ function NotificationDetailsPanel({
       <div className="flex-1 space-y-6 p-6">
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            Lokalizacja
+            {translateMessage("generated.m0893")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <DetailsCard
-              label="Magazyn"
+              label={translateMessage("generated.m0894")}
               value={
                 notification.alert.warehouseName ??
                 notification.alert.warehouseId ??
@@ -287,7 +303,7 @@ function NotificationDetailsPanel({
               }
             />
             <DetailsCard
-              label="Regał"
+              label={translateMessage("generated.m0168")}
               value={
                 notification.alert.rackMarker ??
                 notification.alert.rackId ??
@@ -295,48 +311,58 @@ function NotificationDetailsPanel({
               }
             />
             <DetailsCard
-              label="Status"
+              label={translateMessage("generated.m0895")}
               value={toTitleCase(notification.alert.status)}
             />
           </div>
         </section>
 
         <section className="space-y-3">
-          <h3 className="font-medium text-muted-foreground text-sm">Metryki</h3>
+          <h3 className="font-medium text-muted-foreground text-sm">
+            {translateMessage("generated.m0896")}
+          </h3>
           <div className="grid gap-3 sm:grid-cols-3">
             <DetailsCard
-              label="Próg"
+              label={translateMessage("generated.m0169")}
               value={formatMetricValue(notification.alert.thresholdValue)}
             />
             <DetailsCard
-              label="Wartość"
+              label={translateMessage("generated.m0170")}
               value={formatMetricValue(notification.alert.actualValue)}
             />
             <DetailsCard
-              label="Różnica"
+              label={translateMessage("generated.m0171")}
               value={differenceValue == null ? "—" : differenceValue.toString()}
             />
           </div>
         </section>
 
         <section className="space-y-3">
-          <h3 className="font-medium text-muted-foreground text-sm">Czas</h3>
+          <h3 className="font-medium text-muted-foreground text-sm">
+            {translateMessage("generated.m0897")}
+          </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <DetailsCard
-              label="Utworzono"
-              value={formatDateTime(notification.createdAt)}
+              label={translateMessage("generated.m0898")}
+              value={formatDateTime(notification.createdAt, dateFnsLocale)}
             />
             <DetailsCard
-              label="Odczytano"
-              value={formatDateTime(notification.readAt)}
+              label={translateMessage("generated.m0991")}
+              value={formatDateTime(notification.readAt, dateFnsLocale)}
             />
             <DetailsCard
-              label="Aktualizacja alertu"
-              value={formatDateTime(notification.alert.updatedAt)}
+              label={translateMessage("generated.m0492")}
+              value={formatDateTime(
+                notification.alert.updatedAt,
+                dateFnsLocale
+              )}
             />
             <DetailsCard
-              label="Rozwiązanie alertu"
-              value={formatDateTime(notification.alert.resolvedAt)}
+              label={translateMessage("generated.m0493")}
+              value={formatDateTime(
+                notification.alert.resolvedAt,
+                dateFnsLocale
+              )}
             />
           </div>
         </section>
@@ -344,10 +370,12 @@ function NotificationDetailsPanel({
         {hasResolutionData ? (
           <section className="space-y-3">
             <h3 className="font-medium text-muted-foreground text-sm">
-              Notatka rozwiązania
+              {translateMessage("generated.m0173")}
             </h3>
             <div className="rounded-lg border bg-muted/20 p-3">
-              <p className="text-muted-foreground text-xs">Rozwiązane przez</p>
+              <p className="text-muted-foreground text-xs">
+                {translateMessage("generated.m0174")}
+              </p>
               <p className="mt-0.5 font-medium">
                 {notification.alert.resolvedByName ?? "—"}
               </p>
@@ -378,7 +406,7 @@ function NotificationDetailsPanel({
             })}
             href={locationHref}
           >
-            Przejdź do lokalizacji
+            {translateMessage("generated.m0175")}
             <HugeiconsIcon className="ml-2 size-4" icon={ArrowRight02Icon} />
           </Link>
         ) : null}
@@ -388,6 +416,9 @@ function NotificationDetailsPanel({
 }
 
 export default function NotificationsMain() {
+  const locale = useLocale()
+  const dateFnsLocale = getDateFnsLocale(locale)
+
   const [feedFilter, setFeedFilter] = useState<FeedFilter>("ALL")
   const [page, setPage] = useState(1)
   const [selectedNotificationId, setSelectedNotificationId] = useState<
@@ -517,10 +548,10 @@ export default function NotificationsMain() {
               </div>
               <div className="space-y-2">
                 <h1 className="font-semibold text-2xl tracking-tight sm:text-3xl">
-                  Powiadomienia
+                  {translateMessage("generated.m0988")}
                 </h1>
                 <p className="max-w-md text-muted-foreground text-sm">
-                  Przeglądaj i zarządzaj swoimi powiadomieniami
+                  {translateMessage("generated.m0494")}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
@@ -528,7 +559,7 @@ export default function NotificationsMain() {
                       {totalNotifications}
                     </span>
                     <span className="text-muted-foreground text-xs">
-                      łącznie
+                      {translateMessage("generated.m0178")}
                     </span>
                   </div>
                   {unreadCount > 0 ? (
@@ -538,7 +569,7 @@ export default function NotificationsMain() {
                         {unreadCount}
                       </span>
                       <span className="text-muted-foreground text-xs">
-                        nieprzeczytanych
+                        {translateMessage("generated.m0992")}
                       </span>
                     </div>
                   ) : null}
@@ -556,7 +587,7 @@ export default function NotificationsMain() {
                   className="mr-2 size-4"
                   icon={CheckmarkBadge01Icon}
                 />
-                Oznacz wszystkie jako przeczytane
+                {translateMessage("generated.m0495")}
               </Button>
             </div>
           </div>
@@ -578,7 +609,7 @@ export default function NotificationsMain() {
                   onClick={() => handleFeedFilterChange("ALL")}
                   type="button"
                 >
-                  Wszystkie
+                  {translateMessage("generated.m0935")}
                 </button>
                 <button
                   className={cn(
@@ -590,7 +621,7 @@ export default function NotificationsMain() {
                   onClick={() => handleFeedFilterChange("UNREAD")}
                   type="button"
                 >
-                  Nieprzeczytane
+                  {translateMessage("generated.m0990")}
                 </button>
               </div>
             </div>
@@ -598,6 +629,7 @@ export default function NotificationsMain() {
             <ScrollArea className="h-112">
               <div className="space-y-2 p-2">
                 <NotificationListBody
+                  dateFnsLocale={dateFnsLocale}
                   isError={isNotificationsError}
                   isPending={isNotificationsPending}
                   notifications={notifications}
@@ -619,6 +651,7 @@ export default function NotificationsMain() {
 
         <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
           <NotificationDetailsPanel
+            dateFnsLocale={dateFnsLocale}
             notification={selectedNotification}
             onToggleReadStatus={handleToggleReadStatus}
           />
@@ -628,8 +661,12 @@ export default function NotificationsMain() {
       {selectedNotification ? (
         <div className="rounded-lg border border-dashed p-3 text-muted-foreground text-xs">
           <HugeiconsIcon className="mr-1 inline size-3.5" icon={Time01Icon} />
-          Ostatnia aktualizacja:{" "}
-          {formatDateTime(selectedNotification.alert.updatedAt)}
+          {translateMessage("generated.m1058", {
+            value0: formatDateTime(
+              selectedNotification.alert.updatedAt,
+              dateFnsLocale
+            ),
+          })}
         </div>
       ) : null}
     </div>

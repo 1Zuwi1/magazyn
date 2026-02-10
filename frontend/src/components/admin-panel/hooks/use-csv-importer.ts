@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
+import { translateMessage } from "@/i18n/translate-message"
 import { MAX_TOAST_ROWS } from "../lib/constants"
 import { parseCsvFile } from "../warehouses/csv/utils/csv-utils"
 import type {
@@ -52,11 +53,17 @@ export function useCsvImporter<T extends CsvImporterType>({
           .join("\n")
 
         const remaining = result.errors.length - MAX_TOAST_ROWS
-        const suffix = remaining > 0 ? `\n...i ${remaining} więcej` : ""
+        const suffix =
+          remaining > 0
+            ? translateMessage("generated.m0197", { value0: remaining })
+            : ""
 
-        toast.error(`Błędy parsowania CSV (${result.errors.length})`, {
-          description: displayedErrors + suffix,
-        })
+        toast.error(
+          translateMessage("generated.m0198", { value0: result.errors.length }),
+          {
+            description: displayedErrors + suffix,
+          }
+        )
         return false
       }
 
@@ -66,7 +73,7 @@ export function useCsvImporter<T extends CsvImporterType>({
       setPreviewHeaders(result.headers)
       return true
     } catch {
-      toast.error("Nie udało się przetworzyć pliku CSV")
+      toast.error(translateMessage("generated.m0199"))
       resetFile()
       return false
     }
@@ -82,12 +89,12 @@ export function useCsvImporter<T extends CsvImporterType>({
 
   async function confirmImport() {
     if (parseErrors.length > 0) {
-      toast.error("Plik CSV zawiera błędy. Popraw plik przed importem.")
+      toast.error(translateMessage("generated.m0200"))
       return
     }
 
     if (!sourceFile) {
-      toast.error("Najpierw wybierz plik CSV")
+      toast.error(translateMessage("generated.m0201"))
       return
     }
 

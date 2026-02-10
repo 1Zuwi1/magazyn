@@ -3,26 +3,31 @@ import {
   InboxIcon,
   WeightScale01Icon,
 } from "@hugeicons/core-free-icons"
+import { translateMessage } from "@/i18n/translate-message"
 
 export const ADMIN_NAV_LINKS = [
-  { title: "Przegląd", url: "/admin" },
-  { title: "Użytkownicy", url: "/admin/users" },
-  { title: "Magazyny", url: "/admin/warehouses" },
-  { title: "Przedmioty", url: "/admin/items" },
-  { title: "Alerty", url: "/admin/alerts" },
-  { title: "Raporty regałów", url: "/admin/rack-reports" },
-  { title: "Audyt operacji", url: "/admin/audit" },
+  { title: translateMessage("generated.m0087"), url: "/admin" },
+  { title: translateMessage("generated.m0233"), url: "/admin/users" },
+  { title: translateMessage("generated.m0886"), url: "/admin/warehouses" },
+  { title: translateMessage("generated.m0931"), url: "/admin/items" },
+  { title: translateMessage("generated.m0901"), url: "/admin/alerts" },
+  { title: translateMessage("generated.m0234"), url: "/admin/rack-reports" },
+  { title: translateMessage("generated.m0190"), url: "/admin/audit" },
 ] as const
 
 export const NOTIFICATIONS_NAV_LINKS = [
-  { title: "Wszystkie", icon: InboxIcon, filterValue: null },
   {
-    title: "Przeciążenia",
+    title: translateMessage("generated.m0935"),
+    icon: InboxIcon,
+    filterValue: null,
+  },
+  {
+    title: translateMessage("generated.m0235"),
     icon: WeightScale01Icon,
     filterValue: "RACK_OVERWEIGHT" as const,
   },
   {
-    title: "Nieautoryzowane",
+    title: translateMessage("generated.m0936"),
     icon: Alert01Icon,
     filterValue: "UNAUTHORIZED_REMOVAL" as const,
   },

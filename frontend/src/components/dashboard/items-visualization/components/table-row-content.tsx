@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { TableCell } from "@/components/ui/table"
+import { translateMessage } from "@/i18n/translate-message"
 import type { RackAssortment } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 
@@ -65,13 +66,13 @@ export function TableRowContent({
         </span>
         {expired && (
           <Badge className="ml-2" variant="destructive">
-            Wygasło
+            {translateMessage("generated.m0482")}
           </Badge>
         )}
       </TableCell>
       <TableCell className="text-right">
         <DropdownMenu>
-          <DropdownMenuTrigger aria-label="Otwórz menu">
+          <DropdownMenuTrigger aria-label={translateMessage("generated.m0227")}>
             <HugeiconsIcon
               className={cn(
                 buttonVariants({
@@ -88,21 +89,21 @@ export function TableRowContent({
               onClick={() => onView(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={ViewIcon} />
-              <span>Podgląd</span>
+              <span>{translateMessage("generated.m0483")}</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => onEdit(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilEdit01Icon} />
-              <span>Edytuj</span>
+              <span>{translateMessage("generated.m0934")}</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer text-destructive focus:text-destructive"
               onClick={() => onDelete(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={Delete02Icon} />
-              <span>Usuń</span>
+              <span>{translateMessage("generated.m0230")}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -1,5 +1,6 @@
 "use client"
 
+import { translateMessage } from "@/i18n/translate-message"
 import { ScannerSelectItem } from "../scanner-select-item"
 import type { ScanItem } from "../scanner-types"
 
@@ -14,10 +15,10 @@ export function OutboundSelectItem({
 }: OutboundSelectItemProps) {
   return (
     <ScannerSelectItem
-      description="Znajdź produkt który chcesz zdjąć z magazynu."
+      description={translateMessage("generated.m0713")}
       onCancel={onCancel}
       onSelect={onSelect}
-      title="Wybierz produkt"
+      title={translateMessage("generated.m0714")}
     />
   )
 }

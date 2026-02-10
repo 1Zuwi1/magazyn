@@ -2,6 +2,7 @@ import { StopIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { translateMessage } from "@/i18n/translate-message"
 
 interface VoiceAssistantListeningViewProps {
   onStopListening: () => void
@@ -53,7 +54,7 @@ export function VoiceAssistantListeningView({
           <span className="pointer-events-none absolute -inset-4 animate-pulse rounded-full bg-destructive/8 blur-lg" />
 
           <Button
-            aria-label="Zatrzymaj nasłuchiwanie"
+            aria-label={translateMessage("generated.m0818")}
             className="relative size-22 rounded-full shadow-destructive/25 shadow-lg transition-all duration-200 hover:shadow-xl active:scale-95"
             onClick={onStopListening}
             size="icon"
@@ -69,10 +70,10 @@ export function VoiceAssistantListeningView({
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75" />
               <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
             </span>
-            Słucham...
+            {translateMessage("generated.m0819")}
           </h2>
           <p className="text-muted-foreground text-sm">
-            Powiedz polecenie, a następnie naciśnij stop
+            {translateMessage("generated.m0820")}
           </p>
         </div>
 
@@ -82,11 +83,13 @@ export function VoiceAssistantListeningView({
         >
           {transcript ? (
             <p className="rounded-lg bg-muted/50 px-4 py-2 text-foreground/80 text-sm leading-relaxed">
-              &bdquo;{transcript}&rdquo;
+              &bdquo;
+              {transcript}
+              &rdquo;
             </p>
           ) : (
             <p className="text-muted-foreground/60 text-xs italic">
-              Nasłuchuję Twojego polecenia...
+              {translateMessage("generated.m0821")}
             </p>
           )}
           {detectedCommandLabel && (
@@ -98,7 +101,9 @@ export function VoiceAssistantListeningView({
                 aria-hidden="true"
                 className="inline-flex size-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px] shadow-emerald-400/60"
               />
-              Wykryto: {detectedCommandLabel}
+              {translateMessage("generated.m1104", {
+                value0: detectedCommandLabel,
+              })}
             </Badge>
           )}
         </div>

@@ -4,6 +4,7 @@ import {
   useQueries,
 } from "@tanstack/react-query"
 import { useMemo } from "react"
+import { translateMessage } from "@/i18n/translate-message"
 import {
   apiFetch,
   type FetchError,
@@ -188,7 +189,7 @@ export function useInfiniteRacks(
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
       if (warehouseId === null) {
-        throw new Error("Brak aktywnego magazynu.")
+        throw new Error(translateMessage("generated.m0838"))
       }
 
       return await apiFetch(

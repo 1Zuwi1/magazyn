@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/popover"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import type { FilterState } from "./types"
 
@@ -40,12 +41,14 @@ export function WarehouseFilters({
       <PopoverContent className="w-80">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <h4 className="font-medium leading-none">Filtry zaawansowane</h4>
+            <h4 className="font-medium leading-none">
+              {translateMessage("generated.m0651")}
+            </h4>
           </div>
 
           <div className="space-y-2">
             <div className="flex justify-between">
-              <Label>Min. zapełnienie</Label>
+              <Label>{translateMessage("generated.m0652")}</Label>
               <span className="text-muted-foreground text-sm">
                 {filters.minOccupancy}%
               </span>
@@ -65,7 +68,9 @@ export function WarehouseFilters({
           </div>
 
           <div className="flex items-center justify-between">
-            <Label htmlFor="showEmpty">Pokaż puste magazyny</Label>
+            <Label htmlFor="showEmpty">
+              {translateMessage("generated.m0653")}
+            </Label>
             <Switch
               checked={filters.showEmpty}
               id="showEmpty"
@@ -83,7 +88,7 @@ export function WarehouseFilters({
             size="sm"
             variant="ghost"
           >
-            Resetuj filtry
+            {translateMessage("generated.m0654")}
           </Button>
         </div>
       </PopoverContent>

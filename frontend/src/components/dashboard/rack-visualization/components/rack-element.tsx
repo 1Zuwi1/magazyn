@@ -1,4 +1,5 @@
 import { ItemPhoto } from "@/components/ui/item-photo"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import type { ItemSlot } from "../../types"
 import { getItemStatus, getStatusColors } from "../../utils/item-status"
@@ -29,8 +30,11 @@ export default function RackElement({
     statusRing = "ring-2 ring-destructive/50"
   }
   const ariaLabel = isEmpty
-    ? `Pusta półka ${coordinate}`
-    : `Półka ${coordinate}, ${item?.name ?? "nieznany element"}`
+    ? translateMessage("generated.m0496", { value0: coordinate })
+    : translateMessage("generated.m0497", {
+        value0: coordinate,
+        value1: item?.name ?? "nieznany element",
+      })
 
   return (
     <button

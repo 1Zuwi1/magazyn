@@ -10,6 +10,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
+import { translateMessage } from "@/i18n/translate-message"
 import { getAnimationStyle } from "@/lib/utils"
 
 // Static decorative components - hoisted outside to avoid re-creation
@@ -63,48 +64,42 @@ const FloatingElements = () => (
 // Feature data - static, defined at module level
 const features = [
   {
-    title: "Śledzenie zapasów",
-    description:
-      "Monitoruj stany magazynowe w czasie rzeczywistym. Otrzymuj powiadomienia o niskich stanach.",
+    title: translateMessage("generated.m0107"),
+    description: translateMessage("generated.m0108"),
     icon: PackageIcon,
   },
   {
-    title: "Kody QR",
-    description:
-      "Skanuj i generuj kody QR dla produktów. Szybka identyfikacja i lokalizacja.",
+    title: translateMessage("generated.m0109"),
+    description: translateMessage("generated.m0110"),
     icon: QrCodeIcon,
   },
   {
-    title: "Raporty i analizy",
-    description:
-      "Szczegółowe raporty i wizualizacje danych. Podejmuj lepsze decyzje biznesowe.",
+    title: translateMessage("generated.m0111"),
+    description: translateMessage("generated.m0112"),
     icon: Chart01Icon,
   },
   {
-    title: "Zarządzanie lokalizacjami",
-    description:
-      "Organizuj magazyn w strefy i regały. Zawsze wiedz, gdzie leży produkt.",
+    title: translateMessage("generated.m0113"),
+    description: translateMessage("generated.m0114"),
     icon: Location01Icon,
   },
   {
-    title: "Historia operacji",
-    description:
-      "Pełna historia przyjęć, wydań i przesunięć. Audyt i kontrola zmian.",
+    title: translateMessage("generated.m0115"),
+    description: translateMessage("generated.m0116"),
     icon: Clock01Icon,
   },
   {
-    title: "Wieloosobowy dostęp",
-    description:
-      "Role i uprawnienia dla zespołu. Każdy ma dostęp tylko do tego, co potrzebuje.",
+    title: translateMessage("generated.m0117"),
+    description: translateMessage("generated.m0118"),
     icon: UserMultipleIcon,
   },
 ]
 
 const benefits = [
-  { value: "99.9%", label: "Dostępność systemu" },
-  { value: "< 1s", label: "Czas odpowiedzi" },
-  { value: "24/7", label: "Monitoring" },
-  { value: "SSL", label: "Szyfrowanie danych" },
+  { value: "99.9%", label: translateMessage("generated.m0119") },
+  { value: "< 1s", label: translateMessage("generated.m0120") },
+  { value: "24/7", label: translateMessage("generated.m0887") },
+  { value: "SSL", label: translateMessage("generated.m0121") },
 ]
 
 export default function LandingPage() {
@@ -124,11 +119,11 @@ export default function LandingPage() {
           <nav className="flex items-center gap-2">
             <Link href="/login">
               <Button size="sm" variant="ghost">
-                Zaloguj się
+                {translateMessage("generated.m0014")}
               </Button>
             </Link>
             <Link href="/register">
-              <Button size="sm">Załóż konto</Button>
+              <Button size="sm">{translateMessage("generated.m0122")}</Button>
             </Link>
           </nav>
         </div>
@@ -144,7 +139,7 @@ export default function LandingPage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
               </span>
-              System aktywny
+              {translateMessage("generated.m0123")}
             </div>
 
             {/* Headline */}
@@ -152,10 +147,11 @@ export default function LandingPage() {
               className="fade-in slide-in-from-bottom-4 max-w-4xl animate-in font-bold text-4xl tracking-tight duration-700 sm:text-5xl md:text-6xl lg:text-7xl"
               style={getAnimationStyle("100ms")}
             >
-              Zarządzanie magazynem <br className="hidden sm:block" />
+              {translateMessage("generated.m0124")}{" "}
+              <br className="hidden sm:block" />
               <span className="relative inline-block">
                 <span className="bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                  dla firmy
+                  {translateMessage("generated.m0125")}
                 </span>
                 <svg
                   aria-hidden="true"
@@ -179,8 +175,7 @@ export default function LandingPage() {
               className="fade-in slide-in-from-bottom-5 mt-8 max-w-2xl animate-in text-lg text-muted-foreground duration-700 sm:text-xl"
               style={getAnimationStyle("200ms")}
             >
-              Kompletny system do zarządzania stanami magazynowymi, śledzenia
-              produktów i optymalizacji operacji logistycznych.
+              {translateMessage("generated.m0126")}
             </p>
 
             {/* CTA buttons */}
@@ -193,7 +188,7 @@ export default function LandingPage() {
                   className="group min-w-45 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-primary/30 hover:shadow-xl"
                   size="lg"
                 >
-                  Rozpocznij teraz
+                  {translateMessage("generated.m0127")}
                   <svg
                     className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
                     fill="none"
@@ -209,7 +204,7 @@ export default function LandingPage() {
               </Link>
               <Link href="/login">
                 <Button className="min-w-45" size="lg" variant="outline">
-                  Zaloguj się
+                  {translateMessage("generated.m0014")}
                 </Button>
               </Link>
             </div>
@@ -229,7 +224,7 @@ export default function LandingPage() {
                 >
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
-                Bezpieczny dostęp
+                {translateMessage("generated.m0128")}
               </div>
               <div className="flex items-center gap-2">
                 <svg
@@ -242,7 +237,7 @@ export default function LandingPage() {
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12,6 12,12 16,14" />
                 </svg>
-                Dane w czasie rzeczywistym
+                {translateMessage("generated.m0129")}
               </div>
               <div className="flex items-center gap-2">
                 <svg
@@ -256,7 +251,7 @@ export default function LandingPage() {
                   <line x1="3" x2="21" y1="9" y2="9" />
                   <line x1="9" x2="9" y1="21" y2="9" />
                 </svg>
-                Intuicyjny interfejs
+                {translateMessage("generated.m0130")}
               </div>
             </div>
           </div>
@@ -268,10 +263,10 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 py-24 md:py-32">
           <div className="mb-16 text-center">
             <h2 className="font-bold text-3xl tracking-tight sm:text-4xl">
-              Wszystko, czego potrzebujesz
+              {translateMessage("generated.m0131")}
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Kompleksowe narzędzia do efektywnego zarządzania magazynem
+              {translateMessage("generated.m0132")}
             </p>
           </div>
 
@@ -308,10 +303,10 @@ export default function LandingPage() {
           <div className="rounded-3xl border border-border/50 bg-linear-to-b from-card/80 to-card/40 p-8 backdrop-blur-sm md:p-12">
             <div className="mb-12 text-center">
               <h2 className="font-bold text-3xl tracking-tight sm:text-4xl">
-                Niezawodność, na której możesz polegać
+                {translateMessage("generated.m0133")}
               </h2>
               <p className="mt-4 text-muted-foreground">
-                System zaprojektowany z myślą o bezpieczeństwie i wydajności
+                {translateMessage("generated.m0134")}
               </p>
             </div>
 
@@ -353,11 +348,10 @@ export default function LandingPage() {
 
             <div className="relative flex flex-col items-center text-center">
               <h2 className="max-w-2xl font-bold text-3xl tracking-tight sm:text-4xl">
-                Gotowy, aby usprawnić zarządzanie magazynem?
+                {translateMessage("generated.m0135")}
               </h2>
               <p className="mt-4 max-w-xl text-muted-foreground">
-                Dołącz do systemu i zacznij efektywnie zarządzać swoimi zasobami
-                już dziś.
+                {translateMessage("generated.m0136")}
               </p>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <Link href="/register">
@@ -365,7 +359,7 @@ export default function LandingPage() {
                     className="group min-w-40 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-primary/30 hover:shadow-xl"
                     size="lg"
                   >
-                    Załóż konto
+                    {translateMessage("generated.m0122")}
                     <svg
                       className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
                       fill="none"
@@ -381,7 +375,7 @@ export default function LandingPage() {
                 </Link>
                 <Link href="/login">
                   <Button size="lg" variant="outline">
-                    Mam już konto
+                    {translateMessage("generated.m0137")}
                   </Button>
                 </Link>
               </div>
@@ -400,18 +394,20 @@ export default function LandingPage() {
                 className="transition-colors hover:text-foreground"
                 href="/login"
               >
-                Logowanie
+                {translateMessage("generated.m0888")}
               </Link>
               <Link
                 className="transition-colors hover:text-foreground"
                 href="/register"
               >
-                Rejestracja
+                {translateMessage("generated.m0889")}
               </Link>
             </div>
             <div className="h-px w-full max-w-xs bg-linear-to-r from-transparent via-border to-transparent" />
             <p className="text-muted-foreground/70 text-sm">
-              © {new Date().getFullYear()} GdzieToLeży. System wewnętrzny.
+              {translateMessage("generated.m1092", {
+                value0: new Date().getFullYear(),
+              })}
             </p>
           </div>
         </div>

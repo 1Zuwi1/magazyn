@@ -1,5 +1,6 @@
 import Image from "next/image"
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
+import { translateMessage } from "@/i18n/translate-message"
 import { Badge } from "../../ui/badge"
 import { Button } from "../../ui/button"
 import { Input } from "../../ui/input"
@@ -35,10 +36,10 @@ export function OutboundSelectQuantity({
 
         <div className="mb-6">
           <h2 className="font-semibold text-xl tracking-tight">
-            Ile sztuk chcesz zdjąć?
+            {translateMessage("generated.m0715")}
           </h2>
           <p className="mt-1 text-muted-foreground text-sm">
-            Podaj ilość sztuk do zdjęcia z magazynu.
+            {translateMessage("generated.m0716")}
           </p>
         </div>
 
@@ -58,10 +59,12 @@ export function OutboundSelectQuantity({
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="truncate font-medium">{item.name}</h3>
-                  {item.dangerous ? <Badge>Niebezpieczny</Badge> : null}
+                  {item.dangerous ? (
+                    <Badge>{translateMessage("generated.m0925")}</Badge>
+                  ) : null}
                 </div>
                 <p className="mt-1 font-mono text-muted-foreground text-xs">
-                  Kod: {item.code}
+                  {translateMessage("generated.m1100", { value0: item.code })}
                 </p>
               </div>
             </div>
@@ -74,7 +77,7 @@ export function OutboundSelectQuantity({
               className="mb-2 block font-medium text-sm"
               htmlFor="outbound-quantity"
             >
-              Ilość do zdjęcia
+              {translateMessage("generated.m0717")}
             </label>
             <div className="flex items-center gap-3">
               <Button
@@ -127,7 +130,7 @@ export function OutboundSelectQuantity({
             onClick={onSubmit}
             type="button"
           >
-            Wyznacz pozycje do pobrania
+            {translateMessage("generated.m0718")}
           </Button>
         </div>
       </div>

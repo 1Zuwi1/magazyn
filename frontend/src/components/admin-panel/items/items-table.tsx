@@ -52,6 +52,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 interface AdminItemsTableProps {
@@ -79,7 +80,9 @@ function createColumns(
     {
       accessorKey: "name",
       header: ({ column }) => (
-        <SortableHeader column={column}>Nazwa</SortableHeader>
+        <SortableHeader column={column}>
+          {translateMessage("generated.m0922")}
+        </SortableHeader>
       ),
       cell: ({ row }) => {
         const item = row.original
@@ -101,7 +104,9 @@ function createColumns(
     },
     {
       accessorKey: "dimensions",
-      header: () => <StaticHeader>Wymiary (mm)</StaticHeader>,
+      header: () => (
+        <StaticHeader>{translateMessage("generated.m0215")}</StaticHeader>
+      ),
       cell: ({ row }) => {
         const item = row.original
         return (
@@ -115,7 +120,9 @@ function createColumns(
     {
       accessorKey: "weight",
       header: ({ column }) => (
-        <SortableHeader column={column}>Waga (kg)</SortableHeader>
+        <SortableHeader column={column}>
+          {translateMessage("generated.m0214")}
+        </SortableHeader>
       ),
       cell: ({ row }) => (
         <span className="font-mono text-sm">{row.original.weight}</span>
@@ -124,12 +131,17 @@ function createColumns(
     },
     {
       accessorKey: "temperature",
-      header: () => <StaticHeader>Temperatura</StaticHeader>,
+      header: () => (
+        <StaticHeader>{translateMessage("generated.m0924")}</StaticHeader>
+      ),
       cell: ({ row }) => {
         const item = row.original
         return (
           <div className="font-mono text-sm">
-            {item.minTemp}°C – {item.maxTemp}°C
+            {translateMessage("generated.m0095", {
+              value0: item.minTemp,
+              value1: item.maxTemp,
+            })}
           </div>
         )
       },
@@ -138,7 +150,9 @@ function createColumns(
     {
       accessorKey: "daysToExpiry",
       header: ({ column }) => (
-        <SortableHeader column={column}>Ważność (dni)</SortableHeader>
+        <SortableHeader column={column}>
+          {translateMessage("generated.m0211")}
+        </SortableHeader>
       ),
       cell: ({ row }) => (
         <span className="font-mono text-sm">{row.original.daysToExpiry}</span>
@@ -148,27 +162,37 @@ function createColumns(
     {
       accessorKey: "isDangerous",
       header: ({ column }) => (
-        <SortableHeader column={column}>Status</SortableHeader>
+        <SortableHeader column={column}>
+          {translateMessage("generated.m0895")}
+        </SortableHeader>
       ),
       cell: ({ row }) => {
         const item = row.original
         return item.isDangerous ? (
-          <Badge variant="destructive">Niebezpieczny</Badge>
+          <Badge variant="destructive">
+            {translateMessage("generated.m0925")}
+          </Badge>
         ) : (
-          <Badge variant="secondary">Bezpieczny</Badge>
+          <Badge variant="secondary">
+            {translateMessage("generated.m0933")}
+          </Badge>
         )
       },
       enableSorting: true,
     },
     {
       id: "actions",
-      header: () => <StaticHeader>Akcje</StaticHeader>,
+      header: () => (
+        <StaticHeader>{translateMessage("generated.m0900")}</StaticHeader>
+      ),
       cell: ({ row }) => {
         const item = row.original
 
         return (
           <DropdownMenu>
-            <DropdownMenuTrigger aria-label="Otwórz menu">
+            <DropdownMenuTrigger
+              aria-label={translateMessage("generated.m0227")}
+            >
               <HugeiconsIcon
                 className={cn(
                   buttonVariants({ variant: "ghost", size: "icon-xs" })
@@ -182,18 +206,20 @@ function createColumns(
                   className="mr-2 h-4 w-4"
                   icon={ImageUploadIcon}
                 />
-                {item.imageUrl ? "Zmień zdjęcie" : "Dodaj zdjęcie"}
+                {item.imageUrl
+                  ? translateMessage("generated.m0228")
+                  : translateMessage("generated.m0229")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(item)}>
                 <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
-                Edytuj
+                {translateMessage("generated.m0934")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive"
                 onClick={() => onDelete(item)}
               >
                 <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
-                Usuń
+                {translateMessage("generated.m0230")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -246,7 +272,7 @@ export function AdminItemsTable({
   const itemLabel = {
     singular: "przedmiot",
     plural: "przedmioty",
-    genitive: "przedmiotów",
+    genitive: translateMessage("generated.m0224"),
   }
 
   const getTableContent = () => {
@@ -307,9 +333,9 @@ export function AdminItemsTable({
         <FilterBar className="gap-3">
           <FilterGroup>
             <SearchInput
-              aria-label="Filtruj przedmioty po nazwie lub ID"
+              aria-label={translateMessage("generated.m0231")}
               onChange={onSearchChange}
-              placeholder="Szukaj po nazwie lub ID..."
+              placeholder={translateMessage("generated.m0232")}
               value={search}
             />
             {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}

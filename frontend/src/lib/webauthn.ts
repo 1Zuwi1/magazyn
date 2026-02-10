@@ -1,3 +1,5 @@
+import { translateMessage } from "@/i18n/translate-message"
+
 const BASE64_TO_URL_REPLACEMENTS = [/\+/g, /\//g] as const
 const BASE64_URL_TO_BASE64_REPLACEMENTS = [/-/g, /_/g] as const
 
@@ -79,7 +81,7 @@ const decodeBase64Url = (value: Base64UrlString): Uint8Array => {
   const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4)
 
   if (typeof atob !== "function") {
-    throw new Error("Base64 decoding is not supported in this environment")
+    throw new Error(translateMessage("generated.m0868"))
   }
 
   const binary = atob(padded)
@@ -102,7 +104,7 @@ const encodeBase64Url = (value: ArrayBufferLike): Base64UrlString => {
   }
 
   if (typeof btoa !== "function") {
-    throw new Error("Base64 encoding is not supported in this environment")
+    throw new Error(translateMessage("generated.m0869"))
   }
 
   const base64 = btoa(binary)
@@ -233,13 +235,13 @@ export const getWebAuthnErrorMessage = (
   if (typeof DOMException !== "undefined" && error instanceof DOMException) {
     switch (error.name) {
       case "NotAllowedError":
-        return "Operacja została anulowana lub przekroczono limit czasu."
+        return translateMessage("generated.m0870")
       case "InvalidStateError":
-        return "Ten klucz bezpieczeństwa jest już dodany na tym urządzeniu."
+        return translateMessage("generated.m0871")
       case "NotSupportedError":
-        return "To urządzenie lub przeglądarka nie obsługuje kluczy bezpieczeństwa."
+        return translateMessage("generated.m0872")
       case "SecurityError":
-        return "Operacja zablokowana przez ustawienia bezpieczeństwa."
+        return translateMessage("generated.m0873")
       default:
         return fallback
     }

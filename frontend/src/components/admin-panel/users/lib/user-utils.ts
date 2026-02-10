@@ -1,5 +1,6 @@
 import type { EditableAdminUser } from "@/components/admin-panel/users/components/action-dialog"
 import type { AdminTeamOption, AdminUser } from "@/hooks/use-admin-users"
+import { translateMessage } from "@/i18n/translate-message"
 
 export const TABLE_PAGE_SIZE = 10
 
@@ -14,7 +15,7 @@ export const getStatusLabel = (status: AdminUser["account_status"]): string => {
     return "Zablokowane"
   }
   if (status === "DISABLED") {
-    return "Wyłączone"
+    return translateMessage("generated.m0317")
   }
   return status
 }

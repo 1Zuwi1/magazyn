@@ -1,3 +1,4 @@
+import { translateMessage } from "@/i18n/translate-message"
 export type VoiceCommandId =
   | "dashboard"
   | "warehouses"
@@ -62,7 +63,7 @@ const IGNORED_PARAM_VALUES = new Set([
 export const VOICE_COMMANDS: VoiceCommand[] = [
   {
     id: "dashboard",
-    description: "Otwórz dashboard",
+    description: translateMessage("generated.m0859"),
     patterns: [
       { regex: /^otworz dashboard$/i },
       { regex: /^przejdz do dashboard$/i },
@@ -76,13 +77,13 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
   },
   {
     id: "warehouses",
-    description: "Pokaż magazyny",
+    description: translateMessage("generated.m0860"),
     patterns: [{ regex: /^pokaz magazyny$/i }, { regex: /^otworz magazyny$/i }],
     keywords: ["magazyny"],
   },
   {
     id: "warehouses:id",
-    description: "Otwórz magazyn o podanej nazwie",
+    description: translateMessage("generated.m0861"),
     patterns: [
       {
         regex: /^otworz magazyn ([a-z0-9 ]+)$/i,
@@ -100,7 +101,7 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
   },
   {
     id: "items",
-    description: "Pokaż produkty",
+    description: translateMessage("generated.m0862"),
     patterns: [
       { regex: /^pokaz produkty$/i },
       { regex: /^pokaz asortyment$/i },
@@ -116,13 +117,13 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
   },
   {
     id: "settings",
-    description: "Ustawienia",
+    description: translateMessage("generated.m1010"),
     patterns: [{ regex: /^ustawienia$/i }, { regex: /^otworz ustawienia$/i }],
     keywords: ["ustawienia", "ustawien"],
   },
   {
     id: "open-scanner",
-    description: "Uruchom skaner",
+    description: translateMessage("generated.m0863"),
     patterns: [
       { regex: /^uruchom skaner$/i },
       { regex: /^otworz skaner$/i },
@@ -135,7 +136,7 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
   },
   {
     id: "add-item",
-    description: "Dodaj produkt",
+    description: translateMessage("generated.m0864"),
     patterns: [
       { regex: /^dodaj produkt$/i },
       { regex: /^dodaj przedmiot$/i },
@@ -146,7 +147,7 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
   },
   {
     id: "search-assortment",
-    description: "Wyszukaj asortyment",
+    description: translateMessage("generated.m0865"),
     patterns: [
       {
         regex: /^znajdz asortyment ([a-z0-9 ]+)$/i,
@@ -168,7 +169,7 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
   },
   {
     id: "search-product",
-    description: "Wyszukaj produkt",
+    description: translateMessage("generated.m0754"),
     patterns: [
       {
         regex: /^znajdz produkt ([a-z0-9 ]+)$/i,
@@ -214,7 +215,7 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
   },
   {
     id: "notifications",
-    description: "Pokaż powiadomienia",
+    description: translateMessage("generated.m0826"),
     patterns: [
       { regex: /^pokaz powiadomienia$/i },
       { regex: /^pokaz moje powiadomienia$/i },
@@ -228,7 +229,7 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
   },
   {
     id: "alerts",
-    description: "Pokaż alerty",
+    description: translateMessage("generated.m0866"),
     patterns: [
       { regex: /^pokaz alerty$/i },
       { regex: /^otworz alerty$/i },
@@ -238,7 +239,7 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
   },
   {
     id: "admin-panel",
-    description: "Otwórz panel administracyjny",
+    description: translateMessage("generated.m0827"),
     patterns: [
       { regex: /^otworz panel administracyjny$/i },
       { regex: /^pokaz panel administracyjny$/i },
@@ -249,7 +250,7 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
   },
   {
     id: "inventory-check",
-    description: "Sprawdź stan magazynowy",
+    description: translateMessage("generated.m0867"),
     patterns: [
       {
         regex: /^sprawdz stan magazynu ([a-z0-9 ]+)$/i,

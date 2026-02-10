@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { AdminUser } from "@/hooks/use-admin-users"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import {
   getStatusLabel,
@@ -49,11 +50,11 @@ const ADMIN_TABLE_LABELS = {
   LOGISTICS: "Logistyka",
   WAREHOUSE: "Magazyn",
   INVENTORY: "Inwentaryzacja",
-  QUALITY_CONTROL: "Kontrola jakości",
-  RECEIVING: "Przyjęcia",
-  SHIPPING: "Wysyłka",
+  QUALITY_CONTROL: translateMessage("generated.m0284"),
+  RECEIVING: translateMessage("generated.m0285"),
+  SHIPPING: translateMessage("generated.m0286"),
   IT_SUPPORT: "Wsparcie IT",
-  MANAGEMENT: "Zarządzanie",
+  MANAGEMENT: translateMessage("generated.m0287"),
 }
 
 export function UsersTable({
@@ -149,7 +150,7 @@ export function UsersTable({
         <TableCell>
           <DropdownMenu>
             <DropdownMenuTrigger
-              aria-label="Akcje użytkownika"
+              aria-label={translateMessage("generated.m0288")}
               className={cn(
                 "flex size-8 items-center justify-center rounded-md opacity-0 transition-all hover:bg-muted group-hover:opacity-100",
                 "focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
@@ -172,7 +173,7 @@ export function UsersTable({
                   className="mr-2 size-4"
                   icon={PencilEdit01Icon}
                 />
-                Edytuj
+                {translateMessage("generated.m0934")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer"
@@ -185,7 +186,7 @@ export function UsersTable({
                   className="mr-2 size-4"
                   icon={UserShield01Icon}
                 />
-                Zmień status
+                {translateMessage("generated.m0176")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer"
@@ -195,7 +196,7 @@ export function UsersTable({
                 }}
               >
                 <HugeiconsIcon className="mr-2 size-4" icon={Building06Icon} />
-                Przypisz magazyn
+                {translateMessage("generated.m0289")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -206,7 +207,7 @@ export function UsersTable({
                 }}
               >
                 <HugeiconsIcon className="mr-2 size-4" icon={Delete02Icon} />
-                Usuń
+                {translateMessage("generated.m0230")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -220,11 +221,21 @@ export function UsersTable({
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/20 hover:bg-muted/20">
-            <TableHead className="font-semibold">Imię i nazwisko</TableHead>
-            <TableHead className="font-semibold">Email</TableHead>
-            <TableHead className="font-semibold">Status</TableHead>
-            <TableHead className="font-semibold">Rola</TableHead>
-            <TableHead className="font-semibold">Zespół</TableHead>
+            <TableHead className="font-semibold">
+              {translateMessage("generated.m0270")}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {translateMessage("generated.m0874")}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {translateMessage("generated.m0895")}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {translateMessage("generated.m0942")}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {translateMessage("generated.m0272")}
+            </TableHead>
             <TableHead className="w-12" />
           </TableRow>
         </TableHeader>

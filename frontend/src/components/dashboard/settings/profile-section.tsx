@@ -6,7 +6,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { format } from "date-fns"
-import { pl } from "date-fns/locale"
+import { useLocale } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -16,6 +16,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { translateMessage } from "@/i18n/translate-message"
 import type { User } from "@/lib/schemas"
 import type { IconComponent } from "../types"
 import { ROLE_LABELS, STATUS_CONFIG } from "./constants"
@@ -24,8 +26,9 @@ import type { ProfileDetail } from "./types"
 interface ProfileSectionProps {
   user: User
 }
+type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
 
-const FALLBACK_DISPLAY_NAME = "Brak nazwy użytkownika"
+const FALLBACK_DISPLAY_NAME = translateMessage("generated.m0570")
 const INITIALS_REGEX = /\s+/
 
 const getInitialsFromName = ({
@@ -61,20 +64,23 @@ function ProfileDetailRow({ detail }: { detail: ProfileDetail }) {
   )
 }
 
-function buildProfileDetails(user: User): ProfileDetail[] {
+function buildProfileDetails(
+  user: User,
+  dateFnsLocale: DateFnsLocale
+): ProfileDetail[] {
   return [
     {
-      label: "Status konta",
+      label: translateMessage("generated.m0571"),
       value: STATUS_CONFIG[user.account_status].label,
     },
     {
-      label: "Rola",
+      label: translateMessage("generated.m0942"),
       value: ROLE_LABELS[user.role],
     },
     {
-      label: "Ostatnie logowanie",
+      label: translateMessage("generated.m0572"),
       value: format(new Date(user.last_login ?? Date.now()), "EEEE, H:mm", {
-        locale: pl,
+        locale: dateFnsLocale,
       }),
     },
   ]
@@ -118,17 +124,19 @@ function InfoField({ icon, label, value }: InfoFieldProps) {
 }
 
 export function ProfileSection({ user }: ProfileSectionProps) {
+  const locale = useLocale()
+  const dateFnsLocale = getDateFnsLocale(locale)
   const statusBadge = STATUS_CONFIG[user.account_status]
-  const profileDetails = buildProfileDetails(user)
+  const profileDetails = buildProfileDetails(user, dateFnsLocale)
   const displayName = user.full_name?.trim() || FALLBACK_DISPLAY_NAME
 
   return (
     <Card>
       <CardHeader>
         <div>
-          <CardTitle>Profil użytkownika</CardTitle>
+          <CardTitle>{translateMessage("generated.m0573")}</CardTitle>
           <p className="text-muted-foreground text-sm">
-            Dane konta i informacje kontaktowe przypisane przez administratora.
+            {translateMessage("generated.m0574")}
           </p>
         </div>
         <CardAction>
@@ -155,22 +163,22 @@ export function ProfileSection({ user }: ProfileSectionProps) {
         <div className="grid gap-3 sm:grid-cols-2">
           <InfoField
             icon={Mail01Icon}
-            label="Adres e-mail"
+            label={translateMessage("generated.m0575")}
             value={user.email}
           />
           <InfoField
             icon={SmartPhone01Icon}
-            label="Telefon"
+            label={translateMessage("generated.m0940")}
             value={user.phone ?? "—"}
           />
           <InfoField
             icon={Location04Icon}
-            label="Lokalizacja"
+            label={translateMessage("generated.m0893")}
             value={user.location ?? "—"}
           />
           <InfoField
             icon={UserGroupIcon}
-            label="Zespół"
+            label={translateMessage("generated.m0272")}
             value={user.team ?? "—"}
           />
         </div>
@@ -179,7 +187,7 @@ export function ProfileSection({ user }: ProfileSectionProps) {
 
         <div>
           <p className="mb-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">
-            Informacje systemowe
+            {translateMessage("generated.m0576")}
           </p>
           <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
             {profileDetails.map((detail) => (
@@ -190,8 +198,7 @@ export function ProfileSection({ user }: ProfileSectionProps) {
 
         <div className="rounded-lg border border-muted-foreground/30 border-dashed bg-muted/20 px-4 py-3">
           <p className="text-muted-foreground text-xs">
-            Dane profilu są zarządzane przez administratora systemu. Jeśli
-            potrzebujesz wprowadzić zmiany, skontaktuj się z działem IT.
+            {translateMessage("generated.m0577")}
           </p>
         </div>
       </CardContent>

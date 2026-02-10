@@ -1,5 +1,6 @@
 import { Loading02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 
 function Spinner({
@@ -9,7 +10,7 @@ function Spinner({
 }: React.ComponentProps<"svg">) {
   return (
     <HugeiconsIcon
-      aria-label="Loading"
+      aria-label={translateMessage("generated.m1046")}
       className={cn("size-4 animate-spin fill-current", className)}
       icon={Loading02Icon}
       role="status"

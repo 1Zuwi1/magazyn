@@ -1,5 +1,6 @@
 import z from "zod"
 import { OTP_LENGTH } from "@/config/constants"
+import { translateMessage } from "@/i18n/translate-message"
 import { createApiSchema } from "./create-api-schema"
 import { AlertSchema } from "./schemas/monitoring-schemas"
 
@@ -19,28 +20,31 @@ export type ResendType = z.infer<typeof ResendMethods>
 
 export const PasswordSchema = z
   .string()
-  .min(8, "Hasło musi mieć co najmniej 8 znaków")
-  .regex(/[A-Z]/, "Hasło musi zawierać co najmniej jedną wielką literę")
-  .regex(/[a-z]/, "Hasło musi zawierać co najmniej jedną małą literę")
-  .regex(/[0-9]/, "Hasło musi zawierać co najmniej jedną cyfrę")
+  .min(8, translateMessage("generated.m0844"))
+  .regex(/[A-Z]/, translateMessage("generated.m0845"))
+  .regex(/[a-z]/, translateMessage("generated.m0846"))
+  .regex(/[0-9]/, translateMessage("generated.m0847"))
   .regex(
     /[!@#$%^&*()_\-+=[\]{};':"\\|,.<>/?]/,
-    "Hasło musi zawierać co najmniej jeden znak specjalny"
+    translateMessage("generated.m0848")
   )
   .refine((value) => {
     const bytes = txtEncoder.encode(value).length
     return bytes <= 72
-  }, "Hasło nie może przekraczać 72 bajtów w kodowaniu UTF-8.")
+  }, translateMessage("generated.m0849"))
 
 const OTPSchema = z
   .string()
   .nullable()
-  .refine((val) => {
-    if (val === null) {
-      return true
-    }
-    return val.length === OTP_LENGTH
-  }, `Kod 2FA musi mieć dokładnie ${OTP_LENGTH} znaków`)
+  .refine(
+    (val) => {
+      if (val === null) {
+        return true
+      }
+      return val.length === OTP_LENGTH
+    },
+    translateMessage("generated.m0850", { value0: OTP_LENGTH })
+  )
 
 export const Check2FASchema = createApiSchema({
   POST: {
@@ -62,11 +66,11 @@ export const BackupCodesGenerateSchema = createApiSchema({
 export const ChangePasswordFormSchema = z
   .object({
     newPassword: PasswordSchema,
-    oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
-    confirmPassword: z.string().min(1, "Potwierdzenie hasła jest wymagane"),
+    oldPassword: z.string().min(1, translateMessage("generated.m0851")),
+    confirmPassword: z.string().min(1, translateMessage("generated.m0852")),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Hasła nie są zgodne",
+    message: translateMessage("generated.m0853"),
     path: ["confirmPassword"],
   })
 
@@ -74,7 +78,7 @@ export const ChangePasswordSchema = createApiSchema({
   PATCH: {
     input: z.object({
       newPassword: PasswordSchema,
-      oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
+      oldPassword: z.string().min(1, translateMessage("generated.m0851")),
     }),
     output: z.null(),
   },
@@ -83,7 +87,7 @@ export const ChangePasswordSchema = createApiSchema({
 export const LoginSchema = createApiSchema({
   POST: {
     input: z.object({
-      email: z.email("Nieprawidłowy adres email"),
+      email: z.email(translateMessage("generated.m0854")),
       password: PasswordSchema,
       rememberMe: z.boolean(),
     }),
@@ -93,12 +97,10 @@ export const LoginSchema = createApiSchema({
 export const RegisterSchema = createApiSchema({
   POST: {
     input: z.object({
-      fullName: z
-        .string()
-        .min(2, "Imię i nazwisko musi mieć co najmniej 2 znaki"),
-      email: z.email("Nieprawidłowy adres email"),
+      fullName: z.string().min(2, translateMessage("generated.m0855")),
+      email: z.email(translateMessage("generated.m0854")),
       password: PasswordSchema,
-      phoneNumber: z.e164("Nieprawidłowy numer telefonu"),
+      phoneNumber: z.e164(translateMessage("generated.m0856")),
     }),
     output: z.null(),
   },
@@ -159,7 +161,7 @@ export const WebAuthnFinishRegistrationSchema = createApiSchema({
       keyName: z
         .string()
         .min(1, "Nazwa klucza jest wymagana")
-        .max(50, "Nazwa jest za długa"),
+        .max(50, translateMessage("generated.m0857")),
     }),
     output: z.null(),
   },
@@ -188,7 +190,7 @@ export const FormRegisterSchema = RegisterSchema.shape.POST.shape.input
     confirmPassword: PasswordSchema,
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Hasła nie są zgodne",
+    message: translateMessage("generated.m0853"),
     path: ["confirmPassword"],
   })
 
@@ -196,7 +198,7 @@ export const Verify2FASchema = createApiSchema({
   POST: {
     input: z.object({
       method: TFAMethods,
-      code: z.string().length(6, "Kod musi mieć dokładnie 6 cyfr"),
+      code: z.string().length(6, translateMessage("generated.m0858")),
     }),
     output: z.null(),
   },
@@ -227,7 +229,7 @@ export const TFAAuthenticatorStartSchema = createApiSchema({
 export const TFAAuthenticatorFinishSchema = createApiSchema({
   POST: {
     input: z.object({
-      code: z.string().length(6, "Kod musi mieć dokładnie 6 cyfr"),
+      code: z.string().length(6, translateMessage("generated.m0858")),
     }),
     output: z.null(),
   },
@@ -320,7 +322,7 @@ export const PasskeyRenameSchema = createApiSchema({
       name: z
         .string()
         .min(1, "Nazwa jest wymagana")
-        .max(50, "Nazwa jest za długa"),
+        .max(50, translateMessage("generated.m0857")),
     }),
     output: z.null(),
   },

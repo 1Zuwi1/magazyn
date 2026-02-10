@@ -12,6 +12,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useMemo } from "react"
+import { translateMessage } from "@/i18n/translate-message"
 import { cn } from "@/lib/utils"
 import { Scanner } from "./scanner/scanner"
 import { DialogTrigger } from "./ui/dialog"
@@ -20,22 +21,22 @@ import { VoiceAssistant } from "./voice-assistant/voice-assistant"
 
 const dockNavItems = [
   {
-    title: "Dashboard",
+    title: translateMessage("generated.m1009"),
     href: "/dashboard",
     icon: Home01Icon,
   },
   {
-    title: "Magazyny",
+    title: translateMessage("generated.m0886"),
     href: "/dashboard/warehouse",
     icon: Package,
   },
   {
-    title: "Asortyment",
+    title: translateMessage("generated.m0882"),
     href: "/dashboard/items",
     icon: GroupItemsIcon,
   },
   {
-    title: "Ustawienia",
+    title: translateMessage("generated.m1010"),
     href: "/settings",
     icon: Settings01Icon,
   },
@@ -151,7 +152,7 @@ export function Dock() {
               <TooltipTrigger
                 render={
                   <DialogTrigger
-                    aria-label="Asystent głosowy"
+                    aria-label={translateMessage("generated.m0665")}
                     className={cn(
                       "group relative flex size-12 flex-col items-center justify-center rounded-xl transition-all duration-200",
                       "hover:bg-muted/80 active:scale-95"
@@ -166,7 +167,7 @@ export function Dock() {
                 />
               </TooltipTrigger>
               <TooltipContent side="top" sideOffset={12}>
-                Asystent głosowy
+                {translateMessage("generated.m0665")}
               </TooltipContent>
             </Tooltip>
           }
@@ -180,7 +181,7 @@ export function Dock() {
                 render={
                   <DialogTrigger
                     aria-disabled={!isInWarehouse}
-                    aria-label="Skaner kodów"
+                    aria-label={translateMessage("generated.m0666")}
                     className={cn(
                       "group relative flex size-12 flex-col items-center justify-center rounded-xl transition-all duration-200",
                       isInWarehouse
@@ -211,8 +212,8 @@ export function Dock() {
               </TooltipTrigger>
               <TooltipContent side="top" sideOffset={12}>
                 {isInWarehouse
-                  ? "Skaner kodów"
-                  : "Wybierz magazyn, aby użyć skanera"}
+                  ? translateMessage("generated.m0666")
+                  : translateMessage("generated.m0667")}
               </TooltipContent>
             </Tooltip>
           }
