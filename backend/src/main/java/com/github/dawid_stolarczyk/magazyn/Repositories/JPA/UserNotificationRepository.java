@@ -28,29 +28,10 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
     Page<UserNotification> findByUserIdAndIsReadFalseOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
     /**
-     * Find read notifications for a user
-     */
-    Page<UserNotification> findByUserIdAndIsReadTrueOrderByCreatedAtDesc(Long userId, Pageable pageable);
-
-    /**
      * Find notification by user and alert
      */
     Optional<UserNotification> findByUserIdAndAlertId(Long userId, Long alertId);
 
-    /**
-     * Check if notification exists for user and alert
-     */
-    boolean existsByUserIdAndAlertId(Long userId, Long alertId);
-
-    /**
-     * Count unread notifications for a user
-     */
-    long countByUserIdAndIsReadFalse(Long userId);
-
-    /**
-     * Count all notifications for a user
-     */
-    long countByUserId(Long userId);
 
     /**
      * Mark all notifications as read for a user
@@ -63,20 +44,6 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
      * Find all notifications for a specific alert
      */
     List<UserNotification> findByAlertId(Long alertId);
-
-    /**
-     * Delete all notifications for a user
-     */
-    @Modifying
-    @Query("DELETE FROM UserNotification n WHERE n.user.id = :userId")
-    void deleteAllByUserId(@Param("userId") Long userId);
-
-    /**
-     * Delete all notifications for an alert
-     */
-    @Modifying
-    @Query("DELETE FROM UserNotification n WHERE n.alert.id = :alertId")
-    void deleteAllByAlertId(@Param("alertId") Long alertId);
 
     /**
      * Get all user IDs that already have a notification for the given alert.

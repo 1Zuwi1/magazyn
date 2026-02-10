@@ -48,14 +48,6 @@ public class AlertService {
     }
 
     /**
-     * Get alerts filtered by status
-     */
-    public Page<AlertDto> getAlertsByStatus(AlertStatus status, HttpServletRequest httpRequest, Pageable pageable) {
-        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
-        return alertRepository.findByStatusOrderByCreatedAtDesc(status, pageable).map(this::mapToDto);
-    }
-
-    /**
      * Get only active (unresolved) alerts
      */
     public Page<AlertDto> getActiveAlerts(HttpServletRequest httpRequest, Pageable pageable) {
@@ -78,14 +70,6 @@ public class AlertService {
     public Page<AlertDto> getAlertsByRack(Long rackId, HttpServletRequest httpRequest, Pageable pageable) {
         rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
         return alertRepository.findByRackIdOrderByCreatedAtDesc(rackId, pageable).map(this::mapToDto);
-    }
-
-    /**
-     * Get alerts by type
-     */
-    public Page<AlertDto> getAlertsByType(AlertType alertType, HttpServletRequest httpRequest, Pageable pageable) {
-        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
-        return alertRepository.findByAlertTypeOrderByCreatedAtDesc(alertType, pageable).map(this::mapToDto);
     }
 
     /**
