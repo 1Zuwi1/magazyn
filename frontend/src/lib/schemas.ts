@@ -259,6 +259,13 @@ export const ApiMeSchema = createApiSchema({
   },
 })
 
+export const LogoutSchema = createApiSchema({
+  POST: {
+    input: z.null(),
+    output: z.null(),
+  },
+})
+
 export const TFASchema = createApiSchema({
   GET: {
     output: z.object({

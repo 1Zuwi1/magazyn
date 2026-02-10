@@ -1,6 +1,7 @@
 import { Settings01Icon, UserIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { PageHeader } from "@/components/dashboard/page-header"
+import { LogoutSection } from "./logout-section"
 import { ProfileSection } from "./profile-section"
 import { SecuritySection } from "./security-section"
 import type { SettingsContentProps } from "./types"
@@ -29,6 +30,7 @@ export function SettingsContent({ user }: SettingsContentProps) {
             <span>Bezpieczeństwo</span>
           </div>
           <SecuritySection userEmail={user.email} />
+          <LogoutSection />
         </section>
       </div>
     </div>

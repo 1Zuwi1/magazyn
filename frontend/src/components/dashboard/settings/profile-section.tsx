@@ -80,6 +80,19 @@ function buildProfileDetails(user: User): ProfileDetail[] {
   ]
 }
 
+export const InitialAvatar = ({ name }: { name: string }) => {
+  const initials = getInitialsFromName({
+    displayName: name,
+    email: "",
+  })
+
+  return (
+    <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary/20 to-primary/5 font-semibold text-lg text-primary ring-1 ring-primary/10">
+      {initials}
+    </div>
+  )
+}
+
 interface InfoFieldProps {
   icon: IconComponent
   label: string
@@ -108,10 +121,6 @@ export function ProfileSection({ user }: ProfileSectionProps) {
   const statusBadge = STATUS_CONFIG[user.account_status]
   const profileDetails = buildProfileDetails(user)
   const displayName = user.full_name?.trim() || FALLBACK_DISPLAY_NAME
-  const userInitials = getInitialsFromName({
-    displayName: user.full_name ?? "",
-    email: user.email,
-  })
 
   return (
     <Card>
@@ -132,9 +141,7 @@ export function ProfileSection({ user }: ProfileSectionProps) {
 
       <CardContent className="space-y-6">
         <div className="flex items-center gap-4">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary/20 to-primary/5 font-semibold text-lg text-primary ring-1 ring-primary/10">
-            {userInitials}
-          </div>
+          <InitialAvatar name={displayName} />
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold text-lg">{displayName}</p>
             <p className="truncate text-muted-foreground text-sm">
