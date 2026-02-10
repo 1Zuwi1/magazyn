@@ -18,39 +18,53 @@
                     <td style="padding: 40px 32px;">
                         <div style="text-align: center; margin-bottom: 32px;">
                             <th:block th:if="${success}">
-                                <div style="width: 56px; height: 56px; line-height: 56px; background-color: #10B981; border-radius: 50%; margin: 0 auto 20px; text-align: center;">
-                                    <span style="color: #ffffff; font-size: 28px; font-family: Arial, sans-serif; font-weight: bold;">&#10003;</span>
+                                <div
+                                        style="width: 56px; height: 56px; line-height: 56px; background-color: #10B981; border-radius: 50%; margin: 0 auto 20px; text-align: center;">
+                                        <span
+                                                style="color: #ffffff; font-size: 28px; font-family: Arial, sans-serif; font-weight: bold;">&#10003;</span>
                                 </div>
-                                <h1 style="color:rgb(17,24,39); font-size:22px; font-weight:700; line-height:30px; margin:0 0 8px 0;">
+                                <h1
+                                        style="color:rgb(17,24,39); font-size:22px; font-weight:700; line-height:30px; margin:0 0 8px 0;">
                                     Kopia zapasowa gotowa
                                 </h1>
                             </th:block>
 
                             <th:block th:if="${!success}">
-                                <div style="width: 56px; height: 56px; line-height: 56px; background-color: #EF4444; border-radius: 50%; margin: 0 auto 20px; text-align: center;">
-                                    <span style="color: #ffffff; font-size: 28px; font-family: Arial, sans-serif; font-weight: bold;">&#10005;</span>
+                                <div
+                                        style="width: 56px; height: 56px; line-height: 56px; background-color: #EF4444; border-radius: 50%; margin: 0 auto 20px; text-align: center;">
+                                        <span
+                                                style="color: #ffffff; font-size: 28px; font-family: Arial, sans-serif; font-weight: bold;">&#10005;</span>
                                 </div>
-                                <h1 style="color:rgb(17,24,39); font-size:22px; font-weight:700; line-height:30px; margin:0 0 8px 0;">
+                                <h1
+                                        style="color:rgb(17,24,39); font-size:22px; font-weight:700; line-height:30px; margin:0 0 8px 0;">
                                     Błąd tworzenia kopii
                                 </h1>
                             </th:block>
                             <p style="color:rgb(107,114,128); font-size:14px; margin:0;">
-                                Magazyn: <span th:text="${warehouseName}" style="color:rgb(17,24,39); font-weight:600;">Magazyn Główny</span>
+                                Magazyn: <span th:text="${warehouseName}"
+                                               style="color:rgb(17,24,39); font-weight:600;">Magazyn Główny</span>
                             </p>
                         </div>
 
-                        <div style="background-color:rgb(252,253,254); border: 1px solid rgb(234,236,240); border-radius: 12px; overflow: hidden; margin-bottom: 32px;">
+                        <div
+                                style="background-color:rgb(252,253,254); border: 1px solid rgb(234,236,240); border-radius: 12px; overflow: hidden; margin-bottom: 32px;">
                             <table border="0" width="100%" cellpadding="0" cellspacing="0" role="presentation">
                                 <tr th:if="${success}">
                                     <td style="padding: 16px 20px; border-bottom: 1px solid rgb(234,236,240);">
-                                        <table border="0" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                                        <table border="0" width="100%" cellpadding="0" cellspacing="0"
+                                               role="presentation">
                                             <tr>
                                                 <td width="24" valign="top" style="padding-top: 2px;">
                                                     <span style="color:rgb(16,185,129); font-size: 14px;">📦</span>
                                                 </td>
                                                 <td>
-                                                    <div style="color:rgb(156,163,175); font-size:12px; font-weight:600; margin-bottom:2px;">Zabezpieczone rekordy</div>
-                                                    <div style="color:rgb(55,65,81); font-size:15px; font-weight:600;" th:text="${totalRecords}">150 produktów</div>
+                                                    <div
+                                                            style="color:rgb(156,163,175); font-size:12px; font-weight:600; margin-bottom:2px;">
+                                                        Zabezpieczone rekordy
+                                                    </div>
+                                                    <div style="color:rgb(55,65,81); font-size:15px; font-weight:600;"
+                                                         th:text="${totalRecords}">150 produktów
+                                                    </div>
                                                 </td>
                                             </tr>
                                         </table>
@@ -58,14 +72,20 @@
                                 </tr>
                                 <tr th:if="${success}">
                                     <td style="padding: 16px 20px; border-bottom: 1px solid rgb(234,236,240);">
-                                        <table border="0" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                                        <table border="0" width="100%" cellpadding="0" cellspacing="0"
+                                               role="presentation">
                                             <tr>
                                                 <td width="24" valign="top" style="padding-top: 2px;">
                                                     <span style="color:rgb(16,185,129); font-size: 14px;">💾</span>
                                                 </td>
                                                 <td>
-                                                    <div style="color:rgb(156,163,175); font-size:12px; font-weight:600; margin-bottom:2px;">Rozmiar archiwum</div>
-                                                    <div style="color:rgb(55,65,81); font-size:15px; font-weight:600;" th:text="${sizeBytes}">2.5 MB</div>
+                                                    <div
+                                                            style="color:rgb(156,163,175); font-size:12px; font-weight:600; margin-bottom:2px;">
+                                                        Rozmiar archiwum
+                                                    </div>
+                                                    <div style="color:rgb(55,65,81); font-size:15px; font-weight:600;"
+                                                         th:text="${sizeBytes}">2.5 MB
+                                                    </div>
                                                 </td>
                                             </tr>
                                         </table>
@@ -73,14 +93,20 @@
                                 </tr>
                                 <tr>
                                     <td style="padding: 16px 20px;">
-                                        <table border="0" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                                        <table border="0" width="100%" cellpadding="0" cellspacing="0"
+                                               role="presentation">
                                             <tr>
                                                 <td width="24" valign="top" style="padding-top: 2px;">
                                                     <span style="color:rgb(10,133,234); font-size: 14px;">📅</span>
                                                 </td>
                                                 <td>
-                                                    <div style="color:rgb(156,163,175); font-size:12px; font-weight:600; margin-bottom:2px;">Data wykonania</div>
-                                                    <div style="color:rgb(55,65,81); font-size:15px;" th:text="${completedAt}">2026-02-10 22:50:00</div>
+                                                    <div
+                                                            style="color:rgb(156,163,175); font-size:12px; font-weight:600; margin-bottom:2px;">
+                                                        Data wykonania
+                                                    </div>
+                                                    <div style="color:rgb(55,65,81); font-size:15px;"
+                                                         th:text="${completedAt}">2026-02-10 22:50:00
+                                                    </div>
                                                 </td>
                                             </tr>
                                         </table>
@@ -89,15 +115,19 @@
                             </table>
                         </div>
 
-                        <div th:if="${!success && errorMessage}" style="background-color:rgb(254,242,242); border: 1px solid rgb(252,165,165); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                        <div th:if="${!success && errorMessage}"
+                             style="background-color:rgb(254,242,242); border: 1px solid rgb(252,165,165); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
                             <div style="color:rgb(153,27,27); font-size:13px; line-height:20px;">
                                 <strong>Szczegóły błędu:</strong> <br/>
-                                <span th:text="${errorMessage}">Błąd podczas odczytu struktury katalogu zdjęć.</span>
+                                <span th:text="${errorMessage}">Błąd podczas odczytu struktury katalogu
+                                        zdjęć.</span>
                             </div>
                         </div>
 
-                        <div th:if="${backupType}" style="background-color:rgb(243,244,246); border-radius: 8px; padding: 12px 16px; margin-bottom: 24px;">
-                            <div style="color:rgb(75,85,99); font-size:11px; line-height:18px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <div th:if="${backupType}"
+                             style="background-color:rgb(243,244,246); border-radius: 8px; padding: 12px 16px; margin-bottom: 24px;">
+                            <div
+                                    style="color:rgb(75,85,99); font-size:11px; line-height:18px; text-transform: uppercase; letter-spacing: 0.5px;">
                                 <strong>Tryb:</strong> <span th:text="${backupType}">MANUAL</span>
                                 <th:block th:if="${triggeredByName}">
                                     | <strong>Operator:</strong> <span th:text="${triggeredByName}">System</span>
@@ -105,20 +135,10 @@
                             </div>
                         </div>
 
-                        <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation"
-                               style="margin: 0 auto;">
-                            <tr>
-                                <td align="center" style="background-color:rgb(10,133,234); border-radius:8px;">
-                                    <a th:href="${backupLink}" target="_blank"
-                                       style="display: inline-block; padding: 14px 40px; color: #ffffff; font-size: 15px; font-weight: 600; text-decoration: none;">
-                                        Pobierz kopię zapasową
-                                    </a>
-                                </td>
-                            </tr>
-                        </table>
-
-                        <p style="color:rgb(156,163,175); font-size:12px; text-align:center; margin-top:32px; line-height:20px;">
-                            To powiadomienie zostało wygenerowane automatycznie przez system zarządzania asortymentem.
+                        <p
+                                style="color:rgb(156,163,175); font-size:12px; text-align:center; margin-top:32px; line-height:20px;">
+                            To powiadomienie zostało wygenerowane automatycznie przez system zarządzania
+                            asortymentem.
                         </p>
                     </td>
                 </tr>

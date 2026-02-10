@@ -98,8 +98,8 @@ public class EmailService {
 
     @Async
     public void sendBackupNotificationEmail(String to, String warehouseName, boolean success, Long totalRecords,
-                                             Long sizeBytes, String completedAt, String backupType, String triggeredByName,
-                                             String errorMessage, String backupLink) {
+                                            Long sizeBytes, String completedAt, String backupType, String triggeredByName,
+                                            String errorMessage, String backupLink) {
         Context context = new Context();
         context.setVariable("warehouseName", warehouseName);
         context.setVariable("success", success);
