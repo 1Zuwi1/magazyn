@@ -161,18 +161,20 @@ public class BackupService {
         Warehouse warehouse = warehouseRepository.findById(warehouseId)
                 .orElseThrow(() -> new BackupException(BackupError.WAREHOUSE_NOT_FOUND));
 
-        if (backupRecordRepository.existsByWarehouseIdAndStatus(warehouse.getId(), BackupStatus.IN_PROGRESS)) {
-            log.info("Skipping scheduled backup for warehouse {} - backup already in progress", warehouseId);
-            return null;
-        }
-
-        AtomicBoolean lock = warehouseLocks.computeIfAbsent(warehouse.getId(), k -> new AtomicBoolean(false));
-        if (!lock.compareAndSet(false, true)) {
-            log.info("Skipping scheduled backup for warehouse {} - lock already held", warehouseId);
-            return null;
-        }
-
+        boolean lockAcquired = false;
         try {
+            if (backupRecordRepository.existsByWarehouseIdAndStatus(warehouse.getId(), BackupStatus.IN_PROGRESS)) {
+                log.info("Skipping scheduled backup for warehouse {} - backup already in progress", warehouseId);
+                return null;
+            }
+
+            AtomicBoolean lock = warehouseLocks.computeIfAbsent(warehouse.getId(), k -> new AtomicBoolean(false));
+            if (!lock.compareAndSet(false, true)) {
+                log.info("Skipping scheduled backup for warehouse {} - lock already held", warehouseId);
+                return null;
+            }
+            lockAcquired = true;
+
             BackupRecord record = BackupRecord.builder()
                     .warehouse(warehouse)
                     .backupType(BackupType.SCHEDULED)
@@ -186,13 +188,16 @@ public class BackupService {
             Long recordId = record.getId();
             asyncTaskExecutor.submit(() -> executeBackup(recordId));
 
+            lockAcquired = false;
             return toDto(record);
-        } catch (Exception e) {
-            if (lock.get()) {
-                lock.set(false);
-                warehouseLocks.remove(warehouseId);
+        } finally {
+            if (lockAcquired) {
+                AtomicBoolean lock = warehouseLocks.get(warehouseId);
+                if (lock != null && lock.get()) {
+                    lock.set(false);
+                    warehouseLocks.remove(warehouseId);
+                }
             }
-            throw e;
         }
     }
 
