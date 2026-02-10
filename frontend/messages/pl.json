@@ -9,6 +9,7 @@
     "warehouse": "Magazyn",
     "item": "Przedmiot"
   },
+  "selectLanguage": "Wybierz język",
   "errorCodes": {},
   "adminUsers": {
     "teams": {

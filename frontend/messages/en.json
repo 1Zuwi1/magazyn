@@ -9,6 +9,7 @@
     "warehouse": "Warehouse",
     "item": "Item"
   },
+  "selectLanguage": "Select language",
   "adminUsers": {
     "teams": {
       "OPERATIONS": "Warehouse Operations",

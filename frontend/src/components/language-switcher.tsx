@@ -38,7 +38,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
 
   return (
     <nav
-      aria-label="Select language"
+      aria-label={t("selectLanguage")}
       className={cn(
         "relative inline-flex h-8 items-center gap-0 rounded-full border border-border/60 bg-muted/40 p-0.5 backdrop-blur-sm",
         {
