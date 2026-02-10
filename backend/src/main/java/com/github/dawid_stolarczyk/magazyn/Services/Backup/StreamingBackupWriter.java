@@ -72,9 +72,29 @@ public class StreamingBackupWriter {
         } catch (ExecutionException e) {
             throw new Exception("Streaming backup failed", e.getCause());
         } catch (TimeoutException e) {
+            log.error("Streaming backup timeout after {} minutes for {}/{}", streamingTimeoutMinutes, basePath, fileName);
+            try {
+                if (jsonOut != null) jsonOut.close();
+            } catch (IOException ex) {
+                log.warn("Failed to close jsonOut stream", ex);
+            }
+            try {
+                if (jsonIn != null) jsonIn.close();
+            } catch (IOException ex) {
+                log.warn("Failed to close jsonIn stream", ex);
+            }
+            try {
+                if (encryptOut != null) encryptOut.close();
+            } catch (IOException ex) {
+                log.warn("Failed to close encryptOut stream", ex);
+            }
+            try {
+                if (encryptIn != null) encryptIn.close();
+            } catch (IOException ex) {
+                log.warn("Failed to close encryptIn stream", ex);
+            }
             jsonTask.cancel(true);
             encryptTask.cancel(true);
-            log.error("Streaming backup timeout after {} minutes for {}/{}", streamingTimeoutMinutes, basePath, fileName);
             throw new Exception("Streaming backup timeout after " + streamingTimeoutMinutes + " minutes");
         }
 

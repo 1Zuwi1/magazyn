@@ -28,6 +28,7 @@ public class BackupStorageService {
 
     private static final int MULTIPART_THRESHOLD = 5 * 1024 * 1024; // 5MB
     private static final int PART_SIZE = 5 * 1024 * 1024; // 5MB per part
+    private static final int INITIAL_CHECK_SIZE = 64 * 1024; // 64KB for initial size check
 
     /**
      * Upload backup file from InputStream using streaming (no full buffering in RAM).
@@ -38,14 +39,14 @@ public class BackupStorageService {
         long totalBytes = 0;
 
         try {
-            // Buffer first 5MB to determine if we need multipart
-            byte[] firstChunk = new byte[MULTIPART_THRESHOLD];
-            int firstChunkSize = readFully(inputStream, firstChunk);
+            // Read small chunk first to check size (avoid large buffer allocation)
+            byte[] checkBuffer = new byte[INITIAL_CHECK_SIZE];
+            int bytesRead = readFully(inputStream, checkBuffer);
 
-            if (firstChunkSize < MULTIPART_THRESHOLD) {
-                // Small file - single PUT (trim array to actual size)
-                byte[] trimmed = (firstChunkSize == firstChunk.length) ? firstChunk :
-                        java.util.Arrays.copyOf(firstChunk, firstChunkSize);
+            if (bytesRead < INITIAL_CHECK_SIZE) {
+                // Small file - single PUT (entire file fits in check buffer)
+                byte[] trimmed = (bytesRead == checkBuffer.length) ? checkBuffer :
+                        java.util.Arrays.copyOf(checkBuffer, bytesRead);
                 s3Client.putObject(
                         PutObjectRequest.builder()
                                 .bucket(bucketName)
@@ -54,11 +55,12 @@ public class BackupStorageService {
                                 .build(),
                         RequestBody.fromBytes(trimmed)
                 );
-                totalBytes = firstChunkSize;
+                totalBytes = bytesRead;
                 log.debug("Uploaded backup file (single-part): {} ({} bytes)", key, totalBytes);
             } else {
-                // Large file - multipart upload
-                totalBytes = uploadMultipart(key, firstChunk, firstChunkSize, inputStream);
+                // Large file detected - use multipart upload
+                // Use the checkBuffer as first chunk and continue reading
+                totalBytes = uploadMultipart(key, checkBuffer, bytesRead, inputStream);
                 log.debug("Uploaded backup file (multipart): {} ({} bytes)", key, totalBytes);
             }
         } catch (Exception e) {

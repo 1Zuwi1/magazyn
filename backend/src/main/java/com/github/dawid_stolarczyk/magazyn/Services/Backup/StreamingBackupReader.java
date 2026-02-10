@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -58,8 +59,18 @@ public class StreamingBackupReader {
         } catch (ExecutionException e) {
             throw new Exception("Streaming restore failed", e.getCause());
         } catch (TimeoutException e) {
-            decryptTask.cancel(true);
             log.error("Streaming restore timeout after {} minutes for {}/{}", streamingTimeoutMinutes, basePath, fileName);
+            try {
+                if (decryptOut != null) decryptOut.close();
+            } catch (IOException ex) {
+                log.warn("Failed to close decryptOut stream", ex);
+            }
+            try {
+                if (decryptIn != null) decryptIn.close();
+            } catch (IOException ex) {
+                log.warn("Failed to close decryptIn stream", ex);
+            }
+            decryptTask.cancel(true);
             throw new Exception("Streaming restore timeout after " + streamingTimeoutMinutes + " minutes");
         }
 
@@ -93,8 +104,18 @@ public class StreamingBackupReader {
         } catch (ExecutionException e) {
             throw new Exception("Streaming restore failed", e.getCause());
         } catch (TimeoutException e) {
-            decryptTask.cancel(true);
             log.error("Streaming restore timeout after {} minutes for {}/{}", streamingTimeoutMinutes, basePath, fileName);
+            try {
+                if (decryptOut != null) decryptOut.close();
+            } catch (IOException ex) {
+                log.warn("Failed to close decryptOut stream", ex);
+            }
+            try {
+                if (decryptIn != null) decryptIn.close();
+            } catch (IOException ex) {
+                log.warn("Failed to close decryptIn stream", ex);
+            }
+            decryptTask.cancel(true);
             throw new Exception("Streaming restore timeout after " + streamingTimeoutMinutes + " minutes");
         }
 

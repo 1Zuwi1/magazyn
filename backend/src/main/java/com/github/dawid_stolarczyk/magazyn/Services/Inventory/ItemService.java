@@ -207,7 +207,7 @@ public class ItemService {
         }
 
         // Case 3: Invalid QR code format - generate default
-        log.warn("Invalid QR code format provided: {}, using default QR-{{}}", providedQrCode);
+        log.warn("Invalid QR code format provided: {}, using default QR code", providedQrCode);
         return generateDefaultQrCode(itemBarcode);
     }
 
