@@ -23,7 +23,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi zawierać co najmniej jedną wielką literę"
+        "generated.validation.passwordMustContainLeastOne"
       )
     }
   })
@@ -34,7 +34,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi zawierać co najmniej jedną małą literę"
+        "generated.validation.passwordMustContainLeastOneLowercase"
       )
     }
   })
@@ -45,7 +45,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi zawierać co najmniej jedną cyfrę"
+        "generated.validation.passwordMustContainLeastOneDigit"
       )
     }
   })
@@ -56,7 +56,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi zawierać co najmniej jeden znak specjalny"
+        "generated.validation.passwordMustContainLeastOneSpecial"
       )
     }
   })
@@ -87,7 +87,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi mieć co najmniej 8 znaków"
+        "generated.validation.passwordMustLeast8Characters"
       )
     }
   })
@@ -102,7 +102,9 @@ describe("LoginSchema", () => {
 
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe("Nieprawidłowy adres email")
+      expect(result.error.issues[0].message).toBe(
+        "generated.validation.invalidEmailAddress"
+      )
     }
   })
 
@@ -140,6 +142,7 @@ describe("RegisterSchema", () => {
       email: "user@example.com",
       password: "Password123!",
       confirmPassword: "Password123!",
+      phoneNumber: "+48123456789",
     }
 
     const result = FormRegisterSchema.safeParse(validInput)
@@ -153,13 +156,16 @@ describe("RegisterSchema", () => {
       email: "user@example.com",
       password: "Password123!",
       confirmPassword: "Different123!",
+      phoneNumber: "+48123456789",
     }
 
     const result = FormRegisterSchema.safeParse(invalidInput)
 
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe("Hasła nie są zgodne")
+      expect(result.error.issues[0].message).toBe(
+        "generated.shared.passwordsMatch"
+      )
     }
   })
 
@@ -189,7 +195,7 @@ describe("RegisterSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Imię i nazwisko musi mieć co najmniej 2 znaki"
+        "generated.validation.fullNameMustLeast2"
       )
     }
   })
@@ -205,17 +211,6 @@ describe("Verify2FASchema", () => {
   it("accepts valid authenticator input", () => {
     const validInput = {
       method: "AUTHENTICATOR" as const,
-      code: "123456",
-    }
-
-    const result = Verify2FASchema.shape.POST.shape.input.safeParse(validInput)
-
-    expect(result.success).toBe(true)
-  })
-
-  it("accepts valid SMS input", () => {
-    const validInput = {
-      method: "SMS" as const,
       code: "123456",
     }
 
@@ -259,7 +254,7 @@ describe("Verify2FASchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Kod musi mieć dokładnie 6 cyfr"
+        "generated.validation.codeMustExactly6Digits"
       )
     }
   })
@@ -284,16 +279,6 @@ describe("Verify2FASchema", () => {
 })
 
 describe("Resend2FASchema", () => {
-  it("accepts valid SMS method", () => {
-    const validInput = {
-      method: "SMS" as const,
-    }
-
-    const result = Resend2FASchema.shape.POST.shape.input.safeParse(validInput)
-
-    expect(result.success).toBe(true)
-  })
-
   it("accepts valid email method", () => {
     const validInput = {
       method: "EMAIL" as const,
@@ -341,20 +326,12 @@ describe("ApiMeSchema", () => {
       full_name: "Test User",
       account_status: "ACTIVE",
       role: "USER",
-    }
-
-    const result = ApiMeSchema.shape.GET.shape.output.safeParse(validOutput)
-
-    expect(result.success).toBe(true)
-  })
-
-  it("accepts user data with nullable full_name", () => {
-    const validOutput = {
-      id: 1,
-      email: "user@example.com",
-      full_name: null,
-      account_status: "ACTIVE",
-      role: "ADMIN",
+      phone: null,
+      location: "Warsaw",
+      team: null,
+      last_login: null,
+      warehouse_ids: [],
+      backup_codes_refresh_needed: false,
     }
 
     const result = ApiMeSchema.shape.GET.shape.output.safeParse(validOutput)
@@ -366,7 +343,7 @@ describe("ApiMeSchema", () => {
     const invalidOutput = {
       id: 1,
       email: "not-an-email",
-      full_name: null,
+      full_name: "Test User",
       account_status: "ACTIVE",
       role: "USER",
     }

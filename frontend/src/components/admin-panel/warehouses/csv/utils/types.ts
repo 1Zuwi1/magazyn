@@ -1,5 +1,9 @@
 import type z from "zod"
-import type { ItemCsvSchema, RackCsvSchema } from "@/lib/schemas/csv-schemas"
+import type {
+  ItemCsvSchema,
+  RackCsvSchema,
+  WarehouseCsvSchema,
+} from "@/lib/schemas/csv-schemas"
 
 export interface Column {
   key: string
@@ -9,8 +13,7 @@ export interface Column {
 export type RackCsvData = z.infer<typeof RackCsvSchema>
 
 export interface RackFormData {
-  symbol?: string
-  name: string
+  marker: string
   rows: number
   cols: number
   minTemp: number
@@ -19,16 +22,21 @@ export interface RackFormData {
   maxItemWidth: number
   maxItemHeight: number
   maxItemDepth: number
+  acceptsDangerous: boolean
   comment?: string
 }
 
 export type ItemCsvData = z.infer<typeof ItemCsvSchema>
 
-export type CsvImporterType = "rack" | "item"
+export type WarehouseCsvData = z.infer<typeof WarehouseCsvSchema>
+
+export type CsvImporterType = "rack" | "item" | "warehouse"
 
 export type CsvRowType<T extends CsvImporterType> = T extends "rack"
   ? RackCsvData
-  : ItemCsvData
+  : T extends "item"
+    ? ItemCsvData
+    : WarehouseCsvData
 
 export interface CsvParseError {
   row: number

@@ -2,9 +2,11 @@
 
 import { Key01Icon, LockIcon, Shield01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { TwoFactorMethod } from "@/lib/schemas"
 import { PasskeysSection } from "./passkeys-section"
 import { PasswordSection } from "./password-section"
@@ -16,19 +18,21 @@ interface SecuritySectionProps {
 }
 
 function SecurityStatusIndicator({ status }: { status: TwoFactorStatus }) {
+  const t = useAppTranslations()
+
   const config = {
     ENABLED: {
-      label: "Chronione",
+      label: t("generated.dashboard.settings.protected"),
       variant: "success" as const,
       icon: Shield01Icon,
     },
     SETUP: {
-      label: "Konfiguracja",
+      label: t("generated.dashboard.settings.configuration"),
       variant: "warning" as const,
       icon: Key01Icon,
     },
     DISABLED: {
-      label: "Podstawowe",
+      label: t("generated.dashboard.settings.basic"),
       variant: "secondary" as const,
       icon: LockIcon,
     },
@@ -47,8 +51,11 @@ function SecurityStatusIndicator({ status }: { status: TwoFactorStatus }) {
 }
 
 export function SecuritySection({ userEmail }: SecuritySectionProps) {
+  const t = useAppTranslations()
+
   const [twoFactorMethod, setTwoFactorMethod] =
     useState<TwoFactorMethod>("EMAIL")
+
   return (
     <div className="space-y-6">
       <Card>
@@ -63,10 +70,12 @@ export function SecuritySection({ userEmail }: SecuritySectionProps) {
                     size={16}
                   />
                 </div>
-                Weryfikacja dwuetapowa
+                {t("generated.dashboard.settings.twoStepVerification")}
               </CardTitle>
               <p className="text-muted-foreground text-sm">
-                Chroń swoje konto dodatkową warstwą zabezpieczeń.
+                {t(
+                  "generated.dashboard.settings.protectAccountExtraLayerSecurity"
+                )}
               </p>
             </div>
             <SecurityStatusIndicator status="ENABLED" />
@@ -95,15 +104,19 @@ export function SecuritySection({ userEmail }: SecuritySectionProps) {
               />
             </div>
             <div className="space-y-1">
-              <CardTitle>Zmiana hasła</CardTitle>
+              <CardTitle>
+                {t("generated.dashboard.settings.changingPassword")}
+              </CardTitle>
               <p className="text-muted-foreground text-sm">
-                Regularnie aktualizuj hasło dla bezpieczeństwa.
+                {t(
+                  "generated.dashboard.settings.updatePasswordRegularlySecurity"
+                )}
               </p>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <PasswordSection twoFactorMethod={twoFactorMethod} />
+          <PasswordSection />
         </CardContent>
       </Card>
     </div>

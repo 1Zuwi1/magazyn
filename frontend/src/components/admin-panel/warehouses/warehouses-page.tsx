@@ -1,102 +1,248 @@
 "use client"
 
-import { Add01Icon, Package, Warehouse } from "@hugeicons/core-free-icons"
+import {
+  Add01Icon,
+  Alert02Icon,
+  Package,
+  WarehouseIcon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useState } from "react"
+
+import { type ReactNode, useState } from "react"
+import { toast } from "sonner"
+
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
-import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
-import type { Warehouse as WarehouseType } from "@/components/dashboard/types"
+import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
 import { Button } from "@/components/ui/button"
+import PaginationFull from "@/components/ui/pagination-component"
+import { Skeleton } from "@/components/ui/skeleton"
+import useWarehouses, {
+  useCreateWarehouse,
+  useDeleteWarehouse,
+  useImportWarehouses,
+  useUpdateWarehouse,
+  type WarehousesList,
+} from "@/hooks/use-warehouses"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { ADMIN_NAV_LINKS } from "../lib/constants"
+import { getAdminNavLinks } from "../lib/constants"
 import { WarehouseCard } from "./components/warehouse-card"
 import {
   WarehouseDialog,
   type WarehouseFormData,
 } from "./components/warehouse-dialog"
 
+type ApiWarehouse = WarehousesList["content"][number]
+
 export default function WarehousesMain() {
-  const [warehouses, setWarehouses] = useState<WarehouseType[]>(
-    MOCK_WAREHOUSES as WarehouseType[]
-  )
+  const t = useAppTranslations()
+
+  const [page, setPage] = useState(1)
+  const {
+    data: warehousesData,
+    isPending: isWarehousesPending,
+    isError: isWarehousesError,
+  } = useWarehouses({
+    page: page - 1,
+  })
+  const warehouses = warehousesData?.content ?? []
+  const createWarehouseMutation = useCreateWarehouse()
+  const updateWarehouseMutation = useUpdateWarehouse()
+  const deleteWarehouseMutation = useDeleteWarehouse()
+  const importWarehousesMutation = useImportWarehouses()
   const [open, setOpen] = useState(false)
-  const [selectedWarehouse, setSelectedWarehouse] = useState<
-    WarehouseType | undefined
-  >(undefined)
+  const [selectedWarehouse, setSelectedWarehouse] = useState<ApiWarehouse>()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [warehouseToDelete, setWarehouseToDelete] = useState<
-    WarehouseType | undefined
-  >(undefined)
+  const [warehouseToDelete, setWarehouseToDelete] = useState<ApiWarehouse>()
 
   const handleAddWarehouse = () => {
     setSelectedWarehouse(undefined)
     setOpen(true)
   }
-
-  const handleEditWarehouse = (warehouse: WarehouseType) => {
+  const handleEditWarehouse = (warehouse: ApiWarehouse) => {
     setSelectedWarehouse(warehouse)
     setOpen(true)
   }
 
-  const handleDeleteWarehouse = (warehouse: WarehouseType) => {
+  const handleDeleteWarehouse = (warehouse: ApiWarehouse) => {
     setWarehouseToDelete(warehouse)
     setDeleteDialogOpen(true)
   }
 
-  const confirmDeleteWarehouse = () => {
-    if (warehouseToDelete) {
-      setWarehouses((prev) => prev.filter((w) => w.id !== warehouseToDelete.id))
-      setWarehouseToDelete(undefined)
+  const confirmDeleteWarehouse = async () => {
+    if (!warehouseToDelete) {
+      return
     }
+
+    await deleteWarehouseMutation.mutateAsync(warehouseToDelete.id)
+    setWarehouseToDelete(undefined)
   }
 
-  const handleSubmit = (data: WarehouseFormData) => {
+  const handleSubmit = async (data: WarehouseFormData) => {
     if (selectedWarehouse) {
-      setWarehouses((prev) =>
-        prev.map((w) => (w.id === data.id ? { ...w, name: data.name } : w))
-      )
-    } else {
-      const newWarehouse: WarehouseType = {
-        id: data.id,
+      await updateWarehouseMutation.mutateAsync({
+        warehouseId: selectedWarehouse.id,
         name: data.name,
-        capacity: 0,
-        used: 0,
-        racks: [],
-      }
-      setWarehouses((prev) => [...prev, newWarehouse])
+      })
+    } else {
+      await createWarehouseMutation.mutateAsync(data.name)
     }
+
+    setSelectedWarehouse(undefined)
   }
 
-  // Calculate stats
-  const totalCapacity = warehouses.reduce((acc, w) => acc + w.capacity, 0)
-  const totalUsed = warehouses.reduce((acc, w) => acc + w.used, 0)
-  const totalRacks = warehouses.reduce((acc, w) => acc + w.racks.length, 0)
+  const handleCsvImport = async ({ file }: { file: File }) => {
+    const report = await importWarehousesMutation.mutateAsync(file)
+    if (report.errors.length > 0) {
+      toast.warning(
+        t("generated.admin.shared.importPartiallyCompleted", {
+          value0: report.imported,
+          value1: report.processedLines,
+        })
+      )
+      return
+    }
+
+    toast.success(
+      t("generated.admin.warehouses.imported2", {
+        value0: report.imported,
+      })
+    )
+  }
+
+  const totalWarehouses = warehousesData?.totalElements
+  const totalCapacity = warehousesData?.summary.totalCapacity
+  const totalUsed = warehousesData?.summary.occupiedSlots
+  const totalRacks = warehousesData?.summary.totalRacks
+  let warehousesContent: ReactNode
+
+  if (isWarehousesPending) {
+    warehousesContent = (
+      <div className="grid @2xl:grid-cols-2 @5xl:grid-cols-3 gap-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            className="overflow-hidden rounded-xl border bg-card"
+            key={i}
+            style={{ animationDelay: `${i * 75}ms` }}
+          >
+            <div className="space-y-4 p-5">
+              <div className="flex items-start gap-3">
+                <Skeleton className="size-10 rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-28" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+                <Skeleton className="h-2 w-full rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <div className="border-t p-5">
+              <Skeleton className="h-10 w-full rounded-lg" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  } else if (isWarehousesError) {
+    warehousesContent = (
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-destructive/5 py-16">
+        <div className="flex size-14 items-center justify-center rounded-full bg-destructive/10">
+          <HugeiconsIcon
+            className="size-7 text-destructive"
+            icon={Alert02Icon}
+          />
+        </div>
+        <p className="mt-4 font-medium text-foreground">
+          {t("generated.admin.warehouses.failedDownloadWarehouses")}
+        </p>
+        <p className="mt-1 text-muted-foreground text-sm">
+          {t("generated.admin.warehouses.problemLoadingDataRefreshingPage")}
+        </p>
+        <Button
+          className="mt-4"
+          onClick={() => window.location.reload()}
+          variant="outline"
+        >
+          {t("generated.shared.again")}
+        </Button>
+      </div>
+    )
+  } else if (warehouses.length === 0) {
+    warehousesContent = (
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/20 py-16">
+        <div className="flex size-14 items-center justify-center rounded-full bg-muted">
+          <HugeiconsIcon
+            className="size-7 text-muted-foreground"
+            icon={WarehouseIcon}
+          />
+        </div>
+        <p className="mt-4 font-medium text-foreground">
+          {t("generated.admin.warehouses.warehouses2")}
+        </p>
+        <p className="mt-1 text-muted-foreground text-sm">
+          {t("generated.admin.warehouses.addFirstWarehouseGetStarted")}
+        </p>
+        <Button className="mt-4" onClick={handleAddWarehouse}>
+          <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
+          {t("generated.admin.warehouses.addWarehouse")}
+        </Button>
+      </div>
+    )
+  } else {
+    warehousesContent = (
+      <div className="grid @2xl:grid-cols-2 @5xl:grid-cols-3 gap-4">
+        {warehouses.map((warehouse) => (
+          <WarehouseCard
+            key={warehouse.id}
+            onDelete={handleDeleteWarehouse}
+            onEdit={handleEditWarehouse}
+            warehouse={warehouse}
+          />
+        ))}
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="@container space-y-6">
       {/* Page Header */}
       <AdminPageHeader
         actions={
-          <Button onClick={handleAddWarehouse}>
-            <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-            Dodaj magazyn
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <CsvImporter
+              isImporting={importWarehousesMutation.isPending}
+              onImport={handleCsvImport}
+              type="warehouse"
+            />
+            <Button onClick={handleAddWarehouse}>
+              <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
+              {t("generated.admin.warehouses.addWarehouse")}
+            </Button>
+          </div>
         }
-        description="Zarządzaj magazynami i ich regałami"
-        icon={Warehouse}
-        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+        description={t("generated.admin.warehouses.manageWarehousesRacks")}
+        icon={WarehouseIcon}
+        navLinks={getAdminNavLinks(t).map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title="Magazyny"
+        title={t("generated.shared.warehouses")}
       >
         {/* Quick Stats */}
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <span className="font-mono font-semibold text-primary">
-              {warehouses.length}
+              {totalWarehouses}
             </span>
-            <span className="text-muted-foreground text-xs">magazynów</span>
+            <span className="text-muted-foreground text-xs">
+              {t("generated.admin.warehouses.warehouses")}
+            </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <HugeiconsIcon
@@ -104,13 +250,17 @@ export default function WarehousesMain() {
               icon={Package}
             />
             <span className="font-mono font-semibold">{totalRacks}</span>
-            <span className="text-muted-foreground text-xs">regałów</span>
+            <span className="text-muted-foreground text-xs">
+              {t("generated.admin.warehouses.racks")}
+            </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
-            <span className="text-muted-foreground text-xs">Zajętość:</span>
+            <span className="text-muted-foreground text-xs">
+              {t("generated.admin.warehouses.occupancy")}
+            </span>
             <span className="font-mono font-semibold">
-              {totalCapacity > 0
-                ? Math.round((totalUsed / totalCapacity) * 100)
+              {(totalCapacity ?? 0) > 0
+                ? Math.round(((totalUsed ?? 0) / (totalCapacity ?? 1)) * 100)
                 : 0}
               %
             </span>
@@ -119,41 +269,19 @@ export default function WarehousesMain() {
       </AdminPageHeader>
 
       {/* Warehouse Grid */}
-      {warehouses.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/20 py-16">
-          <div className="flex size-14 items-center justify-center rounded-full bg-muted">
-            <HugeiconsIcon
-              className="size-7 text-muted-foreground"
-              icon={Warehouse}
-            />
-          </div>
-          <p className="mt-4 font-medium text-foreground">Brak magazynów</p>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Dodaj pierwszy magazyn, aby rozpocząć
-          </p>
-          <Button className="mt-4" onClick={handleAddWarehouse}>
-            <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-            Dodaj magazyn
-          </Button>
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {warehouses.map((warehouse) => (
-            <WarehouseCard
-              key={warehouse.id}
-              onDelete={handleDeleteWarehouse}
-              onEdit={handleEditWarehouse}
-              warehouse={warehouse}
-            />
-          ))}
-        </div>
-      )}
+      {warehousesContent}
+
+      <PaginationFull
+        currentPage={page}
+        setPage={setPage}
+        totalPages={warehousesData ? warehousesData.totalPages : 1}
+      />
 
       {/* Dialogs */}
       <WarehouseDialog
         currentRow={
           selectedWarehouse
-            ? { id: selectedWarehouse.id, name: selectedWarehouse.name }
+            ? { id: String(selectedWarehouse.id), name: selectedWarehouse.name }
             : undefined
         }
         formId="warehouse-form"
@@ -163,11 +291,16 @@ export default function WarehousesMain() {
       />
 
       <ConfirmDialog
-        description={`Czy na pewno chcesz usunąć magazyn "${warehouseToDelete?.name}"? Wszystkie regały w tym magazynie zostaną również usunięte.`}
+        description={t(
+          "generated.admin.warehouses.sureWantDeleteWarehouseAll",
+          {
+            value0: warehouseToDelete?.name,
+          }
+        )}
         onConfirm={confirmDeleteWarehouse}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
-        title="Usuń magazyn"
+        title={t("generated.admin.warehouses.deleteWarehouse")}
       />
     </div>
   )

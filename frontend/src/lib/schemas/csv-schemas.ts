@@ -1,89 +1,84 @@
 import z from "zod"
-import { createApiSchema } from "../create-api-schema"
+import { createZodMessage } from "../zod-message"
 
-export const ItemSchema = z.object({
-  name: z.string(),
-  id: z.string(),
-  qrCode: z.string(),
-  imageUrl: z.string().optional().or(z.literal("")),
-  minTemp: z.number(),
-  maxTemp: z.number(),
-  weight: z.number().nonnegative(),
-  width: z.number().positive(),
-  height: z.number().positive(),
-  depth: z.number().positive(),
+export const WarehouseCsvSchema = z.object({
+  name: z.string().trim().min(1, "Nazwa magazynu jest wymagana"),
+})
+
+const csvBoolean = z.preprocess((v) => {
+  // treat empty cell as "missing"
+  if (v === "" || v === null || v === undefined) {
+    return undefined
+  }
+
+  // already a boolean
+  if (typeof v === "boolean") {
+    return v
+  }
+
+  // numbers from some CSV parsers
+  if (typeof v === "number") {
+    return v !== 0
+  }
+
+  if (typeof v === "string") {
+    const s = v.trim().toLowerCase()
+
+    // common CSV variants
+    if (["true", "t", "1", "yes", "y"].includes(s)) {
+      return true
+    }
+    if (["false", "f", "0", "no", "n"].includes(s)) {
+      return false
+    }
+  }
+
+  // let Zod throw a nice error for weird values
+  return v
+}, z.boolean())
+
+export const RackCsvSchema = z.object({
+  marker: z.string().trim().min(1, "Marker jest wymagany"),
+  rows: z.coerce.number().int().min(1),
+  cols: z.coerce.number().int().min(1),
+  minTemp: z.coerce.number(),
+  maxTemp: z.coerce.number(),
+  maxWeight: z.coerce.number().nonnegative(),
+  maxItemWidth: z.coerce.number().positive(),
+  maxItemHeight: z.coerce.number().positive(),
+  maxItemDepth: z.coerce.number().positive(),
+  isDangerous: csvBoolean.optional(),
+  comment: z.coerce.string().optional(),
+})
+
+export const ItemCsvSchema = z.object({
+  name: z.string().trim().min(1, "Nazwa produktu jest wymagana"),
+  minTemp: z.coerce.number(),
+  maxTemp: z.coerce.number(),
+  weight: z.coerce.number().nonnegative(),
+  width: z.coerce.number().positive(),
+  height: z.coerce.number().positive(),
+  depth: z.coerce.number().positive(),
+  daysToExpiry: z.coerce.number().int().nonnegative().optional(),
+  isDangerous: csvBoolean.optional(),
   comment: z.string().optional(),
-  daysToExpiry: z.number().nonnegative(),
-  isDangerous: z
-    .string()
-    .refine(
-      (val) => val.toLowerCase() === "true" || val.toLowerCase() === "false",
-      {
-        message: "isDangerous must be 'true' or 'false'",
-      }
-    )
-    .transform((val) => val.toLowerCase() === "true"),
-})
-
-export const RackSchema = z.object({
-  id: z.string(),
-  symbol: z.string().optional(),
-  name: z.string(),
-  rows: z.number().min(1),
-  cols: z.number().min(1),
-  minTemp: z.number(),
-  maxTemp: z.number(),
-  maxWeight: z.number().nonnegative(),
-  currentWeight: z.number().nonnegative(),
-  maxItemWidth: z.number().positive(),
-  maxItemHeight: z.number().positive(),
-  maxItemDepth: z.number().positive(),
-  comment: z.string().optional(),
-  occupancy: z.number().min(0).max(100),
-  items: z.array(ItemSchema),
-})
-
-export const RackCsvSchema = RackSchema.omit({
-  id: true,
-  currentWeight: true,
-  occupancy: true,
-  items: true,
-  name: true,
-}).extend({
-  name: z.string().optional(),
-  symbol: z.string(),
-})
-
-export const ItemCsvSchema = ItemSchema.omit({
-  qrCode: true,
-})
-
-export const ApiRacksSchema = createApiSchema({
-  GET: {
-    output: z.array(RackSchema),
-  },
-  POST: {
-    input: RackCsvSchema,
-    output: RackSchema,
-  },
-})
-
-export const ApiItemsSchema = createApiSchema({
-  POST: {
-    input: ItemSchema.omit({
-      id: true,
-    }),
-    output: ItemSchema,
-  },
 })
 
 const usernameSchema = z
   .string()
-  .min(3, "Nazwa użytkownika musi mieć co najmniej 3 znaki")
-  .max(20, "Nazwa użytkownika może mieć maksymalnie 20 znaków")
+  .min(
+    3,
+    createZodMessage("generated.validation.csv.usernameMustLeast3Characters")
+  )
+  .max(
+    20,
+    createZodMessage("generated.validation.csv.username20CharactersLong")
+  )
   .regex(
     /^[a-zA-Z0-9_]+$/,
-    "Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślenia"
+    createZodMessage(
+      "generated.validation.csv.usernameOnlyContainLettersNumbers"
+    )
   )
 
 export const UserFormSchema = z.object({

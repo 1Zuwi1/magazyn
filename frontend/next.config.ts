@@ -15,9 +15,10 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns:
       process.env.NODE_ENV !== "production"
-        ? [new URL("https://placehold.co/**")]
+        ? [new URL("http://localhost:8080/**")]
         : undefined,
     dangerouslyAllowSVG: process.env.NODE_ENV !== "production",
+    dangerouslyAllowLocalIP: process.env.NODE_ENV !== "production",
   },
   experimental: {
     // Enable filesystem caching for `next dev`

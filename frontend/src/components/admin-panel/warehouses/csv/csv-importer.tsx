@@ -2,6 +2,7 @@
 
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { useMemo } from "react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
@@ -12,24 +13,42 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { useCsvImporter } from "../../hooks/use-csv-importer"
 import { FileUploader } from "./file-uploader"
 import { PreviewTable } from "./preview-table"
-import { ITEM_COLUMNS, RACK_COLUMNS } from "./utils/constants"
+import {
+  getItemColumns,
+  getRackColumns,
+  getWarehouseColumns,
+} from "./utils/constants"
 import type { CsvImporterType, CsvRowType } from "./utils/types"
 
 interface CsvImporterProps<T extends CsvImporterType> {
   type: T
-  onImport: (data: CsvRowType<T>[]) => void
+  isImporting?: boolean
+  onImport: (payload: {
+    file: File
+    rows: CsvRowType<T>[]
+  }) => Promise<void> | void
 }
 
 export function CsvImporter<T extends CsvImporterType>({
+  isImporting = false,
   type,
   onImport,
 }: CsvImporterProps<T>) {
-  const handleImport = (data: CsvRowType<T>[]): void => {
-    onImport(data)
+  const t = useAppTranslations()
+
+  const handleImport = async ({
+    file,
+    rows,
+  }: {
+    file: File
+    rows: CsvRowType<T>[]
+  }): Promise<void> => {
+    await onImport({ file, rows })
   }
 
   const {
@@ -43,7 +62,19 @@ export function CsvImporter<T extends CsvImporterType>({
     resetFile,
   } = useCsvImporter<T>({ type, onImport: handleImport })
 
-  const columns = type === "rack" ? RACK_COLUMNS : ITEM_COLUMNS
+  let columns: ReadonlyArray<{ key: string; label: string }> = getItemColumns(t)
+  if (type === "warehouse") {
+    columns = getWarehouseColumns(t)
+  } else if (type === "rack") {
+    columns = getRackColumns(t)
+  }
+
+  let dialogTitle = "Importuj przedmioty z CSV"
+  if (type === "warehouse") {
+    dialogTitle = "Importuj magazyny z CSV"
+  } else if (type === "rack") {
+    dialogTitle = t("generated.admin.warehouses.importRacksCsv")
+  }
 
   const labels = useMemo(() => {
     const map: Record<string, string> = {}
@@ -73,15 +104,11 @@ export function CsvImporter<T extends CsvImporterType>({
       <DialogTrigger
         className={cn(buttonVariants({ variant: "default" }), "w-fit gap-2")}
       >
-        Importuj CSV
+        {t("generated.admin.warehouses.importCsv")}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] min-w-fit overflow-auto sm:min-w-125">
         <DialogHeader>
-          <DialogTitle>
-            {type === "rack"
-              ? "Importuj regały z CSV"
-              : "Importuj przedmioty z CSV"}
-          </DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
 
         {isPreviewing ? (
@@ -95,19 +122,25 @@ export function CsvImporter<T extends CsvImporterType>({
           </div>
         )}
 
-        <DialogFooter className="w-full flex-row justify-center gap-3 sm:justify-center">
+        <DialogFooter className="justify-start! w-full flex-row gap-3">
           {isPreviewing ? (
             <>
               <Button
+                disabled={isImporting}
                 onClick={() => {
                   resetFile()
                 }}
                 variant="destructive"
               >
-                Usuń
+                {t("generated.shared.remove")}
               </Button>
-              <Button onClick={confirmImport}>
-                Importuj
+              <Button
+                disabled={isImporting}
+                onClick={async () => {
+                  await confirmImport()
+                }}
+              >
+                {t("generated.admin.warehouses.import")}
                 <HugeiconsIcon
                   className="ml-2 size-4"
                   icon={ArrowRight01Icon}
@@ -115,8 +148,12 @@ export function CsvImporter<T extends CsvImporterType>({
               </Button>
             </>
           ) : (
-            <Button onClick={() => setOpen(false)} variant="outline">
-              Anuluj
+            <Button
+              disabled={isImporting}
+              onClick={() => setOpen(false)}
+              variant="outline"
+            >
+              {t("generated.shared.cancel")}
             </Button>
           )}
         </DialogFooter>

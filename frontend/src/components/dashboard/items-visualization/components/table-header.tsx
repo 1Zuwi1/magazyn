@@ -1,17 +1,23 @@
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table"
-
+import { useAppTranslations } from "@/i18n/use-translations"
 export function RackItemsTableHeader() {
+  const t = useAppTranslations()
+
   return (
     <TableHeader>
       <TableRow>
-        <TableHead className="w-16 text-center">Zdjęcie</TableHead>
-        <TableHead className="min-w-37.5">Nazwa</TableHead>
-        <TableHead className="w-25">Kod QR</TableHead>
-        <TableHead className="w-20">Waga</TableHead>
-        <TableHead className="w-25">Wymiary</TableHead>
-        <TableHead className="w-20">Temp.</TableHead>
-        <TableHead className="w-25">Data ważności</TableHead>
-        <TableHead className="w-25 text-center">Status</TableHead>
+        <TableHead className="min-w-25">{t("generated.shared.code")}</TableHead>
+        <TableHead className="w-20">
+          {t("generated.dashboard.itemsVisualization.itemId")}
+        </TableHead>
+        <TableHead className="w-25">{t("generated.shared.position")}</TableHead>
+        <TableHead className="w-25">
+          {t("generated.dashboard.shared.user")}
+        </TableHead>
+        <TableHead className="w-30">{t("generated.shared.created")}</TableHead>
+        <TableHead className="w-30">
+          {t("generated.dashboard.shared.expires")}
+        </TableHead>
         <TableHead className="w-16"> </TableHead>
       </TableRow>
     </TableHeader>

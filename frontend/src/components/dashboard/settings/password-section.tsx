@@ -1,23 +1,22 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
-import { useState } from "react"
+
+import { useRef } from "react"
 import { toast } from "sonner"
+import { useTwoFactorVerificationDialog } from "@/components/dashboard/settings/two-factor-verification-dialog-store"
+import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { Button } from "@/components/ui/button"
-import { ChangePasswordFormSchema, type TwoFactorMethod } from "@/lib/schemas"
-import { TwoFactorVerificationDialog } from "./two-factor-verification-dialog"
-import { wait } from "./utils"
+import { useAppTranslations } from "@/i18n/use-translations"
+import { apiFetch } from "@/lib/fetcher"
+import { ChangePasswordFormSchema, ChangePasswordSchema } from "@/lib/schemas"
+import tryCatch from "@/lib/try-catch"
+export function PasswordSection() {
+  const t = useAppTranslations()
 
-interface PasswordSectionProps {
-  twoFactorMethod: TwoFactorMethod
-}
-
-export function PasswordSection({ twoFactorMethod }: PasswordSectionProps) {
-  const [isVerificationDialogOpen, setIsVerificationDialogOpen] =
-    useState(false)
-
-  const [isVerified, setIsVerified] = useState(false) // FIXME: Only in dev - remove later
+  const { open } = useTwoFactorVerificationDialog()
+  const isTwoFactorVerifiedRef = useRef(false)
 
   const form = useForm({
     defaultValues: {
@@ -25,19 +24,40 @@ export function PasswordSection({ twoFactorMethod }: PasswordSectionProps) {
       newPassword: "",
       confirmPassword: "",
     },
-    onSubmit: async () => {
-      if (!isVerified) {
-        setIsVerificationDialogOpen(true)
+    onSubmit: async ({ value }) => {
+      if (!isTwoFactorVerifiedRef.current) {
+        open({
+          onVerified: async () => {
+            isTwoFactorVerifiedRef.current = true
+            await form.handleSubmit()
+          },
+        })
         return
       }
 
-      try {
-        await wait(1000)
-        form.reset()
-        toast.success("Hasło zostało zmienione.")
-      } catch {
-        toast.error("Nie udało się zmienić hasła. Spróbuj ponownie.")
+      const [error] = await tryCatch(
+        apiFetch("/api/users/password", ChangePasswordSchema, {
+          method: "PATCH",
+          body: {
+            oldPassword: value.oldPassword,
+            newPassword: value.newPassword,
+          },
+        })
+      )
+
+      isTwoFactorVerifiedRef.current = false
+
+      if (error) {
+        handleApiError(
+          error,
+          t("generated.dashboard.settings.failedChangePasswordAgain"),
+          t
+        )
+        return
       }
+
+      form.reset()
+      toast.success(t("generated.dashboard.settings.passwordBeenChanged"))
     },
     validators: {
       onSubmitAsync: ChangePasswordFormSchema,
@@ -61,8 +81,10 @@ export function PasswordSection({ twoFactorMethod }: PasswordSectionProps) {
                   autoComplete="current-password"
                   field={field}
                   id="current-password"
-                  label="Obecne hasło"
-                  placeholder="Wprowadź obecne hasło"
+                  label={t("generated.dashboard.settings.currentPassword")}
+                  placeholder={t(
+                    "generated.dashboard.settings.enterCurrentPassword"
+                  )}
                   type="password"
                 />
               </div>
@@ -76,8 +98,8 @@ export function PasswordSection({ twoFactorMethod }: PasswordSectionProps) {
                 autoComplete="new-password"
                 field={field}
                 id="new-password"
-                label="Nowe hasło"
-                placeholder="Co najmniej 8 znaków"
+                label={t("generated.shared.newPassword")}
+                placeholder={t("generated.dashboard.settings.least8Characters")}
                 type="password"
               />
             )
@@ -90,8 +112,10 @@ export function PasswordSection({ twoFactorMethod }: PasswordSectionProps) {
                 autoComplete="new-password"
                 field={field}
                 id="confirm-password"
-                label="Potwierdź hasło"
-                placeholder="Powtórz nowe hasło"
+                label={t("generated.shared.confirmPassword")}
+                placeholder={t(
+                  "generated.dashboard.settings.repeatNewPassword"
+                )}
                 type="password"
               />
             )
@@ -101,7 +125,7 @@ export function PasswordSection({ twoFactorMethod }: PasswordSectionProps) {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground text-xs">
-          Min. 8 znaków, w tym cyfry, znaki specjalne, małe i wielkie litery.
+          {t("generated.dashboard.settings.min8CharactersIncludingNumbers")}
         </p>
         <form.Subscribe
           selector={(state) => [state.canSubmit, state.isSubmitting]}
@@ -112,20 +136,11 @@ export function PasswordSection({ twoFactorMethod }: PasswordSectionProps) {
               isLoading={isSubmitting}
               type="submit"
             >
-              Zmień hasło
+              {t("generated.dashboard.settings.changePassword")}
             </Button>
           )}
         </form.Subscribe>
       </div>
-      <TwoFactorVerificationDialog
-        initialMethod={twoFactorMethod}
-        onOpenChange={setIsVerificationDialogOpen}
-        onVerified={() => {
-          setIsVerified(true) // FIXME: Only in dev - remove later
-          form.handleSubmit()
-        }}
-        open={isVerificationDialogOpen}
-      />
     </form>
   )
 }

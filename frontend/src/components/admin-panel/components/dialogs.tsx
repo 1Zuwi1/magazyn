@@ -2,6 +2,7 @@
 
 import { Alert01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import type React from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 interface ConfirmDialogProps {
@@ -30,6 +32,8 @@ export function ConfirmDialog({
   title,
   description,
 }: ConfirmDialogProps) {
+  const t = useAppTranslations()
+
   const handleConfirm = () => {
     onConfirm()
     onOpenChange(false)
@@ -53,10 +57,10 @@ export function ConfirmDialog({
         </DialogHeader>
         <DialogFooter className="mt-4 gap-1">
           <Button onClick={() => onOpenChange(false)} variant="outline">
-            Anuluj
+            {t("generated.shared.cancel")}
           </Button>
           <Button onClick={handleConfirm} variant="destructive">
-            Potwierdź
+            {t("generated.admin.shared.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -72,6 +76,7 @@ interface FormDialogProps {
   children: React.ReactNode
   onFormReset?: () => void
   formId?: string
+  isLoading?: boolean
 }
 
 export function FormDialog({
@@ -82,7 +87,10 @@ export function FormDialog({
   children,
   onFormReset,
   formId,
+  isLoading,
 }: FormDialogProps) {
+  const t = useAppTranslations()
+
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       onFormReset?.()
@@ -104,8 +112,8 @@ export function FormDialog({
         <Separator />
         <div className="py-1">{children}</div>
         <DialogFooter>
-          <Button form={formId} type="submit">
-            Zapisz
+          <Button form={formId} isLoading={isLoading} type="submit">
+            {t("generated.admin.shared.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

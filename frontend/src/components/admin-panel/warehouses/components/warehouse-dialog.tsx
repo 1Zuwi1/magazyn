@@ -1,11 +1,12 @@
 "use client"
 
-import { useForm } from "@tanstack/react-form"
+import { useForm, useStore } from "@tanstack/react-form"
+
 import { useEffect } from "react"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { FieldGroup } from "@/components/ui/field"
-
+import { useAppTranslations } from "@/i18n/use-translations"
 export interface WarehouseFormData {
   id: string
   name: string
@@ -15,7 +16,7 @@ interface WarehouseDialogProps {
   currentRow?: WarehouseFormData
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: WarehouseFormData) => void
+  onSubmit: (data: WarehouseFormData) => Promise<void>
   formId: string
 }
 
@@ -26,13 +27,15 @@ export function WarehouseDialog({
   onSubmit,
   formId,
 }: WarehouseDialogProps) {
+  const t = useAppTranslations()
+
   const isEdit = !!currentRow
 
   const form = useForm({
     defaultValues: isEdit ? { name: currentRow.name } : { name: "" },
-    onSubmit: ({ value }) => {
+    onSubmit: async ({ value }) => {
       const id = isEdit ? currentRow.id : `warehouse-${Date.now()}`
-      onSubmit({ id, name: value.name })
+      await onSubmit({ id, name: value.name })
       form.reset()
       onOpenChange(false)
     },
@@ -46,18 +49,25 @@ export function WarehouseDialog({
     }
   }, [currentRow, form])
 
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
+
   return (
     <FormDialog
       description={
         isEdit
-          ? "Zmień informacje o magazynie"
-          : "Wprowadź informacje o nowym magazynie."
+          ? t("generated.admin.warehouses.changeStockInformation")
+          : t("generated.admin.warehouses.enterInformationAboutNewWarehouse")
       }
       formId={formId}
+      isLoading={isSubmitting}
       onFormReset={() => form.reset()}
       onOpenChange={onOpenChange}
       open={open}
-      title={isEdit ? "Edytuj magazyn" : "Dodaj magazyn"}
+      title={
+        isEdit
+          ? t("generated.admin.warehouses.editWarehouse")
+          : t("generated.admin.warehouses.addWarehouse2")
+      }
     >
       <form
         className="space-y-4 px-0.5"
@@ -73,9 +83,9 @@ export function WarehouseDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label="Nazwa"
+                label={t("generated.shared.name")}
                 layout="grid"
-                placeholder="Magazyn A1"
+                placeholder={t("generated.admin.warehouses.a1Warehouse")}
               />
             )}
           </form.Field>

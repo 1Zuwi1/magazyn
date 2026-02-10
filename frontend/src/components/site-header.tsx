@@ -3,7 +3,9 @@
 import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Fragment } from "react/jsx-runtime"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { NotificationInbox } from "./dashboard/notifications/components/notification-icon"
+import { LanguageSwitcher } from "./language-switcher"
 import { Scanner } from "./scanner/scanner"
 import {
   Breadcrumb,
@@ -22,6 +24,7 @@ import {
 } from "./ui/dropdown-menu"
 import { Separator } from "./ui/separator"
 import { SidebarTrigger } from "./ui/sidebar"
+import { VoiceAssistant } from "./voice-assistant/voice-assistant"
 
 // biome-ignore lint/suspicious/noControlCharactersInRegex: This is needed to strip control characters from decoded text
 const CONTROL_CHAR_REGEX = /[\u0000-\u001f\u007f]/g
@@ -50,6 +53,8 @@ const sanitizeVisibleText = (value: string): string => {
 }
 
 export default function SiteHeader() {
+  const t = useAppTranslations()
+
   const pathname = usePathname()
   const router = useRouter()
   const splitted = pathname.split("/").filter((part) => part !== "")
@@ -118,7 +123,9 @@ export default function SiteHeader() {
                   <DropdownMenu>
                     <DropdownMenuTrigger className="flex items-center gap-1">
                       <BreadcrumbEllipsis className="size-4" />
-                      <span className="sr-only">Toggle menu</span>
+                      <span className="sr-only">
+                        {t("generated.global.header.toggleMenu")}
+                      </span>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                       {middleItems.map((item) => (
@@ -161,14 +168,18 @@ export default function SiteHeader() {
         </Breadcrumb>
       </div>
 
-      <NotificationInbox />
-      {pathname.includes("/dashboard/warehouse/") && (
-        <Scanner
-          warehouseName={decodeURIComponent(
-            sanitizeVisibleText(safeDecodeURIComponent(splitted[2] ?? ""))
-          )}
-        />
-      )}
+      <div className="flex standalone:hidden items-center gap-2 pr-3 sm:gap-3 sm:pr-4">
+        <LanguageSwitcher />
+        {pathname.includes("/dashboard/warehouse/") && (
+          <Scanner
+            warehouseName={decodeURIComponent(
+              sanitizeVisibleText(safeDecodeURIComponent(splitted[2] ?? ""))
+            )}
+          />
+        )}
+        <VoiceAssistant />
+        <NotificationInbox />
+      </div>
     </header>
   )
 }

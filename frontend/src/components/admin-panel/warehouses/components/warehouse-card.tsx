@@ -6,15 +6,12 @@ import {
   MoreHorizontalCircle01FreeIcons,
   Package,
   PencilEdit01Icon,
-  Warehouse,
+  WarehouseIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-import type { Warehouse as WarehouseType } from "@/components/dashboard/types"
-import {
-  getOccupancyPercentage,
-  pluralize,
-} from "@/components/dashboard/utils/helpers"
+
+import { getOccupancyPercentage } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
@@ -22,13 +19,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { WarehousesList } from "@/hooks/use-warehouses"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { THRESHOLD } from "../../lib/constants"
 
+type WarehouseListItem = WarehousesList["content"][number]
+
 interface WarehouseCardProps {
-  warehouse: WarehouseType
-  onEdit?: (warehouse: WarehouseType) => void
-  onDelete?: (warehouse: WarehouseType) => void
+  warehouse: WarehouseListItem
+  onEdit?: (warehouse: WarehouseListItem) => void
+  onDelete?: (warehouse: WarehouseListItem) => void
 }
 
 export function WarehouseCard({
@@ -36,10 +37,11 @@ export function WarehouseCard({
   onEdit,
   onDelete,
 }: WarehouseCardProps) {
-  const occupancyPercentage = getOccupancyPercentage(
-    warehouse.used,
-    warehouse.capacity
-  )
+  const t = useAppTranslations()
+
+  const usedSlots = warehouse.occupiedSlots
+  const totalCapacity = warehouse.occupiedSlots + warehouse.freeSlots
+  const occupancyPercentage = getOccupancyPercentage(usedSlots, totalCapacity)
   const isCritical = occupancyPercentage >= THRESHOLD
 
   return (
@@ -81,13 +83,15 @@ export function WarehouseCard({
                   "size-5",
                   isCritical ? "text-destructive" : "text-primary"
                 )}
-                icon={Warehouse}
+                icon={WarehouseIcon}
               />
             </div>
             <div>
               <h3 className="font-semibold text-lg">{warehouse.name}</h3>
               <p className="text-muted-foreground text-xs">
-                ID: {warehouse.id}
+                {t("generated.admin.warehouses.id", {
+                  value0: warehouse.id,
+                })}
               </p>
             </div>
           </div>
@@ -95,7 +99,7 @@ export function WarehouseCard({
           {(onEdit || onDelete) && (
             <DropdownMenu>
               <DropdownMenuTrigger
-                aria-label="Akcje magazynu"
+                aria-label={t("generated.admin.warehouses.warehouseShares")}
                 className={cn(
                   "flex size-8 items-center justify-center rounded-md opacity-0 transition-all hover:bg-muted group-hover:opacity-100",
                   "focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
@@ -116,7 +120,7 @@ export function WarehouseCard({
                       className="mr-2 size-4"
                       icon={PencilEdit01Icon}
                     />
-                    Edytuj
+                    {t("generated.shared.edit")}
                   </DropdownMenuItem>
                 )}
                 {onDelete && (
@@ -128,7 +132,7 @@ export function WarehouseCard({
                       className="mr-2 size-4"
                       icon={Delete02Icon}
                     />
-                    Usuń
+                    {t("generated.shared.remove")}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -141,10 +145,12 @@ export function WarehouseCard({
           {/* Occupancy */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Zapełnienie</span>
+              <span className="text-muted-foreground">
+                {t("generated.shared.occupancy")}
+              </span>
               <div className="flex items-center gap-2">
                 <span className="font-medium">
-                  {warehouse.used} / {warehouse.capacity}
+                  {usedSlots} / {totalCapacity}
                 </span>
                 <Badge variant={isCritical ? "destructive" : "secondary"}>
                   {Math.round(occupancyPercentage)}%
@@ -169,13 +175,9 @@ export function WarehouseCard({
             <div className="flex items-center gap-1.5">
               <HugeiconsIcon className="size-4" icon={Package} />
               <span>
-                {warehouse.racks.length}{" "}
-                {pluralize(
-                  warehouse.racks.length,
-                  "regał",
-                  "regały",
-                  "regałów"
-                )}
+                {t("generated.shared.pluralLabel", {
+                  value0: warehouse.racksCount,
+                })}
               </span>
             </div>
           </div>
@@ -188,9 +190,9 @@ export function WarehouseCard({
               "flex w-full items-center justify-center gap-2 rounded-lg border bg-background px-4 py-2.5 font-medium text-sm transition-all",
               "hover:border-primary/30 hover:bg-muted"
             )}
-            href={`/admin/warehouses/${encodeURIComponent(warehouse.name)}`}
+            href={`/admin/warehouses/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}`}
           >
-            Zarządzaj regałami
+            {t("generated.admin.warehouses.manageRacks")}
             <HugeiconsIcon
               className="size-4 transition-transform group-hover:translate-x-0.5"
               icon={ArrowRight02Icon}
