@@ -27,6 +27,7 @@ const getCachedSchema = <S extends z.ZodType>(dataSchema: S) => {
 // ----------------- Public types -----------------
 
 const ERROR_CODE_PATTERN = /^[A-Z0-9_]+$/
+const LOCALHOST_BASE_URL = "http://localhost"
 
 const getErrorCodeFromMessage = (message: string): string | undefined =>
   ERROR_CODE_PATTERN.test(message) ? message : undefined
@@ -349,7 +350,7 @@ function resolveRequestUrl(path: string, baseUrl?: string): string {
   if (baseUrl) {
     return new URL(path, baseUrl).toString()
   }
-  return path
+  return new URL(path, LOCALHOST_BASE_URL).toString()
 }
 
 async function performApiFetch<S extends ApiSchema, M extends ApiMethod>(
@@ -386,9 +387,16 @@ async function performApiFetch<S extends ApiSchema, M extends ApiMethod>(
 }
 
 function resolveBaseUrl(): string | undefined {
-  return typeof window === "undefined"
-    ? process.env.INTERNAL_API_URL
-    : (process.env.NEXT_PUBLIC_API_URL ?? "")
+  if (typeof window === "undefined") {
+    return process.env.INTERNAL_API_URL
+  }
+
+  const publicApiUrl = process.env.NEXT_PUBLIC_API_URL
+  if (publicApiUrl) {
+    return publicApiUrl
+  }
+
+  return window.location.origin
 }
 
 function buildRequestUrl(
@@ -398,7 +406,7 @@ function buildRequestUrl(
   queryParams?: Record<string, unknown>
 ): URL {
   const resolvedPath = resolveRequestUrl(path, baseUrl)
-  const url = new URL(resolvedPath, baseUrl)
+  const url = new URL(resolvedPath)
 
   if (method !== "GET" || !queryParams) {
     return url
