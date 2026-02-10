@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Spinner } from "@/components/ui/spinner"
 import { OTP_LENGTH } from "@/config/constants"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { TwoFactorMethod } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { RESEND_COOLDOWN_SECONDS } from "./constants"
@@ -13,7 +14,6 @@ import { OtpInput } from "./otp-input"
 import type { PasswordVerificationStage } from "./types"
 import { useCountdown } from "./use-countdown"
 import { formatCountdown } from "./utils"
-
 export interface PasswordVerificationCopy {
   title?: string
   description?: string | ((context: { method: TwoFactorMethod }) => string)
@@ -56,6 +56,8 @@ function usePasswordVerificationFlow({
   onResendCooldownChange,
   onRequestCode,
 }: PasswordVerificationFlowHandlers) {
+  const t = useAppTranslations()
+
   const requestCode = async (startTimer = true): Promise<void> => {
     onStageChange("SENDING")
     onErrorChange("")
@@ -68,7 +70,7 @@ function usePasswordVerificationFlow({
       }
     } catch {
       onStageChange("ERROR")
-      const message = "Nie udało się wysłać kodu. Spróbuj ponownie."
+      const message = t("generated.dashboard.settings.failedSendCodeAgain")
       onErrorChange(message)
       toast.error(message)
     }
@@ -78,11 +80,15 @@ function usePasswordVerificationFlow({
 }
 
 function PasswordVerificationAlerts() {
+  const t = useAppTranslations()
+
   return (
     <Alert>
       <Spinner className="text-muted-foreground" />
-      <AlertTitle>Wysyłamy kod</AlertTitle>
-      <AlertDescription>Kod trafia na wybraną metodę.</AlertDescription>
+      <AlertTitle>{t("generated.dashboard.settings.sendCode")}</AlertTitle>
+      <AlertDescription>
+        {t("generated.dashboard.settings.codeGoesSelectedMethod")}
+      </AlertDescription>
     </Alert>
   )
 }
@@ -106,9 +112,13 @@ function CodeInputEntry({
   onResend: () => void
   onVerify: () => void
 }) {
+  const t = useAppTranslations()
+
   return (
     <div className="space-y-3">
-      <Label htmlFor="password-2fa-code">Kod 2FA</Label>
+      <Label htmlFor="password-2fa-code">
+        {t("generated.dashboard.settings.value2faCode")}
+      </Label>
       <OtpInput
         disabled={isBusy}
         id="password-2fa-code"
@@ -122,7 +132,7 @@ function CodeInputEntry({
           onClick={onVerify}
           type="button"
         >
-          Zweryfikuj kod
+          {t("generated.shared.verifyCode")}
         </Button>
         {method !== "AUTHENTICATOR" ? (
           <>
@@ -135,8 +145,10 @@ function CodeInputEntry({
               variant="outline"
             >
               {resendCooldown > 0
-                ? `Wyślij ponownie (${formatCountdown(resendCooldown)})`
-                : "Wyślij ponownie"}
+                ? t("generated.dashboard.settings.resend", {
+                    value0: formatCountdown(resendCooldown),
+                  })
+                : t("generated.shared.resend")}
             </Button>
             <span
               aria-atomic="true"
@@ -145,8 +157,10 @@ function CodeInputEntry({
               id="resend-status"
             >
               {resendCooldown > 0
-                ? "Wyślij ponownie będzie dostępne po zakończeniu odliczania."
-                : "Możesz teraz wysłać ponownie."}
+                ? t(
+                    "generated.dashboard.settings.resendWillAvailableAfterCountdown"
+                  )
+                : t("generated.dashboard.settings.nowResend")}
             </span>
           </>
         ) : null}
@@ -169,6 +183,8 @@ export function PasswordVerificationSection({
   verificationError,
   autoVerify = false,
 }: PasswordVerificationSectionProps) {
+  const t = useAppTranslations()
+
   const [state, setState] = useState<PasswordVerificationState>({
     stage: "IDLE",
     error: "",
@@ -229,7 +245,9 @@ export function PasswordVerificationSection({
     }
 
     if (code.length !== OTP_LENGTH) {
-      const message = "Wpisz pełny kod weryfikacyjny."
+      const message = t(
+        "generated.dashboard.settings.enterFullVerificationCode"
+      )
       setState((current) => ({ ...current, error: message }))
       toast.error(message)
       return
@@ -266,10 +284,13 @@ export function PasswordVerificationSection({
     onVerify(code)
   }, [autoVerify, code, complete, isVerifying, onVerify])
 
-  const title = copy?.title ?? "Potwierdź 2FA przed zmianą"
-  const verifiedTitle = copy?.verifiedTitle ?? "Zweryfikowano"
+  const title =
+    copy?.title ?? t("generated.dashboard.settings.confirm2faBeforeChanging")
+  const verifiedTitle =
+    copy?.verifiedTitle ?? t("generated.dashboard.settings.verified3")
   const verifiedDescription =
-    copy?.verifiedDescription ?? "Możesz bezpiecznie zmienić hasło."
+    copy?.verifiedDescription ??
+    t("generated.dashboard.settings.safelyChangePassword")
   const description = (() => {
     if (copy?.description) {
       return typeof copy.description === "function"
@@ -277,8 +298,8 @@ export function PasswordVerificationSection({
         : copy.description
     }
     return method === "AUTHENTICATOR"
-      ? "Wpisz kod z aplikacji uwierzytelniającej."
-      : "Wyślemy kod na wybraną metodę."
+      ? t("generated.dashboard.settings.enterCodeAuthenticatorApp")
+      : t("generated.dashboard.settings.willSendCodeSelectedMethod")
   })()
   const resolvedError = verificationError ?? error
 
@@ -290,7 +311,9 @@ export function PasswordVerificationSection({
           <p className="text-muted-foreground text-sm">{description}</p>
         </div>
         <Badge variant={complete ? "success" : "warning"}>
-          {complete ? "Zweryfikowano" : "Wymagane"}
+          {complete
+            ? t("generated.dashboard.settings.verified3")
+            : t("generated.dashboard.settings.required")}
         </Badge>
       </div>
 
@@ -303,7 +326,9 @@ export function PasswordVerificationSection({
         <div className="space-y-3">
           {resolvedError ? (
             <Alert variant="destructive">
-              <AlertTitle>Nie udało się zweryfikować</AlertTitle>
+              <AlertTitle>
+                {t("generated.dashboard.settings.verified")}
+              </AlertTitle>
               <AlertDescription>{resolvedError}</AlertDescription>
             </Alert>
           ) : null}

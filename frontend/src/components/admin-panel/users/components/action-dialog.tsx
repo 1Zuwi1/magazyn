@@ -1,7 +1,8 @@
 "use client"
 
 import { useForm, useStore } from "@tanstack/react-form"
-import { useCallback, useEffect } from "react"
+import { useTranslations } from "next-intl"
+import { useCallback, useEffect, useMemo } from "react"
 import z from "zod"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import { FieldWithState } from "@/components/helpers/field-state"
@@ -14,33 +15,37 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { AdminTeamOption } from "@/hooks/use-admin-users"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 const profilePhonePattern = /^[+\d\s()-]*$/
 
-const EditUserFormSchema = z.object({
-  fullName: z
-    .string()
-    .trim()
-    .min(3, "Imię i nazwisko musi mieć co najmniej 3 znaki")
-    .max(100, "Imię i nazwisko może mieć maksymalnie 100 znaków"),
-  email: z.email("Podaj poprawny adres email"),
-  phone: z
-    .string()
-    .trim()
-    .max(20, "Numer telefonu może mieć maksymalnie 20 znaków")
-    .regex(
-      profilePhonePattern,
-      "Numer telefonu może zawierać tylko cyfry, spacje i znaki +()-"
-    ),
-  location: z
-    .string()
-    .trim()
-    .max(100, "Lokalizacja może mieć maksymalnie 100 znaków"),
-  team: z.string(),
-})
+const createEditUserFormSchema = (t: ReturnType<typeof useAppTranslations>) =>
+  z.object({
+    fullName: z
+      .string()
+      .trim()
+      .min(3, t("generated.admin.users.fullNameMustLeast3"))
+      .max(100, t("generated.admin.users.fullNameMaximum100Characters")),
+    email: z.email("Podaj poprawny adres email"),
+    phone: z
+      .string()
+      .trim()
+      .max(20, t("generated.admin.users.phoneNumberMaximum20Characters"))
+      .regex(
+        profilePhonePattern,
+        t("generated.admin.users.phoneNumberOnlyContainNumbers")
+      ),
+    location: z
+      .string()
+      .trim()
+      .max(100, t("generated.admin.users.locationMaximum100Characters")),
+    team: z.string(),
+  })
 
-export type EditUserFormValues = z.infer<typeof EditUserFormSchema>
+export type EditUserFormValues = z.infer<
+  ReturnType<typeof createEditUserFormSchema>
+>
 
 export interface EditableAdminUser {
   id: number
@@ -69,7 +74,11 @@ export function ActionDialog({
   onSubmit,
   teams,
 }: ActionDialogProps) {
+  const t = useAppTranslations()
+  const editUserFormSchema = useMemo(() => createEditUserFormSchema(t), [t])
+
   const formId = "edit-user-form"
+  const teamTranslations = useTranslations("adminUsers.teams")
 
   const getFormValues = useCallback(
     () => ({
@@ -95,7 +104,7 @@ export function ActionDialog({
       onOpenChange(false)
     },
     validators: {
-      onSubmit: EditUserFormSchema,
+      onSubmit: editUserFormSchema,
     },
   })
 
@@ -106,16 +115,29 @@ export function ActionDialog({
   }, [open, getFormValues, form])
 
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
+  const getTeamLabel = useCallback(
+    (teamValue: string): string => {
+      const selectedTeam = teams.find(
+        (teamOption) => teamOption.value === teamValue
+      )
+      if (!selectedTeam) {
+        return t("generated.admin.users.chooseTeam")
+      }
+
+      return teamTranslations(selectedTeam.value)
+    },
+    [teamTranslations, teams, t]
+  )
 
   return (
     <FormDialog
-      description="Zmień informacje profilowe użytkownika"
+      description={t("generated.admin.users.changeUserProfileInformation")}
       formId={formId}
       isLoading={isSubmitting}
       onFormReset={() => form.reset(getFormValues())}
       onOpenChange={onOpenChange}
       open={open}
-      title="Edytuj użytkownika"
+      title={t("generated.admin.users.editUser")}
     >
       <form
         className="space-y-4 px-0.5"
@@ -131,9 +153,9 @@ export function ActionDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label="Imię i nazwisko"
+                label={t("generated.admin.users.fullName")}
                 layout="grid"
-                placeholder="Jan Kowalski"
+                placeholder={t("generated.shared.johnKowalski")}
               />
             )}
           </form.Field>
@@ -143,9 +165,9 @@ export function ActionDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label="Email"
+                label={t("generated.shared.eMail")}
                 layout="grid"
-                placeholder="jan.kowalski@example.com"
+                placeholder={t("generated.admin.users.johnKowalskiExampleCom")}
                 type="email"
               />
             )}
@@ -156,7 +178,7 @@ export function ActionDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label="Telefon"
+                label={t("generated.shared.phone")}
                 layout="grid"
                 placeholder="+48 555 019 203"
                 type="tel"
@@ -169,9 +191,9 @@ export function ActionDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label="Lokalizacja"
+                label={t("generated.shared.location")}
                 layout="grid"
-                placeholder="Gdańsk, Polska"
+                placeholder={t("generated.admin.users.gdanskPoland")}
               />
             )}
           </form.Field>
@@ -180,7 +202,7 @@ export function ActionDialog({
             {(field) => (
               <FieldWithState
                 field={field}
-                label="Zespół"
+                label={t("generated.shared.team")}
                 layout="grid"
                 renderInput={({ id, isInvalid }) => (
                   <Select
@@ -194,13 +216,12 @@ export function ActionDialog({
                       id={id}
                     >
                       <SelectValue
-                        placeholder="Wybierz zespół"
+                        placeholder={t("generated.admin.users.chooseTeam")}
                         render={
                           <span>
                             {field.state.value
-                              ? teams.find((t) => t.value === field.state.value)
-                                  ?.label
-                              : "Wybierz zespół"}
+                              ? getTeamLabel(field.state.value)
+                              : t("generated.admin.users.chooseTeam")}
                           </span>
                         }
                       />
@@ -211,7 +232,7 @@ export function ActionDialog({
                           key={teamOption.value}
                           value={teamOption.value}
                         >
-                          {teamOption.label}
+                          {teamTranslations(teamOption.value)}
                         </SelectItem>
                       ))}
                     </SelectContent>

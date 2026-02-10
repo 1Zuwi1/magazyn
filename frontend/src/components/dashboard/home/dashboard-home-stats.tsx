@@ -6,14 +6,15 @@ import {
   GroupItemsIcon,
   Package,
 } from "@hugeicons/core-free-icons"
+import { useLocale } from "next-intl"
 import { useMemo } from "react"
 import { StatCard } from "@/components/dashboard/stat-card"
-import { pluralize } from "@/components/dashboard/utils/helpers"
 import { ErrorEmptyState } from "@/components/ui/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
 import useAssortments from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import useWarehouses from "@/hooks/use-warehouses"
+import { useAppTranslations } from "@/i18n/use-translations"
 import {
   formatNumber,
   OCCUPANCY_CRITICAL_THRESHOLD,
@@ -35,9 +36,11 @@ const getOccupancyCardVariant = (
 }
 
 function DashboardHomeStatsSkeleton() {
+  const t = useAppTranslations()
+
   return (
     <section
-      aria-label="Ładowanie statystyk magazynowych"
+      aria-label={t("generated.dashboard.home.loadingWarehouseStatistics")}
       className="@container"
     >
       <div className="grid @5xl:grid-cols-4 @lg:grid-cols-2 gap-4">
@@ -64,6 +67,9 @@ function DashboardHomeStatsSkeleton() {
 }
 
 export function DashboardHomeStats() {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
   const {
     data: warehousesData,
     isPending: isWarehousesPending,
@@ -150,7 +156,7 @@ export function DashboardHomeStats() {
     return (
       <section aria-labelledby="dashboard-stats">
         <h2 className="sr-only" id="dashboard-stats">
-          Statystyki magazynowe
+          {t("generated.dashboard.home.warehouseStatistics")}
         </h2>
         <ErrorEmptyState onRetry={handleRetry} />
       </section>
@@ -160,36 +166,53 @@ export function DashboardHomeStats() {
   return (
     <section aria-labelledby="dashboard-stats" className="@container">
       <h2 className="sr-only" id="dashboard-stats">
-        Statystyki magazynowe
+        {t("generated.dashboard.home.warehouseStatistics")}
       </h2>
 
       <div className="grid @5xl:grid-cols-4 @lg:grid-cols-2 gap-4">
         <StatCard
-          hint={`${formatNumber(totalRacks)} ${pluralize(totalRacks, "regał", "regały", "regałów")}`}
+          hint={t("generated.shared.pluralLabel", {
+            value0: totalRacks,
+          })}
           icon={Package}
-          label="Magazyny aktywne"
-          value={formatNumber(totalWarehouses)}
+          label={t("generated.dashboard.home.activeWarehouses")}
+          value={formatNumber(totalWarehouses, locale)}
           variant="primary"
         />
         <StatCard
-          hint={`${formatNumber(warehousesData?.summary?.occupiedSlots ?? 0)} zajęte`}
+          hint={t("generated.dashboard.home.taken", {
+            value0: formatNumber(
+              warehousesData?.summary?.occupiedSlots ?? 0,
+              locale
+            ),
+          })}
           icon={Analytics01Icon}
-          label="Łączna pojemność"
-          value={formatNumber(warehousesData?.summary?.totalCapacity ?? 0)}
+          label={t("generated.dashboard.home.totalCapacity")}
+          value={formatNumber(
+            warehousesData?.summary?.totalCapacity ?? 0,
+            locale
+          )}
           variant="default"
         />
         <StatCard
-          hint={`${formatNumber(warehousesData?.summary?.freeSlots ?? 0)} wolnych`}
+          hint={t("generated.dashboard.home.free", {
+            value0: formatNumber(
+              warehousesData?.summary?.freeSlots ?? 0,
+              locale
+            ),
+          })}
           icon={Clock01Icon}
-          label="Zajętość"
+          label={t("generated.dashboard.home.occupied")}
           value={`${occupancyPercentage}%`}
           variant={getOccupancyCardVariant(occupancyPercentage)}
         />
         <StatCard
-          hint={`${formatNumber(dangerousItemsCount)} oznaczonych jako niebezpieczne`}
+          hint={t("generated.dashboard.home.markedDangerous", {
+            value0: formatNumber(dangerousItemsCount, locale),
+          })}
           icon={GroupItemsIcon}
-          label="Produkty w obiegu"
-          value={formatNumber(productsInCirculation)}
+          label={t("generated.dashboard.home.productsCirculation")}
+          value={formatNumber(productsInCirculation, locale)}
           variant="default"
         />
       </div>

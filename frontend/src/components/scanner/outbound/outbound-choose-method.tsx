@@ -1,3 +1,4 @@
+import { useAppTranslations } from "@/i18n/use-translations"
 import { ScannerChooseMethod } from "../scanner-choose-method"
 
 interface OutboundChooseMethodProps {
@@ -11,17 +12,21 @@ export function OutboundChooseMethod({
   onSelect,
   onCancel,
 }: OutboundChooseMethodProps) {
+  const t = useAppTranslations()
+
   return (
     <ScannerChooseMethod
-      description="Wybierz sposób wskazania towaru do zdjęcia z magazynu."
+      description={t("generated.scanner.shared.chooseHowIndicateGoodsRemove")}
       onCancel={onCancel}
       onScan={onScan}
       onSelect={onSelect}
-      scanDescription="Zeskanuj kod GS1-128 z etykiety asortymentu."
+      scanDescription={t("generated.scanner.shared.scanGs1128CodeAssortment")}
       scanLabel="Zeskanuj kod"
-      selectDescription="Wyszukaj produkt i wskaż ilość do zdjęcia."
+      selectDescription={t(
+        "generated.scanner.shared.searchProductSpecifyQuantityRemove"
+      )}
       selectLabel="Wybierz z listy"
-      title="Zdejmowanie towaru"
+      title={t("generated.scanner.shared.goodsRemoval")}
     />
   )
 }

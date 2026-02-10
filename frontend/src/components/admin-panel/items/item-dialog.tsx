@@ -15,6 +15,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useForm, useStore } from "@tanstack/react-form"
+
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
@@ -37,8 +38,8 @@ import { Separator } from "@/components/ui/separator"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { useUploadItemPhoto } from "@/hooks/use-items"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
-
 export interface ItemFormData {
   name: string
   minTemp: number
@@ -107,6 +108,8 @@ function SectionHeader({
 type PhotoStep = "prompt" | "camera" | "preview"
 
 function useCamera(videoRef: React.RefObject<HTMLVideoElement | null>) {
+  const t = useAppTranslations()
+
   const streamRef = useRef<MediaStream | null>(null)
   const [isActive, setIsActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -128,11 +131,9 @@ function useCamera(videoRef: React.RefObject<HTMLVideoElement | null>) {
       }
       setIsActive(true)
     } catch {
-      setError(
-        "Nie udalo sie uzyskac dostepu do kamery. Upewnij sie, ze udzielono pozwolenia."
-      )
+      setError(t("generated.admin.items.failedAccessCameraMakeSure"))
     }
-  }, [videoRef])
+  }, [videoRef, t])
 
   const stop = useCallback(() => {
     const stream = streamRef.current
@@ -202,6 +203,8 @@ function CameraView({
   onCapture: (file: File) => void
   onCancel: () => void
 }) {
+  const t = useAppTranslations()
+
   const videoRef = useRef<HTMLVideoElement>(null)
   const { isActive, error, start, stop, capture } = useCamera(videoRef)
 
@@ -240,7 +243,7 @@ function CameraView({
             <p className="text-sm text-white/80">{error}</p>
             <Button onClick={start} size="sm" variant="outline">
               <HugeiconsIcon className="mr-1.5 size-4" icon={RefreshIcon} />
-              Sprobuj ponownie
+              {t("generated.admin.items.again")}
             </Button>
           </div>
         )}
@@ -249,10 +252,10 @@ function CameraView({
       <div className="flex w-full items-center justify-between">
         <Button onClick={onCancel} size="sm" variant="ghost">
           <HugeiconsIcon className="mr-1.5 size-4" icon={Cancel01Icon} />
-          Anuluj
+          {t("generated.shared.cancel")}
         </Button>
         <button
-          aria-label="Zrob zdjecie"
+          aria-label={t("generated.admin.items.takePhoto")}
           className="flex size-14 items-center justify-center rounded-full border-4 border-primary bg-primary/10 transition-colors hover:bg-primary/20 active:bg-primary/30 disabled:opacity-50"
           disabled={!isActive}
           onClick={handleCapture}
@@ -277,6 +280,8 @@ export function PhotoPromptDialog({
   onOpenChange: (open: boolean) => void
   hasExistingPhoto?: boolean
 }) {
+  const t = useAppTranslations()
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const uploadMutation = useUploadItemPhoto()
   const [preview, setPreview] = useState<string | null>(null)
@@ -346,8 +351,8 @@ export function PhotoPromptDialog({
       await uploadMutation.mutateAsync({ itemId, photo: selectedFile })
       toast.success(
         hasExistingPhoto
-          ? "Zmieniono zdjecie przedmiotu"
-          : "Dodano zdjecie przedmiotu"
+          ? t("generated.admin.items.changedProductPhoto")
+          : t("generated.admin.items.addedProductPhoto")
       )
       cleanup()
       onOpenChange(false)
@@ -375,13 +380,13 @@ export function PhotoPromptDialog({
             <DialogHeader>
               <DialogTitle>
                 {hasExistingPhoto
-                  ? "Zmien zdjecie przedmiotu"
-                  : "Dodaj zdjecie przedmiotu"}
+                  ? t("generated.admin.items.changeProductPhoto")
+                  : t("generated.admin.items.addProductPhoto")}
               </DialogTitle>
               <DialogDescription>
                 {hasExistingPhoto
-                  ? "Wybierz nowe zdjecie. Obecne zdjecie zostanie zastapione."
-                  : "Chcesz dodac zdjecie nowo utworzonego przedmiotu? Mozesz to zrobic teraz lub pozniej."}
+                  ? t("generated.admin.items.selectNewPhotoCurrentPhoto")
+                  : t("generated.admin.items.wantAddPhotoNewlyCreated")}
               </DialogDescription>
             </DialogHeader>
 
@@ -392,8 +397,7 @@ export function PhotoPromptDialog({
                   icon={AlertDiamondIcon}
                 />
                 <p className="text-amber-800 text-sm leading-snug dark:text-amber-200">
-                  Obecne zdjecie zostanie nadpisane. Tej operacji nie mozna
-                  cofnac.
+                  {t("generated.admin.items.currentPhotoWillOverwrittenAction")}
                 </p>
               </div>
             )}
@@ -408,7 +412,9 @@ export function PhotoPromptDialog({
                   className="size-8 text-muted-foreground/60"
                   icon={Camera01Icon}
                 />
-                <span className="font-medium text-sm">Zrob zdjecie</span>
+                <span className="font-medium text-sm">
+                  {t("generated.admin.items.takePhoto")}
+                </span>
               </button>
               <button
                 className="flex flex-col items-center gap-3 rounded-lg border-2 border-muted-foreground/25 border-dashed bg-muted/20 p-6 transition-colors hover:border-primary/40 hover:bg-muted/40"
@@ -419,13 +425,17 @@ export function PhotoPromptDialog({
                   className="size-8 text-muted-foreground/60"
                   icon={ImageUploadIcon}
                 />
-                <span className="font-medium text-sm">Wybierz plik</span>
+                <span className="font-medium text-sm">
+                  {t("generated.admin.items.selectFile")}
+                </span>
               </button>
             </div>
 
             <DialogFooter>
               <Button onClick={() => handleOpenChange(false)} variant="ghost">
-                {hasExistingPhoto ? "Anuluj" : "Pomin"}
+                {hasExistingPhoto
+                  ? t("generated.shared.cancel")
+                  : t("generated.admin.items.skip")}
               </Button>
             </DialogFooter>
           </>
@@ -441,13 +451,15 @@ export function PhotoPromptDialog({
         {step === "preview" && preview && (
           <>
             <DialogHeader>
-              <DialogTitle>Podglad zdjecia</DialogTitle>
+              <DialogTitle>
+                {t("generated.admin.items.photoPreview")}
+              </DialogTitle>
             </DialogHeader>
 
             <div className="overflow-hidden rounded-lg border bg-muted/30">
               {/* biome-ignore lint/performance/noImgElement: blob URLs are not supported by next/image */}
               <img
-                alt="Podglad zdjecia"
+                alt={t("generated.admin.items.photoPreview")}
                 className="mx-auto max-h-64 object-contain"
                 height={256}
                 src={preview}
@@ -469,7 +481,7 @@ export function PhotoPromptDialog({
                     className="mr-1.5 size-4"
                     icon={Camera01Icon}
                   />
-                  Ponow
+                  {t("generated.admin.items.retry")}
                 </Button>
                 <Button
                   onClick={() => fileInputRef.current?.click()}
@@ -480,7 +492,7 @@ export function PhotoPromptDialog({
                     className="mr-1.5 size-4"
                     icon={ImageUploadIcon}
                   />
-                  Zmien
+                  {t("generated.admin.items.change")}
                 </Button>
               </div>
               <Button
@@ -492,7 +504,7 @@ export function PhotoPromptDialog({
                   className="mr-1.5 size-4"
                   icon={CheckmarkCircle01Icon}
                 />
-                Zapisz
+                {t("generated.admin.shared.save")}
               </Button>
             </DialogFooter>
           </>
@@ -508,6 +520,8 @@ export function ItemDialog({
   onOpenChange,
   onSubmit,
 }: ItemDialogProps) {
+  const t = useAppTranslations()
+
   const isEdit = !!currentRow
   const [photoPromptOpen, setPhotoPromptOpen] = useState(false)
   const [createdItemId, setCreatedItemId] = useState<number | null>(null)
@@ -568,15 +582,19 @@ export function ItemDialog({
       <FormDialog
         description={
           isEdit
-            ? "Zmien parametry przedmiotu"
-            : "Wprowadz parametry nowego przedmiotu."
+            ? t("generated.admin.items.changeProductParameters")
+            : t("generated.admin.items.enterNewProductParameters")
         }
         formId="item-form"
         isLoading={isSubmitting}
         onFormReset={() => setPendingFormReset(true)}
         onOpenChange={onOpenChange}
         open={open}
-        title={isEdit ? "Edytuj przedmiot" : "Dodaj przedmiot"}
+        title={
+          isEdit
+            ? t("generated.admin.items.editProduct")
+            : t("generated.admin.items.addProduct")
+        }
       >
         <form
           className="space-y-5 px-0.5 py-4"
@@ -588,16 +606,19 @@ export function ItemDialog({
         >
           {/* -- Identyfikacja -- */}
           <section className="space-y-3">
-            <SectionHeader icon={Tag01Icon} title="Identyfikacja" />
+            <SectionHeader
+              icon={Tag01Icon}
+              title={t("generated.admin.shared.identification")}
+            />
             <FieldGroup className="gap-4">
               <form.Field name="name">
                 {(field) => (
                   <FieldWithState
                     autoComplete="off"
                     field={field}
-                    label="Nazwa"
+                    label={t("generated.shared.name")}
                     layout="grid"
-                    placeholder="Mleko 3,2%"
+                    placeholder={t("generated.admin.items.milk32")}
                   />
                 )}
               </form.Field>
@@ -608,11 +629,14 @@ export function ItemDialog({
 
           {/* -- Warunki przechowywania -- */}
           <section className="space-y-3">
-            <SectionHeader icon={ThermometerIcon} title="Przechowywanie" />
+            <SectionHeader
+              icon={ThermometerIcon}
+              title={t("generated.admin.shared.storage")}
+            />
             <FieldGroup className="gap-4">
               <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
                 <span className="col-span-2 text-start font-medium text-sm">
-                  Temperatura
+                  {t("generated.shared.temperature")}
                 </span>
                 <div className="col-span-4 flex items-center gap-2">
                   <form.Field name="minTemp">
@@ -624,7 +648,7 @@ export function ItemDialog({
                         onChange={(e) =>
                           field.handleChange(Number(e.target.value))
                         }
-                        placeholder="Min °C"
+                        placeholder={t("generated.admin.shared.minC")}
                         type="number"
                         value={field.state.value}
                       />
@@ -640,7 +664,7 @@ export function ItemDialog({
                         onChange={(e) =>
                           field.handleChange(Number(e.target.value))
                         }
-                        placeholder="Max °C"
+                        placeholder={t("generated.admin.shared.maxC")}
                         type="number"
                         value={field.state.value}
                       />
@@ -653,7 +677,7 @@ export function ItemDialog({
                 {(field) => (
                   <FieldWithState
                     field={field}
-                    label="Ważność (dni)"
+                    label={t("generated.admin.items.shelfLifeDays")}
                     layout="grid"
                     renderInput={({ id, isInvalid }) => (
                       <Input
@@ -680,7 +704,7 @@ export function ItemDialog({
                       className="col-span-2 cursor-pointer text-nowrap text-end"
                       htmlFor={field.name}
                     >
-                      Niebezpieczny
+                      {t("generated.shared.dangerous")}
                     </Label>
                     <FieldContent className="col-span-4 flex items-center gap-2.5">
                       <Checkbox
@@ -693,7 +717,7 @@ export function ItemDialog({
                       {field.state.value && (
                         <span className="flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-destructive text-xs">
                           <HugeiconsIcon className="size-3" icon={DangerIcon} />
-                          Material niebezpieczny
+                          {t("generated.admin.items.hazardousMaterial")}
                         </span>
                       )}
                     </FieldContent>
@@ -707,13 +731,16 @@ export function ItemDialog({
 
           {/* -- Wymiary fizyczne -- */}
           <section className="space-y-3">
-            <SectionHeader icon={RulerIcon} title="Wymiary fizyczne" />
+            <SectionHeader
+              icon={RulerIcon}
+              title={t("generated.admin.shared.physicalDimensions")}
+            />
             <FieldGroup className="gap-4">
               <form.Field name="weight">
                 {(field) => (
                   <FieldWithState
                     field={field}
-                    label="Waga (kg)"
+                    label={t("generated.admin.items.weightKg")}
                     layout="grid"
                     renderInput={({ id, isInvalid }) => (
                       <Input
@@ -736,7 +763,7 @@ export function ItemDialog({
 
               <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
                 <span className="col-span-2 font-medium text-sm">
-                  Wymiary (mm)
+                  {t("generated.admin.items.dimensionsMm")}
                 </span>
                 <div className="col-span-4 flex items-center gap-2">
                   <form.Field name="width">
@@ -749,7 +776,7 @@ export function ItemDialog({
                         onChange={(e) =>
                           field.handleChange(Number(e.target.value))
                         }
-                        placeholder="Szer."
+                        placeholder={t("generated.admin.shared.lat")}
                         type="number"
                         value={field.state.value}
                       />
@@ -766,7 +793,7 @@ export function ItemDialog({
                         onChange={(e) =>
                           field.handleChange(Number(e.target.value))
                         }
-                        placeholder="Wys."
+                        placeholder={t("generated.admin.shared.height")}
                         type="number"
                         value={field.state.value}
                       />
@@ -783,7 +810,7 @@ export function ItemDialog({
                         onChange={(e) =>
                           field.handleChange(Number(e.target.value))
                         }
-                        placeholder="Gl."
+                        placeholder={t("generated.admin.items.main")}
                         type="number"
                         value={field.state.value}
                       />
@@ -798,14 +825,17 @@ export function ItemDialog({
 
           {/* -- Komentarz -- */}
           <section className="space-y-3">
-            <SectionHeader icon={Comment01Icon} title="Dodatkowe" />
+            <SectionHeader
+              icon={Comment01Icon}
+              title={t("generated.admin.shared.additional")}
+            />
             <FieldGroup className="gap-4">
               <form.Field name="comment">
                 {(field) => (
                   <FieldWithState
                     field={field}
                     fieldClassName="items-start"
-                    label="Komentarz"
+                    label={t("generated.shared.comment")}
                     labelClassName="pt-2 text-left"
                     layout="grid"
                     renderInput={({ id, isInvalid }) => (
@@ -816,7 +846,9 @@ export function ItemDialog({
                         id={id}
                         name={field.name}
                         onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder="Opcjonalny komentarz..."
+                        placeholder={t(
+                          "generated.admin.shared.optionalComment"
+                        )}
                         rows={3}
                         value={field.state.value ?? ""}
                       />

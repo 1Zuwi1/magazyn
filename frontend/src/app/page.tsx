@@ -8,8 +8,11 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
+
+import { LanguageSwitcher } from "@/components/language-switcher"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
+import { getAppTranslations } from "@/i18n/get-translations"
 import { getAnimationStyle } from "@/lib/utils"
 
 // Static decorative components - hoisted outside to avoid re-creation
@@ -60,54 +63,63 @@ const FloatingElements = () => (
   </>
 )
 
-// Feature data - static, defined at module level
-const features = [
-  {
-    title: "Śledzenie zapasów",
-    description:
-      "Monitoruj stany magazynowe w czasie rzeczywistym. Otrzymuj powiadomienia o niskich stanach.",
-    icon: PackageIcon,
-  },
-  {
-    title: "Kody QR",
-    description:
-      "Skanuj i generuj kody QR dla produktów. Szybka identyfikacja i lokalizacja.",
-    icon: QrCodeIcon,
-  },
-  {
-    title: "Raporty i analizy",
-    description:
-      "Szczegółowe raporty i wizualizacje danych. Podejmuj lepsze decyzje biznesowe.",
-    icon: Chart01Icon,
-  },
-  {
-    title: "Zarządzanie lokalizacjami",
-    description:
-      "Organizuj magazyn w strefy i regały. Zawsze wiedz, gdzie leży produkt.",
-    icon: Location01Icon,
-  },
-  {
-    title: "Historia operacji",
-    description:
-      "Pełna historia przyjęć, wydań i przesunięć. Audyt i kontrola zmian.",
-    icon: Clock01Icon,
-  },
-  {
-    title: "Wieloosobowy dostęp",
-    description:
-      "Role i uprawnienia dla zespołu. Każdy ma dostęp tylko do tego, co potrzebuje.",
-    icon: UserMultipleIcon,
-  },
-]
+export default async function LandingPage() {
+  const t = await getAppTranslations()
 
-const benefits = [
-  { value: "99.9%", label: "Dostępność systemu" },
-  { value: "< 1s", label: "Czas odpowiedzi" },
-  { value: "24/7", label: "Monitoring" },
-  { value: "SSL", label: "Szyfrowanie danych" },
-]
+  const features = [
+    {
+      title: t("generated.landing.inventoryTracking"),
+      description: t("generated.landing.monitorStockLevelsRealTime"),
+      icon: PackageIcon,
+    },
+    {
+      title: t("generated.landing.qrCodes"),
+      description: t("generated.landing.scanGenerateQrCodesProducts"),
+      icon: QrCodeIcon,
+    },
+    {
+      title: t("generated.landing.reportsAnalyses"),
+      description: t("generated.landing.detailedReportsDataVisualizationsMake"),
+      icon: Chart01Icon,
+    },
+    {
+      title: t("generated.landing.locationManagement"),
+      description: t("generated.landing.organizeWarehouseZonesRacksAlways"),
+      icon: Location01Icon,
+    },
+    {
+      title: t("generated.landing.operationHistory"),
+      description: t(
+        "generated.landing.completeHistoryReceiptsIssuesTransfers"
+      ),
+      icon: Clock01Icon,
+    },
+    {
+      title: t("generated.landing.multiUserAccess"),
+      description: t("generated.landing.rolesPermissionsTeamEveryoneAccess"),
+      icon: UserMultipleIcon,
+    },
+  ] as const
 
-export default function LandingPage() {
+  const benefits = [
+    {
+      value: "99.9%",
+      label: t("generated.landing.systemAvailability"),
+    },
+    {
+      value: "< 1s",
+      label: t("generated.landing.responseTime"),
+    },
+    {
+      value: "24/7",
+      label: t("generated.landing.value247Availability"),
+    },
+    {
+      value: "SSL",
+      label: t("generated.landing.dataEncryption"),
+    },
+  ] as const
+
   return (
     <div className="relative min-h-screen bg-background">
       {/* Background decorations */}
@@ -121,14 +133,15 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 w-full border-border/40 border-b bg-background/70 backdrop-blur-xl">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Logo href="/" />
-          <nav className="flex items-center gap-2">
+          <nav className="flex items-center gap-3">
+            <LanguageSwitcher />
             <Link href="/login">
               <Button size="sm" variant="ghost">
-                Zaloguj się
+                {t("generated.shared.log")}
               </Button>
             </Link>
             <Link href="/register">
-              <Button size="sm">Załóż konto</Button>
+              <Button size="sm">{t("generated.landing.createAccount")}</Button>
             </Link>
           </nav>
         </div>
@@ -144,7 +157,7 @@ export default function LandingPage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
               </span>
-              System aktywny
+              {t("generated.landing.activeSystem")}
             </div>
 
             {/* Headline */}
@@ -152,10 +165,11 @@ export default function LandingPage() {
               className="fade-in slide-in-from-bottom-4 max-w-4xl animate-in font-bold text-4xl tracking-tight duration-700 sm:text-5xl md:text-6xl lg:text-7xl"
               style={getAnimationStyle("100ms")}
             >
-              Zarządzanie magazynem <br className="hidden sm:block" />
+              {t("generated.landing.warehouseManagement")}{" "}
+              <br className="hidden sm:block" />
               <span className="relative inline-block">
                 <span className="bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                  dla firmy
+                  {t("generated.landing.company")}
                 </span>
                 <svg
                   aria-hidden="true"
@@ -179,8 +193,7 @@ export default function LandingPage() {
               className="fade-in slide-in-from-bottom-5 mt-8 max-w-2xl animate-in text-lg text-muted-foreground duration-700 sm:text-xl"
               style={getAnimationStyle("200ms")}
             >
-              Kompletny system do zarządzania stanami magazynowymi, śledzenia
-              produktów i optymalizacji operacji logistycznych.
+              {t("generated.landing.completeSystemManagingInventoryTracking")}
             </p>
 
             {/* CTA buttons */}
@@ -193,7 +206,7 @@ export default function LandingPage() {
                   className="group min-w-45 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-primary/30 hover:shadow-xl"
                   size="lg"
                 >
-                  Rozpocznij teraz
+                  {t("generated.landing.startNow")}
                   <svg
                     className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
                     fill="none"
@@ -209,7 +222,7 @@ export default function LandingPage() {
               </Link>
               <Link href="/login">
                 <Button className="min-w-45" size="lg" variant="outline">
-                  Zaloguj się
+                  {t("generated.shared.log")}
                 </Button>
               </Link>
             </div>
@@ -229,7 +242,7 @@ export default function LandingPage() {
                 >
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
-                Bezpieczny dostęp
+                {t("generated.landing.secureAccess")}
               </div>
               <div className="flex items-center gap-2">
                 <svg
@@ -242,7 +255,7 @@ export default function LandingPage() {
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12,6 12,12 16,14" />
                 </svg>
-                Dane w czasie rzeczywistym
+                {t("generated.landing.realTimeData")}
               </div>
               <div className="flex items-center gap-2">
                 <svg
@@ -256,7 +269,7 @@ export default function LandingPage() {
                   <line x1="3" x2="21" y1="9" y2="9" />
                   <line x1="9" x2="9" y1="21" y2="9" />
                 </svg>
-                Intuicyjny interfejs
+                {t("generated.landing.intuitiveInterface")}
               </div>
             </div>
           </div>
@@ -268,10 +281,12 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 py-24 md:py-32">
           <div className="mb-16 text-center">
             <h2 className="font-bold text-3xl tracking-tight sm:text-4xl">
-              Wszystko, czego potrzebujesz
+              {t("generated.landing.everythingNeed")}
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Kompleksowe narzędzia do efektywnego zarządzania magazynem
+              {t(
+                "generated.landing.comprehensiveToolsEffectiveWarehouseManagement"
+              )}
             </p>
           </div>
 
@@ -308,10 +323,10 @@ export default function LandingPage() {
           <div className="rounded-3xl border border-border/50 bg-linear-to-b from-card/80 to-card/40 p-8 backdrop-blur-sm md:p-12">
             <div className="mb-12 text-center">
               <h2 className="font-bold text-3xl tracking-tight sm:text-4xl">
-                Niezawodność, na której możesz polegać
+                {t("generated.landing.reliabilityRely")}
               </h2>
               <p className="mt-4 text-muted-foreground">
-                System zaprojektowany z myślą o bezpieczeństwie i wydajności
+                {t("generated.landing.systemDesignedSafetyEfficiencyMind")}
               </p>
             </div>
 
@@ -353,11 +368,10 @@ export default function LandingPage() {
 
             <div className="relative flex flex-col items-center text-center">
               <h2 className="max-w-2xl font-bold text-3xl tracking-tight sm:text-4xl">
-                Gotowy, aby usprawnić zarządzanie magazynem?
+                {t("generated.landing.readyImproveWarehouseManagement")}
               </h2>
               <p className="mt-4 max-w-xl text-muted-foreground">
-                Dołącz do systemu i zacznij efektywnie zarządzać swoimi zasobami
-                już dziś.
+                {t("generated.landing.joinSystemStartManagingResources")}
               </p>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <Link href="/register">
@@ -365,7 +379,7 @@ export default function LandingPage() {
                     className="group min-w-40 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-primary/30 hover:shadow-xl"
                     size="lg"
                   >
-                    Załóż konto
+                    {t("generated.landing.createAccount")}
                     <svg
                       className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
                       fill="none"
@@ -381,7 +395,7 @@ export default function LandingPage() {
                 </Link>
                 <Link href="/login">
                   <Button size="lg" variant="outline">
-                    Mam już konto
+                    {t("generated.landing.alreadyAccount")}
                   </Button>
                 </Link>
               </div>
@@ -400,18 +414,20 @@ export default function LandingPage() {
                 className="transition-colors hover:text-foreground"
                 href="/login"
               >
-                Logowanie
+                {t("generated.landing.login")}
               </Link>
               <Link
                 className="transition-colors hover:text-foreground"
                 href="/register"
               >
-                Rejestracja
+                {t("generated.landing.registration")}
               </Link>
             </div>
             <div className="h-px w-full max-w-xs bg-linear-to-r from-transparent via-border to-transparent" />
             <p className="text-muted-foreground/70 text-sm">
-              © {new Date().getFullYear()} GdzieToLeży. System wewnętrzny.
+              {t("generated.landing.gdzietolezyInternalSystem", {
+                value0: new Date().getFullYear().toString(),
+              })}
             </p>
           </div>
         </div>

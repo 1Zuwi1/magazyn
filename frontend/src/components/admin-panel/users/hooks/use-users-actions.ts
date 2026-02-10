@@ -13,6 +13,7 @@ import {
   useUsersWarehouseAssignments,
   useUsersWarehouseAssignmentsDelete,
 } from "@/hooks/use-admin-users"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { EditUserFormValues } from "../components/action-dialog"
 import { normalizeValue, resolveTeamValue } from "../lib/user-utils"
 
@@ -57,6 +58,8 @@ export function useUsersActions({
   userIdToDelete,
   clearUserIdToDelete,
 }: UseUsersActionsParams) {
+  const t = useAppTranslations()
+
   const updateProfileMutation = useUpdateAdminUserProfile()
   const changeEmailMutation = useChangeAdminUserEmail()
   const deleteUserMutation = useDeleteAdminUser()
@@ -72,10 +75,10 @@ export function useUsersActions({
     deleteUserMutation.mutate(userIdToDelete, {
       onSuccess: () => {
         clearUserIdToDelete()
-        toast.success("Użytkownik został usunięty")
+        toast.success(t("generated.admin.users.userBeenDeleted"))
       },
       onError: () => {
-        toast.error("Nie udało się usunąć użytkownika")
+        toast.error(t("generated.admin.users.failedDeleteUser"))
       },
     })
   }
@@ -93,10 +96,10 @@ export function useUsersActions({
       { userId, status, reason },
       {
         onSuccess: () => {
-          toast.success("Status użytkownika został zmieniony")
+          toast.success(t("generated.admin.users.usersStatusBeenChanged"))
         },
         onError: () => {
-          toast.error("Nie udało się zmienić statusu użytkownika")
+          toast.error(t("generated.admin.users.failedChangeUserStatus"))
         },
       }
     )
@@ -113,10 +116,10 @@ export function useUsersActions({
       { userId, warehouseId },
       {
         onSuccess: () => {
-          toast.success("Magazyn został przypisany do użytkownika")
+          toast.success(t("generated.admin.users.warehouseBeenAssignedUser"))
         },
         onError: () => {
-          toast.error("Nie udało się przypisać magazynu")
+          toast.error(t("generated.admin.users.failedAssignWarehouse"))
         },
       }
     )
@@ -133,10 +136,12 @@ export function useUsersActions({
       { userId, warehouseId },
       {
         onSuccess: () => {
-          toast.success("Przypisanie magazynu zostało usunięte")
+          toast.success(
+            t("generated.admin.users.warehouseAssignmentBeenDeleted")
+          )
         },
         onError: () => {
-          toast.error("Nie udało się usunąć przypisania magazynu")
+          toast.error(t("generated.admin.users.failedDeleteStorageAssignment"))
         },
       }
     )
@@ -180,10 +185,10 @@ export function useUsersActions({
         },
         {
           onSuccess: () => {
-            toast.success("Email użytkownika został zaktualizowany")
+            toast.success(t("generated.admin.users.usersEmailBeenUpdated"))
           },
           onError: () => {
-            toast.error("Nie udało się zaktualizować emaila użytkownika")
+            toast.error(t("generated.admin.users.failedUpdateUserEmail"))
           },
         }
       )
@@ -202,10 +207,10 @@ export function useUsersActions({
         },
         {
           onSuccess: () => {
-            toast.success("Profil użytkownika został zaktualizowany")
+            toast.success(t("generated.admin.users.userProfileBeenUpdated"))
           },
           onError: () => {
-            toast.error("Nie udało się zaktualizować profilu użytkownika")
+            toast.error(t("generated.admin.users.failedUpdateUserProfile"))
           },
         }
       )

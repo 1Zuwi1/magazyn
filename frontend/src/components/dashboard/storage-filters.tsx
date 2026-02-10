@@ -1,5 +1,6 @@
 import { Filter } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
@@ -9,6 +10,7 @@ import {
 } from "@/components/ui/popover"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { FilterState } from "./types"
 
@@ -27,6 +29,8 @@ export function WarehouseFilters({
   filters,
   onFilterChange,
 }: WarehouseFiltersProps) {
+  const t = useAppTranslations()
+
   return (
     <Popover>
       <PopoverTrigger
@@ -40,12 +44,14 @@ export function WarehouseFilters({
       <PopoverContent className="w-80">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <h4 className="font-medium leading-none">Filtry zaawansowane</h4>
+            <h4 className="font-medium leading-none">
+              {t("generated.dashboard.storage.advancedFilters")}
+            </h4>
           </div>
 
           <div className="space-y-2">
             <div className="flex justify-between">
-              <Label>Min. zapełnienie</Label>
+              <Label>{t("generated.dashboard.storage.minFill")}</Label>
               <span className="text-muted-foreground text-sm">
                 {filters.minOccupancy}%
               </span>
@@ -65,7 +71,9 @@ export function WarehouseFilters({
           </div>
 
           <div className="flex items-center justify-between">
-            <Label htmlFor="showEmpty">Pokaż puste magazyny</Label>
+            <Label htmlFor="showEmpty">
+              {t("generated.dashboard.storage.showEmptyWarehouses")}
+            </Label>
             <Switch
               checked={filters.showEmpty}
               id="showEmpty"
@@ -83,7 +91,7 @@ export function WarehouseFilters({
             size="sm"
             variant="ghost"
           >
-            Resetuj filtry
+            {t("generated.dashboard.storage.resetFilters")}
           </Button>
         </div>
       </PopoverContent>

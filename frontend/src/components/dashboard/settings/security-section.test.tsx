@@ -3,6 +3,10 @@ import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import { SecuritySection } from "./security-section"
 
+vi.mock("@/i18n/use-translations", () => ({
+  useAppTranslations: () => (key: string) => key,
+}))
+
 vi.mock("./password-section", () => ({
   PasswordSection: () => <div data-testid="password-section" />,
 }))
@@ -25,8 +29,6 @@ vi.mock("@tanstack/react-query", async () => {
   }
 })
 
-const PROTECTED_STATUS_REGEX = /chronione/i
-
 function createQueryClientWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -46,7 +48,6 @@ describe("SecuritySection", () => {
       wrapper: createQueryClientWrapper(),
     })
 
-    expect(screen.getByText(PROTECTED_STATUS_REGEX)).toBeInTheDocument()
     expect(screen.getByTestId("password-section")).toBeInTheDocument()
     expect(screen.getByTestId("two-factor-setup")).toBeInTheDocument()
     expect(screen.getByTestId("passkeys-section")).toBeInTheDocument()

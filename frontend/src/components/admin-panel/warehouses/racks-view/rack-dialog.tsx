@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useForm, useStore } from "@tanstack/react-form"
+
 import { useEffect, useMemo } from "react"
 import { toast } from "sonner"
 import z from "zod"
@@ -19,48 +20,65 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { Rack } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { DEFAULT_RACK } from "../../lib/constants"
 import type { RackFormData } from "../csv/utils/types"
 
-const RackDialogFormSchema = z
-  .object({
-    marker: z
-      .string()
-      .trim()
-      .min(1, "Marker jest wymagany")
-      .max(100, "Marker może mieć maksymalnie 100 znaków"),
-    rows: z
-      .number()
-      .int("Liczba wierszy musi być liczbą całkowitą")
-      .min(1, "Liczba wierszy musi być większa od 0"),
-    cols: z
-      .number()
-      .int("Liczba kolumn musi być liczbą całkowitą")
-      .min(1, "Liczba kolumn musi być większa od 0"),
-    minTemp: z.number(),
-    maxTemp: z.number(),
-    maxWeight: z.number().nonnegative("Maksymalna waga nie może być ujemna"),
-    maxItemWidth: z
-      .number()
-      .positive("Maksymalna szerokość asortymentu musi być większa od 0"),
-    maxItemHeight: z
-      .number()
-      .positive("Maksymalna wysokość asortymentu musi być większa od 0"),
-    maxItemDepth: z
-      .number()
-      .positive("Maksymalna głębokość asortymentu musi być większa od 0"),
-    acceptsDangerous: z.boolean(),
-    comment: z
-      .string()
-      .trim()
-      .max(1000, "Komentarz może mieć maksymalnie 1000 znaków"),
-  })
-  .refine((value) => value.maxTemp >= value.minTemp, {
-    message: "Maksymalna temperatura nie może być mniejsza od minimalnej",
-    path: ["maxTemp"],
-  })
+const createRackDialogFormSchema = (t: ReturnType<typeof useAppTranslations>) =>
+  z
+    .object({
+      marker: z
+        .string()
+        .trim()
+        .min(1, "Marker jest wymagany")
+        .max(100, t("generated.admin.warehouses.markerMaximum100Characters")),
+      rows: z
+        .number()
+        .int(t("generated.admin.warehouses.numberRowsMustInteger"))
+        .min(1, t("generated.admin.warehouses.numberRowsMustGreater0")),
+      cols: z
+        .number()
+        .int(t("generated.admin.warehouses.numberColumnsMustInteger"))
+        .min(1, t("generated.admin.warehouses.numberColumnsMustGreater0")),
+      minTemp: z.number(),
+      maxTemp: z.number(),
+      maxWeight: z
+        .number()
+        .nonnegative(
+          t("generated.admin.warehouses.maximumWeightCannotNegative")
+        ),
+      maxItemWidth: z
+        .number()
+        .positive(
+          t("generated.admin.warehouses.maximumAssortmentWidthMustGreater")
+        ),
+      maxItemHeight: z
+        .number()
+        .positive(
+          t("generated.admin.warehouses.maximumHeightAssortmentMustGreater")
+        ),
+      maxItemDepth: z
+        .number()
+        .positive(
+          t("generated.admin.warehouses.maximumAssortmentDepthMustGreater")
+        ),
+      acceptsDangerous: z.boolean(),
+      comment: z
+        .string()
+        .trim()
+        .max(
+          1000,
+          t("generated.admin.warehouses.commentMaximum1000Characters")
+        ),
+    })
+    .refine((value) => value.maxTemp >= value.minTemp, {
+      message: t(
+        "generated.admin.warehouses.maximumTemperatureCannotLowerMinimum"
+      ),
+      path: ["maxTemp"],
+    })
 
 const getNumericInputValue = (value: string): number => {
   const parsedValue = Number(value)
@@ -97,6 +115,9 @@ export function RackDialog({
   onOpenChange,
   onSubmit,
 }: RackDialogProps) {
+  const t = useAppTranslations()
+  const rackDialogFormSchema = useMemo(() => createRackDialogFormSchema(t), [t])
+
   const isEdit = !!currentRow
   const formValues = useMemo(
     () => ({
@@ -132,12 +153,16 @@ export function RackDialog({
         acceptsDangerous: value.acceptsDangerous,
         comment: value.comment.length > 0 ? value.comment : undefined,
       })
-      toast.success(isEdit ? "Regał zaktualizowany" : "Regał dodany")
+      toast.success(
+        isEdit
+          ? t("generated.admin.warehouses.bookcaseUpdated")
+          : t("generated.admin.warehouses.bookcaseAdded")
+      )
       form.reset(formValues)
       onOpenChange(false)
     },
     validators: {
-      onSubmit: RackDialogFormSchema,
+      onSubmit: rackDialogFormSchema,
     },
   })
 
@@ -152,14 +177,20 @@ export function RackDialog({
   return (
     <FormDialog
       description={
-        isEdit ? "Zmień parametry regału" : "Wprowadź parametry nowego regału."
+        isEdit
+          ? t("generated.admin.warehouses.changeRackParameters")
+          : t("generated.admin.warehouses.enterParametersNewRack")
       }
       formId="rack-form"
       isLoading={isSubmitting}
       onFormReset={() => form.reset(formValues)}
       onOpenChange={onOpenChange}
       open={open}
-      title={isEdit ? "Edytuj regał" : "Dodaj regał"}
+      title={
+        isEdit
+          ? t("generated.admin.warehouses.editRack")
+          : t("generated.admin.warehouses.addRack")
+      }
     >
       <form
         className="space-y-5 px-0.5 py-4"
@@ -170,16 +201,19 @@ export function RackDialog({
         }}
       >
         <section className="space-y-3">
-          <SectionHeader icon={Tag01Icon} title="Identyfikacja" />
+          <SectionHeader
+            icon={Tag01Icon}
+            title={t("generated.admin.shared.identification")}
+          />
           <FieldGroup className="gap-4">
             <form.Field name="marker">
               {(field) => (
                 <FieldWithState
                   autoComplete="off"
                   field={field}
-                  label="Marker"
+                  label={t("generated.admin.warehouses.marker")}
                   layout="grid"
-                  placeholder="A1-01"
+                  placeholder={t("generated.admin.warehouses.a101")}
                 />
               )}
             </form.Field>
@@ -189,11 +223,14 @@ export function RackDialog({
         <Separator />
 
         <section className="space-y-3">
-          <SectionHeader icon={ThermometerIcon} title="Przechowywanie" />
+          <SectionHeader
+            icon={ThermometerIcon}
+            title={t("generated.admin.shared.storage")}
+          />
           <FieldGroup className="gap-4">
             <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
               <span className="col-span-2 text-start font-medium text-sm">
-                Temperatura
+                {t("generated.shared.temperature")}
               </span>
               <div className="col-span-4 flex items-center gap-2">
                 <form.Field name="minTemp">
@@ -206,7 +243,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder="Min °C"
+                      placeholder={t("generated.admin.shared.minC")}
                       type="number"
                       value={field.state.value}
                     />
@@ -223,7 +260,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder="Max °C"
+                      placeholder={t("generated.admin.shared.maxC")}
                       type="number"
                       value={field.state.value}
                     />
@@ -239,7 +276,7 @@ export function RackDialog({
                     className="col-span-2 cursor-pointer text-nowrap text-end"
                     htmlFor={field.name}
                   >
-                    Akceptuje niebezpieczne
+                    {t("generated.admin.warehouses.acceptsDangerous")}
                   </Label>
                   <FieldContent className="col-span-4 flex items-center">
                     <Checkbox
@@ -259,11 +296,14 @@ export function RackDialog({
         <Separator />
 
         <section className="space-y-3">
-          <SectionHeader icon={RulerIcon} title="Wymiary fizyczne" />
+          <SectionHeader
+            icon={RulerIcon}
+            title={t("generated.admin.shared.physicalDimensions")}
+          />
           <FieldGroup className="gap-4">
             <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
               <span className="col-span-2 font-medium text-sm">
-                Wymiary (wiersze × kolumny)
+                {t("generated.admin.warehouses.dimensionsRowsColumns")}
               </span>
               <div className="col-span-4 flex items-center gap-2">
                 <form.Field name="rows">
@@ -277,7 +317,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder="Wiersze"
+                      placeholder={t("generated.admin.warehouses.poems")}
                       type="number"
                       value={field.state.value}
                     />
@@ -295,7 +335,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder="Kolumny"
+                      placeholder={t("generated.admin.warehouses.columns")}
                       type="number"
                       value={field.state.value}
                     />
@@ -308,7 +348,7 @@ export function RackDialog({
               {(field) => (
                 <FieldWithState
                   field={field}
-                  label="Max waga (kg)"
+                  label={t("generated.admin.warehouses.maxWeightKg2")}
                   layout="grid"
                   renderInput={({ id, isInvalid }) => (
                     <Input
@@ -333,7 +373,7 @@ export function RackDialog({
 
             <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
               <span className="col-span-2 font-medium text-sm">
-                Wymiary asortymentu (mm)
+                {t("generated.admin.warehouses.assortmentDimensionsMm")}
               </span>
               <div className="col-span-4 flex items-center gap-2">
                 <form.Field name="maxItemWidth">
@@ -347,7 +387,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder="Szer."
+                      placeholder={t("generated.admin.shared.lat")}
                       type="number"
                       value={field.state.value}
                     />
@@ -365,7 +405,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder="Wys."
+                      placeholder={t("generated.admin.shared.height")}
                       type="number"
                       value={field.state.value}
                     />
@@ -383,7 +423,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder="Gł."
+                      placeholder={t("generated.admin.warehouses.main")}
                       type="number"
                       value={field.state.value}
                     />
@@ -397,14 +437,17 @@ export function RackDialog({
         <Separator />
 
         <section className="space-y-3">
-          <SectionHeader icon={Tag01Icon} title="Dodatkowe" />
+          <SectionHeader
+            icon={Tag01Icon}
+            title={t("generated.admin.shared.additional")}
+          />
           <FieldGroup className="gap-4">
             <form.Field name="comment">
               {(field) => (
                 <FieldWithState
                   field={field}
                   fieldClassName="items-start"
-                  label="Komentarz"
+                  label={t("generated.shared.comment")}
                   labelClassName="pt-2 text-left"
                   layout="grid"
                   renderInput={({ id, isInvalid }) => (
@@ -416,7 +459,7 @@ export function RackDialog({
                       name={field.name}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="Opcjonalny komentarz..."
+                      placeholder={t("generated.admin.shared.optionalComment")}
                       rows={3}
                       value={field.state.value ?? ""}
                     />

@@ -13,9 +13,9 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { formatDate, formatDistanceToNow } from "date-fns"
-import { pl } from "date-fns/locale"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useLocale } from "next-intl"
 import {
   type Dispatch,
   type SetStateAction,
@@ -57,13 +57,14 @@ import {
 import useAssortment from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import { useMultipleRacks } from "@/hooks/use-racks"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type { AssortmentsSchema, RackAssortmentsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { getDaysUntilExpiry } from "../utils/helpers"
 import { CodeCell } from "./components/code-cell"
 import { SortableHeader } from "./sortable-header"
-
 export type ExpiryFilters = "DAYS_14" | "DAYS_7" | "DAYS_3" | "EXPIRED" | "ALL"
 
 type RackAssortmentList = InferApiOutput<typeof RackAssortmentsSchema, "GET">
@@ -73,15 +74,29 @@ type RackAssortmentItem = RackAssortmentList["content"][number]
 type AssortmentItemWithItemId = AssortmentList["content"][number]
 type AssortmentItem = SupportedAssortmentList["content"][number]
 
-const EXPIRY_FILTER_OPTIONS: {
+const getExpiryFilterOptions = (
+  t: ReturnType<typeof useAppTranslations>
+): {
   value: ExpiryFilters
   label: string
-}[] = [
-  { value: "ALL", label: "Wszystkie" },
-  { value: "EXPIRED", label: "Przeterminowane" },
-  { value: "DAYS_3", label: "Do 3 dni" },
-  { value: "DAYS_7", label: "Do 7 dni" },
-  { value: "DAYS_14", label: "Do 14 dni" },
+}[] => [
+  { value: "ALL", label: t("generated.shared.all") },
+  {
+    value: "EXPIRED",
+    label: t("generated.dashboard.shared.expired"),
+  },
+  {
+    value: "DAYS_3",
+    label: t("generated.dashboard.items.value3Days"),
+  },
+  {
+    value: "DAYS_7",
+    label: t("generated.dashboard.items.value7Days"),
+  },
+  {
+    value: "DAYS_14",
+    label: t("generated.dashboard.items.value14Days"),
+  },
 ]
 
 const GS1_WITH_SERIAL_PATTERN = /^11\d{6}01(\d{14})21\d+$/
@@ -149,17 +164,27 @@ const buildRackWarehouseHref = ({
 }
 
 function ExpiryStatusBadge({ value }: { value: string }) {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
+  const dateFnsLocale = getDateFnsLocale(locale)
   const daysUntilExpiry = getDaysToExpiry(value)
 
   if (typeof daysUntilExpiry !== "number") {
-    return <Badge variant="outline">Brak daty</Badge>
+    return (
+      <Badge variant="outline">{t("generated.dashboard.items.date")}</Badge>
+    )
   }
   if (daysUntilExpiry < 0) {
-    return <Badge variant="destructive">Przeterminowane</Badge>
+    return (
+      <Badge variant="destructive">
+        {t("generated.dashboard.shared.expired")}
+      </Badge>
+    )
   }
   const label = formatDistanceToNow(new Date(value), {
     addSuffix: true,
-    locale: pl,
+    locale: dateFnsLocale,
   })
   if (daysUntilExpiry <= 3) {
     return <Badge variant="destructive">{label}</Badge>
@@ -321,9 +346,11 @@ function AssortmentTableSkeleton() {
   )
 }
 
-const isExpiryFilterValue = (value: string | null): value is ExpiryFilters =>
-  typeof value === "string" &&
-  EXPIRY_FILTER_OPTIONS.some((option) => option.value === value)
+const isExpiryFilterValue = (
+  options: Array<{ value: ExpiryFilters }>,
+  value: string | null
+): value is ExpiryFilters =>
+  typeof value === "string" && options.some((option) => option.value === value)
 
 function AssortmentTableContent({
   assortmentData,
@@ -341,6 +368,9 @@ function AssortmentTableContent({
   onSortingChange,
   manualServerControls = false,
 }: AssortmentTableContentProps) {
+  const t = useAppTranslations()
+  const expiryFilterOptions = useMemo(() => getExpiryFilterOptions(t), [t])
+
   const assortmentItems = assortmentData?.content ?? []
   const itemIdsToFetch = useMemo(
     () => [
@@ -409,7 +439,9 @@ function AssortmentTableContent({
       {
         accessorKey: "code",
         header: ({ column }) => (
-          <SortableHeader column={column}>Kod</SortableHeader>
+          <SortableHeader column={column}>
+            {t("generated.shared.code")}
+          </SortableHeader>
         ),
         cell: ({ row }) => <CodeCell value={row.original.code} />,
         enableSorting: true,
@@ -418,7 +450,9 @@ function AssortmentTableContent({
         id: "itemName",
         accessorFn: (row) => getItemName(row, itemNamesById),
         header: ({ column }) => (
-          <SortableHeader column={column}>Produkt</SortableHeader>
+          <SortableHeader column={column}>
+            {t("generated.dashboard.items.product")}
+          </SortableHeader>
         ),
         cell: ({ row }) => (
           <Link
@@ -434,11 +468,14 @@ function AssortmentTableContent({
         id: "rackName",
         accessorFn: (row) => rackNamesById.get(row.rackId) ?? "",
         header: ({ column }) => (
-          <SortableHeader column={column}>Regał</SortableHeader>
+          <SortableHeader column={column}>
+            {t("generated.shared.rack")}
+          </SortableHeader>
         ),
         cell: ({ row }) => {
           const rackName =
-            rackNamesById.get(row.original.rackId) ?? "Nieznany regał"
+            rackNamesById.get(row.original.rackId) ??
+            t("generated.dashboard.items.unknownBookcase")
           const rackWarehouseId = rackWarehouseIdsById.get(row.original.rackId)
 
           if (rackWarehouseId === undefined) {
@@ -467,11 +504,16 @@ function AssortmentTableContent({
         id: "position",
         accessorFn: (item) => `${item.positionX + 1}:${item.positionY + 1}`,
         header: ({ column }) => (
-          <SortableHeader column={column}>Pozycja</SortableHeader>
+          <SortableHeader column={column}>
+            {t("generated.shared.position")}
+          </SortableHeader>
         ),
         cell: ({ row }) => (
           <span className="font-mono text-sm">
-            Rząd {row.original.positionX + 1}, Kol. {row.original.positionY + 1}
+            {t("generated.dashboard.items.rowCol", {
+              value0: row.original.positionX + 1,
+              value1: row.original.positionY + 1,
+            })}
           </span>
         ),
         enableSorting: !manualServerControls,
@@ -479,7 +521,9 @@ function AssortmentTableContent({
       {
         accessorKey: "createdAt",
         header: ({ column }) => (
-          <SortableHeader column={column}>Dodano</SortableHeader>
+          <SortableHeader column={column}>
+            {t("generated.dashboard.items.added")}
+          </SortableHeader>
         ),
         cell: ({ row }) => (
           <span className="font-mono text-sm">
@@ -491,7 +535,9 @@ function AssortmentTableContent({
       {
         accessorKey: "expiresAt",
         header: ({ column }) => (
-          <SortableHeader column={column}>Ważność</SortableHeader>
+          <SortableHeader column={column}>
+            {t("generated.dashboard.shared.shelfLife")}
+          </SortableHeader>
         ),
         cell: ({ row }) => (
           <div className="space-y-1">
@@ -504,7 +550,13 @@ function AssortmentTableContent({
         enableSorting: true,
       },
     ],
-    [itemNamesById, manualServerControls, rackNamesById, rackWarehouseIdsById]
+    [
+      itemNamesById,
+      manualServerControls,
+      rackNamesById,
+      rackWarehouseIdsById,
+      t,
+    ]
   )
 
   const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
@@ -558,9 +610,9 @@ function AssortmentTableContent({
   }
 
   const itemLabel = {
-    singular: "przedmiot",
-    plural: "przedmioty",
-    genitive: "przedmiotów",
+    singular: t("generated.shared.item"),
+    plural: t("generated.shared.items2"),
+    genitive: t("generated.shared.items3"),
   }
 
   if (isLoading) {
@@ -577,9 +629,13 @@ function AssortmentTableContent({
         <FilterBar className="gap-3">
           <FilterGroup>
             <SearchInput
-              aria-label="Filtruj asortyment po kodzie i identyfikatorach"
+              aria-label={t(
+                "generated.dashboard.items.filterAssortmentCodeIdentifiers"
+              )}
               onChange={handleSearchChange}
-              placeholder="Szukaj po kodzie kreskowym, nazwie produktu lub regału..."
+              placeholder={t(
+                "generated.dashboard.items.searchBarcodeProductNameRack"
+              )}
               value={search}
             />
 
@@ -589,7 +645,7 @@ function AssortmentTableContent({
             >
               <Select
                 onValueChange={(value) => {
-                  if (isExpiryFilterValue(value)) {
+                  if (isExpiryFilterValue(expiryFilterOptions, value)) {
                     onExpiryFilterChange(value)
                     setPage(1)
                   }
@@ -597,7 +653,9 @@ function AssortmentTableContent({
                 value={expiryFilter}
               >
                 <SelectTrigger
-                  aria-label="Filtruj według daty ważności"
+                  aria-label={t(
+                    "generated.dashboard.items.filterExpirationDate"
+                  )}
                   className={cn(
                     "h-10! w-44 gap-2 pl-9",
                     isExpiryFiltered &&
@@ -608,7 +666,7 @@ function AssortmentTableContent({
                     render={
                       <span className="truncate">
                         {
-                          EXPIRY_FILTER_OPTIONS.find(
+                          expiryFilterOptions.find(
                             (option) => option.value === expiryFilter
                           )?.label
                         }
@@ -617,7 +675,7 @@ function AssortmentTableContent({
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {EXPIRY_FILTER_OPTIONS.map((option) => (
+                  {expiryFilterOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       <span
                         className={cn(

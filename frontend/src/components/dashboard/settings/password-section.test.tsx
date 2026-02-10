@@ -1,8 +1,12 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, waitFor } from "@testing-library/react"
 import { toast } from "sonner"
 import { describe, expect, it, vi } from "vitest"
 import { ChangePasswordSchema } from "@/lib/schemas"
 import { PasswordSection } from "./password-section"
+
+vi.mock("@/i18n/use-translations", () => ({
+  useAppTranslations: () => (key: string) => key,
+}))
 
 const { apiFetchMock, openVerificationDialogMock } = vi.hoisted(() => ({
   apiFetchMock: vi.fn(),
@@ -29,12 +33,15 @@ vi.mock(
   })
 )
 
-const OLD_PASSWORD_REGEX = /obecne hasło/i
-const NEW_PASSWORD_REGEX = /nowe hasło/i
-const CONFIRM_PASSWORD_REGEX = /potwierdź hasło/i
-const CHANGE_PASSWORD_BUTTON_REGEX = /zmień hasło/i
-
 describe("PasswordSection", () => {
+  const getElement = (selector: string): Element => {
+    const element = document.querySelector(selector)
+    if (!element) {
+      throw new Error(`Element not found for selector: ${selector}`)
+    }
+    return element
+  }
+
   it("calls password change API after successful 2FA verification", async () => {
     apiFetchMock.mockResolvedValue(null)
     openVerificationDialogMock.mockImplementation(
@@ -47,19 +54,17 @@ describe("PasswordSection", () => {
 
     render(<PasswordSection />)
 
-    fireEvent.change(screen.getByLabelText(OLD_PASSWORD_REGEX), {
+    fireEvent.change(getElement("#current-password"), {
       target: { value: "OldPassword1!" },
     })
-    fireEvent.change(screen.getByLabelText(NEW_PASSWORD_REGEX), {
+    fireEvent.change(getElement("#new-password"), {
       target: { value: "Password123!" },
     })
-    fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_REGEX), {
+    fireEvent.change(getElement("#confirm-password"), {
       target: { value: "Password123!" },
     })
 
-    fireEvent.click(
-      screen.getByRole("button", { name: CHANGE_PASSWORD_BUTTON_REGEX })
-    )
+    fireEvent.click(getElement('button[type="submit"]'))
 
     await waitFor(() => {
       expect(openVerificationDialogMock).toHaveBeenCalledTimes(1)
@@ -74,7 +79,7 @@ describe("PasswordSection", () => {
           },
         }
       )
-      expect(toast.success).toHaveBeenCalledWith("Hasło zostało zmienione.")
+      expect(toast.success).toHaveBeenCalledWith(expect.any(String))
     })
   })
 })

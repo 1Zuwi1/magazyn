@@ -2,7 +2,7 @@
 
 import { AlertCircleIcon } from "@hugeicons/core-free-icons"
 import { formatDistanceToNow } from "date-fns"
-import { pl } from "date-fns/locale"
+import { useLocale } from "next-intl"
 import { useMemo } from "react"
 import { InsightCard } from "@/components/dashboard/stat-card"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import useAssortments from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import useWarehouses from "@/hooks/use-warehouses"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { useAppTranslations } from "@/i18n/use-translations"
 import {
   EXPIRING_ITEMS_LIMIT,
   EXPIRY_WARNING_DAYS,
@@ -50,6 +52,11 @@ function OperationalAlertsSkeleton() {
 }
 
 export function DashboardOperationalAlertsCard() {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
+  const dateFnsLocale = getDateFnsLocale(locale)
+
   const {
     data: criticalWarehousesData,
     isPending: isCriticalWarehousesPending,
@@ -153,7 +160,11 @@ export function DashboardOperationalAlertsCard() {
       <div className="space-y-4">
         <div className="space-y-2 text-sm">
           <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
-            <span>Magazyny powyżej {OCCUPANCY_CRITICAL_THRESHOLD}%</span>
+            <span>
+              {t("generated.dashboard.home.warehousesAbove", {
+                value0: OCCUPANCY_CRITICAL_THRESHOLD,
+              })}
+            </span>
             <Badge
               variant={
                 (criticalWarehousesData?.totalElements ?? 0) > 0
@@ -161,11 +172,15 @@ export function DashboardOperationalAlertsCard() {
                   : "success"
               }
             >
-              {formatNumber(criticalWarehousesData?.totalElements ?? 0)}
+              {formatNumber(criticalWarehousesData?.totalElements ?? 0, locale)}
             </Badge>
           </div>
           <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
-            <span>Produkty z terminem poniżej {EXPIRY_WARNING_DAYS} dni</span>
+            <span>
+              {t("generated.dashboard.home.productsExpiringUnderDays", {
+                value0: EXPIRY_WARNING_DAYS,
+              })}
+            </span>
             <Badge
               variant={
                 (expiringSoonItemsData?.totalElements ?? 0) > 0
@@ -173,13 +188,13 @@ export function DashboardOperationalAlertsCard() {
                   : "success"
               }
             >
-              {formatNumber(expiringSoonItemsData?.totalElements ?? 0)}
+              {formatNumber(expiringSoonItemsData?.totalElements ?? 0, locale)}
             </Badge>
           </div>
           <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
-            <span>Produkty niebezpieczne</span>
+            <span>{t("generated.dashboard.home.dangerousProducts")}</span>
             <Badge variant={dangerousItemsCount > 0 ? "warning" : "success"}>
-              {formatNumber(dangerousItemsCount)}
+              {formatNumber(dangerousItemsCount, locale)}
             </Badge>
           </div>
         </div>
@@ -187,7 +202,7 @@ export function DashboardOperationalAlertsCard() {
         {expiringSoonItems.length > 0 ? (
           <div className="space-y-2">
             <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-              Najbliższe terminy
+              {t("generated.dashboard.home.upcomingDates")}
             </p>
             <ul className="space-y-2 text-sm">
               {expiringSoonItems.map((item) => (
@@ -200,7 +215,7 @@ export function DashboardOperationalAlertsCard() {
                   </span>
                   <span className="shrink-0 font-mono text-muted-foreground text-xs">
                     {formatDistanceToNow(new Date(item.expiresAt), {
-                      locale: pl,
+                      locale: dateFnsLocale,
                     })}
                   </span>
                 </li>
@@ -209,14 +224,14 @@ export function DashboardOperationalAlertsCard() {
           </div>
         ) : (
           <p className="text-muted-foreground text-sm">
-            Brak produktów z krótką datą ważności.
+            {t("generated.dashboard.home.productsShortExpirationDate")}
           </p>
         )}
 
         {(criticalWarehousesData?.totalElements ?? 0) > 0 && (
           <div className="space-y-2">
             <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-              Krytyczne lokalizacje
+              {t("generated.dashboard.home.criticalLocations")}
             </p>
             <div className="flex flex-wrap gap-2">
               {criticalWarehousesData?.content.map((warehouse) => (
@@ -233,9 +248,9 @@ export function DashboardOperationalAlertsCard() {
 
   return (
     <InsightCard
-      description="Zestawienie ryzyk wymagających uwagi."
+      description={t("generated.dashboard.home.listRisksRequiringAttention")}
       icon={AlertCircleIcon}
-      title="Alerty operacyjne"
+      title={t("generated.dashboard.home.operationalAlerts")}
     >
       {renderContent()}
     </InsightCard>

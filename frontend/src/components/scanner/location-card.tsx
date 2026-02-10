@@ -1,7 +1,9 @@
 import { Tick02Icon, UnfoldMoreIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
+
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { Badge } from "../ui/badge"
 import { Button, buttonVariants } from "../ui/button"
@@ -79,6 +81,8 @@ function RackSelect({
   onFetchNextRackPage,
   onChange,
 }: RackSelectProps) {
+  const t = useAppTranslations()
+
   const [isRackSelectOpen, setIsRackSelectOpen] = useState(false)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(
     null
@@ -127,7 +131,7 @@ function RackSelect({
     virtualRackItems,
   ])
 
-  const triggerLabel = selectedRackName || "Wybierz regał"
+  const triggerLabel = selectedRackName || t("generated.shared.selectRack")
 
   return (
     <Popover onOpenChange={setIsRackSelectOpen} open={isRackSelectOpen}>
@@ -146,7 +150,7 @@ function RackSelect({
       </PopoverTrigger>
       <PopoverContent align="start" className="w-(--anchor-width) gap-0 p-0">
         <ScrollArea
-          aria-label="Lista regałów"
+          aria-label={t("generated.scanner.rackList")}
           className="h-56 p-1 pr-3"
           ref={scrollAreaRef}
           role="listbox"
@@ -208,13 +212,13 @@ function RackSelect({
           {!(isRackOptionsPending || isRackOptionsError) &&
           rackOptions.length === 0 ? (
             <p className="px-2 py-3 text-muted-foreground text-sm">
-              Brak regałów do wyboru.
+              {t("generated.scanner.racksAvailable")}
             </p>
           ) : null}
 
           {isRackOptionsError ? (
             <p className="px-2 py-3 text-destructive text-sm">
-              Nie udało się pobrać listy regałów.
+              {t("generated.scanner.failedFetchRackList")}
             </p>
           ) : null}
         </ScrollArea>
@@ -222,7 +226,7 @@ function RackSelect({
         {isFetchingNextRackPage && (
           <div className="flex items-center gap-2 border-t px-2 py-1.5 text-muted-foreground text-xs">
             <Spinner className="size-3.5" />
-            <span>Ładowanie regałów...</span>
+            <span>{t("generated.scanner.loadingRacks")}</span>
           </div>
         )}
       </PopoverContent>
@@ -245,6 +249,8 @@ export function LocationCard({
   onRemove,
   onChange,
 }: LocationCardProps) {
+  const t = useAppTranslations()
+
   const baseId = `placement-${placement.id}`
 
   const selectedRack = useMemo(
@@ -264,7 +270,9 @@ export function LocationCard({
           <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 font-bold font-mono text-primary text-sm">
             {index + 1}
           </div>
-          <p className="font-medium text-sm">Lokalizacja</p>
+          <p className="font-medium text-sm">
+            {t("generated.shared.location")}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {rackName ? <Badge variant="outline">{rackName}</Badge> : null}
@@ -275,14 +283,14 @@ export function LocationCard({
             type="button"
             variant="ghost"
           >
-            Usuń
+            {t("generated.shared.remove")}
           </Button>
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label htmlFor={`${baseId}-rack`}>Regał</Label>
+          <Label htmlFor={`${baseId}-rack`}>{t("generated.shared.rack")}</Label>
           <RackSelect
             disabled={isRackSelectDisabled}
             hasNextRackPage={hasNextRackPage}
@@ -301,7 +309,7 @@ export function LocationCard({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor={`${baseId}-x`}>Półka</Label>
+          <Label htmlFor={`${baseId}-x`}>{t("generated.scanner.shelf")}</Label>
           <Input
             id={`${baseId}-x`}
             max={maxColumn}
@@ -317,12 +325,14 @@ export function LocationCard({
             value={placement.positionX}
           />
           {maxColumn !== undefined ? (
-            <p className="text-muted-foreground text-xs">maks. {maxColumn}</p>
+            <p className="text-muted-foreground text-xs">
+              {t("generated.scanner.max", { value0: maxColumn })}
+            </p>
           ) : null}
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor={`${baseId}-y`}>Rząd</Label>
+          <Label htmlFor={`${baseId}-y`}>{t("generated.scanner.row")}</Label>
           <Input
             id={`${baseId}-y`}
             max={maxRow}
@@ -338,7 +348,9 @@ export function LocationCard({
             value={placement.positionY}
           />
           {maxRow !== undefined ? (
-            <p className="text-muted-foreground text-xs">maks. {maxRow}</p>
+            <p className="text-muted-foreground text-xs">
+              {t("generated.scanner.max", { value0: maxRow })}
+            </p>
           ) : null}
         </div>
       </div>

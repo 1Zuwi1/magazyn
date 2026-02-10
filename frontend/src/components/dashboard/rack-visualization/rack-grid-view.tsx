@@ -6,11 +6,13 @@ import {
   GridViewIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import type * as React from "react"
 import { useRef } from "react"
 import { Button } from "@/components/ui/button"
 import PaginationFull from "@/components/ui/pagination-component"
 import { useElementSize } from "@/hooks/use-element-size"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { ItemSlot, SlotCoordinates } from "../types"
 import Virtualized from "./components/virtualized"
 
@@ -67,6 +69,8 @@ export function RackGridView({
   onSelectSlot,
   selectedSlotCoordinates,
 }: RackGridViewProps) {
+  const t = useAppTranslations()
+
   const parentRef = useRef<HTMLDivElement>(null)
 
   const showNavigation = totalPages > 1 && (onPreviousRack || onNextRack)
@@ -127,9 +131,15 @@ export function RackGridView({
             />
           </div>
           <div>
-            <h3 className="font-semibold text-sm">Widok siatki</h3>
+            <h3 className="font-semibold text-sm">
+              {t("generated.dashboard.rackVisualization.gridView")}
+            </h3>
             <p className="text-muted-foreground text-xs">
-              {rows} × {cols} = {totalSlots} miejsc
+              {t("generated.dashboard.rackVisualization.slots", {
+                value0: rows,
+                value1: cols,
+                value2: totalSlots,
+              })}
             </p>
           </div>
         </div>

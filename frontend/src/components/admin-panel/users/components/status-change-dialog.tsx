@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import type { AdminUser } from "@/hooks/use-admin-users"
+import { useAppTranslations } from "@/i18n/use-translations"
 import {
   getStatusLabel,
   getStatusVariant,
@@ -54,6 +55,8 @@ export function StatusChangeDialog({
   user,
   onConfirm,
 }: StatusChangeDialogProps) {
+  const t = useAppTranslations()
+
   const [selectedStatus, setSelectedStatus] = useState<AccountStatus | "">("")
   const [reason, setReason] = useState("")
 
@@ -85,9 +88,11 @@ export function StatusChangeDialog({
     <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Zmień status konta</DialogTitle>
+          <DialogTitle>
+            {t("generated.admin.users.changeAccountStatus")}
+          </DialogTitle>
           <DialogDescription>
-            Zmień status konta użytkownika{" "}
+            {t("generated.admin.users.changeStatusUserAccount")}{" "}
             <strong>
               {normalizeValue(user?.full_name) || user?.email || ""}
             </strong>
@@ -98,15 +103,17 @@ export function StatusChangeDialog({
           <div className="space-y-4 py-2">
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground text-sm">
-                Obecny status:
+                {t("generated.admin.users.currentStatus")}
               </span>
               <Badge variant={getStatusVariant(user.account_status)}>
-                {getStatusLabel(user.account_status)}
+                {getStatusLabel(user.account_status, t)}
               </Badge>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="new-status">Nowy status</Label>
+              <Label htmlFor="new-status">
+                {t("generated.admin.users.newStatus")}
+              </Label>
               <Select
                 onValueChange={(value) =>
                   setSelectedStatus(value as AccountStatus)
@@ -115,12 +122,12 @@ export function StatusChangeDialog({
               >
                 <SelectTrigger className="w-full" id="new-status">
                   <SelectValue
-                    placeholder="Wybierz nowy status"
+                    placeholder={t("generated.admin.users.selectNewStatus")}
                     render={
                       <span>
                         {selectedStatus
-                          ? getStatusLabel(selectedStatus)
-                          : "Wybierz nowy status"}
+                          ? getStatusLabel(selectedStatus, t)
+                          : t("generated.admin.users.selectNewStatus")}
                       </span>
                     }
                   />
@@ -128,7 +135,7 @@ export function StatusChangeDialog({
                 <SelectContent className="w-fit">
                   {availableStatuses.map((status) => (
                     <SelectItem key={status} value={status}>
-                      {getStatusLabel(status)}
+                      {getStatusLabel(status, t)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -136,12 +143,16 @@ export function StatusChangeDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status-reason">Powód (opcjonalny)</Label>
+              <Label htmlFor="status-reason">
+                {t("generated.admin.users.reasonOptional")}
+              </Label>
               <Input
                 id="status-reason"
                 maxLength={500}
                 onChange={(event) => setReason(event.target.value)}
-                placeholder="Podaj powód zmiany statusu..."
+                placeholder={t(
+                  "generated.admin.users.provideReasonChangingStatus"
+                )}
                 value={reason}
               />
             </div>
@@ -149,10 +160,10 @@ export function StatusChangeDialog({
         ) : null}
         <DialogFooter className="gap-1">
           <Button onClick={() => handleOpenChange(false)} variant="outline">
-            Anuluj
+            {t("generated.shared.cancel")}
           </Button>
           <Button disabled={!selectedStatus} onClick={handleConfirm}>
-            Zmień status
+            {t("generated.admin.shared.changeStatus")}
           </Button>
         </DialogFooter>
       </DialogContent>

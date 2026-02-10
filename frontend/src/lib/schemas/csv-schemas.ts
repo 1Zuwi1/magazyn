@@ -1,4 +1,5 @@
 import z from "zod"
+import { createZodMessage } from "../zod-message"
 
 export const WarehouseCsvSchema = z.object({
   name: z.string().trim().min(1, "Nazwa magazynu jest wymagana"),
@@ -65,11 +66,19 @@ export const ItemCsvSchema = z.object({
 
 const usernameSchema = z
   .string()
-  .min(3, "Nazwa użytkownika musi mieć co najmniej 3 znaki")
-  .max(20, "Nazwa użytkownika może mieć maksymalnie 20 znaków")
+  .min(
+    3,
+    createZodMessage("generated.validation.csv.usernameMustLeast3Characters")
+  )
+  .max(
+    20,
+    createZodMessage("generated.validation.csv.username20CharactersLong")
+  )
   .regex(
     /^[a-zA-Z0-9_]+$/,
-    "Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślenia"
+    createZodMessage(
+      "generated.validation.csv.usernameOnlyContainLettersNumbers"
+    )
   )
 
 export const UserFormSchema = z.object({

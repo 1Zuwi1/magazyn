@@ -5,10 +5,12 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
 import { type KeyboardEvent, useCallback, useRef, useState } from "react"
 import { remToPixels } from "@/components/dashboard/utils/helpers"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useElementSize } from "@/hooks/use-element-size"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { OutboundPickSlot } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
 import { Button } from "../../ui/button"
@@ -28,8 +30,8 @@ interface OutboundScanVerificationProps {
   onCancel: () => void
 }
 
-const formatTime = (date: Date): string => {
-  return new Intl.DateTimeFormat("pl-PL", {
+const formatTime = (date: Date, locale: string): string => {
+  return new Intl.DateTimeFormat(locale, {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -45,6 +47,9 @@ export function OutboundScanVerification({
   onConfirm,
   onCancel,
 }: OutboundScanVerificationProps) {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
   const scannedCodes = new Set(scannedEntries.map((e) => e.assortmentCode))
   const allScanned = selectedSlots.every((slot) =>
     scannedCodes.has(slot.assortmentCode)
@@ -66,20 +71,29 @@ export function OutboundScanVerification({
     )
     if (!hasMatchingSlot) {
       setManualInputError(
-        "Ten kod nie należy do żadnej wybranej pozycji do pobrania."
+        t("generated.scanner.outbound.codeBelongAnySelectedItem")
       )
       return
     }
 
     if (scannedCodes.has(trimmedCode)) {
-      setManualInputError("Ta pozycja została już zweryfikowana.")
+      setManualInputError(
+        t("generated.scanner.outbound.itemAlreadyBeenVerified")
+      )
       return
     }
 
     setManualInputError(null)
     onManualCodeSubmit(trimmedCode)
     setManualCode("")
-  }, [allScanned, manualCode, onManualCodeSubmit, scannedCodes, selectedSlots])
+  }, [
+    allScanned,
+    manualCode,
+    onManualCodeSubmit,
+    scannedCodes,
+    selectedSlots,
+    t,
+  ])
 
   const handleManualCodeKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
@@ -107,10 +121,10 @@ export function OutboundScanVerification({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              Weryfikacja skanowaniem
+              {t("generated.scanner.outbound.scanVerification")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              Zeskanuj kody wybranych pozycji, aby potwierdzić pobranie.
+              {t("generated.scanner.outbound.scanSelectedItemCodesConfirm")}
             </p>
           </div>
         </div>
@@ -124,15 +138,21 @@ export function OutboundScanVerification({
           >
             <div className="mb-4 grid grid-cols-3 gap-2">
               <div className="rounded-xl border bg-card/40 p-3 text-center">
-                <p className="text-muted-foreground text-xs">Wybrano</p>
+                <p className="text-muted-foreground text-xs">
+                  {t("generated.scanner.outbound.selected")}
+                </p>
                 <p className="font-semibold text-lg">{selectedSlots.length}</p>
               </div>
               <div className="rounded-xl border bg-card/40 p-3 text-center">
-                <p className="text-muted-foreground text-xs">Zeskanowano</p>
+                <p className="text-muted-foreground text-xs">
+                  {t("generated.scanner.outbound.scanned")}
+                </p>
                 <p className="font-semibold text-lg">{scannedEntries.length}</p>
               </div>
               <div className="rounded-xl border bg-card/40 p-3 text-center">
-                <p className="text-muted-foreground text-xs">Pozostało</p>
+                <p className="text-muted-foreground text-xs">
+                  {t("generated.scanner.outbound.remaining")}
+                </p>
                 <p className="font-semibold text-lg">{remaining}</p>
               </div>
             </div>
@@ -168,10 +188,13 @@ export function OutboundScanVerification({
                             {entry.rackMarker}
                           </span>
                           <Badge variant="outline">
-                            P:{entry.positionX} R:{entry.positionY}
+                            {t("generated.scanner.outbound.xY", {
+                              value0: entry.positionX,
+                              value1: entry.positionY,
+                            })}
                           </Badge>
                           <span className="ml-auto text-muted-foreground text-xs">
-                            {formatTime(entry.scannedAt)}
+                            {formatTime(entry.scannedAt, locale)}
                           </span>
                         </div>
                       </div>
@@ -189,8 +212,7 @@ export function OutboundScanVerification({
                   />
                 </div>
                 <p className="text-center text-muted-foreground text-sm">
-                  Brak zeskanowanych pozycji. Zeskanuj kody z etykiet, aby
-                  kontynuować.
+                  {t("generated.scanner.outbound.scannedItemsScanLabelCodes")}
                 </p>
               </div>
             )}
@@ -207,7 +229,7 @@ export function OutboundScanVerification({
                       className="font-medium text-sm"
                       htmlFor="manual-outbound-code"
                     >
-                      Wpisz kod ręcznie
+                      {t("generated.scanner.outbound.enterCodeManually")}
                     </Label>
                   </div>
                   <div className="flex items-center gap-2">
@@ -220,7 +242,7 @@ export function OutboundScanVerification({
                         setManualInputError(null)
                       }}
                       onKeyDown={handleManualCodeKeyDown}
-                      placeholder="np. 01..."
+                      placeholder={t("generated.scanner.outbound.eG01")}
                       type="text"
                       value={manualCode}
                     />
@@ -231,11 +253,11 @@ export function OutboundScanVerification({
                       type="button"
                       variant="outline"
                     >
-                      Dodaj
+                      {t("generated.scanner.outbound.add")}
                     </Button>
                   </div>
                   <p className="mt-2 text-muted-foreground text-xs">
-                    Użyj, jeśli kamera nie odczytuje etykiety.
+                    {t("generated.scanner.outbound.useCameraCannotReadLabel")}
                   </p>
                   {manualInputError ? (
                     <p className="mt-1 text-destructive text-xs" role="alert">
@@ -250,7 +272,9 @@ export function OutboundScanVerification({
                   onClick={onRequestScan}
                   type="button"
                 >
-                  Skanuj ({remaining} pozostało)
+                  {t("generated.scanner.outbound.scanRemaining", {
+                    value0: remaining,
+                  })}
                 </Button>
               )}
               <Button
@@ -262,8 +286,10 @@ export function OutboundScanVerification({
                 variant={allScanned ? "default" : "outline"}
               >
                 {allScanned
-                  ? `Potwierdź pobranie (${selectedSlots.length})`
-                  : "Zeskanuj wszystkie pozycje, aby potwierdzić"}
+                  ? t("generated.scanner.outbound.confirmPick2", {
+                      value0: selectedSlots.length,
+                    })
+                  : t("generated.scanner.outbound.scanAllItemsConfirm")}
               </Button>
             </div>
           </ScrollArea>

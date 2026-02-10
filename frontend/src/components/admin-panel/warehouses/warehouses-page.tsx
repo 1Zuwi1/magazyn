@@ -23,8 +23,9 @@ import useWarehouses, {
   useUpdateWarehouse,
   type WarehousesList,
 } from "@/hooks/use-warehouses"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { ADMIN_NAV_LINKS } from "../lib/constants"
+import { getAdminNavLinks } from "../lib/constants"
 import { WarehouseCard } from "./components/warehouse-card"
 import {
   WarehouseDialog,
@@ -34,6 +35,8 @@ import {
 type ApiWarehouse = WarehousesList["content"][number]
 
 export default function WarehousesMain() {
+  const t = useAppTranslations()
+
   const [page, setPage] = useState(1)
   const {
     data: warehousesData,
@@ -92,12 +95,19 @@ export default function WarehousesMain() {
     const report = await importWarehousesMutation.mutateAsync(file)
     if (report.errors.length > 0) {
       toast.warning(
-        `Import zakończony częściowo: ${report.imported}/${report.processedLines}`
+        t("generated.admin.shared.importPartiallyCompleted", {
+          value0: report.imported,
+          value1: report.processedLines,
+        })
       )
       return
     }
 
-    toast.success(`Zaimportowano ${report.imported} magazynów`)
+    toast.success(
+      t("generated.admin.warehouses.imported2", {
+        value0: report.imported,
+      })
+    )
   }
 
   const totalWarehouses = warehousesData?.totalElements
@@ -149,17 +159,17 @@ export default function WarehousesMain() {
           />
         </div>
         <p className="mt-4 font-medium text-foreground">
-          Nie udało się pobrać magazynów
+          {t("generated.admin.warehouses.failedDownloadWarehouses")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Wystąpił problem podczas ładowania danych. Spróbuj odświeżyć stronę.
+          {t("generated.admin.warehouses.problemLoadingDataRefreshingPage")}
         </p>
         <Button
           className="mt-4"
           onClick={() => window.location.reload()}
           variant="outline"
         >
-          Spróbuj ponownie
+          {t("generated.shared.again")}
         </Button>
       </div>
     )
@@ -172,13 +182,15 @@ export default function WarehousesMain() {
             icon={WarehouseIcon}
           />
         </div>
-        <p className="mt-4 font-medium text-foreground">Brak magazynów</p>
+        <p className="mt-4 font-medium text-foreground">
+          {t("generated.admin.warehouses.warehouses2")}
+        </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Dodaj pierwszy magazyn, aby rozpocząć
+          {t("generated.admin.warehouses.addFirstWarehouseGetStarted")}
         </p>
         <Button className="mt-4" onClick={handleAddWarehouse}>
           <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-          Dodaj magazyn
+          {t("generated.admin.warehouses.addWarehouse")}
         </Button>
       </div>
     )
@@ -210,17 +222,17 @@ export default function WarehousesMain() {
             />
             <Button onClick={handleAddWarehouse}>
               <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-              Dodaj magazyn
+              {t("generated.admin.warehouses.addWarehouse")}
             </Button>
           </div>
         }
-        description="Zarządzaj magazynami i ich regałami"
+        description={t("generated.admin.warehouses.manageWarehousesRacks")}
         icon={WarehouseIcon}
-        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+        navLinks={getAdminNavLinks(t).map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title="Magazyny"
+        title={t("generated.shared.warehouses")}
       >
         {/* Quick Stats */}
         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -228,7 +240,9 @@ export default function WarehousesMain() {
             <span className="font-mono font-semibold text-primary">
               {totalWarehouses}
             </span>
-            <span className="text-muted-foreground text-xs">magazynów</span>
+            <span className="text-muted-foreground text-xs">
+              {t("generated.admin.warehouses.warehouses")}
+            </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <HugeiconsIcon
@@ -236,10 +250,14 @@ export default function WarehousesMain() {
               icon={Package}
             />
             <span className="font-mono font-semibold">{totalRacks}</span>
-            <span className="text-muted-foreground text-xs">regałów</span>
+            <span className="text-muted-foreground text-xs">
+              {t("generated.admin.warehouses.racks")}
+            </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
-            <span className="text-muted-foreground text-xs">Zajętość:</span>
+            <span className="text-muted-foreground text-xs">
+              {t("generated.admin.warehouses.occupancy")}
+            </span>
             <span className="font-mono font-semibold">
               {(totalCapacity ?? 0) > 0
                 ? Math.round(((totalUsed ?? 0) / (totalCapacity ?? 1)) * 100)
@@ -273,11 +291,16 @@ export default function WarehousesMain() {
       />
 
       <ConfirmDialog
-        description={`Czy na pewno chcesz usunąć magazyn "${warehouseToDelete?.name}"? Wszystkie regały w tym magazynie zostaną również usunięte.`}
+        description={t(
+          "generated.admin.warehouses.sureWantDeleteWarehouseAll",
+          {
+            value0: warehouseToDelete?.name,
+          }
+        )}
         onConfirm={confirmDeleteWarehouse}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
-        title="Usuń magazyn"
+        title={t("generated.admin.warehouses.deleteWarehouse")}
       />
     </div>
   )

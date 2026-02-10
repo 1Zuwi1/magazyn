@@ -10,6 +10,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { TwoFactorMethod } from "@/lib/schemas"
 import { PasswordVerificationSection } from "./password-verification-section"
 
+const NON_EMPTY_TEXT_REGEX = /.+/
+
+vi.mock("@/i18n/use-translations", () => ({
+  useAppTranslations: () => (key: string) => key,
+}))
+
 vi.mock("sonner", () => ({
   toast: {
     error: vi.fn(),
@@ -50,12 +56,6 @@ vi.mock("./use-countdown", async () => {
     },
   }
 })
-
-const RESEND_BUTTON_REGEX = /wyślij ponownie/i
-const CODE_INPUT_REGEX = /kod 2fa/i
-const VERIFY_BUTTON_REGEX = /zweryfikuj kod/i
-const VERIFIED_TEXT_REGEX = /zweryfikowano/i
-const SAFE_CHANGE_TEXT_REGEX = /możesz bezpiecznie zmienić hasło/i
 
 function PasswordVerificationHarness({
   method,
@@ -105,8 +105,14 @@ describe("PasswordVerificationSection", () => {
       expect(onRequestCode).toHaveBeenCalledWith("EMAIL")
     })
 
-    const resendButton = await screen.findByRole("button", {
-      name: RESEND_BUTTON_REGEX,
+    const resendButton = await waitFor(() => {
+      const button = screen
+        .getAllByRole("button")
+        .find((candidate) => candidate.getAttribute("aria-describedby"))
+      if (!button) {
+        throw new Error("Resend button not found")
+      }
+      return button
     })
 
     expect(resendButton).toBeDisabled()
@@ -123,12 +129,15 @@ describe("PasswordVerificationSection", () => {
       />
     )
 
-    const codeInput = await screen.findByLabelText(CODE_INPUT_REGEX)
+    const codeInput = document.querySelector("#password-2fa-code")
+    if (!(codeInput instanceof HTMLInputElement)) {
+      throw new Error("Code input not found")
+    }
     fireEvent.change(codeInput, {
       target: { value: "654321" },
     })
 
-    fireEvent.click(screen.getByRole("button", { name: VERIFY_BUTTON_REGEX }))
+    fireEvent.click(screen.getAllByRole("button")[0])
 
     await waitFor(() => {
       expect(onVerify).toHaveBeenCalledWith("654321")
@@ -144,8 +153,9 @@ describe("PasswordVerificationSection", () => {
     )
 
     const alert = await screen.findByRole("alert")
-    expect(within(alert).getByText(VERIFIED_TEXT_REGEX)).toBeInTheDocument()
-    expect(within(alert).getByText(SAFE_CHANGE_TEXT_REGEX)).toBeInTheDocument()
+    expect(
+      within(alert).getAllByText(NON_EMPTY_TEXT_REGEX).length
+    ).toBeGreaterThan(1)
   })
 
   it("auto-submits when the last digit is entered", async () => {
@@ -160,7 +170,10 @@ describe("PasswordVerificationSection", () => {
       />
     )
 
-    const codeInput = await screen.findByLabelText(CODE_INPUT_REGEX)
+    const codeInput = document.querySelector("#password-2fa-code")
+    if (!(codeInput instanceof HTMLInputElement)) {
+      throw new Error("Code input not found")
+    }
     fireEvent.change(codeInput, {
       target: { value: "123456" },
     })

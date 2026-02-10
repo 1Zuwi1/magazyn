@@ -1,10 +1,12 @@
 import { Package } from "@hugeicons/core-free-icons"
 import Link from "next/link"
+import { useLocale } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { ErrorEmptyState } from "@/components/ui/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
 import useWarehouses from "@/hooks/use-warehouses"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { InsightCard } from "../stat-card"
 import { formatNumber } from "./dashboard-home.constants"
@@ -53,6 +55,9 @@ function TopOccupiedWarehousesSkeleton() {
 }
 
 export default function DashboardTopOccupiedWarehousesCard() {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
   const {
     data: topWarehouses,
     isPending,
@@ -94,9 +99,13 @@ export default function DashboardTopOccupiedWarehousesCard() {
               />
             </div>
             <p className="font-mono text-muted-foreground text-xs">
-              {formatNumber(warehouse.occupiedSlots)} /{" "}
-              {formatNumber(warehouse.occupiedSlots + warehouse.freeSlots)}{" "}
-              miejsc
+              {t("generated.dashboard.home.slots", {
+                value0: formatNumber(warehouse.occupiedSlots, locale),
+                value1: formatNumber(
+                  warehouse.occupiedSlots + warehouse.freeSlots,
+                  locale
+                ),
+              })}
             </p>
           </div>
         ))}
@@ -108,7 +117,7 @@ export default function DashboardTopOccupiedWarehousesCard() {
           })}
           href="/dashboard/warehouse"
         >
-          Zobacz wszystkie magazyny
+          {t("generated.dashboard.home.viewAllWarehouses")}
         </Link>
       </div>
     )
@@ -116,9 +125,9 @@ export default function DashboardTopOccupiedWarehousesCard() {
 
   return (
     <InsightCard
-      description="Najbardziej wypełnione lokalizacje."
+      description={t("generated.dashboard.home.mostFilledLocations")}
       icon={Package}
-      title="Obłożenie magazynów"
+      title={t("generated.dashboard.home.warehouseOccupancy")}
     >
       {renderContent()}
     </InsightCard>

@@ -6,6 +6,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
+
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { remToPixels } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 
@@ -106,6 +108,8 @@ function WarehouseRow({
   rowHeight,
   rowOffset,
 }: WarehouseRowProps) {
+  const t = useAppTranslations()
+
   const rowSurfaceClass = getRowSurfaceClass({ isAssigned, isSelected })
   const rowIconClass = getRowIconClass({ isAssigned, isSelected })
   const rowNameClass = getRowNameClass({ isAssigned, isSelected })
@@ -144,13 +148,15 @@ function WarehouseRow({
           {warehouse.name}
         </p>
         <p className="mt-0.5 text-muted-foreground text-xs">
-          {warehouse.racksCount} regałów &middot; {warehouse.occupancy}%
-          zajętości
+          {t("generated.admin.users.racksOccupancy", {
+            value0: warehouse.racksCount,
+            value1: warehouse.occupancy,
+          })}
         </p>
       </div>
       {isAssigned ? (
         <Badge className="shrink-0" variant="secondary">
-          Przypisany
+          {t("generated.admin.users.assigned")}
         </Badge>
       ) : null}
     </Button>
@@ -168,6 +174,8 @@ export function WarehouseVirtualList({
   isPending,
   isError,
 }: WarehouseVirtualListProps) {
+  const t = useAppTranslations()
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const assignedWarehouseIdSet = useMemo(
     () => new Set(assignedWarehouseIds),
@@ -236,7 +244,7 @@ export function WarehouseVirtualList({
           />
         </span>
         <p className="text-center text-destructive text-sm">
-          Nie udało się pobrać listy magazynów.
+          {t("generated.admin.users.failedRetrieveWarehouseList")}
         </p>
       </div>
     )
@@ -252,7 +260,7 @@ export function WarehouseVirtualList({
           />
         </span>
         <p className="text-center text-muted-foreground text-sm">
-          Nie znaleziono magazynów.
+          {t("generated.admin.users.warehousesFound")}
         </p>
       </div>
     )

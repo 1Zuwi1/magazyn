@@ -62,6 +62,7 @@ import useLinkedMethods, {
 } from "@/hooks/use-linked-methods"
 import useRemoveMethod from "@/hooks/use-remove-method"
 import useSetDefaultMethod from "@/hooks/use-set-default-method"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { apiFetch } from "@/lib/fetcher"
 import {
   BackupCodesGenerateSchema,
@@ -73,8 +74,8 @@ import {
 import {
   AUTHENTICATOR_QR_SIZE,
   COPY_FEEDBACK_TIMEOUT_MS,
+  getTwoFactorMethods,
   METHOD_ICONS,
-  TWO_FACTOR_METHODS,
   TWO_FACTOR_RESEND_SECONDS,
 } from "./constants"
 import { OtpInput } from "./otp-input"
@@ -92,31 +93,36 @@ import {
   verifyOneTimeCode,
 } from "./utils"
 
-const TWO_FACTOR_METHOD_HINTS: Record<TwoFactorMethod, string> = {
-  AUTHENTICATOR: "Najpewniejsza metoda",
-  EMAIL: "Kod e-mail",
-  PASSKEYS: "Uwierzytelnianie kluczem dostępu",
-  BACKUP_CODES: "Jednorazowe kody odzyskiwania",
+const getTwoFactorMethodLabels = (
+  t: ReturnType<typeof useAppTranslations>
+): Record<TwoFactorMethod, string> => {
+  const labels = {} as Record<TwoFactorMethod, string>
+  for (const method of getTwoFactorMethods(t)) {
+    labels[method.value as TwoFactorMethod] = method.label
+  }
+  return labels
 }
 
-const TWO_FACTOR_METHOD_LABELS: Record<TwoFactorMethod, string> =
-  TWO_FACTOR_METHODS.reduce(
-    (acc, current) => {
-      acc[current.value] = current.label
-      return acc
-    },
-    {} as Record<TwoFactorMethod, string>
-  )
+const getTwoFactorMethodHints = (
+  t: ReturnType<typeof useAppTranslations>
+): Record<TwoFactorMethod, string> => {
+  const hints = {} as Record<TwoFactorMethod, string>
+  for (const method of getTwoFactorMethods(t)) {
+    hints[method.value as TwoFactorMethod] = method.hint
+  }
+  return hints
+}
 
 const isIdleSetupStage = (stage: TwoFactorSetupStage): boolean =>
   stage === "IDLE" || stage === "SUCCESS"
 
 const getLinkedMethodsState = (
+  t: ReturnType<typeof useAppTranslations>,
   linkedMethods: TwoFactorMethod[] | undefined,
   method: TwoFactorMethod
 ) => {
   const safeLinkedMethods = linkedMethods ?? []
-  const availableMethods = TWO_FACTOR_METHODS.filter(
+  const availableMethods = getTwoFactorMethods(t).filter(
     (candidate) =>
       candidate.addable &&
       !safeLinkedMethods.includes(candidate.value as TwoFactorMethod)
@@ -165,11 +171,13 @@ const getCanStartSetup = ({
 }
 
 const getLinkedMethodsHint = ({
+  t,
   status,
   linkedMethods,
   hasAvailableMethods,
   isSelectedLinked,
 }: {
+  t: ReturnType<typeof useAppTranslations>
   status: TwoFactorStatus
   linkedMethods: TwoFactorMethod[] | undefined
   hasAvailableMethods: boolean
@@ -180,14 +188,16 @@ const getLinkedMethodsHint = ({
   }
 
   if (!hasAvailableMethods) {
-    return "Wszystkie dostępne metody są już połączone."
+    return t("generated.dashboard.settings.allAvailableMethodsAlreadyConnected")
   }
 
   if (isSelectedLinked) {
-    return "Wybrana metoda jest już połączona. Wybierz inną, aby dodać nową."
+    return t(
+      "generated.dashboard.settings.selectedMethodAlreadyConnectedSelect"
+    )
   }
 
-  return "Wybierz metodę, którą chcesz dodać."
+  return t("generated.dashboard.settings.selectMethodWantAdd")
 }
 
 const getResendMethod = (method: TwoFactorMethod): ResendType | null => {
@@ -204,48 +214,57 @@ const escapeHtml = (value: string): string =>
     .replaceAll("'", "&#39;")
 
 const getPrintableRecoveryCodesDocument = (
+  t: ReturnType<typeof useAppTranslations>,
   codes: string[],
-  generatedAt: string
+  generatedAt: string,
+  locale: string
 ): string => {
   const listMarkup = codes
     .map((code) => `<li>${escapeHtml(code)}</li>`)
     .join("")
 
+  const htmlLanguage = escapeHtml(locale)
+  const title = escapeHtml(t("generated.dashboard.settings.recoveryCodes"))
+  const generatedLabel = escapeHtml(t("generated.dashboard.settings.generated"))
+  const securityNotice = escapeHtml(
+    t("generated.dashboard.settings.storeSafePlace")
+  )
+
   return `<!doctype html>
-<html lang="pl">
-  <head>
-    <meta charset="utf-8" />
-    <title>Kody odzyskiwania 2FA GdzieToLeży</title>
-    <style>
-      body {
-        font-family: "Arial", sans-serif;
-        margin: 24px;
-        color: #111827;
-      }
-      h1 {
-        margin: 0 0 8px;
-        font-size: 20px;
-      }
-      p {
-        margin: 0 0 12px;
-      }
-      ul {
-        margin: 0;
-        padding-left: 20px;
-        columns: 2;
-      }
-      li {
-        font-family: "Courier New", monospace;
-        margin-bottom: 6px;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Kody odzyskiwania 2FA</h1>
-    <p>Wygenerowano: ${escapeHtml(generatedAt)}</p>
-    <p>Przechowuj ten wydruk w bezpiecznym miejscu.</p>
-    <ul>${listMarkup}</ul>
-  </body>
+<html lang="${htmlLanguage}">
+<head>
+  <meta charset="utf-8" />
+  <title>${title} GdzieToLeży</title>
+  <style>
+    body {
+      font-family: "Arial", sans-serif;
+      margin: 24px;
+      color: #111827;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+    p {
+      margin: 0 0 12px;
+    }
+    ul {
+      margin: 0;
+      padding-left: 20px;
+      columns: 2;
+    }
+    li {
+      font-family: "Courier New", monospace;
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>${title}</h1>
+  <p>${generatedLabel} ${escapeHtml(generatedAt)}</p>
+  <p>${securityNotice}</p>
+  <ul>${listMarkup}</ul>
+</body>
 </html>`
 }
 
@@ -260,12 +279,14 @@ function TwoFactorMethodInput({
   disabled?: boolean
   availableMethods?: TwoFactorMethod[]
 }) {
+  const t = useAppTranslations()
+  const twoFactorMethods = getTwoFactorMethods(t)
   // If availableMethods is provided, filter to only those; otherwise show all
   const methodsToShow = availableMethods
-    ? TWO_FACTOR_METHODS.filter((m) =>
+    ? twoFactorMethods.filter((m) =>
         availableMethods.includes(m.value as TwoFactorMethod)
       )
-    : TWO_FACTOR_METHODS
+    : twoFactorMethods
 
   return (
     <RadioGroup
@@ -377,6 +398,8 @@ function useTwoFactorSetupFlow({
   startTimer,
   onSuccess,
 }: TwoFactorSetupFlowParams) {
+  const t = useAppTranslations()
+
   const { code } = setupState
   const resetFlow = useCallback(() => {
     dispatch({ type: "reset" })
@@ -392,7 +415,7 @@ function useTwoFactorSetupFlow({
 
   const startSetup = async () => {
     if (method === "PASSKEYS") {
-      toast.error("Dodaj klucz bezpieczeństwa w sekcji poniżej.")
+      toast.error(t("generated.dashboard.settings.addSecurityKeySectionBelow"))
       return
     }
 
@@ -414,7 +437,9 @@ function useTwoFactorSetupFlow({
       } else {
         const resendMethod = getResendMethod(method)
         if (!resendMethod) {
-          throw new Error("Unsupported resend method")
+          throw new Error(
+            t("generated.dashboard.settings.unsupportedResendMethod")
+          )
         }
         dispatch({ type: "set_stage", stage: "SENDING" })
         await sendTwoFactorCode(resendMethod)
@@ -423,8 +448,9 @@ function useTwoFactorSetupFlow({
 
       dispatch({ type: "set_stage", stage: "AWAITING" })
     } catch {
-      const message =
-        "Nie udało się zainicjować konfiguracji. Spróbuj ponownie."
+      const message = t(
+        "generated.dashboard.settings.failedInitializeConfigurationAgain"
+      )
       dispatch({ type: "set_error", error: message })
       dispatch({ type: "set_stage", stage: "ERROR" })
       toast.error(message)
@@ -445,7 +471,7 @@ function useTwoFactorSetupFlow({
       startTimer(TWO_FACTOR_RESEND_SECONDS)
       dispatch({ type: "set_stage", stage: "AWAITING" })
     } catch {
-      const message = "Nie udało się wysłać kodu. Spróbuj ponownie."
+      const message = t("generated.dashboard.settings.failedSendCodeAgain")
       dispatch({ type: "set_error", error: message })
       dispatch({ type: "set_stage", stage: "ERROR" })
       toast.error(message)
@@ -466,14 +492,14 @@ function useTwoFactorSetupFlow({
       } else {
         dispatch({
           type: "set_error",
-          error: "Nieprawidłowy kod weryfikacyjny. Spróbuj ponownie.",
+          error: t("generated.dashboard.settings.invalidVerificationCodeAgain"),
         })
         dispatch({ type: "set_stage", stage: "ERROR" })
       }
     } catch {
       dispatch({
         type: "set_error",
-        error: "Wystąpił błąd podczas weryfikacji. Spróbuj ponownie.",
+        error: t("generated.shared.errorOccurredDuringVerificationAgain"),
       })
       dispatch({ type: "set_stage", stage: "ERROR" })
     }
@@ -510,6 +536,11 @@ function ConnectedMethods({
   onRemoveMethod: (method: RemovableTwoFactorMethod) => void
   removingMethod: RemovableTwoFactorMethod | null
 }) {
+  const t = useAppTranslations()
+
+  const twoFactorMethodLabels = getTwoFactorMethodLabels(t)
+  const twoFactorMethodHints = getTwoFactorMethodHints(t)
+
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -542,10 +573,12 @@ function ConnectedMethods({
         </div>
         <div className="space-y-1">
           <p className="font-medium text-foreground/80 text-sm">
-            Nie udało się załadować metod
+            {t("generated.dashboard.settings.failedLoadMethods")}
           </p>
           <p className="text-muted-foreground text-xs">
-            Wystąpił problem podczas pobierania połączonych metod weryfikacji.
+            {t(
+              "generated.dashboard.settings.problemDownloadingLinkedVerificationMethods"
+            )}
           </p>
         </div>
         {onRetry && (
@@ -554,7 +587,7 @@ function ConnectedMethods({
             onClick={onRetry}
             type="button"
           >
-            Spróbuj ponownie
+            {t("generated.shared.again")}
           </button>
         )}
       </div>
@@ -573,10 +606,12 @@ function ConnectedMethods({
         </div>
         <div>
           <p className="font-medium text-muted-foreground text-sm">
-            Brak połączonych metod
+            {t("generated.dashboard.settings.combinedMethods")}
           </p>
           <p className="text-muted-foreground/70 text-xs">
-            Dodaj metodę weryfikacji, aby zabezpieczyć konto
+            {t(
+              "generated.dashboard.settings.addVerificationMethodSecureAccount"
+            )}
           </p>
         </div>
       </div>
@@ -584,13 +619,14 @@ function ConnectedMethods({
   }
 
   const hasMultipleMethods = linkedMethods.length > 1
+  const setDefaultActionLabel = t("generated.dashboard.settings.change")
 
   return (
     <div className="space-y-2">
       {linkedMethods.map((linkedMethod) => {
         const Icon = METHOD_ICONS[linkedMethod]
-        const label = TWO_FACTOR_METHOD_LABELS[linkedMethod] ?? linkedMethod
-        const hint = TWO_FACTOR_METHOD_HINTS[linkedMethod]
+        const label = twoFactorMethodLabels[linkedMethod] ?? linkedMethod
+        const hint = twoFactorMethodHints[linkedMethod]
         const isDefault = linkedMethod === defaultMethod
 
         return (
@@ -605,7 +641,9 @@ function ConnectedMethods({
             {linkedMethod !== "EMAIL" && linkedMethod !== "PASSKEYS" ? (
               <Tooltip>
                 <TooltipTrigger
-                  aria-label={`Usuń metodę ${label}`}
+                  aria-label={t("generated.dashboard.settings.removeMethod", {
+                    value0: label,
+                  })}
                   className="absolute top-1.5 right-1.5 inline-flex size-5 cursor-pointer items-center justify-center rounded-full text-muted-foreground/50 opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive disabled:pointer-events-none disabled:opacity-50 group-hover:opacity-100"
                   disabled={removingMethod === linkedMethod}
                   onClick={() => onRemoveMethod(linkedMethod)}
@@ -620,7 +658,7 @@ function ConnectedMethods({
                     />
                   )}
                 </TooltipTrigger>
-                <TooltipContent>Usuń</TooltipContent>
+                <TooltipContent>{t("generated.shared.remove")}</TooltipContent>
               </Tooltip>
             ) : null}
             <div
@@ -649,12 +687,14 @@ function ConnectedMethods({
                       <span className="inline-flex cursor-help items-center gap-1 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-amber-600 dark:text-amber-500">
                         <HugeiconsIcon icon={StarIcon} size={12} />
                         <span className="font-medium text-[10px] uppercase tracking-wide">
-                          Domyślna
+                          {t("generated.dashboard.settings.default")}
                         </span>
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      Ta metoda będzie używana jako pierwsza podczas logowania
+                      {t(
+                        "generated.dashboard.settings.methodWillUsedFirstLogging"
+                      )}
                     </TooltipContent>
                   </Tooltip>
                 ) : null}
@@ -663,7 +703,9 @@ function ConnectedMethods({
             </div>
             <div className="mr-2 flex items-center gap-1.5 rounded-full bg-green-500/10 px-2 py-1 text-green-600 dark:text-green-500">
               <HugeiconsIcon icon={Tick01Icon} size={14} />
-              <span className="font-medium text-xs">Aktywna</span>
+              <span className="font-medium text-xs">
+                {t("generated.dashboard.settings.active")}
+              </span>
             </div>
           </div>
         )
@@ -678,11 +720,11 @@ function ConnectedMethods({
               size={14}
             />
             <span className="text-muted-foreground text-xs">
-              Domyślna metoda:{" "}
+              {t("generated.dashboard.settings.defaultMethod")}{" "}
               <span className="font-medium text-foreground">
                 {defaultMethod
-                  ? (TWO_FACTOR_METHOD_LABELS[defaultMethod] ?? defaultMethod)
-                  : "Nie ustawiono"}
+                  ? (twoFactorMethodLabels[defaultMethod] ?? defaultMethod)
+                  : t("generated.dashboard.settings.set")}
               </span>
             </span>
           </div>
@@ -692,11 +734,13 @@ function ConnectedMethods({
               disabled={isSettingDefault}
             >
               {isSettingDefault ? <Spinner className="mr-1.5 size-3" /> : null}
-              Zmień
+              {setDefaultActionLabel}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-fit">
               <DropdownMenuGroup>
-                <DropdownMenuLabel>Wybierz domyślną metodę</DropdownMenuLabel>
+                <DropdownMenuLabel>
+                  {t("generated.dashboard.settings.selectDefaultMethod")}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuRadioGroup
                   onValueChange={(value) =>
@@ -713,7 +757,7 @@ function ConnectedMethods({
                           icon={MethodIcon}
                           size={16}
                         />
-                        {TWO_FACTOR_METHOD_LABELS[method] ?? method}
+                        {twoFactorMethodLabels[method] ?? method}
                       </DropdownMenuRadioItem>
                     )
                   })}
@@ -734,17 +778,18 @@ function AuthenticatorSetup({
   authenticatorSetupData: AuthenticatorSetupData | null
   userEmail?: string
 }) {
+  const t = useAppTranslations()
+
   const [copied, setCopied] = useState(false)
   const secret = authenticatorSetupData?.secret ?? ""
-  const accountName =
-    authenticatorSetupData?.accountName ?? userEmail ?? "user@magazynpro.pl"
-  const issuer = authenticatorSetupData?.issuer ?? "MagazynPro"
+  const accountName = authenticatorSetupData?.accountName ?? userEmail ?? ""
+  const issuer = authenticatorSetupData?.issuer ?? ""
   const totpUri = generateTotpUri(secret, accountName, issuer)
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleCopySecret = async (): Promise<void> => {
     if (!navigator.clipboard) {
-      toast.error("Schowek jest niedostępny w tej przeglądarce.")
+      toast.error(t("generated.dashboard.settings.clipboardUnavailableBrowser"))
       return
     }
 
@@ -760,7 +805,7 @@ function AuthenticatorSetup({
         false
       )
     } catch {
-      toast.error("Nie udało się skopiować klucza. Skopiuj ręcznie.")
+      toast.error(t("generated.dashboard.settings.failedCopyKeyCopyManually"))
     }
   }
 
@@ -775,9 +820,11 @@ function AuthenticatorSetup({
   if (!secret) {
     return (
       <Alert variant="destructive">
-        <AlertTitle>Brak danych konfiguracji aplikacji</AlertTitle>
+        <AlertTitle>
+          {t("generated.dashboard.settings.applicationConfigurationData")}
+        </AlertTitle>
         <AlertDescription>
-          Odśwież konfigurację i spróbuj ponownie.
+          {t("generated.dashboard.settings.refreshConfigurationAgain")}
         </AlertDescription>
       </Alert>
     )
@@ -788,15 +835,18 @@ function AuthenticatorSetup({
       <div className="flex flex-col items-center gap-3">
         <QRCodeDisplay size={AUTHENTICATOR_QR_SIZE} value={totpUri} />
         <p className="text-center text-muted-foreground text-xs">
-          Zeskanuj kodem QR
+          {t("generated.dashboard.settings.scanQrCode")}
         </p>
       </div>
       <div className="space-y-3">
         <div>
-          <p className="font-medium text-sm">Lub wprowadź klucz ręcznie</p>
+          <p className="font-medium text-sm">
+            {t("generated.dashboard.settings.enterKeyManually")}
+          </p>
           <p className="text-muted-foreground text-sm">
-            Użyj aplikacji uwierzytelniającej (Google Authenticator, Authy,
-            1Password).
+            {t(
+              "generated.dashboard.settings.useAuthenticatorAppGoogleAuthenticator"
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -806,7 +856,11 @@ function AuthenticatorSetup({
             value={secret}
           />
           <Button
-            aria-label={copied ? "Klucz skopiowany" : "Skopiuj klucz"}
+            aria-label={
+              copied
+                ? t("generated.dashboard.settings.keyCopied")
+                : t("generated.dashboard.settings.copyCode")
+            }
             aria-pressed={copied}
             onClick={handleCopySecret}
             size="icon"
@@ -817,7 +871,9 @@ function AuthenticatorSetup({
           </Button>
         </div>
         <p className="text-muted-foreground text-xs">
-          Wygenerowano: {authenticatorSetupData?.issuedAt ?? "—"}
+          {t("generated.dashboard.settings.generated2", {
+            value0: authenticatorSetupData?.issuedAt ?? "—",
+          })}
         </p>
       </div>
     </div>
@@ -847,6 +903,8 @@ function CodeInputEntry({
   onVerify: () => void
   userEmail?: string
 }) {
+  const t = useAppTranslations()
+
   const canSendCode = getResendMethod(method) !== null
 
   return (
@@ -858,18 +916,22 @@ function CodeInputEntry({
         />
       ) : (
         <div className="space-y-2">
-          <p className="font-medium text-sm">Kod jednorazowy</p>
+          <p className="font-medium text-sm">
+            {t("generated.dashboard.settings.oneTimeCode")}
+          </p>
           <p className="text-muted-foreground text-sm">
-            E-mail z kodem został wysłany na Twoją skrzynkę.
+            {t("generated.dashboard.settings.eMailCodeBeenSent")}
           </p>
           <p className="text-muted-foreground text-xs">
-            Możesz poprosić o ponowną wysyłkę, jeśli kod nie dotarł.
+            {t("generated.dashboard.settings.requestResendCodeArrived")}
           </p>
         </div>
       )}
 
       <div className="space-y-3">
-        <Label htmlFor="two-factor-code">Kod weryfikacyjny</Label>
+        <Label htmlFor="two-factor-code">
+          {t("generated.shared.verificationCode")}
+        </Label>
         <OtpInput id="two-factor-code" onChange={onCodeChange} value={code} />
         <div className="flex flex-wrap items-center gap-2">
           <Button
@@ -878,7 +940,7 @@ function CodeInputEntry({
             onClick={onVerify}
             type="button"
           >
-            Zweryfikuj i aktywuj
+            {t("generated.dashboard.settings.verifyActivate")}
           </Button>
           {canSendCode ? (
             <>
@@ -891,8 +953,10 @@ function CodeInputEntry({
                 variant="outline"
               >
                 {resendCooldown > 0
-                  ? `Wyślij ponownie (${formatCountdown(resendCooldown)})`
-                  : "Wyślij ponownie"}
+                  ? t("generated.dashboard.settings.resend", {
+                      value0: formatCountdown(resendCooldown),
+                    })
+                  : t("generated.shared.resend")}
               </Button>
               <span
                 aria-atomic="true"
@@ -901,8 +965,10 @@ function CodeInputEntry({
                 id="resend-status"
               >
                 {resendCooldown > 0
-                  ? "Wyślij ponownie będzie dostępne po zakończeniu odliczania."
-                  : "Możesz teraz wysłać ponownie."}
+                  ? t(
+                      "generated.dashboard.settings.resendWillAvailableAfterCountdown"
+                    )
+                  : t("generated.dashboard.settings.nowResend")}
               </span>
             </>
           ) : null}
@@ -912,6 +978,9 @@ function CodeInputEntry({
   )
 }
 function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false)
   const [isCodesDialogOpen, setIsCodesDialogOpen] = useState(false)
 
@@ -954,16 +1023,16 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
     const printWindow = window.open("", "_blank", "width=720,height=900")
 
     if (!printWindow) {
-      toast.error(
-        "Nie udało się otworzyć podglądu wydruku. Sprawdź blokadę wyskakujących okien."
-      )
+      toast.error(t("generated.dashboard.settings.printPreviewFailedOpenCheck"))
       return
     }
 
-    const generatedAt = new Date().toLocaleString()
+    const generatedAt = new Date().toLocaleString(locale)
     const documentMarkup = getPrintableRecoveryCodesDocument(
+      t,
       generatedCodes ?? [],
-      generatedAt
+      generatedAt,
+      locale
     )
     printWindow.document.write(documentMarkup)
     printWindow.document.close()
@@ -975,9 +1044,11 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div className="space-y-1">
-          <p className="font-medium text-sm">Kody odzyskiwania</p>
+          <p className="font-medium text-sm">
+            {t("generated.dashboard.settings.recoveryCodes")}
+          </p>
           <p className="text-muted-foreground text-sm">
-            Przechowuj je w bezpiecznym miejscu.
+            {t("generated.dashboard.settings.storeSafePlace")}
           </p>
         </div>
         <Button
@@ -986,14 +1057,14 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
           type="button"
           variant="outline"
         >
-          Wygeneruj
+          {t("generated.dashboard.settings.generate")}
         </Button>
       </div>
 
       <p className="text-muted-foreground text-sm">
         {enabled
-          ? "Wygenerowanie nowych kodów unieważni wszystkie poprzednie."
-          : "Włącz 2FA, aby wygenerować kody."}
+          ? t("generated.dashboard.settings.generatingNewCodesWillInvalidate")
+          : t("generated.dashboard.settings.enable2faGenerateCodes")}
       </p>
 
       <AlertDialog
@@ -1010,22 +1081,21 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
               />
             </AlertDialogMedia>
             <AlertDialogTitle>
-              Wygenerować nowe kody odzyskiwania?
+              {t("generated.dashboard.settings.generateNewRecoveryCodes")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Poprzednie kody przestaną działać natychmiast po wygenerowaniu
-              nowych.
+              {t("generated.dashboard.settings.previousCodesWillStopWorking")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isGeneratingCodes}>
-              Anuluj
+              {t("generated.shared.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               isLoading={isGeneratingCodes}
               onClick={async () => await handleGenerateCodes()}
             >
-              Wygeneruj nowe kody
+              {t("generated.dashboard.settings.generateNewCodes")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1037,15 +1107,16 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Nowe kody odzyskiwania</DialogTitle>
+            <DialogTitle>
+              {t("generated.dashboard.settings.newRecoveryCodes")}
+            </DialogTitle>
             <DialogDescription>
-              Zapisz je teraz i przechowuj w bezpiecznym miejscu. Po zamknięciu
-              tego okna nie będzie możliwości ponownego podglądu.
+              {t("generated.dashboard.settings.writeDownNowKeepSafe")}
             </DialogDescription>
           </DialogHeader>
 
           <Textarea
-            aria-label="Kody odzyskiwania"
+            aria-label={t("generated.dashboard.settings.recoveryCodes")}
             className="min-h-40 font-mono text-sm"
             readOnly
             value={generatedCodes.join("\n")}
@@ -1053,9 +1124,11 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
 
           <DialogFooter className="gap-2 sm:gap-2">
             <Button onClick={handlePrintCodes} type="button" variant="outline">
-              Drukuj kody
+              {t("generated.dashboard.settings.printCodes")}
             </Button>
-            <DialogClose render={<Button type="button" />}>Zamknij</DialogClose>
+            <DialogClose render={<Button type="button" />}>
+              {t("generated.dashboard.settings.close")}
+            </DialogClose>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1101,6 +1174,8 @@ function TwoFactorActionButtons({
   onStartSetup: () => void
   onCancelSetup: () => void
 }) {
+  const t = useAppTranslations()
+
   if (status === "DISABLED" && !isSetupInProgress) {
     return (
       <Button
@@ -1109,7 +1184,7 @@ function TwoFactorActionButtons({
         onClick={onStartSetup}
         type="button"
       >
-        Rozpocznij konfigurację
+        {t("generated.dashboard.settings.startSetup")}
       </Button>
     )
   }
@@ -1117,7 +1192,7 @@ function TwoFactorActionButtons({
   if (status === "ENABLED" && !isSetupInProgress) {
     return (
       <Button disabled={!canStartSetup} onClick={onStartSetup} type="button">
-        Dodaj metodę
+        {t("generated.dashboard.settings.addMethod")}
       </Button>
     )
   }
@@ -1125,7 +1200,7 @@ function TwoFactorActionButtons({
   if (status === "SETUP" || isSetupInProgress) {
     return (
       <Button onClick={onCancelSetup} type="button" variant="outline">
-        Anuluj konfigurację
+        {t("generated.dashboard.settings.cancelSetup")}
       </Button>
     )
   }
@@ -1166,10 +1241,12 @@ function TwoFactorConfigurationSection({
   onRemoveMethod: (method: RemovableTwoFactorMethod) => void
   removingMethod: RemovableTwoFactorMethod | null
 }) {
+  const t = useAppTranslations()
+
   const isIdleStage = isIdleSetupStage(setupStage)
   const isSetupInProgress = !isIdleStage
   const { hasAvailableMethods, isSelectedLinked, availableMethods } =
-    getLinkedMethodsState(linkedMethods, method)
+    getLinkedMethodsState(t, linkedMethods, method)
   const canStartSetup = getCanStartSetup({
     status,
     isIdleStage,
@@ -1179,6 +1256,7 @@ function TwoFactorConfigurationSection({
   })
   const canSelectMethod = isIdleStage
   const linkedMethodsHint = getLinkedMethodsHint({
+    t,
     status,
     linkedMethods,
     hasAvailableMethods,
@@ -1188,7 +1266,9 @@ function TwoFactorConfigurationSection({
   return (
     <div className="space-y-4 rounded-xl border bg-muted/30 p-4">
       <div className="space-y-2">
-        <p className="font-medium text-sm">Połączone metody</p>
+        <p className="font-medium text-sm">
+          {t("generated.dashboard.settings.combinedMethods2")}
+        </p>
         <ConnectedMethods
           defaultMethod={defaultMethod}
           isError={isLinkedMethodsError}
@@ -1205,9 +1285,13 @@ function TwoFactorConfigurationSection({
         <>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">
-              <p className="font-semibold">Konfiguracja 2FA</p>
+              <p className="font-semibold">
+                {t("generated.dashboard.settings.value2faSetup")}
+              </p>
               <p className="text-muted-foreground text-sm">
-                Dodaj drugi krok weryfikacji i chroń krytyczne działania.
+                {t(
+                  "generated.dashboard.settings.addSecondVerificationStepProtect"
+                )}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -1229,7 +1313,7 @@ function TwoFactorConfigurationSection({
               >
                 1
               </Badge>
-              <span>Wybierz metodę</span>
+              <span>{t("generated.dashboard.settings.selectMethod")}</span>
             </div>
             <div className="flex items-center gap-2">
               <Badge
@@ -1237,7 +1321,7 @@ function TwoFactorConfigurationSection({
               >
                 2
               </Badge>
-              <span>Potwierdź kod</span>
+              <span>{t("generated.dashboard.settings.confirmCode")}</span>
             </div>
             <div className="flex items-center gap-2">
               <Badge
@@ -1245,7 +1329,7 @@ function TwoFactorConfigurationSection({
               >
                 3
               </Badge>
-              <span>Zapisz kody</span>
+              <span>{t("generated.dashboard.settings.saveCodes")}</span>
             </div>
           </div>
           <TwoFactorMethodInput
@@ -1273,6 +1357,9 @@ export function TwoFactorSetup({
   onMethodChange,
   userEmail,
 }: TwoFactorSetupProps) {
+  const t = useAppTranslations()
+
+  const twoFactorMethodLabels = getTwoFactorMethodLabels(t)
   const {
     data: linkedMethods,
     isLoading: isLinkedMethodsLoading,
@@ -1289,7 +1376,9 @@ export function TwoFactorSetup({
     setDefaultMethodMutation.mutate(newDefaultMethod, {
       onSuccess: () => {
         toast.success(
-          `Metoda ${TWO_FACTOR_METHOD_LABELS[newDefaultMethod]} została ustawiona jako domyślna`
+          t("generated.dashboard.settings.methodBeenSetDefault", {
+            value0: twoFactorMethodLabels[newDefaultMethod],
+          })
         )
       },
     })
@@ -1300,7 +1389,9 @@ export function TwoFactorSetup({
     removeMethodMutation.mutate(methodToRemove, {
       onSuccess: () => {
         toast.success(
-          `Metoda ${TWO_FACTOR_METHOD_LABELS[methodToRemove]} została usunięta`
+          t("generated.dashboard.settings.methodBeenRemoved", {
+            value0: twoFactorMethodLabels[methodToRemove],
+          })
         )
         setRemovingMethod(null)
       },
@@ -1312,14 +1403,14 @@ export function TwoFactorSetup({
       return
     }
     if (linkedMethods.methods.includes(method)) {
-      const available = TWO_FACTOR_METHODS.find(
+      const available = getTwoFactorMethods(t).find(
         (m) => !linkedMethods.methods.includes(m.value)
       )?.value
       if (available) {
         onMethodChange(available)
       }
     }
-  }, [linkedMethods, method, onMethodChange])
+  }, [linkedMethods, method, onMethodChange, t])
   const [setupState, dispatch] = useReducer(
     twoFactorSetupReducer,
     initialTwoFactorSetupState
@@ -1368,7 +1459,7 @@ export function TwoFactorSetup({
       onSuccess: () => {
         refetchLinkedMethods().catch(() => {
           toast.error(
-            "Nie udało się odświeżyć listy metod 2FA. Odśwież stronę, aby zobaczyć nową metodę."
+            t("generated.dashboard.settings.failedRefresh2faMethodList")
           )
         })
         resetFlow()
@@ -1412,9 +1503,11 @@ export function TwoFactorSetup({
           {setupStage === "REQUESTING" ? (
             <Alert>
               <Spinner className="text-muted-foreground" />
-              <AlertTitle>Łączymy się z usługą 2FA</AlertTitle>
+              <AlertTitle>
+                {t("generated.dashboard.settings.connect2faService")}
+              </AlertTitle>
               <AlertDescription>
-                Generujemy klucz i przygotowujemy kolejne kroki.
+                {t("generated.dashboard.settings.generateKeyPrepareNextSteps")}
               </AlertDescription>
             </Alert>
           ) : null}
@@ -1422,14 +1515,20 @@ export function TwoFactorSetup({
           {setupStage === "SENDING" ? (
             <Alert>
               <Spinner className="text-muted-foreground" />
-              <AlertTitle>Wysyłamy kod</AlertTitle>
-              <AlertDescription>Kod trafia na wybraną metodę.</AlertDescription>
+              <AlertTitle>
+                {t("generated.dashboard.settings.sendCode")}
+              </AlertTitle>
+              <AlertDescription>
+                {t("generated.dashboard.settings.codeGoesSelectedMethod")}
+              </AlertDescription>
             </Alert>
           ) : null}
 
           {setupStage === "ERROR" && error ? (
             <Alert variant="destructive">
-              <AlertTitle>Nie udało się aktywować 2FA</AlertTitle>
+              <AlertTitle>
+                {t("generated.dashboard.settings.value2faFailedActivate")}
+              </AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}

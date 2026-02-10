@@ -2,6 +2,7 @@
 
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { useMemo } from "react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
@@ -12,14 +13,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { useCsvImporter } from "../../hooks/use-csv-importer"
 import { FileUploader } from "./file-uploader"
 import { PreviewTable } from "./preview-table"
 import {
-  ITEM_COLUMNS,
-  RACK_COLUMNS,
-  WAREHOUSE_COLUMNS,
+  getItemColumns,
+  getRackColumns,
+  getWarehouseColumns,
 } from "./utils/constants"
 import type { CsvImporterType, CsvRowType } from "./utils/types"
 
@@ -37,6 +39,8 @@ export function CsvImporter<T extends CsvImporterType>({
   type,
   onImport,
 }: CsvImporterProps<T>) {
+  const t = useAppTranslations()
+
   const handleImport = async ({
     file,
     rows,
@@ -58,18 +62,18 @@ export function CsvImporter<T extends CsvImporterType>({
     resetFile,
   } = useCsvImporter<T>({ type, onImport: handleImport })
 
-  let columns: ReadonlyArray<{ key: string; label: string }> = ITEM_COLUMNS
+  let columns: ReadonlyArray<{ key: string; label: string }> = getItemColumns(t)
   if (type === "warehouse") {
-    columns = WAREHOUSE_COLUMNS
+    columns = getWarehouseColumns(t)
   } else if (type === "rack") {
-    columns = RACK_COLUMNS
+    columns = getRackColumns(t)
   }
 
   let dialogTitle = "Importuj przedmioty z CSV"
   if (type === "warehouse") {
     dialogTitle = "Importuj magazyny z CSV"
   } else if (type === "rack") {
-    dialogTitle = "Importuj regały z CSV"
+    dialogTitle = t("generated.admin.warehouses.importRacksCsv")
   }
 
   const labels = useMemo(() => {
@@ -100,7 +104,7 @@ export function CsvImporter<T extends CsvImporterType>({
       <DialogTrigger
         className={cn(buttonVariants({ variant: "default" }), "w-fit gap-2")}
       >
-        Importuj CSV
+        {t("generated.admin.warehouses.importCsv")}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] min-w-fit overflow-auto sm:min-w-125">
         <DialogHeader>
@@ -128,7 +132,7 @@ export function CsvImporter<T extends CsvImporterType>({
                 }}
                 variant="destructive"
               >
-                Usuń
+                {t("generated.shared.remove")}
               </Button>
               <Button
                 disabled={isImporting}
@@ -136,7 +140,7 @@ export function CsvImporter<T extends CsvImporterType>({
                   await confirmImport()
                 }}
               >
-                Importuj
+                {t("generated.admin.warehouses.import")}
                 <HugeiconsIcon
                   className="ml-2 size-4"
                   icon={ArrowRight01Icon}
@@ -149,7 +153,7 @@ export function CsvImporter<T extends CsvImporterType>({
               onClick={() => setOpen(false)}
               variant="outline"
             >
-              Anuluj
+              {t("generated.shared.cancel")}
             </Button>
           )}
         </DialogFooter>

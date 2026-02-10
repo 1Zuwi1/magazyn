@@ -1,4 +1,5 @@
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
@@ -34,6 +35,8 @@ export function ScannerQuantityStep({
   onReserveChange,
   onSubmit,
 }: ScannerQuantityStepProps) {
+  const t = useAppTranslations()
+
   return (
     <ScannerBody>
       <div className="relative flex h-full flex-col">
@@ -41,10 +44,10 @@ export function ScannerQuantityStep({
 
         <div className="mb-6">
           <h2 className="font-semibold text-xl tracking-tight">
-            Podaj ilość przedmiotów
+            {t("generated.scanner.enterItemQuantity")}
           </h2>
           <p className="mt-1 text-muted-foreground text-sm">
-            Ile sztuk chcesz dodać do magazynu?
+            {t("generated.scanner.howManyUnitsWantAdd")}
           </p>
         </div>
 
@@ -61,32 +64,39 @@ export function ScannerQuantityStep({
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="truncate font-medium">{scannedItem.name}</h3>
-                  {scannedItem.dangerous ? <Badge>Niebezpieczny</Badge> : null}
+                  {scannedItem.dangerous ? (
+                    <Badge>{t("generated.shared.dangerous")}</Badge>
+                  ) : null}
                 </div>
                 <p className="mt-1 font-mono text-muted-foreground text-xs">
-                  Kod: {scannedItem.code}
+                  {t("generated.scanner.shared.code", {
+                    value0: scannedItem.code,
+                  })}
                 </p>
                 <p className="mt-2 text-muted-foreground text-sm">
-                  Wygasa za{" "}
+                  {t("generated.scanner.expires")}{" "}
                   <span className="font-medium text-foreground">
                     {scannedItem.expireAfterDays}
                   </span>{" "}
-                  dni
+                  {t("generated.scanner.days")}
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  Temperatura:{" "}
+                  {t("generated.scanner.temperature")}{" "}
                   <span className="font-medium text-foreground">
-                    {scannedItem.minTemp}°C – {scannedItem.maxTemp}°C
+                    {t("generated.shared.cC", {
+                      value0: scannedItem.minTemp,
+                      value1: scannedItem.maxTemp,
+                    })}
                   </span>
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  Waga:{" "}
+                  {t("generated.scanner.weight")}{" "}
                   <span className="font-medium text-foreground">
-                    {scannedItem.weight} kg
+                    {scannedItem.weight} {t("generated.shared.kg")}
                   </span>
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  Wymiary:{" "}
+                  {t("generated.scanner.dimensions")}{" "}
                   <span className="font-medium text-foreground">
                     {scannedItem.sizeX} × {scannedItem.sizeY} ×{" "}
                     {scannedItem.sizeZ}
@@ -103,7 +113,7 @@ export function ScannerQuantityStep({
               className="mb-2 block font-medium text-sm"
               htmlFor="quantity"
             >
-              Ilość przedmiotów
+              {t("generated.scanner.itemQuantity")}
             </label>
             <div className="flex items-center gap-3">
               <Button
@@ -152,9 +162,11 @@ export function ScannerQuantityStep({
 
           <div className="flex items-center justify-between rounded-xl border bg-card/30 p-3">
             <div>
-              <Label htmlFor="reserve-toggle">Rezerwuj miejsca</Label>
+              <Label htmlFor="reserve-toggle">
+                {t("generated.scanner.reserveLocations")}
+              </Label>
               <p className="text-muted-foreground text-xs">
-                Zablokuj pozycje do momentu potwierdzenia rozmieszczenia.
+                {t("generated.scanner.lockPositionsUntilPlacementConfirmation")}
               </p>
             </div>
             <Switch
@@ -170,7 +182,7 @@ export function ScannerQuantityStep({
             onClick={onSubmit}
             type="button"
           >
-            Wyznacz lokalizacje
+            {t("generated.scanner.generateLocations")}
           </Button>
         </div>
       </div>

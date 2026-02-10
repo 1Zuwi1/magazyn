@@ -1,8 +1,16 @@
 "use client"
 
 import { useQueryClient } from "@tanstack/react-query"
-import { useCallback, useEffect, useImperativeHandle, useState } from "react"
+
+import {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from "react"
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   type OutboundCheckResult,
@@ -27,21 +35,29 @@ import { OutboundSelectItem } from "./outbound-select-item"
 import { OutboundSelectQuantity } from "./outbound-select-quantity"
 import { OutboundSuccess } from "./outbound-success"
 
-const OUTBOUND_ERROR_MESSAGES: Record<string, string> = {
-  ASSORTMENT_NOT_FOUND:
-    "Nie znaleziono asortymentu dla zeskanowanego kodu. Sprawdź etykietę.",
-  OUTBOUND_FIFO_VIOLATION:
-    "Naruszenie zasady FIFO. Nie można pobrać tego asortymentu bez pominięcia FIFO.",
-  USER_NOT_FOUND: "Nie znaleziono użytkownika. Zaloguj się ponownie.",
-}
+const getOutboundErrorMessages = (
+  t: ReturnType<typeof useAppTranslations>
+): Record<string, string> => ({
+  ASSORTMENT_NOT_FOUND: t(
+    "generated.scanner.outbound.assortmentFoundScannedCodeCheck"
+  ),
+  OUTBOUND_FIFO_VIOLATION: t(
+    "generated.scanner.outbound.fifoRuleViolationCannotPick"
+  ),
+  USER_NOT_FOUND: t("generated.scanner.outbound.userFoundSignAgain"),
+})
 
-const getOutboundErrorMessage = (error: unknown, fallback: string): string => {
+const getOutboundErrorMessage = (
+  error: unknown,
+  fallback: string,
+  errorMessages: Record<string, string>
+): string => {
   if (!FetchError.isError(error)) {
     return fallback
   }
 
   if (error.code) {
-    const msg = OUTBOUND_ERROR_MESSAGES[error.code]
+    const msg = errorMessages[error.code]
     if (msg) {
       return msg
     }
@@ -79,6 +95,9 @@ export const OutboundFlow = ({
   onReset: parentOnReset,
   ref,
 }: OutboundFlowProps) => {
+  const t = useAppTranslations()
+  const outboundErrorMessages = useMemo(() => getOutboundErrorMessages(t), [t])
+
   const queryClient = useQueryClient()
 
   const [step, setStep] = useState<OutboundStep>(
@@ -153,14 +172,15 @@ export const OutboundFlow = ({
         setError(
           getOutboundErrorMessage(
             executeError,
-            "Nie udało się wykonać operacji zdejmowania."
+            t("generated.scanner.outbound.failedPerformRemovalOperation"),
+            outboundErrorMessages
           )
         )
       } finally {
         setIsSubmitting(false)
       }
     },
-    [queryClient]
+    [queryClient, t, outboundErrorMessages]
   )
 
   // ── Reset ───────────────────────────────────────────────────────
@@ -187,7 +207,7 @@ export const OutboundFlow = ({
     (code: string) => {
       const scannedCode = code.trim()
       if (!scannedCode) {
-        setError("Nie udało się odczytać kodu. Spróbuj ponownie.")
+        setError(t("generated.scanner.shared.failedReadCodeAgain"))
         return
       }
 
@@ -197,9 +217,7 @@ export const OutboundFlow = ({
       )
 
       if (!matchingSlot) {
-        setError(
-          "Zeskanowany kod nie pasuje do żadnej wybranej pozycji. Sprawdź etykietę."
-        )
+        setError(t("generated.scanner.outbound.scannedCodeMatchAnySelected"))
         return
       }
 
@@ -210,7 +228,7 @@ export const OutboundFlow = ({
         )
 
         if (alreadyScanned) {
-          setError("Ta pozycja została już zeskanowana.")
+          setError(t("generated.scanner.outbound.itemAlreadyBeenScanned"))
           return current
         }
 
@@ -227,7 +245,7 @@ export const OutboundFlow = ({
         ]
       })
     },
-    [selectedPickSlots]
+    [selectedPickSlots, t]
   )
 
   const handleConfirmAfterVerification = useCallback(async () => {
@@ -260,13 +278,14 @@ export const OutboundFlow = ({
       setError(
         getOutboundErrorMessage(
           checkError,
-          "Nie udało się zweryfikować zgodności FIFO."
+          t("generated.scanner.outbound.failedVerifyFifoCompliance"),
+          outboundErrorMessages
         )
       )
     } finally {
       setIsSubmitting(false)
     }
-  }, [selectedPickSlots, executeOutbound])
+  }, [selectedPickSlots, executeOutbound, t, outboundErrorMessages])
 
   // ── Scan flow ───────────────────────────────────────────────────
 
@@ -274,7 +293,7 @@ export const OutboundFlow = ({
     async (code: string) => {
       const scannedCode = code.trim()
       if (!scannedCode) {
-        setError("Nie udało się odczytać kodu. Spróbuj ponownie.")
+        setError(t("generated.scanner.shared.failedReadCodeAgain"))
         return
       }
 
@@ -309,14 +328,21 @@ export const OutboundFlow = ({
         setError(
           getOutboundErrorMessage(
             scanError,
-            "Nie udało się zweryfikować zeskanowanego kodu."
+            t("generated.scanner.outbound.failedVerifyScannedCode"),
+            outboundErrorMessages
           )
         )
       } finally {
         setIsSubmitting(false)
       }
     },
-    [executeOutbound, handleVerificationScanResult, step]
+    [
+      executeOutbound,
+      handleVerificationScanResult,
+      step,
+      t,
+      outboundErrorMessages,
+    ]
   )
   useImperativeHandle(ref, () => ({ handleScanResult, reset: handleReset }), [
     handleScanResult,
@@ -373,13 +399,14 @@ export const OutboundFlow = ({
       setError(
         getOutboundErrorMessage(
           planError,
-          "Nie udało się wyznaczyć planu pobrania."
+          t("generated.scanner.outbound.failedGeneratePickPlan"),
+          outboundErrorMessages
         )
       )
     } finally {
       setIsSubmitting(false)
     }
-  }, [selectedItem, quantity])
+  }, [selectedItem, quantity, t, outboundErrorMessages])
 
   const handleToggleSlot = useCallback((slot: OutboundPickSlot) => {
     setSelectedPickSlots((current) => {

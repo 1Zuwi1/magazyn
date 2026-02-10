@@ -1,7 +1,9 @@
 import { Location04Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
 import { useMemo } from "react"
 import { useInfiniteRacks } from "@/hooks/use-racks"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
 import { CancelButton } from "./cancel-button"
@@ -26,7 +28,10 @@ interface ScannerLocationsStepProps {
   ) => void
 }
 
-const formatReservedUntil = (value: string | null): string | null => {
+const formatReservedUntil = (
+  value: string | null,
+  locale: string
+): string | null => {
   if (!value) {
     return null
   }
@@ -36,7 +41,7 @@ const formatReservedUntil = (value: string | null): string | null => {
     return null
   }
 
-  return new Intl.DateTimeFormat("pl-PL", {
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -57,7 +62,10 @@ export function ScannerLocationsStep({
   onRemovePlacement,
   onPlacementChange,
 }: ScannerLocationsStepProps) {
-  const reservedUntilLabel = formatReservedUntil(plan.reservedUntil)
+  const t = useAppTranslations()
+
+  const locale = useLocale()
+  const reservedUntilLabel = formatReservedUntil(plan.reservedUntil, locale)
   const {
     fetchNextPage: fetchNextRackPage,
     hasNextPage: hasNextRackPage,
@@ -99,36 +107,47 @@ export function ScannerLocationsStep({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              Edytuj rozmieszczenie
+              {t("generated.scanner.editPlacement")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              Zmień pozycje ręcznie, jeśli chcesz umieścić towar w innych
-              miejscach.
+              {t("generated.scanner.changePositionsManuallyWantPlace")}
             </p>
           </div>
         </div>
 
         <div className="mb-4 grid grid-cols-3 gap-2">
           <div className="rounded-xl border bg-card/40 p-3 text-center">
-            <p className="text-muted-foreground text-xs">Zgłoszono</p>
+            <p className="text-muted-foreground text-xs">
+              {t("generated.scanner.requested")}
+            </p>
             <p className="font-semibold text-lg">{plan.requestedQuantity}</p>
           </div>
           <div className="rounded-xl border bg-card/40 p-3 text-center">
-            <p className="text-muted-foreground text-xs">Przydzielono</p>
+            <p className="text-muted-foreground text-xs">
+              {t("generated.scanner.allocated")}
+            </p>
             <p className="font-semibold text-lg">{plan.allocatedQuantity}</p>
           </div>
           <div className="rounded-xl border bg-card/40 p-3 text-center">
-            <p className="text-muted-foreground text-xs">Brakuje</p>
+            <p className="text-muted-foreground text-xs">
+              {t("generated.scanner.missing")}
+            </p>
             <p className="font-semibold text-lg">{plan.remainingQuantity}</p>
           </div>
         </div>
 
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Badge variant={plan.reserved ? "default" : "outline"}>
-            {plan.reserved ? "Rezerwacja aktywna" : "Bez rezerwacji"}
+            {plan.reserved
+              ? t("generated.scanner.reservationActive")
+              : t("generated.scanner.reservation")}
           </Badge>
           {reservedUntilLabel ? (
-            <Badge variant="outline">Do: {reservedUntilLabel}</Badge>
+            <Badge variant="outline">
+              {t("generated.scanner.until", {
+                value0: reservedUntilLabel,
+              })}
+            </Badge>
           ) : null}
         </div>
 
@@ -161,7 +180,7 @@ export function ScannerLocationsStep({
 
         <div className="space-y-3">
           <Button onClick={onAddPlacement} type="button" variant="outline">
-            Dodaj lokalizację
+            {t("generated.scanner.addLocation")}
           </Button>
           <Button
             className="h-12 w-full rounded-xl"
@@ -170,7 +189,7 @@ export function ScannerLocationsStep({
             onClick={onConfirm}
             type="button"
           >
-            Potwierdź rozmieszczenie
+            {t("generated.scanner.confirmPlacement")}
           </Button>
         </div>
       </div>

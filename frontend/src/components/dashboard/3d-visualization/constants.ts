@@ -58,20 +58,10 @@ export const OVERVIEW_CAMERA_HEIGHT = 4
 export const FOCUS_CAMERA_HEIGHT = 3
 export const FOCUS_CAMERA_DISTANCE = 6
 
-export const STATUS_LABELS: Record<BlockStatusKey, string> = {
-  normal: "Normalny",
-  dangerous: "Niebezpieczny",
-  expired: "Przeterminowany",
-  "expired-dangerous": "Przeterminowany i niebezpieczny",
-  empty: "Pusta strefa",
-}
-
-export const GLOW_SETTINGS: Record<
-  ItemStatus,
-  { glowOpacity: number; emissiveIntensity: number }
-> = {
-  normal: { glowOpacity: 0.05, emissiveIntensity: 0.12 },
-  dangerous: { glowOpacity: 0.22, emissiveIntensity: 0.3 },
-  expired: { glowOpacity: 0.14, emissiveIntensity: 0.2 },
-  "expired-dangerous": { glowOpacity: 0.3, emissiveIntensity: 0.38 },
+export const STATUS_LABEL_KEYS: Record<BlockStatusKey, string> = {
+  normal: "warehouseVisualization.statusLabels.normal",
+  dangerous: "warehouseVisualization.statusLabels.dangerous",
+  expired: "warehouseVisualization.statusLabels.expired",
+  "expired-dangerous": "warehouseVisualization.statusLabels.expiredDangerous",
+  empty: "warehouseVisualization.statusLabels.empty",
 }

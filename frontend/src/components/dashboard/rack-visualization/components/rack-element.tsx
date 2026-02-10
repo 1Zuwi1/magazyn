@@ -1,4 +1,5 @@
 import { ItemPhoto } from "@/components/ui/item-photo"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { ItemSlot } from "../../types"
 import { getItemStatus, getStatusColors } from "../../utils/item-status"
@@ -18,6 +19,8 @@ export default function RackElement({
   className,
   ...props
 }: ElementProps) {
+  const t = useAppTranslations()
+
   const status = item ? getItemStatus(item) : null
   const statusColors = status ? getStatusColors(status) : null
   let statusRing: string | null = null
@@ -29,8 +32,14 @@ export default function RackElement({
     statusRing = "ring-2 ring-destructive/50"
   }
   const ariaLabel = isEmpty
-    ? `Pusta półka ${coordinate}`
-    : `Półka ${coordinate}, ${item?.name ?? "nieznany element"}`
+    ? t("generated.dashboard.rackVisualization.emptyShelf", {
+        value0: coordinate,
+      })
+    : t("generated.dashboard.rackVisualization.shelf", {
+        value0: coordinate,
+        value1:
+          item?.name ?? t("generated.dashboard.rackVisualization.unknownItem"),
+      })
 
   return (
     <button

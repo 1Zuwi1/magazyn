@@ -1,8 +1,11 @@
 import { AlertCircleIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Button } from "@/components/ui/button"
 
+import { Button } from "@/components/ui/button"
+import { useAppTranslations } from "@/i18n/use-translations"
 export function VoiceAssistantProcessingView() {
+  const t = useAppTranslations()
+
   return (
     <div
       className="relative flex h-full flex-col items-center justify-center p-6 text-center"
@@ -18,10 +21,10 @@ export function VoiceAssistantProcessingView() {
 
         <div className="max-w-xs space-y-1.5">
           <h2 className="font-semibold text-foreground text-lg tracking-tight">
-            Przetwarzam...
+            {t("generated.voiceAssistant.imProcessing")}
           </h2>
           <p className="text-muted-foreground text-sm">
-            Analizuję Twoje polecenie
+            {t("generated.voiceAssistant.amAnalyzingCommand")}
           </p>
         </div>
       </div>
@@ -38,6 +41,8 @@ export function VoiceAssistantErrorView({
   message,
   onReset,
 }: VoiceAssistantErrorViewProps) {
+  const t = useAppTranslations()
+
   return (
     <div
       className="relative flex h-full flex-col items-center justify-center gap-5 p-6 text-center"
@@ -58,7 +63,7 @@ export function VoiceAssistantErrorView({
 
       <div className="max-w-xs space-y-1.5">
         <h2 className="font-semibold text-foreground text-lg tracking-tight">
-          Nie udało się
+          {t("generated.voiceAssistant.didntWork")}
         </h2>
         <p className="text-muted-foreground text-sm leading-relaxed">
           {message}
@@ -66,7 +71,7 @@ export function VoiceAssistantErrorView({
       </div>
 
       <Button className="rounded-full px-6" onClick={onReset} type="button">
-        Spróbuj ponownie
+        {t("generated.shared.again")}
       </Button>
     </div>
   )

@@ -4,7 +4,7 @@ import { Alert02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
-import PasskeyLogin from "@/app/(auth)/components/passkey-login"
+import PasskeyLogin from "@/app/[locale]/(auth)/components/passkey-login"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Skeleton } from "@/components/ui/skeleton"
 import useLinkedMethods from "@/hooks/use-linked-methods"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   Check2FASchema,
@@ -26,7 +27,8 @@ import {
   type TwoFactorMethod,
 } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
-import { METHOD_ICONS, TWO_FACTOR_METHODS } from "./constants"
+import { translateZodMessage } from "@/lib/zod-message"
+import { getTwoFactorMethods, METHOD_ICONS } from "./constants"
 import {
   type PasswordVerificationCopy,
   PasswordVerificationSection,
@@ -51,6 +53,7 @@ export function TwoFactorVerificationDialog({
   contentClassName = "sm:max-w-lg",
   copy,
 }: TwoFactorVerificationDialogProps) {
+  const t = useAppTranslations()
   const [code, setCode] = useState("")
   const {
     data: methods,
@@ -70,12 +73,12 @@ export function TwoFactorVerificationDialog({
     method,
   }) => {
     if (method === "AUTHENTICATOR") {
-      return "Wpisz kod z aplikacji uwierzytelniającej."
+      return t("generated.dashboard.settings.enterCodeAuthenticatorApp")
     }
     if (method === "PASSKEYS") {
-      return "Potwierdź przy użyciu klucza bezpieczeństwa."
+      return t("generated.dashboard.settings.confirmSecurityKey")
     }
-    return "Wyślemy jednorazowy kod na wybraną metodę."
+    return t("generated.dashboard.settings.willSendOneTimeCode")
   }
 
   const resolvedCopy: PasswordVerificationCopy = (() => {
@@ -88,15 +91,16 @@ export function TwoFactorVerificationDialog({
     return { ...copy, description: defaultDescription }
   })()
 
-  const methodOptions = useMemo(
-    () =>
-      methods?.methods?.length
-        ? TWO_FACTOR_METHODS.filter((method) =>
-            methods?.methods.includes(method.value as TwoFactorMethod)
-          )
-        : TWO_FACTOR_METHODS,
-    [methods?.methods]
-  )
+  const methodOptions = useMemo(() => {
+    const twoFactorMethods = getTwoFactorMethods(t)
+    if (methods?.methods?.length) {
+      return twoFactorMethods.filter((method) =>
+        methods.methods.includes(method.value as TwoFactorMethod)
+      )
+    }
+
+    return twoFactorMethods
+  }, [methods?.methods, t])
   const hasInitialMethod = methods?.defaultMethod
     ? methodOptions.some((method) => method.value === methods?.defaultMethod)
     : false
@@ -149,9 +153,10 @@ export function TwoFactorVerificationDialog({
 
       onVerified?.()
     } catch (e) {
-      const message = FetchError.isError(e)
+      const rawMessage = FetchError.isError(e)
         ? e.message
-        : "Kod jest nieprawidłowy. Spróbuj ponownie."
+        : t("generated.dashboard.settings.codeInvalidAgain")
+      const message = translateZodMessage(rawMessage, t)
       setIsVerified(false)
       setVerificationError(message)
       toast.error(message)
@@ -160,16 +165,22 @@ export function TwoFactorVerificationDialog({
     }
   }
 
-  const resolvedTitle = title ?? copy?.title ?? "Potwierdź 2FA przed zmianą"
-  const resolvedDescription =
-    "To dodatkowy krok bezpieczeństwa. Potwierdź swoją tożsamość, aby kontynuować."
+  const resolvedTitle =
+    title ??
+    copy?.title ??
+    t("generated.dashboard.settings.confirm2faBeforeChanging")
+  const resolvedDescription = t(
+    "generated.dashboard.settings.additionalSecurityStepConfirmIdentity"
+  )
   const passkeyDescription =
     typeof resolvedCopy.description === "function"
       ? resolvedCopy.description({ method: "PASSKEYS" })
       : resolvedCopy.description
-  const passkeyVerifiedTitle = copy?.verifiedTitle ?? "Zweryfikowano"
+  const passkeyVerifiedTitle =
+    copy?.verifiedTitle ?? t("generated.dashboard.settings.verified3")
   const passkeyVerifiedDescription =
-    copy?.verifiedDescription ?? "Możesz bezpiecznie kontynuować."
+    copy?.verifiedDescription ??
+    t("generated.dashboard.settings.safelyContinue")
 
   const handlePasskeyVerified = () => {
     setIsVerified(true)
@@ -193,7 +204,9 @@ export function TwoFactorVerificationDialog({
               </p>
             </div>
             <Badge variant={isVerified ? "success" : "warning"}>
-              {isVerified ? "Zweryfikowano" : "Wymagane"}
+              {isVerified
+                ? t("generated.dashboard.settings.verified3")
+                : t("generated.dashboard.settings.required")}
             </Badge>
           </div>
           {isVerified ? (
@@ -203,7 +216,7 @@ export function TwoFactorVerificationDialog({
             </Alert>
           ) : (
             <PasskeyLogin
-              label="Zweryfikuj kluczem bezpieczeństwa"
+              label={t("generated.shared.verifySecurityKey")}
               onSuccess={handlePasskeyVerified}
               redirectTo={null}
               showSeparator={false}
@@ -247,7 +260,7 @@ export function TwoFactorVerificationDialog({
             className="text-muted-foreground text-xs uppercase tracking-wide"
             id="verification-method-label"
           >
-            Metoda weryfikacji
+            {t("generated.dashboard.settings.verificationMethod")}
           </Label>
           {isMethodsPending && (
             <div className="space-y-2">
@@ -270,10 +283,12 @@ export function TwoFactorVerificationDialog({
                 size={20}
               />
               <p className="font-medium text-foreground/80 text-sm">
-                Nie udało się załadować metod weryfikacji
+                {t(
+                  "generated.dashboard.settings.failedLoadVerificationMethods"
+                )}
               </p>
               <p className="text-muted-foreground text-xs">
-                Zamknij okno i spróbuj ponownie.
+                {t("generated.dashboard.settings.closeWindowAgain")}
               </p>
             </div>
           )}

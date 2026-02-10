@@ -1,9 +1,15 @@
-import { differenceInCalendarDays, format, parseISO } from "date-fns"
-import { pl } from "date-fns/locale"
+import {
+  differenceInCalendarDays,
+  formatDate,
+  isValid,
+  parseISO,
+} from "date-fns"
 import { toast } from "sonner"
-import type { UserNotification } from "@/hooks/use-notifications"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { FetchError } from "@/lib/fetcher"
 import type { RackAssortment } from "@/lib/schemas"
+import { translateZodMessage } from "@/lib/zod-message"
 import type { Item, ItemSlot } from "../types"
 
 // Helper function to convert index to coordinate (R01-P01, R02-P03, etc.)
@@ -15,8 +21,15 @@ export function getSlotCoordinate(index: number, cols: number): string {
   return `${rowLabel}-${colLabel}`
 }
 
-export function formatDate(date: Date): string {
-  return format(date, "dd.MM.yyyy", { locale: pl })
+export const formatDateTimeLabel = (value: string, locale: string): string => {
+  const parsedDate = parseISO(value)
+  if (!isValid(parsedDate)) {
+    return value
+  }
+
+  return formatDate(parsedDate, "Pp", {
+    locale: getDateFnsLocale(locale),
+  })
 }
 
 export function formatDimensions(item: Item): string {
@@ -27,34 +40,55 @@ export function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
   return differenceInCalendarDays(expiryDate, today)
 }
 
-export function pluralize(
-  count: number,
-  singular: string,
-  few: string,
-  many: string
-): string {
-  if (count === 1) {
-    return singular
-  }
-  const lastDigit = count % 10
-  const lastTwoDigits = count % 100
-  if (
-    lastDigit >= 2 &&
-    lastDigit <= 4 &&
-    !(lastTwoDigits >= 12 && lastTwoDigits <= 14)
-  ) {
-    return few
+const ERROR_CODE_PATTERN = /^[A-Z0-9_]+$/
+const DEFAULT_ERROR_CODE = "UNEXPECTED_ERROR"
+
+const getErrorCode = (value: string | undefined): string | undefined => {
+  if (!value) {
+    return undefined
   }
 
-  return many
+  return ERROR_CODE_PATTERN.test(value) ? value : undefined
 }
 
-export const handleApiError = (err: unknown, fallback?: string) => {
-  toast.error(
-    FetchError.isError(err)
-      ? err.message
-      : (fallback ?? "Wystąpił nieoczekiwany błąd.")
-  )
+const translateErrorCode = (
+  t: AppTranslate,
+  errorCode: string,
+  fallback?: string
+): string => {
+  try {
+    return t(`errorCodes.${errorCode}`)
+  } catch {
+    return fallback ?? errorCode
+  }
+}
+
+export const handleApiError = (
+  err: unknown,
+  fallback: string | undefined,
+  t: AppTranslate
+) => {
+  const rawMessage = err instanceof Error ? err.message : undefined
+  const resolvedCode =
+    (FetchError.isError(err) ? err.message : undefined) ??
+    getErrorCode(rawMessage)
+
+  if (resolvedCode) {
+    toast.error(translateErrorCode(t, resolvedCode, fallback))
+    return
+  }
+
+  if (rawMessage) {
+    toast.error(translateZodMessage(rawMessage, t))
+    return
+  }
+
+  if (fallback) {
+    toast.error(fallback)
+    return
+  }
+
+  toast.error(translateErrorCode(t, DEFAULT_ERROR_CODE))
 }
 export const getOccupancyPercentage = (
   used: number,
@@ -132,6 +166,3 @@ export const toTitleCase = (value: string): string =>
     .filter(Boolean)
     .map((part) => `${part.slice(0, 1)}${part.slice(1).toLowerCase()}`)
     .join(" ")
-export const getNotificationTitle = (notification: UserNotification): string =>
-  notification.alert.alertTypeDescription?.trim() ||
-  toTitleCase(notification.alert.alertType)

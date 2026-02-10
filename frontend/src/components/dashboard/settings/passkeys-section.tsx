@@ -11,6 +11,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useQueryClient } from "@tanstack/react-query"
+
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
@@ -43,6 +44,7 @@ import useDeletePasskey from "@/hooks/use-delete-passkey"
 import { LINKED_2FA_METHODS_QUERY_KEY } from "@/hooks/use-linked-methods"
 import usePasskeys, { PASSKEYS_QUERY_KEY } from "@/hooks/use-passkeys"
 import useRenamePasskey from "@/hooks/use-rename-passkey"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   type Passkey,
@@ -58,19 +60,19 @@ import {
 } from "@/lib/webauthn"
 import { useTwoFactorVerificationDialog } from "./two-factor-verification-dialog-store"
 
-const SUPPORT_LABELS = {
-  checking: "Sprawdzanie",
-  supported: "Obsługiwane",
-  unsupported: "Brak wsparcia",
-} as const
+type SupportState = "checking" | "supported" | "unsupported"
+
+const SUPPORT_LABEL_KEYS: Record<SupportState, string> = {
+  checking: "passkeys.support.checking",
+  supported: "generated.dashboard.settings.supported",
+  unsupported: "passkeys.support.unsupported",
+}
 
 const SUPPORT_VARIANTS = {
   checking: "secondary",
   supported: "success",
   unsupported: "warning",
 } as const
-
-type SupportState = keyof typeof SUPPORT_LABELS
 
 interface PasskeyItemProps {
   passkey: Passkey
@@ -80,6 +82,8 @@ interface PasskeyItemProps {
 }
 
 function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
+  const t = useAppTranslations()
+
   return (
     <div
       className="group/item relative flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-linear-to-r from-background to-muted/20 p-4 shadow-xs transition-all duration-300 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5"
@@ -116,7 +120,9 @@ function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
             </div>
           </div>
           <p className="text-muted-foreground/70 text-xs">
-            Klucz #{passkey.id} • Aktywny
+            {t("generated.dashboard.settings.keyActive", {
+              value0: passkey.id,
+            })}
           </p>
         </div>
       </div>
@@ -135,7 +141,9 @@ function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
             icon={PencilEdit02Icon}
             size={14}
           />
-          <span className="sr-only">Zmień nazwę</span>
+          <span className="sr-only">
+            {t("generated.dashboard.settings.changeName")}
+          </span>
         </Button>
         <Button
           className="size-8 rounded-lg bg-destructive/5 hover:bg-destructive/10"
@@ -149,7 +157,7 @@ function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
             icon={Delete02Icon}
             size={14}
           />
-          <span className="sr-only">Usuń</span>
+          <span className="sr-only">{t("generated.shared.remove")}</span>
         </Button>
       </div>
     </div>
@@ -186,6 +194,8 @@ function PasskeysListSkeleton() {
 }
 
 function PasskeysEmptyState() {
+  const t = useAppTranslations()
+
   return (
     <div className="flex flex-col items-center gap-4 rounded-xl border border-border/60 border-dashed bg-linear-to-b from-muted/30 to-transparent px-6 py-8 text-center">
       <div className="relative">
@@ -200,11 +210,10 @@ function PasskeysEmptyState() {
       </div>
       <div className="space-y-1">
         <p className="font-medium text-foreground/80 text-sm">
-          Brak kluczy bezpieczeństwa
+          {t("generated.dashboard.settings.securityKeys2")}
         </p>
         <p className="max-w-60 text-muted-foreground text-xs">
-          Dodaj swój pierwszy klucz, aby logować się szybko i bezpiecznie bez
-          hasła.
+          {t("generated.dashboard.settings.addFirstKeyLogQuickly")}
         </p>
       </div>
     </div>
@@ -219,6 +228,8 @@ function PasskeysList({
   onDelete,
   onRetry,
 }: PasskeysListProps) {
+  const t = useAppTranslations()
+
   if (isLoading) {
     return <PasskeysListSkeleton />
   }
@@ -235,10 +246,10 @@ function PasskeysList({
         </div>
         <div className="space-y-1">
           <p className="font-medium text-foreground/80 text-sm">
-            Nie udało się załadować kluczy
+            {t("generated.dashboard.settings.failedLoadKeys")}
           </p>
           <p className="text-muted-foreground text-xs">
-            Wystąpił problem podczas pobierania danych.
+            {t("generated.dashboard.settings.problemDownloadingData")}
           </p>
         </div>
         {onRetry && (
@@ -247,7 +258,7 @@ function PasskeysList({
             onClick={onRetry}
             type="button"
           >
-            Spróbuj ponownie
+            {t("generated.shared.again")}
           </button>
         )}
       </div>
@@ -274,6 +285,8 @@ function PasskeysList({
 }
 
 export function PasskeysSection() {
+  const t = useAppTranslations()
+
   const [supportState, setSupportState] = useState<SupportState>("checking")
   const [isRegistering, setIsRegistering] = useState(false)
   const queryClient = useQueryClient()
@@ -312,12 +325,12 @@ export function PasskeysSection() {
 
   const handleAddPasskey = async () => {
     if (supportState !== "supported") {
-      toast.error("Twoje urządzenie nie obsługuje kluczy bezpieczeństwa.")
+      toast.error(t("generated.shared.deviceSupportSecurityKeys"))
       return
     }
 
     if (!navigator.credentials) {
-      toast.error("Twoja przeglądarka nie obsługuje WebAuthn.")
+      toast.error(t("generated.shared.browserSupportWebauthn"))
       return
     }
 
@@ -347,7 +360,8 @@ export function PasskeysSection() {
         }
         handleApiError(
           startError,
-          "Nie udało się rozpocząć dodawania klucza bezpieczeństwa."
+          t("generated.dashboard.settings.failedStartAddingSecurityKey"),
+          t
         )
         return
       }
@@ -361,14 +375,15 @@ export function PasskeysSection() {
         toast.error(
           getWebAuthnErrorMessage(
             credentialError,
-            "Nie udało się utworzyć klucza bezpieczeństwa."
+            t("generated.dashboard.settings.failedCreateSecurityKey"),
+            t
           )
         )
         return
       }
 
       if (!isPublicKeyCredential(credential)) {
-        toast.error("Nie udało się odczytać danych klucza bezpieczeństwa.")
+        toast.error(t("generated.shared.securityKeyDataRead"))
         return
       }
 
@@ -416,7 +431,8 @@ export function PasskeysSection() {
       }
       handleApiError(
         finishError,
-        "Nie udało się zakończyć dodawania klucza bezpieczeństwa."
+        t("generated.dashboard.settings.failedCompleteAddingSecurityKey"),
+        t
       )
       return
     }
@@ -424,7 +440,7 @@ export function PasskeysSection() {
     setIsNamingDialogOpen(false)
     setPendingCredentialJson(null)
     setNewKeyName("")
-    toast.success("Klucz bezpieczeństwa został dodany.")
+    toast.success(t("generated.dashboard.settings.securityKeyBeenAdded"))
     queryClient.invalidateQueries({ queryKey: PASSKEYS_QUERY_KEY })
     queryClient.invalidateQueries({ queryKey: LINKED_2FA_METHODS_QUERY_KEY })
   }
@@ -433,7 +449,7 @@ export function PasskeysSection() {
     setIsNamingDialogOpen(false)
     setPendingCredentialJson(null)
     setNewKeyName("")
-    toast.info("Dodawanie klucza zostało anulowane.")
+    toast.info(t("generated.dashboard.settings.addingKeyBeenCanceled"))
   }
 
   const handleOpenRename = (passkey: Passkey) => {
@@ -454,7 +470,7 @@ export function PasskeysSection() {
           setIsRenameDialogOpen(false)
           setRenamingPasskey(null)
           setRenameValue("")
-          toast.success("Nazwa klucza została zmieniona.")
+          toast.success(t("generated.dashboard.settings.keyNameBeenChanged"))
         },
       }
     )
@@ -477,7 +493,7 @@ export function PasskeysSection() {
         queryClient.invalidateQueries({
           queryKey: LINKED_2FA_METHODS_QUERY_KEY,
         })
-        toast.success("Klucz bezpieczeństwa został usunięty.")
+        toast.success(t("generated.dashboard.settings.securityKeyBeenDeleted"))
       },
     })
   }
@@ -506,15 +522,17 @@ export function PasskeysSection() {
               </div>
               <div className="space-y-1.5">
                 <CardTitle className="text-lg tracking-tight">
-                  Klucze bezpieczeństwa
+                  {t("generated.dashboard.settings.securityKeys")}
                 </CardTitle>
                 <p className="max-w-70 text-muted-foreground text-sm leading-relaxed">
-                  Loguj się szybciej i bezpieczniej bez hasła.
+                  {t(
+                    "generated.dashboard.settings.logFasterMoreSecurelyWithout"
+                  )}
                 </p>
               </div>
             </div>
             <Badge className="mt-1" variant={SUPPORT_VARIANTS[supportState]}>
-              {SUPPORT_LABELS[supportState]}
+              {t(SUPPORT_LABEL_KEYS[supportState])}
             </Badge>
           </div>
         </CardHeader>
@@ -546,10 +564,10 @@ export function PasskeysSection() {
                 </div>
                 <div className="space-y-0.5">
                   <p className="font-semibold text-sm tracking-tight">
-                    Dodaj nowy klucz
+                    {t("generated.dashboard.settings.addNewKey")}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    Biometria, klucz sprzętowy lub PIN
+                    {t("generated.dashboard.settings.biometricsDonglePin")}
                   </p>
                 </div>
               </div>
@@ -561,7 +579,7 @@ export function PasskeysSection() {
                 type="button"
               >
                 <HugeiconsIcon icon={Key01Icon} size={16} />
-                Dodaj klucz
+                {t("generated.dashboard.settings.addKey")}
               </Button>
             </div>
           </div>
@@ -588,10 +606,10 @@ export function PasskeysSection() {
               />
             </div>
             <DialogTitle className="text-center">
-              Nazwij swój klucz bezpieczeństwa
+              {t("generated.dashboard.settings.nameSecurityKey")}
             </DialogTitle>
             <DialogDescription className="text-center">
-              Nadaj nazwę, która pomoże Ci rozpoznać to urządzenie.
+              {t("generated.dashboard.settings.giveNameWillHelpRecognize")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 pt-2">
@@ -605,18 +623,18 @@ export function PasskeysSection() {
                   handleSaveNewPasskey()
                 }
               }}
-              placeholder="np. MacBook Pro, iPhone 15"
+              placeholder={t("generated.dashboard.settings.eGMacbookProIphone")}
               value={newKeyName}
             />
             <p className="text-center text-muted-foreground/70 text-xs">
-              Maksymalnie 50 znaków
+              {t("generated.dashboard.settings.maximum50Characters")}
             </p>
           </div>
           <DialogFooter className="gap-2 pt-2 sm:gap-2">
             <DialogClose
               render={<Button className="flex-1" variant="outline" />}
             >
-              Anuluj
+              {t("generated.shared.cancel")}
             </DialogClose>
             <Button
               className="flex-1"
@@ -624,7 +642,7 @@ export function PasskeysSection() {
               isLoading={isSavingName}
               onClick={handleSaveNewPasskey}
             >
-              Zapisz klucz
+              {t("generated.dashboard.settings.saveKey")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -652,10 +670,10 @@ export function PasskeysSection() {
               />
             </div>
             <DialogTitle className="text-center">
-              Zmień nazwę klucza
+              {t("generated.dashboard.settings.renameKey")}
             </DialogTitle>
             <DialogDescription className="text-center">
-              Wprowadź nową nazwę dla klucza bezpieczeństwa.
+              {t("generated.dashboard.settings.enterNewNameSecurityKey")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 pt-2">
@@ -669,18 +687,18 @@ export function PasskeysSection() {
                   handleRename()
                 }
               }}
-              placeholder="np. MacBook Pro, iPhone 15"
+              placeholder={t("generated.dashboard.settings.eGMacbookProIphone")}
               value={renameValue}
             />
             <p className="text-center text-muted-foreground/70 text-xs">
-              Maksymalnie 50 znaków
+              {t("generated.dashboard.settings.maximum50Characters")}
             </p>
           </div>
           <DialogFooter className="gap-2 pt-2 sm:gap-2">
             <DialogClose
               render={<Button className="flex-1" variant="outline" />}
             >
-              Anuluj
+              {t("generated.shared.cancel")}
             </DialogClose>
             <Button
               className="flex-1"
@@ -688,7 +706,7 @@ export function PasskeysSection() {
               isLoading={renamePasskey.isPending}
               onClick={handleRename}
             >
-              Zapisz zmiany
+              {t("generated.dashboard.settings.saveChanges")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -713,20 +731,25 @@ export function PasskeysSection() {
                 size={24}
               />
             </AlertDialogMedia>
-            <AlertDialogTitle>Usuń klucz bezpieczeństwa?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("generated.dashboard.settings.deleteSecurityKey")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Klucz &ldquo;{deletingPasskey?.name}&rdquo; zostanie trwale
-              usunięty. Nie będzie można go użyć do logowania.
+              {t("generated.dashboard.settings.keyWillPermanentlyDeletedWont", {
+                value0: deletingPasskey?.name ?? "",
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogCancel>
+              {t("generated.shared.cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction
               isLoading={deletePasskey.isPending}
               onClick={handleDelete}
               variant="destructive"
             >
-              Usuń klucz
+              {t("generated.dashboard.settings.deleteKey")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

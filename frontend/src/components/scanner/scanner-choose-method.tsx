@@ -4,6 +4,7 @@ import {
   Search01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { Button } from "../ui/button"
 import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
@@ -37,6 +38,8 @@ export function ScannerChooseMethod({
   onManual,
   onCancel,
 }: ScannerChooseMethodProps) {
+  const t = useAppTranslations()
+
   const showManualOption =
     manualLabel && manualDescription && typeof onManual === "function"
 
@@ -118,7 +121,7 @@ export function ScannerChooseMethod({
             type="button"
             variant="outline"
           >
-            Anuluj
+            {t("generated.shared.cancel")}
           </Button>
         </div>
       </div>

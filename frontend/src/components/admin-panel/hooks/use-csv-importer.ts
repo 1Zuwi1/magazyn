@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { MAX_TOAST_ROWS } from "../lib/constants"
 import { parseCsvFile } from "../warehouses/csv/utils/csv-utils"
 import type {
@@ -22,6 +23,8 @@ export function useCsvImporter<T extends CsvImporterType>({
   type,
   onImport,
 }: UseCsvImporterProps<T>) {
+  const t = useAppTranslations()
+
   const [open, setOpen] = useState(false)
   const [sourceFile, setSourceFile] = useState<File | null>(null)
   const [rawPreviewData, setRawPreviewData] = useState<
@@ -40,7 +43,7 @@ export function useCsvImporter<T extends CsvImporterType>({
     resetFile()
 
     try {
-      const result = await parseCsvFile(file, type)
+      const result = await parseCsvFile(file, type, t)
       setParseErrors(result.errors)
 
       if (result.errors.length > 0) {
@@ -52,11 +55,21 @@ export function useCsvImporter<T extends CsvImporterType>({
           .join("\n")
 
         const remaining = result.errors.length - MAX_TOAST_ROWS
-        const suffix = remaining > 0 ? `\n...i ${remaining} więcej` : ""
+        const suffix =
+          remaining > 0
+            ? t("generated.admin.shared.more", {
+                value0: remaining,
+              })
+            : ""
 
-        toast.error(`Błędy parsowania CSV (${result.errors.length})`, {
-          description: displayedErrors + suffix,
-        })
+        toast.error(
+          t("generated.admin.shared.csvParsingErrors", {
+            value0: result.errors.length,
+          }),
+          {
+            description: displayedErrors + suffix,
+          }
+        )
         return false
       }
 
@@ -66,7 +79,7 @@ export function useCsvImporter<T extends CsvImporterType>({
       setPreviewHeaders(result.headers)
       return true
     } catch {
-      toast.error("Nie udało się przetworzyć pliku CSV")
+      toast.error(t("generated.admin.shared.csvFileFailedProcess"))
       resetFile()
       return false
     }
@@ -82,12 +95,12 @@ export function useCsvImporter<T extends CsvImporterType>({
 
   async function confirmImport() {
     if (parseErrors.length > 0) {
-      toast.error("Plik CSV zawiera błędy. Popraw plik przed importem.")
+      toast.error(t("generated.admin.shared.csvFileContainsErrorsCorrect"))
       return
     }
 
     if (!sourceFile) {
-      toast.error("Najpierw wybierz plik CSV")
+      toast.error(t("generated.admin.shared.firstSelectCsvFile"))
       return
     }
 

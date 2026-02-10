@@ -7,6 +7,8 @@ import {
   serializeCredential,
 } from "./webauthn"
 
+const t = (key: string): string => key
+
 const setupWebAuthnGlobals = () => {
   if (typeof window === "undefined") {
     global.window = {} as any
@@ -117,13 +119,13 @@ describe("getWebAuthnErrorMessage", () => {
   it("maps DOMException names to user-friendly messages", () => {
     const error = new DOMException("", "NotAllowedError")
 
-    expect(getWebAuthnErrorMessage(error, "fallback")).toBe(
-      "Operacja została anulowana lub przekroczono limit czasu."
+    expect(getWebAuthnErrorMessage(error, "fallback", t)).toBe(
+      "generated.security.webauthn.operationCanceledTimedOut"
     )
   })
 
   it("returns fallback for non-DOMException", () => {
-    expect(getWebAuthnErrorMessage(new Error("boom"), "fallback")).toBe(
+    expect(getWebAuthnErrorMessage(new Error("boom"), "fallback", t)).toBe(
       "fallback"
     )
   })

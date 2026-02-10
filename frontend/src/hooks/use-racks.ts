@@ -3,7 +3,9 @@ import {
   useInfiniteQuery,
   useQueries,
 } from "@tanstack/react-query"
+
 import { useMemo } from "react"
+import { useAppTranslations } from "@/i18n/use-translations"
 import {
   apiFetch,
   type FetchError,
@@ -153,14 +155,24 @@ export function useUpdateRack() {
 
 export function useImportRacks() {
   return useApiMutation({
-    mutationFn: async (file: File) => {
-      return await apiFetch("/api/racks/import", RackImportSchema, {
-        method: "POST",
-        body: { file },
-        formData: (formData, data) => {
-          formData.append("file", data.file)
-        },
-      })
+    mutationFn: async ({
+      file,
+      warehouseId,
+    }: {
+      file: File
+      warehouseId: number
+    }) => {
+      return await apiFetch(
+        `/api/racks/import?warehouseId=${warehouseId}`,
+        RackImportSchema,
+        {
+          method: "POST",
+          body: { file },
+          formData: (formData, data) => {
+            formData.append("file", data.file)
+          },
+        }
+      )
     },
     onSuccess: (_, __, ___, context) => {
       context.client.invalidateQueries({ queryKey: Racks_QUERY_KEY })
@@ -182,13 +194,15 @@ export function useInfiniteRacks(
   }: InfiniteRacksParams,
   options?: SafeInfiniteQueryOptions<RacksList, number>
 ) {
+  const t = useAppTranslations()
+
   const infiniteQuery = useInfiniteQuery({
     queryKey: ["infinite-racks", warehouseId, pageSize],
     enabled: warehouseId !== null,
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
       if (warehouseId === null) {
-        throw new Error("Brak aktywnego magazynu.")
+        throw new Error(t("generated.hooks.activeStorage"))
       }
 
       return await apiFetch(

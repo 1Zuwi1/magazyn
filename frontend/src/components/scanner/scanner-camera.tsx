@@ -16,7 +16,9 @@ import {
   NotFoundException,
   type Result,
 } from "@zxing/library"
+
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { Button } from "../ui/button"
 import { TAB_TRIGGERS } from "./scanner"
@@ -93,6 +95,8 @@ export function ScannerCamera({
   onScan,
   isLoading,
 }: ScannerCameraProps) {
+  const t = useAppTranslations()
+
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const controlsRef = useRef<IScannerControls | null>(null)
   const readerRef = useRef<BrowserMultiFormatReader | null>(null)
@@ -119,7 +123,7 @@ export function ScannerCamera({
     canvas.height = video.videoHeight
     const ctx = canvas.getContext("2d")
     if (!ctx) {
-      setErrorMsg("Nie udało się przygotować podglądu zdjęcia.")
+      setErrorMsg(t("generated.scanner.failedPreparePhotoPreview"))
       return
     }
 
@@ -127,7 +131,7 @@ export function ScannerCamera({
     canvas.toBlob(
       (blob) => {
         if (!blob) {
-          setErrorMsg("Nie udało się wykonać zdjęcia. Spróbuj ponownie.")
+          setErrorMsg(t("generated.scanner.failedTakePhotoAgain"))
           return
         }
 
@@ -137,7 +141,7 @@ export function ScannerCamera({
       "image/jpeg",
       0.85
     )
-  }, [onTakePhoto])
+  }, [onTakePhoto, t])
 
   const modeLabel = TAB_TRIGGERS.find(
     (trigger) => trigger.action === mode
@@ -188,11 +192,13 @@ export function ScannerCamera({
 
       if (err && !isRecoverableDecodeError(err)) {
         const msg =
-          err instanceof Error ? err.message : "Unexpected scanner error."
+          err instanceof Error
+            ? err.message
+            : t("generated.scanner.unexpectedScannerErrorOccurred")
         setErrorMsg(msg)
       }
     },
-    [handleDecodedText]
+    [handleDecodedText, t]
   )
 
   const stop = useCallback(() => {
@@ -248,12 +254,14 @@ export function ScannerCamera({
         }
 
         const msg =
-          e instanceof Error ? e.message : "Could not start the camera scanner."
+          e instanceof Error
+            ? e.message
+            : t("generated.scanner.failedStartCameraScanner")
         setErrorMsg(msg)
         stop()
       }
     },
-    [constraints, handleScanResult, stop, mode]
+    [constraints, handleScanResult, stop, mode, t]
   )
 
   useEffect(() => {
@@ -282,7 +290,7 @@ export function ScannerCamera({
         variant="ghost"
       >
         <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
-        <span className="sr-only">Close</span>
+        <span className="sr-only">{t("generated.shared.close")}</span>
       </Button>
 
       {errorMsg ? (
@@ -307,15 +315,14 @@ export function ScannerCamera({
             {/* Text content */}
             <div className="max-w-sm space-y-2">
               <h2 className="font-semibold text-foreground text-xl">
-                Problem z kamerą
+                {t("generated.scanner.cameraIssue")}
               </h2>
               <p className="text-muted-foreground text-sm">
-                Upewnij się że Twoja kamera jest podłączona i dostępna oraz że
-                udzieliłeś/aś pozwolenia na jej użycie.
+                {t("generated.scanner.makeSureCameraConnectedAvailable")}
               </p>
               <details className="mt-3">
                 <summary className="cursor-pointer text-muted-foreground text-xs hover:text-foreground">
-                  Szczegóły techniczne
+                  {t("generated.scanner.technicalDetails")}
                 </summary>
                 <p className="mt-2 rounded-lg bg-muted/50 p-2 font-mono text-muted-foreground text-xs">
                   {errorMsg}
@@ -335,7 +342,7 @@ export function ScannerCamera({
                 type="button"
                 variant="outline"
               >
-                Spróbuj ponownie
+                {t("generated.shared.again")}
               </Button>
             </div>
           </div>
@@ -351,11 +358,13 @@ export function ScannerCamera({
             )}
           >
             <p className="h-full w-full text-center">
-              Skanujesz w magazynie: {warehouseName}
+              {t("generated.scanner.scanningWarehouse", {
+                value0: warehouseName,
+              })}
             </p>
             {modeLabel ? (
               <p className="rounded-full bg-black/50 px-4 py-3 text-center text-sm text-white backdrop-blur-sm">
-                Jesteś w trybie:{" "}
+                {t("generated.scanner.mode")}{" "}
                 <span className="font-medium">{modeLabel}</span>.
               </p>
             ) : null}
@@ -409,7 +418,7 @@ export function ScannerCamera({
                 variant="ghost"
               >
                 <HugeiconsIcon className="size-4" icon={Camera01Icon} />
-                Rozpoznaj produkt
+                {t("generated.scanner.identifyProduct")}
               </Button>
             </div>
           )}

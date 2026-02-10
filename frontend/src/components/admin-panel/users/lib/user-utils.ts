@@ -1,20 +1,24 @@
 import type { EditableAdminUser } from "@/components/admin-panel/users/components/action-dialog"
 import type { AdminTeamOption, AdminUser } from "@/hooks/use-admin-users"
+import type { AppTranslate } from "@/i18n/use-translations"
 
 export const TABLE_PAGE_SIZE = 10
 
-export const getStatusLabel = (status: AdminUser["account_status"]): string => {
+export const getStatusLabel = (
+  status: AdminUser["account_status"],
+  t: AppTranslate
+): string => {
   if (status === "ACTIVE") {
-    return "Aktywne"
+    return t("generated.shared.active")
   }
   if (status === "PENDING_VERIFICATION") {
-    return "Oczekuje"
+    return t("generated.admin.users.pending")
   }
   if (status === "LOCKED") {
-    return "Zablokowane"
+    return t("generated.shared.blocked")
   }
   if (status === "DISABLED") {
-    return "Wyłączone"
+    return t("generated.shared.disabled")
   }
   return status
 }
@@ -47,11 +51,6 @@ export const resolveTeamValue = (
   const exactValueMatch = teams.find((team) => team.value === normalizedTeam)
   if (exactValueMatch) {
     return exactValueMatch.value
-  }
-
-  const labelMatch = teams.find((team) => team.label === normalizedTeam)
-  if (labelMatch) {
-    return labelMatch.value
   }
 
   return ""

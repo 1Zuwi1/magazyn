@@ -3,7 +3,9 @@
 import { ArrowRight02Icon, RefreshIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import Link from "next/link"
+
 import { Skeleton } from "@/components/ui/skeleton"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 interface AdminStatCardProps {
@@ -80,6 +82,8 @@ export function AdminStatCard({
   onRetry,
   trend,
 }: AdminStatCardProps) {
+  const t = useAppTranslations()
+
   const styles = getVariantStyles(variant)
   const errorStyles = getVariantStyles("danger")
   const activeStyles = isError ? errorStyles : styles
@@ -122,7 +126,7 @@ export function AdminStatCard({
             <div className="space-y-1">
               <p className="text-muted-foreground text-sm">{title}</p>
               <p className="font-medium text-destructive text-sm">
-                Nie udalo sie pobrac danych
+                {t("generated.admin.overview.failedFetchData")}
               </p>
             </div>
             <div
@@ -146,11 +150,11 @@ export function AdminStatCard({
                 type="button"
               >
                 <HugeiconsIcon className="size-3.5" icon={RefreshIcon} />
-                Ponów próbę
+                {t("generated.admin.overview.retry")}
               </button>
             ) : (
               <p className="text-muted-foreground text-sm">
-                Spróbuj ponownie później
+                {t("generated.admin.overview.againLater")}
               </p>
             )}
           </div>

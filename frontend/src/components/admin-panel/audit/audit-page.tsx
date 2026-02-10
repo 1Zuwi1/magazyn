@@ -11,7 +11,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { format } from "date-fns"
-import { pl } from "date-fns/locale"
+import { useLocale } from "next-intl"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -35,25 +35,30 @@ import {
   useAuditInboundOperations,
   useAuditOutboundOperations,
 } from "@/hooks/use-audit"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type {
   AuditInboudOperationsSchema,
   AuditOutboundOperationsSchema,
 } from "@/lib/schemas"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { ADMIN_NAV_LINKS } from "../lib/constants"
+import { getAdminNavLinks } from "../lib/constants"
 
 type InboundList = InferApiOutput<typeof AuditInboudOperationsSchema, "GET">
 type InboundOperation = InboundList["content"][number]
 
 type OutboundList = InferApiOutput<typeof AuditOutboundOperationsSchema, "GET">
 type OutboundOperation = OutboundList["content"][number]
+type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
 
 const PAGE_SIZE = 20
 
-const formatDateTime = (date: string): string => {
+const formatDateTime = (date: string, dateFnsLocale: DateFnsLocale): string => {
   try {
-    return format(new Date(date), "dd MMM yyyy, HH:mm", { locale: pl })
+    return format(new Date(date), "dd MMM yyyy, HH:mm", {
+      locale: dateFnsLocale,
+    })
   } catch {
     return "\u2014"
   }
@@ -72,13 +77,17 @@ function DateRangeFilter({
   onEndDateChange: (value: string) => void
   onClear: () => void
 }) {
+  const t = useAppTranslations()
+
   const hasFilter = startDate !== "" || endDate !== ""
 
   return (
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-1.5 text-muted-foreground">
         <HugeiconsIcon className="size-3.5" icon={Calendar03Icon} />
-        <span className="hidden text-xs sm:inline">Zakres dat</span>
+        <span className="hidden text-xs sm:inline">
+          {t("generated.admin.audit.dateRange")}
+        </span>
       </div>
       <div className="flex items-center gap-1.5">
         <DatePicker
@@ -128,13 +137,17 @@ function InboundTableContent({
   onStartDateChange,
   onEndDateChange,
   onClearDates,
+  dateFnsLocale,
 }: {
   startDate: string
   endDate: string
   onStartDateChange: (value: string) => void
   onEndDateChange: (value: string) => void
   onClearDates: () => void
+  dateFnsLocale: DateFnsLocale
 }) {
+  const t = useAppTranslations()
+
   const [page, setPage] = useState(1)
 
   const query = useAuditInboundOperations({
@@ -164,21 +177,25 @@ function InboundTableContent({
           <span className="font-mono font-semibold text-primary text-sm tabular-nums">
             {totalElements}
           </span>
-          <span className="text-muted-foreground text-xs">operacji</span>
+          <span className="text-muted-foreground text-xs">
+            {t("generated.admin.audit.pluralLabel", {
+              value0: totalElements,
+            })}
+          </span>
         </div>
       </div>
 
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/30">
-            <TableHead>Data</TableHead>
-            <TableHead>Przedmiot</TableHead>
-            <TableHead>Kod</TableHead>
-            <TableHead>Regal</TableHead>
-            <TableHead>Pozycja</TableHead>
-            <TableHead>Ilosc</TableHead>
-            <TableHead>Asortyment</TableHead>
-            <TableHead>Przyjal</TableHead>
+            <TableHead>{t("generated.admin.audit.date")}</TableHead>
+            <TableHead>{t("generated.admin.audit.item")}</TableHead>
+            <TableHead>{t("generated.shared.code")}</TableHead>
+            <TableHead>{t("generated.admin.audit.rack")}</TableHead>
+            <TableHead>{t("generated.shared.position")}</TableHead>
+            <TableHead>{t("generated.admin.audit.quantity")}</TableHead>
+            <TableHead>{t("generated.shared.assortment")}</TableHead>
+            <TableHead>{t("generated.admin.audit.heAccepted")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -201,8 +218,10 @@ function InboundTableContent({
                   <FilterEmptyState />
                 ) : (
                   <EmptyState
-                    description="Nie znaleziono żadnych operacji w bazie danych."
-                    title="Brak operacji przyjęcia"
+                    description={t(
+                      "generated.admin.audit.operationsFoundDatabase"
+                    )}
+                    title={t("generated.admin.audit.admissionOperation")}
                   />
                 )}
               </TableCell>
@@ -217,7 +236,7 @@ function InboundTableContent({
                     icon={Time01Icon}
                   />
                   <span className="text-xs">
-                    {formatDateTime(op.operationTimestamp)}
+                    {formatDateTime(op.operationTimestamp, dateFnsLocale)}
                   </span>
                 </div>
               </TableCell>
@@ -271,13 +290,17 @@ function OutboundTableContent({
   onStartDateChange,
   onEndDateChange,
   onClearDates,
+  dateFnsLocale,
 }: {
   startDate: string
   endDate: string
   onStartDateChange: (value: string) => void
   onEndDateChange: (value: string) => void
   onClearDates: () => void
+  dateFnsLocale: DateFnsLocale
 }) {
+  const t = useAppTranslations()
+
   const [page, setPage] = useState(1)
 
   const query = useAuditOutboundOperations({
@@ -307,22 +330,26 @@ function OutboundTableContent({
           <span className="font-mono font-semibold text-primary text-sm tabular-nums">
             {totalElements}
           </span>
-          <span className="text-muted-foreground text-xs">operacji</span>
+          <span className="text-muted-foreground text-xs">
+            {t("generated.admin.audit.pluralLabel", {
+              value0: totalElements,
+            })}
+          </span>
         </div>
       </div>
 
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/30">
-            <TableHead>Data</TableHead>
-            <TableHead>Przedmiot</TableHead>
-            <TableHead>Kod</TableHead>
-            <TableHead>Regal</TableHead>
-            <TableHead>Pozycja</TableHead>
-            <TableHead>Ilosc</TableHead>
-            <TableHead>Asortyment</TableHead>
-            <TableHead>Wydal</TableHead>
-            <TableHead>FIFO</TableHead>
+            <TableHead>{t("generated.admin.audit.date")}</TableHead>
+            <TableHead>{t("generated.admin.audit.item")}</TableHead>
+            <TableHead>{t("generated.shared.code")}</TableHead>
+            <TableHead>{t("generated.admin.audit.rack")}</TableHead>
+            <TableHead>{t("generated.shared.position")}</TableHead>
+            <TableHead>{t("generated.admin.audit.quantity")}</TableHead>
+            <TableHead>{t("generated.shared.assortment")}</TableHead>
+            <TableHead>{t("generated.admin.audit.heSpent")}</TableHead>
+            <TableHead>{t("generated.admin.audit.fifo")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -345,8 +372,10 @@ function OutboundTableContent({
                   <FilterEmptyState />
                 ) : (
                   <EmptyState
-                    description="Nie znaleziono żadnych operacji w bazie danych."
-                    title="Brak operacji wydania"
+                    description={t(
+                      "generated.admin.audit.operationsFoundDatabase"
+                    )}
+                    title={t("generated.admin.audit.releaseOperation")}
                   />
                 )}
               </TableCell>
@@ -361,7 +390,7 @@ function OutboundTableContent({
                     icon={Time01Icon}
                   />
                   <span className="text-xs">
-                    {formatDateTime(op.operationTimestamp)}
+                    {formatDateTime(op.operationTimestamp, dateFnsLocale)}
                   </span>
                 </div>
               </TableCell>
@@ -396,7 +425,9 @@ function OutboundTableContent({
               </TableCell>
               <TableCell>
                 <Badge variant={op.fifoCompliant ? "success" : "warning"}>
-                  {op.fifoCompliant ? "Tak" : "Nie"}
+                  {op.fifoCompliant
+                    ? t("generated.admin.shared.yes")
+                    : t("generated.admin.shared.label")}
                 </Badge>
               </TableCell>
             </TableRow>
@@ -415,6 +446,11 @@ function OutboundTableContent({
 }
 
 export default function AuditMain() {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
+  const dateFnsLocale = getDateFnsLocale(locale)
+
   const [inboundStartDate, setInboundStartDate] = useState("")
   const [inboundEndDate, setInboundEndDate] = useState("")
   const [outboundStartDate, setOutboundStartDate] = useState("")
@@ -433,13 +469,15 @@ export default function AuditMain() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description="Historia operacji magazynowych - przyjecia i wydania"
+        description={t(
+          "generated.admin.audit.warehouseOperationsHistoryInboundOutbound"
+        )}
         icon={Analytics01Icon}
-        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+        navLinks={getAdminNavLinks(t).map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title="Audyt operacji"
+        title={t("generated.shared.operationsAudit")}
       />
 
       <Tabs defaultValue="inbound">
@@ -448,17 +486,18 @@ export default function AuditMain() {
             <TabsList className="h-auto" variant="line">
               <TabsTrigger className="py-2.5" value="inbound">
                 <HugeiconsIcon className="size-3.5" icon={PackageReceiveIcon} />
-                Przyjecia
+                {t("generated.admin.audit.parties")}
               </TabsTrigger>
               <TabsTrigger className="py-2.5" value="outbound">
                 <HugeiconsIcon className="size-3.5" icon={PackageIcon} />
-                Wydania
+                {t("generated.admin.audit.releases")}
               </TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="inbound">
             <InboundTableContent
+              dateFnsLocale={dateFnsLocale}
               endDate={inboundEndDate}
               onClearDates={handleClearInboundDates}
               onEndDateChange={(v) => {
@@ -473,6 +512,7 @@ export default function AuditMain() {
 
           <TabsContent value="outbound">
             <OutboundTableContent
+              dateFnsLocale={dateFnsLocale}
               endDate={outboundEndDate}
               onClearDates={handleClearOutboundDates}
               onEndDateChange={(v) => {

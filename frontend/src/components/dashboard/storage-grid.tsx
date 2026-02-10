@@ -9,6 +9,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useLocale } from "next-intl"
 import { useState } from "react"
 import {
   AlertDialog,
@@ -30,10 +31,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { Badge } from "../ui/badge"
-import { getOccupancyPercentage, pluralize } from "./utils/helpers"
+import { getOccupancyPercentage } from "./utils/helpers"
 
 const OCCUPANCY_WARNING_THRESHOLD = 75
 const OCCUPANCY_CRITICAL_THRESHOLD = 90
@@ -121,6 +123,9 @@ function WarehouseGridSkeleton() {
 }
 
 export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
   const router = useRouter()
   const [visualizationTarget, setVisualizationTarget] = useState<{
     id: number
@@ -140,10 +145,10 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
           />
         </div>
         <p className="mt-4 font-medium text-muted-foreground">
-          Brak magazynów do wyświetlenia
+          {t("generated.dashboard.storage.warehousesDisplay")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Zmień filtry lub dodaj nowy magazyn
+          {t("generated.dashboard.storage.changeFiltersAddNewWarehouse")}
         </p>
       </div>
     )
@@ -183,13 +188,9 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                     <CardTitle className="text-lg">{warehouse.name}</CardTitle>
                     <p className="mt-0.5 flex items-center gap-1 text-muted-foreground text-xs">
                       <HugeiconsIcon className="size-3" icon={Layers01Icon} />
-                      {warehouse.racksCount}{" "}
-                      {pluralize(
-                        warehouse.racksCount,
-                        "regał",
-                        "regały",
-                        "regałów"
-                      )}
+                      {t("generated.shared.pluralLabel", {
+                        value0: warehouse.racksCount,
+                      })}
                     </p>
                   </div>
                 </div>
@@ -203,12 +204,14 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
               {/* Occupancy Bar */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Zapełnienie</span>
+                  <span className="text-muted-foreground">
+                    {t("generated.shared.occupancy")}
+                  </span>
                   <span className="font-medium font-mono">
-                    {warehouse.occupiedSlots.toLocaleString("pl-PL")} /{" "}
+                    {warehouse.occupiedSlots.toLocaleString(locale)} /{" "}
                     {(
                       warehouse.occupiedSlots + warehouse.freeSlots
-                    ).toLocaleString("pl-PL")}
+                    ).toLocaleString(locale)}
                   </span>
                 </div>
                 <div className="relative h-2 overflow-hidden rounded-full bg-secondary">
@@ -226,18 +229,18 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="rounded-md bg-muted/50 px-2 py-1.5">
                   <span className="block font-mono font-semibold text-sm">
-                    {warehouse.occupiedSlots.toLocaleString("pl-PL")}
+                    {warehouse.occupiedSlots.toLocaleString(locale)}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    Zajęte
+                    {t("generated.dashboard.shared.occupied")}
                   </span>
                 </div>
                 <div className="rounded-md bg-muted/50 px-2 py-1.5">
                   <span className="block font-mono font-semibold text-sm">
-                    {warehouse.freeSlots.toLocaleString("pl-PL")}
+                    {warehouse.freeSlots.toLocaleString(locale)}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    Wolne
+                    {t("generated.dashboard.shared.free2")}
                   </span>
                 </div>
                 <div className="rounded-md bg-muted/50 px-2 py-1.5">
@@ -245,12 +248,9 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                     {warehouse.racksCount}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    {pluralize(
-                      warehouse.racksCount,
-                      "Regał",
-                      "Regały",
-                      "Regałów"
-                    )}
+                    {t("generated.dashboard.storage.pluralLabel", {
+                      value0: warehouse.racksCount,
+                    })}
                   </span>
                 </div>
               </div>
@@ -265,7 +265,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                 })}
                 href={`/dashboard/warehouse/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}`}
               >
-                <span>Regały</span>
+                <span>{t("generated.shared.racks2")}</span>
                 <HugeiconsIcon className="size-3.5" icon={ArrowRight01Icon} />
               </Link>
               <Button
@@ -280,7 +280,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                 variant="outline"
               >
                 <HugeiconsIcon className="size-3.5" icon={CubeIcon} />
-                <span>3D</span>
+                <span>{t("generated.dashboard.storage.value3d")}</span>
               </Button>
             </CardFooter>
           </Card>
@@ -304,15 +304,17 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                 size={24}
               />
             </AlertDialogMedia>
-            <AlertDialogTitle>Widok 3D magazynu</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("generated.dashboard.shared.value3dViewWarehouse")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Wizualizacja 3D pobiera dane o wszystkich magazynach, regałach i
-              przedmiotach. Przy dużej ilości danych może to znacząco obciążyć
-              połączenie i zużyć dużo transferu.
+              {t("generated.dashboard.shared.value3dVisualizationFetchesData")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogCancel>
+              {t("generated.shared.cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (visualizationTarget) {
@@ -322,7 +324,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                 }
               }}
             >
-              Otwórz widok 3D
+              {t("generated.dashboard.shared.open3dView")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

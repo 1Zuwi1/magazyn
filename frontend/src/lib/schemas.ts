@@ -1,7 +1,9 @@
 import z from "zod"
 import { OTP_LENGTH } from "@/config/constants"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { createApiSchema } from "./create-api-schema"
 import { AlertSchema } from "./schemas/monitoring-schemas"
+import { createZodMessage } from "./zod-message"
 
 const txtEncoder = new TextEncoder()
 
@@ -19,28 +21,44 @@ export type ResendType = z.infer<typeof ResendMethods>
 
 export const PasswordSchema = z
   .string()
-  .min(8, "Hasło musi mieć co najmniej 8 znaków")
-  .regex(/[A-Z]/, "Hasło musi zawierać co najmniej jedną wielką literę")
-  .regex(/[a-z]/, "Hasło musi zawierać co najmniej jedną małą literę")
-  .regex(/[0-9]/, "Hasło musi zawierać co najmniej jedną cyfrę")
+  .min(8, createZodMessage("generated.validation.passwordMustLeast8Characters"))
+  .regex(
+    /[A-Z]/,
+    createZodMessage("generated.validation.passwordMustContainLeastOne")
+  )
+  .regex(
+    /[a-z]/,
+    createZodMessage(
+      "generated.validation.passwordMustContainLeastOneLowercase"
+    )
+  )
+  .regex(
+    /[0-9]/,
+    createZodMessage("generated.validation.passwordMustContainLeastOneDigit")
+  )
   .regex(
     /[!@#$%^&*()_\-+=[\]{};':"\\|,.<>/?]/,
-    "Hasło musi zawierać co najmniej jeden znak specjalny"
+    createZodMessage("generated.validation.passwordMustContainLeastOneSpecial")
   )
   .refine((value) => {
     const bytes = txtEncoder.encode(value).length
     return bytes <= 72
-  }, "Hasło nie może przekraczać 72 bajtów w kodowaniu UTF-8.")
+  }, createZodMessage("generated.validation.passwordCannotExceed72Bytes"))
 
 const OTPSchema = z
   .string()
   .nullable()
-  .refine((val) => {
-    if (val === null) {
-      return true
-    }
-    return val.length === OTP_LENGTH
-  }, `Kod 2FA musi mieć dokładnie ${OTP_LENGTH} znaków`)
+  .refine(
+    (val) => {
+      if (val === null) {
+        return true
+      }
+      return val.length === OTP_LENGTH
+    },
+    createZodMessage("generated.validation.value2faCodeMustExactly", {
+      value0: OTP_LENGTH,
+    })
+  )
 
 export const Check2FASchema = createApiSchema({
   POST: {
@@ -62,11 +80,18 @@ export const BackupCodesGenerateSchema = createApiSchema({
 export const ChangePasswordFormSchema = z
   .object({
     newPassword: PasswordSchema,
-    oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
-    confirmPassword: z.string().min(1, "Potwierdzenie hasła jest wymagane"),
+    oldPassword: z
+      .string()
+      .min(1, createZodMessage("generated.validation.currentPasswordRequired")),
+    confirmPassword: z
+      .string()
+      .min(
+        1,
+        createZodMessage("generated.validation.passwordConfirmationRequired")
+      ),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Hasła nie są zgodne",
+    message: createZodMessage("generated.shared.passwordsMatch"),
     path: ["confirmPassword"],
   })
 
@@ -74,7 +99,12 @@ export const ChangePasswordSchema = createApiSchema({
   PATCH: {
     input: z.object({
       newPassword: PasswordSchema,
-      oldPassword: z.string().min(1, "Obecne hasło jest wymagane"),
+      oldPassword: z
+        .string()
+        .min(
+          1,
+          createZodMessage("generated.validation.currentPasswordRequired")
+        ),
     }),
     output: z.null(),
   },
@@ -83,7 +113,9 @@ export const ChangePasswordSchema = createApiSchema({
 export const LoginSchema = createApiSchema({
   POST: {
     input: z.object({
-      email: z.email("Nieprawidłowy adres email"),
+      email: z.email(
+        createZodMessage("generated.validation.invalidEmailAddress")
+      ),
       password: PasswordSchema,
       rememberMe: z.boolean(),
     }),
@@ -95,10 +127,14 @@ export const RegisterSchema = createApiSchema({
     input: z.object({
       fullName: z
         .string()
-        .min(2, "Imię i nazwisko musi mieć co najmniej 2 znaki"),
-      email: z.email("Nieprawidłowy adres email"),
+        .min(2, createZodMessage("generated.validation.fullNameMustLeast2")),
+      email: z.email(
+        createZodMessage("generated.validation.invalidEmailAddress")
+      ),
       password: PasswordSchema,
-      phoneNumber: z.e164("Nieprawidłowy numer telefonu"),
+      phoneNumber: z.e164(
+        createZodMessage("generated.validation.invalidPhoneNumber")
+      ),
     }),
     output: z.null(),
   },
@@ -159,7 +195,7 @@ export const WebAuthnFinishRegistrationSchema = createApiSchema({
       keyName: z
         .string()
         .min(1, "Nazwa klucza jest wymagana")
-        .max(50, "Nazwa jest za długa"),
+        .max(50, createZodMessage("generated.validation.nameTooLong")),
     }),
     output: z.null(),
   },
@@ -188,7 +224,7 @@ export const FormRegisterSchema = RegisterSchema.shape.POST.shape.input
     confirmPassword: PasswordSchema,
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Hasła nie są zgodne",
+    message: createZodMessage("generated.shared.passwordsMatch"),
     path: ["confirmPassword"],
   })
 
@@ -196,7 +232,12 @@ export const Verify2FASchema = createApiSchema({
   POST: {
     input: z.object({
       method: TFAMethods,
-      code: z.string().length(6, "Kod musi mieć dokładnie 6 cyfr"),
+      code: z
+        .string()
+        .length(
+          6,
+          createZodMessage("generated.validation.codeMustExactly6Digits")
+        ),
     }),
     output: z.null(),
   },
@@ -227,7 +268,12 @@ export const TFAAuthenticatorStartSchema = createApiSchema({
 export const TFAAuthenticatorFinishSchema = createApiSchema({
   POST: {
     input: z.object({
-      code: z.string().length(6, "Kod musi mieć dokładnie 6 cyfr"),
+      code: z
+        .string()
+        .length(
+          6,
+          createZodMessage("generated.validation.codeMustExactly6Digits")
+        ),
     }),
     output: z.null(),
   },
@@ -320,7 +366,7 @@ export const PasskeyRenameSchema = createApiSchema({
       name: z
         .string()
         .min(1, "Nazwa jest wymagana")
-        .max(50, "Nazwa jest za długa"),
+        .max(50, createZodMessage("generated.validation.nameTooLong")),
     }),
     output: z.null(),
   },
@@ -460,7 +506,6 @@ const AdminUserSchema = z.object({
 
 const TeamOptionSchema = z.object({
   value: AdminTeamSchema,
-  label: z.string().min(1),
 })
 
 const ImportErrorSchema = z.object({
@@ -1165,7 +1210,7 @@ export const AuditOutboundOperationsSchema = createApiSchema({
 
 // --- Alerts ---
 
-const AlertTypeSchema = z.enum([
+export const AlertTypeSchema = z.enum([
   "WEIGHT_EXCEEDED",
   "TEMPERATURE_TOO_HIGH",
   "TEMPERATURE_TOO_LOW",
@@ -1177,6 +1222,66 @@ const AlertTypeSchema = z.enum([
   "ASSORTMENT_EXPIRED",
   "ASSORTMENT_CLOSE_TO_EXPIRY",
 ])
+
+export type AlertType = z.infer<typeof AlertTypeSchema>
+
+const ALERT_TYPE_OPTION_KEYS: ReadonlyArray<{
+  value: AlertType
+  labelKey: string
+}> = [
+  {
+    value: "WEIGHT_EXCEEDED",
+    labelKey: "generated.validation.exceedingWeight",
+  },
+  {
+    value: "TEMPERATURE_TOO_HIGH",
+    labelKey: "generated.validation.temperatureTooHigh",
+  },
+  {
+    value: "TEMPERATURE_TOO_LOW",
+    labelKey: "generated.validation.temperatureTooLow",
+  },
+  {
+    value: "LOW_VISUAL_SIMILARITY",
+    labelKey: "generated.validation.lowVisualCompatibility",
+  },
+  {
+    value: "ITEM_TEMPERATURE_TOO_HIGH",
+    labelKey: "generated.validation.productTemperatureTooHigh",
+  },
+  {
+    value: "ITEM_TEMPERATURE_TOO_LOW",
+    labelKey: "generated.validation.productTemperatureTooLow",
+  },
+  {
+    value: "EMBEDDING_GENERATION_COMPLETED",
+    labelKey: "generated.validation.embeddingGenerationComplete",
+  },
+  {
+    value: "EMBEDDING_GENERATION_FAILED",
+    labelKey: "generated.validation.embeddingGenerationFailed",
+  },
+  {
+    value: "ASSORTMENT_EXPIRED",
+    labelKey: "generated.validation.assortmentExpired",
+  },
+  {
+    value: "ASSORTMENT_CLOSE_TO_EXPIRY",
+    labelKey: "generated.validation.assortmentCloseExpiration",
+  },
+] as const
+
+export const getAlertTypeOptions = (
+  t: AppTranslate
+): ReadonlyArray<{ value: AlertType; label: string }> =>
+  ALERT_TYPE_OPTION_KEYS.map((option) => ({
+    value: option.value,
+    label: t(option.labelKey),
+  }))
+
+export const findAlertTitle = (alert: { alertType: string }, t: AppTranslate) =>
+  getAlertTypeOptions(t).find((option) => option.value === alert.alertType)
+    ?.label || alert.alertType
 
 export const AlertsSchema = createApiSchema({
   GET: {

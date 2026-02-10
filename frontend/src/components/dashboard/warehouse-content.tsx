@@ -8,19 +8,20 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useDebouncedValue } from "@tanstack/react-pacer"
+import { useLocale } from "next-intl"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { PageHeader } from "@/components/dashboard/page-header"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import useWarehouses from "@/hooks/use-warehouses"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { normalizeTranscript } from "@/lib/voice/commands"
 import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
 import { ErrorEmptyState } from "../ui/empty-state"
+import { PageHeader } from "./page-header"
 import { DEFAULT_FILTERS, WarehouseFilters } from "./storage-filters"
 import { WarehouseGrid } from "./storage-grid"
 import type { FilterState } from "./types"
-import { pluralize } from "./utils/helpers"
 
 const OCCUPANCY_WARNING_THRESHOLD = 75
 const OCCUPANCY_CRITICAL_THRESHOLD = 90
@@ -58,6 +59,9 @@ const isWarehouseMatch = ({
 }
 
 export const WarehouseContent = () => {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
   const pendingAction = useVoiceCommandStore((state) => state.pendingAction)
   const clearPendingAction = useVoiceCommandStore(
     (state) => state.clearPendingAction
@@ -90,14 +94,18 @@ export const WarehouseContent = () => {
 
     if (query) {
       setFilters((prev) => ({ ...prev, query }))
-      toast.success(`Uruchomiono sprawdzanie stanu dla "${query}"`)
+      toast.success(
+        t("generated.dashboard.warehouse.statusCheckStarted", {
+          value0: query,
+        })
+      )
     } else {
-      toast.success("Uruchomiono sprawdzanie stanu magazynowego")
+      toast.success(t("generated.dashboard.warehouse.stockCheckingBeenStarted"))
     }
 
     setPendingVoiceWarehouseName(normalizedWarehouseName ?? null)
     clearPendingAction()
-  }, [pendingAction, clearPendingAction])
+  }, [pendingAction, clearPendingAction, t])
 
   useEffect(() => {
     if (!pendingVoiceWarehouseName || isPending) {
@@ -105,7 +113,7 @@ export const WarehouseContent = () => {
     }
 
     if (isError) {
-      toast.error("Nie udało się zweryfikować wskazanego magazynu.")
+      toast.error(t("generated.dashboard.warehouse.specifiedWarehouseVerified"))
       setPendingVoiceWarehouseName(null)
       return
     }
@@ -120,19 +128,20 @@ export const WarehouseContent = () => {
 
     if (!hasMatchingWarehouse) {
       toast.error(
-        `Nie znaleziono magazynu "${pendingVoiceWarehouseName.trim()}".`
+        t("generated.dashboard.warehouse.storageFound", {
+          value0: pendingVoiceWarehouseName.trim(),
+        })
       )
     }
 
     setPendingVoiceWarehouseName(null)
-  }, [pendingVoiceWarehouseName, isPending, isError, warehouses])
+  }, [pendingVoiceWarehouseName, isPending, isError, warehouses, t])
 
   const hasActiveFilters =
     filters.query !== "" ||
     filters.minOccupancy !== DEFAULT_FILTERS.minOccupancy ||
     filters.showEmpty !== DEFAULT_FILTERS.showEmpty
 
-  const hasWarehouseData = warehouses !== undefined
   const totalWarehouses = warehouses?.totalElements ?? 0
   const totalCapacity = warehouses?.summary.totalCapacity ?? 0
   const totalUsed = warehouses?.summary.occupiedSlots ?? 0
@@ -140,13 +149,13 @@ export const WarehouseContent = () => {
     totalCapacity > 0 ? Math.round((totalUsed / totalCapacity) * 100) : 0
   const headerStats = [
     {
-      label: "Magazyny",
-      value: hasWarehouseData ? totalWarehouses : "...",
+      label: t("generated.shared.warehouses"),
+      value: totalWarehouses,
       icon: PackageIcon,
     },
     {
-      label: "Obłożenie",
-      value: hasWarehouseData ? `${overallOccupancy}%` : "...",
+      label: t("generated.dashboard.shared.occupancy"),
+      value: `${overallOccupancy}%`,
       icon: ChartLineData01Icon,
       variant: getOccupancyVariant(overallOccupancy),
     },
@@ -155,24 +164,24 @@ export const WarehouseContent = () => {
   return (
     <div className="space-y-8">
       <PageHeader
-        description="Wyszukuj lokalizacje, sprawdzaj obłożenie i przechodź do szczegółów regałów."
+        description={t(
+          "generated.dashboard.warehouse.searchLocationsCheckOccupancyDrill"
+        )}
         icon={Building05Icon}
-        iconBadge={hasWarehouseData ? totalWarehouses : undefined}
+        iconBadge={totalWarehouses}
         stats={headerStats}
         statsChildren={
           <div className="flex flex-col items-center rounded-lg border bg-background/50 px-4 py-2 backdrop-blur-sm">
             <span className="font-bold font-mono text-foreground text-lg">
-              {hasWarehouseData ? totalUsed.toLocaleString("pl-PL") : "..."}
+              {totalUsed.toLocaleString(locale)}
             </span>
             <span className="text-muted-foreground text-xs">
-              /{" "}
-              {hasWarehouseData ? totalCapacity.toLocaleString("pl-PL") : "..."}
+              / {totalCapacity.toLocaleString(locale)}
             </span>
           </div>
         }
-        title="Magazyny"
+        title={t("generated.shared.warehouses")}
       />
-
       {isError ? (
         <ErrorEmptyState onRetry={refetch} />
       ) : (
@@ -190,7 +199,7 @@ export const WarehouseContent = () => {
                   onChange={(e) => {
                     setFilters((prev) => ({ ...prev, query: e.target.value }))
                   }}
-                  placeholder="Szukaj magazynu..."
+                  placeholder={t("generated.shared.searchWarehouse")}
                   value={filters.query}
                 />
               </div>
@@ -201,17 +210,13 @@ export const WarehouseContent = () => {
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               {hasActiveFilters && (
                 <Badge className="font-normal" variant="secondary">
-                  Filtrowane
+                  {t("generated.dashboard.warehouse.filtered")}
                 </Badge>
               )}
               <span>
-                {warehouses?.totalElements}{" "}
-                {pluralize(
-                  warehouses?.totalElements ?? 0,
-                  "magazyn",
-                  "magazyny",
-                  "magazynów"
-                )}
+                {t("generated.dashboard.warehouse.pluralLabel", {
+                  value0: warehouses?.totalElements ?? 0,
+                })}
               </span>
             </div>
           </div>
@@ -219,7 +224,9 @@ export const WarehouseContent = () => {
           {/* Warehouse Grid */}
           <section className="@container space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-lg">Twoje Magazyny</h2>
+              <h2 className="font-semibold text-lg">
+                {t("generated.dashboard.warehouse.warehouses")}
+              </h2>
             </div>
             <WarehouseGrid
               isLoading={isPending}

@@ -12,8 +12,8 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import { format, formatDistanceToNow } from "date-fns"
-import { pl } from "date-fns/locale"
 import Link from "next/link"
+import { useLocale } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { toTitleCase } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
@@ -31,46 +31,40 @@ import {
 import PaginationFull from "@/components/ui/pagination-component"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import useAlerts, { usePatchAlert } from "@/hooks/use-alerts"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
-import type { AlertsSchema } from "@/lib/schemas"
+import {
+  type AlertsSchema,
+  type AlertType,
+  findAlertTitle,
+  getAlertTypeOptions,
+} from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { ADMIN_NAV_LINKS } from "../lib/constants"
+import { getAdminNavLinks } from "../lib/constants"
 
 type AlertsList = InferApiOutput<typeof AlertsSchema, "GET">
 type AlertItem = AlertsList["content"][number]
+type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
 
-const ALERT_TYPE_OPTIONS = [
-  { value: "WEIGHT_EXCEEDED", label: "Przekroczenie wagi" },
-  { value: "TEMPERATURE_TOO_HIGH", label: "Temp. za wysoka" },
-  { value: "TEMPERATURE_TOO_LOW", label: "Temp. za niska" },
-  { value: "LOW_VISUAL_SIMILARITY", label: "Niska zgodność wizualna" },
-  { value: "ITEM_TEMPERATURE_TOO_HIGH", label: "Temp. produktu za wysoka" },
-  { value: "ITEM_TEMPERATURE_TOO_LOW", label: "Temp. produktu za niska" },
-  {
-    value: "EMBEDDING_GENERATION_COMPLETED",
-    label: "Generowanie embeddingów ukończone",
-  },
-  {
-    value: "EMBEDDING_GENERATION_FAILED",
-    label: "Generowanie embeddingów nieudane",
-  },
-  { value: "ASSORTMENT_EXPIRED", label: "Asortyment przeterminowany" },
-  { value: "ASSORTMENT_CLOSE_TO_EXPIRY", label: "Asortyment bliski terminu" },
-] as const
-
-type AlertTypeValue = (typeof ALERT_TYPE_OPTIONS)[number]["value"]
+type AlertTypeValue = AlertType
 
 type AlertStatusValue = "OPEN" | "ACTIVE" | "RESOLVED" | "DISMISSED"
 
-const ALERT_STATUS_OPTIONS: {
+const getAlertStatusOptions = (
+  t: ReturnType<typeof useAppTranslations>
+): {
   value: AlertStatusValue
   label: string
-}[] = [
-  { value: "OPEN", label: "Otwarte" },
-  { value: "ACTIVE", label: "Aktywne" },
-  { value: "RESOLVED", label: "Rozwiązane" },
-  { value: "DISMISSED", label: "Odrzucone" },
+}[] => [
+  { value: "OPEN", label: t("generated.shared.open") },
+  { value: "ACTIVE", label: t("generated.shared.active") },
+  { value: "RESOLVED", label: t("generated.shared.solved") },
+  {
+    value: "DISMISSED",
+    label: t("generated.admin.alerts.rejected"),
+  },
 ]
 
 function getAlertIcon(alertType: string): IconSvgElement {
@@ -83,7 +77,10 @@ function getAlertIcon(alertType: string): IconSvgElement {
   }
 }
 
-function getStatusConfig(status: string): {
+function getStatusConfig(
+  t: ReturnType<typeof useAppTranslations>,
+  status: string
+): {
   badgeVariant: "default" | "destructive" | "secondary"
   cardClassName: string
   label: string
@@ -94,7 +91,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "destructive",
       cardClassName: "bg-destructive/10 text-destructive",
-      label: "Otwarte",
+      label: t("generated.shared.open"),
     }
   }
 
@@ -102,7 +99,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "secondary",
       cardClassName: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-      label: "Rozwiązane",
+      label: t("generated.shared.solved"),
     }
   }
 
@@ -110,7 +107,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "secondary",
       cardClassName: "bg-muted text-muted-foreground",
-      label: "Odrzucone",
+      label: t("generated.admin.alerts.rejected"),
     }
   }
 
@@ -118,7 +115,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "default",
       cardClassName: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
-      label: "Aktywne",
+      label: t("generated.shared.active"),
     }
   }
 
@@ -129,13 +126,18 @@ function getStatusConfig(status: string): {
   }
 }
 
-const formatDateTime = (date: string | null | undefined): string => {
+const formatDateTime = (
+  date: string | null | undefined,
+  dateFnsLocale: DateFnsLocale
+): string => {
   if (!date) {
     return "—"
   }
 
   try {
-    return format(new Date(date), "dd MMMM yyyy, HH:mm", { locale: pl })
+    return format(new Date(date), "dd MMMM yyyy, HH:mm", {
+      locale: dateFnsLocale,
+    })
   } catch {
     return "—"
   }
@@ -176,13 +178,17 @@ function AlertListBody({
   alerts,
   onSelect,
   selectedAlertId,
+  dateFnsLocale,
 }: {
   isPending: boolean
   isError: boolean
   alerts: AlertItem[]
   onSelect: (alert: AlertItem) => void
   selectedAlertId: number | null
+  dateFnsLocale: DateFnsLocale
 }) {
+  const t = useAppTranslations()
+
   if (isPending) {
     return (
       <>
@@ -199,9 +205,11 @@ function AlertListBody({
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <p className="font-medium">Nie udało się pobrać alertów</p>
+        <p className="font-medium">
+          {t("generated.admin.alerts.failedDownloadAlerts")}
+        </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Spróbuj ponownie za chwilę.
+          {t("generated.shared.againMoment")}
         </p>
       </div>
     )
@@ -216,9 +224,9 @@ function AlertListBody({
             icon={InboxIcon}
           />
         </div>
-        <p className="mt-3 font-medium">Brak alertów</p>
+        <p className="mt-3 font-medium">{t("generated.admin.alerts.alerts")}</p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Brak wpisów dla wybranego filtra
+          {t("generated.shared.entriesSelectedFilter")}
         </p>
       </div>
     )
@@ -227,7 +235,7 @@ function AlertListBody({
   return (
     <>
       {alerts.map((alert) => {
-        const statusConfig = getStatusConfig(alert.status)
+        const statusConfig = getStatusConfig(t, alert.status)
         const isSelected = selectedAlertId === alert.id
 
         return (
@@ -256,7 +264,7 @@ function AlertListBody({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="truncate font-medium text-sm">
-                  {alert.alertTypeDescription || toTitleCase(alert.alertType)}
+                  {findAlertTitle(alert, t)}
                 </p>
                 <Badge className="shrink-0" variant={statusConfig.badgeVariant}>
                   {statusConfig.label}
@@ -268,7 +276,7 @@ function AlertListBody({
               <p className="mt-1 text-[11px] text-muted-foreground">
                 {formatDistanceToNow(new Date(alert.createdAt), {
                   addSuffix: true,
-                  locale: pl,
+                  locale: dateFnsLocale,
                 })}
               </p>
             </div>
@@ -279,32 +287,37 @@ function AlertListBody({
   )
 }
 
-const STATUSES = {
+const getStatuses = (t: ReturnType<typeof useAppTranslations>) => ({
   OPEN: {
-    label: "Oznacz jako otwarte",
+    label: t("generated.admin.alerts.markOpen"),
     icon: Time01Icon,
   },
   ACTIVE: {
-    label: "Oznacz jako aktywne",
+    label: t("generated.admin.alerts.markActive"),
     icon: AlertCircleIcon,
   },
   RESOLVED: {
-    label: "Oznacz jako rozwiązane",
+    label: t("generated.admin.alerts.markSolved"),
     icon: CheckmarkBadge01Icon,
   },
   DISMISSED: {
-    label: "Odrzuć alert",
+    label: t("generated.admin.alerts.dismissAlert"),
     icon: Alert01Icon,
   },
-}
+})
 
 function AlertDetailsPanel({
   alert,
   onStatusChange,
+  dateFnsLocale,
 }: {
   alert: AlertItem | null
   onStatusChange: (status: AlertStatusValue) => void
+  dateFnsLocale: DateFnsLocale
 }) {
+  const t = useAppTranslations()
+  const statuses = useMemo(() => getStatuses(t), [t])
+
   if (!alert) {
     return (
       <div className="flex h-full flex-col items-center justify-center p-12">
@@ -314,15 +327,17 @@ function AlertDetailsPanel({
             icon={Alert01Icon}
           />
         </div>
-        <p className="mt-4 font-medium text-lg">Wybierz alert</p>
+        <p className="mt-4 font-medium text-lg">
+          {t("generated.admin.alerts.selectAlert")}
+        </p>
         <p className="mt-1 text-center text-muted-foreground text-sm">
-          Kliknij wpis na liście, aby zobaczyć szczegóły
+          {t("generated.shared.clickEntryListSeeDetails")}
         </p>
       </div>
     )
   }
 
-  const statusConfig = getStatusConfig(alert.status)
+  const statusConfig = getStatusConfig(t, alert.status)
   const differenceValue =
     alert.actualValue != null && alert.thresholdValue != null
       ? alert.actualValue - alert.thresholdValue
@@ -339,10 +354,9 @@ function AlertDetailsPanel({
           <Badge variant={statusConfig.badgeVariant}>
             {statusConfig.label}
           </Badge>
-          <Badge variant="outline">{toTitleCase(alert.alertType)}</Badge>
         </div>
         <h2 className="mt-3 font-semibold text-xl">
-          {alert.alertTypeDescription || toTitleCase(alert.alertType)}
+          {findAlertTitle(alert, t)}
         </h2>
         <p className="mt-1 text-muted-foreground">{alert.message}</p>
       </div>
@@ -350,53 +364,63 @@ function AlertDetailsPanel({
       <div className="flex-1 space-y-6 p-6">
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            Lokalizacja
+            {t("generated.shared.location")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <DetailsCard
-              label="Magazyn"
+              label={t("generated.shared.warehouse")}
               value={alert.warehouseName ?? alert.warehouseId ?? "—"}
             />
             <DetailsCard
-              label="Regał"
+              label={t("generated.shared.rack")}
               value={alert.rackMarker ?? alert.rackId ?? "—"}
             />
-            <DetailsCard label="Status" value={toTitleCase(alert.status)} />
+            <DetailsCard
+              label={t("generated.shared.status")}
+              value={getStatusConfig(t, alert.status).label}
+            />
           </div>
         </section>
 
         <section className="space-y-3">
-          <h3 className="font-medium text-muted-foreground text-sm">Metryki</h3>
+          <h3 className="font-medium text-muted-foreground text-sm">
+            {t("generated.shared.metrics")}
+          </h3>
           <div className="grid gap-3 sm:grid-cols-3">
             <DetailsCard
-              label="Próg"
+              label={t("generated.shared.threshold")}
               value={formatMetricValue(alert.thresholdValue)}
             />
             <DetailsCard
-              label="Wartość"
+              label={t("generated.shared.value")}
               value={formatMetricValue(alert.actualValue)}
             />
             <DetailsCard
-              label="Różnica"
+              label={t("generated.shared.difference")}
               value={differenceValue == null ? "—" : differenceValue.toString()}
             />
           </div>
         </section>
 
         <section className="space-y-3">
-          <h3 className="font-medium text-muted-foreground text-sm">Czas</h3>
+          <h3 className="font-medium text-muted-foreground text-sm">
+            {t("generated.shared.time")}
+          </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <DetailsCard
-              label="Utworzono"
-              value={formatDateTime(alert.createdAt?.toString())}
+              label={t("generated.shared.created")}
+              value={formatDateTime(alert.createdAt?.toString(), dateFnsLocale)}
             />
             <DetailsCard
-              label="Aktualizacja"
-              value={formatDateTime(alert.updatedAt?.toString())}
+              label={t("generated.admin.alerts.update")}
+              value={formatDateTime(alert.updatedAt?.toString(), dateFnsLocale)}
             />
             <DetailsCard
-              label="Rozwiązano"
-              value={formatDateTime(alert.resolvedAt?.toString())}
+              label={t("generated.admin.alerts.solved")}
+              value={formatDateTime(
+                alert.resolvedAt?.toString(),
+                dateFnsLocale
+              )}
             />
           </div>
         </section>
@@ -404,10 +428,12 @@ function AlertDetailsPanel({
         {hasResolutionData ? (
           <section className="space-y-3">
             <h3 className="font-medium text-muted-foreground text-sm">
-              Notatka rozwiązania
+              {t("generated.shared.solutionNote")}
             </h3>
             <div className="rounded-lg border bg-muted/20 p-3">
-              <p className="text-muted-foreground text-xs">Rozwiązane przez</p>
+              <p className="text-muted-foreground text-xs">
+                {t("generated.shared.solved2")}
+              </p>
               <p className="mt-0.5 font-medium">
                 {alert.resolvedByName ?? "—"}
               </p>
@@ -428,7 +454,7 @@ function AlertDetailsPanel({
             })}
             href={locationHref}
           >
-            Przejdź do lokalizacji
+            {t("generated.shared.goLocation")}
             <HugeiconsIcon className="ml-2 size-4" icon={ArrowRight02Icon} />
           </Link>
         ) : null}
@@ -442,13 +468,15 @@ function AlertDetailsPanel({
               })
             )}
           >
-            Zmień status
+            {t("generated.admin.shared.changeStatus")}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="center" className="w-fit" side="top">
             <DropdownMenuGroup>
-              <DropdownMenuLabel>Akcje</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                {t("generated.shared.shares")}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {Object.entries(STATUSES).map(([status, config]) => (
+              {Object.entries(statuses).map(([status, config]) => (
                 <DropdownMenuItem
                   className="gap-2"
                   key={status}
@@ -467,6 +495,13 @@ function AlertDetailsPanel({
 }
 
 export default function AlertsMain() {
+  const t = useAppTranslations()
+  const alertStatusOptions = useMemo(() => getAlertStatusOptions(t), [t])
+  const alertTypeOptions = useMemo(() => getAlertTypeOptions(t), [t])
+
+  const locale = useLocale()
+  const dateFnsLocale = getDateFnsLocale(locale)
+
   const [alertTypeFilter, setAlertTypeFilter] = useState<AlertTypeValue[]>([])
   const [statusFilter, setStatusFilter] = useState<AlertStatusValue[]>([])
   const [page, setPage] = useState(0)
@@ -569,20 +604,22 @@ export default function AlertsMain() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description="Przeglądaj alerty systemowe dotyczące magazynów"
+        description={t("generated.admin.alerts.viewSystemAlertsWarehouses")}
         icon={Alert01Icon}
-        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+        navLinks={getAdminNavLinks(t).map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title="Alerty"
+        title={t("generated.shared.alerts")}
       >
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <span className="font-mono font-semibold text-primary">
               {allAlerts?.totalElements ?? 0}
             </span>
-            <span className="text-muted-foreground text-xs">łącznie</span>
+            <span className="text-muted-foreground text-xs">
+              {t("generated.shared.together")}
+            </span>
           </div>
           {(activeAlerts?.totalElements ?? 0) > 0 ? (
             <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-1.5">
@@ -590,7 +627,9 @@ export default function AlertsMain() {
               <span className="font-mono font-semibold text-destructive">
                 {activeAlerts?.totalElements ?? 0}
               </span>
-              <span className="text-muted-foreground text-xs">otwartych</span>
+              <span className="text-muted-foreground text-xs">
+                {t("generated.admin.alerts.open")}
+              </span>
             </div>
           ) : null}
         </div>
@@ -608,7 +647,7 @@ export default function AlertsMain() {
                   )}
                 >
                   <HugeiconsIcon className="size-4" icon={FilterIcon} />
-                  Status
+                  {t("generated.shared.status")}
                   {statusFilter.length > 0 && (
                     <Badge className="ml-1" variant="secondary">
                       {statusFilter.length}
@@ -621,9 +660,11 @@ export default function AlertsMain() {
                   side="bottom"
                 >
                   <DropdownMenuGroup>
-                    <DropdownMenuLabel>Filtruj po statusie</DropdownMenuLabel>
+                    <DropdownMenuLabel>
+                      {t("generated.admin.alerts.filterStatus")}
+                    </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {ALERT_STATUS_OPTIONS.map((option) => (
+                    {alertStatusOptions.map((option) => (
                       <DropdownMenuCheckboxItem
                         checked={statusFilter.includes(option.value)}
                         key={option.value}
@@ -640,7 +681,7 @@ export default function AlertsMain() {
                           onClick={handleClearStatusFilter}
                           type="button"
                         >
-                          Wyczyść filtry
+                          {t("generated.shared.clearFilters")}
                         </button>
                       </>
                     )}
@@ -656,7 +697,7 @@ export default function AlertsMain() {
                   )}
                 >
                   <HugeiconsIcon className="size-4" icon={FilterIcon} />
-                  Typ alertu
+                  {t("generated.admin.alerts.alertType")}
                   {alertTypeFilter.length > 0 && (
                     <Badge className="ml-1" variant="secondary">
                       {alertTypeFilter.length}
@@ -670,10 +711,10 @@ export default function AlertsMain() {
                 >
                   <DropdownMenuGroup>
                     <DropdownMenuLabel>
-                      Filtruj po typie alertu
+                      {t("generated.admin.alerts.filterAlertType")}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {ALERT_TYPE_OPTIONS.map((option) => (
+                    {alertTypeOptions.map((option) => (
                       <DropdownMenuCheckboxItem
                         checked={alertTypeFilter.includes(option.value)}
                         key={option.value}
@@ -690,7 +731,7 @@ export default function AlertsMain() {
                           onClick={handleClearAlertTypeFilter}
                           type="button"
                         >
-                          Wyczyść filtry
+                          {t("generated.shared.clearFilters")}
                         </button>
                       </>
                     )}
@@ -703,6 +744,7 @@ export default function AlertsMain() {
               <div className="space-y-2 p-2">
                 <AlertListBody
                   alerts={alerts}
+                  dateFnsLocale={dateFnsLocale}
                   isError={isAlertsError}
                   isPending={isAlertsPending}
                   onSelect={handleSelectAlert}
@@ -723,6 +765,7 @@ export default function AlertsMain() {
         <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
           <AlertDetailsPanel
             alert={selectedAlert}
+            dateFnsLocale={dateFnsLocale}
             onStatusChange={handleStatusChange}
           />
         </div>
@@ -731,8 +774,12 @@ export default function AlertsMain() {
       {selectedAlert ? (
         <div className="rounded-lg border border-dashed p-3 text-muted-foreground text-xs">
           <HugeiconsIcon className="mr-1 inline size-3.5" icon={Time01Icon} />
-          Ostatnia aktualizacja:{" "}
-          {formatDateTime(selectedAlert.updatedAt?.toString())}
+          {t("generated.shared.lastUpdated", {
+            value0: formatDateTime(
+              selectedAlert.updatedAt?.toString(),
+              dateFnsLocale
+            ),
+          })}
         </div>
       ) : null}
     </div>

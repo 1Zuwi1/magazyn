@@ -1,4 +1,5 @@
 import { addDays } from "date-fns"
+import type { AppTranslate } from "@/i18n/use-translations"
 import type { Item } from "../types"
 import { getDaysUntilExpiry } from "./helpers"
 
@@ -7,6 +8,13 @@ export type ItemStatus =
   | "expired"
   | "expired-dangerous"
   | "dangerous"
+
+const STATUS_TEXT_KEYS: Record<ItemStatus, string> = {
+  normal: "warehouseVisualization.statusLabels.normal",
+  expired: "warehouseVisualization.statusLabels.expired",
+  "expired-dangerous": "warehouseVisualization.statusLabels.expiredDangerous",
+  dangerous: "warehouseVisualization.statusLabels.dangerous",
+}
 
 export function getItemStatus(item: Item): ItemStatus {
   const daysUntilExpiry = getDaysUntilExpiry(
@@ -27,17 +35,8 @@ export function getItemStatus(item: Item): ItemStatus {
   return "normal"
 }
 
-export function getStatusText(status: ItemStatus): string {
-  if (status === "normal") {
-    return "Normalny"
-  }
-  if (status === "expired") {
-    return "Przeterminowany"
-  }
-  if (status === "expired-dangerous") {
-    return "Przeterminowany i niebezpieczny"
-  }
-  return "Niebezpieczny"
+export function getStatusText(status: ItemStatus, t: AppTranslate): string {
+  return t(STATUS_TEXT_KEYS[status])
 }
 
 export function getStatusColors(status: ItemStatus): {

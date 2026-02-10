@@ -11,6 +11,7 @@ import {
   WeightScale01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
@@ -18,6 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { Rack } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { THRESHOLD } from "../../lib/constants"
@@ -29,6 +31,8 @@ interface RackCardProps {
 }
 
 function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
+  const t = useAppTranslations()
+
   const hasActions = onEdit || onDelete
   const isCritical = rack.occupiedSlots / rack.totalSlots >= THRESHOLD
   const isOverweight = rack.totalWeight > rack.maxWeight
@@ -79,7 +83,9 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
             <div className="min-w-0">
               <h3 className="truncate font-semibold text-lg">{rack.marker}</h3>
               <p className="truncate text-muted-foreground text-xs">
-                ID: {rack.id}
+                {t("generated.admin.warehouses.id", {
+                  value0: rack.id,
+                })}
               </p>
             </div>
           </div>
@@ -91,7 +97,7 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
             {hasActions && (
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  aria-label="Akcje regału"
+                  aria-label={t("generated.admin.warehouses.bookcaseActions")}
                   className={cn(
                     "flex size-8 items-center justify-center rounded-md opacity-0 transition-all hover:bg-muted group-hover:opacity-100",
                     "focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
@@ -112,7 +118,7 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
                         className="mr-2 size-4"
                         icon={PencilEdit01Icon}
                       />
-                      Edytuj
+                      {t("generated.shared.edit")}
                     </DropdownMenuItem>
                   )}
                   {onDelete && (
@@ -124,7 +130,7 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
                         className="mr-2 size-4"
                         icon={Delete02Icon}
                       />
-                      Usuń
+                      {t("generated.shared.remove")}
                     </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
@@ -139,7 +145,9 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <HugeiconsIcon className="size-4" icon={GridIcon} />
-              <span>Wymiary (wiersze × kolumny)</span>
+              <span>
+                {t("generated.admin.warehouses.dimensionsRowsColumns")}
+              </span>
             </div>
             <span className="font-medium font-mono">
               {rack.sizeY} × {rack.sizeX}
@@ -150,10 +158,13 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <HugeiconsIcon className="size-4" icon={ThermometerIcon} />
-              <span>Temperatura</span>
+              <span>{t("generated.shared.temperature")}</span>
             </div>
             <span className="font-medium font-mono">
-              {rack.minTemp}°C – {rack.maxTemp}°C
+              {t("generated.shared.cC", {
+                value0: rack.minTemp,
+                value1: rack.maxTemp,
+              })}
             </span>
           </div>
 
@@ -161,7 +172,7 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <HugeiconsIcon className="size-4" icon={WeightScale01Icon} />
-              <span>Waga</span>
+              <span>{t("generated.shared.weight")}</span>
             </div>
             <div className="flex items-center gap-2">
               <span
@@ -169,11 +180,14 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
                   "text-destructive": isOverweight,
                 })}
               >
-                {rack.totalWeight} / {rack.maxWeight} kg
+                {t("generated.admin.warehouses.kg", {
+                  value0: rack.totalWeight,
+                  value1: rack.maxWeight,
+                })}
               </span>
               {isOverweight && (
                 <Badge className="text-[10px]" variant="destructive">
-                  Przeciążenie
+                  {t("generated.admin.warehouses.overload")}
                 </Badge>
               )}
             </div>
@@ -183,7 +197,7 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <HugeiconsIcon className="size-4" icon={Package} />
-              <span>Przedmioty</span>
+              <span>{t("generated.shared.items")}</span>
             </div>
             <span className="font-medium font-mono">{rack.occupiedSlots}</span>
           </div>
@@ -196,10 +210,12 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
           >
             <div className="flex items-center gap-2 text-muted-foreground">
               <HugeiconsIcon className="size-4" icon={Alert02Icon} />
-              <span>Akceptuje niebezpieczne</span>
+              <span>{t("generated.admin.warehouses.acceptsDangerous")}</span>
             </div>
             <span className="font-medium font-mono">
-              {rack.acceptsDangerous ? "Tak" : "Nie"}
+              {rack.acceptsDangerous
+                ? t("generated.admin.shared.yes")
+                : t("generated.admin.shared.label")}
             </span>
           </div>
 
@@ -224,6 +240,8 @@ interface RackGridProps {
 }
 
 export function RackGrid({ racks, onEdit, onDelete }: RackGridProps) {
+  const t = useAppTranslations()
+
   if (racks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/20 py-16">
@@ -233,9 +251,11 @@ export function RackGrid({ racks, onEdit, onDelete }: RackGridProps) {
             icon={GridIcon}
           />
         </div>
-        <p className="mt-4 font-medium text-foreground">Brak regałów</p>
+        <p className="mt-4 font-medium text-foreground">
+          {t("generated.shared.racks")}
+        </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Dodaj pierwszy regał, aby rozpocząć
+          {t("generated.admin.warehouses.addFirstRackGetStarted")}
         </p>
       </div>
     )

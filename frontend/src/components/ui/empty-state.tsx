@@ -11,7 +11,9 @@ import {
   Settings01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { Button } from "@/components/ui/button"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { IconComponent } from "../dashboard/types"
 
@@ -248,20 +250,22 @@ export function SearchEmptyState({
   onClear?: () => void
   className?: string
 }) {
+  const t = useAppTranslations()
+
   return (
     <EmptyState
       action={
         onClear
           ? {
-              label: "Wyczyść wyszukiwanie",
+              label: t("generated.ui.clearSearch"),
               onClick: onClear,
               variant: "outline",
             }
           : undefined
       }
       className={className}
-      description="Spróbuj zmienić kryteria wyszukiwania lub użyj innych słów kluczowych."
-      title="Brak wyników"
+      description={t("generated.ui.changingSearchCriteriaUsingDifferent")}
+      title={t("generated.shared.results")}
       variant="search"
     />
   )
@@ -270,18 +274,22 @@ export function SearchEmptyState({
 export function FilterEmptyState({
   onClear,
   className,
-  description = "Żadne elementy nie pasują do wybranych filtrów. Spróbuj zmienić ustawienia filtrowania.",
+  description,
 }: {
   onClear?: () => void
   className?: string
   description?: string
 }) {
+  const t = useAppTranslations()
+  const resolvedDescription =
+    description ?? t("generated.ui.itemsMatchSelectedFiltersChanging")
+
   return (
     <EmptyState
       action={
         onClear
           ? {
-              label: "Wyczyść filtry",
+              label: t("generated.shared.clearFilters"),
               onClick: onClear,
               variant: "outline",
               icon: Delete02Icon,
@@ -289,8 +297,8 @@ export function FilterEmptyState({
           : undefined
       }
       className={className}
-      description={description}
-      title="Brak pasujących elementów"
+      description={resolvedDescription}
+      title={t("generated.ui.matchingItems")}
       variant="filter"
     />
   )
@@ -305,30 +313,36 @@ export function NoItemsEmptyState({
   itemName?: string
   className?: string
 }) {
+  const t = useAppTranslations()
+
   return (
     <EmptyState
       action={
         onAdd
           ? {
-              label: `Dodaj ${itemName}`,
+              label: t("generated.ui.add", { value0: itemName }),
               onClick: onAdd,
             }
           : undefined
       }
       className={className}
-      description={`Nie masz jeszcze żadnych ${itemName}ów. Zacznij od dodania pierwszego.`}
-      title={`Brak ${itemName}ów`}
+      description={t("generated.ui.dontAnySYetStart", {
+        value0: itemName,
+      })}
+      title={t("generated.ui.s", { value0: itemName })}
       variant="noItems"
     />
   )
 }
 
 export function NoDataEmptyState({ className }: { className?: string }) {
+  const t = useAppTranslations()
+
   return (
     <EmptyState
       className={className}
-      description="Dane nie zostały jeszcze załadowane. Spróbuj odświeżyć stronę."
-      title="Brak danych"
+      description={t("generated.ui.dataBeenLoadedYetRefreshing")}
+      title={t("generated.shared.dataAvailable")}
       variant="noData"
     />
   )
@@ -341,12 +355,14 @@ export function ErrorEmptyState({
   onRetry?: () => void
   className?: string
 }) {
+  const t = useAppTranslations()
+
   return (
     <EmptyState
       action={
         onRetry
           ? {
-              label: "Spróbuj ponownie",
+              label: t("generated.shared.again"),
               onClick: onRetry,
               variant: "outline",
               icon: ReloadIcon,
@@ -354,8 +370,8 @@ export function ErrorEmptyState({
           : undefined
       }
       className={className}
-      description="Wystąpił problem podczas ładowania danych. Spróbuj ponownie."
-      title="Coś poszło nie tak"
+      description={t("generated.ui.problemLoadingDataAgain")}
+      title={t("generated.ui.somethingWentWrong")}
       variant="error"
     />
   )

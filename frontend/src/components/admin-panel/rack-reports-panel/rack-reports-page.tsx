@@ -9,8 +9,8 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { formatDistanceToNow } from "date-fns"
-import { pl } from "date-fns/locale"
 import Link from "next/link"
+import { useLocale } from "next-intl"
 import { useMemo, useState } from "react"
 import type { IconComponent } from "@/components/dashboard/types"
 import { Badge } from "@/components/ui/badge"
@@ -27,18 +27,24 @@ import PaginationFull from "@/components/ui/pagination-component"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import useRackReports from "@/hooks/use-rack-reports"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type { RackReportsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { ADMIN_NAV_LINKS } from "../lib/constants"
+import { getAdminNavLinks } from "../lib/constants"
 
 type RackReportsList = InferApiOutput<typeof RackReportsSchema, "GET">
 type RackReportItem = RackReportsList["content"][number]
+type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
 
 const RACK_REPORTS_PAGE_SIZE = 20
 
-const formatDateTime = (date: string | null | undefined): string => {
+const formatDateTime = (
+  date: string | null | undefined,
+  dateFnsLocale: DateFnsLocale
+): string => {
   if (!date) {
     return "—"
   }
@@ -46,7 +52,7 @@ const formatDateTime = (date: string | null | undefined): string => {
   try {
     return formatDistanceToNow(new Date(date), {
       addSuffix: true,
-      locale: pl,
+      locale: dateFnsLocale,
     })
   } catch {
     return "—"
@@ -91,13 +97,17 @@ function RackReportListBody({
   reports,
   onSelect,
   selectedReportId,
+  dateFnsLocale,
 }: {
   isPending: boolean
   isError: boolean
   reports: RackReportItem[]
   onSelect: (report: RackReportItem) => void
   selectedReportId: number | null
+  dateFnsLocale: DateFnsLocale
 }) {
+  const t = useAppTranslations()
+
   if (isPending) {
     return (
       <>
@@ -114,9 +124,11 @@ function RackReportListBody({
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <p className="font-medium">Nie udało się pobrać raportów</p>
+        <p className="font-medium">
+          {t("generated.admin.rackReports.failedDownloadReports")}
+        </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Spróbuj ponownie za chwilę.
+          {t("generated.shared.againMoment")}
         </p>
       </div>
     )
@@ -131,9 +143,11 @@ function RackReportListBody({
             icon={PackageIcon}
           />
         </div>
-        <p className="mt-3 font-medium">Brak raportów</p>
+        <p className="mt-3 font-medium">
+          {t("generated.admin.rackReports.reports")}
+        </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          Brak wpisów dla wybranego filtra
+          {t("generated.shared.entriesSelectedFilter")}
         </p>
       </div>
     )
@@ -178,14 +192,16 @@ function RackReportListBody({
                   className="shrink-0"
                   variant={report.alertTriggered ? "destructive" : "secondary"}
                 >
-                  {report.alertTriggered ? "Alert" : "OK"}
+                  {report.alertTriggered
+                    ? t("generated.admin.rackReports.alert2")
+                    : t("generated.admin.rackReports.ok")}
                 </Badge>
               </div>
               <p className="mt-0.5 line-clamp-1 text-muted-foreground text-xs">
                 {report.warehouseName}
               </p>
               <p className="mt-1 text-[11px] text-muted-foreground">
-                {formatDateTime(report.createdAt)}
+                {formatDateTime(report.createdAt, dateFnsLocale)}
               </p>
             </div>
           </button>
@@ -195,7 +211,15 @@ function RackReportListBody({
   )
 }
 
-function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
+function RackReportDetailsPanel({
+  report,
+  dateFnsLocale,
+}: {
+  report: RackReportItem | null
+  dateFnsLocale: DateFnsLocale
+}) {
+  const t = useAppTranslations()
+
   if (!report) {
     return (
       <div className="flex h-full flex-col items-center justify-center p-12">
@@ -205,9 +229,11 @@ function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
             icon={PackageIcon}
           />
         </div>
-        <p className="mt-4 font-medium text-lg">Wybierz raport</p>
+        <p className="mt-4 font-medium text-lg">
+          {t("generated.admin.rackReports.selectReport")}
+        </p>
         <p className="mt-1 text-center text-muted-foreground text-sm">
-          Kliknij wpis na liście, aby zobaczyć szczegóły
+          {t("generated.shared.clickEntryListSeeDetails")}
         </p>
       </div>
     )
@@ -220,7 +246,9 @@ function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
       <div className="border-b bg-muted/20 p-6">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={report.alertTriggered ? "destructive" : "secondary"}>
-            {report.alertTriggered ? "Alert aktywowany" : "Wszystko OK"}
+            {report.alertTriggered
+              ? t("generated.admin.rackReports.alertActivated")
+              : t("generated.admin.rackReports.allOk")}
           </Badge>
         </div>
         <h2 className="mt-3 font-semibold text-xl">{report.rackMarker}</h2>
@@ -230,34 +258,36 @@ function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
       <div className="flex-1 space-y-6 p-6">
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            Lokalizacja
+            {t("generated.shared.location")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <MetricCard
               icon={WarehouseIcon}
-              label="Magazyn"
+              label={t("generated.shared.warehouse")}
               value={report.warehouseName}
             />
             <MetricCard
               icon={PackageIcon}
-              label="Regał"
+              label={t("generated.shared.rack")}
               value={report.rackMarker}
             />
           </div>
         </section>
 
         <section className="space-y-3">
-          <h3 className="font-medium text-muted-foreground text-sm">Metryki</h3>
+          <h3 className="font-medium text-muted-foreground text-sm">
+            {t("generated.shared.metrics")}
+          </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <MetricCard
               icon={WeightScale01Icon}
-              label="Aktualna waga"
+              label={t("generated.admin.rackReports.currentWeight")}
               unit="kg"
               value={report.currentWeight}
             />
             <MetricCard
               icon={ThermometerIcon}
-              label="Temperatura"
+              label={t("generated.shared.temperature")}
               unit="°C"
               value={report.currentTemperature}
             />
@@ -266,16 +296,20 @@ function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
 
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            Informacje
+            {t("generated.admin.rackReports.information")}
           </h3>
           <div className="rounded-lg border bg-muted/20 p-3">
-            <p className="text-muted-foreground text-xs">ID czujnika</p>
+            <p className="text-muted-foreground text-xs">
+              {t("generated.admin.rackReports.sensorId")}
+            </p>
             <p className="mt-0.5 font-medium font-mono">{report.sensorId}</p>
           </div>
           <div className="rounded-lg border bg-muted/20 p-3">
-            <p className="text-muted-foreground text-xs">Utworzono</p>
+            <p className="text-muted-foreground text-xs">
+              {t("generated.shared.created")}
+            </p>
             <p className="mt-0.5 font-medium">
-              {formatDateTime(report.createdAt)}
+              {formatDateTime(report.createdAt, dateFnsLocale)}
             </p>
           </div>
         </section>
@@ -286,7 +320,7 @@ function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
           className="inline-flex items-center justify-center rounded-md border px-3 py-1.5 font-medium text-sm transition-colors hover:bg-muted"
           href={warehouseHref}
         >
-          Przejdź do magazynu
+          {t("generated.admin.rackReports.goWarehouse")}
         </Link>
       </div>
     </div>
@@ -294,6 +328,11 @@ function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
 }
 
 export default function RackReportsMain() {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
+  const dateFnsLocale = getDateFnsLocale(locale)
+
   const [withAlertsFilter, setWithAlertsFilter] = useState<boolean | undefined>(
     undefined
   )
@@ -343,20 +382,22 @@ export default function RackReportsMain() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description="Przeglądaj raporty z czujników regałów"
+        description={t("generated.admin.rackReports.viewRackSensorReports")}
         icon={PackageIcon}
-        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+        navLinks={getAdminNavLinks(t).map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title="Raporty regałów"
+        title={t("generated.shared.rackReports")}
       >
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <span className="font-mono font-semibold text-primary">
               {totalReports}
             </span>
-            <span className="text-muted-foreground text-xs">łącznie</span>
+            <span className="text-muted-foreground text-xs">
+              {t("generated.shared.together")}
+            </span>
           </div>
           {alertCount > 0 ? (
             <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-1.5">
@@ -364,7 +405,9 @@ export default function RackReportsMain() {
               <span className="font-mono font-semibold text-destructive">
                 {alertCount}
               </span>
-              <span className="text-muted-foreground text-xs">z alertem</span>
+              <span className="text-muted-foreground text-xs">
+                {t("generated.admin.rackReports.alert")}
+              </span>
             </div>
           ) : null}
         </div>
@@ -382,23 +425,27 @@ export default function RackReportsMain() {
                   )}
                 >
                   <HugeiconsIcon className="size-4" icon={FilterIcon} />
-                  Filtry
+                  {t("generated.admin.rackReports.filters")}
                   {withAlertsFilter !== undefined && (
                     <Badge className="ml-1" variant="secondary">
-                      {withAlertsFilter ? "Tylko" : "Wszystkie"}
+                      {withAlertsFilter
+                        ? t("generated.admin.rackReports.only")
+                        : t("generated.admin.rackReports.all")}
                     </Badge>
                   )}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" side="bottom">
                   <DropdownMenuGroup>
-                    <DropdownMenuLabel>Filtruj po alertach</DropdownMenuLabel>
+                    <DropdownMenuLabel>
+                      {t("generated.admin.rackReports.filterAlerts")}
+                    </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuCheckboxItem
                       checked={withAlertsFilter === true}
                       className="text-nowrap"
                       onClick={() => handleToggleAlertsFilter(true)}
                     >
-                      Tylko z alertami
+                      {t("generated.admin.rackReports.onlyAlerts")}
                     </DropdownMenuCheckboxItem>
                     {withAlertsFilter !== undefined && (
                       <>
@@ -408,7 +455,7 @@ export default function RackReportsMain() {
                           onClick={() => setWithAlertsFilter(undefined)}
                           type="button"
                         >
-                          Wyczyść filtr
+                          {t("generated.admin.rackReports.cleanFilter")}
                         </button>
                       </>
                     )}
@@ -420,6 +467,7 @@ export default function RackReportsMain() {
             <ScrollArea className="h-112">
               <div className="space-y-2 p-2">
                 <RackReportListBody
+                  dateFnsLocale={dateFnsLocale}
                   isError={isReportsError}
                   isPending={isReportsPending}
                   onSelect={handleSelectReport}
@@ -440,7 +488,10 @@ export default function RackReportsMain() {
         </div>
 
         <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-          <RackReportDetailsPanel report={selectedReport} />
+          <RackReportDetailsPanel
+            dateFnsLocale={dateFnsLocale}
+            report={selectedReport}
+          />
         </div>
       </div>
     </div>

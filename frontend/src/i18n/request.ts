@@ -1,5 +1,7 @@
 import type { Formats } from "next-intl"
+import { hasLocale } from "next-intl"
 import { getRequestConfig, type RequestConfig } from "next-intl/server"
+import { routing } from "@/i18n/routing"
 
 export const formats = {
   dateTime: {
@@ -22,12 +24,13 @@ export const formats = {
   },
 } satisfies Formats
 
-export const locales = ["pl"] as const
+export const locales = routing.locales
 
-export default getRequestConfig(async () => {
-  // const store = await cookies()
-  // const locale = store.get("locale")?.value || "pl"
-  const locale = "pl"
+export default getRequestConfig(async ({ requestLocale }) => {
+  const requestedLocale = await requestLocale
+  const locale = hasLocale(routing.locales, requestedLocale)
+    ? requestedLocale
+    : routing.defaultLocale
 
   return {
     locale,

@@ -2,19 +2,22 @@
 
 import { KeyboardIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useCallback, useEffect, useRef, useState } from "react"
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 
-const MODE_OPTIONS = [
-  { label: "Przyjmowanie", value: "take" },
-  { label: "Zdejmowanie", value: "remove" },
-] as const
+const getModeOptions = (t: ReturnType<typeof useAppTranslations>) =>
+  [
+    { label: t("generated.scanner.receiving"), value: "take" },
+    { label: t("generated.scanner.removing"), value: "remove" },
+  ] as const
 
-type ScannerManualMode = (typeof MODE_OPTIONS)[number]["value"]
+type ScannerManualMode = "remove" | "take"
 
 interface ScannerManualInputProps {
   onSubmit: (code: string) => void
@@ -35,6 +38,9 @@ export function ScannerManualInput({
   error,
   mode,
 }: ScannerManualInputProps) {
+  const t = useAppTranslations()
+  const modeOptions = useMemo(() => getModeOptions(t), [t])
+
   const [code, setCode] = useState<string>(initialCode)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -66,7 +72,7 @@ export function ScannerManualInput({
     [handleSubmit]
   )
 
-  const modeLabel = MODE_OPTIONS.find((option) => option.value === mode)?.label
+  const modeLabel = modeOptions.find((option) => option.value === mode)?.label
 
   return (
     <ScannerBody>
@@ -75,7 +81,7 @@ export function ScannerManualInput({
 
         {modeLabel ? (
           <p className="mx-10 mb-4 rounded-xl border border-border/70 bg-muted/30 px-4 py-2 text-center text-muted-foreground text-sm">
-            Jesteś w trybie:{" "}
+            {t("generated.scanner.mode")}{" "}
             <span className="font-medium text-foreground">{modeLabel}</span>.
           </p>
         ) : null}
@@ -89,10 +95,10 @@ export function ScannerManualInput({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              Wprowadź kod ręcznie
+              {t("generated.scanner.enterCodeManually")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              Wpisz kod kreskowy lub QR, jeśli skaner nie może go odczytać.
+              {t("generated.scanner.enterBarcodeQrCodeScanner")}
             </p>
           </div>
         </div>
@@ -104,7 +110,7 @@ export function ScannerManualInput({
                 className="block font-medium text-sm"
                 htmlFor="manual-code"
               >
-                Kod produktu
+                {t("generated.scanner.productCode")}
               </Label>
               <Input
                 autoComplete="off"
@@ -112,7 +118,7 @@ export function ScannerManualInput({
                 id="manual-code"
                 onChange={(event) => setCode(event.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="np. 5901234123457"
+                placeholder={t("generated.scanner.eG5901234123457")}
                 ref={inputRef}
                 type="text"
                 value={code}
@@ -134,7 +140,7 @@ export function ScannerManualInput({
             onClick={handleSubmit}
             type="button"
           >
-            Wyszukaj produkt
+            {t("generated.shared.searchProduct")}
           </Button>
         </div>
       </div>

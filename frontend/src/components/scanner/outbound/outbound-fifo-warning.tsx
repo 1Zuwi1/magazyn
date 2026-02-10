@@ -1,5 +1,8 @@
 import { AlertCircleIcon, Location04Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
+import { formatDateTimeLabel } from "@/components/dashboard/utils/helpers"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { OutboundCheckResult } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
 import { Button } from "../../ui/button"
@@ -14,21 +17,6 @@ interface OutboundFifoWarningProps {
   onCancel: () => void
 }
 
-const formatDate = (value: string): string => {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat("pl-PL", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date)
-}
-
 export function OutboundFifoWarning({
   checkResult,
   isSubmitting,
@@ -36,6 +24,9 @@ export function OutboundFifoWarning({
   onTakeFifoCompliant,
   onCancel,
 }: OutboundFifoWarningProps) {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
   const { requestedAssortment, olderAssortments, warning } = checkResult
 
   return (
@@ -52,34 +43,47 @@ export function OutboundFifoWarning({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              Naruszenie FIFO
+              {t("generated.scanner.outbound.fifoViolation")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              Wybrany asortyment nie jest zgodny z zasadą FIFO.
-              {warning ? ` ${warning} starszych pozycji.` : ""}
+              {t("generated.scanner.outbound.selectedAssortmentFifoCompliant")}
+              {warning
+                ? ` ${t("generated.scanner.outbound.olderItems", { value0: warning })}`
+                : ""}
             </p>
           </div>
         </div>
 
         <div className="mb-4 overflow-hidden rounded-xl border bg-card/50">
           <div className="border-b bg-muted/30 px-4 py-2.5">
-            <p className="font-medium text-sm">Zeskanowany asortyment</p>
+            <p className="font-medium text-sm">
+              {t("generated.scanner.outbound.scannedAssortment")}
+            </p>
           </div>
           <div className="p-4">
             <div className="flex items-center gap-2">
               <p className="font-medium text-sm">
-                Regał {requestedAssortment.rackMarker}
+                {t("generated.shared.rack2", {
+                  value0: requestedAssortment.rackMarker,
+                })}
               </p>
               <Badge variant="outline">
-                P:{requestedAssortment.positionX} R:
-                {requestedAssortment.positionY}
+                {t("generated.scanner.outbound.xY", {
+                  value0: requestedAssortment.positionX,
+                  value1: requestedAssortment.positionY,
+                })}
               </Badge>
             </div>
             <p className="mt-1 font-mono text-muted-foreground text-xs">
               {requestedAssortment.assortmentCode}
             </p>
             <p className="mt-1 text-muted-foreground text-xs">
-              Przyjęto: {formatDate(requestedAssortment.createdAt)}
+              {t("generated.scanner.outbound.received", {
+                value0: formatDateTimeLabel(
+                  requestedAssortment.createdAt,
+                  locale
+                ),
+              })}
             </p>
           </div>
         </div>
@@ -89,7 +93,7 @@ export function OutboundFifoWarning({
             <div className="absolute inset-x-0 top-0 z-10 h-4 bg-linear-to-b from-background to-transparent" />
             <div className="h-full space-y-2 overflow-y-auto px-2 py-2">
               <p className="px-1 font-medium text-sm">
-                Starsze pozycje (FIFO-zgodne):
+                {t("generated.scanner.outbound.olderEntriesFifoCompliant")}
               </p>
               {olderAssortments.map((slot) => (
                 <div
@@ -102,18 +106,31 @@ export function OutboundFifoWarning({
                       icon={Location04Icon}
                     />
                     <p className="font-medium text-sm">
-                      Regał {slot.rackMarker}
+                      {t("generated.shared.rack2", {
+                        value0: slot.rackMarker,
+                      })}
                     </p>
                     <Badge variant="outline">
-                      P:{slot.positionX} R:{slot.positionY}
+                      {t("generated.scanner.outbound.xY", {
+                        value0: slot.positionX,
+                        value1: slot.positionY,
+                      })}
                     </Badge>
                   </div>
                   <p className="mt-1 font-mono text-muted-foreground text-xs">
                     {slot.assortmentCode}
                   </p>
                   <div className="mt-1 flex gap-3 text-muted-foreground text-xs">
-                    <span>Przyjęto: {formatDate(slot.createdAt)}</span>
-                    <span>Wygasa: {formatDate(slot.expiresAt)}</span>
+                    <span>
+                      {t("generated.scanner.outbound.received", {
+                        value0: formatDateTimeLabel(slot.createdAt, locale),
+                      })}
+                    </span>
+                    <span>
+                      {t("generated.scanner.outbound.expires", {
+                        value0: formatDateTimeLabel(slot.expiresAt, locale),
+                      })}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -128,7 +145,7 @@ export function OutboundFifoWarning({
             onClick={onTakeFifoCompliant}
             type="button"
           >
-            Pobierz zgodny z FIFO
+            {t("generated.scanner.outbound.pickFifoCompliant")}
           </Button>
           <Button
             className="h-12 w-full rounded-xl"
@@ -137,7 +154,7 @@ export function OutboundFifoWarning({
             type="button"
             variant="outline"
           >
-            Kontynuuj mimo to (pomiń FIFO)
+            {t("generated.scanner.outbound.continueAnywaySkipFifo")}
           </Button>
         </div>
       </div>

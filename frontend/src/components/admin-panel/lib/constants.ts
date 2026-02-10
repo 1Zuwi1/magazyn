@@ -3,30 +3,49 @@ import {
   InboxIcon,
   WeightScale01Icon,
 } from "@hugeicons/core-free-icons"
+import type { AppTranslate } from "@/i18n/use-translations"
 
-export const ADMIN_NAV_LINKS = [
-  { title: "Przegląd", url: "/admin" },
-  { title: "Użytkownicy", url: "/admin/users" },
-  { title: "Magazyny", url: "/admin/warehouses" },
-  { title: "Przedmioty", url: "/admin/items" },
-  { title: "Alerty", url: "/admin/alerts" },
-  { title: "Raporty regałów", url: "/admin/rack-reports" },
-  { title: "Audyt operacji", url: "/admin/audit" },
-] as const
+export const getAdminNavLinks = (t: AppTranslate) =>
+  [
+    { title: t("generated.shared.review"), url: "/admin" },
+    { title: t("generated.shared.users"), url: "/admin/users" },
+    {
+      title: t("generated.shared.warehouses"),
+      url: "/admin/warehouses",
+    },
+    { title: t("generated.shared.items"), url: "/admin/items" },
+    {
+      title: t("generated.shared.alerts"),
+      url: "/admin/alerts",
+    },
+    {
+      title: t("generated.shared.rackReports"),
+      url: "/admin/rack-reports",
+    },
+    {
+      title: t("generated.shared.operationsAudit"),
+      url: "/admin/audit",
+    },
+  ] as const
 
-export const NOTIFICATIONS_NAV_LINKS = [
-  { title: "Wszystkie", icon: InboxIcon, filterValue: null },
-  {
-    title: "Przeciążenia",
-    icon: WeightScale01Icon,
-    filterValue: "RACK_OVERWEIGHT" as const,
-  },
-  {
-    title: "Nieautoryzowane",
-    icon: Alert01Icon,
-    filterValue: "UNAUTHORIZED_REMOVAL" as const,
-  },
-]
+export const getNotificationsNavLinks = (t: AppTranslate) =>
+  [
+    {
+      title: t("generated.shared.all"),
+      icon: InboxIcon,
+      filterValue: null,
+    },
+    {
+      title: t("generated.admin.shared.overloads"),
+      icon: WeightScale01Icon,
+      filterValue: "RACK_OVERWEIGHT" as const,
+    },
+    {
+      title: t("generated.admin.shared.unauthorized"),
+      icon: Alert01Icon,
+      filterValue: "UNAUTHORIZED_REMOVAL" as const,
+    },
+  ] as const
 export const DEFAULT_RACK = {
   marker: "",
   name: "",

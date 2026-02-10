@@ -7,6 +7,7 @@ import {
   ViewIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -16,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { TableCell } from "@/components/ui/table"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { RackAssortment } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 
@@ -26,8 +28,8 @@ interface TableRowContentProps {
   onDelete: (id: number) => void
 }
 
-function formatDateTime(dateString: string) {
-  return new Date(dateString).toLocaleDateString("pl-PL", {
+function formatDateTime(dateString: string, locale: string) {
+  return new Date(dateString).toLocaleDateString(locale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -46,6 +48,9 @@ export function TableRowContent({
   onEdit,
   onDelete,
 }: TableRowContentProps) {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
   const expired = isExpired(assortment.expiresAt)
 
   return (
@@ -57,21 +62,21 @@ export function TableRowContent({
       </TableCell>
       <TableCell>{assortment.userId}</TableCell>
       <TableCell className="text-sm">
-        {formatDateTime(assortment.createdAt)}
+        {formatDateTime(assortment.createdAt, locale)}
       </TableCell>
       <TableCell>
         <span className={expired ? "font-medium text-destructive" : ""}>
-          {formatDateTime(assortment.expiresAt)}
+          {formatDateTime(assortment.expiresAt, locale)}
         </span>
         {expired && (
           <Badge className="ml-2" variant="destructive">
-            Wygasło
+            {t("generated.shared.expired")}
           </Badge>
         )}
       </TableCell>
       <TableCell className="text-right">
         <DropdownMenu>
-          <DropdownMenuTrigger aria-label="Otwórz menu">
+          <DropdownMenuTrigger aria-label={t("generated.shared.openMenu")}>
             <HugeiconsIcon
               className={cn(
                 buttonVariants({
@@ -88,21 +93,21 @@ export function TableRowContent({
               onClick={() => onView(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={ViewIcon} />
-              <span>Podgląd</span>
+              <span>{t("generated.dashboard.itemsVisualization.preview")}</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => onEdit(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilEdit01Icon} />
-              <span>Edytuj</span>
+              <span>{t("generated.shared.edit")}</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer text-destructive focus:text-destructive"
               onClick={() => onDelete(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={Delete02Icon} />
-              <span>Usuń</span>
+              <span>{t("generated.shared.remove")}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

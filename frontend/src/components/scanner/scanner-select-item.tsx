@@ -2,8 +2,10 @@
 
 import { Search01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useInfiniteItems } from "@/hooks/use-items"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Spinner } from "../ui/spinner"
@@ -26,6 +28,8 @@ export function ScannerSelectItem({
   onSelect,
   onCancel,
 }: ScannerSelectItemProps) {
+  const t = useAppTranslations()
+
   const [search, setSearch] = useState("")
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -81,7 +85,7 @@ export function ScannerSelectItem({
             autoComplete="off"
             className="h-11 rounded-xl pl-9"
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Szukaj po nazwie lub kodzie..."
+            placeholder={t("generated.scanner.searchNameCode")}
             type="text"
             value={search}
           />
@@ -100,13 +104,13 @@ export function ScannerSelectItem({
 
             {isError ? (
               <p className="py-8 text-center text-destructive text-sm">
-                Nie udało się pobrać listy produktów.
+                {t("generated.scanner.failedFetchProductList")}
               </p>
             ) : null}
 
             {!(isPending || isError) && items.length === 0 ? (
               <p className="py-8 text-center text-muted-foreground text-sm">
-                Nie znaleziono produktów.
+                {t("generated.scanner.productsFound")}
               </p>
             ) : null}
 
@@ -145,7 +149,7 @@ export function ScannerSelectItem({
             type="button"
             variant="outline"
           >
-            Wróć
+            {t("generated.scanner.back")}
           </Button>
         </div>
       </div>

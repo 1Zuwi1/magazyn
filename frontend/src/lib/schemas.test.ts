@@ -23,7 +23,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi zawierać co najmniej jedną wielką literę"
+        "generated.validation.passwordMustContainLeastOne"
       )
     }
   })
@@ -34,7 +34,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi zawierać co najmniej jedną małą literę"
+        "generated.validation.passwordMustContainLeastOneLowercase"
       )
     }
   })
@@ -45,7 +45,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi zawierać co najmniej jedną cyfrę"
+        "generated.validation.passwordMustContainLeastOneDigit"
       )
     }
   })
@@ -56,7 +56,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi zawierać co najmniej jeden znak specjalny"
+        "generated.validation.passwordMustContainLeastOneSpecial"
       )
     }
   })
@@ -87,7 +87,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi mieć co najmniej 8 znaków"
+        "generated.validation.passwordMustLeast8Characters"
       )
     }
   })
@@ -102,7 +102,9 @@ describe("LoginSchema", () => {
 
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe("Nieprawidłowy adres email")
+      expect(result.error.issues[0].message).toBe(
+        "generated.validation.invalidEmailAddress"
+      )
     }
   })
 
@@ -161,7 +163,9 @@ describe("RegisterSchema", () => {
 
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe("Hasła nie są zgodne")
+      expect(result.error.issues[0].message).toBe(
+        "generated.shared.passwordsMatch"
+      )
     }
   })
 
@@ -191,7 +195,7 @@ describe("RegisterSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Imię i nazwisko musi mieć co najmniej 2 znaki"
+        "generated.validation.fullNameMustLeast2"
       )
     }
   })
@@ -250,7 +254,7 @@ describe("Verify2FASchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Kod musi mieć dokładnie 6 cyfr"
+        "generated.validation.codeMustExactly6Digits"
       )
     }
   })
@@ -322,8 +326,12 @@ describe("ApiMeSchema", () => {
       full_name: "Test User",
       account_status: "ACTIVE",
       role: "USER",
+      phone: null,
       location: "Warsaw",
+      team: null,
+      last_login: null,
       warehouse_ids: [],
+      backup_codes_refresh_needed: false,
     }
 
     const result = ApiMeSchema.shape.GET.shape.output.safeParse(validOutput)

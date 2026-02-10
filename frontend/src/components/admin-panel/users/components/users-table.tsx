@@ -6,6 +6,7 @@ import {
   UserShield01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
@@ -25,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { AdminUser } from "@/hooks/use-admin-users"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import {
   getStatusLabel,
@@ -44,16 +46,16 @@ interface UsersTableProps {
 
 const TABLE_COLUMNS_COUNT = 6
 
-const ADMIN_TABLE_LABELS = {
-  OPERATIONS: "Operacje magazynowe",
-  LOGISTICS: "Logistyka",
-  WAREHOUSE: "Magazyn",
-  INVENTORY: "Inwentaryzacja",
-  QUALITY_CONTROL: "Kontrola jakości",
-  RECEIVING: "Przyjęcia",
-  SHIPPING: "Wysyłka",
-  IT_SUPPORT: "Wsparcie IT",
-  MANAGEMENT: "Zarządzanie",
+const ADMIN_TABLE_LABEL_KEYS = {
+  OPERATIONS: "adminUsers.teams.OPERATIONS",
+  LOGISTICS: "adminUsers.teams.LOGISTICS",
+  WAREHOUSE: "adminUsers.teams.WAREHOUSE",
+  INVENTORY: "adminUsers.teams.INVENTORY",
+  QUALITY_CONTROL: "adminUsers.teams.QUALITY_CONTROL",
+  RECEIVING: "adminUsers.teams.RECEIVING",
+  SHIPPING: "adminUsers.teams.SHIPPING",
+  IT_SUPPORT: "adminUsers.teams.IT_SUPPORT",
+  MANAGEMENT: "adminUsers.teams.MANAGEMENT",
 }
 
 export function UsersTable({
@@ -65,6 +67,8 @@ export function UsersTable({
   onChangeStatus,
   onAssignWarehouse,
 }: UsersTableProps) {
+  const t = useAppTranslations()
+
   const renderRows = () => {
     if (isPending) {
       return Array.from({ length: 5 }, (_, i) => (
@@ -117,102 +121,109 @@ export function UsersTable({
       )
     }
 
-    return users.map((user) => (
-      <TableRow
-        className="group cursor-default transition-colors"
-        key={user.id}
-      >
-        <TableCell className="font-medium">
-          {normalizeValue(user.full_name) || "—"}
-        </TableCell>
-        <TableCell className="text-muted-foreground">{user.email}</TableCell>
-        <TableCell>
-          <Badge
-            className="capitalize"
-            variant={getStatusVariant(user.account_status)}
-          >
-            {getStatusLabel(user.account_status)}
-          </Badge>
-        </TableCell>
-        <TableCell>
-          <Badge
-            className="capitalize"
-            variant={user.role === "ADMIN" ? "default" : "outline"}
-          >
-            {user.role}
-          </Badge>
-        </TableCell>
-        <TableCell className="text-muted-foreground">
-          {ADMIN_TABLE_LABELS[user.team as keyof typeof ADMIN_TABLE_LABELS] ||
-            "—"}
-        </TableCell>
-        <TableCell>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              aria-label="Akcje użytkownika"
-              className={cn(
-                "flex size-8 items-center justify-center rounded-md opacity-0 transition-all hover:bg-muted group-hover:opacity-100",
-                "focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
-              )}
+    return users.map((user) => {
+      const teamLabelKey =
+        ADMIN_TABLE_LABEL_KEYS[user.team as keyof typeof ADMIN_TABLE_LABEL_KEYS]
+
+      return (
+        <TableRow
+          className="group cursor-default transition-colors"
+          key={user.id}
+        >
+          <TableCell className="font-medium">
+            {normalizeValue(user.full_name) || "—"}
+          </TableCell>
+          <TableCell className="text-muted-foreground">{user.email}</TableCell>
+          <TableCell>
+            <Badge
+              className="capitalize"
+              variant={getStatusVariant(user.account_status)}
             >
-              <HugeiconsIcon
-                className="size-5"
-                icon={MoreHorizontalCircle01FreeIcons}
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  onEditUser(user.id)
-                }}
+              {getStatusLabel(user.account_status, t)}
+            </Badge>
+          </TableCell>
+          <TableCell>
+            <Badge
+              className="capitalize"
+              variant={user.role === "ADMIN" ? "default" : "outline"}
+            >
+              {user.role}
+            </Badge>
+          </TableCell>
+          <TableCell className="text-muted-foreground">
+            {teamLabelKey ? t(teamLabelKey) : "—"}
+          </TableCell>
+          <TableCell>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-label={t("generated.admin.users.userActions")}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-md opacity-0 transition-all hover:bg-muted group-hover:opacity-100",
+                  "focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
+                )}
               >
                 <HugeiconsIcon
-                  className="mr-2 size-4"
-                  icon={PencilEdit01Icon}
+                  className="size-5"
+                  icon={MoreHorizontalCircle01FreeIcons}
                 />
-                Edytuj
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  onChangeStatus(user.id)
-                }}
-              >
-                <HugeiconsIcon
-                  className="mr-2 size-4"
-                  icon={UserShield01Icon}
-                />
-                Zmień status
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  onAssignWarehouse(user.id)
-                }}
-              >
-                <HugeiconsIcon className="mr-2 size-4" icon={Building06Icon} />
-                Przypisz magazyn
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="cursor-pointer text-destructive focus:text-destructive"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  onDeleteUser(user.id)
-                }}
-              >
-                <HugeiconsIcon className="mr-2 size-4" icon={Delete02Icon} />
-                Usuń
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </TableCell>
-      </TableRow>
-    ))
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onEditUser(user.id)
+                  }}
+                >
+                  <HugeiconsIcon
+                    className="mr-2 size-4"
+                    icon={PencilEdit01Icon}
+                  />
+                  {t("generated.shared.edit")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onChangeStatus(user.id)
+                  }}
+                >
+                  <HugeiconsIcon
+                    className="mr-2 size-4"
+                    icon={UserShield01Icon}
+                  />
+                  {t("generated.admin.shared.changeStatus")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onAssignWarehouse(user.id)
+                  }}
+                >
+                  <HugeiconsIcon
+                    className="mr-2 size-4"
+                    icon={Building06Icon}
+                  />
+                  {t("generated.admin.users.assignWarehouse")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onDeleteUser(user.id)
+                  }}
+                >
+                  <HugeiconsIcon className="mr-2 size-4" icon={Delete02Icon} />
+                  {t("generated.shared.remove")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </TableCell>
+        </TableRow>
+      )
+    })
   }
 
   return (
@@ -220,11 +231,21 @@ export function UsersTable({
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/20 hover:bg-muted/20">
-            <TableHead className="font-semibold">Imię i nazwisko</TableHead>
-            <TableHead className="font-semibold">Email</TableHead>
-            <TableHead className="font-semibold">Status</TableHead>
-            <TableHead className="font-semibold">Rola</TableHead>
-            <TableHead className="font-semibold">Zespół</TableHead>
+            <TableHead className="font-semibold">
+              {t("generated.admin.users.fullName")}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {t("generated.shared.eMail")}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {t("generated.shared.status")}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {t("generated.shared.role")}
+            </TableHead>
+            <TableHead className="font-semibold">
+              {t("generated.shared.team")}
+            </TableHead>
             <TableHead className="w-12" />
           </TableRow>
         </TableHeader>

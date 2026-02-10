@@ -8,8 +8,10 @@ import {
   Tag01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { Button } from "@/components/ui/button"
 import { ItemPhoto } from "@/components/ui/item-photo"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { IconComponent } from "../types"
 import { useWarehouseStore } from "./store"
@@ -20,17 +22,15 @@ interface DetailsPanelProps {
   warehouse: Warehouse3D
 }
 
+const STATUS_TEXT_KEYS: Record<Item3D["status"], string> = {
+  normal: "warehouseVisualization.statusLabels.normal",
+  expired: "warehouseVisualization.statusLabels.expired",
+  "expired-dangerous": "warehouseVisualization.statusLabels.expiredDangerous",
+  dangerous: "warehouseVisualization.statusLabels.dangerous",
+}
+
 function getStatusText(status: Item3D["status"]): string {
-  if (status === "normal") {
-    return "Normalny"
-  }
-  if (status === "expired") {
-    return "Przeterminowany"
-  }
-  if (status === "expired-dangerous") {
-    return "Przeterminowany i niebezpieczny"
-  }
-  return "Niebezpieczny"
+  return STATUS_TEXT_KEYS[status]
 }
 
 function getStatusColor(status: Item3D["status"]): {
@@ -66,7 +66,10 @@ function getStatusColor(status: Item3D["status"]): {
   }
 }
 
-function getOccupancyColor(percentage: number): {
+function getOccupancyColor(
+  t: ReturnType<typeof useAppTranslations>,
+  percentage: number
+): {
   text: string
   bg: string
   bar: string
@@ -77,7 +80,7 @@ function getOccupancyColor(percentage: number): {
       text: "text-destructive",
       bg: "bg-destructive/10",
       bar: "bg-destructive",
-      label: "Krytyczne",
+      label: t("generated.dashboard.shared.critical"),
     }
   }
   if (percentage >= 75) {
@@ -85,7 +88,7 @@ function getOccupancyColor(percentage: number): {
       text: "text-orange-500",
       bg: "bg-orange-500/10",
       bar: "bg-orange-500",
-      label: "Wysokie",
+      label: t("generated.dashboard.shared.high"),
     }
   }
   if (percentage >= 50) {
@@ -93,14 +96,14 @@ function getOccupancyColor(percentage: number): {
       text: "text-primary",
       bg: "bg-primary/10",
       bar: "bg-primary",
-      label: "Umiarkowane",
+      label: t("generated.dashboard.shared.moderate"),
     }
   }
   return {
     text: "text-emerald-500",
     bg: "bg-emerald-500/10",
     bar: "bg-emerald-500",
-    label: "Niskie",
+    label: t("generated.dashboard.shared.low"),
   }
 }
 
@@ -134,6 +137,8 @@ function StatCard({
 }
 
 function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
+  const t = useAppTranslations()
+
   const totalSlots = warehouse.racks.reduce(
     (sum: number, rack: Rack3D) => sum + rack.grid.rows * rack.grid.cols,
     0
@@ -147,7 +152,7 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
   const freeSlots = totalSlots - occupiedSlots
   const occupancyPercentage =
     totalSlots > 0 ? Math.round((occupiedSlots / totalSlots) * 100) : 0
-  const occupancyColors = getOccupancyColor(occupancyPercentage)
+  const occupancyColors = getOccupancyColor(t, occupancyPercentage)
 
   return (
     <div className="flex h-full flex-col border-l bg-linear-to-b from-background via-background to-muted/20">
@@ -164,10 +169,10 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
           </div>
           <div>
             <h2 className="font-semibold text-base tracking-tight">
-              Przegląd Magazynu
+              {t("generated.dashboard.visualization3d.warehouseReview")}
             </h2>
             <p className="text-muted-foreground text-xs">
-              Statystyki i podsumowanie
+              {t("generated.dashboard.visualization3d.statisticsSummary")}
             </p>
           </div>
         </div>
@@ -177,7 +182,9 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
       <div className="border-b px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-sm">Obłożenie całkowite</span>
+            <span className="font-medium text-sm">
+              {t("generated.dashboard.visualization3d.totalOccupancy")}
+            </span>
             <span
               className={cn(
                 "rounded-md px-2 py-0.5 font-medium text-xs",
@@ -218,28 +225,28 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
           bgColor="bg-muted"
           color="text-muted-foreground"
           icon={GridViewIcon}
-          label="Regałów"
+          label={t("generated.dashboard.shared.racks")}
           value={warehouse.racks.length}
         />
         <StatCard
           bgColor="bg-primary/10"
           color="text-primary"
           icon={PackageIcon}
-          label="Pojemność"
+          label={t("generated.dashboard.shared.capacity")}
           value={totalSlots}
         />
         <StatCard
           bgColor="bg-muted"
           color="text-muted-foreground"
           icon={SquareLock02Icon}
-          label="Zajętych"
+          label={t("generated.dashboard.visualization3d.occupied")}
           value={occupiedSlots}
         />
         <StatCard
           bgColor="bg-emerald-500/10"
           color="text-emerald-500"
           icon={CheckmarkCircle02Icon}
-          label="Wolnych"
+          label={t("generated.dashboard.shared.free")}
           value={freeSlots}
         />
       </div>
@@ -248,6 +255,8 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
 }
 
 export function DetailsPanel({ warehouse }: DetailsPanelProps) {
+  const t = useAppTranslations()
+
   const { mode, selectedRackId, selectedShelf, clearSelection, focusWindow } =
     useWarehouseStore()
 
@@ -276,7 +285,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
           100
       )
     : 0
-  const occupancyColors = getOccupancyColor(rackOccupancy)
+  const occupancyColors = getOccupancyColor(t, rackOccupancy)
 
   return (
     <div className="flex h-full flex-col border-l bg-linear-to-b from-background via-background to-muted/20">
@@ -294,10 +303,10 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
             </div>
             <div>
               <h2 className="font-semibold text-base tracking-tight">
-                Szczegóły Regału
+                {t("generated.dashboard.shared.rackDetails")}
               </h2>
               <p className="text-muted-foreground text-xs">
-                {selectedRack?.name ?? "Wybierz regał"}
+                {selectedRack?.name ?? t("generated.shared.selectRack")}
               </p>
             </div>
           </div>
@@ -337,29 +346,39 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
 
             <div className="space-y-2 p-3 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Siatka</span>
+                <span className="text-muted-foreground">
+                  {t("generated.dashboard.visualization3d.net")}
+                </span>
                 <span className="font-mono font-semibold">
                   {selectedRack.grid.rows}×{selectedRack.grid.cols}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Wszystkie miejsca</span>
+                <span className="text-muted-foreground">
+                  {t("generated.dashboard.visualization3d.allPlaces")}
+                </span>
                 <span className="font-mono font-semibold">
                   {selectedRack.grid.rows * selectedRack.grid.cols}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Zajęte</span>
+                <span className="text-muted-foreground">
+                  {t("generated.dashboard.shared.occupied")}
+                </span>
                 <span className="font-mono font-semibold">
                   {selectedRack.items.filter((item) => item !== null).length}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Max rozmiar</span>
+                <span className="text-muted-foreground">
+                  {t("generated.dashboard.visualization3d.maxSize")}
+                </span>
                 <span className="font-mono font-semibold">
-                  {selectedRack.maxElementSize.width}×
-                  {selectedRack.maxElementSize.height}×
-                  {selectedRack.maxElementSize.depth} mm
+                  {t("generated.dashboard.visualization3d.maxMm", {
+                    value0: selectedRack.maxElementSize.width,
+                    value1: selectedRack.maxElementSize.height,
+                    value2: selectedRack.maxElementSize.depth,
+                  })}
                 </span>
               </div>
             </div>
@@ -378,13 +397,15 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                   </div>
                   <div>
                     <h4 className="font-semibold text-sm">
-                      Rząd {selectedShelf.row + 1}, Półka{" "}
-                      {selectedShelf.col + 1}
+                      {t("generated.dashboard.shared.rowShelf", {
+                        value0: selectedShelf.row + 1,
+                        value1: selectedShelf.col + 1,
+                      })}
                     </h4>
                   </div>
                 </div>
                 <Button onClick={clearSelection} size="sm" variant="ghost">
-                  Wyczyść
+                  {t("generated.shared.clear")}
                 </Button>
               </div>
 
@@ -400,17 +421,21 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                         getStatusColor(selectedItem.status).text
                       )}
                     >
-                      {getStatusText(selectedItem.status)}
+                      {t(getStatusText(selectedItem.status))}
                     </span>
                   </div>
 
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">ID</span>
+                      <span className="text-muted-foreground">
+                        {t("generated.dashboard.shared.id")}
+                      </span>
                       <span className="font-mono">{selectedItem.id}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Nazwa</span>
+                      <span className="text-muted-foreground">
+                        {t("generated.shared.name")}
+                      </span>
                       <span className="font-medium">{selectedItem.label}</span>
                     </div>
                   </div>
@@ -431,12 +456,15 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                     />
                   </div>
                   <p className="font-medium text-muted-foreground text-sm">
-                    Pusta półka
+                    {t("generated.dashboard.shared.emptyShelf")}
                   </p>
                   <p className="text-muted-foreground/70 text-xs">
-                    Brak elementu na pozycji
+                    {t("generated.dashboard.shared.itemPosition")}
                     <br />
-                    Rząd {selectedShelf.row + 1}, Półka {selectedShelf.col + 1}
+                    {t("generated.dashboard.shared.rowShelf", {
+                      value0: selectedShelf.row + 1,
+                      value1: selectedShelf.col + 1,
+                    })}
                   </p>
                 </div>
               )}
@@ -455,10 +483,10 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
               <p className="font-medium text-muted-foreground text-sm">
                 {showBlockHint
                   ? `Kliknij blok ${RACK_ZONE_SIZE}×${RACK_ZONE_SIZE}`
-                  : "Kliknij na półkę"}
+                  : t("generated.dashboard.shared.clickShelf")}
               </p>
               <p className="text-muted-foreground/70 text-xs">
-                aby zobaczyć szczegóły elementu
+                {t("generated.dashboard.shared.seeItemDetails")}
               </p>
             </div>
           )}

@@ -10,7 +10,8 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
+
+import { useEffect, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import {
   ErrorEmptyState,
@@ -36,6 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import useItems, { type Item } from "@/hooks/use-items"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { CodeCell } from "./components/code-cell"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 
@@ -120,11 +122,15 @@ interface ItemsTableProps {
   initialSearch?: string
 }
 
-const itemsColumns: ColumnDef<Item>[] = [
+const createItemsColumns = (
+  t: ReturnType<typeof useAppTranslations>
+): ColumnDef<Item>[] => [
   {
     accessorKey: "name",
     header: ({ column }) => (
-      <SortableHeader column={column}>Nazwa</SortableHeader>
+      <SortableHeader column={column}>
+        {t("generated.shared.name")}
+      </SortableHeader>
     ),
     cell: ({ row }) => {
       const item = row.original
@@ -145,7 +151,9 @@ const itemsColumns: ColumnDef<Item>[] = [
   {
     accessorKey: "code",
     header: ({ column }) => (
-      <SortableHeader column={column}>Kod</SortableHeader>
+      <SortableHeader column={column}>
+        {t("generated.shared.code")}
+      </SortableHeader>
     ),
     cell: ({ row }) => <CodeCell value={row.original.code} />,
     enableSorting: true,
@@ -154,7 +162,9 @@ const itemsColumns: ColumnDef<Item>[] = [
     id: "dimensions",
     accessorFn: (item) => `${item.sizeX}×${item.sizeY}×${item.sizeZ}`,
     header: ({ column }) => (
-      <SortableHeader column={column}>Wymiary</SortableHeader>
+      <SortableHeader column={column}>
+        {t("generated.dashboard.shared.dimensions")}
+      </SortableHeader>
     ),
     cell: ({ row }) => (
       <span className="font-mono text-sm">
@@ -166,40 +176,52 @@ const itemsColumns: ColumnDef<Item>[] = [
   {
     accessorKey: "weight",
     header: ({ column }) => (
-      <SortableHeader column={column}>Waga</SortableHeader>
+      <SortableHeader column={column}>
+        {t("generated.shared.weight")}
+      </SortableHeader>
     ),
     cell: ({ row }) => (
-      <span className="font-mono">{row.original.weight} kg</span>
+      <span className="font-mono">
+        {row.original.weight} {t("generated.shared.kg")}
+      </span>
     ),
     enableSorting: true,
   },
   {
     accessorKey: "expireAfterDays",
     header: ({ column }) => (
-      <SortableHeader column={column}>Ważność</SortableHeader>
+      <SortableHeader column={column}>
+        {t("generated.dashboard.shared.shelfLife")}
+      </SortableHeader>
     ),
     cell: ({ row }) => (
-      <Badge variant="outline">{row.original.expireAfterDays} dni</Badge>
+      <Badge variant="outline">
+        {t("generated.dashboard.shared.pluralLabel", {
+          value0: row.original.expireAfterDays,
+        })}
+      </Badge>
     ),
     enableSorting: true,
   },
   {
     accessorKey: "dangerous",
     header: ({ column }) => (
-      <SortableHeader column={column}>Status</SortableHeader>
+      <SortableHeader column={column}>
+        {t("generated.shared.status")}
+      </SortableHeader>
     ),
     cell: ({ row }) =>
       row.original.dangerous ? (
-        <Badge variant="destructive">Niebezpieczny</Badge>
+        <Badge variant="destructive">{t("generated.shared.dangerous")}</Badge>
       ) : (
-        <Badge variant="secondary">Bezpieczny</Badge>
+        <Badge variant="secondary">{t("generated.shared.safe")}</Badge>
       ),
     enableSorting: true,
   },
   {
     id: "comment",
     accessorKey: "comment",
-    header: () => <StaticHeader>Komentarz</StaticHeader>,
+    header: () => <StaticHeader>{t("generated.shared.comment")}</StaticHeader>,
     cell: ({ row }) => (
       <span className="line-clamp-2 text-muted-foreground text-sm">
         {row.original.comment || "Brak"}
@@ -210,6 +232,9 @@ const itemsColumns: ColumnDef<Item>[] = [
 ]
 
 export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
+  const t = useAppTranslations()
+  const itemsColumns = useMemo(() => createItemsColumns(t), [t])
+
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState(initialSearch)
   const [debouncedSearch] = useDebouncedValue(search, { wait: 500 })
@@ -271,9 +296,9 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
   const totalPages = items?.totalPages ?? 1
 
   const itemLabel = {
-    singular: "przedmiot",
-    plural: "przedmioty",
-    genitive: "przedmiotów",
+    singular: t("generated.shared.item"),
+    plural: t("generated.shared.items2"),
+    genitive: t("generated.shared.items3"),
   }
 
   const clearAllFilters = () => {
@@ -286,9 +311,9 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
         <FilterBar className="gap-3">
           <FilterGroup>
             <SearchInput
-              aria-label="Szukaj przedmiotów"
+              aria-label={t("generated.dashboard.items.searchItems")}
               onChange={handleSearchChange}
-              placeholder="Szukaj po nazwie, kodzie lub komentarzu..."
+              placeholder={t("generated.dashboard.items.searchNameCodeComment")}
               value={search}
             />
             {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}

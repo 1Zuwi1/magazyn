@@ -5,9 +5,11 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { format } from "date-fns"
+
 import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { Rack, RackAssortment } from "@/lib/schemas"
 import type { SlotCoordinates } from "../types"
 import { getSlotCoordinate } from "../utils/helpers"
@@ -40,6 +42,8 @@ export function RackShelfDetailsCard({
   assortment,
   onClearSelection,
 }: RackShelfDetailsCardProps) {
+  const t = useAppTranslations()
+
   const hasSelection = selectedSlotCoordinates !== null
   const selectedPosition = selectedSlotCoordinates
     ? {
@@ -61,11 +65,16 @@ export function RackShelfDetailsCard({
             <HugeiconsIcon className="size-4 text-primary" icon={Tag01Icon} />
           </div>
           <div>
-            <h3 className="font-semibold text-sm">Szczegóły półki</h3>
+            <h3 className="font-semibold text-sm">
+              {t("generated.dashboard.rackVisualization.shelfDetails")}
+            </h3>
             <p className="text-muted-foreground text-xs">
               {selectedPosition
-                ? `Rząd ${selectedPosition.row + 1}, Półka ${selectedPosition.col + 1}`
-                : "Wybierz półkę"}
+                ? t("generated.dashboard.shared.rowShelf", {
+                    value0: selectedPosition.row + 1,
+                    value1: selectedPosition.col + 1,
+                  })
+                : t("generated.dashboard.rackVisualization.selectShelf")}
             </p>
           </div>
         </div>
@@ -78,7 +87,7 @@ export function RackShelfDetailsCard({
           )}
           {selectedPosition && (
             <Button onClick={onClearSelection} size="sm" variant="ghost">
-              Wyczyść
+              {t("generated.shared.clear")}
             </Button>
           )}
         </div>
@@ -93,10 +102,10 @@ export function RackShelfDetailsCard({
             />
           </div>
           <p className="font-medium text-muted-foreground text-sm">
-            Kliknij na półkę
+            {t("generated.dashboard.shared.clickShelf")}
           </p>
           <p className="text-muted-foreground/70 text-xs">
-            aby zobaczyć szczegóły elementu
+            {t("generated.dashboard.shared.seeItemDetails")}
           </p>
         </div>
       )}
@@ -110,13 +119,16 @@ export function RackShelfDetailsCard({
             />
           </div>
           <p className="font-medium text-muted-foreground text-sm">
-            Pusta półka
+            {t("generated.dashboard.shared.emptyShelf")}
           </p>
           <p className="text-muted-foreground/70 text-xs">
-            Brak elementu na pozycji
+            {t("generated.dashboard.shared.itemPosition")}
             <br />
             {selectedPosition
-              ? `Rząd ${selectedPosition.row + 1}, Półka ${selectedPosition.col + 1}`
+              ? t("generated.dashboard.shared.rowShelf", {
+                  value0: selectedPosition.row + 1,
+                  value1: selectedPosition.col + 1,
+                })
               : ""}
           </p>
         </div>
@@ -126,7 +138,7 @@ export function RackShelfDetailsCard({
         <div className="space-y-3 p-4">
           <div className="space-y-2 text-xs">
             <DetailRow
-              label="Nazwa przedmiotu"
+              label={t("generated.dashboard.shared.itemName")}
               value={
                 <span className="font-mono font-semibold">
                   {assortment.item.name}
@@ -134,7 +146,7 @@ export function RackShelfDetailsCard({
               }
             />
             <DetailRow
-              label="Kod"
+              label={t("generated.shared.code")}
               value={
                 <span className="font-mono font-semibold">
                   {assortment.code}
@@ -142,15 +154,18 @@ export function RackShelfDetailsCard({
               }
             />
             <DetailRow
-              label="Pozycja"
+              label={t("generated.shared.position")}
               value={
                 <span className="font-mono font-semibold">
-                  X: {assortment.positionX}, Y: {assortment.positionY}
+                  {t("generated.dashboard.rackVisualization.xY", {
+                    value0: assortment.positionX,
+                    value1: assortment.positionY,
+                  })}
                 </span>
               }
             />
             <DetailRow
-              label="Utworzono"
+              label={t("generated.shared.created")}
               value={
                 <span className="font-mono font-semibold">
                   {format(
@@ -161,7 +176,7 @@ export function RackShelfDetailsCard({
               }
             />
             <DetailRow
-              label="Wygasa"
+              label={t("generated.dashboard.shared.expires")}
               value={
                 <span className="font-mono font-semibold">
                   {format(

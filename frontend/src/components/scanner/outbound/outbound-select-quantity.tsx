@@ -1,5 +1,7 @@
 import Image from "next/image"
+
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { Badge } from "../../ui/badge"
 import { Button } from "../../ui/button"
 import { Input } from "../../ui/input"
@@ -28,6 +30,8 @@ export function OutboundSelectQuantity({
   onQuantityChange,
   onSubmit,
 }: OutboundSelectQuantityProps) {
+  const t = useAppTranslations()
+
   return (
     <ScannerBody>
       <div className="relative flex h-full flex-col">
@@ -35,10 +39,10 @@ export function OutboundSelectQuantity({
 
         <div className="mb-6">
           <h2 className="font-semibold text-xl tracking-tight">
-            Ile sztuk chcesz zdjąć?
+            {t("generated.scanner.outbound.howManyUnitsWantRemove")}
           </h2>
           <p className="mt-1 text-muted-foreground text-sm">
-            Podaj ilość sztuk do zdjęcia z magazynu.
+            {t("generated.scanner.outbound.enterQuantityRemoveWarehouse")}
           </p>
         </div>
 
@@ -58,10 +62,14 @@ export function OutboundSelectQuantity({
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="truncate font-medium">{item.name}</h3>
-                  {item.dangerous ? <Badge>Niebezpieczny</Badge> : null}
+                  {item.dangerous ? (
+                    <Badge>{t("generated.shared.dangerous")}</Badge>
+                  ) : null}
                 </div>
                 <p className="mt-1 font-mono text-muted-foreground text-xs">
-                  Kod: {item.code}
+                  {t("generated.scanner.shared.code", {
+                    value0: item.code,
+                  })}
                 </p>
               </div>
             </div>
@@ -74,7 +82,7 @@ export function OutboundSelectQuantity({
               className="mb-2 block font-medium text-sm"
               htmlFor="outbound-quantity"
             >
-              Ilość do zdjęcia
+              {t("generated.scanner.outbound.quantityRemove")}
             </label>
             <div className="flex items-center gap-3">
               <Button
@@ -127,7 +135,7 @@ export function OutboundSelectQuantity({
             onClick={onSubmit}
             type="button"
           >
-            Wyznacz pozycje do pobrania
+            {t("generated.scanner.outbound.generatePickLocations")}
           </Button>
         </div>
       </div>

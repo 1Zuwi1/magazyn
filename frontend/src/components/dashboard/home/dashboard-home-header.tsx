@@ -5,15 +5,19 @@ import {
   Home01Icon,
   Package,
 } from "@hugeicons/core-free-icons"
+import { useLocale } from "next-intl"
 import { PageHeader } from "@/components/dashboard/page-header"
 import useWarehouses from "@/hooks/use-warehouses"
+import { useAppTranslations } from "@/i18n/use-translations"
 import {
   formatNumber,
   getOccupancyStatVariant,
   TOP_WAREHOUSES_LIMIT,
 } from "./dashboard-home.constants"
-
 export function DashboardHomeHeader() {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
   const { data: warehousesData } = useWarehouses({
     page: 0,
     size: TOP_WAREHOUSES_LIMIT,
@@ -26,22 +30,24 @@ export function DashboardHomeHeader() {
   const totalWarehouses = warehousesData?.summary?.totalWarehouses ?? 0
   return (
     <PageHeader
-      description="Bieżący stan magazynów, alerty operacyjne i szybkie przejścia do kluczowych modułów."
+      description={t(
+        "generated.dashboard.home.currentWarehouseStatusOperationalAlerts"
+      )}
       icon={Home01Icon}
       stats={[
         {
-          label: "Magazyny",
-          value: formatNumber(totalWarehouses),
+          label: t("generated.shared.warehouses"),
+          value: formatNumber(totalWarehouses, locale),
           icon: Package,
         },
         {
-          label: "Zajętość",
+          label: t("generated.dashboard.home.occupied"),
           value: `${occupancyPercentage}%`,
           icon: ChartLineData01Icon,
           variant: getOccupancyStatVariant(occupancyPercentage),
         },
       ]}
-      title="Panel główny"
+      title={t("generated.shared.mainPanel")}
     />
   )
 }

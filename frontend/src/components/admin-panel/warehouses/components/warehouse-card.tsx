@@ -8,14 +8,10 @@ import {
   PencilEdit01Icon,
   WarehouseIcon,
 } from "@hugeicons/core-free-icons"
-
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 
-import {
-  getOccupancyPercentage,
-  pluralize,
-} from "@/components/dashboard/utils/helpers"
+import { getOccupancyPercentage } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
@@ -24,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { WarehousesList } from "@/hooks/use-warehouses"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { THRESHOLD } from "../../lib/constants"
 
@@ -40,6 +37,8 @@ export function WarehouseCard({
   onEdit,
   onDelete,
 }: WarehouseCardProps) {
+  const t = useAppTranslations()
+
   const usedSlots = warehouse.occupiedSlots
   const totalCapacity = warehouse.occupiedSlots + warehouse.freeSlots
   const occupancyPercentage = getOccupancyPercentage(usedSlots, totalCapacity)
@@ -90,7 +89,9 @@ export function WarehouseCard({
             <div>
               <h3 className="font-semibold text-lg">{warehouse.name}</h3>
               <p className="text-muted-foreground text-xs">
-                ID: {warehouse.id}
+                {t("generated.admin.warehouses.id", {
+                  value0: warehouse.id,
+                })}
               </p>
             </div>
           </div>
@@ -98,7 +99,7 @@ export function WarehouseCard({
           {(onEdit || onDelete) && (
             <DropdownMenu>
               <DropdownMenuTrigger
-                aria-label="Akcje magazynu"
+                aria-label={t("generated.admin.warehouses.warehouseShares")}
                 className={cn(
                   "flex size-8 items-center justify-center rounded-md opacity-0 transition-all hover:bg-muted group-hover:opacity-100",
                   "focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
@@ -119,7 +120,7 @@ export function WarehouseCard({
                       className="mr-2 size-4"
                       icon={PencilEdit01Icon}
                     />
-                    Edytuj
+                    {t("generated.shared.edit")}
                   </DropdownMenuItem>
                 )}
                 {onDelete && (
@@ -131,7 +132,7 @@ export function WarehouseCard({
                       className="mr-2 size-4"
                       icon={Delete02Icon}
                     />
-                    Usuń
+                    {t("generated.shared.remove")}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -144,7 +145,9 @@ export function WarehouseCard({
           {/* Occupancy */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Zapełnienie</span>
+              <span className="text-muted-foreground">
+                {t("generated.shared.occupancy")}
+              </span>
               <div className="flex items-center gap-2">
                 <span className="font-medium">
                   {usedSlots} / {totalCapacity}
@@ -172,8 +175,9 @@ export function WarehouseCard({
             <div className="flex items-center gap-1.5">
               <HugeiconsIcon className="size-4" icon={Package} />
               <span>
-                {warehouse.racksCount}{" "}
-                {pluralize(warehouse.racksCount, "regał", "regały", "regałów")}
+                {t("generated.shared.pluralLabel", {
+                  value0: warehouse.racksCount,
+                })}
               </span>
             </div>
           </div>
@@ -188,7 +192,7 @@ export function WarehouseCard({
             )}
             href={`/admin/warehouses/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}`}
           >
-            Zarządzaj regałami
+            {t("generated.admin.warehouses.manageRacks")}
             <HugeiconsIcon
               className="size-4 transition-transform group-hover:translate-x-0.5"
               icon={ArrowRight02Icon}

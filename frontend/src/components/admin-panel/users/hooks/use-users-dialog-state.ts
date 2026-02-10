@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import type { AdminTeamOption, AdminUser } from "@/hooks/use-admin-users"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { createEditableUser, normalizeValue } from "../lib/user-utils"
 
 interface UseUsersDialogStateParams {
@@ -11,6 +12,8 @@ export function useUsersDialogState({
   users,
   teams,
 }: UseUsersDialogStateParams) {
+  const t = useAppTranslations()
+
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -48,7 +51,13 @@ export function useUsersDialogState({
     return createEditableUser(selectedUser, teams)
   }, [selectedUser, teams])
 
-  const deleteDescription = `Czy na pewno chcesz usunąć użytkownika "${normalizeValue(userToDelete?.full_name) || userToDelete?.email || ""}"? Ta operacja jest nieodwracalna.`
+  const deleteDescription = t(
+    "generated.admin.users.sureWantDeleteUserOperation",
+    {
+      value0:
+        normalizeValue(userToDelete?.full_name) || userToDelete?.email || "",
+    }
+  )
 
   const openEditDialog = (userId: number) => {
     setSelectedUserId(userId)

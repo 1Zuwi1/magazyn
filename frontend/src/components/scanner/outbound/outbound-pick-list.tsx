@@ -4,6 +4,9 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
+import { formatDateTimeLabel } from "@/components/dashboard/utils/helpers"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { OutboundPickSlot, OutboundPlan } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
 import { Button } from "../../ui/button"
@@ -19,21 +22,6 @@ interface OutboundPickListProps {
   onCancel: () => void
 }
 
-const formatDate = (value: string): string => {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat("pl-PL", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date)
-}
-
 const isExpired = (expiresAt: string): boolean => {
   return new Date(expiresAt) < new Date()
 }
@@ -46,6 +34,9 @@ export function OutboundPickList({
   onConfirm,
   onCancel,
 }: OutboundPickListProps) {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
   const selectedIds = new Set(selectedSlots.map((s) => s.assortmentId))
 
   return (
@@ -62,25 +53,33 @@ export function OutboundPickList({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              Pozycje do pobrania
+              {t("generated.scanner.outbound.itemsPick")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              {plan.itemName} — wybierz pozycje do zdjęcia z regałów.
+              {t("generated.scanner.outbound.selectItemsRemoveRacks", {
+                value0: plan.itemName,
+              })}
             </p>
           </div>
         </div>
 
         <div className="mb-4 grid grid-cols-3 gap-2">
           <div className="rounded-xl border bg-card/40 p-3 text-center">
-            <p className="text-muted-foreground text-xs">Żądano</p>
+            <p className="text-muted-foreground text-xs">
+              {t("generated.scanner.outbound.requested")}
+            </p>
             <p className="font-semibold text-lg">{plan.requestedQuantity}</p>
           </div>
           <div className="rounded-xl border bg-card/40 p-3 text-center">
-            <p className="text-muted-foreground text-xs">Dostępne</p>
+            <p className="text-muted-foreground text-xs">
+              {t("generated.scanner.outbound.available")}
+            </p>
             <p className="font-semibold text-lg">{plan.availableQuantity}</p>
           </div>
           <div className="rounded-xl border bg-card/40 p-3 text-center">
-            <p className="text-muted-foreground text-xs">Wybrano</p>
+            <p className="text-muted-foreground text-xs">
+              {t("generated.scanner.outbound.selected")}
+            </p>
             <p className="font-semibold text-lg">{selectedSlots.length}</p>
           </div>
         </div>
@@ -104,7 +103,9 @@ export function OutboundPickList({
               icon={AlertCircleIcon}
             />
             <p className="text-destructive text-sm">
-              {plan.expiredQuantity} pozycji straciło ważność.
+              {t("generated.scanner.outbound.pluralLabel", {
+                value0: plan.expiredQuantity,
+              })}
             </p>
           </div>
         ) : null}
@@ -146,21 +147,36 @@ export function OutboundPickList({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-sm">
-                        Regał {slot.rackMarker}
+                        {t("generated.shared.rack2", {
+                          value0: slot.rackMarker,
+                        })}
                       </p>
                       <Badge variant="outline">
-                        P:{slot.positionX} R:{slot.positionY}
+                        {t("generated.scanner.outbound.xY", {
+                          value0: slot.positionX,
+                          value1: slot.positionY,
+                        })}
                       </Badge>
                       {expired ? (
-                        <Badge variant="destructive">Wygasło</Badge>
+                        <Badge variant="destructive">
+                          {t("generated.shared.expired")}
+                        </Badge>
                       ) : null}
                     </div>
                     <p className="mt-1 font-mono text-muted-foreground text-xs">
                       {slot.assortmentCode}
                     </p>
                     <div className="mt-1 flex gap-3 text-muted-foreground text-xs">
-                      <span>Przyjęto: {formatDate(slot.createdAt)}</span>
-                      <span>Wygasa: {formatDate(slot.expiresAt)}</span>
+                      <span>
+                        {t("generated.scanner.outbound.received", {
+                          value0: formatDateTimeLabel(slot.createdAt, locale),
+                        })}
+                      </span>
+                      <span>
+                        {t("generated.scanner.outbound.expires", {
+                          value0: formatDateTimeLabel(slot.expiresAt, locale),
+                        })}
+                      </span>
                     </div>
                   </div>
                 </button>
@@ -178,7 +194,9 @@ export function OutboundPickList({
             onClick={onConfirm}
             type="button"
           >
-            Potwierdź pobranie ({selectedSlots.length})
+            {t("generated.scanner.outbound.confirmPick", {
+              value0: selectedSlots.length,
+            })}
           </Button>
         </div>
       </div>

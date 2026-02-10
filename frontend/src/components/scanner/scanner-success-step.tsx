@@ -1,5 +1,6 @@
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { Button } from "../ui/button"
 
 interface ScannerSuccessStepProps {
@@ -13,6 +14,8 @@ export function ScannerSuccessStep({
   itemName,
   placementsCount,
 }: ScannerSuccessStepProps) {
+  const t = useAppTranslations()
+
   return (
     <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
       <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-emerald-500/5 via-transparent to-transparent opacity-50" />
@@ -33,16 +36,19 @@ export function ScannerSuccessStep({
 
         <div className="max-w-sm space-y-2">
           <h2 className="font-semibold text-foreground text-xl">
-            Rozmieszczenie zapisane
+            {t("generated.scanner.placementSaved")}
           </h2>
           <p className="text-muted-foreground text-sm">
-            {itemName}: utworzono {placementsCount} pozycji asortymentu.
+            {t("generated.scanner.created", {
+              value0: itemName,
+              value1: placementsCount,
+            })}
           </p>
         </div>
 
         <div className="pt-2">
           <Button onClick={onReset} type="button">
-            Zeskanuj kolejny
+            {t("generated.scanner.scanAnother")}
           </Button>
         </div>
       </div>

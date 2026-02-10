@@ -15,6 +15,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
+
 import { useState } from "react"
 import {
   SortableHeader,
@@ -52,6 +53,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 interface AdminItemsTableProps {
@@ -71,6 +73,7 @@ interface AdminItemsTableProps {
 }
 
 function createColumns(
+  t: ReturnType<typeof useAppTranslations>,
   onEdit: (item: Item) => void,
   onDelete: (item: Item) => void,
   onUploadPhoto: (item: Item) => void
@@ -79,7 +82,9 @@ function createColumns(
     {
       accessorKey: "name",
       header: ({ column }) => (
-        <SortableHeader column={column}>Nazwa</SortableHeader>
+        <SortableHeader column={column}>
+          {t("generated.shared.name")}
+        </SortableHeader>
       ),
       cell: ({ row }) => {
         const item = row.original
@@ -101,7 +106,9 @@ function createColumns(
     },
     {
       accessorKey: "dimensions",
-      header: () => <StaticHeader>Wymiary (mm)</StaticHeader>,
+      header: () => (
+        <StaticHeader>{t("generated.admin.items.dimensionsMm")}</StaticHeader>
+      ),
       cell: ({ row }) => {
         const item = row.original
         return (
@@ -115,7 +122,9 @@ function createColumns(
     {
       accessorKey: "weight",
       header: ({ column }) => (
-        <SortableHeader column={column}>Waga (kg)</SortableHeader>
+        <SortableHeader column={column}>
+          {t("generated.admin.items.weightKg")}
+        </SortableHeader>
       ),
       cell: ({ row }) => (
         <span className="font-mono text-sm">{row.original.weight}</span>
@@ -124,12 +133,17 @@ function createColumns(
     },
     {
       accessorKey: "temperature",
-      header: () => <StaticHeader>Temperatura</StaticHeader>,
+      header: () => (
+        <StaticHeader>{t("generated.shared.temperature")}</StaticHeader>
+      ),
       cell: ({ row }) => {
         const item = row.original
         return (
           <div className="font-mono text-sm">
-            {item.minTemp}°C – {item.maxTemp}°C
+            {t("generated.shared.cC", {
+              value0: item.minTemp,
+              value1: item.maxTemp,
+            })}
           </div>
         )
       },
@@ -138,7 +152,9 @@ function createColumns(
     {
       accessorKey: "daysToExpiry",
       header: ({ column }) => (
-        <SortableHeader column={column}>Ważność (dni)</SortableHeader>
+        <SortableHeader column={column}>
+          {t("generated.admin.items.shelfLifeDays")}
+        </SortableHeader>
       ),
       cell: ({ row }) => (
         <span className="font-mono text-sm">{row.original.daysToExpiry}</span>
@@ -148,27 +164,29 @@ function createColumns(
     {
       accessorKey: "isDangerous",
       header: ({ column }) => (
-        <SortableHeader column={column}>Status</SortableHeader>
+        <SortableHeader column={column}>
+          {t("generated.shared.status")}
+        </SortableHeader>
       ),
       cell: ({ row }) => {
         const item = row.original
         return item.isDangerous ? (
-          <Badge variant="destructive">Niebezpieczny</Badge>
+          <Badge variant="destructive">{t("generated.shared.dangerous")}</Badge>
         ) : (
-          <Badge variant="secondary">Bezpieczny</Badge>
+          <Badge variant="secondary">{t("generated.shared.safe")}</Badge>
         )
       },
       enableSorting: true,
     },
     {
       id: "actions",
-      header: () => <StaticHeader>Akcje</StaticHeader>,
+      header: () => <StaticHeader>{t("generated.shared.shares")}</StaticHeader>,
       cell: ({ row }) => {
         const item = row.original
 
         return (
           <DropdownMenu>
-            <DropdownMenuTrigger aria-label="Otwórz menu">
+            <DropdownMenuTrigger aria-label={t("generated.shared.openMenu")}>
               <HugeiconsIcon
                 className={cn(
                   buttonVariants({ variant: "ghost", size: "icon-xs" })
@@ -182,18 +200,20 @@ function createColumns(
                   className="mr-2 h-4 w-4"
                   icon={ImageUploadIcon}
                 />
-                {item.imageUrl ? "Zmień zdjęcie" : "Dodaj zdjęcie"}
+                {item.imageUrl
+                  ? t("generated.admin.items.changePhoto")
+                  : t("generated.admin.items.addPhoto")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(item)}>
                 <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
-                Edytuj
+                {t("generated.shared.edit")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive"
                 onClick={() => onDelete(item)}
               >
                 <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
-                Usuń
+                {t("generated.shared.remove")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -219,9 +239,11 @@ export function AdminItemsTable({
   isLoading,
   refetch,
 }: AdminItemsTableProps) {
+  const t = useAppTranslations()
+
   const [sorting, setSorting] = useState<SortingState>([])
 
-  const columns = createColumns(onEdit, onDelete, onUploadPhoto)
+  const columns = createColumns(t, onEdit, onDelete, onUploadPhoto)
 
   const table = useReactTable({
     data: items,
@@ -244,9 +266,9 @@ export function AdminItemsTable({
   }
 
   const itemLabel = {
-    singular: "przedmiot",
-    plural: "przedmioty",
-    genitive: "przedmiotów",
+    singular: t("generated.shared.item"),
+    plural: t("generated.shared.items2"),
+    genitive: t("generated.shared.items3"),
   }
 
   const getTableContent = () => {
@@ -307,9 +329,9 @@ export function AdminItemsTable({
         <FilterBar className="gap-3">
           <FilterGroup>
             <SearchInput
-              aria-label="Filtruj przedmioty po nazwie lub ID"
+              aria-label={t("generated.admin.items.filterItemsNameId")}
               onChange={onSearchChange}
-              placeholder="Szukaj po nazwie lub ID..."
+              placeholder={t("generated.admin.items.searchNameId")}
               value={search}
             />
             {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}

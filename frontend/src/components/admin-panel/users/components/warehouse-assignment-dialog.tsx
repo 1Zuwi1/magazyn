@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useDebouncedValue } from "@tanstack/react-pacer"
+
 import { useCallback, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -27,6 +28,7 @@ import {
   useInfiniteWarehouses,
   useMultipleWarehouses,
 } from "@/hooks/use-warehouses"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { normalizeValue } from "../lib/user-utils"
@@ -126,6 +128,8 @@ export function WarehouseAssignmentDialog({
   onAssign,
   onRemove,
 }: WarehouseAssignmentDialogProps) {
+  const t = useAppTranslations()
+
   const [search, setSearch] = useState("")
   const [showAssignedOnly, setShowAssignedOnly] = useState(false)
   const [selectedWarehouseIds, setSelectedWarehouseIds] = useState<number[]>([])
@@ -228,14 +232,14 @@ export function WarehouseAssignmentDialog({
                 icon={Building06Icon}
               />
             </span>
-            Przypisz magazyn
+            {t("generated.admin.users.assignWarehouse")}
           </DialogTitle>
           <DialogDescription>
-            Przypisz magazyn do użytkownika{" "}
+            {t("generated.admin.users.assignWarehouseUser")}{" "}
             <strong>
               {normalizeValue(user?.full_name) || user?.email || ""}
             </strong>
-            , aby otrzymywał alerty z tego magazynu.
+            {t("generated.admin.users.receiveAlertsWarehouse")}
           </DialogDescription>
         </DialogHeader>
         <Separator />
@@ -252,7 +256,7 @@ export function WarehouseAssignmentDialog({
               onChange={(event) => {
                 setSearch(event.target.value)
               }}
-              placeholder="Szukaj magazynu..."
+              placeholder={t("generated.shared.searchWarehouse")}
               type="text"
               value={search}
             />
@@ -263,7 +267,9 @@ export function WarehouseAssignmentDialog({
               className="cursor-pointer text-sm"
               htmlFor="show-assigned-warehouses-only"
             >
-              Tylko przypisane ({assignedWarehouseIds.length})
+              {t("generated.admin.users.assignedOnly", {
+                value0: assignedWarehouseIds.length,
+              })}
             </Label>
             <Switch
               checked={showAssignedOnly}
@@ -308,11 +314,15 @@ export function WarehouseAssignmentDialog({
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-sm">
-                  Wybrano {selectedWarehouseIds.length} magazynów
+                  {t("generated.admin.users.selectedWarehouses", {
+                    value0: selectedWarehouseIds.length,
+                  })}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  Do przypisania: {selectedUnassignedWarehouseIds.length}{" "}
-                  &middot; Przypisane: {selectedAssignedWarehouseIds.length}
+                  {t("generated.admin.users.assignAssigned", {
+                    value0: selectedUnassignedWarehouseIds.length,
+                    value1: selectedAssignedWarehouseIds.length,
+                  })}
                 </p>
               </div>
               <Badge
@@ -324,8 +334,10 @@ export function WarehouseAssignmentDialog({
                 }
               >
                 {lastSelectedWarehouse
-                  ? `Ostatni: ${lastSelectedWarehouse.name}`
-                  : "Wybrane"}
+                  ? t("warehouseAssignment.lastSelected", {
+                      value0: lastSelectedWarehouse.name,
+                    })
+                  : t("warehouseAssignment.selected")}
               </Badge>
             </div>
           ) : null}
@@ -341,19 +353,23 @@ export function WarehouseAssignmentDialog({
               onClick={handleRemove}
               variant="destructive"
             >
-              Usuń przypisanie ({selectedAssignedWarehouseIds.length})
+              {t("generated.admin.users.removeAssignment", {
+                value0: selectedAssignedWarehouseIds.length,
+              })}
             </Button>
           ) : null}
           <div className="flex flex-1 justify-end gap-2">
             <Button onClick={() => handleOpenChange(false)} variant="outline">
-              Anuluj
+              {t("generated.shared.cancel")}
             </Button>
             {canAssignSelectedWarehouses ? (
               <Button
                 disabled={!canAssignSelectedWarehouses}
                 onClick={handleAssign}
               >
-                Przypisz ({selectedUnassignedWarehouseIds.length})
+                {t("generated.admin.users.assign", {
+                  value0: selectedUnassignedWarehouseIds.length,
+                })}
               </Button>
             ) : null}
           </div>

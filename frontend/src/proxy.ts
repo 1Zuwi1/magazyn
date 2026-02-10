@@ -1,5 +1,13 @@
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
+import createIntlMiddleware from "next-intl/middleware"
+import {
+  type AppLocale,
+  addAppLocaleToPathname,
+  getAppLocaleFromPathname,
+  stripAppLocaleFromPathname,
+} from "@/i18n/locale"
+import { routing } from "@/i18n/routing"
 import { getUrl } from "@/lib/get-url"
 import { getSession } from "./lib/session"
 
@@ -27,6 +35,9 @@ const REDIRECT_RULES: readonly RedirectRule[] = [
   },
 ] as const
 
+const PROTECTED_PATH_PREFIXES = ["/dashboard", "/settings", "/admin"] as const
+const intlProxy = createIntlMiddleware(routing)
+
 function normalizePrefix(p: string) {
   return p.endsWith("/") ? p : `${p}/`
 }
@@ -46,21 +57,56 @@ function getRedirectRule(pathname: string): RedirectRule | null {
   return null
 }
 
+const hasPathPrefix = (pathname: string, prefix: string): boolean =>
+  pathname === prefix || pathname.startsWith(`${prefix}/`)
+
+const isProtectedPath = (pathname: string): boolean => {
+  for (const prefix of PROTECTED_PATH_PREFIXES) {
+    if (hasPathPrefix(pathname, prefix)) {
+      return true
+    }
+  }
+
+  return false
+}
+
+const resolveRequestLocale = (pathname: string): AppLocale =>
+  getAppLocaleFromPathname(pathname) ?? routing.defaultLocale
+
+const localizePathname = (pathname: string, locale: AppLocale): string => {
+  if (locale === routing.defaultLocale) {
+    return pathname
+  }
+
+  return addAppLocaleToPathname(pathname, locale)
+}
+
 export async function proxy(request: NextRequest) {
-  const session = await getSession()
-  if (!session) {
-    return NextResponse.redirect(new URL("/login", request.url))
+  const intlResponse = intlProxy(request)
+  if (intlResponse.headers.has("location")) {
+    return intlResponse
+  }
+
+  const locale = resolveRequestLocale(request.nextUrl.pathname)
+  const pathname = stripAppLocaleFromPathname(request.nextUrl.pathname)
+
+  if (isProtectedPath(pathname)) {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.redirect(
+        new URL(localizePathname("/login", locale), request.url)
+      )
+    }
   }
 
   // Only bother with redirect logic for GET/HEAD
   if (request.method !== "GET" && request.method !== "HEAD") {
-    return NextResponse.next()
+    return intlResponse
   }
 
-  const pathname = request.nextUrl.pathname
   const rule = getRedirectRule(pathname)
   if (!rule) {
-    return NextResponse.next()
+    return intlResponse
   }
 
   // After prefix we expect: [id]/[name]/(...optional tail...)
@@ -70,7 +116,8 @@ export async function proxy(request: NextRequest) {
 
   if (!(id && nameSegment && ID_REGEX.test(id))) {
     const base = await getUrl(request)
-    return NextResponse.redirect(new URL(rule.fallbackPath, base))
+    const fallbackPath = localizePathname(rule.fallbackPath, locale)
+    return NextResponse.redirect(new URL(fallbackPath, base))
   }
 
   // Normalize name safely (avoid double-encoding)
@@ -79,12 +126,16 @@ export async function proxy(request: NextRequest) {
     decodedName = decodeURIComponent(nameSegment)
   } catch {
     const base = await getUrl(request)
-    return NextResponse.redirect(new URL(rule.fallbackPath, base))
+    const fallbackPath = localizePathname(rule.fallbackPath, locale)
+    return NextResponse.redirect(new URL(fallbackPath, base))
   }
   const safeName = encodeURIComponent(decodedName)
   const tailPath = tail.length ? `/${tail.join("/")}` : ""
 
-  const targetPath = `${rule.targetPrefix}${safeName}${tailPath}`
+  const targetPath = localizePathname(
+    `${rule.targetPrefix}${safeName}${tailPath}`,
+    locale
+  )
 
   const base = await getUrl(request)
   const url = new URL(targetPath, base)
@@ -97,5 +148,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/settings/:path*", "/admin/:path*"],
+  matcher: ["/((?!api|trpc|_next|_vercel|.*\\..*).*)"],
 }

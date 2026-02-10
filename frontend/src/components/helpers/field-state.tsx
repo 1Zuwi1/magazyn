@@ -1,14 +1,25 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { AnyFieldApi } from "@tanstack/react-form"
 import type { ZodError } from "zod"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
+import { translateZodMessage } from "@/lib/zod-message"
 import type { IconComponent } from "../dashboard/types"
 import { Field, FieldContent, FieldError, FieldLabel } from "../ui/field"
 import { Input } from "../ui/input"
 
-const getFieldErrorMessage = (field: AnyFieldApi): string | undefined => {
+const getFieldErrorMessage = (
+  field: AnyFieldApi,
+  t: ReturnType<typeof useAppTranslations>
+): string | undefined => {
   const error = field.state.meta.errors[0] as ZodError | string | undefined
-  return typeof error === "string" ? error : error?.message
+  const message = typeof error === "string" ? error : error?.message
+
+  if (!message) {
+    return undefined
+  }
+
+  return translateZodMessage(message, t)
 }
 
 export function FieldState({
@@ -18,7 +29,8 @@ export function FieldState({
   field: AnyFieldApi
   className?: string
 }) {
-  const message = getFieldErrorMessage(field)
+  const t = useAppTranslations()
+  const message = getFieldErrorMessage(field, t)
 
   return message ? (
     <p
@@ -63,9 +75,10 @@ export function FieldWithState({
   errorClassName?: string
   renderInput?: (args: { id: string; isInvalid: boolean }) => React.ReactNode
 } & React.ComponentProps<"input">) {
+  const t = useAppTranslations()
   const isInvalid = field.state.meta.errors.length > 0
   const inputId = props.id ?? field.name
-  const errorMessage = getFieldErrorMessage(field)
+  const errorMessage = getFieldErrorMessage(field, t)
   const inputNode = renderInput ? (
     renderInput({ id: inputId, isInvalid })
   ) : (

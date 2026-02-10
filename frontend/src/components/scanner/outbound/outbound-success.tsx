@@ -1,5 +1,8 @@
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
+import { formatDateTimeLabel } from "@/components/dashboard/utils/helpers"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { OutboundExecuteResult } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
 import { Button } from "../../ui/button"
@@ -9,22 +12,11 @@ interface OutboundSuccessProps {
   onReset: () => void
 }
 
-const formatDate = (value: string): string => {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat("pl-PL", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date)
-}
-
 export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
+  const t = useAppTranslations()
+
+  const locale = useLocale()
+
   return (
     <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
       <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-emerald-500/5 via-transparent to-transparent opacity-50" />
@@ -45,11 +37,12 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
 
         <div className="space-y-2">
           <h2 className="font-semibold text-foreground text-xl">
-            Towar zdjęty z magazynu
+            {t("generated.scanner.outbound.goodsRemovedWarehouse")}
           </h2>
           <p className="text-muted-foreground text-sm">
-            Pomyślnie zdjęto {result.issuedCount}{" "}
-            {result.issuedCount === 1 ? "pozycję" : "pozycji"} z magazynu.
+            {t("generated.scanner.outbound.successfullyRemovedWarehouse", {
+              value0: result.issuedCount,
+            })}
           </p>
         </div>
 
@@ -60,14 +53,23 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
                 <div className="flex items-center justify-between gap-2">
                   <p className="truncate font-medium text-sm">{op.itemName}</p>
                   <Badge variant={op.fifoCompliant ? "default" : "outline"}>
-                    {op.fifoCompliant ? "FIFO" : "Pominięto FIFO"}
+                    {op.fifoCompliant
+                      ? "FIFO"
+                      : t("generated.scanner.outbound.fifoSkipped")}
                   </Badge>
                 </div>
                 <p className="mt-1 text-muted-foreground text-xs">
-                  Regał {op.rackMarker} — P:{op.positionX} R:{op.positionY}
+                  {t("generated.scanner.outbound.rackXY", {
+                    value0: op.rackMarker,
+                    value1: op.positionX,
+                    value2: op.positionY,
+                  })}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  Wydał: {op.issuedByName} o {formatDate(op.operationTimestamp)}
+                  {t("generated.scanner.outbound.issued", {
+                    value0: op.issuedByName,
+                    value1: formatDateTimeLabel(op.operationTimestamp, locale),
+                  })}
                 </p>
               </div>
             ))}
@@ -76,7 +78,7 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
 
         <div className="w-full pt-2">
           <Button className="w-full" onClick={onReset} type="button">
-            Zdejmij kolejny
+            {t("generated.scanner.outbound.removeAnother")}
           </Button>
         </div>
       </div>

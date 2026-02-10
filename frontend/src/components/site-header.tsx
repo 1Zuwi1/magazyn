@@ -3,7 +3,9 @@
 import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Fragment } from "react/jsx-runtime"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { NotificationInbox } from "./dashboard/notifications/components/notification-icon"
+import { LanguageSwitcher } from "./language-switcher"
 import { Scanner } from "./scanner/scanner"
 import {
   Breadcrumb,
@@ -51,6 +53,8 @@ const sanitizeVisibleText = (value: string): string => {
 }
 
 export default function SiteHeader() {
+  const t = useAppTranslations()
+
   const pathname = usePathname()
   const router = useRouter()
   const splitted = pathname.split("/").filter((part) => part !== "")
@@ -119,7 +123,9 @@ export default function SiteHeader() {
                   <DropdownMenu>
                     <DropdownMenuTrigger className="flex items-center gap-1">
                       <BreadcrumbEllipsis className="size-4" />
-                      <span className="sr-only">Toggle menu</span>
+                      <span className="sr-only">
+                        {t("generated.global.header.toggleMenu")}
+                      </span>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                       {middleItems.map((item) => (
@@ -163,6 +169,7 @@ export default function SiteHeader() {
       </div>
 
       <div className="flex standalone:hidden items-center gap-2 pr-3 sm:gap-3 sm:pr-4">
+        <LanguageSwitcher />
         {pathname.includes("/dashboard/warehouse/") && (
           <Scanner
             warehouseName={decodeURIComponent(
