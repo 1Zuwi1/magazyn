@@ -44,4 +44,7 @@ public class UserInfoResponse {
     @Schema(description = "List of assigned warehouse IDs", example = "[1, 2, 5]")
     private List<Long> warehouse_ids;
 
+    @Schema(description = "Whether backup codes need to be regenerated (true if any backup code has been used)", example = "false")
+    private Boolean backup_codes_refresh_needed;
+
 }

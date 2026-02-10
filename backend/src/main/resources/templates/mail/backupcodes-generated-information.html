@@ -18,34 +18,45 @@
                         <td style="padding: 40px 32px; text-align: center;">
                             <div
                                 style="background-color:rgba(10,133,234,0.1); width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 24px auto; display: table;">
-                                <span style="display: table-cell; vertical-align: middle; font-size: 32px;">🔑</span>
+                                <span style="display: table-cell; vertical-align: middle; font-size: 32px;">🛡️</span>
                             </div>
 
                             <h1
                                 style="color:rgb(17,24,39); font-size:24px; font-weight:700; line-height:32px; margin:0 0 12px 0;">
-                                Resetowanie hasła
+                                Bezpieczeństwo konta
                             </h1>
                             <p style="color:rgb(75,85,99); font-size:16px; line-height:24px; margin:0 0 32px 0;">
-                                Otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta. Kliknij przycisk poniżej, aby
-                                ustawić nowe hasło.
+                                Informujemy, że dla Twojego konta zostały właśnie wygenerowane <strong>nowe kody
+                                    zapasowe</strong>.
                             </p>
+
+                            <div
+                                style="background-color:rgb(249,250,251); border-radius: 12px; padding: 20px; text-align: left; border-left: 4px solid rgb(10,133,234); margin-bottom: 32px;">
+                                <p style="color:rgb(55,65,81); font-size:14px; line-height:20px; margin:0;">
+                                    Stary zestaw kodów przestał być aktywny.
+                                </p>
+                            </div>
 
                             <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation"
                                 style="margin: 0 auto;">
                                 <tr>
                                     <td align="center" style="background-color:rgb(10,133,234); border-radius:8px;">
-                                        <a th:href="${resetLink}" target="_blank"
-                                            style="display: inline-block; padding: 14px 32px; color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; letter-spacing: 0.5px;">
-                                            Ustaw nowe hasło
+                                        <a th:href="${settingsLink}" target="_blank"
+                                            style="display: inline-block; padding: 14px 32px; color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none;">
+                                            Otwórz panel bezpieczeństwa
                                         </a>
                                     </td>
                                 </tr>
                             </table>
 
-                            <p style="color:rgb(156,163,175); font-size:13px; margin-top:32px; line-height:20px;">
-                                Jeśli nie prosiłeś o zmianę hasła, możesz bezpiecznie zignorować ten e-mail. Twoje
-                                obecne hasło pozostanie niezmienione.
-                            </p>
+                            <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgb(243,244,246);">
+                                <p style="color:rgb(156,163,175); font-size:13px; line-height:20px; margin:0;">
+                                    <strong>To nie Ty?</strong> Jeśli nie generowałeś nowych kodów, Twoje konto mogło
+                                    zostać naruszone. <a href="#"
+                                        style="color:rgb(10,133,234); text-decoration:none;">Zmień hasło</a> natychmiast
+                                    i skontaktuj się z nami.
+                                </p>
+                            </div>
                         </td>
                     </tr>
                 </table>

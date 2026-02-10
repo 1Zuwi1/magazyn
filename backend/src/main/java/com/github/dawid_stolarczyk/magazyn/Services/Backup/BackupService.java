@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Exceptions.BackupAlreadyInProgressException;
@@ -323,7 +324,7 @@ public class BackupService {
         Long warehouseId = record.getWarehouse().getId();
         if (!currentUser.getRole().equals(UserRole.ADMIN) && !currentUser.hasAccessToWarehouse(warehouseId)) {
             log.warn("User {} (role: {}) attempted to restore backup for unauthorized warehouse {}", currentUser.getId(), currentUser.getRole(), warehouseId);
-            throw new SecurityException("WAREHOUSE_ACCESS_DENIED");
+            throw new SecurityException(InventoryError.WAREHOUSE_ACCESS_DENIED.name());
         }
 
         AtomicBoolean lock = warehouseLocks.computeIfAbsent(warehouseId, k -> new AtomicBoolean(false));

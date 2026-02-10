@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.util.List;
+
 @Service
 public class EmailService {
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
@@ -75,12 +77,22 @@ public class EmailService {
     }
 
     @Async
-    public void sendBatchNotificationEmail(String to, java.util.List<String> alertMessages) {
+    public void sendBatchNotificationEmail(String to, List<String> alertMessages, String notificationsLink) {
         Context context = new Context();
         context.setVariable("alertMessages", alertMessages);
         context.setVariable("alertCount", alertMessages.size());
+        context.setVariable("notificationsLink", notificationsLink);
         String htmlContent = templateEngine.process("mail/batch-notification", context);
         String subject = alertMessages.size() == 1 ? "Nowe powiadomienie" : "Nowe powiadomienia (" + alertMessages.size() + ")";
+        sendSimpleEmail(to, subject, htmlContent);
+    }
+
+    @Async
+    public void sendBackupCodesGeneratedInfoEmail(String to, String settingsLink) {
+        Context context = new Context();
+        context.setVariable("settingsLink", settingsLink);
+        String htmlContent = templateEngine.process("mail/backupcodes-generated-information", context);
+        String subject = "Nowe kody zapasowe wygenerowane";
         sendSimpleEmail(to, subject, htmlContent);
     }
 }

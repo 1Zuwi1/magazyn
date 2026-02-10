@@ -11,6 +11,7 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.*;
 import com.github.dawid_stolarczyk.magazyn.Services.EmailService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
+import com.github.dawid_stolarczyk.magazyn.Utils.LinksUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -57,7 +58,7 @@ public class RackReportService {
      * 5. If no active alert exists, create new alert and distribute notifications
      *
      * @param request     The rack report request
-     * @param httpRequest HTTP request for rate limiting
+     * @param httpRequest HTTP request for rate limiting and building links in emails
      * @return Response with report details and any triggered alerts
      */
     @Transactional(rollbackFor = Exception.class)
@@ -168,7 +169,7 @@ public class RackReportService {
                     userAlertMessages.size(), triggeredAlerts.size());
             userAlertMessages.forEach((userId, messages) -> {
                 User user = usersById.get(userId);
-                emailService.sendBatchNotificationEmail(user.getEmail(), messages);
+                emailService.sendBatchNotificationEmail(user.getEmail(), messages, LinksUtils.getWebAppUrl("/alerts", httpRequest));
             });
         }
 

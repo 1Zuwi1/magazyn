@@ -39,11 +39,6 @@ public enum InventoryError {
     PLACEMENT_BARCODE_GENERATION_FAILED,
     BARCODE_MUST_BE_16_DIGITS,
 
-    // QR code errors
-    INVALID_QR_CODE_FORMAT,
-
-    // Outbound operation errors
-    OUTBOUND_INSUFFICIENT_STOCK,
     OUTBOUND_FIFO_VIOLATION,
     OUTBOUND_ASSORTMENT_EXPIRED,
 

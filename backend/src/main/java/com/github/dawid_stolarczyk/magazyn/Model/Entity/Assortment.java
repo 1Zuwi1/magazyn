@@ -24,7 +24,7 @@ public class Assortment {
     @ManyToOne
     @JoinColumn(name = "rack_id", nullable = false)
     private Rack rack;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User user;
     @Column(name = "created_at")

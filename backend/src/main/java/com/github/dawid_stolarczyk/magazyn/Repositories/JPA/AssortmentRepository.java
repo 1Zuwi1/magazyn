@@ -93,5 +93,7 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long>, J
     @Query("SELECT a FROM Assortment a WHERE a.expiresAt IS NOT NULL " +
             "AND a.expiresAt > CURRENT_TIMESTAMP AND a.expiresAt <= :threshold")
     List<Assortment> findAllCloseToExpiry(@Param("threshold") Timestamp threshold);
+
+    List<Assortment> findByUserId(Long userId);
 }
 
