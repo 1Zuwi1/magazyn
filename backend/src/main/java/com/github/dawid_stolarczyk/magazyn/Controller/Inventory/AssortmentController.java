@@ -39,7 +39,7 @@ public class AssortmentController {
     private final AssortmentImportService assortmentImportService;
 
     @Operation(summary = "Get all assortments with pagination and filters",
-            description = "Retrieve assortments with optional filters for item name/code search, week to expire status, and expiration filters")
+            description = "Retrieve assortments with optional filters for assortment code search, week to expire status, and expiration filters")
     @ApiResponse(responseCode = "200", description = "Success",
             content = @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ResponseTemplate.PagedAssortmentsResponse.class)))
@@ -51,7 +51,7 @@ public class AssortmentController {
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir,
             @Parameter(description = "Filter by expiration") @RequestParam(defaultValue = "ALL") ArrayList<ExpiryFilters> expiryFilters,
-            @Parameter(description = "Search by item name or code (case-insensitive)", example = "milk") @RequestParam(required = false) String search,
+            @Parameter(description = "Search by assortment code (case-insensitive)", example = "0123456789") @RequestParam(required = false) String search,
             @Parameter(description = "Filter by week to expire (expires within 7 days)", example = "true") @RequestParam(required = false) Boolean weekToExpire) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);

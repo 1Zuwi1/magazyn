@@ -23,14 +23,11 @@ public class AssortmentSpecifications {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Text search on item name or item code
+            // Text search on assortment code
             if (search != null && !search.isBlank()) {
                 String searchPattern = "%" + search.toLowerCase() + "%";
-                Predicate namePredicate = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("item").get("name")), searchPattern);
-                Predicate codePredicate = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("item").get("code")), searchPattern);
-                predicates.add(criteriaBuilder.or(namePredicate, codePredicate));
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("code")), searchPattern));
             }
 
             // Week to expire filter (expires within 7 days)
