@@ -53,7 +53,7 @@ app.background-removal.url=${DOMAIN}:7000/api/remove
 app.background-removal.timeout-seconds=30
 
 # Backup streaming timeout (in minutes)
-app.backup.streaming-timeout-minutes=5
+app.backup.streaming-timeout-minutes=15
 # Backup scheduler thread pool size
 app.backup.scheduler-pool-size=10
 # Backup streaming executor thread pool size (for concurrent uploads/downloads)

@@ -172,20 +172,28 @@ public class BackupService {
             return null;
         }
 
-        BackupRecord record = BackupRecord.builder()
-                .warehouse(warehouse)
-                .backupType(BackupType.SCHEDULED)
-                .status(BackupStatus.IN_PROGRESS)
-                .build();
-        record.setResourceTypeSet(resourceTypes);
-        record.setBackupProgressPercentage(0);
-        record.setRestoreProgressPercentage(null);
-        record = backupRecordRepository.save(record);
+        try {
+            BackupRecord record = BackupRecord.builder()
+                    .warehouse(warehouse)
+                    .backupType(BackupType.SCHEDULED)
+                    .status(BackupStatus.IN_PROGRESS)
+                    .build();
+            record.setResourceTypeSet(resourceTypes);
+            record.setBackupProgressPercentage(0);
+            record.setRestoreProgressPercentage(null);
+            record = backupRecordRepository.save(record);
 
-        Long recordId = record.getId();
-        asyncTaskExecutor.submit(() -> executeBackup(recordId));
+            Long recordId = record.getId();
+            asyncTaskExecutor.submit(() -> executeBackup(recordId));
 
-        return toDto(record);
+            return toDto(record);
+        } catch (Exception e) {
+            if (lock.get()) {
+                lock.set(false);
+                warehouseLocks.remove(warehouseId);
+            }
+            throw e;
+        }
     }
 
     private void executeBackup(Long recordId) {
@@ -971,7 +979,7 @@ public class BackupService {
 
                 // Release lock if held
                 AtomicBoolean lock = warehouseLocks.get(warehouseId);
-                if (lock != null) {
+                if (lock != null && lock.get()) {
                     lock.set(false);
                     warehouseLocks.remove(warehouseId);
                     log.info("Released lock for warehouse {}", warehouseId);

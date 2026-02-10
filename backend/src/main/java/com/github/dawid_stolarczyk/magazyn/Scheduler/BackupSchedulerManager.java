@@ -162,13 +162,13 @@ public class BackupSchedulerManager {
         log.info("Executing scheduled backup for warehouse {}", warehouseId);
         try {
             backupService.initiateScheduledBackup(warehouseId, schedule.getResourceTypeSet());
-
-            // Update lastRunAt and nextRunAt
+        } catch (Exception e) {
+            log.error("Scheduled backup failed for warehouse {}", warehouseId, e);
+        } finally {
+            // Update lastRunAt and nextRunAt regardless of outcome
             schedule.setLastRunAt(Instant.now());
             schedule.setNextRunAt(calculateNextRunAt(schedule));
             backupScheduleRepository.save(schedule);
-        } catch (Exception e) {
-            log.error("Scheduled backup failed for warehouse {}", warehouseId, e);
         }
     }
 

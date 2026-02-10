@@ -5,10 +5,12 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.BackupStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.BackupType;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Slf4j
 public class BackupRecord {
 
     @Id
@@ -101,7 +104,15 @@ public class BackupRecord {
         }
         return Arrays.stream(resourceTypes.split(","))
                 .map(String::trim)
-                .map(BackupResourceType::valueOf)
+                .map(s -> {
+                    try {
+                        return BackupResourceType.valueOf(s);
+                    } catch (IllegalArgumentException e) {
+                        log.warn("Invalid BackupResourceType '{}' in backup record {}, ignoring", s, id);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
     }
 
