@@ -1,21 +1,42 @@
 "use client"
 
-import { Alert02Icon, Search } from "@hugeicons/core-free-icons"
+import {
+  Building05Icon,
+  ChartLineData01Icon,
+  PackageIcon,
+  Search,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useDebouncedValue } from "@tanstack/react-pacer"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import useWarehouses from "@/hooks/use-warehouses"
 import { translateMessage } from "@/i18n/translate-message"
 import { normalizeTranscript } from "@/lib/voice/commands"
 import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
+import { ErrorEmptyState } from "../ui/empty-state"
+import { PageHeader } from "./page-header"
 import { DEFAULT_FILTERS, WarehouseFilters } from "./storage-filters"
 import { WarehouseGrid } from "./storage-grid"
 import type { FilterState } from "./types"
 import { pluralize } from "./utils/helpers"
+
+const OCCUPANCY_WARNING_THRESHOLD = 75
+const OCCUPANCY_CRITICAL_THRESHOLD = 90
+
+function getOccupancyVariant(
+  occupancy: number
+): "default" | "warning" | "destructive" {
+  if (occupancy >= OCCUPANCY_CRITICAL_THRESHOLD) {
+    return "destructive"
+  }
+  if (occupancy >= OCCUPANCY_WARNING_THRESHOLD) {
+    return "warning"
+  }
+  return "default"
+}
 
 const isWarehouseMatch = ({
   inputName,
@@ -114,81 +135,101 @@ export const WarehouseContent = () => {
     filters.minOccupancy !== DEFAULT_FILTERS.minOccupancy ||
     filters.showEmpty !== DEFAULT_FILTERS.showEmpty
 
-  if (isError) {
-    return (
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-destructive/30 bg-card py-12 text-center">
-        <div className="flex size-12 items-center justify-center rounded-xl bg-destructive/10">
-          <HugeiconsIcon
-            className="size-6 text-destructive"
-            icon={Alert02Icon}
-          />
-        </div>
-        <div className="space-y-1">
-          <p className="font-semibold">{translateMessage("generated.m0662")}</p>
-          <p className="text-muted-foreground text-sm">
-            {translateMessage("generated.m0663")}
-          </p>
-        </div>
-        <Button onClick={() => refetch()} variant="outline">
-          {translateMessage("generated.m0075")}
-        </Button>
-      </div>
-    )
-  }
+  const totalWarehouses = warehouses?.totalElements ?? 0
+  const totalCapacity = warehouses?.summary.totalCapacity ?? 0
+  const totalUsed = warehouses?.summary.occupiedSlots ?? 0
+  const overallOccupancy =
+    totalCapacity > 0 ? Math.round((totalUsed / totalCapacity) * 100) : 0
+  const headerStats = [
+    {
+      label: translateMessage("generated.m0886"),
+      value: totalWarehouses,
+      icon: PackageIcon,
+    },
+    {
+      label: translateMessage("generated.m0094"),
+      value: `${overallOccupancy}%`,
+      icon: ChartLineData01Icon,
+      variant: getOccupancyVariant(overallOccupancy),
+    },
+  ]
 
   return (
-    <div className="space-y-6">
-      {/* Search and Filters */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <div className="relative max-w-sm flex-1 sm:min-w-72">
-            <HugeiconsIcon
-              className="absolute top-2.5 left-3 size-4 text-muted-foreground"
-              icon={Search}
-            />
-            <Input
-              className="pl-9"
-              onChange={(e) => {
-                setFilters((prev) => ({ ...prev, query: e.target.value }))
-              }}
-              placeholder={translateMessage("generated.m0292")}
-              value={filters.query}
-            />
+    <div className="space-y-8">
+      <PageHeader
+        description={translateMessage("generated.m0101")}
+        icon={Building05Icon}
+        iconBadge={totalWarehouses}
+        stats={headerStats}
+        statsChildren={
+          <div className="flex flex-col items-center rounded-lg border bg-background/50 px-4 py-2 backdrop-blur-sm">
+            <span className="font-bold font-mono text-foreground text-lg">
+              {totalUsed.toLocaleString("pl-PL")}
+            </span>
+            <span className="text-muted-foreground text-xs">
+              / {totalCapacity.toLocaleString("pl-PL")}
+            </span>
           </div>
-          <WarehouseFilters filters={filters} onFilterChange={setFilters} />
-        </div>
+        }
+        title={translateMessage("generated.m0886")}
+      />
+      {isError ? (
+        <ErrorEmptyState onRetry={refetch} />
+      ) : (
+        <div className="space-y-6">
+          {/* Search and Filters */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <div className="relative max-w-sm flex-1 sm:min-w-72">
+                <HugeiconsIcon
+                  className="absolute top-2.5 left-3 size-4 text-muted-foreground"
+                  icon={Search}
+                />
+                <Input
+                  className="pl-9"
+                  onChange={(e) => {
+                    setFilters((prev) => ({ ...prev, query: e.target.value }))
+                  }}
+                  placeholder={translateMessage("generated.m0292")}
+                  value={filters.query}
+                />
+              </div>
+              <WarehouseFilters filters={filters} onFilterChange={setFilters} />
+            </div>
 
-        {/* Results count */}
-        <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          {hasActiveFilters && (
-            <Badge className="font-normal" variant="secondary">
-              {translateMessage("generated.m1008")}
-            </Badge>
-          )}
-          <span>
-            {warehouses?.totalElements}{" "}
-            {pluralize(
-              warehouses?.totalElements ?? 0,
-              "magazyn",
-              "magazyny",
-              translateMessage("generated.m0294")
-            )}
-          </span>
-        </div>
-      </div>
+            {/* Results count */}
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+              {hasActiveFilters && (
+                <Badge className="font-normal" variant="secondary">
+                  {translateMessage("generated.m1008")}
+                </Badge>
+              )}
+              <span>
+                {warehouses?.totalElements}{" "}
+                {pluralize(
+                  warehouses?.totalElements ?? 0,
+                  "magazyn",
+                  "magazyny",
+                  translateMessage("generated.m0294")
+                )}
+              </span>
+            </div>
+          </div>
 
-      {/* Warehouse Grid */}
-      <section className="@container space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-lg">
-            {translateMessage("generated.m0664")}
-          </h2>
+          {/* Warehouse Grid */}
+          <section className="@container space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-lg">
+                {translateMessage("generated.m0664")}
+              </h2>
+            </div>
+            <WarehouseGrid
+              isLoading={isPending}
+              warehouses={warehouses?.content ?? []}
+            />
+          </section>
         </div>
-        <WarehouseGrid
-          isLoading={isPending}
-          warehouses={warehouses?.content ?? []}
-        />
-      </section>
+      )}
     </div>
   )
 }
