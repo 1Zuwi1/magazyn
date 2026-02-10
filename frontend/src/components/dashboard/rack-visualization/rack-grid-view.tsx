@@ -4,16 +4,13 @@ import {
   ArrowLeft01Icon,
   ArrowRight01Icon,
   GridViewIcon,
-  ViewIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type * as React from "react"
-import { useRef, useState } from "react"
+import { useRef } from "react"
 import { Button } from "@/components/ui/button"
 import PaginationFull from "@/components/ui/pagination-component"
 import { useElementSize } from "@/hooks/use-element-size"
-import type { Rack } from "@/lib/schemas"
-import { RackItemsDialog } from "../items-visualization/rack-items-dialog"
 import type { ItemSlot, SlotCoordinates } from "../types"
 import Virtualized from "./components/virtualized"
 
@@ -29,7 +26,6 @@ interface RackGridViewProps {
   onActivateSlot?: (coordinates: SlotCoordinates) => void
   onSelectSlot?: (coordinates: SlotCoordinates) => void
   selectedSlotCoordinates?: SlotCoordinates | null
-  rack?: Rack
 }
 
 const ARROW_MOVES = {
@@ -70,9 +66,7 @@ export function RackGridView({
   onActivateSlot,
   onSelectSlot,
   selectedSlotCoordinates,
-  rack,
 }: RackGridViewProps) {
-  const [isItemsDialogOpen, setIsItemsDialogOpen] = useState(false)
   const parentRef = useRef<HTMLDivElement>(null)
 
   const showNavigation = totalPages > 1 && (onPreviousRack || onNextRack)
@@ -139,18 +133,6 @@ export function RackGridView({
             </p>
           </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            className="gap-1.5"
-            onClick={() => setIsItemsDialogOpen(true)}
-            size="sm"
-            variant="outline"
-          >
-            <HugeiconsIcon className="size-3.5" icon={ViewIcon} />
-            <span className="hidden sm:inline">Lista przedmiotów</span>
-          </Button>
-        </div>
       </div>
 
       {/* Grid Visualization with Side Navigation */}
@@ -210,12 +192,6 @@ export function RackGridView({
         currentPage={currentPage}
         setPage={onSetPage}
         totalPages={totalPages}
-      />
-
-      <RackItemsDialog
-        onOpenChange={setIsItemsDialogOpen}
-        open={isItemsDialogOpen}
-        rack={rack || null}
       />
     </>
   )

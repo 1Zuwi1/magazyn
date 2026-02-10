@@ -747,7 +747,6 @@ export default function WarehouseClient() {
                 onPreviousRack={handlePreviousRack}
                 onSelectSlot={handleSelectSlot}
                 onSetPage={handleSetPage}
-                rack={currentRack}
                 rows={currentRack.sizeY}
                 selectedSlotCoordinates={selectedSlotCoordinates}
                 totalPages={rackGridTotalPages}
