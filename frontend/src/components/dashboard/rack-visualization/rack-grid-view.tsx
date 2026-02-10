@@ -129,10 +129,12 @@ export function RackGridView({
           </div>
           <div>
             <h3 className="font-semibold text-sm">
-              {translateMessage("generated.m0500")}
+              {translateMessage(
+                "generated.dashboard.rackVisualization.gridView"
+              )}
             </h3>
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.m1090", {
+              {translateMessage("generated.dashboard.rackVisualization.slots", {
                 value0: rows,
                 value1: cols,
                 value2: totalSlots,

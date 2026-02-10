@@ -85,7 +85,7 @@ export function SearchInput({
       />
       {isFiltered && (
         <button
-          aria-label={translateMessage("generated.m0790")}
+          aria-label={translateMessage("generated.ui.clearSearch")}
           className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           onClick={() => onChange("")}
           type="button"
@@ -120,7 +120,7 @@ export function FilterResults({
     <div className={cn("flex items-center gap-2 text-sm", className)}>
       {isFiltered ? (
         <span className="rounded-md bg-primary/10 px-2.5 py-1 font-medium text-primary">
-          {translateMessage("generated.m1099", {
+          {translateMessage("generated.ui.pluralLabel2", {
             value0: filteredCount,
             value1: totalCount,
             singular: itemLabel.singular,
@@ -130,7 +130,7 @@ export function FilterResults({
         </span>
       ) : (
         <span className="text-muted-foreground">
-          {translateMessage("generated.m1111", {
+          {translateMessage("generated.ui.pluralLabel3", {
             value0: totalCount,
             singular: itemLabel.singular,
             plural: itemLabel.plural,
@@ -159,7 +159,7 @@ export function ClearFiltersButton({
       variant="ghost"
     >
       <HugeiconsIcon className="size-3.5" icon={FilterIcon} />
-      <span>{translateMessage("generated.m0413")}</span>
+      <span>{translateMessage("generated.shared.clear")}</span>
     </Button>
   )
 }
@@ -179,7 +179,7 @@ export function ActiveFiltersBadge({
 
   return (
     <Badge className={cn("font-normal", className)} variant="secondary">
-      {translateMessage("generated.m1060", { value0: count })}
+      {translateMessage("generated.ui.pluralLabel", { value0: count })}
     </Badge>
   )
 }

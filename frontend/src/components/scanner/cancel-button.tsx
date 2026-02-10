@@ -17,7 +17,9 @@ export function CancelButton({ onClick }: CancelButtonProps) {
       variant="ghost"
     >
       <HugeiconsIcon className="size-5" icon={ArrowLeft02Icon} />
-      <span className="sr-only">{translateMessage("generated.m0669")}</span>
+      <span className="sr-only">
+        {translateMessage("generated.scanner.back")}
+      </span>
     </Button>
   )
 }

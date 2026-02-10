@@ -36,10 +36,14 @@ export function OutboundSelectQuantity({
 
         <div className="mb-6">
           <h2 className="font-semibold text-xl tracking-tight">
-            {translateMessage("generated.m0715")}
+            {translateMessage(
+              "generated.scanner.outbound.howManyUnitsWantRemove"
+            )}
           </h2>
           <p className="mt-1 text-muted-foreground text-sm">
-            {translateMessage("generated.m0716")}
+            {translateMessage(
+              "generated.scanner.outbound.enterQuantityRemoveWarehouse"
+            )}
           </p>
         </div>
 
@@ -60,11 +64,15 @@ export function OutboundSelectQuantity({
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="truncate font-medium">{item.name}</h3>
                   {item.dangerous ? (
-                    <Badge>{translateMessage("generated.m0925")}</Badge>
+                    <Badge>
+                      {translateMessage("generated.shared.dangerous")}
+                    </Badge>
                   ) : null}
                 </div>
                 <p className="mt-1 font-mono text-muted-foreground text-xs">
-                  {translateMessage("generated.m1100", { value0: item.code })}
+                  {translateMessage("generated.scanner.shared.code", {
+                    value0: item.code,
+                  })}
                 </p>
               </div>
             </div>
@@ -77,7 +85,7 @@ export function OutboundSelectQuantity({
               className="mb-2 block font-medium text-sm"
               htmlFor="outbound-quantity"
             >
-              {translateMessage("generated.m0717")}
+              {translateMessage("generated.scanner.outbound.quantityRemove")}
             </label>
             <div className="flex items-center gap-3">
               <Button
@@ -130,7 +138,9 @@ export function OutboundSelectQuantity({
             onClick={onSubmit}
             type="button"
           >
-            {translateMessage("generated.m0718")}
+            {translateMessage(
+              "generated.scanner.outbound.generatePickLocations"
+            )}
           </Button>
         </div>
       </div>

@@ -92,9 +92,17 @@ export const WarehouseContent = () => {
 
     if (query) {
       setFilters((prev) => ({ ...prev, query }))
-      toast.success(translateMessage("generated.m0658", { value0: query }))
+      toast.success(
+        translateMessage("generated.dashboard.warehouse.statusCheckStarted", {
+          value0: query,
+        })
+      )
     } else {
-      toast.success(translateMessage("generated.m0659"))
+      toast.success(
+        translateMessage(
+          "generated.dashboard.warehouse.stockCheckingBeenStarted"
+        )
+      )
     }
 
     setPendingVoiceWarehouseName(normalizedWarehouseName ?? null)
@@ -107,7 +115,11 @@ export const WarehouseContent = () => {
     }
 
     if (isError) {
-      toast.error(translateMessage("generated.m0660"))
+      toast.error(
+        translateMessage(
+          "generated.dashboard.warehouse.specifiedWarehouseVerified"
+        )
+      )
       setPendingVoiceWarehouseName(null)
       return
     }
@@ -122,7 +134,7 @@ export const WarehouseContent = () => {
 
     if (!hasMatchingWarehouse) {
       toast.error(
-        translateMessage("generated.m0661", {
+        translateMessage("generated.dashboard.warehouse.storageFound", {
           value0: pendingVoiceWarehouseName.trim(),
         })
       )
@@ -143,12 +155,12 @@ export const WarehouseContent = () => {
     totalCapacity > 0 ? Math.round((totalUsed / totalCapacity) * 100) : 0
   const headerStats = [
     {
-      label: translateMessage("generated.m0886"),
+      label: translateMessage("generated.shared.warehouses"),
       value: totalWarehouses,
       icon: PackageIcon,
     },
     {
-      label: translateMessage("generated.m0094"),
+      label: translateMessage("generated.dashboard.shared.occupancy"),
       value: `${overallOccupancy}%`,
       icon: ChartLineData01Icon,
       variant: getOccupancyVariant(overallOccupancy),
@@ -158,7 +170,9 @@ export const WarehouseContent = () => {
   return (
     <div className="space-y-8">
       <PageHeader
-        description={translateMessage("generated.m0101")}
+        description={translateMessage(
+          "generated.dashboard.warehouse.searchLocationsCheckOccupancyDrill"
+        )}
         icon={Building05Icon}
         iconBadge={totalWarehouses}
         stats={headerStats}
@@ -172,7 +186,7 @@ export const WarehouseContent = () => {
             </span>
           </div>
         }
-        title={translateMessage("generated.m0886")}
+        title={translateMessage("generated.shared.warehouses")}
       />
       {isError ? (
         <ErrorEmptyState onRetry={refetch} />
@@ -191,7 +205,9 @@ export const WarehouseContent = () => {
                   onChange={(e) => {
                     setFilters((prev) => ({ ...prev, query: e.target.value }))
                   }}
-                  placeholder={translateMessage("generated.m0292")}
+                  placeholder={translateMessage(
+                    "generated.shared.searchWarehouse"
+                  )}
                   value={filters.query}
                 />
               </div>
@@ -202,11 +218,11 @@ export const WarehouseContent = () => {
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               {hasActiveFilters && (
                 <Badge className="font-normal" variant="secondary">
-                  {translateMessage("generated.m1008")}
+                  {translateMessage("generated.dashboard.warehouse.filtered")}
                 </Badge>
               )}
               <span>
-                {translateMessage("generated.m1106", {
+                {translateMessage("generated.dashboard.warehouse.pluralLabel", {
                   value0: warehouses?.totalElements ?? 0,
                 })}
               </span>
@@ -217,7 +233,7 @@ export const WarehouseContent = () => {
           <section className="@container space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-lg">
-                {translateMessage("generated.m0664")}
+                {translateMessage("generated.dashboard.warehouse.warehouses")}
               </h2>
             </div>
             <WarehouseGrid

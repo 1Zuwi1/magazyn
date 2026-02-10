@@ -161,7 +161,9 @@ export function AdminOverview() {
     criticalWarehousesContent = (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-destructive/30 border-dashed bg-destructive/5 py-12">
         <p className="font-medium text-foreground">
-          {translateMessage("generated.m0236")}
+          {translateMessage(
+            "generated.admin.overview.failedRetrieveStorageData"
+          )}
         </p>
         <button
           className="mt-3 flex items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
@@ -169,7 +171,7 @@ export function AdminOverview() {
           type="button"
         >
           <HugeiconsIcon className="size-4" icon={RefreshIcon} />
-          {translateMessage("generated.m0237")}
+          {translateMessage("generated.admin.overview.retry")}
         </button>
       </div>
     )
@@ -180,10 +182,12 @@ export function AdminOverview() {
           <HugeiconsIcon className="size-6 text-emerald-500" icon={Warehouse} />
         </div>
         <p className="mt-4 font-medium text-foreground">
-          {translateMessage("generated.m0238")}
+          {translateMessage("generated.admin.overview.everythingsAllRight")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage("generated.m0239")}
+          {translateMessage(
+            "generated.admin.overview.warehousesRequiringImmediateAttention"
+          )}
         </p>
       </div>
     )
@@ -212,10 +216,13 @@ export function AdminOverview() {
                         {warehouse.name}
                       </h3>
                       <p className="text-muted-foreground text-sm">
-                        {translateMessage("generated.m1063", {
-                          value0: warehouse.occupiedSlots,
-                          value1: capacity,
-                        })}
+                        {translateMessage(
+                          "generated.admin.overview.slotsOccupied",
+                          {
+                            value0: warehouse.occupiedSlots,
+                            value1: capacity,
+                          }
+                        )}
                       </p>
                     </div>
                     <Badge variant="destructive">
@@ -234,7 +241,7 @@ export function AdminOverview() {
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">
-                        {translateMessage("generated.m1064", {
+                        {translateMessage("generated.shared.pluralLabel", {
                           value0: warehouse.racksCount,
                         })}
                       </span>
@@ -247,8 +254,10 @@ export function AdminOverview() {
                         )}
                       >
                         {warehouse.occupancy >= 95
-                          ? translateMessage("generated.m1138")
-                          : translateMessage("generated.m1139")}
+                          ? translateMessage(
+                              "generated.admin.overview.critical"
+                            )
+                          : translateMessage("generated.admin.overview.high")}
                       </span>
                     </div>
                   </div>
@@ -275,13 +284,15 @@ export function AdminOverview() {
     <div className="space-y-8">
       {/* Admin Header */}
       <AdminPageHeader
-        description={translateMessage("generated.m0242")}
+        description={translateMessage(
+          "generated.admin.overview.manageUsersWarehousesSystemNotifications"
+        )}
         icon={Settings02Icon}
         navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title={translateMessage("generated.m0243")}
+        title={translateMessage("generated.shared.administrationPanel")}
       />
 
       {/* Stats Grid */}
@@ -290,7 +301,7 @@ export function AdminOverview() {
           description={
             isUsersStatsPending
               ? undefined
-              : translateMessage("generated.m1118", {
+              : translateMessage("generated.admin.overview.active", {
                   value0: stats.users.active,
                 })
           }
@@ -299,18 +310,20 @@ export function AdminOverview() {
           isError={isUsersStatsError}
           isLoading={isUsersStatsPending}
           onRetry={refetchUsersStats}
-          title={translateMessage("generated.m0233")}
+          title={translateMessage("generated.shared.users")}
           value={stats.users.total}
           variant="primary"
         />
         <AdminStatCard
-          description={translateMessage("generated.m0244")}
+          description={translateMessage(
+            "generated.admin.overview.allLocations"
+          )}
           href="/admin/warehouses"
           icon={Warehouse}
           isError={isWarehousesError}
           isLoading={isWarehousesPending}
           onRetry={() => refetchWarehouses()}
-          title={translateMessage("generated.m0886")}
+          title={translateMessage("generated.shared.warehouses")}
           value={stats.warehouses.total ?? "—"}
           variant="default"
         />
@@ -318,14 +331,14 @@ export function AdminOverview() {
           description={
             isAssortmentsPending
               ? undefined
-              : translateMessage("generated.m1117")
+              : translateMessage("generated.admin.overview.allWarehouses")
           }
           href="/dashboard/items"
           icon={Package}
           isError={isAssortmentsError}
           isLoading={isAssortmentsPending}
           onRetry={() => refetchAssortments()}
-          title={translateMessage("generated.m0931")}
+          title={translateMessage("generated.shared.items")}
           value={stats.items.total}
           variant="success"
         />
@@ -333,7 +346,7 @@ export function AdminOverview() {
           description={
             isAlertsStatsPending
               ? undefined
-              : translateMessage("generated.m0245", {
+              : translateMessage("generated.admin.overview.total", {
                   value0: stats.alerts.total,
                 })
           }
@@ -342,7 +355,7 @@ export function AdminOverview() {
           isError={isAlertsStatsError}
           isLoading={isAlertsStatsPending}
           onRetry={() => refetchAlerts()}
-          title={translateMessage("generated.m0246")}
+          title={translateMessage("generated.admin.overview.openAlerts")}
           value={stats.alerts.open}
           variant={stats.alerts.open > 0 ? "warning" : "default"}
         />
@@ -353,17 +366,22 @@ export function AdminOverview() {
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h2 className="font-semibold text-xl tracking-tight">
-              {translateMessage("generated.m0247")}
+              {translateMessage(
+                "generated.admin.overview.warehousesRequiringAttention"
+              )}
             </h2>
             <p className="text-muted-foreground text-sm">
-              {translateMessage("generated.m1094", { value0: THRESHOLD })}
+              {translateMessage(
+                "generated.admin.overview.warehousesAboveOccupancy",
+                { value0: THRESHOLD }
+              )}
             </p>
           </div>
           <Link
             className={buttonVariants({ variant: "outline", size: "sm" })}
             href="/admin/warehouses"
           >
-            {translateMessage("generated.m0249")}
+            {translateMessage("generated.shared.seeAll")}
             <HugeiconsIcon className="ml-2 size-4" icon={ArrowRight02Icon} />
           </Link>
         </div>

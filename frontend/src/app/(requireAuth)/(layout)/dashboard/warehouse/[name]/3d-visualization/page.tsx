@@ -177,14 +177,18 @@ const renderVisualizationFallback = (_error: Error, reset: () => void) => (
   >
     <div>
       <h2 className="font-semibold text-lg">
-        {translateMessage("generated.m0073")}
+        {translateMessage(
+          "generated.dashboard.warehouse.value3dVisualizationUnavailable"
+        )}
       </h2>
       <p className="mt-2 text-muted-foreground text-sm">
-        {translateMessage("generated.m0074")}
+        {translateMessage(
+          "generated.dashboard.warehouse.problemRenderingSceneAgainReturn"
+        )}
       </p>
     </div>
     <Button onClick={reset} size="sm" variant="outline">
-      {translateMessage("generated.m0075")}
+      {translateMessage("generated.shared.again")}
     </Button>
   </div>
 )
@@ -309,12 +313,14 @@ export default function ThreeDVisualizationPage() {
 
   const backTitle = useMemo(() => {
     if (focusWindow) {
-      return translateMessage("generated.m0076")
+      return translateMessage("generated.dashboard.warehouse.backBlocks")
     }
     if (isFocusActive) {
-      return translateMessage("generated.m0077")
+      return translateMessage("generated.dashboard.warehouse.backOverview")
     }
-    return translateMessage("generated.m0078")
+    return translateMessage(
+      "generated.dashboard.warehouse.returnWarehousePanel"
+    )
   }, [focusWindow, isFocusActive])
 
   const skipHistoryRef = useRef(false)
@@ -406,7 +412,9 @@ export default function ThreeDVisualizationPage() {
         }}
       >
         <p className="text-muted-foreground text-sm">
-          {translateMessage("generated.m0079")}
+          {translateMessage(
+            "generated.dashboard.warehouse.loading3dVisualization"
+          )}
         </p>
       </div>
     )
@@ -421,7 +429,9 @@ export default function ThreeDVisualizationPage() {
         }}
       >
         <p className="text-muted-foreground text-sm">
-          {translateMessage("generated.m0080")}
+          {translateMessage(
+            "generated.dashboard.warehouse.failedRetrieveStorageData"
+          )}
         </p>
       </div>
     )
@@ -436,9 +446,12 @@ export default function ThreeDVisualizationPage() {
         }}
       >
         <p className="text-muted-foreground text-sm">
-          {translateMessage("generated.m1093", {
-            value0: decodedWarehouseName,
-          })}
+          {translateMessage(
+            "generated.dashboard.warehouse.warehouseNamedFound",
+            {
+              value0: decodedWarehouseName,
+            }
+          )}
         </p>
       </div>
     )
@@ -457,17 +470,23 @@ export default function ThreeDVisualizationPage() {
         }}
       >
         <PageHeader
-          backTitle={translateMessage("generated.m0078")}
-          description={translateMessage("generated.m0082")}
+          backTitle={translateMessage(
+            "generated.dashboard.warehouse.returnWarehousePanel"
+          )}
+          description={translateMessage(
+            "generated.dashboard.warehouse.interactiveSpatialViewRacksProducts"
+          )}
           onBack={() => router.push("./")}
           stats={[
             {
-              label: translateMessage("generated.m0083"),
+              label: translateMessage("generated.dashboard.shared.racks"),
               value: 0,
               icon: Layers01Icon,
             },
           ]}
-          title={translateMessage("generated.m0084")}
+          title={translateMessage(
+            "generated.dashboard.warehouse.value3dVisualization"
+          )}
         />
         <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-2xl border bg-background">
           <div className="flex max-w-sm flex-col items-center gap-4 p-8 text-center">
@@ -479,10 +498,12 @@ export default function ThreeDVisualizationPage() {
             </div>
             <div className="space-y-2">
               <h2 className="font-semibold text-lg">
-                {translateMessage("generated.m0085")}
+                {translateMessage("generated.shared.racks")}
               </h2>
               <p className="text-muted-foreground text-sm">
-                {translateMessage("generated.m0086")}
+                {translateMessage(
+                  "generated.dashboard.warehouse.warehouseAnyRacksYetAdd"
+                )}
               </p>
             </div>
           </div>
@@ -493,15 +514,15 @@ export default function ThreeDVisualizationPage() {
 
   const headerStats = [
     {
-      label: translateMessage("generated.m0083"),
+      label: translateMessage("generated.dashboard.shared.racks"),
       value: warehouse.racks.length,
     },
     {
-      label: translateMessage("generated.m0879"),
+      label: translateMessage("generated.dashboard.warehouse.mode"),
       value:
         mode === "overview"
-          ? translateMessage("generated.m0087")
-          : translateMessage("generated.m0088"),
+          ? translateMessage("generated.shared.review")
+          : translateMessage("generated.dashboard.shared.details"),
     },
   ]
 
@@ -511,11 +532,15 @@ export default function ThreeDVisualizationPage() {
         <SheetTrigger
           className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
         >
-          {translateMessage("generated.m0880")}
+          {translateMessage("generated.dashboard.warehouse.explorer")}
         </SheetTrigger>
         <SheetContent className="p-0" side="left">
           <SheetHeader className="border-b">
-            <SheetTitle>{translateMessage("generated.m0089")}</SheetTitle>
+            <SheetTitle>
+              {translateMessage(
+                "generated.dashboard.warehouse.warehouseExplorer"
+              )}
+            </SheetTitle>
           </SheetHeader>
           <div className="min-h-0 flex-1">
             <SidebarPanel racks={warehouse.racks} />
@@ -526,11 +551,13 @@ export default function ThreeDVisualizationPage() {
         <SheetTrigger
           className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
         >
-          {translateMessage("generated.m0088")}
+          {translateMessage("generated.dashboard.shared.details")}
         </SheetTrigger>
         <SheetContent className="p-0" side="right">
           <SheetHeader className="border-b">
-            <SheetTitle>{translateMessage("generated.m0090")}</SheetTitle>
+            <SheetTitle>
+              {translateMessage("generated.dashboard.shared.rackDetails")}
+            </SheetTitle>
           </SheetHeader>
           <div className="min-h-0 flex-1">
             <DetailsPanel warehouse={warehouse} />
@@ -549,11 +576,15 @@ export default function ThreeDVisualizationPage() {
     >
       <PageHeader
         backTitle={backTitle}
-        description={translateMessage("generated.m0082")}
+        description={translateMessage(
+          "generated.dashboard.warehouse.interactiveSpatialViewRacksProducts"
+        )}
         onBack={handleBack}
         stats={headerStats}
         statsChildren={panelButtons}
-        title={translateMessage("generated.m0084")}
+        title={translateMessage(
+          "generated.dashboard.warehouse.value3dVisualization"
+        )}
       />
 
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden">

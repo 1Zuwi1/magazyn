@@ -199,7 +199,7 @@ export function useInfiniteRacks(
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
       if (warehouseId === null) {
-        throw new Error(translateMessage("generated.m0838"))
+        throw new Error(translateMessage("generated.hooks.activeStorage"))
       }
 
       return await apiFetch(

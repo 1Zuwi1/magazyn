@@ -81,7 +81,7 @@ function createColumns(
       accessorKey: "name",
       header: ({ column }) => (
         <SortableHeader column={column}>
-          {translateMessage("generated.m0922")}
+          {translateMessage("generated.shared.name")}
         </SortableHeader>
       ),
       cell: ({ row }) => {
@@ -105,7 +105,9 @@ function createColumns(
     {
       accessorKey: "dimensions",
       header: () => (
-        <StaticHeader>{translateMessage("generated.m0215")}</StaticHeader>
+        <StaticHeader>
+          {translateMessage("generated.admin.items.dimensionsMm")}
+        </StaticHeader>
       ),
       cell: ({ row }) => {
         const item = row.original
@@ -121,7 +123,7 @@ function createColumns(
       accessorKey: "weight",
       header: ({ column }) => (
         <SortableHeader column={column}>
-          {translateMessage("generated.m0214")}
+          {translateMessage("generated.admin.items.weightKg")}
         </SortableHeader>
       ),
       cell: ({ row }) => (
@@ -132,13 +134,15 @@ function createColumns(
     {
       accessorKey: "temperature",
       header: () => (
-        <StaticHeader>{translateMessage("generated.m0924")}</StaticHeader>
+        <StaticHeader>
+          {translateMessage("generated.shared.temperature")}
+        </StaticHeader>
       ),
       cell: ({ row }) => {
         const item = row.original
         return (
           <div className="font-mono text-sm">
-            {translateMessage("generated.m0095", {
+            {translateMessage("generated.shared.cC", {
               value0: item.minTemp,
               value1: item.maxTemp,
             })}
@@ -151,7 +155,7 @@ function createColumns(
       accessorKey: "daysToExpiry",
       header: ({ column }) => (
         <SortableHeader column={column}>
-          {translateMessage("generated.m0211")}
+          {translateMessage("generated.admin.items.shelfLifeDays")}
         </SortableHeader>
       ),
       cell: ({ row }) => (
@@ -163,18 +167,18 @@ function createColumns(
       accessorKey: "isDangerous",
       header: ({ column }) => (
         <SortableHeader column={column}>
-          {translateMessage("generated.m0895")}
+          {translateMessage("generated.shared.status")}
         </SortableHeader>
       ),
       cell: ({ row }) => {
         const item = row.original
         return item.isDangerous ? (
           <Badge variant="destructive">
-            {translateMessage("generated.m0925")}
+            {translateMessage("generated.shared.dangerous")}
           </Badge>
         ) : (
           <Badge variant="secondary">
-            {translateMessage("generated.m0933")}
+            {translateMessage("generated.shared.safe")}
           </Badge>
         )
       },
@@ -183,7 +187,9 @@ function createColumns(
     {
       id: "actions",
       header: () => (
-        <StaticHeader>{translateMessage("generated.m0900")}</StaticHeader>
+        <StaticHeader>
+          {translateMessage("generated.shared.shares")}
+        </StaticHeader>
       ),
       cell: ({ row }) => {
         const item = row.original
@@ -191,7 +197,7 @@ function createColumns(
         return (
           <DropdownMenu>
             <DropdownMenuTrigger
-              aria-label={translateMessage("generated.m0227")}
+              aria-label={translateMessage("generated.shared.openMenu")}
             >
               <HugeiconsIcon
                 className={cn(
@@ -207,19 +213,19 @@ function createColumns(
                   icon={ImageUploadIcon}
                 />
                 {item.imageUrl
-                  ? translateMessage("generated.m0228")
-                  : translateMessage("generated.m0229")}
+                  ? translateMessage("generated.admin.items.changePhoto")
+                  : translateMessage("generated.admin.items.addPhoto")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(item)}>
                 <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
-                {translateMessage("generated.m0934")}
+                {translateMessage("generated.shared.edit")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive"
                 onClick={() => onDelete(item)}
               >
                 <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
-                {translateMessage("generated.m0230")}
+                {translateMessage("generated.shared.remove")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -270,9 +276,9 @@ export function AdminItemsTable({
   }
 
   const itemLabel = {
-    singular: translateMessage("generated.m1108"),
-    plural: translateMessage("generated.m1109"),
-    genitive: translateMessage("generated.m1110"),
+    singular: translateMessage("generated.shared.item"),
+    plural: translateMessage("generated.shared.items2"),
+    genitive: translateMessage("generated.shared.items3"),
   }
 
   const getTableContent = () => {
@@ -333,9 +339,13 @@ export function AdminItemsTable({
         <FilterBar className="gap-3">
           <FilterGroup>
             <SearchInput
-              aria-label={translateMessage("generated.m0231")}
+              aria-label={translateMessage(
+                "generated.admin.items.filterItemsNameId"
+              )}
               onChange={onSearchChange}
-              placeholder={translateMessage("generated.m0232")}
+              placeholder={translateMessage(
+                "generated.admin.items.searchNameId"
+              )}
               value={search}
             />
             {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}

@@ -97,7 +97,7 @@ export default function DashboardTopOccupiedWarehousesCard() {
               />
             </div>
             <p className="font-mono text-muted-foreground text-xs">
-              {translateMessage("generated.m1072", {
+              {translateMessage("generated.dashboard.home.slots", {
                 value0: formatNumber(warehouse.occupiedSlots, locale),
                 value1: formatNumber(
                   warehouse.occupiedSlots + warehouse.freeSlots,
@@ -115,7 +115,7 @@ export default function DashboardTopOccupiedWarehousesCard() {
           })}
           href="/dashboard/warehouse"
         >
-          {translateMessage("generated.m0454")}
+          {translateMessage("generated.dashboard.home.viewAllWarehouses")}
         </Link>
       </div>
     )
@@ -123,9 +123,11 @@ export default function DashboardTopOccupiedWarehousesCard() {
 
   return (
     <InsightCard
-      description={translateMessage("generated.m0455")}
+      description={translateMessage(
+        "generated.dashboard.home.mostFilledLocations"
+      )}
       icon={Package}
-      title={translateMessage("generated.m0456")}
+      title={translateMessage("generated.dashboard.home.warehouseOccupancy")}
     >
       {renderContent()}
     </InsightCard>

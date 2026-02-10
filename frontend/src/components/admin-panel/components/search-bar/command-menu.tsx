@@ -57,12 +57,14 @@ export function CommandMenu({
     <CommandDialog onOpenChange={setOpen} open={open}>
       <CommandInput
         onValueChange={setQuery}
-        placeholder={translateMessage("generated.m0192")}
+        placeholder={translateMessage("generated.admin.shared.searchCommand")}
         value={query}
       />
       <CommandList>
         <ScrollArea className="h-72 pe-1">
-          <CommandEmpty>{translateMessage("generated.m0193")}</CommandEmpty>
+          <CommandEmpty>
+            {translateMessage("generated.admin.shared.resultsFound")}
+          </CommandEmpty>
 
           {navGroups.map((group) => (
             <CommandGroup key={group.title}>
@@ -90,7 +92,7 @@ export function CommandMenu({
               }}
             >
               <HugeiconsIcon icon={Sun03Icon} />{" "}
-              <span>{translateMessage("generated.m0916")}</span>
+              <span>{translateMessage("generated.admin.shared.bright")}</span>
             </CommandItem>
             <CommandItem
               onSelect={() => {
@@ -98,7 +100,7 @@ export function CommandMenu({
               }}
             >
               <HugeiconsIcon className="scale-90" icon={Moon02Icon} />
-              <span>{translateMessage("generated.m0917")}</span>
+              <span>{translateMessage("generated.admin.shared.dark")}</span>
             </CommandItem>
             <CommandItem
               onSelect={() => {
@@ -106,7 +108,7 @@ export function CommandMenu({
               }}
             >
               <HugeiconsIcon icon={LaptopIcon} />
-              <span>{translateMessage("generated.m0918")}</span>
+              <span>{translateMessage("generated.admin.shared.system")}</span>
             </CommandItem>
           </CommandGroup>
         </ScrollArea>

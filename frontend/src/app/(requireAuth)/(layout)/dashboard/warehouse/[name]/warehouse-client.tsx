@@ -93,13 +93,17 @@ const getWarehouseDisplayMessage = ({
   warehouseName: string
 }): string | null => {
   if (hasFetchError) {
-    return translateMessage("generated.m0080")
+    return translateMessage(
+      "generated.dashboard.warehouse.failedRetrieveStorageData"
+    )
   }
   if (!hasWarehouse) {
     return `Nie znaleziono magazynu o nazwie: ${warehouseName}`
   }
   if (!hasRack) {
-    return translateMessage("generated.m0093")
+    return translateMessage(
+      "generated.dashboard.warehouse.warehouseAnyRacksYet"
+    )
   }
 
   return null
@@ -132,17 +136,17 @@ function buildHeaderStats({
 
   return [
     {
-      label: translateMessage("generated.m0083"),
+      label: translateMessage("generated.dashboard.shared.racks"),
       value: warehouseRacksCount,
       icon: Layers01Icon,
     },
     {
-      label: translateMessage("generated.m0094"),
+      label: translateMessage("generated.dashboard.shared.occupancy"),
       value: `${headerOccupancyPercentage}%`,
       variant: getOccupancyVariant(headerOccupancyPercentage),
     },
     {
-      label: translateMessage("generated.m0883"),
+      label: translateMessage("generated.dashboard.shared.free"),
       value: headerFreeSlots,
     },
   ]
@@ -157,15 +161,23 @@ function WarehouseLoadingSkeleton({
     <div className="space-y-6">
       <PageHeader
         backHref="/dashboard/warehouse"
-        backTitle={translateMessage("generated.m0884")}
+        backTitle={translateMessage(
+          "generated.dashboard.warehouse.backWarehouseList"
+        )}
         stats={[
           {
-            label: translateMessage("generated.m0083"),
+            label: translateMessage("generated.dashboard.shared.racks"),
             value: "-",
             icon: Layers01Icon,
           },
-          { label: translateMessage("generated.m0094"), value: "-" },
-          { label: translateMessage("generated.m0883"), value: "-" },
+          {
+            label: translateMessage("generated.dashboard.shared.occupancy"),
+            value: "-",
+          },
+          {
+            label: translateMessage("generated.dashboard.shared.free"),
+            value: "-",
+          },
         ]}
         title={warehouseName}
       >
@@ -300,7 +312,9 @@ function WarehouseStateView({
     <div className="space-y-6">
       <PageHeader
         backHref="/dashboard/warehouse"
-        backTitle={translateMessage("generated.m0884")}
+        backTitle={translateMessage(
+          "generated.dashboard.warehouse.backWarehouseList"
+        )}
         stats={headerStats}
         title={warehouseName}
         titleBadge={titleBadge}
@@ -660,7 +674,9 @@ export default function WarehouseClient() {
     <div className="space-y-6">
       <PageHeader
         backHref="/dashboard/warehouse"
-        backTitle={translateMessage("generated.m0884")}
+        backTitle={translateMessage(
+          "generated.dashboard.warehouse.backWarehouseList"
+        )}
         stats={headerStats}
         title={warehouseName}
       >
@@ -676,7 +692,7 @@ export default function WarehouseClient() {
             </Badge>
             <Badge className="gap-1.5 font-mono" variant="outline">
               <HugeiconsIcon className="size-3" icon={ThermometerIcon} />
-              {translateMessage("generated.m0095", {
+              {translateMessage("generated.shared.cC", {
                 value0: currentRack.minTemp,
                 value1: currentRack.maxTemp,
               })}
@@ -695,7 +711,7 @@ export default function WarehouseClient() {
           href={`/dashboard/warehouse/${encodeURIComponent(warehouseName)}/assortment`}
         >
           <HugeiconsIcon className="size-4" icon={PackageIcon} />
-          <span>{translateMessage("generated.m0882")}</span>
+          <span>{translateMessage("generated.shared.assortment")}</span>
         </Link>
         <Button
           className="gap-2"
@@ -704,7 +720,9 @@ export default function WarehouseClient() {
           variant="outline"
         >
           <HugeiconsIcon className="size-4" icon={CubeIcon} />
-          <span>{translateMessage("generated.m0097")}</span>
+          <span>
+            {translateMessage("generated.dashboard.warehouse.value3dView")}
+          </span>
         </Button>
       </div>
 
@@ -719,15 +737,19 @@ export default function WarehouseClient() {
               />
             </AlertDialogMedia>
             <AlertDialogTitle>
-              {translateMessage("generated.m0098")}
+              {translateMessage(
+                "generated.dashboard.shared.value3dViewWarehouse"
+              )}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {translateMessage("generated.m0099")}
+              {translateMessage(
+                "generated.dashboard.shared.value3dVisualizationFetchesData"
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>
-              {translateMessage("generated.m0885")}
+              {translateMessage("generated.shared.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() =>
@@ -736,7 +758,7 @@ export default function WarehouseClient() {
                 )
               }
             >
-              {translateMessage("generated.m0100")}
+              {translateMessage("generated.dashboard.shared.open3dView")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

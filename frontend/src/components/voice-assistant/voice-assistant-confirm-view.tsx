@@ -83,7 +83,7 @@ export function VoiceAssistantConfirmView({
           />
         </svg>
         <span
-          aria-label={translateMessage("generated.m0813", {
+          aria-label={translateMessage("generated.voiceAssistant.secondsLeft", {
             value0: secondsLeft,
           })}
           aria-live="assertive"
@@ -96,7 +96,7 @@ export function VoiceAssistantConfirmView({
 
       <div className="max-w-xs space-y-1.5">
         <h2 className="font-semibold text-foreground text-lg tracking-tight">
-          {translateMessage("generated.m0814")}
+          {translateMessage("generated.voiceAssistant.commandRecognized")}
         </h2>
         <p className="font-medium text-foreground/90 text-sm">{commandLabel}</p>
         <p className="rounded-lg bg-muted/40 px-3 py-1.5 text-muted-foreground text-xs leading-relaxed">
@@ -112,7 +112,7 @@ export function VoiceAssistantConfirmView({
           onClick={handleConfirm}
           type="button"
         >
-          {translateMessage("generated.m0817")}
+          {translateMessage("generated.voiceAssistant.executeNow")}
         </Button>
         <Button
           className="rounded-full"
@@ -120,7 +120,7 @@ export function VoiceAssistantConfirmView({
           type="button"
           variant="ghost"
         >
-          {translateMessage("generated.m0885")}
+          {translateMessage("generated.shared.cancel")}
         </Button>
       </div>
     </div>

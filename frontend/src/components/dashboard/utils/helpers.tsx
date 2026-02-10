@@ -44,8 +44,11 @@ export const handleApiError = (err: unknown, fallback?: string) => {
     FetchError.isError(err)
       ? translateMessage(`errorCodes.${err.code}`) ||
           fallback ||
-          translateMessage("generated.m0657")
-      : (fallback ?? translateMessage("generated.m0657"))
+          translateMessage("generated.dashboard.shared.unexpectedErrorOccurred")
+      : (fallback ??
+          translateMessage(
+            "generated.dashboard.shared.unexpectedErrorOccurred"
+          ))
   )
 }
 export const getOccupancyPercentage = (

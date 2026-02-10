@@ -39,7 +39,12 @@ export const createApiSchema = <const C extends ApiSchemaConfig>(
 
   for (const [method, definition] of Object.entries(config)) {
     if (!VALID_METHODS.includes(method as ApiMethod)) {
-      throw new Error(translateMessage("generated.m0839", { value0: method }))
+      throw new Error(
+        translateMessage(
+          "generated.system.api.unsupportedApiMethodPassedCreateapischema",
+          { value0: method }
+        )
+      )
     }
 
     if (!definition) {

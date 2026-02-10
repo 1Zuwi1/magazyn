@@ -68,13 +68,15 @@ export function TableRowContent({
         </span>
         {expired && (
           <Badge className="ml-2" variant="destructive">
-            {translateMessage("generated.m0482")}
+            {translateMessage("generated.shared.expired")}
           </Badge>
         )}
       </TableCell>
       <TableCell className="text-right">
         <DropdownMenu>
-          <DropdownMenuTrigger aria-label={translateMessage("generated.m0227")}>
+          <DropdownMenuTrigger
+            aria-label={translateMessage("generated.shared.openMenu")}
+          >
             <HugeiconsIcon
               className={cn(
                 buttonVariants({
@@ -91,21 +93,25 @@ export function TableRowContent({
               onClick={() => onView(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={ViewIcon} />
-              <span>{translateMessage("generated.m0483")}</span>
+              <span>
+                {translateMessage(
+                  "generated.dashboard.itemsVisualization.preview"
+                )}
+              </span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => onEdit(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilEdit01Icon} />
-              <span>{translateMessage("generated.m0934")}</span>
+              <span>{translateMessage("generated.shared.edit")}</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer text-destructive focus:text-destructive"
               onClick={() => onDelete(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={Delete02Icon} />
-              <span>{translateMessage("generated.m0230")}</span>
+              <span>{translateMessage("generated.shared.remove")}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -66,9 +66,20 @@ export const ItemCsvSchema = z.object({
 
 const usernameSchema = z
   .string()
-  .min(3, translateMessage("generated.m0841"))
-  .max(20, translateMessage("generated.m0842"))
-  .regex(/^[a-zA-Z0-9_]+$/, translateMessage("generated.m0843"))
+  .min(
+    3,
+    translateMessage("generated.validation.csv.usernameMustLeast3Characters")
+  )
+  .max(
+    20,
+    translateMessage("generated.validation.csv.username20CharactersLong")
+  )
+  .regex(
+    /^[a-zA-Z0-9_]+$/,
+    translateMessage(
+      "generated.validation.csv.usernameOnlyContainLettersNumbers"
+    )
+  )
 
 export const UserFormSchema = z.object({
   username: usernameSchema,

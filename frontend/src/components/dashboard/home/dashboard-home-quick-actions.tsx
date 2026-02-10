@@ -8,27 +8,31 @@ export function DashboardHomeQuickActions() {
     <section aria-labelledby="dashboard-actions" className="space-y-4">
       <div>
         <h2 className="font-semibold text-xl" id="dashboard-actions">
-          {translateMessage("generated.m0431")}
+          {translateMessage("generated.dashboard.home.quickActions")}
         </h2>
         <p className="text-muted-foreground text-sm">
-          {translateMessage("generated.m0432")}
+          {translateMessage("generated.dashboard.home.mostCommonTasksOnePlace")}
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Link href="/dashboard/warehouse">
           <QuickActionCard
-            description={translateMessage("generated.m0433")}
+            description={translateMessage(
+              "generated.dashboard.home.manageLocationsRacks"
+            )}
             href="/dashboard/warehouse"
             icon={Package}
-            title={translateMessage("generated.m0434")}
+            title={translateMessage("generated.dashboard.home.warehouseReview")}
           />
         </Link>
         <Link href="/dashboard/items">
           <QuickActionCard
-            description={translateMessage("generated.m0435")}
+            description={translateMessage(
+              "generated.dashboard.home.productCatalogStockLevels"
+            )}
             href="/dashboard/items"
             icon={GroupItemsIcon}
-            title={translateMessage("generated.m0882")}
+            title={translateMessage("generated.shared.assortment")}
           />
         </Link>
       </div>

@@ -153,7 +153,9 @@ export function UsersTable({
           <TableCell>
             <DropdownMenu>
               <DropdownMenuTrigger
-                aria-label={translateMessage("generated.m0288")}
+                aria-label={translateMessage(
+                  "generated.admin.users.userActions"
+                )}
                 className={cn(
                   "flex size-8 items-center justify-center rounded-md opacity-0 transition-all hover:bg-muted group-hover:opacity-100",
                   "focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
@@ -176,7 +178,7 @@ export function UsersTable({
                     className="mr-2 size-4"
                     icon={PencilEdit01Icon}
                   />
-                  {translateMessage("generated.m0934")}
+                  {translateMessage("generated.shared.edit")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer"
@@ -189,7 +191,7 @@ export function UsersTable({
                     className="mr-2 size-4"
                     icon={UserShield01Icon}
                   />
-                  {translateMessage("generated.m0176")}
+                  {translateMessage("generated.admin.shared.changeStatus")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer"
@@ -202,7 +204,7 @@ export function UsersTable({
                     className="mr-2 size-4"
                     icon={Building06Icon}
                   />
-                  {translateMessage("generated.m0289")}
+                  {translateMessage("generated.admin.users.assignWarehouse")}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -213,7 +215,7 @@ export function UsersTable({
                   }}
                 >
                   <HugeiconsIcon className="mr-2 size-4" icon={Delete02Icon} />
-                  {translateMessage("generated.m0230")}
+                  {translateMessage("generated.shared.remove")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -229,19 +231,19 @@ export function UsersTable({
         <TableHeader>
           <TableRow className="bg-muted/20 hover:bg-muted/20">
             <TableHead className="font-semibold">
-              {translateMessage("generated.m0270")}
+              {translateMessage("generated.admin.users.fullName")}
             </TableHead>
             <TableHead className="font-semibold">
-              {translateMessage("generated.m0874")}
+              {translateMessage("generated.shared.eMail")}
             </TableHead>
             <TableHead className="font-semibold">
-              {translateMessage("generated.m0895")}
+              {translateMessage("generated.shared.status")}
             </TableHead>
             <TableHead className="font-semibold">
-              {translateMessage("generated.m0942")}
+              {translateMessage("generated.shared.role")}
             </TableHead>
             <TableHead className="font-semibold">
-              {translateMessage("generated.m0272")}
+              {translateMessage("generated.shared.team")}
             </TableHead>
             <TableHead className="w-12" />
           </TableRow>

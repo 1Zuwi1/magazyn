@@ -54,7 +54,9 @@ export function VoiceAssistantListeningView({
           <span className="pointer-events-none absolute -inset-4 animate-pulse rounded-full bg-destructive/8 blur-lg" />
 
           <Button
-            aria-label={translateMessage("generated.m0818")}
+            aria-label={translateMessage(
+              "generated.voiceAssistant.stopListening"
+            )}
             className="relative size-22 rounded-full shadow-destructive/25 shadow-lg transition-all duration-200 hover:shadow-xl active:scale-95"
             onClick={onStopListening}
             size="icon"
@@ -70,10 +72,12 @@ export function VoiceAssistantListeningView({
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75" />
               <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
             </span>
-            {translateMessage("generated.m0819")}
+            {translateMessage("generated.voiceAssistant.imListening")}
           </h2>
           <p className="text-muted-foreground text-sm">
-            {translateMessage("generated.m0820")}
+            {translateMessage(
+              "generated.voiceAssistant.sayCommandThenPressStop"
+            )}
           </p>
         </div>
 
@@ -89,7 +93,7 @@ export function VoiceAssistantListeningView({
             </p>
           ) : (
             <p className="text-muted-foreground/60 text-xs italic">
-              {translateMessage("generated.m0821")}
+              {translateMessage("generated.voiceAssistant.amListeningCommand")}
             </p>
           )}
           {detectedCommandLabel && (
@@ -101,7 +105,7 @@ export function VoiceAssistantListeningView({
                 aria-hidden="true"
                 className="inline-flex size-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px] shadow-emerald-400/60"
               />
-              {translateMessage("generated.m1104", {
+              {translateMessage("generated.voiceAssistant.detected", {
                 value0: detectedCommandLabel,
               })}
             </Badge>

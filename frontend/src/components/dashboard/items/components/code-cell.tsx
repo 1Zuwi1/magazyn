@@ -220,11 +220,13 @@ function CodeDialog({
         <DialogHeader>
           <DialogTitle>
             {isQr
-              ? translateMessage("generated.m1150")
-              : translateMessage("generated.m1151")}
+              ? translateMessage("generated.dashboard.items.qrCode")
+              : translateMessage("generated.dashboard.items.barcode")}
           </DialogTitle>
           <DialogDescription>
-            {translateMessage("generated.m0470")}
+            {translateMessage(
+              "generated.dashboard.items.enlargedCodeViewQuickLabel"
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -241,8 +243,8 @@ function CodeDialog({
               icon={copied ? Tick02Icon : Copy01Icon}
             />
             {copied
-              ? translateMessage("generated.m1148")
-              : translateMessage("generated.m1149")}
+              ? translateMessage("generated.dashboard.items.copied")
+              : translateMessage("generated.dashboard.items.copyCode")}
           </Button>
         </div>
       </DialogContent>
@@ -284,7 +286,9 @@ export function CodeCell({ value }: CodeCellProps) {
             {formatted}
           </span>
         </TooltipTrigger>
-        <TooltipContent>{translateMessage("generated.m0471")}</TooltipContent>
+        <TooltipContent>
+          {translateMessage("generated.dashboard.items.clickEnlarge")}
+        </TooltipContent>
       </Tooltip>
       <CodeDialog
         formatted={formatted}

@@ -6,16 +6,16 @@ export const TABLE_PAGE_SIZE = 10
 
 export const getStatusLabel = (status: AdminUser["account_status"]): string => {
   if (status === "ACTIVE") {
-    return translateMessage("generated.m0891")
+    return translateMessage("generated.shared.active")
   }
   if (status === "PENDING_VERIFICATION") {
-    return translateMessage("generated.m1119")
+    return translateMessage("generated.admin.users.pending")
   }
   if (status === "LOCKED") {
-    return translateMessage("generated.m0996")
+    return translateMessage("generated.shared.blocked")
   }
   if (status === "DISABLED") {
-    return translateMessage("generated.m0317")
+    return translateMessage("generated.shared.disabled")
   }
   return status
 }

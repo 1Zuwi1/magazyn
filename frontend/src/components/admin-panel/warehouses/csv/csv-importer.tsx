@@ -70,7 +70,7 @@ export function CsvImporter<T extends CsvImporterType>({
   if (type === "warehouse") {
     dialogTitle = "Importuj magazyny z CSV"
   } else if (type === "rack") {
-    dialogTitle = translateMessage("generated.m0329")
+    dialogTitle = translateMessage("generated.admin.warehouses.importRacksCsv")
   }
 
   const labels = useMemo(() => {
@@ -101,7 +101,7 @@ export function CsvImporter<T extends CsvImporterType>({
       <DialogTrigger
         className={cn(buttonVariants({ variant: "default" }), "w-fit gap-2")}
       >
-        {translateMessage("generated.m0330")}
+        {translateMessage("generated.admin.warehouses.importCsv")}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] min-w-fit overflow-auto sm:min-w-125">
         <DialogHeader>
@@ -129,7 +129,7 @@ export function CsvImporter<T extends CsvImporterType>({
                 }}
                 variant="destructive"
               >
-                {translateMessage("generated.m0230")}
+                {translateMessage("generated.shared.remove")}
               </Button>
               <Button
                 disabled={isImporting}
@@ -137,7 +137,7 @@ export function CsvImporter<T extends CsvImporterType>({
                   await confirmImport()
                 }}
               >
-                {translateMessage("generated.m0946")}
+                {translateMessage("generated.admin.warehouses.import")}
                 <HugeiconsIcon
                   className="ml-2 size-4"
                   icon={ArrowRight01Icon}
@@ -150,7 +150,7 @@ export function CsvImporter<T extends CsvImporterType>({
               onClick={() => setOpen(false)}
               variant="outline"
             >
-              {translateMessage("generated.m0885")}
+              {translateMessage("generated.shared.cancel")}
             </Button>
           )}
         </DialogFooter>

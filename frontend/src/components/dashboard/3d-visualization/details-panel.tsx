@@ -76,7 +76,7 @@ function getOccupancyColor(percentage: number): {
       text: "text-destructive",
       bg: "bg-destructive/10",
       bar: "bg-destructive",
-      label: translateMessage("generated.m0961"),
+      label: translateMessage("generated.dashboard.shared.critical"),
     }
   }
   if (percentage >= 75) {
@@ -84,7 +84,7 @@ function getOccupancyColor(percentage: number): {
       text: "text-orange-500",
       bg: "bg-orange-500/10",
       bar: "bg-orange-500",
-      label: translateMessage("generated.m0963"),
+      label: translateMessage("generated.dashboard.shared.high"),
     }
   }
   if (percentage >= 50) {
@@ -92,14 +92,14 @@ function getOccupancyColor(percentage: number): {
       text: "text-primary",
       bg: "bg-primary/10",
       bar: "bg-primary",
-      label: translateMessage("generated.m0965"),
+      label: translateMessage("generated.dashboard.shared.moderate"),
     }
   }
   return {
     text: "text-emerald-500",
     bg: "bg-emerald-500/10",
     bar: "bg-emerald-500",
-    label: translateMessage("generated.m0967"),
+    label: translateMessage("generated.dashboard.shared.low"),
   }
 }
 
@@ -163,10 +163,14 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
           </div>
           <div>
             <h2 className="font-semibold text-base tracking-tight">
-              {translateMessage("generated.m0402")}
+              {translateMessage(
+                "generated.dashboard.visualization3d.warehouseReview"
+              )}
             </h2>
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.m0403")}
+              {translateMessage(
+                "generated.dashboard.visualization3d.statisticsSummary"
+              )}
             </p>
           </div>
         </div>
@@ -177,7 +181,9 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="font-medium text-sm">
-              {translateMessage("generated.m0404")}
+              {translateMessage(
+                "generated.dashboard.visualization3d.totalOccupancy"
+              )}
             </span>
             <span
               className={cn(
@@ -219,28 +225,30 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
           bgColor="bg-muted"
           color="text-muted-foreground"
           icon={GridViewIcon}
-          label={translateMessage("generated.m0083")}
+          label={translateMessage("generated.dashboard.shared.racks")}
           value={warehouse.racks.length}
         />
         <StatCard
           bgColor="bg-primary/10"
           color="text-primary"
           icon={PackageIcon}
-          label={translateMessage("generated.m0405")}
+          label={translateMessage("generated.dashboard.shared.capacity")}
           value={totalSlots}
         />
         <StatCard
           bgColor="bg-muted"
           color="text-muted-foreground"
           icon={SquareLock02Icon}
-          label={translateMessage("generated.m0406")}
+          label={translateMessage(
+            "generated.dashboard.visualization3d.occupied"
+          )}
           value={occupiedSlots}
         />
         <StatCard
           bgColor="bg-emerald-500/10"
           color="text-emerald-500"
           icon={CheckmarkCircle02Icon}
-          label={translateMessage("generated.m0883")}
+          label={translateMessage("generated.dashboard.shared.free")}
           value={freeSlots}
         />
       </div>
@@ -295,10 +303,11 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
             </div>
             <div>
               <h2 className="font-semibold text-base tracking-tight">
-                {translateMessage("generated.m0090")}
+                {translateMessage("generated.dashboard.shared.rackDetails")}
               </h2>
               <p className="text-muted-foreground text-xs">
-                {selectedRack?.name ?? translateMessage("generated.m0407")}
+                {selectedRack?.name ??
+                  translateMessage("generated.shared.selectRack")}
               </p>
             </div>
           </div>
@@ -339,7 +348,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
             <div className="space-y-2 p-3 text-xs">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">
-                  {translateMessage("generated.m0968")}
+                  {translateMessage("generated.dashboard.visualization3d.net")}
                 </span>
                 <span className="font-mono font-semibold">
                   {selectedRack.grid.rows}×{selectedRack.grid.cols}
@@ -347,7 +356,9 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">
-                  {translateMessage("generated.m0408")}
+                  {translateMessage(
+                    "generated.dashboard.visualization3d.allPlaces"
+                  )}
                 </span>
                 <span className="font-mono font-semibold">
                   {selectedRack.grid.rows * selectedRack.grid.cols}
@@ -355,7 +366,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">
-                  {translateMessage("generated.m0409")}
+                  {translateMessage("generated.dashboard.shared.occupied")}
                 </span>
                 <span className="font-mono font-semibold">
                   {selectedRack.items.filter((item) => item !== null).length}
@@ -363,14 +374,19 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">
-                  {translateMessage("generated.m0410")}
+                  {translateMessage(
+                    "generated.dashboard.visualization3d.maxSize"
+                  )}
                 </span>
                 <span className="font-mono font-semibold">
-                  {translateMessage("generated.m1078", {
-                    value0: selectedRack.maxElementSize.width,
-                    value1: selectedRack.maxElementSize.height,
-                    value2: selectedRack.maxElementSize.depth,
-                  })}
+                  {translateMessage(
+                    "generated.dashboard.visualization3d.maxMm",
+                    {
+                      value0: selectedRack.maxElementSize.width,
+                      value1: selectedRack.maxElementSize.height,
+                      value2: selectedRack.maxElementSize.depth,
+                    }
+                  )}
                 </span>
               </div>
             </div>
@@ -389,7 +405,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                   </div>
                   <div>
                     <h4 className="font-semibold text-sm">
-                      {translateMessage("generated.m0506", {
+                      {translateMessage("generated.dashboard.shared.rowShelf", {
                         value0: selectedShelf.row + 1,
                         value1: selectedShelf.col + 1,
                       })}
@@ -397,7 +413,7 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                   </div>
                 </div>
                 <Button onClick={clearSelection} size="sm" variant="ghost">
-                  {translateMessage("generated.m0413")}
+                  {translateMessage("generated.shared.clear")}
                 </Button>
               </div>
 
@@ -420,13 +436,13 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">
-                        {translateMessage("generated.m0969")}
+                        {translateMessage("generated.dashboard.shared.id")}
                       </span>
                       <span className="font-mono">{selectedItem.id}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">
-                        {translateMessage("generated.m0922")}
+                        {translateMessage("generated.shared.name")}
                       </span>
                       <span className="font-medium">{selectedItem.label}</span>
                     </div>
@@ -448,12 +464,14 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                     />
                   </div>
                   <p className="font-medium text-muted-foreground text-sm">
-                    {translateMessage("generated.m0414")}
+                    {translateMessage("generated.dashboard.shared.emptyShelf")}
                   </p>
                   <p className="text-muted-foreground/70 text-xs">
-                    {translateMessage("generated.m0415")}
+                    {translateMessage(
+                      "generated.dashboard.shared.itemPosition"
+                    )}
                     <br />
-                    {translateMessage("generated.m0506", {
+                    {translateMessage("generated.dashboard.shared.rowShelf", {
                       value0: selectedShelf.row + 1,
                       value1: selectedShelf.col + 1,
                     })}
@@ -475,10 +493,10 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
               <p className="font-medium text-muted-foreground text-sm">
                 {showBlockHint
                   ? `Kliknij blok ${RACK_ZONE_SIZE}×${RACK_ZONE_SIZE}`
-                  : translateMessage("generated.m0416")}
+                  : translateMessage("generated.dashboard.shared.clickShelf")}
               </p>
               <p className="text-muted-foreground/70 text-xs">
-                {translateMessage("generated.m0417")}
+                {translateMessage("generated.dashboard.shared.seeItemDetails")}
               </p>
             </div>
           )}

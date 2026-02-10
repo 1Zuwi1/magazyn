@@ -78,7 +78,7 @@ export default function AssortmentClient() {
 
   const headerStats = [
     {
-      label: translateMessage("generated.m0091"),
+      label: translateMessage("generated.dashboard.warehouse.products"),
       value: assortments?.totalElements ?? 0,
       icon: PackageIcon,
     },
@@ -93,9 +93,13 @@ export default function AssortmentClient() {
       <div className="space-y-8">
         <PageHeader
           backHref="/dashboard/warehouse"
-          backTitle={translateMessage("generated.m0881")}
-          description={translateMessage("generated.m0092")}
-          title={translateMessage("generated.m0882")}
+          backTitle={translateMessage(
+            "generated.dashboard.warehouse.backWarehouse"
+          )}
+          description={translateMessage(
+            "generated.dashboard.warehouse.browseAllProductsStoredWarehouse"
+          )}
+          title={translateMessage("generated.shared.assortment")}
         />
         <ErrorEmptyState
           onRetry={() => {
@@ -111,10 +115,14 @@ export default function AssortmentClient() {
     <div className="space-y-8">
       <PageHeader
         backHref={`/dashboard/warehouse/${encodeURIComponent(warehouse?.name ?? "")}`}
-        backTitle={translateMessage("generated.m0881")}
-        description={translateMessage("generated.m0092")}
+        backTitle={translateMessage(
+          "generated.dashboard.warehouse.backWarehouse"
+        )}
+        description={translateMessage(
+          "generated.dashboard.warehouse.browseAllProductsStoredWarehouse"
+        )}
         stats={headerStats}
-        title={translateMessage("generated.m0882")}
+        title={translateMessage("generated.shared.assortment")}
         titleBadge={warehouse?.name}
       />
 

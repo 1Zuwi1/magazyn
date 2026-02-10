@@ -60,7 +60,9 @@ export function QRCodeDisplay({
         if (isCancelled) {
           return
         }
-        setError(translateMessage("generated.m0578"))
+        setError(
+          translateMessage("generated.dashboard.settings.failedGenerateQrCode")
+        )
         setDataUrl(null)
       }
     }
@@ -98,7 +100,7 @@ export function QRCodeDisplay({
   return (
     <div className={cn("overflow-hidden rounded-lg border", className)}>
       <Image
-        alt={translateMessage("generated.m0579")}
+        alt={translateMessage("generated.dashboard.settings.qrCodeScan")}
         className="block"
         height={size}
         priority

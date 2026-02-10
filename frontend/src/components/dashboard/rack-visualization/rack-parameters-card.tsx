@@ -21,7 +21,9 @@ export function RackParametersCard({
   const parameters = [
     {
       icon: RulerIcon,
-      label: translateMessage("generated.m0501"),
+      label: translateMessage(
+        "generated.dashboard.rackVisualization.maxElementSize"
+      ),
       value: `${maxElementSize.width} × ${maxElementSize.height} × ${maxElementSize.depth}`,
       unit: "mm",
       color: "text-blue-500",
@@ -29,7 +31,9 @@ export function RackParametersCard({
     },
     {
       icon: ThermometerIcon,
-      label: translateMessage("generated.m0502"),
+      label: translateMessage(
+        "generated.dashboard.rackVisualization.temperatureRange"
+      ),
       value: `${tempRange.min}°C – ${tempRange.max}°C`,
       unit: null,
       color: "text-orange-500",
@@ -37,7 +41,9 @@ export function RackParametersCard({
     },
     {
       icon: GridViewIcon,
-      label: translateMessage("generated.m0503"),
+      label: translateMessage(
+        "generated.dashboard.rackVisualization.gridDimensions"
+      ),
       value: `${gridDimensions.rows} × ${gridDimensions.cols}`,
       unit: "miejsc",
       color: "text-primary",
@@ -56,7 +62,9 @@ export function RackParametersCard({
           />
         </div>
         <h3 className="font-semibold text-sm">
-          {translateMessage("generated.m0504")}
+          {translateMessage(
+            "generated.dashboard.rackVisualization.rackParameters"
+          )}
         </h3>
       </div>
 

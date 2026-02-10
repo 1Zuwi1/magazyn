@@ -15,10 +15,12 @@ export function OutboundSelectItem({
 }: OutboundSelectItemProps) {
   return (
     <ScannerSelectItem
-      description={translateMessage("generated.m0713")}
+      description={translateMessage(
+        "generated.scanner.shared.findProductWantRemoveWarehouse"
+      )}
       onCancel={onCancel}
       onSelect={onSelect}
-      title={translateMessage("generated.m0714")}
+      title={translateMessage("generated.scanner.shared.selectProduct")}
     />
   )
 }

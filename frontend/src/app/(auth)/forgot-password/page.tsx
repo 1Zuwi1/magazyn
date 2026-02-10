@@ -20,7 +20,7 @@ import { getAnimationStyle } from "@/lib/utils"
 const ForgotPasswordSchema = createApiSchema({
   POST: {
     input: z.object({
-      email: z.email(translateMessage("generated.m0028")),
+      email: z.email(translateMessage("generated.auth.invalidEmailFormat")),
     }),
     output: z.null(),
   },
@@ -38,13 +38,17 @@ export default function ForgotPassword() {
           method: "POST",
         })
 
-        toast.success(translateMessage("generated.m0029"))
+        toast.success(
+          translateMessage("generated.auth.accountEmailAddressExistsWill")
+        )
       } catch (e) {
         if (FetchError.isError(e)) {
           handleApiError(e)
           return
         }
-        toast.error(translateMessage("generated.m0030"))
+        toast.error(
+          translateMessage("generated.auth.unexpectedErrorOccurredAgain")
+        )
       }
     },
     validators: {
@@ -72,7 +76,7 @@ export default function ForgotPassword() {
               href="/login"
             >
               <HugeiconsIcon className="size-4" icon={ArrowLeft01Icon} />
-              {translateMessage("generated.m0031")}
+              {translateMessage("generated.auth.backLogin")}
             </Link>
           </div>
           <div
@@ -84,7 +88,7 @@ export default function ForgotPassword() {
               <Logo className="relative" />
             </div>
             <FieldDescription className="mt-2 max-w-70 text-center text-muted-foreground/80">
-              {translateMessage("generated.m0032")}
+              {translateMessage("generated.auth.enterEmailAddressWillSend")}
             </FieldDescription>
           </div>
           <div
@@ -96,8 +100,8 @@ export default function ForgotPassword() {
                 <FieldWithState
                   field={field}
                   icon={Mail01Icon}
-                  label={translateMessage("generated.m0874")}
-                  placeholder={translateMessage("generated.m0875")}
+                  label={translateMessage("generated.shared.eMail")}
+                  placeholder={translateMessage("generated.auth.janKowalskiPl")}
                   type="email"
                 />
               )}
@@ -109,7 +113,7 @@ export default function ForgotPassword() {
                 size="lg"
                 type="submit"
               >
-                {translateMessage("generated.m0033")}
+                {translateMessage("generated.auth.sendResetLink")}
               </Button>
             </Field>
           </div>

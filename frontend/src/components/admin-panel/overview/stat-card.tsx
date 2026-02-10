@@ -123,7 +123,7 @@ export function AdminStatCard({
             <div className="space-y-1">
               <p className="text-muted-foreground text-sm">{title}</p>
               <p className="font-medium text-destructive text-sm">
-                {translateMessage("generated.m0250")}
+                {translateMessage("generated.admin.overview.failedFetchData")}
               </p>
             </div>
             <div
@@ -147,11 +147,11 @@ export function AdminStatCard({
                 type="button"
               >
                 <HugeiconsIcon className="size-3.5" icon={RefreshIcon} />
-                {translateMessage("generated.m0237")}
+                {translateMessage("generated.admin.overview.retry")}
               </button>
             ) : (
               <p className="text-muted-foreground text-sm">
-                {translateMessage("generated.m0251")}
+                {translateMessage("generated.admin.overview.againLater")}
               </p>
             )}
           </div>

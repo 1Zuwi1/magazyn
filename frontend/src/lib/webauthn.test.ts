@@ -119,7 +119,7 @@ describe("getWebAuthnErrorMessage", () => {
     const error = new DOMException("", "NotAllowedError")
 
     expect(getWebAuthnErrorMessage(error, "fallback")).toBe(
-      translateMessage("generated.m0870")
+      translateMessage("generated.security.webauthn.operationCanceledTimedOut")
     )
   })
 

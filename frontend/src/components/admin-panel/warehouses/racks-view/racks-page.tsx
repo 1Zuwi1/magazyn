@@ -121,7 +121,11 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
 
   const handleSubmit = async (data: RackFormData) => {
     if (!apiWarehouse) {
-      throw new Error(translateMessage("generated.m0380"))
+      throw new Error(
+        translateMessage(
+          "generated.admin.warehouses.warehouseIdRequiredCreateUpdate"
+        )
+      )
     }
 
     if (selectedRack === undefined) {
@@ -154,7 +158,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     })
     if (report.errors.length > 0) {
       toast.warning(
-        translateMessage("generated.m0220", {
+        translateMessage("generated.admin.shared.importPartiallyCompleted", {
           value0: report.imported,
           value1: report.processedLines,
         })
@@ -163,7 +167,9 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     }
 
     toast.success(
-      translateMessage("generated.m0381", { value0: report.imported })
+      translateMessage("generated.admin.warehouses.imported", {
+        value0: report.imported,
+      })
     )
   }
 
@@ -263,21 +269,26 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
             />
             <Button disabled={apiWarehouse == null} onClick={handleAddRack}>
               <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-              {translateMessage("generated.m0371")}
+              {translateMessage("generated.admin.warehouses.addRack")}
             </Button>
           </div>
         }
-        backTitle={translateMessage("generated.m0955")}
-        description={translateMessage("generated.m0382", {
-          value0: warehouseName,
-        })}
+        backTitle={translateMessage(
+          "generated.admin.warehouses.returnWarehouses"
+        )}
+        description={translateMessage(
+          "generated.admin.warehouses.manageRacksWarehouse",
+          {
+            value0: warehouseName,
+          }
+        )}
         icon={GridIcon}
         navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}
         onBack={handleBack}
-        title={translateMessage("generated.m0383")}
+        title={translateMessage("generated.shared.racks2")}
       >
         {/* Quick Stats */}
         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -290,7 +301,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
               {totalRacks}
             </span>
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.m0241")}
+              {translateMessage("generated.admin.warehouses.racks")}
             </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
@@ -300,15 +311,15 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
             />
             <span className="font-mono font-semibold">{totalItems}</span>
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.m0224")}
+              {translateMessage("generated.admin.shared.items")}
             </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.m0384")}
+              {translateMessage("generated.admin.warehouses.totalWeight")}
             </span>
             <span className="font-mono font-semibold">
-              {translateMessage("generated.m1089", {
+              {translateMessage("generated.admin.warehouses.kg2", {
                 value0: racksData?.summary.totalWeight ?? 0,
               })}
             </span>
@@ -335,13 +346,16 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
       />
 
       <ConfirmDialog
-        description={translateMessage("generated.m0385", {
-          value0: rackToDelete?.marker,
-        })}
+        description={translateMessage(
+          "generated.admin.warehouses.sureWantDeleteRackOperation",
+          {
+            value0: rackToDelete?.marker,
+          }
+        )}
         onConfirm={confirmDeleteRack}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
-        title={translateMessage("generated.m0386")}
+        title={translateMessage("generated.admin.warehouses.deleteRack")}
       />
     </div>
   )

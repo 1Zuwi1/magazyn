@@ -382,7 +382,7 @@ export function BlocksInstanced({
         >
           <div className="pointer-events-none min-w-55 rounded border border-white/10 bg-slate-950/80 px-3 py-2 text-center text-slate-100 text-xs">
             <div className="font-bold">
-              {translateMessage("generated.m1079", {
+              {translateMessage("generated.dashboard.visualization3d.zone", {
                 value0: hoveredBlock.startRow + 1,
                 value1: hoveredBlock.startRow + hoveredBlock.rows,
                 value2: hoveredBlock.startCol + 1,
@@ -390,20 +390,24 @@ export function BlocksInstanced({
               })}
             </div>
             <div>
-              {translateMessage("generated.m1096", {
-                value0: hoveredBlock.occupiedCount,
-                value1: hoveredBlock.slotCount,
-                value2:
-                  hoveredBlock.slotCount > 0
-                    ? Math.round(
-                        (hoveredBlock.occupiedCount / hoveredBlock.slotCount) *
-                          100
-                      )
-                    : 0,
-              })}
+              {translateMessage(
+                "generated.dashboard.visualization3d.occupied3",
+                {
+                  value0: hoveredBlock.occupiedCount,
+                  value1: hoveredBlock.slotCount,
+                  value2:
+                    hoveredBlock.slotCount > 0
+                      ? Math.round(
+                          (hoveredBlock.occupiedCount /
+                            hoveredBlock.slotCount) *
+                            100
+                        )
+                      : 0,
+                }
+              )}
             </div>
             <div className="text-slate-400">
-              {translateMessage("generated.m1080", {
+              {translateMessage("generated.dashboard.visualization3d.status", {
                 value0: translateMessage(
                   STATUS_LABEL_KEYS[hoveredBlock.status]
                 ),

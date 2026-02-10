@@ -55,7 +55,9 @@ export function LanguageSwitcher({ className }: { className?: string }) {
         return (
           <button
             aria-label={translateMessage(
-              locale === "pl" ? "generated.m1161" : "generated.m1162"
+              locale === "pl"
+                ? "generated.global.language.polish"
+                : "generated.global.language.english"
             )}
             aria-pressed={isActive}
             className={cn(

@@ -40,6 +40,10 @@ export async function getUrl(data: NextRequest | Headers): Promise<URL> {
     return url
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    throw new Error(translateMessage("generated.m0840", { value0: message }))
+    throw new Error(
+      translateMessage("generated.system.api.invalidUrlConstruction", {
+        value0: message,
+      })
+    )
   }
 }

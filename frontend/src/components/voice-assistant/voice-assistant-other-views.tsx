@@ -19,10 +19,10 @@ export function VoiceAssistantProcessingView() {
 
         <div className="max-w-xs space-y-1.5">
           <h2 className="font-semibold text-foreground text-lg tracking-tight">
-            {translateMessage("generated.m1048")}
+            {translateMessage("generated.voiceAssistant.imProcessing")}
           </h2>
           <p className="text-muted-foreground text-sm">
-            {translateMessage("generated.m0828")}
+            {translateMessage("generated.voiceAssistant.amAnalyzingCommand")}
           </p>
         </div>
       </div>
@@ -59,7 +59,7 @@ export function VoiceAssistantErrorView({
 
       <div className="max-w-xs space-y-1.5">
         <h2 className="font-semibold text-foreground text-lg tracking-tight">
-          {translateMessage("generated.m0829")}
+          {translateMessage("generated.voiceAssistant.didntWork")}
         </h2>
         <p className="text-muted-foreground text-sm leading-relaxed">
           {message}
@@ -67,7 +67,7 @@ export function VoiceAssistantErrorView({
       </div>
 
       <Button className="rounded-full px-6" onClick={onReset} type="button">
-        {translateMessage("generated.m0075")}
+        {translateMessage("generated.shared.again")}
       </Button>
     </div>
   )

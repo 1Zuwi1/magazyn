@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils"
 function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
-      aria-label={translateMessage("generated.m1036")}
+      aria-label={translateMessage("generated.ui.breadcrumbNavigation")}
       className={cn(className)}
       data-slot="breadcrumb"
       {...props}
@@ -109,7 +109,7 @@ function BreadcrumbEllipsis({
       {...props}
     >
       <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} />
-      <span className="sr-only">{translateMessage("generated.m1037")}</span>
+      <span className="sr-only">{translateMessage("generated.ui.more")}</span>
     </span>
   )
 }

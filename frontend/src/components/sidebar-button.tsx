@@ -61,9 +61,12 @@ export default function SidebarButton({ item }: { item: NavigationItem }) {
               isActive={isActive}
               render={
                 <Button
-                  aria-label={translateMessage("generated.m0787", {
-                    value0: item.title,
-                  })}
+                  aria-label={translateMessage(
+                    "generated.ui.sidebar.chooseCategory",
+                    {
+                      value0: item.title,
+                    }
+                  )}
                   id={`button-${item.href}`}
                   onKeyDown={(event) => {
                     if (

@@ -254,15 +254,17 @@ export function SearchEmptyState({
       action={
         onClear
           ? {
-              label: translateMessage("generated.m0790"),
+              label: translateMessage("generated.ui.clearSearch"),
               onClick: onClear,
               variant: "outline",
             }
           : undefined
       }
       className={className}
-      description={translateMessage("generated.m0791")}
-      title={translateMessage("generated.m0422")}
+      description={translateMessage(
+        "generated.ui.changingSearchCriteriaUsingDifferent"
+      )}
+      title={translateMessage("generated.shared.results")}
       variant="search"
     />
   )
@@ -271,7 +273,9 @@ export function SearchEmptyState({
 export function FilterEmptyState({
   onClear,
   className,
-  description = translateMessage("generated.m0792"),
+  description = translateMessage(
+    "generated.ui.itemsMatchSelectedFiltersChanging"
+  ),
 }: {
   onClear?: () => void
   className?: string
@@ -282,7 +286,7 @@ export function FilterEmptyState({
       action={
         onClear
           ? {
-              label: translateMessage("generated.m0180"),
+              label: translateMessage("generated.shared.clearFilters"),
               onClick: onClear,
               variant: "outline",
               icon: Delete02Icon,
@@ -291,7 +295,7 @@ export function FilterEmptyState({
       }
       className={className}
       description={description}
-      title={translateMessage("generated.m0793")}
+      title={translateMessage("generated.ui.matchingItems")}
       variant="filter"
     />
   )
@@ -311,14 +315,16 @@ export function NoItemsEmptyState({
       action={
         onAdd
           ? {
-              label: translateMessage("generated.m0794", { value0: itemName }),
+              label: translateMessage("generated.ui.add", { value0: itemName }),
               onClick: onAdd,
             }
           : undefined
       }
       className={className}
-      description={translateMessage("generated.m0795", { value0: itemName })}
-      title={translateMessage("generated.m0796", { value0: itemName })}
+      description={translateMessage("generated.ui.dontAnySYetStart", {
+        value0: itemName,
+      })}
+      title={translateMessage("generated.ui.s", { value0: itemName })}
       variant="noItems"
     />
   )
@@ -328,8 +334,8 @@ export function NoDataEmptyState({ className }: { className?: string }) {
   return (
     <EmptyState
       className={className}
-      description={translateMessage("generated.m0797")}
-      title={translateMessage("generated.m0472")}
+      description={translateMessage("generated.ui.dataBeenLoadedYetRefreshing")}
+      title={translateMessage("generated.shared.dataAvailable")}
       variant="noData"
     />
   )
@@ -347,7 +353,7 @@ export function ErrorEmptyState({
       action={
         onRetry
           ? {
-              label: translateMessage("generated.m0075"),
+              label: translateMessage("generated.shared.again"),
               onClick: onRetry,
               variant: "outline",
               icon: ReloadIcon,
@@ -355,8 +361,8 @@ export function ErrorEmptyState({
           : undefined
       }
       className={className}
-      description={translateMessage("generated.m0798")}
-      title={translateMessage("generated.m0799")}
+      description={translateMessage("generated.ui.problemLoadingDataAgain")}
+      title={translateMessage("generated.ui.somethingWentWrong")}
       variant="error"
     />
   )

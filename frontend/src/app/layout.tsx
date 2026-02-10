@@ -22,7 +22,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations()
 
   return {
-    title: t("generated.m0106"),
+    title: t("generated.shared.gdzietolezy"),
   }
 }
 

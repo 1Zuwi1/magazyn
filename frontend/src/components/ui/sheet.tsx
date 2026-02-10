@@ -73,7 +73,7 @@ function SheetContent({
           >
             <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
             <span className="sr-only">
-              {translateMessage("generated.m1021")}
+              {translateMessage("generated.shared.close")}
             </span>
           </SheetPrimitive.Close>
         )}

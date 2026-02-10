@@ -52,10 +52,14 @@ vi.mock("./use-countdown", async () => {
   }
 })
 
-const CODE_INPUT_LABEL = translateMessage("generated.m0560")
-const VERIFY_BUTTON_LABEL = translateMessage("generated.m0052")
-const VERIFIED_TEXT = translateMessage("generated.m1153")
-const SAFE_CHANGE_TEXT = translateMessage("generated.m0566")
+const CODE_INPUT_LABEL = translateMessage(
+  "generated.dashboard.settings.value2faCode"
+)
+const VERIFY_BUTTON_LABEL = translateMessage("generated.shared.verifyCode")
+const VERIFIED_TEXT = translateMessage("generated.dashboard.settings.verified3")
+const SAFE_CHANGE_TEXT = translateMessage(
+  "generated.dashboard.settings.safelyChangePassword"
+)
 
 function PasswordVerificationHarness({
   method,

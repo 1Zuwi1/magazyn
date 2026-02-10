@@ -53,7 +53,7 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
             ))
           ) : (
             <div className="rounded-md border p-6 text-center text-muted-foreground">
-              {translateMessage("generated.m0337")}
+              {translateMessage("generated.admin.warehouses.dataDisplay")}
             </div>
           )}
         </div>
@@ -98,7 +98,9 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
                       className="h-24 text-center text-muted-foreground"
                       colSpan={columns.length}
                     >
-                      {translateMessage("generated.m0337")}
+                      {translateMessage(
+                        "generated.admin.warehouses.dataDisplay"
+                      )}
                     </TableCell>
                   </TableRow>
                 )}
@@ -110,12 +112,12 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
 
       <div className="text-left text-muted-foreground text-sm">
         {hasMoreRows
-          ? translateMessage("generated.m0338", {
+          ? translateMessage("generated.admin.warehouses.showing", {
               value0: previewRows.length,
               value1: rows.length,
             })
           : rows.length > 0 &&
-            translateMessage("generated.m0339", {
+            translateMessage("generated.admin.warehouses.showing2", {
               value0: rows.length,
             })}
       </div>

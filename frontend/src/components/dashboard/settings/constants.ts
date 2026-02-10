@@ -11,50 +11,85 @@ import type { IconComponent } from "../types"
 export const getStatusConfig = () =>
   ({
     LOCKED: {
-      label: translateMessage("generated.m0996"),
+      label: translateMessage("generated.shared.blocked"),
       variant: "destructive",
     },
     PENDING_VERIFICATION: {
-      label: translateMessage("generated.m0997"),
+      label: translateMessage("generated.dashboard.settings.verified2"),
       variant: "warning",
     },
     DISABLED: {
-      label: translateMessage("generated.m0317"),
+      label: translateMessage("generated.shared.disabled"),
       variant: "destructive",
     },
-    ACTIVE: { label: translateMessage("generated.m0891"), variant: "success" },
+    ACTIVE: {
+      label: translateMessage("generated.shared.active"),
+      variant: "success",
+    },
   }) as const
 
 export const getRoleLabels = () =>
   ({
-    ADMIN: translateMessage("generated.m1157"),
-    USER: translateMessage("generated.m0481"),
+    ADMIN: translateMessage("generated.dashboard.settings.administrator"),
+    USER: translateMessage("generated.dashboard.shared.user"),
   }) as const
 
 export const getTwoFactorMethods = (locale?: string) =>
   [
     {
       value: "AUTHENTICATOR",
-      label: translateMessage("generated.m0510", undefined, locale),
-      hint: translateMessage("generated.m1158", undefined, locale),
+      label: translateMessage(
+        "generated.dashboard.settings.authenticator",
+        undefined,
+        locale
+      ),
+      hint: translateMessage(
+        "generated.dashboard.settings.recommendedMethod",
+        undefined,
+        locale
+      ),
       addable: true,
     },
     {
       value: "EMAIL",
-      label: translateMessage("generated.m0998", undefined, locale),
-      hint: translateMessage("generated.m0511", undefined, locale),
+      label: translateMessage(
+        "generated.dashboard.settings.eMail",
+        undefined,
+        locale
+      ),
+      hint: translateMessage(
+        "generated.dashboard.settings.codeSentMailbox",
+        undefined,
+        locale
+      ),
       addable: true,
     },
     {
       value: "PASSKEYS",
-      label: translateMessage("generated.m0512", undefined, locale),
-      hint: translateMessage("generated.m0513", undefined, locale),
+      label: translateMessage(
+        "generated.dashboard.settings.securityKeys",
+        undefined,
+        locale
+      ),
+      hint: translateMessage(
+        "generated.dashboard.settings.passwordlessAuthenticationUsingDevicesSupport",
+        undefined,
+        locale
+      ),
       addable: false,
     },
     {
       value: "BACKUP_CODES",
-      label: translateMessage("generated.m0514", undefined, locale),
-      hint: translateMessage("generated.m0515", undefined, locale),
+      label: translateMessage(
+        "generated.dashboard.settings.recoveryCodes",
+        undefined,
+        locale
+      ),
+      hint: translateMessage(
+        "generated.dashboard.settings.oneTimeCodesUseOther",
+        undefined,
+        locale
+      ),
       addable: false,
     },
   ] as const

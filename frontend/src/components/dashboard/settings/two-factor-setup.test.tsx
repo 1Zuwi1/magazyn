@@ -80,11 +80,21 @@ vi.mock("./use-countdown", async () => {
   }
 })
 
-const START_SETUP_BUTTON_LABEL = translateMessage("generated.m0628")
-const ADD_METHOD_BUTTON_LABEL = translateMessage("generated.m0629")
-const ACTIVE_STATUS_LABEL = translateMessage("generated.m1003")
-const GENERATE_CODES_BUTTON_LABEL = translateMessage("generated.m1005")
-const GENERATE_NEW_CODES_BUTTON_LABEL = translateMessage("generated.m0624")
+const START_SETUP_BUTTON_LABEL = translateMessage(
+  "generated.dashboard.settings.startSetup"
+)
+const ADD_METHOD_BUTTON_LABEL = translateMessage(
+  "generated.dashboard.settings.addMethod"
+)
+const ACTIVE_STATUS_LABEL = translateMessage(
+  "generated.dashboard.settings.active"
+)
+const GENERATE_CODES_BUTTON_LABEL = translateMessage(
+  "generated.dashboard.settings.generate"
+)
+const GENERATE_NEW_CODES_BUTTON_LABEL = translateMessage(
+  "generated.dashboard.settings.generateNewCodes"
+)
 
 function TwoFactorSetupHarness({
   initialStatus = "ENABLED",

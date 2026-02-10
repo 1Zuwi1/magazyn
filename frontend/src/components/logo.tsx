@@ -24,14 +24,14 @@ export default function Logo<
       {...props}
     >
       <Image
-        alt={translateMessage("generated.m0668")}
+        alt={translateMessage("generated.global.brand.gdzietolezyLogo")}
         className="size-6"
         height={24}
         src={LogoImage}
         width={24}
       />
       <span className="font-bold text-xl">
-        {translateMessage("generated.m0106")}
+        {translateMessage("generated.shared.gdzietolezy")}
       </span>
     </Wrapper>
   )

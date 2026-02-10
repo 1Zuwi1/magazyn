@@ -7,17 +7,17 @@ import tryCatch from "@/lib/try-catch"
 import TwoFactorForm from "./two-factor-form"
 
 const METHOD_TITLES: Record<TwoFactorMethod, string> = {
-  AUTHENTICATOR: translateMessage("generated.m0034"),
-  EMAIL: translateMessage("generated.m0035"),
-  PASSKEYS: translateMessage("generated.m0036"),
-  BACKUP_CODES: translateMessage("generated.m0040"),
+  AUTHENTICATOR: translateMessage("generated.auth.enterCodeAuthenticatorApp"),
+  EMAIL: translateMessage("generated.auth.enterCodeSentEMail"),
+  PASSKEYS: translateMessage("generated.auth.authenticateAccessKeys"),
+  BACKUP_CODES: translateMessage("generated.auth.useRecoveryCode"),
 }
 
 const METHOD_SWITCH_LABELS: Record<TwoFactorMethod, string> = {
-  AUTHENTICATOR: translateMessage("generated.m0037"),
-  EMAIL: translateMessage("generated.m0038"),
-  PASSKEYS: translateMessage("generated.m0039"),
-  BACKUP_CODES: translateMessage("generated.m0040"),
+  AUTHENTICATOR: translateMessage("generated.auth.useAuthenticatorApp"),
+  EMAIL: translateMessage("generated.auth.sendCodeEmail"),
+  PASSKEYS: translateMessage("generated.auth.useAccessKeys"),
+  BACKUP_CODES: translateMessage("generated.auth.useRecoveryCode"),
 }
 
 const RESEND_METHODS: ResendType[] = ["EMAIL"]

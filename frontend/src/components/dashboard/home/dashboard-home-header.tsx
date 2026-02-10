@@ -29,22 +29,24 @@ export function DashboardHomeHeader() {
   const totalWarehouses = warehousesData?.summary?.totalWarehouses ?? 0
   return (
     <PageHeader
-      description={translateMessage("generated.m0426")}
+      description={translateMessage(
+        "generated.dashboard.home.currentWarehouseStatusOperationalAlerts"
+      )}
       icon={Home01Icon}
       stats={[
         {
-          label: translateMessage("generated.m0886"),
+          label: translateMessage("generated.shared.warehouses"),
           value: formatNumber(totalWarehouses, locale),
           icon: Package,
         },
         {
-          label: translateMessage("generated.m0427"),
+          label: translateMessage("generated.dashboard.home.occupied"),
           value: `${occupancyPercentage}%`,
           icon: ChartLineData01Icon,
           variant: getOccupancyStatVariant(occupancyPercentage),
         },
       ]}
-      title={translateMessage("generated.m0428")}
+      title={translateMessage("generated.shared.mainPanel")}
     />
   )
 }

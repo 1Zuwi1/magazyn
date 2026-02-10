@@ -119,7 +119,7 @@ export function ScannerChooseMethod({
             type="button"
             variant="outline"
           >
-            {translateMessage("generated.m0885")}
+            {translateMessage("generated.shared.cancel")}
           </Button>
         </div>
       </div>

@@ -153,14 +153,17 @@ function RackInstance({
           <div className="rounded border border-white/10 bg-slate-950/80 px-2 py-1 text-slate-100 text-xs">
             <div className="font-bold">{rack.code}</div>
             <div>
-              {translateMessage("generated.m1077", {
-                value0: Math.round(occupancy),
-                value1: rack.grid.cols,
-                value2: rack.grid.rows,
-              })}
+              {translateMessage(
+                "generated.dashboard.visualization3d.occupied2",
+                {
+                  value0: Math.round(occupancy),
+                  value1: rack.grid.cols,
+                  value2: rack.grid.rows,
+                }
+              )}
             </div>
             <div className="text-slate-400">
-              {translateMessage("generated.m1078", {
+              {translateMessage("generated.dashboard.visualization3d.maxMm", {
                 value0: rack.maxElementSize.width,
                 value1: rack.maxElementSize.height,
                 value2: rack.maxElementSize.depth,

@@ -11,8 +11,8 @@ import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 
 const MODE_OPTIONS = [
-  { label: translateMessage("generated.m1026"), value: "take" },
-  { label: translateMessage("generated.m1027"), value: "remove" },
+  { label: translateMessage("generated.scanner.receiving"), value: "take" },
+  { label: translateMessage("generated.scanner.removing"), value: "remove" },
 ] as const
 
 type ScannerManualMode = (typeof MODE_OPTIONS)[number]["value"]
@@ -76,7 +76,7 @@ export function ScannerManualInput({
 
         {modeLabel ? (
           <p className="mx-10 mb-4 rounded-xl border border-border/70 bg-muted/30 px-4 py-2 text-center text-muted-foreground text-sm">
-            {translateMessage("generated.m0733")}{" "}
+            {translateMessage("generated.scanner.mode")}{" "}
             <span className="font-medium text-foreground">{modeLabel}</span>.
           </p>
         ) : null}
@@ -90,10 +90,10 @@ export function ScannerManualInput({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              {translateMessage("generated.m0750")}
+              {translateMessage("generated.scanner.enterCodeManually")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              {translateMessage("generated.m0751")}
+              {translateMessage("generated.scanner.enterBarcodeQrCodeScanner")}
             </p>
           </div>
         </div>
@@ -105,7 +105,7 @@ export function ScannerManualInput({
                 className="block font-medium text-sm"
                 htmlFor="manual-code"
               >
-                {translateMessage("generated.m0752")}
+                {translateMessage("generated.scanner.productCode")}
               </Label>
               <Input
                 autoComplete="off"
@@ -113,7 +113,9 @@ export function ScannerManualInput({
                 id="manual-code"
                 onChange={(event) => setCode(event.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={translateMessage("generated.m0753")}
+                placeholder={translateMessage(
+                  "generated.scanner.eG5901234123457"
+                )}
                 ref={inputRef}
                 type="text"
                 value={code}
@@ -135,7 +137,7 @@ export function ScannerManualInput({
             onClick={handleSubmit}
             type="button"
           >
-            {translateMessage("generated.m0754")}
+            {translateMessage("generated.shared.searchProduct")}
           </Button>
         </div>
       </div>

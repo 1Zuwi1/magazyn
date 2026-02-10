@@ -82,7 +82,7 @@ export function ScannerSelectItem({
             autoComplete="off"
             className="h-11 rounded-xl pl-9"
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={translateMessage("generated.m0762")}
+            placeholder={translateMessage("generated.scanner.searchNameCode")}
             type="text"
             value={search}
           />
@@ -101,13 +101,13 @@ export function ScannerSelectItem({
 
             {isError ? (
               <p className="py-8 text-center text-destructive text-sm">
-                {translateMessage("generated.m0763")}
+                {translateMessage("generated.scanner.failedFetchProductList")}
               </p>
             ) : null}
 
             {!(isPending || isError) && items.length === 0 ? (
               <p className="py-8 text-center text-muted-foreground text-sm">
-                {translateMessage("generated.m0764")}
+                {translateMessage("generated.scanner.productsFound")}
               </p>
             ) : null}
 
@@ -146,7 +146,7 @@ export function ScannerSelectItem({
             type="button"
             variant="outline"
           >
-            {translateMessage("generated.m0669")}
+            {translateMessage("generated.scanner.back")}
           </Button>
         </div>
       </div>

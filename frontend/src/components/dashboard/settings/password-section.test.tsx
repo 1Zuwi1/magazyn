@@ -30,10 +30,16 @@ vi.mock(
   })
 )
 
-const OLD_PASSWORD_LABEL = translateMessage("generated.m0551")
-const NEW_PASSWORD_LABEL = translateMessage("generated.m0055")
-const CONFIRM_PASSWORD_LABEL = translateMessage("generated.m0013")
-const CHANGE_PASSWORD_BUTTON_LABEL = translateMessage("generated.m0556")
+const OLD_PASSWORD_LABEL = translateMessage(
+  "generated.dashboard.settings.currentPassword"
+)
+const NEW_PASSWORD_LABEL = translateMessage("generated.shared.newPassword")
+const CONFIRM_PASSWORD_LABEL = translateMessage(
+  "generated.shared.confirmPassword"
+)
+const CHANGE_PASSWORD_BUTTON_LABEL = translateMessage(
+  "generated.dashboard.settings.changePassword"
+)
 
 describe("PasswordSection", () => {
   it("calls password change API after successful 2FA verification", async () => {
@@ -76,7 +82,7 @@ describe("PasswordSection", () => {
         }
       )
       expect(toast.success).toHaveBeenCalledWith(
-        translateMessage("generated.m0550")
+        translateMessage("generated.dashboard.settings.passwordBeenChanged")
       )
     })
   })

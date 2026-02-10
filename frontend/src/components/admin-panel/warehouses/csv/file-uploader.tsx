@@ -72,7 +72,7 @@ export function FileUploader({
     async (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
       if (acceptedFiles.length > DEFAULT_CONFIG.maxFileCount) {
         toast.error(
-          translateMessage("generated.m0331", {
+          translateMessage("generated.admin.warehouses.uploadMaximumFileS", {
             value0: DEFAULT_CONFIG.maxFileCount,
           })
         )
@@ -81,7 +81,7 @@ export function FileUploader({
 
       if (files.length + acceptedFiles.length > DEFAULT_CONFIG.maxFileCount) {
         toast.error(
-          translateMessage("generated.m0331", {
+          translateMessage("generated.admin.warehouses.uploadMaximumFileS", {
             value0: DEFAULT_CONFIG.maxFileCount,
           })
         )
@@ -91,7 +91,7 @@ export function FileUploader({
       for (const rejection of rejectedFiles) {
         const errors = rejection.errors.map((e) => e.message).join(", ")
         toast.error(
-          translateMessage("generated.m0332", {
+          translateMessage("generated.admin.warehouses.formattedValue", {
             value0: rejection.file.name,
             value1: errors,
           })
@@ -113,7 +113,9 @@ export function FileUploader({
           isUploadSuccessful = await onUpload(updatedFiles)
         } catch {
           isUploadSuccessful = false
-          toast.error(translateMessage("generated.m0333"))
+          toast.error(
+            translateMessage("generated.admin.warehouses.fileFailedProcess")
+          )
         } finally {
           setIsUploading(false)
         }
@@ -170,12 +172,14 @@ export function FileUploader({
             </div>
             {isDragActive ? (
               <p className="font-medium text-muted-foreground">
-                {translateMessage("generated.m0334")}
+                {translateMessage("generated.admin.warehouses.dropFileHere")}
               </p>
             ) : (
               <div className="flex flex-col gap-1">
                 <p className="font-medium text-muted-foreground">
-                  {translateMessage("generated.m0335")}
+                  {translateMessage(
+                    "generated.admin.warehouses.clickDropCsvFile"
+                  )}
                 </p>
               </div>
             )}
@@ -213,7 +217,7 @@ export function FileUploader({
                 >
                   <HugeiconsIcon className="size-4" icon={Cancel01Icon} />
                   <span className="sr-only">
-                    {translateMessage("generated.m0336")}
+                    {translateMessage("generated.admin.warehouses.deleteFile")}
                   </span>
                 </Button>
               </div>

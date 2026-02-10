@@ -17,16 +17,23 @@ export function LogoutSection() {
       router.replace("/login")
       router.refresh()
     } catch (error) {
-      handleApiError(error, translateMessage("generated.m0516"))
+      handleApiError(
+        error,
+        translateMessage("generated.dashboard.settings.failedLogOutAgain")
+      )
     }
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{translateMessage("generated.m0999")}</CardTitle>
+        <CardTitle>
+          {translateMessage("generated.dashboard.settings.logout")}
+        </CardTitle>
         <p className="text-muted-foreground text-sm">
-          {translateMessage("generated.m0517")}
+          {translateMessage(
+            "generated.dashboard.settings.endCurrentSessionReturnLogin"
+          )}
         </p>
       </CardHeader>
       <CardContent>
@@ -36,7 +43,7 @@ export function LogoutSection() {
           type="button"
           variant="destructive"
         >
-          {translateMessage("generated.m0518")}
+          {translateMessage("generated.dashboard.settings.logOut")}
         </Button>
       </CardContent>
     </Card>

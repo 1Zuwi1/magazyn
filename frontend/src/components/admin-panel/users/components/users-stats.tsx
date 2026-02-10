@@ -14,7 +14,7 @@ export function UsersStats({ total, active, inactive }: UsersStatsProps) {
       <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
         <span className="font-mono font-semibold text-primary">{total}</span>
         <span className="text-muted-foreground text-xs">
-          {translateMessage("generated.m0178")}
+          {translateMessage("generated.shared.together")}
         </span>
       </div>
       <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-1.5">
@@ -26,7 +26,7 @@ export function UsersStats({ total, active, inactive }: UsersStatsProps) {
           {active}
         </span>
         <span className="text-muted-foreground text-xs">
-          {translateMessage("generated.m0941")}
+          {translateMessage("generated.admin.users.active")}
         </span>
       </div>
       <div className="flex items-center gap-2 rounded-lg border border-orange-500/20 bg-orange-500/5 px-3 py-1.5">
@@ -38,7 +38,7 @@ export function UsersStats({ total, active, inactive }: UsersStatsProps) {
           {inactive}
         </span>
         <span className="text-muted-foreground text-xs">
-          {translateMessage("generated.m0283")}
+          {translateMessage("generated.admin.users.others")}
         </span>
       </div>
     </div>

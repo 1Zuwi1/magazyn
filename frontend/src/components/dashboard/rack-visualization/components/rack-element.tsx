@@ -30,10 +30,14 @@ export default function RackElement({
     statusRing = "ring-2 ring-destructive/50"
   }
   const ariaLabel = isEmpty
-    ? translateMessage("generated.m0496", { value0: coordinate })
-    : translateMessage("generated.m0497", {
+    ? translateMessage("generated.dashboard.rackVisualization.emptyShelf", {
         value0: coordinate,
-        value1: item?.name ?? translateMessage("generated.m1152"),
+      })
+    : translateMessage("generated.dashboard.rackVisualization.shelf", {
+        value0: coordinate,
+        value1:
+          item?.name ??
+          translateMessage("generated.dashboard.rackVisualization.unknownItem"),
       })
 
   return (

@@ -106,12 +106,14 @@ export function DashboardRecentArrivalsCard() {
           dangerous: itemDefinition?.dangerous ?? false,
           itemName:
             itemDefinition?.name ??
-            translateMessage("generated.m1159", {
+            translateMessage("generated.dashboard.home.product", {
               value0: assortment.itemId,
             }),
           rackLabel:
             rackLabelsById.get(assortment.rackId) ??
-            translateMessage("generated.m0450", { value0: assortment.rackId }),
+            translateMessage("generated.dashboard.home.bookcase", {
+              value0: assortment.rackId,
+            }),
         }
       }),
     [assortments, itemDefinitionsById, rackLabelsById]
@@ -129,7 +131,7 @@ export function DashboardRecentArrivalsCard() {
     if (recentAssortmentEntries.length === 0) {
       return (
         <p className="text-muted-foreground text-sm">
-          {translateMessage("generated.m0451")}
+          {translateMessage("generated.dashboard.home.recentAdmissionsDisplay")}
         </p>
       )
     }
@@ -151,8 +153,8 @@ export function DashboardRecentArrivalsCard() {
               </span>
               <Badge variant={item.dangerous ? "warning" : "secondary"}>
                 {item.dangerous
-                  ? translateMessage("generated.m0976")
-                  : translateMessage("generated.m0974")}
+                  ? translateMessage("generated.dashboard.shared.dangerous")
+                  : translateMessage("generated.dashboard.shared.normal")}
               </Badge>
             </div>
           </li>
@@ -163,9 +165,11 @@ export function DashboardRecentArrivalsCard() {
 
   return (
     <InsightCard
-      description={translateMessage("generated.m0452")}
+      description={translateMessage(
+        "generated.dashboard.home.latestDeliveriesRecentDays"
+      )}
       icon={PackageReceiveIcon}
-      title={translateMessage("generated.m0453")}
+      title={translateMessage("generated.dashboard.home.recentAdmissions")}
     >
       {renderContent()}
     </InsightCard>

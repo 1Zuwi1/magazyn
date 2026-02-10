@@ -196,9 +196,11 @@ function Sidebar({
           }
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>{translateMessage("generated.m1045")}</SheetTitle>
+            <SheetTitle>
+              {translateMessage("generated.ui.sidePanel")}
+            </SheetTitle>
             <SheetDescription>
-              {translateMessage("generated.m0807")}
+              {translateMessage("generated.ui.displaysMobileSidebar")}
             </SheetDescription>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
@@ -279,7 +281,9 @@ function SidebarTrigger({
       {...props}
     >
       <HugeiconsIcon icon={SidebarLeftIcon} strokeWidth={2} />
-      <span className="sr-only">{translateMessage("generated.m0808")}</span>
+      <span className="sr-only">
+        {translateMessage("generated.ui.toggleSidebar")}
+      </span>
     </Button>
   )
 }
@@ -289,7 +293,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
 
   return (
     <button
-      aria-label={translateMessage("generated.m0808")}
+      aria-label={translateMessage("generated.ui.toggleSidebar")}
       className={cn(
         "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 hover:after:bg-sidebar-border group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
@@ -303,7 +307,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
       data-slot="sidebar-rail"
       onClick={toggleSidebar}
       tabIndex={-1}
-      title={translateMessage("generated.m0808")}
+      title={translateMessage("generated.ui.toggleSidebar")}
       {...props}
     />
   )

@@ -23,19 +23,21 @@ export default function UnauthorizedComponent() {
             />
           </div>
           <CardTitle className="mt-4 text-2xl">
-            {translateMessage("generated.m0102")}
+            {translateMessage("generated.auth.unauthorized.access")}
           </CardTitle>
           <CardDescription>
-            {translateMessage("generated.m0103")}
+            {translateMessage("generated.auth.unauthorized.permissionViewPage")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground text-sm">
-            {translateMessage("generated.m0104")}
+            {translateMessage(
+              "generated.auth.unauthorized.pageRequiresSpecialPermissionsThink"
+            )}
           </p>
           <Link href="/dashboard">
             <Button className="w-full">
-              {translateMessage("generated.m0105")}
+              {translateMessage("generated.auth.unauthorized.returnMainPanel")}
             </Button>
           </Link>
         </CardContent>

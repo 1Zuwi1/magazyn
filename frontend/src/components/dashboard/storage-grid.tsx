@@ -143,10 +143,12 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
           />
         </div>
         <p className="mt-4 font-medium text-muted-foreground">
-          {translateMessage("generated.m0655")}
+          {translateMessage("generated.dashboard.storage.warehousesDisplay")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage("generated.m0656")}
+          {translateMessage(
+            "generated.dashboard.storage.changeFiltersAddNewWarehouse"
+          )}
         </p>
       </div>
     )
@@ -186,7 +188,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                     <CardTitle className="text-lg">{warehouse.name}</CardTitle>
                     <p className="mt-0.5 flex items-center gap-1 text-muted-foreground text-xs">
                       <HugeiconsIcon className="size-3" icon={Layers01Icon} />
-                      {translateMessage("generated.m1064", {
+                      {translateMessage("generated.shared.pluralLabel", {
                         value0: warehouse.racksCount,
                       })}
                     </p>
@@ -203,7 +205,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
               <div className="space-y-2">
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">
-                    {translateMessage("generated.m0322")}
+                    {translateMessage("generated.shared.occupancy")}
                   </span>
                   <span className="font-medium font-mono">
                     {warehouse.occupiedSlots.toLocaleString(locale)} /{" "}
@@ -230,7 +232,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                     {warehouse.occupiedSlots.toLocaleString(locale)}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    {translateMessage("generated.m0409")}
+                    {translateMessage("generated.dashboard.shared.occupied")}
                   </span>
                 </div>
                 <div className="rounded-md bg-muted/50 px-2 py-1.5">
@@ -238,7 +240,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                     {warehouse.freeSlots.toLocaleString(locale)}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    {translateMessage("generated.m0995")}
+                    {translateMessage("generated.dashboard.shared.free2")}
                   </span>
                 </div>
                 <div className="rounded-md bg-muted/50 px-2 py-1.5">
@@ -246,9 +248,12 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                     {warehouse.racksCount}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    {translateMessage("generated.m1107", {
-                      value0: warehouse.racksCount,
-                    })}
+                    {translateMessage(
+                      "generated.dashboard.storage.pluralLabel",
+                      {
+                        value0: warehouse.racksCount,
+                      }
+                    )}
                   </span>
                 </div>
               </div>
@@ -263,7 +268,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                 })}
                 href={`/dashboard/warehouse/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}`}
               >
-                <span>{translateMessage("generated.m0383")}</span>
+                <span>{translateMessage("generated.shared.racks2")}</span>
                 <HugeiconsIcon className="size-3.5" icon={ArrowRight01Icon} />
               </Link>
               <Button
@@ -278,7 +283,9 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                 variant="outline"
               >
                 <HugeiconsIcon className="size-3.5" icon={CubeIcon} />
-                <span>{translateMessage("generated.m1007")}</span>
+                <span>
+                  {translateMessage("generated.dashboard.storage.value3d")}
+                </span>
               </Button>
             </CardFooter>
           </Card>
@@ -303,15 +310,19 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
               />
             </AlertDialogMedia>
             <AlertDialogTitle>
-              {translateMessage("generated.m0098")}
+              {translateMessage(
+                "generated.dashboard.shared.value3dViewWarehouse"
+              )}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {translateMessage("generated.m0099")}
+              {translateMessage(
+                "generated.dashboard.shared.value3dVisualizationFetchesData"
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>
-              {translateMessage("generated.m0885")}
+              {translateMessage("generated.shared.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
@@ -322,7 +333,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                 }
               }}
             >
-              {translateMessage("generated.m0100")}
+              {translateMessage("generated.dashboard.shared.open3dView")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

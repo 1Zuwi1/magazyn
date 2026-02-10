@@ -43,7 +43,7 @@ export function UsersFilterBar({
       <Input
         className="max-w-sm"
         onChange={(event) => onSearchChange(event.target.value)}
-        placeholder={translateMessage("generated.m0281")}
+        placeholder={translateMessage("generated.admin.users.searchUsers")}
         type="search"
         value={search}
       />
@@ -64,19 +64,19 @@ export function UsersFilterBar({
         >
           <SelectTrigger className="w-fit pl-9" size="sm">
             <SelectValue
-              placeholder={translateMessage("generated.m0895")}
+              placeholder={translateMessage("generated.shared.status")}
               render={
                 <span>
                   {statusFilter
                     ? getStatusLabel(statusFilter)
-                    : translateMessage("generated.m0282")}
+                    : translateMessage("generated.admin.users.allStatuses")}
                 </span>
               }
             />
           </SelectTrigger>
           <SelectContent className="w-fit">
             <SelectItem value={ALL_STATUSES_VALUE}>
-              {translateMessage("generated.m0282")}
+              {translateMessage("generated.admin.users.allStatuses")}
             </SelectItem>
             {STATUS_OPTIONS.map((status) => (
               <SelectItem key={status} value={status}>

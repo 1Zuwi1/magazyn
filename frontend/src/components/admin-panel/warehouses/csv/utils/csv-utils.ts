@@ -292,11 +292,14 @@ function appendColumnCountError(
 ) {
   errors.push({
     row: rowNumber,
-    message: translateMessage("generated.m0354", {
-      value0: valueCount,
-      value1: minColumns,
-      value2: maxColumns,
-    }),
+    message: translateMessage(
+      "generated.admin.warehouses.invalidNumberColumnsExpected",
+      {
+        value0: valueCount,
+        value1: minColumns,
+        value2: maxColumns,
+      }
+    ),
   })
 }
 
@@ -465,7 +468,7 @@ function appendSchemaIssues(
   for (const issue of issues) {
     errors.push({
       row: rowNumber,
-      message: translateMessage("generated.m0332", {
+      message: translateMessage("generated.admin.warehouses.formattedValue", {
         value0: issue.path.map(String).join("."),
         value1: issue.message,
       }),

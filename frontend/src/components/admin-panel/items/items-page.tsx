@@ -148,7 +148,7 @@ export default function ItemsMain() {
     const itemId = itemToDelete.id
 
     await deleteItemMutation.mutateAsync(itemId)
-    toast.success(translateMessage("generated.m0217"))
+    toast.success(translateMessage("generated.admin.items.itemRemoved"))
     setItemToDelete(undefined)
   }
 
@@ -162,7 +162,7 @@ export default function ItemsMain() {
         itemId,
         ...buildItemMutationData(data),
       })
-      toast.success(translateMessage("generated.m0218"))
+      toast.success(translateMessage("generated.admin.items.itemUpdated"))
       setSelectedItem(undefined)
       return undefined
     }
@@ -170,7 +170,7 @@ export default function ItemsMain() {
     const created = await createItemMutation.mutateAsync(
       buildItemMutationData(data)
     )
-    toast.success(translateMessage("generated.m0219"))
+    toast.success(translateMessage("generated.admin.items.newItemAdded"))
     setSelectedItem(undefined)
     return created.id
   }
@@ -179,7 +179,7 @@ export default function ItemsMain() {
     const report = await importItemsMutation.mutateAsync(file)
     if (report.errors.length > 0) {
       toast.warning(
-        translateMessage("generated.m0220", {
+        translateMessage("generated.admin.shared.importPartiallyCompleted", {
           value0: report.imported,
           value1: report.processedLines,
         })
@@ -188,7 +188,9 @@ export default function ItemsMain() {
     }
 
     toast.success(
-      translateMessage("generated.m0221", { value0: report.imported })
+      translateMessage("generated.admin.items.imported", {
+        value0: report.imported,
+      })
     )
   }
 
@@ -210,17 +212,19 @@ export default function ItemsMain() {
             />
             <Button disabled={isMutating} onClick={handleAddItem}>
               <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-              {translateMessage("generated.m0222")}
+              {translateMessage("generated.admin.items.addItem")}
             </Button>
           </div>
         }
-        description={translateMessage("generated.m0223")}
+        description={translateMessage(
+          "generated.admin.items.manageCatalogInventoryItems"
+        )}
         icon={Package}
         navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title={translateMessage("generated.m0931")}
+        title={translateMessage("generated.shared.items")}
       >
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
@@ -232,7 +236,7 @@ export default function ItemsMain() {
               {totalItemsCount}
             </span>
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.m0224")}
+              {translateMessage("generated.admin.shared.items")}
             </span>
           </div>
           {dangerousCount > 0 && (
@@ -245,7 +249,7 @@ export default function ItemsMain() {
                 {dangerousCount}
               </span>
               <span className="text-destructive/80 text-xs">
-                {translateMessage("generated.m0932")}
+                {translateMessage("generated.admin.items.dangerous")}
               </span>
             </div>
           )}
@@ -276,13 +280,16 @@ export default function ItemsMain() {
       />
 
       <ConfirmDialog
-        description={translateMessage("generated.m0225", {
-          value0: itemToDelete?.name,
-        })}
+        description={translateMessage(
+          "generated.admin.items.sureWantDeleteItemOperation",
+          {
+            value0: itemToDelete?.name,
+          }
+        )}
         onConfirm={confirmDeleteItem}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
-        title={translateMessage("generated.m0226")}
+        title={translateMessage("generated.admin.items.deleteItem")}
       />
 
       <PhotoPromptDialog

@@ -38,7 +38,9 @@ const getOccupancyCardVariant = (
 function DashboardHomeStatsSkeleton() {
   return (
     <section
-      aria-label={translateMessage("generated.m0436")}
+      aria-label={translateMessage(
+        "generated.dashboard.home.loadingWarehouseStatistics"
+      )}
       className="@container"
     >
       <div className="grid @5xl:grid-cols-4 @lg:grid-cols-2 gap-4">
@@ -152,7 +154,7 @@ export function DashboardHomeStats() {
     return (
       <section aria-labelledby="dashboard-stats">
         <h2 className="sr-only" id="dashboard-stats">
-          {translateMessage("generated.m0437")}
+          {translateMessage("generated.dashboard.home.warehouseStatistics")}
         </h2>
         <ErrorEmptyState onRetry={handleRetry} />
       </section>
@@ -162,28 +164,28 @@ export function DashboardHomeStats() {
   return (
     <section aria-labelledby="dashboard-stats" className="@container">
       <h2 className="sr-only" id="dashboard-stats">
-        {translateMessage("generated.m0437")}
+        {translateMessage("generated.dashboard.home.warehouseStatistics")}
       </h2>
 
       <div className="grid @5xl:grid-cols-4 @lg:grid-cols-2 gap-4">
         <StatCard
-          hint={translateMessage("generated.m1064", {
+          hint={translateMessage("generated.shared.pluralLabel", {
             value0: totalRacks,
           })}
           icon={Package}
-          label={translateMessage("generated.m0438")}
+          label={translateMessage("generated.dashboard.home.activeWarehouses")}
           value={formatNumber(totalWarehouses, locale)}
           variant="primary"
         />
         <StatCard
-          hint={translateMessage("generated.m0439", {
+          hint={translateMessage("generated.dashboard.home.taken", {
             value0: formatNumber(
               warehousesData?.summary?.occupiedSlots ?? 0,
               locale
             ),
           })}
           icon={Analytics01Icon}
-          label={translateMessage("generated.m0440")}
+          label={translateMessage("generated.dashboard.home.totalCapacity")}
           value={formatNumber(
             warehousesData?.summary?.totalCapacity ?? 0,
             locale
@@ -191,23 +193,25 @@ export function DashboardHomeStats() {
           variant="default"
         />
         <StatCard
-          hint={translateMessage("generated.m1115", {
+          hint={translateMessage("generated.dashboard.home.free", {
             value0: formatNumber(
               warehousesData?.summary?.freeSlots ?? 0,
               locale
             ),
           })}
           icon={Clock01Icon}
-          label={translateMessage("generated.m0427")}
+          label={translateMessage("generated.dashboard.home.occupied")}
           value={`${occupancyPercentage}%`}
           variant={getOccupancyCardVariant(occupancyPercentage)}
         />
         <StatCard
-          hint={translateMessage("generated.m1116", {
+          hint={translateMessage("generated.dashboard.home.markedDangerous", {
             value0: formatNumber(dangerousItemsCount, locale),
           })}
           icon={GroupItemsIcon}
-          label={translateMessage("generated.m0441")}
+          label={translateMessage(
+            "generated.dashboard.home.productsCirculation"
+          )}
           value={formatNumber(productsInCirculation, locale)}
           variant="default"
         />

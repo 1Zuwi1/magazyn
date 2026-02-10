@@ -73,10 +73,10 @@ export function useUsersActions({
     deleteUserMutation.mutate(userIdToDelete, {
       onSuccess: () => {
         clearUserIdToDelete()
-        toast.success(translateMessage("generated.m0303"))
+        toast.success(translateMessage("generated.admin.users.userBeenDeleted"))
       },
       onError: () => {
-        toast.error(translateMessage("generated.m0304"))
+        toast.error(translateMessage("generated.admin.users.failedDeleteUser"))
       },
     })
   }
@@ -94,10 +94,14 @@ export function useUsersActions({
       { userId, status, reason },
       {
         onSuccess: () => {
-          toast.success(translateMessage("generated.m0305"))
+          toast.success(
+            translateMessage("generated.admin.users.usersStatusBeenChanged")
+          )
         },
         onError: () => {
-          toast.error(translateMessage("generated.m0306"))
+          toast.error(
+            translateMessage("generated.admin.users.failedChangeUserStatus")
+          )
         },
       }
     )
@@ -114,10 +118,14 @@ export function useUsersActions({
       { userId, warehouseId },
       {
         onSuccess: () => {
-          toast.success(translateMessage("generated.m0307"))
+          toast.success(
+            translateMessage("generated.admin.users.warehouseBeenAssignedUser")
+          )
         },
         onError: () => {
-          toast.error(translateMessage("generated.m0308"))
+          toast.error(
+            translateMessage("generated.admin.users.failedAssignWarehouse")
+          )
         },
       }
     )
@@ -134,10 +142,18 @@ export function useUsersActions({
       { userId, warehouseId },
       {
         onSuccess: () => {
-          toast.success(translateMessage("generated.m0309"))
+          toast.success(
+            translateMessage(
+              "generated.admin.users.warehouseAssignmentBeenDeleted"
+            )
+          )
         },
         onError: () => {
-          toast.error(translateMessage("generated.m0310"))
+          toast.error(
+            translateMessage(
+              "generated.admin.users.failedDeleteStorageAssignment"
+            )
+          )
         },
       }
     )
@@ -181,10 +197,14 @@ export function useUsersActions({
         },
         {
           onSuccess: () => {
-            toast.success(translateMessage("generated.m0311"))
+            toast.success(
+              translateMessage("generated.admin.users.usersEmailBeenUpdated")
+            )
           },
           onError: () => {
-            toast.error(translateMessage("generated.m0312"))
+            toast.error(
+              translateMessage("generated.admin.users.failedUpdateUserEmail")
+            )
           },
         }
       )
@@ -203,10 +223,14 @@ export function useUsersActions({
         },
         {
           onSuccess: () => {
-            toast.success(translateMessage("generated.m0313"))
+            toast.success(
+              translateMessage("generated.admin.users.userProfileBeenUpdated")
+            )
           },
           onError: () => {
-            toast.error(translateMessage("generated.m0314"))
+            toast.error(
+              translateMessage("generated.admin.users.failedUpdateUserProfile")
+            )
           },
         }
       )

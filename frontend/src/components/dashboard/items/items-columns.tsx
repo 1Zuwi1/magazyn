@@ -26,7 +26,7 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
     accessorKey: "definition.name",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.m0922")}
+        {translateMessage("generated.shared.name")}
       </SortableHeader>
     ),
     cell: ({ row }) => {
@@ -59,7 +59,7 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
     accessorKey: "definition.category",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.m0979")}
+        {translateMessage("generated.dashboard.items.category")}
       </SortableHeader>
     ),
     cell: ({ row }) => (
@@ -71,12 +71,13 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
     accessorKey: "totalQuantity",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.m0473")}
+        {translateMessage("generated.dashboard.items.quantity")}
       </SortableHeader>
     ),
     cell: ({ row }) => (
       <div className="font-medium font-mono">
-        {row.original.totalQuantity} {translateMessage("generated.m0984")}
+        {row.original.totalQuantity}{" "}
+        {translateMessage("generated.dashboard.items.pcs")}
       </div>
     ),
     enableSorting: true,
@@ -85,7 +86,7 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
     accessorKey: "daysUntilExpiry",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.m0473")}
+        {translateMessage("generated.dashboard.items.quantity")}
       </SortableHeader>
     ),
     cell: ({ row }) => {
@@ -93,12 +94,16 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
       if (typeof daysUntilExpiry === "number") {
         return (
           <Badge variant="secondary">
-            {translateMessage("generated.m1105", { value0: daysUntilExpiry })}
+            {translateMessage("generated.dashboard.shared.pluralLabel", {
+              value0: daysUntilExpiry,
+            })}
           </Badge>
         )
       }
       return (
-        <Badge variant="outline">{translateMessage("generated.m0464")}</Badge>
+        <Badge variant="outline">
+          {translateMessage("generated.dashboard.items.date")}
+        </Badge>
       )
     },
   },
@@ -106,28 +111,32 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
     accessorKey: "definition.isDangerous",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.m0474")}
+        {translateMessage("generated.dashboard.items.danger")}
       </SortableHeader>
     ),
     cell: ({ row }) =>
       row.original.definition.isDangerous ? (
         <Badge variant="destructive">
-          {translateMessage("generated.m0925")}
+          {translateMessage("generated.shared.dangerous")}
         </Badge>
       ) : (
-        <Badge variant="outline">{translateMessage("generated.m0933")}</Badge>
+        <Badge variant="outline">
+          {translateMessage("generated.shared.safe")}
+        </Badge>
       ),
     enableSorting: true,
   },
   {
     id: "actions",
     header: () => (
-      <StaticHeader>{translateMessage("generated.m0900")}</StaticHeader>
+      <StaticHeader>{translateMessage("generated.shared.shares")}</StaticHeader>
     ),
     cell: ({ row }) => {
       return (
         <DropdownMenu>
-          <DropdownMenuTrigger aria-label={translateMessage("generated.m0227")}>
+          <DropdownMenuTrigger
+            aria-label={translateMessage("generated.shared.openMenu")}
+          >
             <HugeiconsIcon
               className={cn(
                 buttonVariants({ variant: "ghost", size: "icon-xs" })
@@ -142,7 +151,7 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
               }}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
-              {translateMessage("generated.m0934")}
+              {translateMessage("generated.shared.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
@@ -151,7 +160,7 @@ export const itemsColumns: ColumnDef<ItemStats>[] = [
               }}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
-              {translateMessage("generated.m0230")}
+              {translateMessage("generated.shared.remove")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

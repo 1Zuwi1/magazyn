@@ -19,17 +19,17 @@ interface SecuritySectionProps {
 function SecurityStatusIndicator({ status }: { status: TwoFactorStatus }) {
   const config = {
     ENABLED: {
-      label: translateMessage("generated.m1000"),
+      label: translateMessage("generated.dashboard.settings.protected"),
       variant: "success" as const,
       icon: Shield01Icon,
     },
     SETUP: {
-      label: translateMessage("generated.m1001"),
+      label: translateMessage("generated.dashboard.settings.configuration"),
       variant: "warning" as const,
       icon: Key01Icon,
     },
     DISABLED: {
-      label: translateMessage("generated.m1002"),
+      label: translateMessage("generated.dashboard.settings.basic"),
       variant: "secondary" as const,
       icon: LockIcon,
     },
@@ -65,10 +65,14 @@ export function SecuritySection({ userEmail }: SecuritySectionProps) {
                     size={16}
                   />
                 </div>
-                {translateMessage("generated.m0580")}
+                {translateMessage(
+                  "generated.dashboard.settings.twoStepVerification"
+                )}
               </CardTitle>
               <p className="text-muted-foreground text-sm">
-                {translateMessage("generated.m0581")}
+                {translateMessage(
+                  "generated.dashboard.settings.protectAccountExtraLayerSecurity"
+                )}
               </p>
             </div>
             <SecurityStatusIndicator status="ENABLED" />
@@ -97,9 +101,15 @@ export function SecuritySection({ userEmail }: SecuritySectionProps) {
               />
             </div>
             <div className="space-y-1">
-              <CardTitle>{translateMessage("generated.m0582")}</CardTitle>
+              <CardTitle>
+                {translateMessage(
+                  "generated.dashboard.settings.changingPassword"
+                )}
+              </CardTitle>
               <p className="text-muted-foreground text-sm">
-                {translateMessage("generated.m0583")}
+                {translateMessage(
+                  "generated.dashboard.settings.updatePasswordRegularlySecurity"
+                )}
               </p>
             </div>
           </div>

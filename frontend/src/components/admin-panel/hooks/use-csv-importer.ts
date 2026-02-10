@@ -55,11 +55,15 @@ export function useCsvImporter<T extends CsvImporterType>({
         const remaining = result.errors.length - MAX_TOAST_ROWS
         const suffix =
           remaining > 0
-            ? translateMessage("generated.m0197", { value0: remaining })
+            ? translateMessage("generated.admin.shared.more", {
+                value0: remaining,
+              })
             : ""
 
         toast.error(
-          translateMessage("generated.m0198", { value0: result.errors.length }),
+          translateMessage("generated.admin.shared.csvParsingErrors", {
+            value0: result.errors.length,
+          }),
           {
             description: displayedErrors + suffix,
           }
@@ -73,7 +77,9 @@ export function useCsvImporter<T extends CsvImporterType>({
       setPreviewHeaders(result.headers)
       return true
     } catch {
-      toast.error(translateMessage("generated.m0199"))
+      toast.error(
+        translateMessage("generated.admin.shared.csvFileFailedProcess")
+      )
       resetFile()
       return false
     }
@@ -89,12 +95,14 @@ export function useCsvImporter<T extends CsvImporterType>({
 
   async function confirmImport() {
     if (parseErrors.length > 0) {
-      toast.error(translateMessage("generated.m0200"))
+      toast.error(
+        translateMessage("generated.admin.shared.csvFileContainsErrorsCorrect")
+      )
       return
     }
 
     if (!sourceFile) {
-      toast.error(translateMessage("generated.m0201"))
+      toast.error(translateMessage("generated.admin.shared.firstSelectCsvFile"))
       return
     }
 

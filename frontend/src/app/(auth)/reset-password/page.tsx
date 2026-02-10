@@ -45,14 +45,18 @@ export default function ResetPassword() {
           method: "POST",
         })
 
-        toast.success(translateMessage("generated.m0053"))
+        toast.success(
+          translateMessage("generated.auth.passwordBeenResetNowLog")
+        )
         redirect("/login")
       } catch (e) {
         if (FetchError.isError(e)) {
           handleApiError(e)
           return
         }
-        toast.error(translateMessage("generated.m0030"))
+        toast.error(
+          translateMessage("generated.auth.unexpectedErrorOccurredAgain")
+        )
       }
     },
     validators: {
@@ -79,7 +83,7 @@ export default function ResetPassword() {
               <Logo className="relative" />
             </div>
             <FieldDescription className="mt-2 max-w-70 text-center text-muted-foreground/80">
-              {translateMessage("generated.m0054")}
+              {translateMessage("generated.auth.enterNewPasswordAccount")}
             </FieldDescription>
           </div>
           <div
@@ -92,7 +96,7 @@ export default function ResetPassword() {
                   <FieldWithState
                     field={field}
                     icon={LockPasswordIcon}
-                    label={translateMessage("generated.m0055")}
+                    label={translateMessage("generated.shared.newPassword")}
                     placeholder="••••••••"
                     type="password"
                   />
@@ -112,7 +116,7 @@ export default function ResetPassword() {
                     size="lg"
                     type="submit"
                   >
-                    {translateMessage("generated.m0056")}
+                    {translateMessage("generated.auth.resetPassword")}
                   </Button>
                 )}
               </form.Subscribe>

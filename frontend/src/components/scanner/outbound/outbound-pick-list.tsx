@@ -51,10 +51,13 @@ export function OutboundPickList({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              {translateMessage("generated.m0694")}
+              {translateMessage("generated.scanner.outbound.itemsPick")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              {translateMessage("generated.m0695", { value0: plan.itemName })}
+              {translateMessage(
+                "generated.scanner.outbound.selectItemsRemoveRacks",
+                { value0: plan.itemName }
+              )}
             </p>
           </div>
         </div>
@@ -62,19 +65,19 @@ export function OutboundPickList({
         <div className="mb-4 grid grid-cols-3 gap-2">
           <div className="rounded-xl border bg-card/40 p-3 text-center">
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.m0696")}
+              {translateMessage("generated.scanner.outbound.requested")}
             </p>
             <p className="font-semibold text-lg">{plan.requestedQuantity}</p>
           </div>
           <div className="rounded-xl border bg-card/40 p-3 text-center">
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.m0697")}
+              {translateMessage("generated.scanner.outbound.available")}
             </p>
             <p className="font-semibold text-lg">{plan.availableQuantity}</p>
           </div>
           <div className="rounded-xl border bg-card/40 p-3 text-center">
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.m0943")}
+              {translateMessage("generated.scanner.outbound.selected")}
             </p>
             <p className="font-semibold text-lg">{selectedSlots.length}</p>
           </div>
@@ -99,7 +102,7 @@ export function OutboundPickList({
               icon={AlertCircleIcon}
             />
             <p className="text-destructive text-sm">
-              {translateMessage("generated.m0698", {
+              {translateMessage("generated.scanner.outbound.pluralLabel", {
                 value0: plan.expiredQuantity,
               })}
             </p>
@@ -143,19 +146,19 @@ export function OutboundPickList({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-sm">
-                        {translateMessage("generated.m0418", {
+                        {translateMessage("generated.shared.rack2", {
                           value0: slot.rackMarker,
                         })}
                       </p>
                       <Badge variant="outline">
-                        {translateMessage("generated.m1084", {
+                        {translateMessage("generated.scanner.outbound.xY", {
                           value0: slot.positionX,
                           value1: slot.positionY,
                         })}
                       </Badge>
                       {expired ? (
                         <Badge variant="destructive">
-                          {translateMessage("generated.m0482")}
+                          {translateMessage("generated.shared.expired")}
                         </Badge>
                       ) : null}
                     </div>
@@ -164,14 +167,20 @@ export function OutboundPickList({
                     </p>
                     <div className="mt-1 flex gap-3 text-muted-foreground text-xs">
                       <span>
-                        {translateMessage("generated.m1085", {
-                          value0: formatDateTimeLabel(slot.createdAt, locale),
-                        })}
+                        {translateMessage(
+                          "generated.scanner.outbound.received",
+                          {
+                            value0: formatDateTimeLabel(slot.createdAt, locale),
+                          }
+                        )}
                       </span>
                       <span>
-                        {translateMessage("generated.m1086", {
-                          value0: formatDateTimeLabel(slot.expiresAt, locale),
-                        })}
+                        {translateMessage(
+                          "generated.scanner.outbound.expires",
+                          {
+                            value0: formatDateTimeLabel(slot.expiresAt, locale),
+                          }
+                        )}
                       </span>
                     </div>
                   </div>
@@ -190,7 +199,7 @@ export function OutboundPickList({
             onClick={onConfirm}
             type="button"
           >
-            {translateMessage("generated.m0699", {
+            {translateMessage("generated.scanner.outbound.confirmPick", {
               value0: selectedSlots.length,
             })}
           </Button>

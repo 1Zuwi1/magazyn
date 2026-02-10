@@ -145,7 +145,7 @@ function WarehouseRow({
           {warehouse.name}
         </p>
         <p className="mt-0.5 text-muted-foreground text-xs">
-          {translateMessage("generated.m1065", {
+          {translateMessage("generated.admin.users.racksOccupancy", {
             value0: warehouse.racksCount,
             value1: warehouse.occupancy,
           })}
@@ -153,7 +153,7 @@ function WarehouseRow({
       </div>
       {isAssigned ? (
         <Badge className="shrink-0" variant="secondary">
-          {translateMessage("generated.m0944")}
+          {translateMessage("generated.admin.users.assigned")}
         </Badge>
       ) : null}
     </Button>
@@ -239,7 +239,9 @@ export function WarehouseVirtualList({
           />
         </span>
         <p className="text-center text-destructive text-sm">
-          {translateMessage("generated.m0301")}
+          {translateMessage(
+            "generated.admin.users.failedRetrieveWarehouseList"
+          )}
         </p>
       </div>
     )
@@ -255,7 +257,7 @@ export function WarehouseVirtualList({
           />
         </span>
         <p className="text-center text-muted-foreground text-sm">
-          {translateMessage("generated.m0302")}
+          {translateMessage("generated.admin.users.warehousesFound")}
         </p>
       </div>
     )

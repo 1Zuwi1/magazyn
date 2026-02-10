@@ -21,22 +21,22 @@ import { VoiceAssistant } from "./voice-assistant/voice-assistant"
 
 const dockNavItems = [
   {
-    title: translateMessage("generated.m1009"),
+    title: translateMessage("generated.ui.dock.dashboard"),
     href: "/dashboard",
     icon: Home01Icon,
   },
   {
-    title: translateMessage("generated.m0886"),
+    title: translateMessage("generated.shared.warehouses"),
     href: "/dashboard/warehouse",
     icon: Package,
   },
   {
-    title: translateMessage("generated.m0882"),
+    title: translateMessage("generated.shared.assortment"),
     href: "/dashboard/items",
     icon: GroupItemsIcon,
   },
   {
-    title: translateMessage("generated.m1010"),
+    title: translateMessage("generated.shared.settings"),
     href: "/settings",
     icon: Settings01Icon,
   },
@@ -152,7 +152,9 @@ export function Dock() {
               <TooltipTrigger
                 render={
                   <DialogTrigger
-                    aria-label={translateMessage("generated.m0665")}
+                    aria-label={translateMessage(
+                      "generated.shared.voiceAssistant"
+                    )}
                     className={cn(
                       "group relative flex size-12 flex-col items-center justify-center rounded-xl transition-all duration-200",
                       "hover:bg-muted/80 active:scale-95"
@@ -167,7 +169,7 @@ export function Dock() {
                 />
               </TooltipTrigger>
               <TooltipContent side="top" sideOffset={12}>
-                {translateMessage("generated.m0665")}
+                {translateMessage("generated.shared.voiceAssistant")}
               </TooltipContent>
             </Tooltip>
           }
@@ -181,7 +183,9 @@ export function Dock() {
                 render={
                   <DialogTrigger
                     aria-disabled={!isInWarehouse}
-                    aria-label={translateMessage("generated.m0666")}
+                    aria-label={translateMessage(
+                      "generated.shared.barcodeScanner"
+                    )}
                     className={cn(
                       "group relative flex size-12 flex-col items-center justify-center rounded-xl transition-all duration-200",
                       isInWarehouse
@@ -212,8 +216,10 @@ export function Dock() {
               </TooltipTrigger>
               <TooltipContent side="top" sideOffset={12}>
                 {isInWarehouse
-                  ? translateMessage("generated.m0666")
-                  : translateMessage("generated.m0667")}
+                  ? translateMessage("generated.shared.barcodeScanner")
+                  : translateMessage(
+                      "generated.ui.dock.selectWarehouseUseScanner"
+                    )}
               </TooltipContent>
             </Tooltip>
           }

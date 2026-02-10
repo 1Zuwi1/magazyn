@@ -79,11 +79,23 @@ const EXPIRY_FILTER_OPTIONS: {
   value: ExpiryFilters
   label: string
 }[] = [
-  { value: "ALL", label: translateMessage("generated.m0935") },
-  { value: "EXPIRED", label: translateMessage("generated.m0975") },
-  { value: "DAYS_3", label: translateMessage("generated.m0461") },
-  { value: "DAYS_7", label: translateMessage("generated.m0462") },
-  { value: "DAYS_14", label: translateMessage("generated.m0463") },
+  { value: "ALL", label: translateMessage("generated.shared.all") },
+  {
+    value: "EXPIRED",
+    label: translateMessage("generated.dashboard.shared.expired"),
+  },
+  {
+    value: "DAYS_3",
+    label: translateMessage("generated.dashboard.items.value3Days"),
+  },
+  {
+    value: "DAYS_7",
+    label: translateMessage("generated.dashboard.items.value7Days"),
+  },
+  {
+    value: "DAYS_14",
+    label: translateMessage("generated.dashboard.items.value14Days"),
+  },
 ]
 
 const GS1_WITH_SERIAL_PATTERN = /^11\d{6}01(\d{14})21\d+$/
@@ -157,12 +169,16 @@ function ExpiryStatusBadge({ value }: { value: string }) {
 
   if (typeof daysUntilExpiry !== "number") {
     return (
-      <Badge variant="outline">{translateMessage("generated.m0464")}</Badge>
+      <Badge variant="outline">
+        {translateMessage("generated.dashboard.items.date")}
+      </Badge>
     )
   }
   if (daysUntilExpiry < 0) {
     return (
-      <Badge variant="destructive">{translateMessage("generated.m0975")}</Badge>
+      <Badge variant="destructive">
+        {translateMessage("generated.dashboard.shared.expired")}
+      </Badge>
     )
   }
   const label = formatDistanceToNow(new Date(value), {
@@ -418,7 +434,7 @@ function AssortmentTableContent({
         accessorKey: "code",
         header: ({ column }) => (
           <SortableHeader column={column}>
-            {translateMessage("generated.m0906")}
+            {translateMessage("generated.shared.code")}
           </SortableHeader>
         ),
         cell: ({ row }) => <CodeCell value={row.original.code} />,
@@ -429,7 +445,7 @@ function AssortmentTableContent({
         accessorFn: (row) => getItemName(row, itemNamesById),
         header: ({ column }) => (
           <SortableHeader column={column}>
-            {translateMessage("generated.m0981")}
+            {translateMessage("generated.dashboard.items.product")}
           </SortableHeader>
         ),
         cell: ({ row }) => (
@@ -447,13 +463,13 @@ function AssortmentTableContent({
         accessorFn: (row) => rackNamesById.get(row.rackId) ?? "",
         header: ({ column }) => (
           <SortableHeader column={column}>
-            {translateMessage("generated.m0168")}
+            {translateMessage("generated.shared.rack")}
           </SortableHeader>
         ),
         cell: ({ row }) => {
           const rackName =
             rackNamesById.get(row.original.rackId) ??
-            translateMessage("generated.m0465")
+            translateMessage("generated.dashboard.items.unknownBookcase")
           const rackWarehouseId = rackWarehouseIdsById.get(row.original.rackId)
 
           if (rackWarehouseId === undefined) {
@@ -483,12 +499,12 @@ function AssortmentTableContent({
         accessorFn: (item) => `${item.positionX + 1}:${item.positionY + 1}`,
         header: ({ column }) => (
           <SortableHeader column={column}>
-            {translateMessage("generated.m0908")}
+            {translateMessage("generated.shared.position")}
           </SortableHeader>
         ),
         cell: ({ row }) => (
           <span className="font-mono text-sm">
-            {translateMessage("generated.m1091", {
+            {translateMessage("generated.dashboard.items.rowCol", {
               value0: row.original.positionX + 1,
               value1: row.original.positionY + 1,
             })}
@@ -500,7 +516,7 @@ function AssortmentTableContent({
         accessorKey: "createdAt",
         header: ({ column }) => (
           <SortableHeader column={column}>
-            {translateMessage("generated.m0982")}
+            {translateMessage("generated.dashboard.items.added")}
           </SortableHeader>
         ),
         cell: ({ row }) => (
@@ -514,7 +530,7 @@ function AssortmentTableContent({
         accessorKey: "expiresAt",
         header: ({ column }) => (
           <SortableHeader column={column}>
-            {translateMessage("generated.m0466")}
+            {translateMessage("generated.dashboard.shared.shelfLife")}
           </SortableHeader>
         ),
         cell: ({ row }) => (
@@ -582,9 +598,9 @@ function AssortmentTableContent({
   }
 
   const itemLabel = {
-    singular: translateMessage("generated.m1108"),
-    plural: translateMessage("generated.m1109"),
-    genitive: translateMessage("generated.m1110"),
+    singular: translateMessage("generated.shared.item"),
+    plural: translateMessage("generated.shared.items2"),
+    genitive: translateMessage("generated.shared.items3"),
   }
 
   if (isLoading) {
@@ -601,9 +617,13 @@ function AssortmentTableContent({
         <FilterBar className="gap-3">
           <FilterGroup>
             <SearchInput
-              aria-label={translateMessage("generated.m0467")}
+              aria-label={translateMessage(
+                "generated.dashboard.items.filterAssortmentCodeIdentifiers"
+              )}
               onChange={handleSearchChange}
-              placeholder={translateMessage("generated.m0468")}
+              placeholder={translateMessage(
+                "generated.dashboard.items.searchBarcodeProductNameRack"
+              )}
               value={search}
             />
 
@@ -621,7 +641,9 @@ function AssortmentTableContent({
                 value={expiryFilter}
               >
                 <SelectTrigger
-                  aria-label={translateMessage("generated.m0469")}
+                  aria-label={translateMessage(
+                    "generated.dashboard.items.filterExpirationDate"
+                  )}
                   className={cn(
                     "h-10! w-44 gap-2 pl-9",
                     isExpiryFiltered &&

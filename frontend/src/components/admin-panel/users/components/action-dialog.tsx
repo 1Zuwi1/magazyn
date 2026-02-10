@@ -24,15 +24,30 @@ const EditUserFormSchema = z.object({
   fullName: z
     .string()
     .trim()
-    .min(3, translateMessage("generated.m0263"))
-    .max(100, translateMessage("generated.m0264")),
+    .min(3, translateMessage("generated.admin.users.fullNameMustLeast3"))
+    .max(
+      100,
+      translateMessage("generated.admin.users.fullNameMaximum100Characters")
+    ),
   email: z.email("Podaj poprawny adres email"),
   phone: z
     .string()
     .trim()
-    .max(20, translateMessage("generated.m0265"))
-    .regex(profilePhonePattern, translateMessage("generated.m0266")),
-  location: z.string().trim().max(100, translateMessage("generated.m0267")),
+    .max(
+      20,
+      translateMessage("generated.admin.users.phoneNumberMaximum20Characters")
+    )
+    .regex(
+      profilePhonePattern,
+      translateMessage("generated.admin.users.phoneNumberOnlyContainNumbers")
+    ),
+  location: z
+    .string()
+    .trim()
+    .max(
+      100,
+      translateMessage("generated.admin.users.locationMaximum100Characters")
+    ),
   team: z.string(),
 })
 
@@ -109,7 +124,7 @@ export function ActionDialog({
         (teamOption) => teamOption.value === teamValue
       )
       if (!selectedTeam) {
-        return translateMessage("generated.m0273")
+        return translateMessage("generated.admin.users.chooseTeam")
       }
 
       return teamTranslations(selectedTeam.value)
@@ -119,13 +134,15 @@ export function ActionDialog({
 
   return (
     <FormDialog
-      description={translateMessage("generated.m0268")}
+      description={translateMessage(
+        "generated.admin.users.changeUserProfileInformation"
+      )}
       formId={formId}
       isLoading={isSubmitting}
       onFormReset={() => form.reset(getFormValues())}
       onOpenChange={onOpenChange}
       open={open}
-      title={translateMessage("generated.m0269")}
+      title={translateMessage("generated.admin.users.editUser")}
     >
       <form
         className="space-y-4 px-0.5"
@@ -141,9 +158,9 @@ export function ActionDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label={translateMessage("generated.m0270")}
+                label={translateMessage("generated.admin.users.fullName")}
                 layout="grid"
-                placeholder={translateMessage("generated.m0008")}
+                placeholder={translateMessage("generated.shared.johnKowalski")}
               />
             )}
           </form.Field>
@@ -153,9 +170,11 @@ export function ActionDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label={translateMessage("generated.m0874")}
+                label={translateMessage("generated.shared.eMail")}
                 layout="grid"
-                placeholder={translateMessage("generated.m0939")}
+                placeholder={translateMessage(
+                  "generated.admin.users.johnKowalskiExampleCom"
+                )}
                 type="email"
               />
             )}
@@ -166,7 +185,7 @@ export function ActionDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label={translateMessage("generated.m0940")}
+                label={translateMessage("generated.shared.phone")}
                 layout="grid"
                 placeholder="+48 555 019 203"
                 type="tel"
@@ -179,9 +198,11 @@ export function ActionDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label={translateMessage("generated.m0893")}
+                label={translateMessage("generated.shared.location")}
                 layout="grid"
-                placeholder={translateMessage("generated.m0271")}
+                placeholder={translateMessage(
+                  "generated.admin.users.gdanskPoland"
+                )}
               />
             )}
           </form.Field>
@@ -190,7 +211,7 @@ export function ActionDialog({
             {(field) => (
               <FieldWithState
                 field={field}
-                label={translateMessage("generated.m0272")}
+                label={translateMessage("generated.shared.team")}
                 layout="grid"
                 renderInput={({ id, isInvalid }) => (
                   <Select
@@ -204,12 +225,16 @@ export function ActionDialog({
                       id={id}
                     >
                       <SelectValue
-                        placeholder={translateMessage("generated.m0273")}
+                        placeholder={translateMessage(
+                          "generated.admin.users.chooseTeam"
+                        )}
                         render={
                           <span>
                             {field.state.value
                               ? getTeamLabel(field.state.value)
-                              : translateMessage("generated.m0273")}
+                              : translateMessage(
+                                  "generated.admin.users.chooseTeam"
+                                )}
                           </span>
                         }
                       />

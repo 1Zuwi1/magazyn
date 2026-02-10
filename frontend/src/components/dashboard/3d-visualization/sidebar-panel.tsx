@@ -74,10 +74,15 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
           </div>
           <div>
             <h2 className="font-semibold text-base tracking-tight">
-              {translateMessage("generated.m0419")}
+              {translateMessage(
+                "generated.dashboard.visualization3d.value3dExplorer"
+              )}
             </h2>
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.m1097", { value0: racks.length })}
+              {translateMessage(
+                "generated.dashboard.visualization3d.pluralLabel",
+                { value0: racks.length }
+              )}
             </p>
           </div>
         </div>
@@ -95,16 +100,21 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
             onChange={(e) => {
               setFilters({ query: e.target.value })
             }}
-            placeholder={translateMessage("generated.m0421")}
+            placeholder={translateMessage(
+              "generated.dashboard.visualization3d.searchRacks"
+            )}
             value={filters.query}
           />
         </div>
         {filters.query && (
           <p className="mt-2 text-muted-foreground text-xs">
-            {translateMessage("generated.m1081", {
-              value0: filteredRacks.length,
-              value1: racks.length,
-            })}
+            {translateMessage(
+              "generated.dashboard.visualization3d.foundRacks",
+              {
+                value0: filteredRacks.length,
+                value1: racks.length,
+              }
+            )}
           </p>
         )}
       </div>
@@ -177,16 +187,22 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
 
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <span className="text-muted-foreground">
-                    {translateMessage("generated.m1082", {
-                      value0: rack.grid.rows,
-                      value1: rack.grid.cols,
-                    })}
+                    {translateMessage(
+                      "generated.dashboard.visualization3d.grid",
+                      {
+                        value0: rack.grid.rows,
+                        value1: rack.grid.cols,
+                      }
+                    )}
                   </span>
                   <span className="text-muted-foreground">
-                    {translateMessage("generated.m1083", {
-                      value0: occupiedCount,
-                      value1: totalSlots,
-                    })}
+                    {translateMessage(
+                      "generated.dashboard.visualization3d.slots",
+                      {
+                        value0: occupiedCount,
+                        value1: totalSlots,
+                      }
+                    )}
                   </span>
                 </div>
 
@@ -214,10 +230,12 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
               />
             </div>
             <p className="font-medium text-muted-foreground text-sm">
-              {translateMessage("generated.m0422")}
+              {translateMessage("generated.shared.results")}
             </p>
             <p className="text-muted-foreground/70 text-xs">
-              {translateMessage("generated.m0423")}
+              {translateMessage(
+                "generated.dashboard.visualization3d.differentSearchPhrase"
+              )}
             </p>
           </div>
         )}
@@ -226,43 +244,45 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
       {/* Legend */}
       <div className="border-t bg-muted/30 p-4">
         <h3 className="mb-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
-          {translateMessage("generated.m0424")}
+          {translateMessage("generated.dashboard.visualization3d.statusLegend")}
         </h3>
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="flex items-center gap-2">
             <div className="size-3 rounded-sm bg-emerald-500 shadow-sm" />
             <span className="text-muted-foreground">
-              {translateMessage("generated.m0974")}
+              {translateMessage("generated.dashboard.shared.normal")}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="size-3 rounded-sm bg-orange-500 shadow-sm" />
             <span className="text-muted-foreground">
-              {translateMessage("generated.m0975")}
+              {translateMessage("generated.dashboard.shared.expired")}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="size-3 rounded-sm bg-red-500 shadow-sm" />
             <span className="text-muted-foreground">
-              {translateMessage("generated.m0976")}
+              {translateMessage("generated.dashboard.shared.dangerous")}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="size-3 rounded-sm bg-[linear-gradient(135deg,var(--color-red-500)_50%,var(--color-orange-500)_50%)] shadow-sm" />
             <span className="text-muted-foreground">
-              {translateMessage("generated.m0425")}
+              {translateMessage(
+                "generated.dashboard.visualization3d.bothStatuses"
+              )}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="size-3 rounded-sm bg-slate-200 shadow-sm dark:bg-slate-700" />
             <span className="text-muted-foreground">
-              {translateMessage("generated.m0414")}
+              {translateMessage("generated.dashboard.shared.emptyShelf")}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="size-3 rounded-sm bg-blue-500 shadow-sm ring-2 ring-blue-500/30" />
             <span className="text-muted-foreground">
-              {translateMessage("generated.m0977")}
+              {translateMessage("generated.dashboard.visualization3d.chosen")}
             </span>
           </div>
         </div>

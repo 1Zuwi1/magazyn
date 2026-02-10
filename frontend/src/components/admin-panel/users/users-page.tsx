@@ -91,7 +91,9 @@ export default function UsersMain() {
 
   const handleEditUser = (userId: number) => {
     if (isTeamsError) {
-      toast.warning(translateMessage("generated.m0318"))
+      toast.warning(
+        translateMessage("generated.admin.users.failedLoadTeamListTeam")
+      )
     }
     openEditDialog(userId)
   }
@@ -111,13 +113,15 @@ export default function UsersMain() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description={translateMessage("generated.m0319")}
+        description={translateMessage(
+          "generated.admin.users.manageUserAccountsProfileData"
+        )}
         icon={UserMultiple02Icon}
         navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title={translateMessage("generated.m0233")}
+        title={translateMessage("generated.shared.users")}
       >
         <UsersStats
           active={stats.active}
@@ -165,7 +169,7 @@ export default function UsersMain() {
         onConfirm={confirmDeleteUser}
         onOpenChange={handleDeleteDialogOpenChange}
         open={deleteDialogOpen}
-        title={translateMessage("generated.m0320")}
+        title={translateMessage("generated.admin.users.deleteUser")}
       />
 
       <StatusChangeDialog

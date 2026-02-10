@@ -128,7 +128,8 @@ function RackSelect({
     virtualRackItems,
   ])
 
-  const triggerLabel = selectedRackName || translateMessage("generated.m0407")
+  const triggerLabel =
+    selectedRackName || translateMessage("generated.shared.selectRack")
 
   return (
     <Popover onOpenChange={setIsRackSelectOpen} open={isRackSelectOpen}>
@@ -147,7 +148,7 @@ function RackSelect({
       </PopoverTrigger>
       <PopoverContent align="start" className="w-(--anchor-width) gap-0 p-0">
         <ScrollArea
-          aria-label={translateMessage("generated.m0670")}
+          aria-label={translateMessage("generated.scanner.rackList")}
           className="h-56 p-1 pr-3"
           ref={scrollAreaRef}
           role="listbox"
@@ -209,13 +210,13 @@ function RackSelect({
           {!(isRackOptionsPending || isRackOptionsError) &&
           rackOptions.length === 0 ? (
             <p className="px-2 py-3 text-muted-foreground text-sm">
-              {translateMessage("generated.m0671")}
+              {translateMessage("generated.scanner.racksAvailable")}
             </p>
           ) : null}
 
           {isRackOptionsError ? (
             <p className="px-2 py-3 text-destructive text-sm">
-              {translateMessage("generated.m0672")}
+              {translateMessage("generated.scanner.failedFetchRackList")}
             </p>
           ) : null}
         </ScrollArea>
@@ -223,7 +224,7 @@ function RackSelect({
         {isFetchingNextRackPage && (
           <div className="flex items-center gap-2 border-t px-2 py-1.5 text-muted-foreground text-xs">
             <Spinner className="size-3.5" />
-            <span>{translateMessage("generated.m0673")}</span>
+            <span>{translateMessage("generated.scanner.loadingRacks")}</span>
           </div>
         )}
       </PopoverContent>
@@ -266,7 +267,7 @@ export function LocationCard({
             {index + 1}
           </div>
           <p className="font-medium text-sm">
-            {translateMessage("generated.m0893")}
+            {translateMessage("generated.shared.location")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -278,7 +279,7 @@ export function LocationCard({
             type="button"
             variant="ghost"
           >
-            {translateMessage("generated.m0230")}
+            {translateMessage("generated.shared.remove")}
           </Button>
         </div>
       </div>
@@ -286,7 +287,7 @@ export function LocationCard({
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-1.5">
           <Label htmlFor={`${baseId}-rack`}>
-            {translateMessage("generated.m0168")}
+            {translateMessage("generated.shared.rack")}
           </Label>
           <RackSelect
             disabled={isRackSelectDisabled}
@@ -307,7 +308,7 @@ export function LocationCard({
 
         <div className="space-y-1.5">
           <Label htmlFor={`${baseId}-x`}>
-            {translateMessage("generated.m0674")}
+            {translateMessage("generated.scanner.shelf")}
           </Label>
           <Input
             id={`${baseId}-x`}
@@ -325,14 +326,14 @@ export function LocationCard({
           />
           {maxColumn !== undefined ? (
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.m1103", { value0: maxColumn })}
+              {translateMessage("generated.scanner.max", { value0: maxColumn })}
             </p>
           ) : null}
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor={`${baseId}-y`}>
-            {translateMessage("generated.m0411")}
+            {translateMessage("generated.scanner.row")}
           </Label>
           <Input
             id={`${baseId}-y`}
@@ -350,7 +351,7 @@ export function LocationCard({
           />
           {maxRow !== undefined ? (
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.m1103", { value0: maxRow })}
+              {translateMessage("generated.scanner.max", { value0: maxRow })}
             </p>
           ) : null}
         </div>

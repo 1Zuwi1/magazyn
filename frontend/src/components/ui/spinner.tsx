@@ -10,7 +10,7 @@ function Spinner({
 }: React.ComponentProps<"svg">) {
   return (
     <HugeiconsIcon
-      aria-label={translateMessage("generated.m1046")}
+      aria-label={translateMessage("generated.ui.landing")}
       className={cn("size-4 animate-spin fill-current", className)}
       icon={Loading02Icon}
       role="status"

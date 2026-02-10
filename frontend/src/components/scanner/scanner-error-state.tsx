@@ -31,7 +31,7 @@ export function ScannerErrorState({ error, onRetry }: ScannerErrorStateProps) {
         {/* Text content */}
         <div className="max-w-sm space-y-2">
           <h2 className="font-semibold text-foreground text-xl">
-            {translateMessage("generated.m0735")}
+            {translateMessage("generated.scanner.errorOccurred")}
           </h2>
           <p className="text-muted-foreground text-sm">{error}</p>
         </div>
@@ -39,7 +39,7 @@ export function ScannerErrorState({ error, onRetry }: ScannerErrorStateProps) {
         {/* Action button */}
         <div className="pt-2">
           <Button onClick={onRetry} type="button" variant="outline">
-            {translateMessage("generated.m0075")}
+            {translateMessage("generated.shared.again")}
           </Button>
         </div>
       </div>

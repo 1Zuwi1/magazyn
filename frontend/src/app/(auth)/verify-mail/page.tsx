@@ -30,7 +30,7 @@ function VerifyMailContent() {
   useEffect(() => {
     if (!token) {
       setState("error")
-      setErrorMessage(translateMessage("generated.m0057"))
+      setErrorMessage(translateMessage("generated.auth.verificationTokenUrl"))
       return
     }
 
@@ -51,7 +51,12 @@ function VerifyMailContent() {
 
       if (err) {
         setState("error")
-        setErrorMessage(err.message || translateMessage("generated.m0058"))
+        setErrorMessage(
+          err.message ||
+            translateMessage(
+              "generated.shared.errorOccurredDuringVerificationAgain"
+            )
+        )
         return
       }
 
@@ -87,8 +92,8 @@ function VerifyMailContent() {
             <Link className="block" href="/login">
               <Button className="w-full" size="lg">
                 {state === "success"
-                  ? translateMessage("generated.m0059")
-                  : translateMessage("generated.m0060")}
+                  ? translateMessage("generated.auth.goLogin")
+                  : translateMessage("generated.auth.backLogin2")}
               </Button>
             </Link>
           </div>
@@ -108,15 +113,15 @@ function LoadingState() {
       </div>
       <div className="space-y-1.5">
         <h1 className="font-semibold text-lg">
-          {translateMessage("generated.m0061")}
+          {translateMessage("generated.auth.emailAddressVerification")}
         </h1>
         <p className="text-muted-foreground text-sm">
-          {translateMessage("generated.m0062")}
+          {translateMessage("generated.auth.waitEmailAddressBeingVerified")}
         </p>
       </div>
       <div className="flex items-center gap-2 text-muted-foreground text-xs">
         <Spinner className="size-3" />
-        <span>{translateMessage("generated.m0877")}</span>
+        <span>{translateMessage("generated.auth.processing")}</span>
       </div>
     </div>
   )
@@ -133,15 +138,19 @@ function SuccessState() {
       </div>
       <div className="space-y-1.5">
         <h1 className="font-semibold text-lg">
-          {translateMessage("generated.m0063")}
+          {translateMessage("generated.auth.emailVerified")}
         </h1>
         <p className="text-muted-foreground text-sm">
-          {translateMessage("generated.m0064")}
+          {translateMessage(
+            "generated.auth.emailAddressBeenSuccessfullyVerified"
+          )}
         </p>
       </div>
       <div className="w-full rounded-lg bg-emerald-500/5 p-3 ring-1 ring-emerald-500/20">
         <p className="text-emerald-600 text-xs dark:text-emerald-400">
-          {translateMessage("generated.m0065")}
+          {translateMessage(
+            "generated.auth.verificationCompletedSuccessfullyAccountNow"
+          )}
         </p>
       </div>
     </div>
@@ -159,13 +168,15 @@ function ErrorState({ message }: { message: string }) {
       </div>
       <div className="space-y-1.5">
         <h1 className="font-semibold text-lg">
-          {translateMessage("generated.m0066")}
+          {translateMessage("generated.auth.verificationFailed")}
         </h1>
         <p className="text-muted-foreground text-sm">{message}</p>
       </div>
       <div className="w-full rounded-lg bg-destructive/5 p-3 ring-1 ring-destructive/20">
         <p className="text-destructive text-xs">
-          {translateMessage("generated.m0067")}
+          {translateMessage(
+            "generated.auth.problemPersistsContactAdministratorSigning"
+          )}
         </p>
       </div>
     </div>

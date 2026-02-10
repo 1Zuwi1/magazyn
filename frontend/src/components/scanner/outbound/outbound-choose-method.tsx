@@ -14,15 +14,21 @@ export function OutboundChooseMethod({
 }: OutboundChooseMethodProps) {
   return (
     <ScannerChooseMethod
-      description={translateMessage("generated.m0675")}
+      description={translateMessage(
+        "generated.scanner.shared.chooseHowIndicateGoodsRemove"
+      )}
       onCancel={onCancel}
       onScan={onScan}
       onSelect={onSelect}
-      scanDescription={translateMessage("generated.m1012")}
+      scanDescription={translateMessage(
+        "generated.scanner.shared.scanGs1128CodeAssortment"
+      )}
       scanLabel="Zeskanuj kod"
-      selectDescription={translateMessage("generated.m1013")}
+      selectDescription={translateMessage(
+        "generated.scanner.shared.searchProductSpecifyQuantityRemove"
+      )}
       selectLabel="Wybierz z listy"
-      title={translateMessage("generated.m0676")}
+      title={translateMessage("generated.scanner.shared.goodsRemoval")}
     />
   )
 }

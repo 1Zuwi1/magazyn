@@ -181,14 +181,18 @@ const getLinkedMethodsHint = ({
   }
 
   if (!hasAvailableMethods) {
-    return translateMessage("generated.m0589")
+    return translateMessage(
+      "generated.dashboard.settings.allAvailableMethodsAlreadyConnected"
+    )
   }
 
   if (isSelectedLinked) {
-    return translateMessage("generated.m0590")
+    return translateMessage(
+      "generated.dashboard.settings.selectedMethodAlreadyConnectedSelect"
+    )
   }
 
-  return translateMessage("generated.m0591")
+  return translateMessage("generated.dashboard.settings.selectMethodWantAdd")
 }
 
 const getResendMethod = (method: TwoFactorMethod): ResendType | null => {
@@ -215,13 +219,25 @@ const getPrintableRecoveryCodesDocument = (
 
   const htmlLanguage = escapeHtml(locale)
   const title = escapeHtml(
-    translateMessage("generated.m0514", undefined, locale)
+    translateMessage(
+      "generated.dashboard.settings.recoveryCodes",
+      undefined,
+      locale
+    )
   )
   const generatedLabel = escapeHtml(
-    translateMessage("generated.m1004", undefined, locale)
+    translateMessage(
+      "generated.dashboard.settings.generated",
+      undefined,
+      locale
+    )
   )
   const securityNotice = escapeHtml(
-    translateMessage("generated.m0619", undefined, locale)
+    translateMessage(
+      "generated.dashboard.settings.storeSafePlace",
+      undefined,
+      locale
+    )
   )
 
   return `<!doctype html>
@@ -406,7 +422,11 @@ function useTwoFactorSetupFlow({
 
   const startSetup = async () => {
     if (method === "PASSKEYS") {
-      toast.error(translateMessage("generated.m0593"))
+      toast.error(
+        translateMessage(
+          "generated.dashboard.settings.addSecurityKeySectionBelow"
+        )
+      )
       return
     }
 
@@ -428,7 +448,11 @@ function useTwoFactorSetupFlow({
       } else {
         const resendMethod = getResendMethod(method)
         if (!resendMethod) {
-          throw new Error(translateMessage("generated.m0594"))
+          throw new Error(
+            translateMessage(
+              "generated.dashboard.settings.unsupportedResendMethod"
+            )
+          )
         }
         dispatch({ type: "set_stage", stage: "SENDING" })
         await sendTwoFactorCode(resendMethod)
@@ -437,7 +461,9 @@ function useTwoFactorSetupFlow({
 
       dispatch({ type: "set_stage", stage: "AWAITING" })
     } catch {
-      const message = translateMessage("generated.m0595")
+      const message = translateMessage(
+        "generated.dashboard.settings.failedInitializeConfigurationAgain"
+      )
       dispatch({ type: "set_error", error: message })
       dispatch({ type: "set_stage", stage: "ERROR" })
       toast.error(message)
@@ -458,7 +484,9 @@ function useTwoFactorSetupFlow({
       startTimer(TWO_FACTOR_RESEND_SECONDS)
       dispatch({ type: "set_stage", stage: "AWAITING" })
     } catch {
-      const message = translateMessage("generated.m0557")
+      const message = translateMessage(
+        "generated.dashboard.settings.failedSendCodeAgain"
+      )
       dispatch({ type: "set_error", error: message })
       dispatch({ type: "set_stage", stage: "ERROR" })
       toast.error(message)
@@ -479,14 +507,18 @@ function useTwoFactorSetupFlow({
       } else {
         dispatch({
           type: "set_error",
-          error: translateMessage("generated.m0596"),
+          error: translateMessage(
+            "generated.dashboard.settings.invalidVerificationCodeAgain"
+          ),
         })
         dispatch({ type: "set_stage", stage: "ERROR" })
       }
     } catch {
       dispatch({
         type: "set_error",
-        error: translateMessage("generated.m0058"),
+        error: translateMessage(
+          "generated.shared.errorOccurredDuringVerificationAgain"
+        ),
       })
       dispatch({ type: "set_stage", stage: "ERROR" })
     }
@@ -558,10 +590,12 @@ function ConnectedMethods({
         </div>
         <div className="space-y-1">
           <p className="font-medium text-foreground/80 text-sm">
-            {translateMessage("generated.m0597")}
+            {translateMessage("generated.dashboard.settings.failedLoadMethods")}
           </p>
           <p className="text-muted-foreground text-xs">
-            {translateMessage("generated.m0598")}
+            {translateMessage(
+              "generated.dashboard.settings.problemDownloadingLinkedVerificationMethods"
+            )}
           </p>
         </div>
         {onRetry && (
@@ -570,7 +604,7 @@ function ConnectedMethods({
             onClick={onRetry}
             type="button"
           >
-            {translateMessage("generated.m0075")}
+            {translateMessage("generated.shared.again")}
           </button>
         )}
       </div>
@@ -589,10 +623,12 @@ function ConnectedMethods({
         </div>
         <div>
           <p className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.m0599")}
+            {translateMessage("generated.dashboard.settings.combinedMethods")}
           </p>
           <p className="text-muted-foreground/70 text-xs">
-            {translateMessage("generated.m0600")}
+            {translateMessage(
+              "generated.dashboard.settings.addVerificationMethodSecureAccount"
+            )}
           </p>
         </div>
       </div>
@@ -600,7 +636,9 @@ function ConnectedMethods({
   }
 
   const hasMultipleMethods = linkedMethods.length > 1
-  const setDefaultActionLabel = translateMessage("generated.m0605")
+  const setDefaultActionLabel = translateMessage(
+    "generated.dashboard.settings.change"
+  )
 
   return (
     <div className="space-y-2">
@@ -622,9 +660,12 @@ function ConnectedMethods({
             {linkedMethod !== "EMAIL" && linkedMethod !== "PASSKEYS" ? (
               <Tooltip>
                 <TooltipTrigger
-                  aria-label={translateMessage("generated.m0601", {
-                    value0: label,
-                  })}
+                  aria-label={translateMessage(
+                    "generated.dashboard.settings.removeMethod",
+                    {
+                      value0: label,
+                    }
+                  )}
                   className="absolute top-1.5 right-1.5 inline-flex size-5 cursor-pointer items-center justify-center rounded-full text-muted-foreground/50 opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive disabled:pointer-events-none disabled:opacity-50 group-hover:opacity-100"
                   disabled={removingMethod === linkedMethod}
                   onClick={() => onRemoveMethod(linkedMethod)}
@@ -640,7 +681,7 @@ function ConnectedMethods({
                   )}
                 </TooltipTrigger>
                 <TooltipContent>
-                  {translateMessage("generated.m0230")}
+                  {translateMessage("generated.shared.remove")}
                 </TooltipContent>
               </Tooltip>
             ) : null}
@@ -670,12 +711,16 @@ function ConnectedMethods({
                       <span className="inline-flex cursor-help items-center gap-1 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-amber-600 dark:text-amber-500">
                         <HugeiconsIcon icon={StarIcon} size={12} />
                         <span className="font-medium text-[10px] uppercase tracking-wide">
-                          {translateMessage("generated.m0602")}
+                          {translateMessage(
+                            "generated.dashboard.settings.default"
+                          )}
                         </span>
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {translateMessage("generated.m0603")}
+                      {translateMessage(
+                        "generated.dashboard.settings.methodWillUsedFirstLogging"
+                      )}
                     </TooltipContent>
                   </Tooltip>
                 ) : null}
@@ -685,7 +730,7 @@ function ConnectedMethods({
             <div className="mr-2 flex items-center gap-1.5 rounded-full bg-green-500/10 px-2 py-1 text-green-600 dark:text-green-500">
               <HugeiconsIcon icon={Tick01Icon} size={14} />
               <span className="font-medium text-xs">
-                {translateMessage("generated.m1003")}
+                {translateMessage("generated.dashboard.settings.active")}
               </span>
             </div>
           </div>
@@ -701,11 +746,11 @@ function ConnectedMethods({
               size={14}
             />
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.m0604")}{" "}
+              {translateMessage("generated.dashboard.settings.defaultMethod")}{" "}
               <span className="font-medium text-foreground">
                 {defaultMethod
                   ? (twoFactorMethodLabels[defaultMethod] ?? defaultMethod)
-                  : translateMessage("generated.m1160")}
+                  : translateMessage("generated.dashboard.settings.set")}
               </span>
             </span>
           </div>
@@ -720,7 +765,9 @@ function ConnectedMethods({
             <DropdownMenuContent align="end" className="w-fit">
               <DropdownMenuGroup>
                 <DropdownMenuLabel>
-                  {translateMessage("generated.m0606")}
+                  {translateMessage(
+                    "generated.dashboard.settings.selectDefaultMethod"
+                  )}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuRadioGroup
@@ -768,7 +815,11 @@ function AuthenticatorSetup({
 
   const handleCopySecret = async (): Promise<void> => {
     if (!navigator.clipboard) {
-      toast.error(translateMessage("generated.m0607"))
+      toast.error(
+        translateMessage(
+          "generated.dashboard.settings.clipboardUnavailableBrowser"
+        )
+      )
       return
     }
 
@@ -784,7 +835,11 @@ function AuthenticatorSetup({
         false
       )
     } catch {
-      toast.error(translateMessage("generated.m0608"))
+      toast.error(
+        translateMessage(
+          "generated.dashboard.settings.failedCopyKeyCopyManually"
+        )
+      )
     }
   }
 
@@ -799,9 +854,15 @@ function AuthenticatorSetup({
   if (!secret) {
     return (
       <Alert variant="destructive">
-        <AlertTitle>{translateMessage("generated.m0609")}</AlertTitle>
+        <AlertTitle>
+          {translateMessage(
+            "generated.dashboard.settings.applicationConfigurationData"
+          )}
+        </AlertTitle>
         <AlertDescription>
-          {translateMessage("generated.m0610")}
+          {translateMessage(
+            "generated.dashboard.settings.refreshConfigurationAgain"
+          )}
         </AlertDescription>
       </Alert>
     )
@@ -812,16 +873,18 @@ function AuthenticatorSetup({
       <div className="flex flex-col items-center gap-3">
         <QRCodeDisplay size={AUTHENTICATOR_QR_SIZE} value={totpUri} />
         <p className="text-center text-muted-foreground text-xs">
-          {translateMessage("generated.m0611")}
+          {translateMessage("generated.dashboard.settings.scanQrCode")}
         </p>
       </div>
       <div className="space-y-3">
         <div>
           <p className="font-medium text-sm">
-            {translateMessage("generated.m0612")}
+            {translateMessage("generated.dashboard.settings.enterKeyManually")}
           </p>
           <p className="text-muted-foreground text-sm">
-            {translateMessage("generated.m0613")}
+            {translateMessage(
+              "generated.dashboard.settings.useAuthenticatorAppGoogleAuthenticator"
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -833,8 +896,8 @@ function AuthenticatorSetup({
           <Button
             aria-label={
               copied
-                ? translateMessage("generated.m1155")
-                : translateMessage("generated.m1156")
+                ? translateMessage("generated.dashboard.settings.keyCopied")
+                : translateMessage("generated.dashboard.settings.copyCode")
             }
             aria-pressed={copied}
             onClick={handleCopySecret}
@@ -846,7 +909,7 @@ function AuthenticatorSetup({
           </Button>
         </div>
         <p className="text-muted-foreground text-xs">
-          {translateMessage("generated.m1062", {
+          {translateMessage("generated.dashboard.settings.generated2", {
             value0: authenticatorSetupData?.issuedAt ?? "—",
           })}
         </p>
@@ -890,20 +953,22 @@ function CodeInputEntry({
       ) : (
         <div className="space-y-2">
           <p className="font-medium text-sm">
-            {translateMessage("generated.m0614")}
+            {translateMessage("generated.dashboard.settings.oneTimeCode")}
           </p>
           <p className="text-muted-foreground text-sm">
-            {translateMessage("generated.m0615")}
+            {translateMessage("generated.dashboard.settings.eMailCodeBeenSent")}
           </p>
           <p className="text-muted-foreground text-xs">
-            {translateMessage("generated.m0616")}
+            {translateMessage(
+              "generated.dashboard.settings.requestResendCodeArrived"
+            )}
           </p>
         </div>
       )}
 
       <div className="space-y-3">
         <Label htmlFor="two-factor-code">
-          {translateMessage("generated.m0048")}
+          {translateMessage("generated.shared.verificationCode")}
         </Label>
         <OtpInput id="two-factor-code" onChange={onCodeChange} value={code} />
         <div className="flex flex-wrap items-center gap-2">
@@ -913,7 +978,7 @@ function CodeInputEntry({
             onClick={onVerify}
             type="button"
           >
-            {translateMessage("generated.m0617")}
+            {translateMessage("generated.dashboard.settings.verifyActivate")}
           </Button>
           {canSendCode ? (
             <>
@@ -926,10 +991,10 @@ function CodeInputEntry({
                 variant="outline"
               >
                 {resendCooldown > 0
-                  ? translateMessage("generated.m0561", {
+                  ? translateMessage("generated.dashboard.settings.resend", {
                       value0: formatCountdown(resendCooldown),
                     })
-                  : translateMessage("generated.m0050")}
+                  : translateMessage("generated.shared.resend")}
               </Button>
               <span
                 aria-atomic="true"
@@ -938,8 +1003,10 @@ function CodeInputEntry({
                 id="resend-status"
               >
                 {resendCooldown > 0
-                  ? translateMessage("generated.m0562")
-                  : translateMessage("generated.m0563")}
+                  ? translateMessage(
+                      "generated.dashboard.settings.resendWillAvailableAfterCountdown"
+                    )
+                  : translateMessage("generated.dashboard.settings.nowResend")}
               </span>
             </>
           ) : null}
@@ -992,7 +1059,11 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
     const printWindow = window.open("", "_blank", "width=720,height=900")
 
     if (!printWindow) {
-      toast.error(translateMessage("generated.m0618"))
+      toast.error(
+        translateMessage(
+          "generated.dashboard.settings.printPreviewFailedOpenCheck"
+        )
+      )
       return
     }
 
@@ -1013,10 +1084,10 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
       <div className="flex items-center justify-between gap-3">
         <div className="space-y-1">
           <p className="font-medium text-sm">
-            {translateMessage("generated.m0514")}
+            {translateMessage("generated.dashboard.settings.recoveryCodes")}
           </p>
           <p className="text-muted-foreground text-sm">
-            {translateMessage("generated.m0619")}
+            {translateMessage("generated.dashboard.settings.storeSafePlace")}
           </p>
         </div>
         <Button
@@ -1025,14 +1096,18 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
           type="button"
           variant="outline"
         >
-          {translateMessage("generated.m1005")}
+          {translateMessage("generated.dashboard.settings.generate")}
         </Button>
       </div>
 
       <p className="text-muted-foreground text-sm">
         {enabled
-          ? translateMessage("generated.m0620")
-          : translateMessage("generated.m0621")}
+          ? translateMessage(
+              "generated.dashboard.settings.generatingNewCodesWillInvalidate"
+            )
+          : translateMessage(
+              "generated.dashboard.settings.enable2faGenerateCodes"
+            )}
       </p>
 
       <AlertDialog
@@ -1049,21 +1124,27 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
               />
             </AlertDialogMedia>
             <AlertDialogTitle>
-              {translateMessage("generated.m0622")}
+              {translateMessage(
+                "generated.dashboard.settings.generateNewRecoveryCodes"
+              )}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {translateMessage("generated.m0623")}
+              {translateMessage(
+                "generated.dashboard.settings.previousCodesWillStopWorking"
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isGeneratingCodes}>
-              {translateMessage("generated.m0885")}
+              {translateMessage("generated.shared.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               isLoading={isGeneratingCodes}
               onClick={async () => await handleGenerateCodes()}
             >
-              {translateMessage("generated.m0624")}
+              {translateMessage(
+                "generated.dashboard.settings.generateNewCodes"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1075,14 +1156,22 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{translateMessage("generated.m0625")}</DialogTitle>
+            <DialogTitle>
+              {translateMessage(
+                "generated.dashboard.settings.newRecoveryCodes"
+              )}
+            </DialogTitle>
             <DialogDescription>
-              {translateMessage("generated.m0626")}
+              {translateMessage(
+                "generated.dashboard.settings.writeDownNowKeepSafe"
+              )}
             </DialogDescription>
           </DialogHeader>
 
           <Textarea
-            aria-label={translateMessage("generated.m0514")}
+            aria-label={translateMessage(
+              "generated.dashboard.settings.recoveryCodes"
+            )}
             className="min-h-40 font-mono text-sm"
             readOnly
             value={generatedCodes.join("\n")}
@@ -1090,10 +1179,10 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
 
           <DialogFooter className="gap-2 sm:gap-2">
             <Button onClick={handlePrintCodes} type="button" variant="outline">
-              {translateMessage("generated.m0627")}
+              {translateMessage("generated.dashboard.settings.printCodes")}
             </Button>
             <DialogClose render={<Button type="button" />}>
-              {translateMessage("generated.m1006")}
+              {translateMessage("generated.dashboard.settings.close")}
             </DialogClose>
           </DialogFooter>
         </DialogContent>
@@ -1148,7 +1237,7 @@ function TwoFactorActionButtons({
         onClick={onStartSetup}
         type="button"
       >
-        {translateMessage("generated.m0628")}
+        {translateMessage("generated.dashboard.settings.startSetup")}
       </Button>
     )
   }
@@ -1156,7 +1245,7 @@ function TwoFactorActionButtons({
   if (status === "ENABLED" && !isSetupInProgress) {
     return (
       <Button disabled={!canStartSetup} onClick={onStartSetup} type="button">
-        {translateMessage("generated.m0629")}
+        {translateMessage("generated.dashboard.settings.addMethod")}
       </Button>
     )
   }
@@ -1164,7 +1253,7 @@ function TwoFactorActionButtons({
   if (status === "SETUP" || isSetupInProgress) {
     return (
       <Button onClick={onCancelSetup} type="button" variant="outline">
-        {translateMessage("generated.m0630")}
+        {translateMessage("generated.dashboard.settings.cancelSetup")}
       </Button>
     )
   }
@@ -1228,7 +1317,7 @@ function TwoFactorConfigurationSection({
     <div className="space-y-4 rounded-xl border bg-muted/30 p-4">
       <div className="space-y-2">
         <p className="font-medium text-sm">
-          {translateMessage("generated.m0631")}
+          {translateMessage("generated.dashboard.settings.combinedMethods2")}
         </p>
         <ConnectedMethods
           defaultMethod={defaultMethod}
@@ -1247,10 +1336,12 @@ function TwoFactorConfigurationSection({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">
               <p className="font-semibold">
-                {translateMessage("generated.m0632")}
+                {translateMessage("generated.dashboard.settings.value2faSetup")}
               </p>
               <p className="text-muted-foreground text-sm">
-                {translateMessage("generated.m0633")}
+                {translateMessage(
+                  "generated.dashboard.settings.addSecondVerificationStepProtect"
+                )}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -1272,7 +1363,9 @@ function TwoFactorConfigurationSection({
               >
                 1
               </Badge>
-              <span>{translateMessage("generated.m0634")}</span>
+              <span>
+                {translateMessage("generated.dashboard.settings.selectMethod")}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <Badge
@@ -1280,7 +1373,9 @@ function TwoFactorConfigurationSection({
               >
                 2
               </Badge>
-              <span>{translateMessage("generated.m0635")}</span>
+              <span>
+                {translateMessage("generated.dashboard.settings.confirmCode")}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <Badge
@@ -1288,7 +1383,9 @@ function TwoFactorConfigurationSection({
               >
                 3
               </Badge>
-              <span>{translateMessage("generated.m0636")}</span>
+              <span>
+                {translateMessage("generated.dashboard.settings.saveCodes")}
+              </span>
             </div>
           </div>
           <TwoFactorMethodInput
@@ -1333,9 +1430,12 @@ export function TwoFactorSetup({
     setDefaultMethodMutation.mutate(newDefaultMethod, {
       onSuccess: () => {
         toast.success(
-          translateMessage("generated.m0637", {
-            value0: twoFactorMethodLabels[newDefaultMethod],
-          })
+          translateMessage(
+            "generated.dashboard.settings.methodBeenSetDefault",
+            {
+              value0: twoFactorMethodLabels[newDefaultMethod],
+            }
+          )
         )
       },
     })
@@ -1346,7 +1446,7 @@ export function TwoFactorSetup({
     removeMethodMutation.mutate(methodToRemove, {
       onSuccess: () => {
         toast.success(
-          translateMessage("generated.m0638", {
+          translateMessage("generated.dashboard.settings.methodBeenRemoved", {
             value0: twoFactorMethodLabels[methodToRemove],
           })
         )
@@ -1415,7 +1515,11 @@ export function TwoFactorSetup({
       startTimer,
       onSuccess: () => {
         refetchLinkedMethods().catch(() => {
-          toast.error(translateMessage("generated.m0639"))
+          toast.error(
+            translateMessage(
+              "generated.dashboard.settings.failedRefresh2faMethodList"
+            )
+          )
         })
         resetFlow()
       },
@@ -1458,9 +1562,15 @@ export function TwoFactorSetup({
           {setupStage === "REQUESTING" ? (
             <Alert>
               <Spinner className="text-muted-foreground" />
-              <AlertTitle>{translateMessage("generated.m0640")}</AlertTitle>
+              <AlertTitle>
+                {translateMessage(
+                  "generated.dashboard.settings.connect2faService"
+                )}
+              </AlertTitle>
               <AlertDescription>
-                {translateMessage("generated.m0641")}
+                {translateMessage(
+                  "generated.dashboard.settings.generateKeyPrepareNextSteps"
+                )}
               </AlertDescription>
             </Alert>
           ) : null}
@@ -1468,16 +1578,24 @@ export function TwoFactorSetup({
           {setupStage === "SENDING" ? (
             <Alert>
               <Spinner className="text-muted-foreground" />
-              <AlertTitle>{translateMessage("generated.m0558")}</AlertTitle>
+              <AlertTitle>
+                {translateMessage("generated.dashboard.settings.sendCode")}
+              </AlertTitle>
               <AlertDescription>
-                {translateMessage("generated.m0559")}
+                {translateMessage(
+                  "generated.dashboard.settings.codeGoesSelectedMethod"
+                )}
               </AlertDescription>
             </Alert>
           ) : null}
 
           {setupStage === "ERROR" && error ? (
             <Alert variant="destructive">
-              <AlertTitle>{translateMessage("generated.m0642")}</AlertTitle>
+              <AlertTitle>
+                {translateMessage(
+                  "generated.dashboard.settings.value2faFailedActivate"
+                )}
+              </AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}

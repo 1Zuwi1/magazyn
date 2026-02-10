@@ -35,12 +35,17 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
 
         <div className="space-y-2">
           <h2 className="font-semibold text-foreground text-xl">
-            {translateMessage("generated.m0719")}
+            {translateMessage(
+              "generated.scanner.outbound.goodsRemovedWarehouse"
+            )}
           </h2>
           <p className="text-muted-foreground text-sm">
-            {translateMessage("generated.m0720", {
-              value0: result.issuedCount,
-            })}
+            {translateMessage(
+              "generated.scanner.outbound.successfullyRemovedWarehouse",
+              {
+                value0: result.issuedCount,
+              }
+            )}
           </p>
         </div>
 
@@ -53,18 +58,20 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
                   <Badge variant={op.fifoCompliant ? "default" : "outline"}>
                     {op.fifoCompliant
                       ? "FIFO"
-                      : translateMessage("generated.m0723")}
+                      : translateMessage(
+                          "generated.scanner.outbound.fifoSkipped"
+                        )}
                   </Badge>
                 </div>
                 <p className="mt-1 text-muted-foreground text-xs">
-                  {translateMessage("generated.m1087", {
+                  {translateMessage("generated.scanner.outbound.rackXY", {
                     value0: op.rackMarker,
                     value1: op.positionX,
                     value2: op.positionY,
                   })}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  {translateMessage("generated.m1088", {
+                  {translateMessage("generated.scanner.outbound.issued", {
                     value0: op.issuedByName,
                     value1: formatDateTimeLabel(op.operationTimestamp, locale),
                   })}
@@ -76,7 +83,7 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
 
         <div className="w-full pt-2">
           <Button className="w-full" onClick={onReset} type="button">
-            {translateMessage("generated.m0726")}
+            {translateMessage("generated.scanner.outbound.removeAnother")}
           </Button>
         </div>
       </div>

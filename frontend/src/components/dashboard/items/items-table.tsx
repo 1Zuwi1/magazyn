@@ -126,7 +126,7 @@ const itemsColumns: ColumnDef<Item>[] = [
     accessorKey: "name",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.m0922")}
+        {translateMessage("generated.shared.name")}
       </SortableHeader>
     ),
     cell: ({ row }) => {
@@ -149,7 +149,7 @@ const itemsColumns: ColumnDef<Item>[] = [
     accessorKey: "code",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.m0906")}
+        {translateMessage("generated.shared.code")}
       </SortableHeader>
     ),
     cell: ({ row }) => <CodeCell value={row.original.code} />,
@@ -160,7 +160,7 @@ const itemsColumns: ColumnDef<Item>[] = [
     accessorFn: (item) => `${item.sizeX}×${item.sizeY}×${item.sizeZ}`,
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.m0985")}
+        {translateMessage("generated.dashboard.shared.dimensions")}
       </SortableHeader>
     ),
     cell: ({ row }) => (
@@ -174,12 +174,12 @@ const itemsColumns: ColumnDef<Item>[] = [
     accessorKey: "weight",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.m0948")}
+        {translateMessage("generated.shared.weight")}
       </SortableHeader>
     ),
     cell: ({ row }) => (
       <span className="font-mono">
-        {row.original.weight} {translateMessage("generated.m0954")}
+        {row.original.weight} {translateMessage("generated.shared.kg")}
       </span>
     ),
     enableSorting: true,
@@ -188,12 +188,12 @@ const itemsColumns: ColumnDef<Item>[] = [
     accessorKey: "expireAfterDays",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.m0466")}
+        {translateMessage("generated.dashboard.shared.shelfLife")}
       </SortableHeader>
     ),
     cell: ({ row }) => (
       <Badge variant="outline">
-        {translateMessage("generated.m1105", {
+        {translateMessage("generated.dashboard.shared.pluralLabel", {
           value0: row.original.expireAfterDays,
         })}
       </Badge>
@@ -204,16 +204,18 @@ const itemsColumns: ColumnDef<Item>[] = [
     accessorKey: "dangerous",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.m0895")}
+        {translateMessage("generated.shared.status")}
       </SortableHeader>
     ),
     cell: ({ row }) =>
       row.original.dangerous ? (
         <Badge variant="destructive">
-          {translateMessage("generated.m0925")}
+          {translateMessage("generated.shared.dangerous")}
         </Badge>
       ) : (
-        <Badge variant="secondary">{translateMessage("generated.m0933")}</Badge>
+        <Badge variant="secondary">
+          {translateMessage("generated.shared.safe")}
+        </Badge>
       ),
     enableSorting: true,
   },
@@ -221,7 +223,9 @@ const itemsColumns: ColumnDef<Item>[] = [
     id: "comment",
     accessorKey: "comment",
     header: () => (
-      <StaticHeader>{translateMessage("generated.m0930")}</StaticHeader>
+      <StaticHeader>
+        {translateMessage("generated.shared.comment")}
+      </StaticHeader>
     ),
     cell: ({ row }) => (
       <span className="line-clamp-2 text-muted-foreground text-sm">
@@ -294,9 +298,9 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
   const totalPages = items?.totalPages ?? 1
 
   const itemLabel = {
-    singular: translateMessage("generated.m1108"),
-    plural: translateMessage("generated.m1109"),
-    genitive: translateMessage("generated.m1110"),
+    singular: translateMessage("generated.shared.item"),
+    plural: translateMessage("generated.shared.items2"),
+    genitive: translateMessage("generated.shared.items3"),
   }
 
   const clearAllFilters = () => {
@@ -309,9 +313,13 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
         <FilterBar className="gap-3">
           <FilterGroup>
             <SearchInput
-              aria-label={translateMessage("generated.m0475")}
+              aria-label={translateMessage(
+                "generated.dashboard.items.searchItems"
+              )}
               onChange={handleSearchChange}
-              placeholder={translateMessage("generated.m0476")}
+              placeholder={translateMessage(
+                "generated.dashboard.items.searchNameCodeComment"
+              )}
               value={search}
             />
             {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}

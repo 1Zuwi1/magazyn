@@ -54,7 +54,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "destructive",
       cardClassName: "bg-destructive/10 text-destructive",
-      label: translateMessage("generated.m0890"),
+      label: translateMessage("generated.shared.open"),
     }
   }
 
@@ -62,7 +62,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "secondary",
       cardClassName: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-      label: translateMessage("generated.m0157"),
+      label: translateMessage("generated.shared.solved"),
     }
   }
 
@@ -143,9 +143,13 @@ function NotificationListBody({
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <p className="font-medium">{translateMessage("generated.m0490")}</p>
+        <p className="font-medium">
+          {translateMessage(
+            "generated.dashboard.notifications.failedDownloadNotifications"
+          )}
+        </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage("generated.m0159")}
+          {translateMessage("generated.shared.againMoment")}
         </p>
       </div>
     )
@@ -161,10 +165,10 @@ function NotificationListBody({
           />
         </div>
         <p className="mt-3 font-medium">
-          {translateMessage("generated.m0487")}
+          {translateMessage("generated.dashboard.notifications.notifications")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage("generated.m0161")}
+          {translateMessage("generated.shared.entriesSelectedFilter")}
         </p>
       </div>
     )
@@ -245,10 +249,12 @@ function NotificationDetailsPanel({
           />
         </div>
         <p className="mt-4 font-medium text-lg">
-          {translateMessage("generated.m0491")}
+          {translateMessage(
+            "generated.dashboard.notifications.selectNotification"
+          )}
         </p>
         <p className="mt-1 text-center text-muted-foreground text-sm">
-          {translateMessage("generated.m0167")}
+          {translateMessage("generated.shared.clickEntryListSeeDetails")}
         </p>
       </div>
     )
@@ -274,7 +280,7 @@ function NotificationDetailsPanel({
           </Badge>
           {!notification.read && (
             <Badge variant="secondary">
-              {translateMessage("generated.m0990")}
+              {translateMessage("generated.dashboard.notifications.unread")}
             </Badge>
           )}
         </div>
@@ -289,11 +295,11 @@ function NotificationDetailsPanel({
       <div className="flex-1 space-y-6 p-6">
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.m0893")}
+            {translateMessage("generated.shared.location")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <DetailsCard
-              label={translateMessage("generated.m0894")}
+              label={translateMessage("generated.shared.warehouse")}
               value={
                 notification.alert.warehouseName ??
                 notification.alert.warehouseId ??
@@ -301,7 +307,7 @@ function NotificationDetailsPanel({
               }
             />
             <DetailsCard
-              label={translateMessage("generated.m0168")}
+              label={translateMessage("generated.shared.rack")}
               value={
                 notification.alert.rackMarker ??
                 notification.alert.rackId ??
@@ -309,7 +315,7 @@ function NotificationDetailsPanel({
               }
             />
             <DetailsCard
-              label={translateMessage("generated.m0895")}
+              label={translateMessage("generated.shared.status")}
               value={getStatusConfig(notification.alert.status).label}
             />
           </div>
@@ -317,19 +323,19 @@ function NotificationDetailsPanel({
 
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.m0896")}
+            {translateMessage("generated.shared.metrics")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-3">
             <DetailsCard
-              label={translateMessage("generated.m0169")}
+              label={translateMessage("generated.shared.threshold")}
               value={formatMetricValue(notification.alert.thresholdValue)}
             />
             <DetailsCard
-              label={translateMessage("generated.m0170")}
+              label={translateMessage("generated.shared.value")}
               value={formatMetricValue(notification.alert.actualValue)}
             />
             <DetailsCard
-              label={translateMessage("generated.m0171")}
+              label={translateMessage("generated.shared.difference")}
               value={differenceValue == null ? "—" : differenceValue.toString()}
             />
           </div>
@@ -337,26 +343,30 @@ function NotificationDetailsPanel({
 
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.m0897")}
+            {translateMessage("generated.shared.time")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <DetailsCard
-              label={translateMessage("generated.m0898")}
+              label={translateMessage("generated.shared.created")}
               value={formatDateTime(notification.createdAt, dateFnsLocale)}
             />
             <DetailsCard
-              label={translateMessage("generated.m0991")}
+              label={translateMessage("generated.dashboard.notifications.read")}
               value={formatDateTime(notification.readAt, dateFnsLocale)}
             />
             <DetailsCard
-              label={translateMessage("generated.m0492")}
+              label={translateMessage(
+                "generated.dashboard.notifications.alertUpdate"
+              )}
               value={formatDateTime(
                 notification.alert.updatedAt,
                 dateFnsLocale
               )}
             />
             <DetailsCard
-              label={translateMessage("generated.m0493")}
+              label={translateMessage(
+                "generated.dashboard.notifications.resolvingAlert"
+              )}
               value={formatDateTime(
                 notification.alert.resolvedAt,
                 dateFnsLocale
@@ -368,11 +378,11 @@ function NotificationDetailsPanel({
         {hasResolutionData ? (
           <section className="space-y-3">
             <h3 className="font-medium text-muted-foreground text-sm">
-              {translateMessage("generated.m0173")}
+              {translateMessage("generated.shared.solutionNote")}
             </h3>
             <div className="rounded-lg border bg-muted/20 p-3">
               <p className="text-muted-foreground text-xs">
-                {translateMessage("generated.m0174")}
+                {translateMessage("generated.shared.solved2")}
               </p>
               <p className="mt-0.5 font-medium">
                 {notification.alert.resolvedByName ?? "—"}
@@ -393,8 +403,8 @@ function NotificationDetailsPanel({
           variant={notification.read ? "outline" : "default"}
         >
           {notification.read
-            ? translateMessage("generated.m1127")
-            : translateMessage("generated.m1128")}
+            ? translateMessage("generated.dashboard.notifications.markUnread")
+            : translateMessage("generated.dashboard.notifications.markRead")}
         </Button>
         {locationHref ? (
           <Link
@@ -404,7 +414,7 @@ function NotificationDetailsPanel({
             })}
             href={locationHref}
           >
-            {translateMessage("generated.m0175")}
+            {translateMessage("generated.shared.goLocation")}
             <HugeiconsIcon className="ml-2 size-4" icon={ArrowRight02Icon} />
           </Link>
         ) : null}
@@ -546,10 +556,12 @@ export default function NotificationsMain() {
               </div>
               <div className="space-y-2">
                 <h1 className="font-semibold text-2xl tracking-tight sm:text-3xl">
-                  {translateMessage("generated.m0988")}
+                  {translateMessage("generated.shared.notifications")}
                 </h1>
                 <p className="max-w-md text-muted-foreground text-sm">
-                  {translateMessage("generated.m0494")}
+                  {translateMessage(
+                    "generated.dashboard.notifications.viewManageNotifications"
+                  )}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
@@ -557,7 +569,7 @@ export default function NotificationsMain() {
                       {totalNotifications}
                     </span>
                     <span className="text-muted-foreground text-xs">
-                      {translateMessage("generated.m0178")}
+                      {translateMessage("generated.shared.together")}
                     </span>
                   </div>
                   {unreadCount > 0 ? (
@@ -567,7 +579,9 @@ export default function NotificationsMain() {
                         {unreadCount}
                       </span>
                       <span className="text-muted-foreground text-xs">
-                        {translateMessage("generated.m0992")}
+                        {translateMessage(
+                          "generated.dashboard.notifications.unread2"
+                        )}
                       </span>
                     </div>
                   ) : null}
@@ -585,7 +599,9 @@ export default function NotificationsMain() {
                   className="mr-2 size-4"
                   icon={CheckmarkBadge01Icon}
                 />
-                {translateMessage("generated.m0495")}
+                {translateMessage(
+                  "generated.dashboard.notifications.markAllRead"
+                )}
               </Button>
             </div>
           </div>
@@ -607,7 +623,7 @@ export default function NotificationsMain() {
                   onClick={() => handleFeedFilterChange("ALL")}
                   type="button"
                 >
-                  {translateMessage("generated.m0935")}
+                  {translateMessage("generated.shared.all")}
                 </button>
                 <button
                   className={cn(
@@ -619,7 +635,7 @@ export default function NotificationsMain() {
                   onClick={() => handleFeedFilterChange("UNREAD")}
                   type="button"
                 >
-                  {translateMessage("generated.m0990")}
+                  {translateMessage("generated.dashboard.notifications.unread")}
                 </button>
               </div>
             </div>
@@ -659,7 +675,7 @@ export default function NotificationsMain() {
       {selectedNotification ? (
         <div className="rounded-lg border border-dashed p-3 text-muted-foreground text-xs">
           <HugeiconsIcon className="mr-1 inline size-3.5" icon={Time01Icon} />
-          {translateMessage("generated.m1058", {
+          {translateMessage("generated.shared.lastUpdated", {
             value0: formatDateTime(
               selectedNotification.alert.updatedAt,
               dateFnsLocale

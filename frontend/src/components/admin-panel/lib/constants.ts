@@ -7,29 +7,41 @@ import { translateMessage } from "@/i18n/translate-message"
 
 export const getAdminNavLinks = () =>
   [
-    { title: translateMessage("generated.m0087"), url: "/admin" },
-    { title: translateMessage("generated.m0233"), url: "/admin/users" },
-    { title: translateMessage("generated.m0886"), url: "/admin/warehouses" },
-    { title: translateMessage("generated.m0931"), url: "/admin/items" },
-    { title: translateMessage("generated.m0901"), url: "/admin/alerts" },
-    { title: translateMessage("generated.m0234"), url: "/admin/rack-reports" },
-    { title: translateMessage("generated.m0190"), url: "/admin/audit" },
+    { title: translateMessage("generated.shared.review"), url: "/admin" },
+    { title: translateMessage("generated.shared.users"), url: "/admin/users" },
+    {
+      title: translateMessage("generated.shared.warehouses"),
+      url: "/admin/warehouses",
+    },
+    { title: translateMessage("generated.shared.items"), url: "/admin/items" },
+    {
+      title: translateMessage("generated.shared.alerts"),
+      url: "/admin/alerts",
+    },
+    {
+      title: translateMessage("generated.shared.rackReports"),
+      url: "/admin/rack-reports",
+    },
+    {
+      title: translateMessage("generated.shared.operationsAudit"),
+      url: "/admin/audit",
+    },
   ] as const
 
 export const getNotificationsNavLinks = () =>
   [
     {
-      title: translateMessage("generated.m0935"),
+      title: translateMessage("generated.shared.all"),
       icon: InboxIcon,
       filterValue: null,
     },
     {
-      title: translateMessage("generated.m0235"),
+      title: translateMessage("generated.admin.shared.overloads"),
       icon: WeightScale01Icon,
       filterValue: "RACK_OVERWEIGHT" as const,
     },
     {
-      title: translateMessage("generated.m0936"),
+      title: translateMessage("generated.admin.shared.unauthorized"),
       icon: Alert01Icon,
       filterValue: "UNAUTHORIZED_REMOVAL" as const,
     },

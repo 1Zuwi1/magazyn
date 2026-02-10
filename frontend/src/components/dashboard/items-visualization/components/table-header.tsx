@@ -6,22 +6,22 @@ export function RackItemsTableHeader() {
     <TableHeader>
       <TableRow>
         <TableHead className="min-w-25">
-          {translateMessage("generated.m0906")}
+          {translateMessage("generated.shared.code")}
         </TableHead>
         <TableHead className="w-20">
-          {translateMessage("generated.m0480")}
+          {translateMessage("generated.dashboard.itemsVisualization.itemId")}
         </TableHead>
         <TableHead className="w-25">
-          {translateMessage("generated.m0908")}
+          {translateMessage("generated.shared.position")}
         </TableHead>
         <TableHead className="w-25">
-          {translateMessage("generated.m0481")}
+          {translateMessage("generated.dashboard.shared.user")}
         </TableHead>
         <TableHead className="w-30">
-          {translateMessage("generated.m0898")}
+          {translateMessage("generated.shared.created")}
         </TableHead>
         <TableHead className="w-30">
-          {translateMessage("generated.m0986")}
+          {translateMessage("generated.dashboard.shared.expires")}
         </TableHead>
         <TableHead className="w-16"> </TableHead>
       </TableRow>

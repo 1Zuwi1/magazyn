@@ -40,7 +40,7 @@ export function DatePicker({
                 locale: dateFnsLocale,
               })
             ) : (
-              <span>{translateMessage("generated.m0789")}</span>
+              <span>{translateMessage("generated.ui.selectDate")}</span>
             )}
             <HugeiconsIcon icon={ArrowDown01Icon} />
           </Button>

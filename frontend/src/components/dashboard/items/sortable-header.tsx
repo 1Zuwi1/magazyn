@@ -61,11 +61,11 @@ export function SortableHeader<TData, TValue>({
     return <span className={className}>{children}</span>
   }
 
-  let sortingTitle = translateMessage("generated.m0477")
+  let sortingTitle = translateMessage("generated.dashboard.items.clearSorting")
   if (nextSortingOrder === "asc") {
-    sortingTitle = translateMessage("generated.m0478")
+    sortingTitle = translateMessage("generated.dashboard.items.sortAscending")
   } else if (nextSortingOrder === "desc") {
-    sortingTitle = translateMessage("generated.m0479")
+    sortingTitle = translateMessage("generated.dashboard.items.sortDescending")
   }
 
   return (

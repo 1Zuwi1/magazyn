@@ -49,10 +49,13 @@ export function useUsersDialogState({
     return createEditableUser(selectedUser, teams)
   }, [selectedUser, teams])
 
-  const deleteDescription = translateMessage("generated.m0315", {
-    value0:
-      normalizeValue(userToDelete?.full_name) || userToDelete?.email || "",
-  })
+  const deleteDescription = translateMessage(
+    "generated.admin.users.sureWantDeleteUserOperation",
+    {
+      value0:
+        normalizeValue(userToDelete?.full_name) || userToDelete?.email || "",
+    }
+  )
 
   const openEditDialog = (userId: number) => {
     setSelectedUserId(userId)

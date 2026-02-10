@@ -68,12 +68,16 @@ export function OutboundScanVerification({
       (slot) => slot.assortmentCode === trimmedCode
     )
     if (!hasMatchingSlot) {
-      setManualInputError(translateMessage("generated.m0700"))
+      setManualInputError(
+        translateMessage("generated.scanner.outbound.codeBelongAnySelectedItem")
+      )
       return
     }
 
     if (scannedCodes.has(trimmedCode)) {
-      setManualInputError(translateMessage("generated.m0701"))
+      setManualInputError(
+        translateMessage("generated.scanner.outbound.itemAlreadyBeenVerified")
+      )
       return
     }
 
@@ -108,10 +112,12 @@ export function OutboundScanVerification({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              {translateMessage("generated.m0702")}
+              {translateMessage("generated.scanner.outbound.scanVerification")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              {translateMessage("generated.m0703")}
+              {translateMessage(
+                "generated.scanner.outbound.scanSelectedItemCodesConfirm"
+              )}
             </p>
           </div>
         </div>
@@ -126,19 +132,19 @@ export function OutboundScanVerification({
             <div className="mb-4 grid grid-cols-3 gap-2">
               <div className="rounded-xl border bg-card/40 p-3 text-center">
                 <p className="text-muted-foreground text-xs">
-                  {translateMessage("generated.m0943")}
+                  {translateMessage("generated.scanner.outbound.selected")}
                 </p>
                 <p className="font-semibold text-lg">{selectedSlots.length}</p>
               </div>
               <div className="rounded-xl border bg-card/40 p-3 text-center">
                 <p className="text-muted-foreground text-xs">
-                  {translateMessage("generated.m1017")}
+                  {translateMessage("generated.scanner.outbound.scanned")}
                 </p>
                 <p className="font-semibold text-lg">{scannedEntries.length}</p>
               </div>
               <div className="rounded-xl border bg-card/40 p-3 text-center">
                 <p className="text-muted-foreground text-xs">
-                  {translateMessage("generated.m0704")}
+                  {translateMessage("generated.scanner.outbound.remaining")}
                 </p>
                 <p className="font-semibold text-lg">{remaining}</p>
               </div>
@@ -175,7 +181,7 @@ export function OutboundScanVerification({
                             {entry.rackMarker}
                           </span>
                           <Badge variant="outline">
-                            {translateMessage("generated.m1084", {
+                            {translateMessage("generated.scanner.outbound.xY", {
                               value0: entry.positionX,
                               value1: entry.positionY,
                             })}
@@ -199,7 +205,9 @@ export function OutboundScanVerification({
                   />
                 </div>
                 <p className="text-center text-muted-foreground text-sm">
-                  {translateMessage("generated.m0705")}
+                  {translateMessage(
+                    "generated.scanner.outbound.scannedItemsScanLabelCodes"
+                  )}
                 </p>
               </div>
             )}
@@ -216,7 +224,9 @@ export function OutboundScanVerification({
                       className="font-medium text-sm"
                       htmlFor="manual-outbound-code"
                     >
-                      {translateMessage("generated.m0706")}
+                      {translateMessage(
+                        "generated.scanner.outbound.enterCodeManually"
+                      )}
                     </Label>
                   </div>
                   <div className="flex items-center gap-2">
@@ -229,7 +239,9 @@ export function OutboundScanVerification({
                         setManualInputError(null)
                       }}
                       onKeyDown={handleManualCodeKeyDown}
-                      placeholder={translateMessage("generated.m0707")}
+                      placeholder={translateMessage(
+                        "generated.scanner.outbound.eG01"
+                      )}
                       type="text"
                       value={manualCode}
                     />
@@ -240,11 +252,13 @@ export function OutboundScanVerification({
                       type="button"
                       variant="outline"
                     >
-                      {translateMessage("generated.m1018")}
+                      {translateMessage("generated.scanner.outbound.add")}
                     </Button>
                   </div>
                   <p className="mt-2 text-muted-foreground text-xs">
-                    {translateMessage("generated.m0708")}
+                    {translateMessage(
+                      "generated.scanner.outbound.useCameraCannotReadLabel"
+                    )}
                   </p>
                   {manualInputError ? (
                     <p className="mt-1 text-destructive text-xs" role="alert">
@@ -259,7 +273,10 @@ export function OutboundScanVerification({
                   onClick={onRequestScan}
                   type="button"
                 >
-                  {translateMessage("generated.m0709", { value0: remaining })}
+                  {translateMessage(
+                    "generated.scanner.outbound.scanRemaining",
+                    { value0: remaining }
+                  )}
                 </Button>
               )}
               <Button
@@ -271,10 +288,15 @@ export function OutboundScanVerification({
                 variant={allScanned ? "default" : "outline"}
               >
                 {allScanned
-                  ? translateMessage("generated.m0711", {
-                      value0: selectedSlots.length,
-                    })
-                  : translateMessage("generated.m0712")}
+                  ? translateMessage(
+                      "generated.scanner.outbound.confirmPick2",
+                      {
+                        value0: selectedSlots.length,
+                      }
+                    )
+                  : translateMessage(
+                      "generated.scanner.outbound.scanAllItemsConfirm"
+                    )}
               </Button>
             </div>
           </ScrollArea>

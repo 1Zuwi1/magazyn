@@ -81,7 +81,11 @@ const decodeBase64Url = (value: Base64UrlString): Uint8Array => {
   const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4)
 
   if (typeof atob !== "function") {
-    throw new Error(translateMessage("generated.m0868"))
+    throw new Error(
+      translateMessage(
+        "generated.security.webauthn.base64DecodingSupportedEnvironment"
+      )
+    )
   }
 
   const binary = atob(padded)
@@ -104,7 +108,11 @@ const encodeBase64Url = (value: ArrayBufferLike): Base64UrlString => {
   }
 
   if (typeof btoa !== "function") {
-    throw new Error(translateMessage("generated.m0869"))
+    throw new Error(
+      translateMessage(
+        "generated.security.webauthn.base64EncodingSupportedEnvironment"
+      )
+    )
   }
 
   const base64 = btoa(binary)
@@ -235,13 +243,21 @@ export const getWebAuthnErrorMessage = (
   if (typeof DOMException !== "undefined" && error instanceof DOMException) {
     switch (error.name) {
       case "NotAllowedError":
-        return translateMessage("generated.m0870")
+        return translateMessage(
+          "generated.security.webauthn.operationCanceledTimedOut"
+        )
       case "InvalidStateError":
-        return translateMessage("generated.m0871")
+        return translateMessage(
+          "generated.security.webauthn.securityKeyAlreadyAddedDevice"
+        )
       case "NotSupportedError":
-        return translateMessage("generated.m0872")
+        return translateMessage(
+          "generated.security.webauthn.deviceBrowserSupportSecurityKeys"
+        )
       case "SecurityError":
-        return translateMessage("generated.m0873")
+        return translateMessage(
+          "generated.security.webauthn.operationBlockedSecuritySettings"
+        )
       default:
         return fallback
     }

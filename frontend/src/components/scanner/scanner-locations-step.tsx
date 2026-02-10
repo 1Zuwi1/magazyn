@@ -105,10 +105,12 @@ export function ScannerLocationsStep({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              {translateMessage("generated.m0745")}
+              {translateMessage("generated.scanner.editPlacement")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              {translateMessage("generated.m0746")}
+              {translateMessage(
+                "generated.scanner.changePositionsManuallyWantPlace"
+              )}
             </p>
           </div>
         </div>
@@ -116,19 +118,19 @@ export function ScannerLocationsStep({
         <div className="mb-4 grid grid-cols-3 gap-2">
           <div className="rounded-xl border bg-card/40 p-3 text-center">
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.m0747")}
+              {translateMessage("generated.scanner.requested")}
             </p>
             <p className="font-semibold text-lg">{plan.requestedQuantity}</p>
           </div>
           <div className="rounded-xl border bg-card/40 p-3 text-center">
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.m1023")}
+              {translateMessage("generated.scanner.allocated")}
             </p>
             <p className="font-semibold text-lg">{plan.allocatedQuantity}</p>
           </div>
           <div className="rounded-xl border bg-card/40 p-3 text-center">
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.m1024")}
+              {translateMessage("generated.scanner.missing")}
             </p>
             <p className="font-semibold text-lg">{plan.remainingQuantity}</p>
           </div>
@@ -137,12 +139,12 @@ export function ScannerLocationsStep({
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Badge variant={plan.reserved ? "default" : "outline"}>
             {plan.reserved
-              ? translateMessage("generated.m1055")
-              : translateMessage("generated.m1056")}
+              ? translateMessage("generated.scanner.reservationActive")
+              : translateMessage("generated.scanner.reservation")}
           </Badge>
           {reservedUntilLabel ? (
             <Badge variant="outline">
-              {translateMessage("generated.m1102", {
+              {translateMessage("generated.scanner.until", {
                 value0: reservedUntilLabel,
               })}
             </Badge>
@@ -178,7 +180,7 @@ export function ScannerLocationsStep({
 
         <div className="space-y-3">
           <Button onClick={onAddPlacement} type="button" variant="outline">
-            {translateMessage("generated.m0748")}
+            {translateMessage("generated.scanner.addLocation")}
           </Button>
           <Button
             className="h-12 w-full rounded-xl"
@@ -187,7 +189,7 @@ export function ScannerLocationsStep({
             onClick={onConfirm}
             type="button"
           >
-            {translateMessage("generated.m0749")}
+            {translateMessage("generated.scanner.confirmPlacement")}
           </Button>
         </div>
       </div>

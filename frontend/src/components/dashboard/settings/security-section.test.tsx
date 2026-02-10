@@ -26,7 +26,9 @@ vi.mock("@tanstack/react-query", async () => {
   }
 })
 
-const PROTECTED_STATUS_LABEL = translateMessage("generated.m1000")
+const PROTECTED_STATUS_LABEL = translateMessage(
+  "generated.dashboard.settings.protected"
+)
 
 function createQueryClientWrapper() {
   const queryClient = new QueryClient({

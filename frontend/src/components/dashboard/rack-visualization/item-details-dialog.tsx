@@ -36,16 +36,25 @@ type BadgeVariant = NonNullable<React.ComponentProps<typeof Badge>["variant"]>
 
 function formatExpiryHint(daysUntilExpiry: number): string {
   if (daysUntilExpiry === 0) {
-    return translateMessage("generated.m1112")
+    return translateMessage(
+      "generated.dashboard.rackVisualization.expiresToday"
+    )
   }
 
   const absDays = Math.abs(daysUntilExpiry)
-  const daysLabel = translateMessage("generated.m1105", { value0: absDays })
+  const daysLabel = translateMessage("generated.dashboard.shared.pluralLabel", {
+    value0: absDays,
+  })
   if (daysUntilExpiry < 0) {
-    return translateMessage("generated.m1113", { value0: daysLabel })
+    return translateMessage(
+      "generated.dashboard.rackVisualization.expiredAgo",
+      { value0: daysLabel }
+    )
   }
 
-  return translateMessage("generated.m1114", { value0: daysLabel })
+  return translateMessage("generated.dashboard.rackVisualization.expires", {
+    value0: daysLabel,
+  })
 }
 
 function getStatusBadgeVariant(status: ItemStatus): BadgeVariant {
@@ -149,27 +158,31 @@ export function ItemDetailsDialog({
 
             <div className="space-y-2 text-xs">
               <DetailRow
-                label={translateMessage("generated.m0969")}
+                label={translateMessage("generated.dashboard.shared.id")}
                 value={item.id}
               />
               <DetailRow
-                label={translateMessage("generated.m0499")}
+                label={translateMessage(
+                  "generated.dashboard.rackVisualization.qrCode"
+                )}
                 value={item.qrCode}
               />
               <DetailRow
-                label={translateMessage("generated.m0948")}
+                label={translateMessage("generated.shared.weight")}
                 value={`${item.weight.toFixed(2)} kg`}
               />
               <DetailRow
-                label={translateMessage("generated.m0985")}
+                label={translateMessage(
+                  "generated.dashboard.shared.dimensions"
+                )}
                 value={formatDimensions(item)}
               />
               <DetailRow
-                label={translateMessage("generated.m0924")}
+                label={translateMessage("generated.shared.temperature")}
                 value={`${item.minTemp}°C – ${item.maxTemp}°C`}
               />
               <DetailRow
-                label={translateMessage("generated.m0466")}
+                label={translateMessage("generated.dashboard.shared.shelfLife")}
                 value={
                   <span
                     className={cn("font-mono font-semibold", statusColors.text)}
@@ -186,7 +199,9 @@ export function ItemDetailsDialog({
             {item.comment && (
               <div className="rounded-lg border bg-muted/30 p-3 text-xs">
                 <p className="font-semibold text-muted-foreground">
-                  {translateMessage("generated.m0993")}
+                  {translateMessage(
+                    "generated.dashboard.rackVisualization.comments"
+                  )}
                 </p>
                 <p className="mt-1 text-foreground text-sm">{item.comment}</p>
               </div>

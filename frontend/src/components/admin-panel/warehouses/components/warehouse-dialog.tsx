@@ -53,8 +53,12 @@ export function WarehouseDialog({
     <FormDialog
       description={
         isEdit
-          ? translateMessage("generated.m0326")
-          : translateMessage("generated.m0327")
+          ? translateMessage(
+              "generated.admin.warehouses.changeStockInformation"
+            )
+          : translateMessage(
+              "generated.admin.warehouses.enterInformationAboutNewWarehouse"
+            )
       }
       formId={formId}
       isLoading={isSubmitting}
@@ -63,8 +67,8 @@ export function WarehouseDialog({
       open={open}
       title={
         isEdit
-          ? translateMessage("generated.m1146")
-          : translateMessage("generated.m1147")
+          ? translateMessage("generated.admin.warehouses.editWarehouse")
+          : translateMessage("generated.admin.warehouses.addWarehouse2")
       }
     >
       <form
@@ -81,9 +85,11 @@ export function WarehouseDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label={translateMessage("generated.m0922")}
+                label={translateMessage("generated.shared.name")}
                 layout="grid"
-                placeholder={translateMessage("generated.m0328")}
+                placeholder={translateMessage(
+                  "generated.admin.warehouses.a1Warehouse"
+                )}
               />
             )}
           </form.Field>

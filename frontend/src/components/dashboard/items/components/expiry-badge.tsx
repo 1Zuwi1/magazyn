@@ -16,31 +16,39 @@ export function ExpiryBadge({ expiryDate }: ExpiryBadgeProps) {
   }, [expiryDate])
   if (days === undefined) {
     return (
-      <Badge variant="outline">{translateMessage("generated.m0472")}</Badge>
+      <Badge variant="outline">
+        {translateMessage("generated.shared.dataAvailable")}
+      </Badge>
     )
   }
   if (days < 0) {
     return (
-      <Badge variant="destructive">{translateMessage("generated.m0975")}</Badge>
+      <Badge variant="destructive">
+        {translateMessage("generated.dashboard.shared.expired")}
+      </Badge>
     )
   }
   if (days <= 3) {
     return (
       <Badge variant="destructive">
-        {translateMessage("generated.m1105", { value0: days })}
+        {translateMessage("generated.dashboard.shared.pluralLabel", {
+          value0: days,
+        })}
       </Badge>
     )
   }
   if (days <= 7) {
     return (
       <Badge className="bg-yellow-500 text-white" variant="default">
-        {translateMessage("generated.m1074", { value0: days })}
+        {translateMessage("generated.dashboard.items.days", { value0: days })}
       </Badge>
     )
   }
   return (
     <Badge variant="outline">
-      {translateMessage("generated.m1105", { value0: days })}
+      {translateMessage("generated.dashboard.shared.pluralLabel", {
+        value0: days,
+      })}
     </Badge>
   )
 }

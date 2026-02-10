@@ -122,7 +122,7 @@ export default function SiteHeader() {
                     <DropdownMenuTrigger className="flex items-center gap-1">
                       <BreadcrumbEllipsis className="size-4" />
                       <span className="sr-only">
-                        {translateMessage("generated.m0788")}
+                        {translateMessage("generated.global.header.toggleMenu")}
                       </span>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">

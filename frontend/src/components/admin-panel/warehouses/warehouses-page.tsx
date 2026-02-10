@@ -93,7 +93,7 @@ export default function WarehousesMain() {
     const report = await importWarehousesMutation.mutateAsync(file)
     if (report.errors.length > 0) {
       toast.warning(
-        translateMessage("generated.m0220", {
+        translateMessage("generated.admin.shared.importPartiallyCompleted", {
           value0: report.imported,
           value1: report.processedLines,
         })
@@ -102,7 +102,9 @@ export default function WarehousesMain() {
     }
 
     toast.success(
-      translateMessage("generated.m0387", { value0: report.imported })
+      translateMessage("generated.admin.warehouses.imported2", {
+        value0: report.imported,
+      })
     )
   }
 
@@ -155,17 +157,21 @@ export default function WarehousesMain() {
           />
         </div>
         <p className="mt-4 font-medium text-foreground">
-          {translateMessage("generated.m0388")}
+          {translateMessage(
+            "generated.admin.warehouses.failedDownloadWarehouses"
+          )}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage("generated.m0389")}
+          {translateMessage(
+            "generated.admin.warehouses.problemLoadingDataRefreshingPage"
+          )}
         </p>
         <Button
           className="mt-4"
           onClick={() => window.location.reload()}
           variant="outline"
         >
-          {translateMessage("generated.m0075")}
+          {translateMessage("generated.shared.again")}
         </Button>
       </div>
     )
@@ -179,14 +185,16 @@ export default function WarehousesMain() {
           />
         </div>
         <p className="mt-4 font-medium text-foreground">
-          {translateMessage("generated.m0390")}
+          {translateMessage("generated.admin.warehouses.warehouses2")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage("generated.m0391")}
+          {translateMessage(
+            "generated.admin.warehouses.addFirstWarehouseGetStarted"
+          )}
         </p>
         <Button className="mt-4" onClick={handleAddWarehouse}>
           <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-          {translateMessage("generated.m0392")}
+          {translateMessage("generated.admin.warehouses.addWarehouse")}
         </Button>
       </div>
     )
@@ -218,17 +226,19 @@ export default function WarehousesMain() {
             />
             <Button onClick={handleAddWarehouse}>
               <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-              {translateMessage("generated.m0392")}
+              {translateMessage("generated.admin.warehouses.addWarehouse")}
             </Button>
           </div>
         }
-        description={translateMessage("generated.m0393")}
+        description={translateMessage(
+          "generated.admin.warehouses.manageWarehousesRacks"
+        )}
         icon={WarehouseIcon}
         navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title={translateMessage("generated.m0886")}
+        title={translateMessage("generated.shared.warehouses")}
       >
         {/* Quick Stats */}
         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -237,7 +247,7 @@ export default function WarehousesMain() {
               {totalWarehouses}
             </span>
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.m0294")}
+              {translateMessage("generated.admin.warehouses.warehouses")}
             </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
@@ -247,12 +257,12 @@ export default function WarehousesMain() {
             />
             <span className="font-mono font-semibold">{totalRacks}</span>
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.m0241")}
+              {translateMessage("generated.admin.warehouses.racks")}
             </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.m0394")}
+              {translateMessage("generated.admin.warehouses.occupancy")}
             </span>
             <span className="font-mono font-semibold">
               {(totalCapacity ?? 0) > 0
@@ -287,13 +297,16 @@ export default function WarehousesMain() {
       />
 
       <ConfirmDialog
-        description={translateMessage("generated.m0395", {
-          value0: warehouseToDelete?.name,
-        })}
+        description={translateMessage(
+          "generated.admin.warehouses.sureWantDeleteWarehouseAll",
+          {
+            value0: warehouseToDelete?.name,
+          }
+        )}
         onConfirm={confirmDeleteWarehouse}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
-        title={translateMessage("generated.m0396")}
+        title={translateMessage("generated.admin.warehouses.deleteWarehouse")}
       />
     </div>
   )

@@ -36,7 +36,9 @@ export const getCommandLabel = (
     if (warehouseName) {
       const warehouse = findWarehouseByName(warehouseName, warehouses)
       const label = warehouse?.name ?? warehouseName
-      return translateMessage("generated.m0809", { value0: label })
+      return translateMessage("generated.voiceAssistant.openWarehouse", {
+        value0: label,
+      })
     }
   }
 
@@ -50,10 +52,14 @@ export const getCommandLabel = (
   if (match.command.id === "inventory-check") {
     const { warehouseName, itemName } = match.params
     if (warehouseName) {
-      return translateMessage("generated.m0810", { value0: warehouseName })
+      return translateMessage("generated.voiceAssistant.checkStockStatus", {
+        value0: warehouseName,
+      })
     }
     if (itemName) {
-      return translateMessage("generated.m0811", { value0: itemName })
+      return translateMessage("generated.voiceAssistant.checkStatus", {
+        value0: itemName,
+      })
     }
   }
 
@@ -188,7 +194,9 @@ export const handleConfirmCommandAction = (
       }
       return
     default:
-      actions.setErrorMessage(translateMessage("generated.m0812"))
+      actions.setErrorMessage(
+        translateMessage("generated.voiceAssistant.unsupportedCommand")
+      )
       actions.setView("error")
       return
   }

@@ -35,11 +35,11 @@ interface PasskeyLoginProps {
 
 export default function PasskeyLogin({
   disabled,
-  label = translateMessage("generated.m0019"),
+  label = translateMessage("generated.auth.logSecurityKey"),
   showSeparator = true,
   onSuccess,
   redirectTo = "/dashboard",
-  successMessage = translateMessage("generated.m0020"),
+  successMessage = translateMessage("generated.auth.loggedSecurityKey"),
   showSuccessToast = true,
 }: PasskeyLoginProps) {
   const router = useRouter()
@@ -52,12 +52,14 @@ export default function PasskeyLogin({
 
   const handlePasskeyLogin = async () => {
     if (supportState !== "supported") {
-      toast.error(translateMessage("generated.m0021"))
+      toast.error(
+        translateMessage("generated.shared.deviceSupportSecurityKeys")
+      )
       return
     }
 
     if (!navigator.credentials) {
-      toast.error(translateMessage("generated.m0022"))
+      toast.error(translateMessage("generated.shared.browserSupportWebauthn"))
       return
     }
 
@@ -76,14 +78,19 @@ export default function PasskeyLogin({
       )
 
       if (startError) {
-        handleApiError(startError, translateMessage("generated.m0023"))
+        handleApiError(
+          startError,
+          translateMessage("generated.auth.failedStartLoginSecurityKey")
+        )
         return
       }
 
       const publicKeyOptions = parseAuthenticationOptions(startResponse)
 
       if (!publicKeyOptions) {
-        toast.error(translateMessage("generated.m0024"))
+        toast.error(
+          translateMessage("generated.auth.failedPrepareSecurityKeyLogin")
+        )
         return
       }
 
@@ -97,14 +104,14 @@ export default function PasskeyLogin({
         toast.error(
           getWebAuthnErrorMessage(
             credentialError,
-            translateMessage("generated.m0025")
+            translateMessage("generated.auth.securityKeyVerified")
           )
         )
         return
       }
 
       if (!isPublicKeyCredential(credential)) {
-        toast.error(translateMessage("generated.m0026"))
+        toast.error(translateMessage("generated.shared.securityKeyDataRead"))
         return
       }
 
@@ -122,7 +129,10 @@ export default function PasskeyLogin({
       )
 
       if (finishError) {
-        handleApiError(finishError, translateMessage("generated.m0027"))
+        handleApiError(
+          finishError,
+          translateMessage("generated.auth.failedCompleteLoginSecurityKey")
+        )
         return
       }
 
@@ -146,7 +156,7 @@ export default function PasskeyLogin({
         <div className="relative">
           <Separator className="bg-border/60" />
           <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-card px-2 text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
-            {translateMessage("generated.m0876")}
+            {translateMessage("generated.auth.label")}
           </span>
         </div>
       ) : null}

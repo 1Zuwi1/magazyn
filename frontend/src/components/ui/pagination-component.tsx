@@ -45,7 +45,7 @@ export default function PaginationFull({
     >
       {isCompact && (
         <p className="text-muted-foreground text-xs">
-          {translateMessage("generated.m1059", {
+          {translateMessage("generated.ui.page", {
             value0: currentPage,
             value1: Math.max(totalPages, 1),
           })}

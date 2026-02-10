@@ -20,18 +20,29 @@ export type ResendType = z.infer<typeof ResendMethods>
 
 export const PasswordSchema = z
   .string()
-  .min(8, translateMessage("generated.m0844"))
-  .regex(/[A-Z]/, translateMessage("generated.m0845"))
-  .regex(/[a-z]/, translateMessage("generated.m0846"))
-  .regex(/[0-9]/, translateMessage("generated.m0847"))
+  .min(8, translateMessage("generated.validation.passwordMustLeast8Characters"))
+  .regex(
+    /[A-Z]/,
+    translateMessage("generated.validation.passwordMustContainLeastOne")
+  )
+  .regex(
+    /[a-z]/,
+    translateMessage(
+      "generated.validation.passwordMustContainLeastOneLowercase"
+    )
+  )
+  .regex(
+    /[0-9]/,
+    translateMessage("generated.validation.passwordMustContainLeastOneDigit")
+  )
   .regex(
     /[!@#$%^&*()_\-+=[\]{};':"\\|,.<>/?]/,
-    translateMessage("generated.m0848")
+    translateMessage("generated.validation.passwordMustContainLeastOneSpecial")
   )
   .refine((value) => {
     const bytes = txtEncoder.encode(value).length
     return bytes <= 72
-  }, translateMessage("generated.m0849"))
+  }, translateMessage("generated.validation.passwordCannotExceed72Bytes"))
 
 const OTPSchema = z
   .string()
@@ -43,7 +54,9 @@ const OTPSchema = z
       }
       return val.length === OTP_LENGTH
     },
-    translateMessage("generated.m0850", { value0: OTP_LENGTH })
+    translateMessage("generated.validation.value2faCodeMustExactly", {
+      value0: OTP_LENGTH,
+    })
   )
 
 export const Check2FASchema = createApiSchema({
@@ -66,11 +79,18 @@ export const BackupCodesGenerateSchema = createApiSchema({
 export const ChangePasswordFormSchema = z
   .object({
     newPassword: PasswordSchema,
-    oldPassword: z.string().min(1, translateMessage("generated.m0851")),
-    confirmPassword: z.string().min(1, translateMessage("generated.m0852")),
+    oldPassword: z
+      .string()
+      .min(1, translateMessage("generated.validation.currentPasswordRequired")),
+    confirmPassword: z
+      .string()
+      .min(
+        1,
+        translateMessage("generated.validation.passwordConfirmationRequired")
+      ),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: translateMessage("generated.m0853"),
+    message: translateMessage("generated.shared.passwordsMatch"),
     path: ["confirmPassword"],
   })
 
@@ -78,7 +98,12 @@ export const ChangePasswordSchema = createApiSchema({
   PATCH: {
     input: z.object({
       newPassword: PasswordSchema,
-      oldPassword: z.string().min(1, translateMessage("generated.m0851")),
+      oldPassword: z
+        .string()
+        .min(
+          1,
+          translateMessage("generated.validation.currentPasswordRequired")
+        ),
     }),
     output: z.null(),
   },
@@ -87,7 +112,9 @@ export const ChangePasswordSchema = createApiSchema({
 export const LoginSchema = createApiSchema({
   POST: {
     input: z.object({
-      email: z.email(translateMessage("generated.m0854")),
+      email: z.email(
+        translateMessage("generated.validation.invalidEmailAddress")
+      ),
       password: PasswordSchema,
       rememberMe: z.boolean(),
     }),
@@ -97,10 +124,16 @@ export const LoginSchema = createApiSchema({
 export const RegisterSchema = createApiSchema({
   POST: {
     input: z.object({
-      fullName: z.string().min(2, translateMessage("generated.m0855")),
-      email: z.email(translateMessage("generated.m0854")),
+      fullName: z
+        .string()
+        .min(2, translateMessage("generated.validation.fullNameMustLeast2")),
+      email: z.email(
+        translateMessage("generated.validation.invalidEmailAddress")
+      ),
       password: PasswordSchema,
-      phoneNumber: z.e164(translateMessage("generated.m0856")),
+      phoneNumber: z.e164(
+        translateMessage("generated.validation.invalidPhoneNumber")
+      ),
     }),
     output: z.null(),
   },
@@ -161,7 +194,7 @@ export const WebAuthnFinishRegistrationSchema = createApiSchema({
       keyName: z
         .string()
         .min(1, "Nazwa klucza jest wymagana")
-        .max(50, translateMessage("generated.m0857")),
+        .max(50, translateMessage("generated.validation.nameTooLong")),
     }),
     output: z.null(),
   },
@@ -190,7 +223,7 @@ export const FormRegisterSchema = RegisterSchema.shape.POST.shape.input
     confirmPassword: PasswordSchema,
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: translateMessage("generated.m0853"),
+    message: translateMessage("generated.shared.passwordsMatch"),
     path: ["confirmPassword"],
   })
 
@@ -198,7 +231,12 @@ export const Verify2FASchema = createApiSchema({
   POST: {
     input: z.object({
       method: TFAMethods,
-      code: z.string().length(6, translateMessage("generated.m0858")),
+      code: z
+        .string()
+        .length(
+          6,
+          translateMessage("generated.validation.codeMustExactly6Digits")
+        ),
     }),
     output: z.null(),
   },
@@ -229,7 +267,12 @@ export const TFAAuthenticatorStartSchema = createApiSchema({
 export const TFAAuthenticatorFinishSchema = createApiSchema({
   POST: {
     input: z.object({
-      code: z.string().length(6, translateMessage("generated.m0858")),
+      code: z
+        .string()
+        .length(
+          6,
+          translateMessage("generated.validation.codeMustExactly6Digits")
+        ),
     }),
     output: z.null(),
   },
@@ -322,7 +365,7 @@ export const PasskeyRenameSchema = createApiSchema({
       name: z
         .string()
         .min(1, "Nazwa jest wymagana")
-        .max(50, translateMessage("generated.m0857")),
+        .max(50, translateMessage("generated.validation.nameTooLong")),
     }),
     output: z.null(),
   },
@@ -1180,33 +1223,45 @@ export const AlertTypeSchema = z.enum([
 ])
 
 export const ALERT_TYPE_OPTIONS = [
-  { value: "WEIGHT_EXCEEDED", label: translateMessage("generated.m0147") },
-  { value: "TEMPERATURE_TOO_HIGH", label: translateMessage("generated.m0148") },
-  { value: "TEMPERATURE_TOO_LOW", label: translateMessage("generated.m0149") },
+  {
+    value: "WEIGHT_EXCEEDED",
+    label: translateMessage("generated.validation.exceedingWeight"),
+  },
+  {
+    value: "TEMPERATURE_TOO_HIGH",
+    label: translateMessage("generated.validation.temperatureTooHigh"),
+  },
+  {
+    value: "TEMPERATURE_TOO_LOW",
+    label: translateMessage("generated.validation.temperatureTooLow"),
+  },
   {
     value: "LOW_VISUAL_SIMILARITY",
-    label: translateMessage("generated.m0150"),
+    label: translateMessage("generated.validation.lowVisualCompatibility"),
   },
   {
     value: "ITEM_TEMPERATURE_TOO_HIGH",
-    label: translateMessage("generated.m0151"),
+    label: translateMessage("generated.validation.productTemperatureTooHigh"),
   },
   {
     value: "ITEM_TEMPERATURE_TOO_LOW",
-    label: translateMessage("generated.m0152"),
+    label: translateMessage("generated.validation.productTemperatureTooLow"),
   },
   {
     value: "EMBEDDING_GENERATION_COMPLETED",
-    label: translateMessage("generated.m0153"),
+    label: translateMessage("generated.validation.embeddingGenerationComplete"),
   },
   {
     value: "EMBEDDING_GENERATION_FAILED",
-    label: translateMessage("generated.m0154"),
+    label: translateMessage("generated.validation.embeddingGenerationFailed"),
   },
-  { value: "ASSORTMENT_EXPIRED", label: translateMessage("generated.m0155") },
+  {
+    value: "ASSORTMENT_EXPIRED",
+    label: translateMessage("generated.validation.assortmentExpired"),
+  },
   {
     value: "ASSORTMENT_CLOSE_TO_EXPIRY",
-    label: translateMessage("generated.m0156"),
+    label: translateMessage("generated.validation.assortmentCloseExpiration"),
   },
 ] as const
 

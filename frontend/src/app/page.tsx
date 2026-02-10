@@ -65,42 +65,66 @@ const FloatingElements = () => (
 export default function LandingPage() {
   const features = [
     {
-      title: translateMessage("generated.m0107"),
-      description: translateMessage("generated.m0108"),
+      title: translateMessage("generated.landing.inventoryTracking"),
+      description: translateMessage(
+        "generated.landing.monitorStockLevelsRealTime"
+      ),
       icon: PackageIcon,
     },
     {
-      title: translateMessage("generated.m0109"),
-      description: translateMessage("generated.m0110"),
+      title: translateMessage("generated.landing.qrCodes"),
+      description: translateMessage(
+        "generated.landing.scanGenerateQrCodesProducts"
+      ),
       icon: QrCodeIcon,
     },
     {
-      title: translateMessage("generated.m0111"),
-      description: translateMessage("generated.m0112"),
+      title: translateMessage("generated.landing.reportsAnalyses"),
+      description: translateMessage(
+        "generated.landing.detailedReportsDataVisualizationsMake"
+      ),
       icon: Chart01Icon,
     },
     {
-      title: translateMessage("generated.m0113"),
-      description: translateMessage("generated.m0114"),
+      title: translateMessage("generated.landing.locationManagement"),
+      description: translateMessage(
+        "generated.landing.organizeWarehouseZonesRacksAlways"
+      ),
       icon: Location01Icon,
     },
     {
-      title: translateMessage("generated.m0115"),
-      description: translateMessage("generated.m0116"),
+      title: translateMessage("generated.landing.operationHistory"),
+      description: translateMessage(
+        "generated.landing.completeHistoryReceiptsIssuesTransfers"
+      ),
       icon: Clock01Icon,
     },
     {
-      title: translateMessage("generated.m0117"),
-      description: translateMessage("generated.m0118"),
+      title: translateMessage("generated.landing.multiUserAccess"),
+      description: translateMessage(
+        "generated.landing.rolesPermissionsTeamEveryoneAccess"
+      ),
       icon: UserMultipleIcon,
     },
   ] as const
 
   const benefits = [
-    { value: "99.9%", label: translateMessage("generated.m0119") },
-    { value: "< 1s", label: translateMessage("generated.m0120") },
-    { value: "24/7", label: translateMessage("generated.m0887") },
-    { value: "SSL", label: translateMessage("generated.m0121") },
+    {
+      value: "99.9%",
+      label: translateMessage("generated.landing.systemAvailability"),
+    },
+    {
+      value: "< 1s",
+      label: translateMessage("generated.landing.responseTime"),
+    },
+    {
+      value: "24/7",
+      label: translateMessage("generated.landing.value247Availability"),
+    },
+    {
+      value: "SSL",
+      label: translateMessage("generated.landing.dataEncryption"),
+    },
   ] as const
 
   return (
@@ -120,11 +144,13 @@ export default function LandingPage() {
             <LanguageSwitcher />
             <Link href="/login">
               <Button size="sm" variant="ghost">
-                {translateMessage("generated.m0014")}
+                {translateMessage("generated.shared.log")}
               </Button>
             </Link>
             <Link href="/register">
-              <Button size="sm">{translateMessage("generated.m0122")}</Button>
+              <Button size="sm">
+                {translateMessage("generated.landing.createAccount")}
+              </Button>
             </Link>
           </nav>
         </div>
@@ -140,7 +166,7 @@ export default function LandingPage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
               </span>
-              {translateMessage("generated.m0123")}
+              {translateMessage("generated.landing.activeSystem")}
             </div>
 
             {/* Headline */}
@@ -148,11 +174,11 @@ export default function LandingPage() {
               className="fade-in slide-in-from-bottom-4 max-w-4xl animate-in font-bold text-4xl tracking-tight duration-700 sm:text-5xl md:text-6xl lg:text-7xl"
               style={getAnimationStyle("100ms")}
             >
-              {translateMessage("generated.m0124")}{" "}
+              {translateMessage("generated.landing.warehouseManagement")}{" "}
               <br className="hidden sm:block" />
               <span className="relative inline-block">
                 <span className="bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                  {translateMessage("generated.m0125")}
+                  {translateMessage("generated.landing.company")}
                 </span>
                 <svg
                   aria-hidden="true"
@@ -176,7 +202,9 @@ export default function LandingPage() {
               className="fade-in slide-in-from-bottom-5 mt-8 max-w-2xl animate-in text-lg text-muted-foreground duration-700 sm:text-xl"
               style={getAnimationStyle("200ms")}
             >
-              {translateMessage("generated.m0126")}
+              {translateMessage(
+                "generated.landing.completeSystemManagingInventoryTracking"
+              )}
             </p>
 
             {/* CTA buttons */}
@@ -189,7 +217,7 @@ export default function LandingPage() {
                   className="group min-w-45 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-primary/30 hover:shadow-xl"
                   size="lg"
                 >
-                  {translateMessage("generated.m0127")}
+                  {translateMessage("generated.landing.startNow")}
                   <svg
                     className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
                     fill="none"
@@ -205,7 +233,7 @@ export default function LandingPage() {
               </Link>
               <Link href="/login">
                 <Button className="min-w-45" size="lg" variant="outline">
-                  {translateMessage("generated.m0014")}
+                  {translateMessage("generated.shared.log")}
                 </Button>
               </Link>
             </div>
@@ -225,7 +253,7 @@ export default function LandingPage() {
                 >
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
-                {translateMessage("generated.m0128")}
+                {translateMessage("generated.landing.secureAccess")}
               </div>
               <div className="flex items-center gap-2">
                 <svg
@@ -238,7 +266,7 @@ export default function LandingPage() {
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12,6 12,12 16,14" />
                 </svg>
-                {translateMessage("generated.m0129")}
+                {translateMessage("generated.landing.realTimeData")}
               </div>
               <div className="flex items-center gap-2">
                 <svg
@@ -252,7 +280,7 @@ export default function LandingPage() {
                   <line x1="3" x2="21" y1="9" y2="9" />
                   <line x1="9" x2="9" y1="21" y2="9" />
                 </svg>
-                {translateMessage("generated.m0130")}
+                {translateMessage("generated.landing.intuitiveInterface")}
               </div>
             </div>
           </div>
@@ -264,10 +292,12 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 py-24 md:py-32">
           <div className="mb-16 text-center">
             <h2 className="font-bold text-3xl tracking-tight sm:text-4xl">
-              {translateMessage("generated.m0131")}
+              {translateMessage("generated.landing.everythingNeed")}
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              {translateMessage("generated.m0132")}
+              {translateMessage(
+                "generated.landing.comprehensiveToolsEffectiveWarehouseManagement"
+              )}
             </p>
           </div>
 
@@ -304,10 +334,12 @@ export default function LandingPage() {
           <div className="rounded-3xl border border-border/50 bg-linear-to-b from-card/80 to-card/40 p-8 backdrop-blur-sm md:p-12">
             <div className="mb-12 text-center">
               <h2 className="font-bold text-3xl tracking-tight sm:text-4xl">
-                {translateMessage("generated.m0133")}
+                {translateMessage("generated.landing.reliabilityRely")}
               </h2>
               <p className="mt-4 text-muted-foreground">
-                {translateMessage("generated.m0134")}
+                {translateMessage(
+                  "generated.landing.systemDesignedSafetyEfficiencyMind"
+                )}
               </p>
             </div>
 
@@ -349,10 +381,14 @@ export default function LandingPage() {
 
             <div className="relative flex flex-col items-center text-center">
               <h2 className="max-w-2xl font-bold text-3xl tracking-tight sm:text-4xl">
-                {translateMessage("generated.m0135")}
+                {translateMessage(
+                  "generated.landing.readyImproveWarehouseManagement"
+                )}
               </h2>
               <p className="mt-4 max-w-xl text-muted-foreground">
-                {translateMessage("generated.m0136")}
+                {translateMessage(
+                  "generated.landing.joinSystemStartManagingResources"
+                )}
               </p>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <Link href="/register">
@@ -360,7 +396,7 @@ export default function LandingPage() {
                     className="group min-w-40 shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-primary/30 hover:shadow-xl"
                     size="lg"
                   >
-                    {translateMessage("generated.m0122")}
+                    {translateMessage("generated.landing.createAccount")}
                     <svg
                       className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
                       fill="none"
@@ -376,7 +412,7 @@ export default function LandingPage() {
                 </Link>
                 <Link href="/login">
                   <Button size="lg" variant="outline">
-                    {translateMessage("generated.m0137")}
+                    {translateMessage("generated.landing.alreadyAccount")}
                   </Button>
                 </Link>
               </div>
@@ -395,18 +431,18 @@ export default function LandingPage() {
                 className="transition-colors hover:text-foreground"
                 href="/login"
               >
-                {translateMessage("generated.m0888")}
+                {translateMessage("generated.landing.login")}
               </Link>
               <Link
                 className="transition-colors hover:text-foreground"
                 href="/register"
               >
-                {translateMessage("generated.m0889")}
+                {translateMessage("generated.landing.registration")}
               </Link>
             </div>
             <div className="h-px w-full max-w-xs bg-linear-to-r from-transparent via-border to-transparent" />
             <p className="text-muted-foreground/70 text-sm">
-              {translateMessage("generated.m1092", {
+              {translateMessage("generated.landing.gdzietolezyInternalSystem", {
                 value0: new Date().getFullYear(),
               })}
             </p>

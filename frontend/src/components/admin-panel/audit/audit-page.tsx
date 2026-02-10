@@ -84,7 +84,7 @@ function DateRangeFilter({
       <div className="flex items-center gap-1.5 text-muted-foreground">
         <HugeiconsIcon className="size-3.5" icon={Calendar03Icon} />
         <span className="hidden text-xs sm:inline">
-          {translateMessage("generated.m0184")}
+          {translateMessage("generated.admin.audit.dateRange")}
         </span>
       </div>
       <div className="flex items-center gap-1.5">
@@ -174,7 +174,7 @@ function InboundTableContent({
             {totalElements}
           </span>
           <span className="text-muted-foreground text-xs">
-            {translateMessage("generated.m0903", {
+            {translateMessage("generated.admin.audit.pluralLabel", {
               value0: totalElements,
             })}
           </span>
@@ -184,14 +184,28 @@ function InboundTableContent({
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/30">
-            <TableHead>{translateMessage("generated.m0904")}</TableHead>
-            <TableHead>{translateMessage("generated.m0905")}</TableHead>
-            <TableHead>{translateMessage("generated.m0906")}</TableHead>
-            <TableHead>{translateMessage("generated.m0907")}</TableHead>
-            <TableHead>{translateMessage("generated.m0908")}</TableHead>
-            <TableHead>{translateMessage("generated.m0909")}</TableHead>
-            <TableHead>{translateMessage("generated.m0882")}</TableHead>
-            <TableHead>{translateMessage("generated.m0910")}</TableHead>
+            <TableHead>
+              {translateMessage("generated.admin.audit.date")}
+            </TableHead>
+            <TableHead>
+              {translateMessage("generated.admin.audit.item")}
+            </TableHead>
+            <TableHead>{translateMessage("generated.shared.code")}</TableHead>
+            <TableHead>
+              {translateMessage("generated.admin.audit.rack")}
+            </TableHead>
+            <TableHead>
+              {translateMessage("generated.shared.position")}
+            </TableHead>
+            <TableHead>
+              {translateMessage("generated.admin.audit.quantity")}
+            </TableHead>
+            <TableHead>
+              {translateMessage("generated.shared.assortment")}
+            </TableHead>
+            <TableHead>
+              {translateMessage("generated.admin.audit.heAccepted")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -214,8 +228,12 @@ function InboundTableContent({
                   <FilterEmptyState />
                 ) : (
                   <EmptyState
-                    description={translateMessage("generated.m0186")}
-                    title={translateMessage("generated.m0187")}
+                    description={translateMessage(
+                      "generated.admin.audit.operationsFoundDatabase"
+                    )}
+                    title={translateMessage(
+                      "generated.admin.audit.admissionOperation"
+                    )}
                   />
                 )}
               </TableCell>
@@ -323,7 +341,7 @@ function OutboundTableContent({
             {totalElements}
           </span>
           <span className="text-muted-foreground text-xs">
-            {translateMessage("generated.m0903", {
+            {translateMessage("generated.admin.audit.pluralLabel", {
               value0: totalElements,
             })}
           </span>
@@ -333,15 +351,31 @@ function OutboundTableContent({
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/30">
-            <TableHead>{translateMessage("generated.m0904")}</TableHead>
-            <TableHead>{translateMessage("generated.m0905")}</TableHead>
-            <TableHead>{translateMessage("generated.m0906")}</TableHead>
-            <TableHead>{translateMessage("generated.m0907")}</TableHead>
-            <TableHead>{translateMessage("generated.m0908")}</TableHead>
-            <TableHead>{translateMessage("generated.m0909")}</TableHead>
-            <TableHead>{translateMessage("generated.m0882")}</TableHead>
-            <TableHead>{translateMessage("generated.m0911")}</TableHead>
-            <TableHead>{translateMessage("generated.m0912")}</TableHead>
+            <TableHead>
+              {translateMessage("generated.admin.audit.date")}
+            </TableHead>
+            <TableHead>
+              {translateMessage("generated.admin.audit.item")}
+            </TableHead>
+            <TableHead>{translateMessage("generated.shared.code")}</TableHead>
+            <TableHead>
+              {translateMessage("generated.admin.audit.rack")}
+            </TableHead>
+            <TableHead>
+              {translateMessage("generated.shared.position")}
+            </TableHead>
+            <TableHead>
+              {translateMessage("generated.admin.audit.quantity")}
+            </TableHead>
+            <TableHead>
+              {translateMessage("generated.shared.assortment")}
+            </TableHead>
+            <TableHead>
+              {translateMessage("generated.admin.audit.heSpent")}
+            </TableHead>
+            <TableHead>
+              {translateMessage("generated.admin.audit.fifo")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -364,8 +398,12 @@ function OutboundTableContent({
                   <FilterEmptyState />
                 ) : (
                   <EmptyState
-                    description={translateMessage("generated.m0186")}
-                    title={translateMessage("generated.m0188")}
+                    description={translateMessage(
+                      "generated.admin.audit.operationsFoundDatabase"
+                    )}
+                    title={translateMessage(
+                      "generated.admin.audit.releaseOperation"
+                    )}
                   />
                 )}
               </TableCell>
@@ -416,8 +454,8 @@ function OutboundTableContent({
               <TableCell>
                 <Badge variant={op.fifoCompliant ? "success" : "warning"}>
                   {op.fifoCompliant
-                    ? translateMessage("generated.m1129")
-                    : translateMessage("generated.m1130")}
+                    ? translateMessage("generated.admin.shared.yes")
+                    : translateMessage("generated.admin.shared.label")}
                 </Badge>
               </TableCell>
             </TableRow>
@@ -457,13 +495,15 @@ export default function AuditMain() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description={translateMessage("generated.m0189")}
+        description={translateMessage(
+          "generated.admin.audit.warehouseOperationsHistoryInboundOutbound"
+        )}
         icon={Analytics01Icon}
         navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title={translateMessage("generated.m0190")}
+        title={translateMessage("generated.shared.operationsAudit")}
       />
 
       <Tabs defaultValue="inbound">
@@ -472,11 +512,11 @@ export default function AuditMain() {
             <TabsList className="h-auto" variant="line">
               <TabsTrigger className="py-2.5" value="inbound">
                 <HugeiconsIcon className="size-3.5" icon={PackageReceiveIcon} />
-                {translateMessage("generated.m0913")}
+                {translateMessage("generated.admin.audit.parties")}
               </TabsTrigger>
               <TabsTrigger className="py-2.5" value="outbound">
                 <HugeiconsIcon className="size-3.5" icon={PackageIcon} />
-                {translateMessage("generated.m0914")}
+                {translateMessage("generated.admin.audit.releases")}
               </TabsTrigger>
             </TabsList>
           </div>

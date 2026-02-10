@@ -3,16 +3,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { translateMessage } from "@/i18n/translate-message"
 import AuthForm from "./auth-form"
 
-const PASSWORD_LABEL = translateMessage("generated.m0011")
-const CONFIRM_PASSWORD_LABEL = translateMessage("generated.m0013")
-const EMAIL_LABEL = translateMessage("generated.m0874")
-const FULLNAME_LABEL = translateMessage("generated.m0007")
-const LOGIN_BUTTON_LABEL = translateMessage("generated.m0014")
-const REGISTER_BUTTON_LABEL = translateMessage("generated.m0015")
-const PHONE_LABEL = translateMessage("generated.m0009")
-const MISMATCH_ERROR_TEXT = translateMessage("generated.m0853")
-const LOGIN_ERROR_TEXT = translateMessage("generated.m0001")
-const REGISTER_ERROR_TEXT = translateMessage("generated.m0003")
+const PASSWORD_LABEL = translateMessage("generated.auth.password")
+const CONFIRM_PASSWORD_LABEL = translateMessage(
+  "generated.shared.confirmPassword"
+)
+const EMAIL_LABEL = translateMessage("generated.shared.eMail")
+const FULLNAME_LABEL = translateMessage("generated.auth.fullName")
+const LOGIN_BUTTON_LABEL = translateMessage("generated.shared.log")
+const REGISTER_BUTTON_LABEL = translateMessage("generated.auth.register")
+const PHONE_LABEL = translateMessage("generated.auth.phoneNumber")
+const MISMATCH_ERROR_TEXT = translateMessage("generated.shared.passwordsMatch")
+const LOGIN_ERROR_TEXT = translateMessage(
+  "generated.auth.errorOccurredLoggingAgain"
+)
+const REGISTER_ERROR_TEXT = translateMessage(
+  "generated.auth.errorOccurredDuringRegistrationAgain"
+)
 
 // Mock next/navigation
 const mockPush = vi.fn()

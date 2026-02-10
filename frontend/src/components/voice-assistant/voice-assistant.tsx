@@ -136,7 +136,9 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     if (!resolvedText) {
       setMatchedCommand(null)
       resetWarehouseLookupState()
-      setErrorMessage(translateMessage("generated.m0830"))
+      setErrorMessage(
+        translateMessage("generated.voiceAssistant.commandRecognized2")
+      )
       setView("error")
       return
     }
@@ -145,7 +147,9 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     if (!(match && isCommandMatchValid(match))) {
       setMatchedCommand(null)
       resetWarehouseLookupState()
-      setErrorMessage(translateMessage("generated.m0831"))
+      setErrorMessage(
+        translateMessage("generated.voiceAssistant.dontKnowCommand")
+      )
       setView("error")
       return
     }
@@ -155,7 +159,11 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
       if (!warehouseName) {
         setMatchedCommand(null)
         resetWarehouseLookupState()
-        setErrorMessage(translateMessage("generated.m0832"))
+        setErrorMessage(
+          translateMessage(
+            "generated.voiceAssistant.warehouseNameMissingCommand"
+          )
+        )
         setView("error")
         return
       }
@@ -193,7 +201,9 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     if (isWarehouseLookupError) {
       setMatchedCommand(null)
       resetWarehouseLookupState()
-      setErrorMessage(translateMessage("generated.m0833"))
+      setErrorMessage(
+        translateMessage("generated.voiceAssistant.warehouseFoundAgain")
+      )
       setView("error")
       return
     }
@@ -206,7 +216,9 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     if (!warehouse) {
       setMatchedCommand(null)
       resetWarehouseLookupState()
-      setErrorMessage(translateMessage("generated.m0834"))
+      setErrorMessage(
+        translateMessage("generated.voiceAssistant.warehouseNameFound")
+      )
       setView("error")
       return
     }
@@ -327,7 +339,11 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
 
   const handleStartListening = useCallback(() => {
     if (!isSupported) {
-      setErrorMessage(translateMessage("generated.m0835"))
+      setErrorMessage(
+        translateMessage(
+          "generated.voiceAssistant.browserSupportSpeechRecognition"
+        )
+      )
       setView("error")
       return
     }
@@ -346,7 +362,9 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
       if (!(match && isCommandMatchValid(match))) {
         setMatchedCommand(null)
         resetWarehouseLookupState()
-        setErrorMessage(translateMessage("generated.m0831"))
+        setErrorMessage(
+          translateMessage("generated.voiceAssistant.dontKnowCommand")
+        )
         setView("error")
         return
       }
@@ -356,7 +374,11 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
         if (!warehouseName) {
           setMatchedCommand(null)
           resetWarehouseLookupState()
-          setErrorMessage(translateMessage("generated.m0832"))
+          setErrorMessage(
+            translateMessage(
+              "generated.voiceAssistant.warehouseNameMissingCommand"
+            )
+          )
           setView("error")
           return
         }
@@ -442,7 +464,10 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     case "error":
       content = (
         <VoiceAssistantErrorView
-          message={errorMessage ?? translateMessage("generated.m0836")}
+          message={
+            errorMessage ??
+            translateMessage("generated.voiceAssistant.commandFailedProcess")
+          }
           onReset={handleReset}
         />
       )
@@ -466,14 +491,14 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
         dialogTrigger
       ) : (
         <DialogTrigger
-          aria-label={translateMessage("generated.m0665")}
+          aria-label={translateMessage("generated.shared.voiceAssistant")}
           className={buttonVariants({
             variant: "ghost",
             size: "icon",
             className:
               "relative mr-3 text-muted-foreground transition-colors duration-200 hover:text-primary",
           })}
-          title={translateMessage("generated.m0665")}
+          title={translateMessage("generated.shared.voiceAssistant")}
         >
           <HugeiconsIcon icon={Mic01Icon} strokeWidth={1.75} />
         </DialogTrigger>
@@ -493,7 +518,9 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
           data-slot="voice-assistant"
         >
           <Button
-            aria-label={translateMessage("generated.m0837")}
+            aria-label={translateMessage(
+              "generated.voiceAssistant.closeVoiceAssistant"
+            )}
             className={cn(
               "absolute right-3 z-10 rounded-full text-muted-foreground transition-colors hover:text-foreground",
               isMobile ? "top-12" : "top-3"

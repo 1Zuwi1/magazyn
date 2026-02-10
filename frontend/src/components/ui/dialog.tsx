@@ -73,7 +73,7 @@ function DialogContent({
           >
             <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
             <span className="sr-only">
-              {translateMessage("generated.m1021")}
+              {translateMessage("generated.shared.close")}
             </span>
           </DialogPrimitive.Close>
         )}
@@ -112,7 +112,7 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close render={<Button variant="outline" />}>
-          {translateMessage("generated.m1021")}
+          {translateMessage("generated.shared.close")}
         </DialogPrimitive.Close>
       )}
     </div>

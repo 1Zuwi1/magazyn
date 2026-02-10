@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils"
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
-      aria-label={translateMessage("generated.m1044")}
+      aria-label={translateMessage("generated.ui.pagination")}
       className={cn("mx-auto flex w-full justify-center", className)}
       data-slot="pagination"
       {...props}
@@ -68,7 +68,7 @@ function PaginationPrevious({
 }) {
   return (
     <PaginationLink
-      aria-label={translateMessage("generated.m0802")}
+      aria-label={translateMessage("generated.ui.goPreviousPage")}
       className={cn("pl-2!", className)}
       size="default"
       {...props}
@@ -87,7 +87,7 @@ function PaginationPrevious({
 
 function PaginationNext({
   className,
-  text = translateMessage("generated.m0803"),
+  text = translateMessage("generated.ui.next"),
   showIcon = true,
   ...props
 }: React.ComponentProps<typeof PaginationLink> & {
@@ -96,7 +96,7 @@ function PaginationNext({
 }) {
   return (
     <PaginationLink
-      aria-label={translateMessage("generated.m0804")}
+      aria-label={translateMessage("generated.ui.goNextPage")}
       className={cn("pr-2!", className)}
       size="default"
       {...props}
@@ -128,7 +128,9 @@ function PaginationEllipsis({
       {...props}
     >
       <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} />
-      <span className="sr-only">{translateMessage("generated.m0805")}</span>
+      <span className="sr-only">
+        {translateMessage("generated.ui.morePages")}
+      </span>
     </span>
   )
 }

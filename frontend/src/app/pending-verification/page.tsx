@@ -23,31 +23,51 @@ export default function PendingVerificationPage() {
             />
           </div>
           <CardTitle className="mt-4 text-2xl">
-            {translateMessage("generated.m0139")}
+            {translateMessage(
+              "generated.auth.pendingVerification.waitingVerification"
+            )}
           </CardTitle>
           <CardDescription>
-            {translateMessage("generated.m0140")}
+            {translateMessage(
+              "generated.auth.pendingVerification.accountWaitingApprovalAdministrator"
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground text-sm">
-            {translateMessage("generated.m0141")}
+            {translateMessage(
+              "generated.auth.pendingVerification.registrationBeenAcceptedWaitingVerification"
+            )}
           </p>
           <div className="rounded-md bg-muted p-4">
             <p className="text-sm">
               <span className="font-semibold">
-                {translateMessage("generated.m0142")}
+                {translateMessage("generated.auth.pendingVerification.now")}
               </span>
             </p>
             <ul className="mt-2 list-inside list-disc text-left text-muted-foreground text-sm">
-              <li>{translateMessage("generated.m0143")}</li>
-              <li>{translateMessage("generated.m0144")}</li>
-              <li>{translateMessage("generated.m0145")}</li>
+              <li>
+                {translateMessage(
+                  "generated.auth.pendingVerification.waitConfirmationEmail"
+                )}
+              </li>
+              <li>
+                {translateMessage(
+                  "generated.auth.pendingVerification.checkInboxRegularly"
+                )}
+              </li>
+              <li>
+                {translateMessage(
+                  "generated.auth.pendingVerification.contactAdministratorTakesLonger24"
+                )}
+              </li>
             </ul>
           </div>
           <Link href="/login">
             <Button className="w-full" variant="outline">
-              {translateMessage("generated.m0146")}
+              {translateMessage(
+                "generated.auth.pendingVerification.returnLoginPage"
+              )}
             </Button>
           </Link>
         </CardContent>

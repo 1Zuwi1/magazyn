@@ -62,19 +62,19 @@ const COMMAND_IDS: VoiceCommandId[] = [
 ]
 
 const COMMAND_DESCRIPTION_KEYS: Readonly<Record<VoiceCommandId, string>> = {
-  dashboard: "generated.m0859",
-  warehouses: "generated.m0860",
-  "warehouses:id": "generated.m0861",
-  items: "generated.m0862",
-  settings: "generated.m1010",
-  "open-scanner": "generated.m0863",
-  "add-item": "generated.m0864",
-  "search-product": "generated.m0754",
-  "search-assortment": "generated.m0865",
-  notifications: "generated.m0826",
-  alerts: "generated.m0866",
-  "admin-panel": "generated.m0827",
-  "inventory-check": "generated.m0867",
+  dashboard: "generated.voiceAssistant.openDashboard",
+  warehouses: "generated.voiceAssistant.showWarehouses",
+  "warehouses:id": "generated.voiceAssistant.openWarehouseGivenName",
+  items: "generated.voiceAssistant.showProducts",
+  settings: "generated.shared.settings",
+  "open-scanner": "generated.voiceAssistant.launchScanner",
+  "add-item": "generated.voiceAssistant.addProduct",
+  "search-product": "generated.shared.searchProduct",
+  "search-assortment": "generated.voiceAssistant.searchAssortment",
+  notifications: "generated.voiceAssistant.showNotifications",
+  alerts: "generated.voiceAssistant.showAlerts",
+  "admin-panel": "generated.voiceAssistant.openAdministrationPanel",
+  "inventory-check": "generated.voiceAssistant.checkStock",
 }
 
 const COMMAND_DEFINITIONS_BY_LOCALE: Readonly<

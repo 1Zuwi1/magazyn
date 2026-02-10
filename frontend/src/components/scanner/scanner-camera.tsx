@@ -120,7 +120,9 @@ export function ScannerCamera({
     canvas.height = video.videoHeight
     const ctx = canvas.getContext("2d")
     if (!ctx) {
-      setErrorMsg(translateMessage("generated.m0727"))
+      setErrorMsg(
+        translateMessage("generated.scanner.failedPreparePhotoPreview")
+      )
       return
     }
 
@@ -128,7 +130,9 @@ export function ScannerCamera({
     canvas.toBlob(
       (blob) => {
         if (!blob) {
-          setErrorMsg(translateMessage("generated.m0728"))
+          setErrorMsg(
+            translateMessage("generated.scanner.failedTakePhotoAgain")
+          )
           return
         }
 
@@ -191,7 +195,9 @@ export function ScannerCamera({
         const msg =
           err instanceof Error
             ? err.message
-            : translateMessage("generated.m1051")
+            : translateMessage(
+                "generated.scanner.unexpectedScannerErrorOccurred"
+              )
         setErrorMsg(msg)
       }
     },
@@ -251,7 +257,9 @@ export function ScannerCamera({
         }
 
         const msg =
-          e instanceof Error ? e.message : translateMessage("generated.m1052")
+          e instanceof Error
+            ? e.message
+            : translateMessage("generated.scanner.failedStartCameraScanner")
         setErrorMsg(msg)
         stop()
       }
@@ -285,7 +293,9 @@ export function ScannerCamera({
         variant="ghost"
       >
         <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
-        <span className="sr-only">{translateMessage("generated.m1021")}</span>
+        <span className="sr-only">
+          {translateMessage("generated.shared.close")}
+        </span>
       </Button>
 
       {errorMsg ? (
@@ -310,14 +320,16 @@ export function ScannerCamera({
             {/* Text content */}
             <div className="max-w-sm space-y-2">
               <h2 className="font-semibold text-foreground text-xl">
-                {translateMessage("generated.m0729")}
+                {translateMessage("generated.scanner.cameraIssue")}
               </h2>
               <p className="text-muted-foreground text-sm">
-                {translateMessage("generated.m0730")}
+                {translateMessage(
+                  "generated.scanner.makeSureCameraConnectedAvailable"
+                )}
               </p>
               <details className="mt-3">
                 <summary className="cursor-pointer text-muted-foreground text-xs hover:text-foreground">
-                  {translateMessage("generated.m0731")}
+                  {translateMessage("generated.scanner.technicalDetails")}
                 </summary>
                 <p className="mt-2 rounded-lg bg-muted/50 p-2 font-mono text-muted-foreground text-xs">
                   {errorMsg}
@@ -337,7 +349,7 @@ export function ScannerCamera({
                 type="button"
                 variant="outline"
               >
-                {translateMessage("generated.m0075")}
+                {translateMessage("generated.shared.again")}
               </Button>
             </div>
           </div>
@@ -353,11 +365,13 @@ export function ScannerCamera({
             )}
           >
             <p className="h-full w-full text-center">
-              {translateMessage("generated.m1101", { value0: warehouseName })}
+              {translateMessage("generated.scanner.scanningWarehouse", {
+                value0: warehouseName,
+              })}
             </p>
             {modeLabel ? (
               <p className="rounded-full bg-black/50 px-4 py-3 text-center text-sm text-white backdrop-blur-sm">
-                {translateMessage("generated.m0733")}{" "}
+                {translateMessage("generated.scanner.mode")}{" "}
                 <span className="font-medium">{modeLabel}</span>.
               </p>
             ) : null}
@@ -411,7 +425,7 @@ export function ScannerCamera({
                 variant="ghost"
               >
                 <HugeiconsIcon className="size-4" icon={Camera01Icon} />
-                {translateMessage("generated.m0734")}
+                {translateMessage("generated.scanner.identifyProduct")}
               </Button>
             </div>
           )}

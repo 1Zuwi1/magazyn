@@ -34,10 +34,10 @@ export function ScannerSuccessStep({
 
         <div className="max-w-sm space-y-2">
           <h2 className="font-semibold text-foreground text-xl">
-            {translateMessage("generated.m0765")}
+            {translateMessage("generated.scanner.placementSaved")}
           </h2>
           <p className="text-muted-foreground text-sm">
-            {translateMessage("generated.m0766", {
+            {translateMessage("generated.scanner.created", {
               value0: itemName,
               value1: placementsCount,
             })}
@@ -46,7 +46,7 @@ export function ScannerSuccessStep({
 
         <div className="pt-2">
           <Button onClick={onReset} type="button">
-            {translateMessage("generated.m0768")}
+            {translateMessage("generated.scanner.scanAnother")}
           </Button>
         </div>
       </div>

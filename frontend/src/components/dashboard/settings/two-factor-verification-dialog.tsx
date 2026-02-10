@@ -73,12 +73,14 @@ export function TwoFactorVerificationDialog({
     method,
   }) => {
     if (method === "AUTHENTICATOR") {
-      return translateMessage("generated.m0567")
+      return translateMessage(
+        "generated.dashboard.settings.enterCodeAuthenticatorApp"
+      )
     }
     if (method === "PASSKEYS") {
-      return translateMessage("generated.m0643")
+      return translateMessage("generated.dashboard.settings.confirmSecurityKey")
     }
-    return translateMessage("generated.m0644")
+    return translateMessage("generated.dashboard.settings.willSendOneTimeCode")
   }
 
   const resolvedCopy: PasswordVerificationCopy = (() => {
@@ -155,7 +157,7 @@ export function TwoFactorVerificationDialog({
     } catch (e) {
       const message = FetchError.isError(e)
         ? e.message
-        : translateMessage("generated.m0645")
+        : translateMessage("generated.dashboard.settings.codeInvalidAgain")
       setIsVerified(false)
       setVerificationError(message)
       toast.error(message)
@@ -165,16 +167,22 @@ export function TwoFactorVerificationDialog({
   }
 
   const resolvedTitle =
-    title ?? copy?.title ?? translateMessage("generated.m0565")
-  const resolvedDescription = translateMessage("generated.m0646")
+    title ??
+    copy?.title ??
+    translateMessage("generated.dashboard.settings.confirm2faBeforeChanging")
+  const resolvedDescription = translateMessage(
+    "generated.dashboard.settings.additionalSecurityStepConfirmIdentity"
+  )
   const passkeyDescription =
     typeof resolvedCopy.description === "function"
       ? resolvedCopy.description({ method: "PASSKEYS" })
       : resolvedCopy.description
   const passkeyVerifiedTitle =
-    copy?.verifiedTitle ?? translateMessage("generated.m1153")
+    copy?.verifiedTitle ??
+    translateMessage("generated.dashboard.settings.verified3")
   const passkeyVerifiedDescription =
-    copy?.verifiedDescription ?? translateMessage("generated.m0647")
+    copy?.verifiedDescription ??
+    translateMessage("generated.dashboard.settings.safelyContinue")
 
   const handlePasskeyVerified = () => {
     setIsVerified(true)
@@ -199,8 +207,8 @@ export function TwoFactorVerificationDialog({
             </div>
             <Badge variant={isVerified ? "success" : "warning"}>
               {isVerified
-                ? translateMessage("generated.m1153")
-                : translateMessage("generated.m1154")}
+                ? translateMessage("generated.dashboard.settings.verified3")
+                : translateMessage("generated.dashboard.settings.required")}
             </Badge>
           </div>
           {isVerified ? (
@@ -210,7 +218,7 @@ export function TwoFactorVerificationDialog({
             </Alert>
           ) : (
             <PasskeyLogin
-              label={translateMessage("generated.m0047")}
+              label={translateMessage("generated.shared.verifySecurityKey")}
               onSuccess={handlePasskeyVerified}
               redirectTo={null}
               showSeparator={false}
@@ -254,7 +262,9 @@ export function TwoFactorVerificationDialog({
             className="text-muted-foreground text-xs uppercase tracking-wide"
             id="verification-method-label"
           >
-            {translateMessage("generated.m0648")}
+            {translateMessage(
+              "generated.dashboard.settings.verificationMethod"
+            )}
           </Label>
           {isMethodsPending && (
             <div className="space-y-2">
@@ -277,10 +287,14 @@ export function TwoFactorVerificationDialog({
                 size={20}
               />
               <p className="font-medium text-foreground/80 text-sm">
-                {translateMessage("generated.m0649")}
+                {translateMessage(
+                  "generated.dashboard.settings.failedLoadVerificationMethods"
+                )}
               </p>
               <p className="text-muted-foreground text-xs">
-                {translateMessage("generated.m0650")}
+                {translateMessage(
+                  "generated.dashboard.settings.closeWindowAgain"
+                )}
               </p>
             </div>
           )}

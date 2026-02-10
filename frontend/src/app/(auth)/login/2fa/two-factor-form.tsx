@@ -50,7 +50,9 @@ export default function TwoFactorForm({
   otpLength,
 }: TwoFactorFormProps) {
   if (linkedMethods.length === 0) {
-    throw new Error(translateMessage("generated.m0041"))
+    throw new Error(
+      translateMessage("generated.auth.twofactorformRequiresLeastOneLinked")
+    )
   }
   const [defaultMethod] = useState(() => defaultLinkedMethod)
   const [isResending, setIsResending] = useState(false)
@@ -71,18 +73,24 @@ export default function TwoFactorForm({
           if (FetchError.isError(err)) {
             handleApiError(err)
           } else {
-            toast.error(translateMessage("generated.m0042"))
+            toast.error(
+              translateMessage(
+                "generated.auth.invalidCodeVerificationErrorAgain"
+              )
+            )
           }
           return
         }
-        toast.success(translateMessage("generated.m0043"))
+        toast.success(translateMessage("generated.auth.verified"))
         router.push("/dashboard")
       } catch (e) {
         if (FetchError.isError(e)) {
           handleApiError(e)
           return
         }
-        toast.error(translateMessage("generated.m0030"))
+        toast.error(
+          translateMessage("generated.auth.unexpectedErrorOccurredAgain")
+        )
       } finally {
         autoSubmittedRef.current = false
       }
@@ -96,7 +104,9 @@ export default function TwoFactorForm({
     async (m: ResendType, showNotSupportedError = true) => {
       if (!resendMethods.includes(m)) {
         if (showNotSupportedError) {
-          toast.error(translateMessage("generated.m0044"))
+          toast.error(
+            translateMessage("generated.auth.unsupportedMethodResendingCode")
+          )
         }
         return false
       }
@@ -110,11 +120,13 @@ export default function TwoFactorForm({
       setIsResending(false)
 
       if (err) {
-        toast.error(translateMessage("generated.m0045"))
+        toast.error(
+          translateMessage("generated.auth.codeFailedResendAgainMoment")
+        )
         return false
       }
 
-      toast.success(translateMessage("generated.m0046"))
+      toast.success(translateMessage("generated.auth.newCodeBeenEmailed"))
       return true
     },
     [resendMethods]
@@ -153,7 +165,7 @@ export default function TwoFactorForm({
               href="/login"
             >
               <HugeiconsIcon className="size-4" icon={ArrowLeft01Icon} />
-              {translateMessage("generated.m0031")}
+              {translateMessage("generated.auth.backLogin")}
             </Link>
           </div>
           <form.Subscribe
@@ -190,7 +202,9 @@ export default function TwoFactorForm({
                     {isPasskey ? (
                       <PasskeyLogin
                         disabled={isSubmitting || isResending}
-                        label={translateMessage("generated.m0047")}
+                        label={translateMessage(
+                          "generated.shared.verifySecurityKey"
+                        )}
                         showSeparator={false}
                       />
                     ) : (
@@ -199,7 +213,9 @@ export default function TwoFactorForm({
                           {(field) => (
                             <FieldWithState
                               field={field}
-                              label={translateMessage("generated.m0048")}
+                              label={translateMessage(
+                                "generated.shared.verificationCode"
+                              )}
                               labelClassName="sr-only"
                               renderInput={({ id, isInvalid }) => (
                                 <InputOTP
@@ -269,7 +285,7 @@ export default function TwoFactorForm({
 
                         {canResend ? (
                           <FieldDescription className="text-center">
-                            {translateMessage("generated.m0049")}{" "}
+                            {translateMessage("generated.auth.didntArrive")}{" "}
                             <Button
                               className="h-auto p-0 align-baseline"
                               isLoading={isResending}
@@ -277,7 +293,7 @@ export default function TwoFactorForm({
                               type="button"
                               variant="link"
                             >
-                              {translateMessage("generated.m0050")}
+                              {translateMessage("generated.shared.resend")}
                             </Button>
                           </FieldDescription>
                         ) : null}
@@ -287,7 +303,7 @@ export default function TwoFactorForm({
                     {alternatives.length ? (
                       <div className="mt-3">
                         <p className="text-center text-muted-foreground text-sm">
-                          {translateMessage("generated.m0051")}
+                          {translateMessage("generated.auth.useAnotherMethod")}
                         </p>
                         <div className="mt-2 flex flex-col gap-1">
                           {alternatives.map((m) => (
@@ -326,7 +342,7 @@ export default function TwoFactorForm({
                   isLoading={isSubmitting}
                   type="submit"
                 >
-                  {translateMessage("generated.m0052")}
+                  {translateMessage("generated.shared.verifyCode")}
                 </Button>
               )
             }

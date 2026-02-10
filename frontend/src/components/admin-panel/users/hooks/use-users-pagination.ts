@@ -33,7 +33,7 @@ export function useUsersPagination({
   const firstVisible = usersCount > 0 ? page * TABLE_PAGE_SIZE + 1 : 0
   const lastVisible = page * TABLE_PAGE_SIZE + usersCount
   const paginationSummaryText = isUsersPending
-    ? translateMessage("generated.m0316")
+    ? translateMessage("generated.admin.users.landing")
     : null
 
   const handleSetPage = (nextPage: number) => {

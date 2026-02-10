@@ -26,66 +26,66 @@ export interface NavigationItem {
 
 export const navigationItems: NavigationItem[] = [
   {
-    title: translateMessage("generated.m0428"),
+    title: translateMessage("generated.shared.mainPanel"),
     href: "/dashboard",
     icon: Analytics01Icon,
     items: [
       {
-        title: translateMessage("generated.m0886"),
+        title: translateMessage("generated.shared.warehouses"),
         href: "/dashboard/warehouse",
         icon: WarehouseIcon,
       },
       {
-        title: translateMessage("generated.m0882"),
+        title: translateMessage("generated.shared.assortment"),
         href: "/dashboard/items",
         icon: Package,
       },
       {
-        title: translateMessage("generated.m0988"),
+        title: translateMessage("generated.shared.notifications"),
         href: "/dashboard/notifications",
         icon: Bell,
       },
     ],
   },
   {
-    title: translateMessage("generated.m1010"),
+    title: translateMessage("generated.shared.settings"),
     href: "/settings",
     icon: Settings,
     items: [],
   },
   {
-    title: translateMessage("generated.m0243"),
+    title: translateMessage("generated.shared.administrationPanel"),
     href: "/admin",
     icon: WaveTriangleIcon,
     adminOnly: true,
     items: [
       {
-        title: translateMessage("generated.m0233"),
+        title: translateMessage("generated.shared.users"),
         href: "/admin/users",
         icon: UserIcon,
       },
       {
-        title: translateMessage("generated.m0886"),
+        title: translateMessage("generated.shared.warehouses"),
         href: "/admin/warehouses",
         icon: WarehouseIcon,
       },
       {
-        title: translateMessage("generated.m0931"),
+        title: translateMessage("generated.shared.items"),
         href: "/admin/items",
         icon: Package,
       },
       {
-        title: translateMessage("generated.m0901"),
+        title: translateMessage("generated.shared.alerts"),
         href: "/admin/alerts",
         icon: Alert01Icon,
       },
       {
-        title: translateMessage("generated.m0234"),
+        title: translateMessage("generated.shared.rackReports"),
         href: "/admin/rack-reports",
         icon: Attachment01Icon,
       },
       {
-        title: translateMessage("generated.m0190"),
+        title: translateMessage("generated.shared.operationsAudit"),
         href: "/admin/audit",
         icon: Analytics01Icon,
       },

@@ -42,10 +42,10 @@ export function ScannerQuantityStep({
 
         <div className="mb-6">
           <h2 className="font-semibold text-xl tracking-tight">
-            {translateMessage("generated.m0755")}
+            {translateMessage("generated.scanner.enterItemQuantity")}
           </h2>
           <p className="mt-1 text-muted-foreground text-sm">
-            {translateMessage("generated.m0756")}
+            {translateMessage("generated.scanner.howManyUnitsWantAdd")}
           </p>
         </div>
 
@@ -63,38 +63,41 @@ export function ScannerQuantityStep({
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="truncate font-medium">{scannedItem.name}</h3>
                   {scannedItem.dangerous ? (
-                    <Badge>{translateMessage("generated.m0925")}</Badge>
+                    <Badge>
+                      {translateMessage("generated.shared.dangerous")}
+                    </Badge>
                   ) : null}
                 </div>
                 <p className="mt-1 font-mono text-muted-foreground text-xs">
-                  {translateMessage("generated.m1100", {
+                  {translateMessage("generated.scanner.shared.code", {
                     value0: scannedItem.code,
                   })}
                 </p>
                 <p className="mt-2 text-muted-foreground text-sm">
-                  {translateMessage("generated.m0757")}{" "}
+                  {translateMessage("generated.scanner.expires")}{" "}
                   <span className="font-medium text-foreground">
                     {scannedItem.expireAfterDays}
                   </span>{" "}
-                  {translateMessage("generated.m0978")}
+                  {translateMessage("generated.scanner.days")}
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  {translateMessage("generated.m1028")}{" "}
+                  {translateMessage("generated.scanner.temperature")}{" "}
                   <span className="font-medium text-foreground">
-                    {translateMessage("generated.m0095", {
+                    {translateMessage("generated.shared.cC", {
                       value0: scannedItem.minTemp,
                       value1: scannedItem.maxTemp,
                     })}
                   </span>
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  {translateMessage("generated.m1022")}{" "}
+                  {translateMessage("generated.scanner.weight")}{" "}
                   <span className="font-medium text-foreground">
-                    {scannedItem.weight} {translateMessage("generated.m0954")}
+                    {scannedItem.weight}{" "}
+                    {translateMessage("generated.shared.kg")}
                   </span>
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  {translateMessage("generated.m1029")}{" "}
+                  {translateMessage("generated.scanner.dimensions")}{" "}
                   <span className="font-medium text-foreground">
                     {scannedItem.sizeX} × {scannedItem.sizeY} ×{" "}
                     {scannedItem.sizeZ}
@@ -111,7 +114,7 @@ export function ScannerQuantityStep({
               className="mb-2 block font-medium text-sm"
               htmlFor="quantity"
             >
-              {translateMessage("generated.m0758")}
+              {translateMessage("generated.scanner.itemQuantity")}
             </label>
             <div className="flex items-center gap-3">
               <Button
@@ -161,10 +164,12 @@ export function ScannerQuantityStep({
           <div className="flex items-center justify-between rounded-xl border bg-card/30 p-3">
             <div>
               <Label htmlFor="reserve-toggle">
-                {translateMessage("generated.m0759")}
+                {translateMessage("generated.scanner.reserveLocations")}
               </Label>
               <p className="text-muted-foreground text-xs">
-                {translateMessage("generated.m0760")}
+                {translateMessage(
+                  "generated.scanner.lockPositionsUntilPlacementConfirmation"
+                )}
               </p>
             </div>
             <Switch
@@ -180,7 +185,7 @@ export function ScannerQuantityStep({
             onClick={onSubmit}
             type="button"
           >
-            {translateMessage("generated.m0761")}
+            {translateMessage("generated.scanner.generateLocations")}
           </Button>
         </div>
       </div>

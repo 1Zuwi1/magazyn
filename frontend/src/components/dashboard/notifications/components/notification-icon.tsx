@@ -149,10 +149,12 @@ export function NotificationInbox() {
           />
         </div>
         <p className="mt-3 font-medium">
-          {translateMessage("generated.m0487")}
+          {translateMessage("generated.dashboard.notifications.notifications")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage("generated.m0488")}
+          {translateMessage(
+            "generated.dashboard.notifications.everythingLooksGood"
+          )}
         </p>
       </motion.div>
     )
@@ -239,7 +241,7 @@ export function NotificationInbox() {
           buttonVariants({ variant: "ghost", size: "icon" }),
           "relative mr-2"
         )}
-        title={translateMessage("generated.m0988")}
+        title={translateMessage("generated.shared.notifications")}
       >
         <HugeiconsIcon
           className="size-5 text-muted-foreground transition-colors group-hover:text-foreground"
@@ -270,11 +272,13 @@ export function NotificationInbox() {
           <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="font-semibold">
-                {translateMessage("generated.m0988")}
+                {translateMessage("generated.shared.notifications")}
               </h3>
               {unreadCount > 0 && (
                 <Badge className="h-5 px-1.5 text-[10px]" variant="secondary">
-                  {translateMessage("generated.m1098", { value0: unreadCount })}
+                  {translateMessage("generated.dashboard.notifications.new", {
+                    value0: unreadCount,
+                  })}
                 </Badge>
               )}
             </div>
@@ -286,7 +290,7 @@ export function NotificationInbox() {
               variant="ghost"
             >
               <HugeiconsIcon className="size-3.5" icon={TickDouble02Icon} />
-              {translateMessage("generated.m0489")}
+              {translateMessage("generated.dashboard.notifications.readAll")}
             </Button>
           </div>
         </div>
@@ -299,7 +303,7 @@ export function NotificationInbox() {
             href="/dashboard/notifications"
             onClick={() => setOpen(false)}
           >
-            {translateMessage("generated.m0249")}
+            {translateMessage("generated.shared.seeAll")}
             <HugeiconsIcon className="size-3.5" icon={ArrowRight02Icon} />
           </Link>
         </div>

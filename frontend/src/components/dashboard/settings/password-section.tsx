@@ -46,12 +46,19 @@ export function PasswordSection() {
       isTwoFactorVerifiedRef.current = false
 
       if (error) {
-        handleApiError(error, translateMessage("generated.m0549"))
+        handleApiError(
+          error,
+          translateMessage(
+            "generated.dashboard.settings.failedChangePasswordAgain"
+          )
+        )
         return
       }
 
       form.reset()
-      toast.success(translateMessage("generated.m0550"))
+      toast.success(
+        translateMessage("generated.dashboard.settings.passwordBeenChanged")
+      )
     },
     validators: {
       onSubmitAsync: ChangePasswordFormSchema,
@@ -75,8 +82,12 @@ export function PasswordSection() {
                   autoComplete="current-password"
                   field={field}
                   id="current-password"
-                  label={translateMessage("generated.m0551")}
-                  placeholder={translateMessage("generated.m0552")}
+                  label={translateMessage(
+                    "generated.dashboard.settings.currentPassword"
+                  )}
+                  placeholder={translateMessage(
+                    "generated.dashboard.settings.enterCurrentPassword"
+                  )}
                   type="password"
                 />
               </div>
@@ -90,8 +101,10 @@ export function PasswordSection() {
                 autoComplete="new-password"
                 field={field}
                 id="new-password"
-                label={translateMessage("generated.m0055")}
-                placeholder={translateMessage("generated.m0553")}
+                label={translateMessage("generated.shared.newPassword")}
+                placeholder={translateMessage(
+                  "generated.dashboard.settings.least8Characters"
+                )}
                 type="password"
               />
             )
@@ -104,8 +117,10 @@ export function PasswordSection() {
                 autoComplete="new-password"
                 field={field}
                 id="confirm-password"
-                label={translateMessage("generated.m0013")}
-                placeholder={translateMessage("generated.m0554")}
+                label={translateMessage("generated.shared.confirmPassword")}
+                placeholder={translateMessage(
+                  "generated.dashboard.settings.repeatNewPassword"
+                )}
                 type="password"
               />
             )
@@ -115,7 +130,9 @@ export function PasswordSection() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground text-xs">
-          {translateMessage("generated.m0555")}
+          {translateMessage(
+            "generated.dashboard.settings.min8CharactersIncludingNumbers"
+          )}
         </p>
         <form.Subscribe
           selector={(state) => [state.canSubmit, state.isSubmitting]}
@@ -126,7 +143,7 @@ export function PasswordSection() {
               isLoading={isSubmitting}
               type="submit"
             >
-              {translateMessage("generated.m0556")}
+              {translateMessage("generated.dashboard.settings.changePassword")}
             </Button>
           )}
         </form.Subscribe>

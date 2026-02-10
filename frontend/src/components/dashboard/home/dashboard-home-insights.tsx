@@ -11,10 +11,12 @@ export function DashboardHomeInsights() {
     >
       <div>
         <h2 className="font-semibold text-xl" id="dashboard-insights">
-          {translateMessage("generated.m0429")}
+          {translateMessage("generated.dashboard.home.operationalInsight")}
         </h2>
         <p className="text-muted-foreground text-sm">
-          {translateMessage("generated.m0430")}
+          {translateMessage(
+            "generated.dashboard.home.mostImportantAlertsLatestReceipts"
+          )}
         </p>
       </div>
       <div className="grid @5xl:grid-cols-3 @md:grid-cols-2 gap-6">

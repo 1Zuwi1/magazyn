@@ -42,10 +42,10 @@ export function Search({ className, placeholder }: SearchProps) {
         value={value}
       />
       <InputGroupButton
-        aria-label={translateMessage("generated.m0195")}
+        aria-label={translateMessage("generated.admin.shared.expandSearchMenu")}
         className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
         onClick={handleOpenSearch}
-        title={translateMessage("generated.m0196")}
+        title={translateMessage("generated.admin.shared.expandMenu")}
       >
         <HugeiconsIcon icon={Search01Icon} />
       </InputGroupButton>

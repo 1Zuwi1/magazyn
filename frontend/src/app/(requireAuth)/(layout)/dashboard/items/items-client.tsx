@@ -71,14 +71,14 @@ export default function ItemsClientPage() {
 
   const headerStats = [
     {
-      label: translateMessage("generated.m0068"),
+      label: translateMessage("generated.dashboard.items.stock"),
       value:
         isPending || isAssortmentError
           ? "..."
           : totalStock.toLocaleString(locale),
     },
     {
-      label: translateMessage("generated.m0878"),
+      label: translateMessage("generated.dashboard.items.products"),
       value: isPending || isItemsError ? "..." : totalItems,
     },
   ]
@@ -86,11 +86,13 @@ export default function ItemsClientPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        description={translateMessage("generated.m0069")}
+        description={translateMessage(
+          "generated.dashboard.items.browseProductCatalogMonitorCurrent"
+        )}
         icon={PackageIcon}
         iconBadge={isPending ? undefined : totalItems}
         stats={headerStats}
-        title={translateMessage("generated.m0070")}
+        title={translateMessage("generated.dashboard.items.itemManagement")}
       />
 
       <Tabs
@@ -107,14 +109,18 @@ export default function ItemsClientPage() {
             <TabsList className="h-auto" variant="line">
               <TabsTrigger className="gap-2 py-2.5" value="assortment">
                 <HugeiconsIcon className="size-3.5" icon={GridViewIcon} />
-                <span>{translateMessage("generated.m0071")}</span>
+                <span>
+                  {translateMessage("generated.dashboard.items.stockStatus")}
+                </span>
                 <Badge className="ml-1" variant="secondary">
                   {isAssortmentPending ? "..." : totalStock}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger className="gap-2 py-2.5" value="definitions">
                 <HugeiconsIcon className="size-3.5" icon={BarCode02Icon} />
-                <span>{translateMessage("generated.m0072")}</span>
+                <span>
+                  {translateMessage("generated.dashboard.items.productCatalog")}
+                </span>
                 <Badge className="ml-1" variant="secondary">
                   {totalItems}
                 </Badge>

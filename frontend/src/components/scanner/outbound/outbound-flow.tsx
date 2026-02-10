@@ -29,9 +29,15 @@ import { OutboundSelectQuantity } from "./outbound-select-quantity"
 import { OutboundSuccess } from "./outbound-success"
 
 const OUTBOUND_ERROR_MESSAGES: Record<string, string> = {
-  ASSORTMENT_NOT_FOUND: translateMessage("generated.m0684"),
-  OUTBOUND_FIFO_VIOLATION: translateMessage("generated.m0685"),
-  USER_NOT_FOUND: translateMessage("generated.m0686"),
+  ASSORTMENT_NOT_FOUND: translateMessage(
+    "generated.scanner.outbound.assortmentFoundScannedCodeCheck"
+  ),
+  OUTBOUND_FIFO_VIOLATION: translateMessage(
+    "generated.scanner.outbound.fifoRuleViolationCannotPick"
+  ),
+  USER_NOT_FOUND: translateMessage(
+    "generated.scanner.outbound.userFoundSignAgain"
+  ),
 }
 
 const getOutboundErrorMessage = (error: unknown, fallback: string): string => {
@@ -152,7 +158,9 @@ export const OutboundFlow = ({
         setError(
           getOutboundErrorMessage(
             executeError,
-            translateMessage("generated.m0687")
+            translateMessage(
+              "generated.scanner.outbound.failedPerformRemovalOperation"
+            )
           )
         )
       } finally {
@@ -186,7 +194,9 @@ export const OutboundFlow = ({
     (code: string) => {
       const scannedCode = code.trim()
       if (!scannedCode) {
-        setError(translateMessage("generated.m0688"))
+        setError(
+          translateMessage("generated.scanner.shared.failedReadCodeAgain")
+        )
         return
       }
 
@@ -196,7 +206,11 @@ export const OutboundFlow = ({
       )
 
       if (!matchingSlot) {
-        setError(translateMessage("generated.m0689"))
+        setError(
+          translateMessage(
+            "generated.scanner.outbound.scannedCodeMatchAnySelected"
+          )
+        )
         return
       }
 
@@ -207,7 +221,11 @@ export const OutboundFlow = ({
         )
 
         if (alreadyScanned) {
-          setError(translateMessage("generated.m0690"))
+          setError(
+            translateMessage(
+              "generated.scanner.outbound.itemAlreadyBeenScanned"
+            )
+          )
           return current
         }
 
@@ -255,7 +273,12 @@ export const OutboundFlow = ({
       }
     } catch (checkError) {
       setError(
-        getOutboundErrorMessage(checkError, translateMessage("generated.m0691"))
+        getOutboundErrorMessage(
+          checkError,
+          translateMessage(
+            "generated.scanner.outbound.failedVerifyFifoCompliance"
+          )
+        )
       )
     } finally {
       setIsSubmitting(false)
@@ -268,7 +291,9 @@ export const OutboundFlow = ({
     async (code: string) => {
       const scannedCode = code.trim()
       if (!scannedCode) {
-        setError(translateMessage("generated.m0688"))
+        setError(
+          translateMessage("generated.scanner.shared.failedReadCodeAgain")
+        )
         return
       }
 
@@ -303,7 +328,9 @@ export const OutboundFlow = ({
         setError(
           getOutboundErrorMessage(
             scanError,
-            translateMessage("generated.m0692")
+            translateMessage(
+              "generated.scanner.outbound.failedVerifyScannedCode"
+            )
           )
         )
       } finally {
@@ -365,7 +392,10 @@ export const OutboundFlow = ({
       setStep("pick-list")
     } catch (planError) {
       setError(
-        getOutboundErrorMessage(planError, translateMessage("generated.m0693"))
+        getOutboundErrorMessage(
+          planError,
+          translateMessage("generated.scanner.outbound.failedGeneratePickPlan")
+        )
       )
     } finally {
       setIsSubmitting(false)

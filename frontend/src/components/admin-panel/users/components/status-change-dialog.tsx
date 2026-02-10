@@ -86,9 +86,11 @@ export function StatusChangeDialog({
     <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{translateMessage("generated.m0274")}</DialogTitle>
+          <DialogTitle>
+            {translateMessage("generated.admin.users.changeAccountStatus")}
+          </DialogTitle>
           <DialogDescription>
-            {translateMessage("generated.m0275")}{" "}
+            {translateMessage("generated.admin.users.changeStatusUserAccount")}{" "}
             <strong>
               {normalizeValue(user?.full_name) || user?.email || ""}
             </strong>
@@ -99,7 +101,7 @@ export function StatusChangeDialog({
           <div className="space-y-4 py-2">
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground text-sm">
-                {translateMessage("generated.m0276")}
+                {translateMessage("generated.admin.users.currentStatus")}
               </span>
               <Badge variant={getStatusVariant(user.account_status)}>
                 {getStatusLabel(user.account_status)}
@@ -108,7 +110,7 @@ export function StatusChangeDialog({
 
             <div className="space-y-2">
               <Label htmlFor="new-status">
-                {translateMessage("generated.m0277")}
+                {translateMessage("generated.admin.users.newStatus")}
               </Label>
               <Select
                 onValueChange={(value) =>
@@ -118,12 +120,16 @@ export function StatusChangeDialog({
               >
                 <SelectTrigger className="w-full" id="new-status">
                   <SelectValue
-                    placeholder={translateMessage("generated.m0278")}
+                    placeholder={translateMessage(
+                      "generated.admin.users.selectNewStatus"
+                    )}
                     render={
                       <span>
                         {selectedStatus
                           ? getStatusLabel(selectedStatus)
-                          : translateMessage("generated.m0278")}
+                          : translateMessage(
+                              "generated.admin.users.selectNewStatus"
+                            )}
                       </span>
                     }
                   />
@@ -140,13 +146,15 @@ export function StatusChangeDialog({
 
             <div className="space-y-2">
               <Label htmlFor="status-reason">
-                {translateMessage("generated.m0279")}
+                {translateMessage("generated.admin.users.reasonOptional")}
               </Label>
               <Input
                 id="status-reason"
                 maxLength={500}
                 onChange={(event) => setReason(event.target.value)}
-                placeholder={translateMessage("generated.m0280")}
+                placeholder={translateMessage(
+                  "generated.admin.users.provideReasonChangingStatus"
+                )}
                 value={reason}
               />
             </div>
@@ -154,10 +162,10 @@ export function StatusChangeDialog({
         ) : null}
         <DialogFooter className="gap-1">
           <Button onClick={() => handleOpenChange(false)} variant="outline">
-            {translateMessage("generated.m0885")}
+            {translateMessage("generated.shared.cancel")}
           </Button>
           <Button disabled={!selectedStatus} onClick={handleConfirm}>
-            {translateMessage("generated.m0176")}
+            {translateMessage("generated.admin.shared.changeStatus")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -63,7 +63,7 @@ type SupportState = "checking" | "supported" | "unsupported"
 
 const SUPPORT_LABEL_KEYS: Record<SupportState, string> = {
   checking: "passkeys.support.checking",
-  supported: "generated.m0018",
+  supported: "generated.dashboard.settings.supported",
   unsupported: "passkeys.support.unsupported",
 }
 
@@ -117,7 +117,9 @@ function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
             </div>
           </div>
           <p className="text-muted-foreground/70 text-xs">
-            {translateMessage("generated.m1061", { value0: passkey.id })}
+            {translateMessage("generated.dashboard.settings.keyActive", {
+              value0: passkey.id,
+            })}
           </p>
         </div>
       </div>
@@ -136,7 +138,9 @@ function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
             icon={PencilEdit02Icon}
             size={14}
           />
-          <span className="sr-only">{translateMessage("generated.m0521")}</span>
+          <span className="sr-only">
+            {translateMessage("generated.dashboard.settings.changeName")}
+          </span>
         </Button>
         <Button
           className="size-8 rounded-lg bg-destructive/5 hover:bg-destructive/10"
@@ -150,7 +154,9 @@ function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
             icon={Delete02Icon}
             size={14}
           />
-          <span className="sr-only">{translateMessage("generated.m0230")}</span>
+          <span className="sr-only">
+            {translateMessage("generated.shared.remove")}
+          </span>
         </Button>
       </div>
     </div>
@@ -201,10 +207,12 @@ function PasskeysEmptyState() {
       </div>
       <div className="space-y-1">
         <p className="font-medium text-foreground/80 text-sm">
-          {translateMessage("generated.m0522")}
+          {translateMessage("generated.dashboard.settings.securityKeys2")}
         </p>
         <p className="max-w-60 text-muted-foreground text-xs">
-          {translateMessage("generated.m0523")}
+          {translateMessage(
+            "generated.dashboard.settings.addFirstKeyLogQuickly"
+          )}
         </p>
       </div>
     </div>
@@ -235,10 +243,12 @@ function PasskeysList({
         </div>
         <div className="space-y-1">
           <p className="font-medium text-foreground/80 text-sm">
-            {translateMessage("generated.m0524")}
+            {translateMessage("generated.dashboard.settings.failedLoadKeys")}
           </p>
           <p className="text-muted-foreground text-xs">
-            {translateMessage("generated.m0525")}
+            {translateMessage(
+              "generated.dashboard.settings.problemDownloadingData"
+            )}
           </p>
         </div>
         {onRetry && (
@@ -247,7 +257,7 @@ function PasskeysList({
             onClick={onRetry}
             type="button"
           >
-            {translateMessage("generated.m0075")}
+            {translateMessage("generated.shared.again")}
           </button>
         )}
       </div>
@@ -312,12 +322,14 @@ export function PasskeysSection() {
 
   const handleAddPasskey = async () => {
     if (supportState !== "supported") {
-      toast.error(translateMessage("generated.m0021"))
+      toast.error(
+        translateMessage("generated.shared.deviceSupportSecurityKeys")
+      )
       return
     }
 
     if (!navigator.credentials) {
-      toast.error(translateMessage("generated.m0022"))
+      toast.error(translateMessage("generated.shared.browserSupportWebauthn"))
       return
     }
 
@@ -345,7 +357,12 @@ export function PasskeysSection() {
           })
           return
         }
-        handleApiError(startError, translateMessage("generated.m0526"))
+        handleApiError(
+          startError,
+          translateMessage(
+            "generated.dashboard.settings.failedStartAddingSecurityKey"
+          )
+        )
         return
       }
 
@@ -358,14 +375,16 @@ export function PasskeysSection() {
         toast.error(
           getWebAuthnErrorMessage(
             credentialError,
-            translateMessage("generated.m0527")
+            translateMessage(
+              "generated.dashboard.settings.failedCreateSecurityKey"
+            )
           )
         )
         return
       }
 
       if (!isPublicKeyCredential(credential)) {
-        toast.error(translateMessage("generated.m0026"))
+        toast.error(translateMessage("generated.shared.securityKeyDataRead"))
         return
       }
 
@@ -411,14 +430,21 @@ export function PasskeysSection() {
         // Keep the dialog open, 2FA dialog will open
         return
       }
-      handleApiError(finishError, translateMessage("generated.m0528"))
+      handleApiError(
+        finishError,
+        translateMessage(
+          "generated.dashboard.settings.failedCompleteAddingSecurityKey"
+        )
+      )
       return
     }
 
     setIsNamingDialogOpen(false)
     setPendingCredentialJson(null)
     setNewKeyName("")
-    toast.success(translateMessage("generated.m0529"))
+    toast.success(
+      translateMessage("generated.dashboard.settings.securityKeyBeenAdded")
+    )
     queryClient.invalidateQueries({ queryKey: PASSKEYS_QUERY_KEY })
     queryClient.invalidateQueries({ queryKey: LINKED_2FA_METHODS_QUERY_KEY })
   }
@@ -427,7 +453,9 @@ export function PasskeysSection() {
     setIsNamingDialogOpen(false)
     setPendingCredentialJson(null)
     setNewKeyName("")
-    toast.info(translateMessage("generated.m0530"))
+    toast.info(
+      translateMessage("generated.dashboard.settings.addingKeyBeenCanceled")
+    )
   }
 
   const handleOpenRename = (passkey: Passkey) => {
@@ -448,7 +476,9 @@ export function PasskeysSection() {
           setIsRenameDialogOpen(false)
           setRenamingPasskey(null)
           setRenameValue("")
-          toast.success(translateMessage("generated.m0531"))
+          toast.success(
+            translateMessage("generated.dashboard.settings.keyNameBeenChanged")
+          )
         },
       }
     )
@@ -471,7 +501,11 @@ export function PasskeysSection() {
         queryClient.invalidateQueries({
           queryKey: LINKED_2FA_METHODS_QUERY_KEY,
         })
-        toast.success(translateMessage("generated.m0532"))
+        toast.success(
+          translateMessage(
+            "generated.dashboard.settings.securityKeyBeenDeleted"
+          )
+        )
       },
     })
   }
@@ -500,10 +534,14 @@ export function PasskeysSection() {
               </div>
               <div className="space-y-1.5">
                 <CardTitle className="text-lg tracking-tight">
-                  {translateMessage("generated.m0512")}
+                  {translateMessage(
+                    "generated.dashboard.settings.securityKeys"
+                  )}
                 </CardTitle>
                 <p className="max-w-70 text-muted-foreground text-sm leading-relaxed">
-                  {translateMessage("generated.m0533")}
+                  {translateMessage(
+                    "generated.dashboard.settings.logFasterMoreSecurelyWithout"
+                  )}
                 </p>
               </div>
             </div>
@@ -540,10 +578,12 @@ export function PasskeysSection() {
                 </div>
                 <div className="space-y-0.5">
                   <p className="font-semibold text-sm tracking-tight">
-                    {translateMessage("generated.m0534")}
+                    {translateMessage("generated.dashboard.settings.addNewKey")}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    {translateMessage("generated.m0535")}
+                    {translateMessage(
+                      "generated.dashboard.settings.biometricsDonglePin"
+                    )}
                   </p>
                 </div>
               </div>
@@ -555,7 +595,7 @@ export function PasskeysSection() {
                 type="button"
               >
                 <HugeiconsIcon icon={Key01Icon} size={16} />
-                {translateMessage("generated.m0536")}
+                {translateMessage("generated.dashboard.settings.addKey")}
               </Button>
             </div>
           </div>
@@ -582,10 +622,12 @@ export function PasskeysSection() {
               />
             </div>
             <DialogTitle className="text-center">
-              {translateMessage("generated.m0537")}
+              {translateMessage("generated.dashboard.settings.nameSecurityKey")}
             </DialogTitle>
             <DialogDescription className="text-center">
-              {translateMessage("generated.m0538")}
+              {translateMessage(
+                "generated.dashboard.settings.giveNameWillHelpRecognize"
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 pt-2">
@@ -599,18 +641,22 @@ export function PasskeysSection() {
                   handleSaveNewPasskey()
                 }
               }}
-              placeholder={translateMessage("generated.m0539")}
+              placeholder={translateMessage(
+                "generated.dashboard.settings.eGMacbookProIphone"
+              )}
               value={newKeyName}
             />
             <p className="text-center text-muted-foreground/70 text-xs">
-              {translateMessage("generated.m0540")}
+              {translateMessage(
+                "generated.dashboard.settings.maximum50Characters"
+              )}
             </p>
           </div>
           <DialogFooter className="gap-2 pt-2 sm:gap-2">
             <DialogClose
               render={<Button className="flex-1" variant="outline" />}
             >
-              {translateMessage("generated.m0885")}
+              {translateMessage("generated.shared.cancel")}
             </DialogClose>
             <Button
               className="flex-1"
@@ -618,7 +664,7 @@ export function PasskeysSection() {
               isLoading={isSavingName}
               onClick={handleSaveNewPasskey}
             >
-              {translateMessage("generated.m0541")}
+              {translateMessage("generated.dashboard.settings.saveKey")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -646,10 +692,12 @@ export function PasskeysSection() {
               />
             </div>
             <DialogTitle className="text-center">
-              {translateMessage("generated.m0542")}
+              {translateMessage("generated.dashboard.settings.renameKey")}
             </DialogTitle>
             <DialogDescription className="text-center">
-              {translateMessage("generated.m0543")}
+              {translateMessage(
+                "generated.dashboard.settings.enterNewNameSecurityKey"
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 pt-2">
@@ -663,18 +711,22 @@ export function PasskeysSection() {
                   handleRename()
                 }
               }}
-              placeholder={translateMessage("generated.m0539")}
+              placeholder={translateMessage(
+                "generated.dashboard.settings.eGMacbookProIphone"
+              )}
               value={renameValue}
             />
             <p className="text-center text-muted-foreground/70 text-xs">
-              {translateMessage("generated.m0540")}
+              {translateMessage(
+                "generated.dashboard.settings.maximum50Characters"
+              )}
             </p>
           </div>
           <DialogFooter className="gap-2 pt-2 sm:gap-2">
             <DialogClose
               render={<Button className="flex-1" variant="outline" />}
             >
-              {translateMessage("generated.m0885")}
+              {translateMessage("generated.shared.cancel")}
             </DialogClose>
             <Button
               className="flex-1"
@@ -682,7 +734,7 @@ export function PasskeysSection() {
               isLoading={renamePasskey.isPending}
               onClick={handleRename}
             >
-              {translateMessage("generated.m0544")}
+              {translateMessage("generated.dashboard.settings.saveChanges")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -708,24 +760,29 @@ export function PasskeysSection() {
               />
             </AlertDialogMedia>
             <AlertDialogTitle>
-              {translateMessage("generated.m0545")}
+              {translateMessage(
+                "generated.dashboard.settings.deleteSecurityKey"
+              )}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {translateMessage("generated.m0546", {
-                value0: deletingPasskey?.name ?? "",
-              })}
+              {translateMessage(
+                "generated.dashboard.settings.keyWillPermanentlyDeletedWont",
+                {
+                  value0: deletingPasskey?.name ?? "",
+                }
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>
-              {translateMessage("generated.m0885")}
+              {translateMessage("generated.shared.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               isLoading={deletePasskey.isPending}
               onClick={handleDelete}
               variant="destructive"
             >
-              {translateMessage("generated.m0548")}
+              {translateMessage("generated.dashboard.settings.deleteKey")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
