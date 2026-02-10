@@ -1,6 +1,7 @@
 "use client"
 
 import { UserMultiple02Icon } from "@hugeicons/core-free-icons"
+
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { ActionDialog } from "@/components/admin-panel/users/components/action-dialog"
@@ -15,11 +16,12 @@ import { useUsersDialogState } from "@/components/admin-panel/users/hooks/use-us
 import { useUsersFilters } from "@/components/admin-panel/users/hooks/use-users-filters"
 import { useUsersPagination } from "@/components/admin-panel/users/hooks/use-users-pagination"
 import PaginationFull from "@/components/ui/pagination-component"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { getAdminNavLinks } from "../lib/constants"
-
 export default function UsersMain() {
+  const t = useAppTranslations()
+
   const {
     page,
     search,
@@ -91,9 +93,7 @@ export default function UsersMain() {
 
   const handleEditUser = (userId: number) => {
     if (isTeamsError) {
-      toast.warning(
-        translateMessage("generated.admin.users.failedLoadTeamListTeam")
-      )
+      toast.warning(t("generated.admin.users.failedLoadTeamListTeam"))
     }
     openEditDialog(userId)
   }
@@ -113,15 +113,13 @@ export default function UsersMain() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description={translateMessage(
-          "generated.admin.users.manageUserAccountsProfileData"
-        )}
+        description={t("generated.admin.users.manageUserAccountsProfileData")}
         icon={UserMultiple02Icon}
         navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title={translateMessage("generated.shared.users")}
+        title={t("generated.shared.users")}
       >
         <UsersStats
           active={stats.active}
@@ -169,7 +167,7 @@ export default function UsersMain() {
         onConfirm={confirmDeleteUser}
         onOpenChange={handleDeleteDialogOpenChange}
         open={deleteDialogOpen}
-        title={translateMessage("generated.admin.users.deleteUser")}
+        title={t("generated.admin.users.deleteUser")}
       />
 
       <StatusChangeDialog

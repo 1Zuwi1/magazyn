@@ -23,7 +23,7 @@ import useWarehouses, {
   useUpdateWarehouse,
   type WarehousesList,
 } from "@/hooks/use-warehouses"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { getAdminNavLinks } from "../lib/constants"
 import { WarehouseCard } from "./components/warehouse-card"
@@ -35,6 +35,8 @@ import {
 type ApiWarehouse = WarehousesList["content"][number]
 
 export default function WarehousesMain() {
+  const t = useAppTranslations()
+
   const [page, setPage] = useState(1)
   const {
     data: warehousesData,
@@ -93,7 +95,7 @@ export default function WarehousesMain() {
     const report = await importWarehousesMutation.mutateAsync(file)
     if (report.errors.length > 0) {
       toast.warning(
-        translateMessage("generated.admin.shared.importPartiallyCompleted", {
+        t("generated.admin.shared.importPartiallyCompleted", {
           value0: report.imported,
           value1: report.processedLines,
         })
@@ -102,7 +104,7 @@ export default function WarehousesMain() {
     }
 
     toast.success(
-      translateMessage("generated.admin.warehouses.imported2", {
+      t("generated.admin.warehouses.imported2", {
         value0: report.imported,
       })
     )
@@ -157,21 +159,17 @@ export default function WarehousesMain() {
           />
         </div>
         <p className="mt-4 font-medium text-foreground">
-          {translateMessage(
-            "generated.admin.warehouses.failedDownloadWarehouses"
-          )}
+          {t("generated.admin.warehouses.failedDownloadWarehouses")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage(
-            "generated.admin.warehouses.problemLoadingDataRefreshingPage"
-          )}
+          {t("generated.admin.warehouses.problemLoadingDataRefreshingPage")}
         </p>
         <Button
           className="mt-4"
           onClick={() => window.location.reload()}
           variant="outline"
         >
-          {translateMessage("generated.shared.again")}
+          {t("generated.shared.again")}
         </Button>
       </div>
     )
@@ -185,16 +183,14 @@ export default function WarehousesMain() {
           />
         </div>
         <p className="mt-4 font-medium text-foreground">
-          {translateMessage("generated.admin.warehouses.warehouses2")}
+          {t("generated.admin.warehouses.warehouses2")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage(
-            "generated.admin.warehouses.addFirstWarehouseGetStarted"
-          )}
+          {t("generated.admin.warehouses.addFirstWarehouseGetStarted")}
         </p>
         <Button className="mt-4" onClick={handleAddWarehouse}>
           <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-          {translateMessage("generated.admin.warehouses.addWarehouse")}
+          {t("generated.admin.warehouses.addWarehouse")}
         </Button>
       </div>
     )
@@ -226,19 +222,17 @@ export default function WarehousesMain() {
             />
             <Button onClick={handleAddWarehouse}>
               <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-              {translateMessage("generated.admin.warehouses.addWarehouse")}
+              {t("generated.admin.warehouses.addWarehouse")}
             </Button>
           </div>
         }
-        description={translateMessage(
-          "generated.admin.warehouses.manageWarehousesRacks"
-        )}
+        description={t("generated.admin.warehouses.manageWarehousesRacks")}
         icon={WarehouseIcon}
         navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title={translateMessage("generated.shared.warehouses")}
+        title={t("generated.shared.warehouses")}
       >
         {/* Quick Stats */}
         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -247,7 +241,7 @@ export default function WarehousesMain() {
               {totalWarehouses}
             </span>
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.admin.warehouses.warehouses")}
+              {t("generated.admin.warehouses.warehouses")}
             </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
@@ -257,12 +251,12 @@ export default function WarehousesMain() {
             />
             <span className="font-mono font-semibold">{totalRacks}</span>
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.admin.warehouses.racks")}
+              {t("generated.admin.warehouses.racks")}
             </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.admin.warehouses.occupancy")}
+              {t("generated.admin.warehouses.occupancy")}
             </span>
             <span className="font-mono font-semibold">
               {(totalCapacity ?? 0) > 0
@@ -297,7 +291,7 @@ export default function WarehousesMain() {
       />
 
       <ConfirmDialog
-        description={translateMessage(
+        description={t(
           "generated.admin.warehouses.sureWantDeleteWarehouseAll",
           {
             value0: warehouseToDelete?.name,
@@ -306,7 +300,7 @@ export default function WarehousesMain() {
         onConfirm={confirmDeleteWarehouse}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
-        title={translateMessage("generated.admin.warehouses.deleteWarehouse")}
+        title={t("generated.admin.warehouses.deleteWarehouse")}
       />
     </div>
   )

@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Fragment } from "react/jsx-runtime"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { NotificationInbox } from "./dashboard/notifications/components/notification-icon"
 import { LanguageSwitcher } from "./language-switcher"
 import { Scanner } from "./scanner/scanner"
@@ -53,6 +53,8 @@ const sanitizeVisibleText = (value: string): string => {
 }
 
 export default function SiteHeader() {
+  const t = useAppTranslations()
+
   const pathname = usePathname()
   const router = useRouter()
   const splitted = pathname.split("/").filter((part) => part !== "")
@@ -122,7 +124,7 @@ export default function SiteHeader() {
                     <DropdownMenuTrigger className="flex items-center gap-1">
                       <BreadcrumbEllipsis className="size-4" />
                       <span className="sr-only">
-                        {translateMessage("generated.global.header.toggleMenu")}
+                        {t("generated.global.header.toggleMenu")}
                       </span>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">

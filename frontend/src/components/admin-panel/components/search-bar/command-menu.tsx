@@ -3,6 +3,7 @@
 import { LaptopIcon, Moon02Icon, Sun03Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
+
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import {
@@ -15,8 +16,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { translateMessage } from "@/i18n/translate-message"
-
+import { useAppTranslations } from "@/i18n/use-translations"
 export interface NavItem {
   title: string
   url?: string
@@ -40,6 +40,8 @@ export function CommandMenu({
   open,
   setOpen,
 }: CommandMenuProps) {
+  const t = useAppTranslations()
+
   const { setTheme } = useTheme()
   const router = useRouter()
   const navGroups = navData || []
@@ -57,13 +59,13 @@ export function CommandMenu({
     <CommandDialog onOpenChange={setOpen} open={open}>
       <CommandInput
         onValueChange={setQuery}
-        placeholder={translateMessage("generated.admin.shared.searchCommand")}
+        placeholder={t("generated.admin.shared.searchCommand")}
         value={query}
       />
       <CommandList>
         <ScrollArea className="h-72 pe-1">
           <CommandEmpty>
-            {translateMessage("generated.admin.shared.resultsFound")}
+            {t("generated.admin.shared.resultsFound")}
           </CommandEmpty>
 
           {navGroups.map((group) => (
@@ -92,7 +94,7 @@ export function CommandMenu({
               }}
             >
               <HugeiconsIcon icon={Sun03Icon} />{" "}
-              <span>{translateMessage("generated.admin.shared.bright")}</span>
+              <span>{t("generated.admin.shared.bright")}</span>
             </CommandItem>
             <CommandItem
               onSelect={() => {
@@ -100,7 +102,7 @@ export function CommandMenu({
               }}
             >
               <HugeiconsIcon className="scale-90" icon={Moon02Icon} />
-              <span>{translateMessage("generated.admin.shared.dark")}</span>
+              <span>{t("generated.admin.shared.dark")}</span>
             </CommandItem>
             <CommandItem
               onSelect={() => {
@@ -108,7 +110,7 @@ export function CommandMenu({
               }}
             >
               <HugeiconsIcon icon={LaptopIcon} />
-              <span>{translateMessage("generated.admin.shared.system")}</span>
+              <span>{t("generated.admin.shared.system")}</span>
             </CommandItem>
           </CommandGroup>
         </ScrollArea>

@@ -2,6 +2,7 @@
 
 import { PackageReceiveIcon } from "@hugeicons/core-free-icons"
 import { formatDate } from "date-fns"
+
 import { useMemo } from "react"
 import { InsightCard } from "@/components/dashboard/stat-card"
 import { Badge } from "@/components/ui/badge"
@@ -10,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import useAssortments from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import { useMultipleRacks } from "@/hooks/use-racks"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { RECENT_ITEMS_LIMIT } from "./dashboard-home.constants"
 
 function RecentArrivalsSkeleton() {
@@ -36,6 +37,8 @@ function RecentArrivalsSkeleton() {
 }
 
 export function DashboardRecentArrivalsCard() {
+  const t = useAppTranslations()
+
   const {
     data: assortmentsData,
     isPending: isAssortmentsPending,
@@ -106,17 +109,17 @@ export function DashboardRecentArrivalsCard() {
           dangerous: itemDefinition?.dangerous ?? false,
           itemName:
             itemDefinition?.name ??
-            translateMessage("generated.dashboard.home.product", {
+            t("generated.dashboard.home.product", {
               value0: assortment.itemId,
             }),
           rackLabel:
             rackLabelsById.get(assortment.rackId) ??
-            translateMessage("generated.dashboard.home.bookcase", {
+            t("generated.dashboard.home.bookcase", {
               value0: assortment.rackId,
             }),
         }
       }),
-    [assortments, itemDefinitionsById, rackLabelsById]
+    [assortments, itemDefinitionsById, rackLabelsById, t]
   )
 
   const renderContent = () => {
@@ -131,7 +134,7 @@ export function DashboardRecentArrivalsCard() {
     if (recentAssortmentEntries.length === 0) {
       return (
         <p className="text-muted-foreground text-sm">
-          {translateMessage("generated.dashboard.home.recentAdmissionsDisplay")}
+          {t("generated.dashboard.home.recentAdmissionsDisplay")}
         </p>
       )
     }
@@ -153,8 +156,8 @@ export function DashboardRecentArrivalsCard() {
               </span>
               <Badge variant={item.dangerous ? "warning" : "secondary"}>
                 {item.dangerous
-                  ? translateMessage("generated.dashboard.shared.dangerous")
-                  : translateMessage("generated.dashboard.shared.normal")}
+                  ? t("generated.dashboard.shared.dangerous")
+                  : t("generated.dashboard.shared.normal")}
               </Badge>
             </div>
           </li>
@@ -165,11 +168,9 @@ export function DashboardRecentArrivalsCard() {
 
   return (
     <InsightCard
-      description={translateMessage(
-        "generated.dashboard.home.latestDeliveriesRecentDays"
-      )}
+      description={t("generated.dashboard.home.latestDeliveriesRecentDays")}
       icon={PackageReceiveIcon}
-      title={translateMessage("generated.dashboard.home.recentAdmissions")}
+      title={t("generated.dashboard.home.recentAdmissions")}
     >
       {renderContent()}
     </InsightCard>

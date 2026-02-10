@@ -6,7 +6,7 @@ import {
   InputOTPStatus,
 } from "@/components/ui/input-otp"
 import { OTP_LENGTH } from "@/config/constants"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { sanitizeOtpValue } from "./utils"
 
 interface OtpInputProps {
@@ -17,6 +17,8 @@ interface OtpInputProps {
 }
 
 export function OtpInput({ id, onChange, value, disabled }: OtpInputProps) {
+  const t = useAppTranslations()
+
   const statusId = `${id}-status`
   const halfOtpLength = OTP_LENGTH / 2
 
@@ -36,7 +38,7 @@ export function OtpInput({ id, onChange, value, disabled }: OtpInputProps) {
         {Array.from({ length: halfOtpLength }).map((_, idx) => (
           <InputOTPSlot
             aria-describedby={statusId}
-            aria-label={translateMessage("inputOtp.digitAriaLabel", {
+            aria-label={t("inputOtp.digitAriaLabel", {
               value0: idx + 1,
             })}
             index={idx}
@@ -49,7 +51,7 @@ export function OtpInput({ id, onChange, value, disabled }: OtpInputProps) {
         {Array.from({ length: halfOtpLength }).map((_, idx) => (
           <InputOTPSlot
             aria-describedby={statusId}
-            aria-label={translateMessage("inputOtp.digitAriaLabel", {
+            aria-label={t("inputOtp.digitAriaLabel", {
               value0: idx + halfOtpLength + 1,
             })}
             index={idx + halfOtpLength}

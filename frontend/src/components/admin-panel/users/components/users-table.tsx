@@ -6,6 +6,7 @@ import {
   UserShield01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
@@ -25,7 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { AdminUser } from "@/hooks/use-admin-users"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import {
   getStatusLabel,
@@ -66,6 +67,8 @@ export function UsersTable({
   onChangeStatus,
   onAssignWarehouse,
 }: UsersTableProps) {
+  const t = useAppTranslations()
+
   const renderRows = () => {
     if (isPending) {
       return Array.from({ length: 5 }, (_, i) => (
@@ -148,14 +151,12 @@ export function UsersTable({
             </Badge>
           </TableCell>
           <TableCell className="text-muted-foreground">
-            {teamLabelKey ? translateMessage(teamLabelKey) : "—"}
+            {teamLabelKey ? t(teamLabelKey) : "—"}
           </TableCell>
           <TableCell>
             <DropdownMenu>
               <DropdownMenuTrigger
-                aria-label={translateMessage(
-                  "generated.admin.users.userActions"
-                )}
+                aria-label={t("generated.admin.users.userActions")}
                 className={cn(
                   "flex size-8 items-center justify-center rounded-md opacity-0 transition-all hover:bg-muted group-hover:opacity-100",
                   "focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
@@ -178,7 +179,7 @@ export function UsersTable({
                     className="mr-2 size-4"
                     icon={PencilEdit01Icon}
                   />
-                  {translateMessage("generated.shared.edit")}
+                  {t("generated.shared.edit")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer"
@@ -191,7 +192,7 @@ export function UsersTable({
                     className="mr-2 size-4"
                     icon={UserShield01Icon}
                   />
-                  {translateMessage("generated.admin.shared.changeStatus")}
+                  {t("generated.admin.shared.changeStatus")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer"
@@ -204,7 +205,7 @@ export function UsersTable({
                     className="mr-2 size-4"
                     icon={Building06Icon}
                   />
-                  {translateMessage("generated.admin.users.assignWarehouse")}
+                  {t("generated.admin.users.assignWarehouse")}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -215,7 +216,7 @@ export function UsersTable({
                   }}
                 >
                   <HugeiconsIcon className="mr-2 size-4" icon={Delete02Icon} />
-                  {translateMessage("generated.shared.remove")}
+                  {t("generated.shared.remove")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -231,19 +232,19 @@ export function UsersTable({
         <TableHeader>
           <TableRow className="bg-muted/20 hover:bg-muted/20">
             <TableHead className="font-semibold">
-              {translateMessage("generated.admin.users.fullName")}
+              {t("generated.admin.users.fullName")}
             </TableHead>
             <TableHead className="font-semibold">
-              {translateMessage("generated.shared.eMail")}
+              {t("generated.shared.eMail")}
             </TableHead>
             <TableHead className="font-semibold">
-              {translateMessage("generated.shared.status")}
+              {t("generated.shared.status")}
             </TableHead>
             <TableHead className="font-semibold">
-              {translateMessage("generated.shared.role")}
+              {t("generated.shared.role")}
             </TableHead>
             <TableHead className="font-semibold">
-              {translateMessage("generated.shared.team")}
+              {t("generated.shared.team")}
             </TableHead>
             <TableHead className="w-12" />
           </TableRow>

@@ -8,7 +8,6 @@ import {
   PencilEdit01Icon,
   WarehouseIcon,
 } from "@hugeicons/core-free-icons"
-
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 
@@ -21,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { WarehousesList } from "@/hooks/use-warehouses"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { THRESHOLD } from "../../lib/constants"
 
@@ -38,6 +37,8 @@ export function WarehouseCard({
   onEdit,
   onDelete,
 }: WarehouseCardProps) {
+  const t = useAppTranslations()
+
   const usedSlots = warehouse.occupiedSlots
   const totalCapacity = warehouse.occupiedSlots + warehouse.freeSlots
   const occupancyPercentage = getOccupancyPercentage(usedSlots, totalCapacity)
@@ -88,7 +89,7 @@ export function WarehouseCard({
             <div>
               <h3 className="font-semibold text-lg">{warehouse.name}</h3>
               <p className="text-muted-foreground text-xs">
-                {translateMessage("generated.admin.warehouses.id", {
+                {t("generated.admin.warehouses.id", {
                   value0: warehouse.id,
                 })}
               </p>
@@ -98,9 +99,7 @@ export function WarehouseCard({
           {(onEdit || onDelete) && (
             <DropdownMenu>
               <DropdownMenuTrigger
-                aria-label={translateMessage(
-                  "generated.admin.warehouses.warehouseShares"
-                )}
+                aria-label={t("generated.admin.warehouses.warehouseShares")}
                 className={cn(
                   "flex size-8 items-center justify-center rounded-md opacity-0 transition-all hover:bg-muted group-hover:opacity-100",
                   "focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
@@ -121,7 +120,7 @@ export function WarehouseCard({
                       className="mr-2 size-4"
                       icon={PencilEdit01Icon}
                     />
-                    {translateMessage("generated.shared.edit")}
+                    {t("generated.shared.edit")}
                   </DropdownMenuItem>
                 )}
                 {onDelete && (
@@ -133,7 +132,7 @@ export function WarehouseCard({
                       className="mr-2 size-4"
                       icon={Delete02Icon}
                     />
-                    {translateMessage("generated.shared.remove")}
+                    {t("generated.shared.remove")}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -147,7 +146,7 @@ export function WarehouseCard({
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
-                {translateMessage("generated.shared.occupancy")}
+                {t("generated.shared.occupancy")}
               </span>
               <div className="flex items-center gap-2">
                 <span className="font-medium">
@@ -176,7 +175,7 @@ export function WarehouseCard({
             <div className="flex items-center gap-1.5">
               <HugeiconsIcon className="size-4" icon={Package} />
               <span>
-                {translateMessage("generated.shared.pluralLabel", {
+                {t("generated.shared.pluralLabel", {
                   value0: warehouse.racksCount,
                 })}
               </span>
@@ -193,7 +192,7 @@ export function WarehouseCard({
             )}
             href={`/admin/warehouses/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}`}
           >
-            {translateMessage("generated.admin.warehouses.manageRacks")}
+            {t("generated.admin.warehouses.manageRacks")}
             <HugeiconsIcon
               className="size-4 transition-transform group-hover:translate-x-0.5"
               icon={ArrowRight02Icon}

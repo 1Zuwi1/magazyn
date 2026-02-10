@@ -1,27 +1,22 @@
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { translateMessage } from "@/i18n/translate-message"
-
+import { useAppTranslations } from "@/i18n/use-translations"
 export function RackItemsTableHeader() {
+  const t = useAppTranslations()
+
   return (
     <TableHeader>
       <TableRow>
-        <TableHead className="min-w-25">
-          {translateMessage("generated.shared.code")}
-        </TableHead>
+        <TableHead className="min-w-25">{t("generated.shared.code")}</TableHead>
         <TableHead className="w-20">
-          {translateMessage("generated.dashboard.itemsVisualization.itemId")}
+          {t("generated.dashboard.itemsVisualization.itemId")}
         </TableHead>
+        <TableHead className="w-25">{t("generated.shared.position")}</TableHead>
         <TableHead className="w-25">
-          {translateMessage("generated.shared.position")}
+          {t("generated.dashboard.shared.user")}
         </TableHead>
-        <TableHead className="w-25">
-          {translateMessage("generated.dashboard.shared.user")}
-        </TableHead>
+        <TableHead className="w-30">{t("generated.shared.created")}</TableHead>
         <TableHead className="w-30">
-          {translateMessage("generated.shared.created")}
-        </TableHead>
-        <TableHead className="w-30">
-          {translateMessage("generated.dashboard.shared.expires")}
+          {t("generated.dashboard.shared.expires")}
         </TableHead>
         <TableHead className="w-16"> </TableHead>
       </TableRow>

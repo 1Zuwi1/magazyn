@@ -1,6 +1,7 @@
 import { Html, Instance, Instances, useCursor } from "@react-three/drei"
+
 import { useMemo, useState } from "react"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import {
   BLOCK_EMPTY_VISUAL,
   BLOCK_GAP_RATIO,
@@ -188,6 +189,8 @@ export function BlocksInstanced({
   hoverable = true,
   clickable = true,
 }: BlocksInstancedProps) {
+  const t = useAppTranslations()
+
   const { setFocusWindow } = useWarehouseStore()
   const [hoveredBlockKey, setHoveredBlockKey] = useState<string | null>(null)
   const { onPointerDown, shouldIgnoreClick } = useClickGuard()
@@ -382,7 +385,7 @@ export function BlocksInstanced({
         >
           <div className="pointer-events-none min-w-55 rounded border border-white/10 bg-slate-950/80 px-3 py-2 text-center text-slate-100 text-xs">
             <div className="font-bold">
-              {translateMessage("generated.dashboard.visualization3d.zone", {
+              {t("generated.dashboard.visualization3d.zone", {
                 value0: hoveredBlock.startRow + 1,
                 value1: hoveredBlock.startRow + hoveredBlock.rows,
                 value2: hoveredBlock.startCol + 1,
@@ -390,27 +393,21 @@ export function BlocksInstanced({
               })}
             </div>
             <div>
-              {translateMessage(
-                "generated.dashboard.visualization3d.occupied3",
-                {
-                  value0: hoveredBlock.occupiedCount,
-                  value1: hoveredBlock.slotCount,
-                  value2:
-                    hoveredBlock.slotCount > 0
-                      ? Math.round(
-                          (hoveredBlock.occupiedCount /
-                            hoveredBlock.slotCount) *
-                            100
-                        )
-                      : 0,
-                }
-              )}
+              {t("generated.dashboard.visualization3d.occupied3", {
+                value0: hoveredBlock.occupiedCount,
+                value1: hoveredBlock.slotCount,
+                value2:
+                  hoveredBlock.slotCount > 0
+                    ? Math.round(
+                        (hoveredBlock.occupiedCount / hoveredBlock.slotCount) *
+                          100
+                      )
+                    : 0,
+              })}
             </div>
             <div className="text-slate-400">
-              {translateMessage("generated.dashboard.visualization3d.status", {
-                value0: translateMessage(
-                  STATUS_LABEL_KEYS[hoveredBlock.status]
-                ),
+              {t("generated.dashboard.visualization3d.status", {
+                value0: t(STATUS_LABEL_KEYS[hoveredBlock.status]),
               })}
             </div>
           </div>

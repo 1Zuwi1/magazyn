@@ -2,7 +2,7 @@ import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useLocale } from "next-intl"
 import { formatDateTimeLabel } from "@/components/dashboard/utils/helpers"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { OutboundExecuteResult } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
 import { Button } from "../../ui/button"
@@ -13,6 +13,8 @@ interface OutboundSuccessProps {
 }
 
 export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
+  const t = useAppTranslations()
+
   const locale = useLocale()
 
   return (
@@ -35,17 +37,12 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
 
         <div className="space-y-2">
           <h2 className="font-semibold text-foreground text-xl">
-            {translateMessage(
-              "generated.scanner.outbound.goodsRemovedWarehouse"
-            )}
+            {t("generated.scanner.outbound.goodsRemovedWarehouse")}
           </h2>
           <p className="text-muted-foreground text-sm">
-            {translateMessage(
-              "generated.scanner.outbound.successfullyRemovedWarehouse",
-              {
-                value0: result.issuedCount,
-              }
-            )}
+            {t("generated.scanner.outbound.successfullyRemovedWarehouse", {
+              value0: result.issuedCount,
+            })}
           </p>
         </div>
 
@@ -58,20 +55,18 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
                   <Badge variant={op.fifoCompliant ? "default" : "outline"}>
                     {op.fifoCompliant
                       ? "FIFO"
-                      : translateMessage(
-                          "generated.scanner.outbound.fifoSkipped"
-                        )}
+                      : t("generated.scanner.outbound.fifoSkipped")}
                   </Badge>
                 </div>
                 <p className="mt-1 text-muted-foreground text-xs">
-                  {translateMessage("generated.scanner.outbound.rackXY", {
+                  {t("generated.scanner.outbound.rackXY", {
                     value0: op.rackMarker,
                     value1: op.positionX,
                     value2: op.positionY,
                   })}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  {translateMessage("generated.scanner.outbound.issued", {
+                  {t("generated.scanner.outbound.issued", {
                     value0: op.issuedByName,
                     value1: formatDateTimeLabel(op.operationTimestamp, locale),
                   })}
@@ -83,7 +78,7 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
 
         <div className="w-full pt-2">
           <Button className="w-full" onClick={onReset} type="button">
-            {translateMessage("generated.scanner.outbound.removeAnother")}
+            {t("generated.scanner.outbound.removeAnother")}
           </Button>
         </div>
       </div>

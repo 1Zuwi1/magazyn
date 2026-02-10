@@ -3,6 +3,7 @@
 import { Cancel01Icon, Mic01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
+
 import type { ReactNode } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -10,7 +11,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition"
 import useWarehouses from "@/hooks/use-warehouses"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import type { VoiceCommandMatch } from "@/lib/voice/commands"
@@ -29,7 +30,6 @@ import {
   VoiceAssistantErrorView,
   VoiceAssistantProcessingView,
 } from "./voice-assistant-other-views"
-
 export type VoiceAssistantViews =
   | "idle"
   | "listening"
@@ -44,6 +44,8 @@ interface VoiceAssistantProps {
 type WarehouseReference = Pick<Warehouse, "id" | "name">
 
 export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
+  const t = useAppTranslations()
+
   const listenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isMobile = useIsMobile()
   const router = useRouter()
@@ -136,9 +138,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     if (!resolvedText) {
       setMatchedCommand(null)
       resetWarehouseLookupState()
-      setErrorMessage(
-        translateMessage("generated.voiceAssistant.commandRecognized2")
-      )
+      setErrorMessage(t("generated.voiceAssistant.commandRecognized2"))
       setView("error")
       return
     }
@@ -147,9 +147,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     if (!(match && isCommandMatchValid(match))) {
       setMatchedCommand(null)
       resetWarehouseLookupState()
-      setErrorMessage(
-        translateMessage("generated.voiceAssistant.dontKnowCommand")
-      )
+      setErrorMessage(t("generated.voiceAssistant.dontKnowCommand"))
       setView("error")
       return
     }
@@ -160,9 +158,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
         setMatchedCommand(null)
         resetWarehouseLookupState()
         setErrorMessage(
-          translateMessage(
-            "generated.voiceAssistant.warehouseNameMissingCommand"
-          )
+          t("generated.voiceAssistant.warehouseNameMissingCommand")
         )
         setView("error")
         return
@@ -183,6 +179,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     interimTranscript,
     pendingWarehouseLookupMatch,
     resetWarehouseLookupState,
+    t,
   ])
 
   useEffect(() => {
@@ -201,9 +198,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     if (isWarehouseLookupError) {
       setMatchedCommand(null)
       resetWarehouseLookupState()
-      setErrorMessage(
-        translateMessage("generated.voiceAssistant.warehouseFoundAgain")
-      )
+      setErrorMessage(t("generated.voiceAssistant.warehouseFoundAgain"))
       setView("error")
       return
     }
@@ -216,9 +211,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     if (!warehouse) {
       setMatchedCommand(null)
       resetWarehouseLookupState()
-      setErrorMessage(
-        translateMessage("generated.voiceAssistant.warehouseNameFound")
-      )
+      setErrorMessage(t("generated.voiceAssistant.warehouseNameFound"))
       setView("error")
       return
     }
@@ -236,6 +229,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     isWarehouseLookupFetching,
     warehouseLookupData,
     resetWarehouseLookupState,
+    t,
   ])
 
   const handleReset = useCallback(() => {
@@ -340,9 +334,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
   const handleStartListening = useCallback(() => {
     if (!isSupported) {
       setErrorMessage(
-        translateMessage(
-          "generated.voiceAssistant.browserSupportSpeechRecognition"
-        )
+        t("generated.voiceAssistant.browserSupportSpeechRecognition")
       )
       setView("error")
       return
@@ -354,7 +346,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
     reset()
     start()
     setView("listening")
-  }, [isSupported, reset, start, resetWarehouseLookupState])
+  }, [isSupported, reset, start, resetWarehouseLookupState, t])
 
   const handleSuggestionSelect = useCallback(
     (suggestion: string) => {
@@ -362,9 +354,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
       if (!(match && isCommandMatchValid(match))) {
         setMatchedCommand(null)
         resetWarehouseLookupState()
-        setErrorMessage(
-          translateMessage("generated.voiceAssistant.dontKnowCommand")
-        )
+        setErrorMessage(t("generated.voiceAssistant.dontKnowCommand"))
         setView("error")
         return
       }
@@ -375,9 +365,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
           setMatchedCommand(null)
           resetWarehouseLookupState()
           setErrorMessage(
-            translateMessage(
-              "generated.voiceAssistant.warehouseNameMissingCommand"
-            )
+            t("generated.voiceAssistant.warehouseNameMissingCommand")
           )
           setView("error")
           return
@@ -399,7 +387,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
       setManualTranscript(suggestion)
       setView("confirm")
     },
-    [resetWarehouseLookupState]
+    [resetWarehouseLookupState, t]
   )
 
   let content: ReactNode
@@ -465,8 +453,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
       content = (
         <VoiceAssistantErrorView
           message={
-            errorMessage ??
-            translateMessage("generated.voiceAssistant.commandFailedProcess")
+            errorMessage ?? t("generated.voiceAssistant.commandFailedProcess")
           }
           onReset={handleReset}
         />
@@ -491,14 +478,14 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
         dialogTrigger
       ) : (
         <DialogTrigger
-          aria-label={translateMessage("generated.shared.voiceAssistant")}
+          aria-label={t("generated.shared.voiceAssistant")}
           className={buttonVariants({
             variant: "ghost",
             size: "icon",
             className:
               "relative mr-3 text-muted-foreground transition-colors duration-200 hover:text-primary",
           })}
-          title={translateMessage("generated.shared.voiceAssistant")}
+          title={t("generated.shared.voiceAssistant")}
         >
           <HugeiconsIcon icon={Mic01Icon} strokeWidth={1.75} />
         </DialogTrigger>
@@ -518,9 +505,7 @@ export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
           data-slot="voice-assistant"
         >
           <Button
-            aria-label={translateMessage(
-              "generated.voiceAssistant.closeVoiceAssistant"
-            )}
+            aria-label={t("generated.voiceAssistant.closeVoiceAssistant")}
             className={cn(
               "absolute right-3 z-10 rounded-full text-muted-foreground transition-colors hover:text-foreground",
               isMobile ? "top-12" : "top-3"

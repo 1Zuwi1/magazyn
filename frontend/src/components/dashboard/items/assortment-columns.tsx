@@ -20,20 +20,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { translateMessage } from "@/i18n/translate-message"
+import type { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { CodeCell } from "./components/code-cell"
 import { ExpiryBadge } from "./components/expiry-badge"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 import type { ItemInstance } from "./types"
-
-export const assortmentColumns: ColumnDef<ItemInstance>[] = [
+export const getAssortmentColumns = (
+  t: ReturnType<typeof useAppTranslations>
+): ColumnDef<ItemInstance>[] => [
   {
     id: "category",
     accessorKey: "definition.category",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.dashboard.items.category")}
+        {t("generated.dashboard.items.category")}
       </SortableHeader>
     ),
     enableHiding: true,
@@ -46,7 +47,7 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
     accessorKey: "definition.name",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.dashboard.shared.itemName")}
+        {t("generated.dashboard.shared.itemName")}
       </SortableHeader>
     ),
     cell: ({ row }) => {
@@ -74,14 +75,14 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
     accessorKey: "rackName",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.shared.rack")}
+        {t("generated.shared.rack")}
       </SortableHeader>
     ),
     cell: ({ row }) => (
       <div>
         <div className="font-medium">{row.original.rackName}</div>
         <div className="text-muted-foreground text-sm">
-          {translateMessage("generated.dashboard.items.rowCol", {
+          {t("generated.dashboard.items.rowCol", {
             value0: row.original.position.row + 1,
             value1: row.original.position.col + 1,
           })}
@@ -94,7 +95,7 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
     accessorKey: "qrCode",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.shared.code")}
+        {t("generated.shared.code")}
       </SortableHeader>
     ),
     cell: ({ row }) => <CodeCell value={row.original.qrCode} />,
@@ -104,7 +105,7 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
     accessorKey: "addedDate",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.dashboard.items.dateAdded")}
+        {t("generated.dashboard.items.dateAdded")}
       </SortableHeader>
     ),
     cell: ({ row }) => (
@@ -118,7 +119,7 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
     accessorKey: "expiryDate",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.dashboard.items.expiration")}
+        {t("generated.dashboard.items.expiration")}
       </SortableHeader>
     ),
     cell: ({ row }) => {
@@ -139,17 +140,13 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
 
   {
     id: "actions",
-    header: () => (
-      <StaticHeader>{translateMessage("generated.shared.shares")}</StaticHeader>
-    ),
+    header: () => <StaticHeader>{t("generated.shared.shares")}</StaticHeader>,
     cell: ({ row }) => {
       const item = row.original
 
       return (
         <DropdownMenu>
-          <DropdownMenuTrigger
-            aria-label={translateMessage("generated.shared.openMenu")}
-          >
+          <DropdownMenuTrigger aria-label={t("generated.shared.openMenu")}>
             <HugeiconsIcon
               className={cn(
                 buttonVariants({ variant: "ghost", size: "icon-xs" })
@@ -160,24 +157,24 @@ export const assortmentColumns: ColumnDef<ItemInstance>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => console.log("View", item.id)}>
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={EyeIcon} />
-              {translateMessage("generated.dashboard.shared.details")}
+              {t("generated.dashboard.shared.details")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => console.log("Edit", item.id)}>
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
-              {translateMessage("generated.shared.edit")}
+              {t("generated.shared.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => console.log("Show QR", item.qrCode)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={QrCodeIcon} />
-              {translateMessage("generated.dashboard.items.showQr")}
+              {t("generated.dashboard.items.showQr")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-destructive"
               onClick={() => console.log("Delete", item.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
-              {translateMessage("generated.shared.remove")}
+              {t("generated.shared.remove")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

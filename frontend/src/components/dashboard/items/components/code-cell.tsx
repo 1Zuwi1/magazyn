@@ -3,6 +3,7 @@
 import { Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
+
 import QRCode from "qrcode"
 import { useCallback, useEffect, useRef, useState } from "react"
 import Barcode from "react-barcode"
@@ -20,7 +21,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 const GS1_BARCODE_PATTERN = /^11(\d{6})01(\d{14})21(\d+)$/
@@ -212,6 +213,8 @@ function CodeDialog({
   open,
   value,
 }: CodeDialogProps) {
+  const t = useAppTranslations()
+
   const { copied, handleCopy } = useCopyToClipboard(value)
 
   return (
@@ -220,13 +223,11 @@ function CodeDialog({
         <DialogHeader>
           <DialogTitle>
             {isQr
-              ? translateMessage("generated.dashboard.items.qrCode")
-              : translateMessage("generated.dashboard.items.barcode")}
+              ? t("generated.dashboard.items.qrCode")
+              : t("generated.dashboard.items.barcode")}
           </DialogTitle>
           <DialogDescription>
-            {translateMessage(
-              "generated.dashboard.items.enlargedCodeViewQuickLabel"
-            )}
+            {t("generated.dashboard.items.enlargedCodeViewQuickLabel")}
           </DialogDescription>
         </DialogHeader>
 
@@ -243,8 +244,8 @@ function CodeDialog({
               icon={copied ? Tick02Icon : Copy01Icon}
             />
             {copied
-              ? translateMessage("generated.dashboard.items.copied")
-              : translateMessage("generated.dashboard.items.copyCode")}
+              ? t("generated.dashboard.items.copied")
+              : t("generated.dashboard.items.copyCode")}
           </Button>
         </div>
       </DialogContent>
@@ -257,6 +258,8 @@ interface CodeCellProps {
 }
 
 export function CodeCell({ value }: CodeCellProps) {
+  const t = useAppTranslations()
+
   const [dialogOpen, setDialogOpen] = useState(false)
   const isQr = isQrCode(value)
   const formatted = isQr ? value : formatGs1Code(value)
@@ -287,7 +290,7 @@ export function CodeCell({ value }: CodeCellProps) {
           </span>
         </TooltipTrigger>
         <TooltipContent>
-          {translateMessage("generated.dashboard.items.clickEnlarge")}
+          {t("generated.dashboard.items.clickEnlarge")}
         </TooltipContent>
       </Tooltip>
       <CodeDialog

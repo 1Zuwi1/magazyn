@@ -11,36 +11,38 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+
 import { useMemo } from "react"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { Scanner } from "./scanner/scanner"
 import { DialogTrigger } from "./ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { VoiceAssistant } from "./voice-assistant/voice-assistant"
 
-const dockNavItems = [
-  {
-    title: translateMessage("generated.ui.dock.dashboard"),
-    href: "/dashboard",
-    icon: Home01Icon,
-  },
-  {
-    title: translateMessage("generated.shared.warehouses"),
-    href: "/dashboard/warehouse",
-    icon: Package,
-  },
-  {
-    title: translateMessage("generated.shared.assortment"),
-    href: "/dashboard/items",
-    icon: GroupItemsIcon,
-  },
-  {
-    title: translateMessage("generated.shared.settings"),
-    href: "/settings",
-    icon: Settings01Icon,
-  },
-] as const
+const getDockNavItems = (t: ReturnType<typeof useAppTranslations>) =>
+  [
+    {
+      title: t("generated.ui.dock.dashboard"),
+      href: "/dashboard",
+      icon: Home01Icon,
+    },
+    {
+      title: t("generated.shared.warehouses"),
+      href: "/dashboard/warehouse",
+      icon: Package,
+    },
+    {
+      title: t("generated.shared.assortment"),
+      href: "/dashboard/items",
+      icon: GroupItemsIcon,
+    },
+    {
+      title: t("generated.shared.settings"),
+      href: "/settings",
+      icon: Settings01Icon,
+    },
+  ] as const
 
 // biome-ignore lint/suspicious/noControlCharactersInRegex: This is needed to strip control characters from decoded text
 const CONTROL_CHAR_REGEX = /[\u0000-\u001f\u007f]/g
@@ -69,6 +71,9 @@ const sanitizeVisibleText = (value: string): string => {
 }
 
 export function Dock() {
+  const t = useAppTranslations()
+  const dockNavItems = useMemo(() => getDockNavItems(t), [t])
+
   const pathname = usePathname()
   const splitted = pathname.split("/").filter((part) => part !== "")
 
@@ -152,9 +157,7 @@ export function Dock() {
               <TooltipTrigger
                 render={
                   <DialogTrigger
-                    aria-label={translateMessage(
-                      "generated.shared.voiceAssistant"
-                    )}
+                    aria-label={t("generated.shared.voiceAssistant")}
                     className={cn(
                       "group relative flex size-12 flex-col items-center justify-center rounded-xl transition-all duration-200",
                       "hover:bg-muted/80 active:scale-95"
@@ -169,7 +172,7 @@ export function Dock() {
                 />
               </TooltipTrigger>
               <TooltipContent side="top" sideOffset={12}>
-                {translateMessage("generated.shared.voiceAssistant")}
+                {t("generated.shared.voiceAssistant")}
               </TooltipContent>
             </Tooltip>
           }
@@ -183,9 +186,7 @@ export function Dock() {
                 render={
                   <DialogTrigger
                     aria-disabled={!isInWarehouse}
-                    aria-label={translateMessage(
-                      "generated.shared.barcodeScanner"
-                    )}
+                    aria-label={t("generated.shared.barcodeScanner")}
                     className={cn(
                       "group relative flex size-12 flex-col items-center justify-center rounded-xl transition-all duration-200",
                       isInWarehouse
@@ -216,10 +217,8 @@ export function Dock() {
               </TooltipTrigger>
               <TooltipContent side="top" sideOffset={12}>
                 {isInWarehouse
-                  ? translateMessage("generated.shared.barcodeScanner")
-                  : translateMessage(
-                      "generated.ui.dock.selectWarehouseUseScanner"
-                    )}
+                  ? t("generated.shared.barcodeScanner")
+                  : t("generated.ui.dock.selectWarehouseUseScanner")}
               </TooltipContent>
             </Tooltip>
           }

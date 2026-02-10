@@ -4,6 +4,7 @@ import { PackageIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { addDays, formatDate } from "date-fns"
 import Image from "next/image"
+
 import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -13,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { Item } from "../types"
 import { formatDimensions, getDaysUntilExpiry } from "../utils/helpers"
@@ -34,25 +35,25 @@ interface ItemDetailsDialogProps {
 
 type BadgeVariant = NonNullable<React.ComponentProps<typeof Badge>["variant"]>
 
-function formatExpiryHint(daysUntilExpiry: number): string {
+function formatExpiryHint(
+  t: ReturnType<typeof useAppTranslations>,
+  daysUntilExpiry: number
+): string {
   if (daysUntilExpiry === 0) {
-    return translateMessage(
-      "generated.dashboard.rackVisualization.expiresToday"
-    )
+    return t("generated.dashboard.rackVisualization.expiresToday")
   }
 
   const absDays = Math.abs(daysUntilExpiry)
-  const daysLabel = translateMessage("generated.dashboard.shared.pluralLabel", {
+  const daysLabel = t("generated.dashboard.shared.pluralLabel", {
     value0: absDays,
   })
   if (daysUntilExpiry < 0) {
-    return translateMessage(
-      "generated.dashboard.rackVisualization.expiredAgo",
-      { value0: daysLabel }
-    )
+    return t("generated.dashboard.rackVisualization.expiredAgo", {
+      value0: daysLabel,
+    })
   }
 
-  return translateMessage("generated.dashboard.rackVisualization.expires", {
+  return t("generated.dashboard.rackVisualization.expires", {
     value0: daysLabel,
   })
 }
@@ -89,6 +90,8 @@ export function ItemDetailsDialog({
   rackName,
   coordinate,
 }: ItemDetailsDialogProps) {
+  const t = useAppTranslations()
+
   if (!item) {
     return null
   }
@@ -100,7 +103,7 @@ export function ItemDetailsDialog({
     new Date(),
     item.expiryDate ?? addDays(new Date(), item.daysToExpiry)
   )
-  const expiryHint = formatExpiryHint(daysUntilExpiry)
+  const expiryHint = formatExpiryHint(t, daysUntilExpiry)
   const badgeVariant = getStatusBadgeVariant(status)
 
   return (
@@ -158,31 +161,27 @@ export function ItemDetailsDialog({
 
             <div className="space-y-2 text-xs">
               <DetailRow
-                label={translateMessage("generated.dashboard.shared.id")}
+                label={t("generated.dashboard.shared.id")}
                 value={item.id}
               />
               <DetailRow
-                label={translateMessage(
-                  "generated.dashboard.rackVisualization.qrCode"
-                )}
+                label={t("generated.dashboard.rackVisualization.qrCode")}
                 value={item.qrCode}
               />
               <DetailRow
-                label={translateMessage("generated.shared.weight")}
+                label={t("generated.shared.weight")}
                 value={`${item.weight.toFixed(2)} kg`}
               />
               <DetailRow
-                label={translateMessage(
-                  "generated.dashboard.shared.dimensions"
-                )}
+                label={t("generated.dashboard.shared.dimensions")}
                 value={formatDimensions(item)}
               />
               <DetailRow
-                label={translateMessage("generated.shared.temperature")}
+                label={t("generated.shared.temperature")}
                 value={`${item.minTemp}°C – ${item.maxTemp}°C`}
               />
               <DetailRow
-                label={translateMessage("generated.dashboard.shared.shelfLife")}
+                label={t("generated.dashboard.shared.shelfLife")}
                 value={
                   <span
                     className={cn("font-mono font-semibold", statusColors.text)}
@@ -199,9 +198,7 @@ export function ItemDetailsDialog({
             {item.comment && (
               <div className="rounded-lg border bg-muted/30 p-3 text-xs">
                 <p className="font-semibold text-muted-foreground">
-                  {translateMessage(
-                    "generated.dashboard.rackVisualization.comments"
-                  )}
+                  {t("generated.dashboard.rackVisualization.comments")}
                 </p>
                 <p className="mt-1 text-foreground text-sm">{item.comment}</p>
               </div>

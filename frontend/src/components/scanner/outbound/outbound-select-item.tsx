@@ -1,6 +1,6 @@
 "use client"
 
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { ScannerSelectItem } from "../scanner-select-item"
 import type { ScanItem } from "../scanner-types"
 
@@ -13,14 +13,14 @@ export function OutboundSelectItem({
   onSelect,
   onCancel,
 }: OutboundSelectItemProps) {
+  const t = useAppTranslations()
+
   return (
     <ScannerSelectItem
-      description={translateMessage(
-        "generated.scanner.shared.findProductWantRemoveWarehouse"
-      )}
+      description={t("generated.scanner.shared.findProductWantRemoveWarehouse")}
       onCancel={onCancel}
       onSelect={onSelect}
-      title={translateMessage("generated.scanner.shared.selectProduct")}
+      title={t("generated.scanner.shared.selectProduct")}
     />
   )
 }

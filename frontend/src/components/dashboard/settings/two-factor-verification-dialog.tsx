@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Skeleton } from "@/components/ui/skeleton"
 import useLinkedMethods from "@/hooks/use-linked-methods"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   Check2FASchema,
@@ -53,6 +53,8 @@ export function TwoFactorVerificationDialog({
   contentClassName = "sm:max-w-lg",
   copy,
 }: TwoFactorVerificationDialogProps) {
+  const t = useAppTranslations()
+
   const locale = useLocale()
   const [code, setCode] = useState("")
   const {
@@ -73,14 +75,12 @@ export function TwoFactorVerificationDialog({
     method,
   }) => {
     if (method === "AUTHENTICATOR") {
-      return translateMessage(
-        "generated.dashboard.settings.enterCodeAuthenticatorApp"
-      )
+      return t("generated.dashboard.settings.enterCodeAuthenticatorApp")
     }
     if (method === "PASSKEYS") {
-      return translateMessage("generated.dashboard.settings.confirmSecurityKey")
+      return t("generated.dashboard.settings.confirmSecurityKey")
     }
-    return translateMessage("generated.dashboard.settings.willSendOneTimeCode")
+    return t("generated.dashboard.settings.willSendOneTimeCode")
   }
 
   const resolvedCopy: PasswordVerificationCopy = (() => {
@@ -157,7 +157,7 @@ export function TwoFactorVerificationDialog({
     } catch (e) {
       const message = FetchError.isError(e)
         ? e.message
-        : translateMessage("generated.dashboard.settings.codeInvalidAgain")
+        : t("generated.dashboard.settings.codeInvalidAgain")
       setIsVerified(false)
       setVerificationError(message)
       toast.error(message)
@@ -169,8 +169,8 @@ export function TwoFactorVerificationDialog({
   const resolvedTitle =
     title ??
     copy?.title ??
-    translateMessage("generated.dashboard.settings.confirm2faBeforeChanging")
-  const resolvedDescription = translateMessage(
+    t("generated.dashboard.settings.confirm2faBeforeChanging")
+  const resolvedDescription = t(
     "generated.dashboard.settings.additionalSecurityStepConfirmIdentity"
   )
   const passkeyDescription =
@@ -178,11 +178,10 @@ export function TwoFactorVerificationDialog({
       ? resolvedCopy.description({ method: "PASSKEYS" })
       : resolvedCopy.description
   const passkeyVerifiedTitle =
-    copy?.verifiedTitle ??
-    translateMessage("generated.dashboard.settings.verified3")
+    copy?.verifiedTitle ?? t("generated.dashboard.settings.verified3")
   const passkeyVerifiedDescription =
     copy?.verifiedDescription ??
-    translateMessage("generated.dashboard.settings.safelyContinue")
+    t("generated.dashboard.settings.safelyContinue")
 
   const handlePasskeyVerified = () => {
     setIsVerified(true)
@@ -207,8 +206,8 @@ export function TwoFactorVerificationDialog({
             </div>
             <Badge variant={isVerified ? "success" : "warning"}>
               {isVerified
-                ? translateMessage("generated.dashboard.settings.verified3")
-                : translateMessage("generated.dashboard.settings.required")}
+                ? t("generated.dashboard.settings.verified3")
+                : t("generated.dashboard.settings.required")}
             </Badge>
           </div>
           {isVerified ? (
@@ -218,7 +217,7 @@ export function TwoFactorVerificationDialog({
             </Alert>
           ) : (
             <PasskeyLogin
-              label={translateMessage("generated.shared.verifySecurityKey")}
+              label={t("generated.shared.verifySecurityKey")}
               onSuccess={handlePasskeyVerified}
               redirectTo={null}
               showSeparator={false}
@@ -262,9 +261,7 @@ export function TwoFactorVerificationDialog({
             className="text-muted-foreground text-xs uppercase tracking-wide"
             id="verification-method-label"
           >
-            {translateMessage(
-              "generated.dashboard.settings.verificationMethod"
-            )}
+            {t("generated.dashboard.settings.verificationMethod")}
           </Label>
           {isMethodsPending && (
             <div className="space-y-2">
@@ -287,14 +284,12 @@ export function TwoFactorVerificationDialog({
                 size={20}
               />
               <p className="font-medium text-foreground/80 text-sm">
-                {translateMessage(
+                {t(
                   "generated.dashboard.settings.failedLoadVerificationMethods"
                 )}
               </p>
               <p className="text-muted-foreground text-xs">
-                {translateMessage(
-                  "generated.dashboard.settings.closeWindowAgain"
-                )}
+                {t("generated.dashboard.settings.closeWindowAgain")}
               </p>
             </div>
           )}

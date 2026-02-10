@@ -3,6 +3,7 @@
 import { Add01Icon, GridIcon, Package } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
+
 import { type ReactNode, useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
@@ -19,7 +20,7 @@ import useRacks, {
   useUpdateRack,
 } from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { Rack } from "@/lib/schemas"
 import { AdminPageHeader } from "../../components/admin-page-header"
 import { getAdminNavLinks } from "../../lib/constants"
@@ -59,6 +60,8 @@ const buildRackMutationData = ({
 }
 
 export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
+  const t = useAppTranslations()
+
   const router = useRouter()
   const { warehouseIdForQuery, isHydrated, isMissingWarehouseId } =
     useCurrentAdminWarehouseId()
@@ -122,9 +125,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
   const handleSubmit = async (data: RackFormData) => {
     if (!apiWarehouse) {
       throw new Error(
-        translateMessage(
-          "generated.admin.warehouses.warehouseIdRequiredCreateUpdate"
-        )
+        t("generated.admin.warehouses.warehouseIdRequiredCreateUpdate")
       )
     }
 
@@ -158,7 +159,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     })
     if (report.errors.length > 0) {
       toast.warning(
-        translateMessage("generated.admin.shared.importPartiallyCompleted", {
+        t("generated.admin.shared.importPartiallyCompleted", {
           value0: report.imported,
           value1: report.processedLines,
         })
@@ -167,7 +168,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     }
 
     toast.success(
-      translateMessage("generated.admin.warehouses.imported", {
+      t("generated.admin.warehouses.imported", {
         value0: report.imported,
       })
     )
@@ -269,26 +270,21 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
             />
             <Button disabled={apiWarehouse == null} onClick={handleAddRack}>
               <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-              {translateMessage("generated.admin.warehouses.addRack")}
+              {t("generated.admin.warehouses.addRack")}
             </Button>
           </div>
         }
-        backTitle={translateMessage(
-          "generated.admin.warehouses.returnWarehouses"
-        )}
-        description={translateMessage(
-          "generated.admin.warehouses.manageRacksWarehouse",
-          {
-            value0: warehouseName,
-          }
-        )}
+        backTitle={t("generated.admin.warehouses.returnWarehouses")}
+        description={t("generated.admin.warehouses.manageRacksWarehouse", {
+          value0: warehouseName,
+        })}
         icon={GridIcon}
         navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}
         onBack={handleBack}
-        title={translateMessage("generated.shared.racks2")}
+        title={t("generated.shared.racks2")}
       >
         {/* Quick Stats */}
         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -301,7 +297,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
               {totalRacks}
             </span>
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.admin.warehouses.racks")}
+              {t("generated.admin.warehouses.racks")}
             </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
@@ -311,15 +307,15 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
             />
             <span className="font-mono font-semibold">{totalItems}</span>
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.admin.shared.items")}
+              {t("generated.admin.shared.items")}
             </span>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.admin.warehouses.totalWeight")}
+              {t("generated.admin.warehouses.totalWeight")}
             </span>
             <span className="font-mono font-semibold">
-              {translateMessage("generated.admin.warehouses.kg2", {
+              {t("generated.admin.warehouses.kg2", {
                 value0: racksData?.summary.totalWeight ?? 0,
               })}
             </span>
@@ -346,7 +342,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
       />
 
       <ConfirmDialog
-        description={translateMessage(
+        description={t(
           "generated.admin.warehouses.sureWantDeleteRackOperation",
           {
             value0: rackToDelete?.marker,
@@ -355,7 +351,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
         onConfirm={confirmDeleteRack}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
-        title={translateMessage("generated.admin.warehouses.deleteRack")}
+        title={t("generated.admin.warehouses.deleteRack")}
       />
     </div>
   )

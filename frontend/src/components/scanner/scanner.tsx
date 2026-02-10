@@ -3,6 +3,7 @@
 import { QrCodeIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useQueryClient } from "@tanstack/react-query"
+
 import {
   type ReactNode,
   useCallback,
@@ -15,7 +16,7 @@ import { toast } from "sonner"
 import { SCAN_DELAY_MS, SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   type IdentificationCandidate,
@@ -67,26 +68,20 @@ interface ScannerProps {
 
 export const TAB_TRIGGERS = [
   {
-    text: translateMessage("generated.scanner.receiving"),
+    text: "Receiving",
     action: "take",
   },
   {
-    text: translateMessage("generated.scanner.removing"),
+    text: "Removing",
     action: "remove",
   },
 ] as const
 
 const SCANNER_ERROR_MESSAGES = {
   ITEM_NOT_FOUND: "Nie znaleziono produktu dla zeskanowanego kodu.",
-  INVALID_INPUT: translateMessage(
-    "generated.scanner.invalidInputDataCheckAgain"
-  ),
-  PLACEMENT_INVALID: translateMessage(
-    "generated.scanner.selectedRackMeetProductsRequirements"
-  ),
-  PLACEMENT_CONFLICT: translateMessage(
-    "generated.scanner.selectedPositionOccupiedSetAnother"
-  ),
+  INVALID_INPUT: "Invalid input data. Check and try again.",
+  PLACEMENT_INVALID: "Selected rack does not meet product requirements.",
+  PLACEMENT_CONFLICT: "Selected position is occupied. Choose another.",
 } as const
 
 type Step =
@@ -135,6 +130,8 @@ export function Scanner({
   dialogTrigger,
   children,
 }: ScannerProps) {
+  const t = useAppTranslations()
+
   const isMobile = useIsMobile()
   const queryClient = useQueryClient()
   const [mode, setMode] = useState<(typeof TAB_TRIGGERS)[number]["action"]>(
@@ -264,172 +261,177 @@ export function Scanner({
 
   const resolveCurrentWarehouseId = useCallback((): number => {
     if (!isHydrated) {
-      throw new Error(
-        translateMessage("generated.scanner.warehouseContextStillLoadingAgain")
-      )
+      throw new Error(t("generated.scanner.warehouseContextStillLoadingAgain"))
     }
 
     if (warehouseId === null) {
-      throw new Error(
-        translateMessage("generated.scanner.warehouseidFoundCurrentSession")
-      )
+      throw new Error(t("generated.scanner.warehouseidFoundCurrentSession"))
     }
 
     return warehouseId
-  }, [isHydrated, warehouseId])
+  }, [isHydrated, warehouseId, t])
 
-  const onScan = useCallback(async (rawCode: string) => {
-    const code = rawCode.trim()
-    if (!code) {
-      setError(translateMessage("generated.scanner.shared.failedReadCodeAgain"))
-      return
-    }
+  const onScan = useCallback(
+    async (rawCode: string) => {
+      const code = rawCode.trim()
+      if (!code) {
+        setError(t("generated.scanner.shared.failedReadCodeAgain"))
+        return
+      }
 
-    setError(null)
-    setScannerState((current) => ({
-      ...current,
-      isLoading: true,
-    }))
+      setError(null)
+      setScannerState((current) => ({
+        ...current,
+        isLoading: true,
+      }))
 
-    try {
-      const item = await apiFetch(
-        `/api/items/code/${encodeURIComponent(code)}`,
-        ItemByCodeSchema
-      )
-
-      setScannedItem(item)
-      setScannedCode(code)
-      setPlacementPlan(null)
-      setCurrentWarehouseId(null)
-      setEditablePlacements([])
-      setConfirmedPlacementsCount(0)
-      setScannerState({
-        step: "quantity",
-        isLoading: false,
-        isSubmitting: false,
-      })
-    } catch (scanError) {
-      setScannedItem(null)
-      setScannedCode("")
-      setPlacementPlan(null)
-      setCurrentWarehouseId(null)
-      setEditablePlacements([])
-      setError(
-        getScannerErrorMessage(
-          scanError,
-          translateMessage("generated.scanner.failedFetchProductDataScanned")
+      try {
+        const item = await apiFetch(
+          `/api/items/code/${encodeURIComponent(code)}`,
+          ItemByCodeSchema
         )
-      )
-      toast.error(
-        translateMessage("generated.scanner.failedFetchProductDataScanned")
-      )
-      setScannerState({
-        step: "camera",
-        isLoading: false,
-        isSubmitting: false,
-      })
-    }
-  }, [])
 
-  const onManualScan = useCallback(async (code: string) => {
-    setLastManualCode(code)
-    const trimmed = code.trim()
-    if (!trimmed) {
-      return
-    }
-
-    setError(null)
-    setScannerState((current) => ({
-      ...current,
-      isLoading: true,
-    }))
-
-    try {
-      const item = await apiFetch(
-        `/api/items/code/${encodeURIComponent(trimmed)}`,
-        ItemByCodeSchema
-      )
-
-      setScannedItem(item)
-      setScannedCode(trimmed)
-      setLastManualCode("")
-      setPlacementPlan(null)
-      setCurrentWarehouseId(null)
-      setEditablePlacements([])
-      setConfirmedPlacementsCount(0)
-      setScannerState({
-        step: "quantity",
-        isLoading: false,
-        isSubmitting: false,
-      })
-    } catch (scanError) {
-      setScannedItem(null)
-      setScannedCode("")
-      setPlacementPlan(null)
-      setCurrentWarehouseId(null)
-      setEditablePlacements([])
-      setError(
-        getScannerErrorMessage(
-          scanError,
-          translateMessage("generated.scanner.failedFetchProductDataEntered")
+        setScannedItem(item)
+        setScannedCode(code)
+        setPlacementPlan(null)
+        setCurrentWarehouseId(null)
+        setEditablePlacements([])
+        setConfirmedPlacementsCount(0)
+        setScannerState({
+          step: "quantity",
+          isLoading: false,
+          isSubmitting: false,
+        })
+      } catch (scanError) {
+        setScannedItem(null)
+        setScannedCode("")
+        setPlacementPlan(null)
+        setCurrentWarehouseId(null)
+        setEditablePlacements([])
+        setError(
+          getScannerErrorMessage(
+            scanError,
+            t("generated.scanner.failedFetchProductDataScanned")
+          )
         )
-      )
-      setScannerState({
-        step: "manual-input",
-        isLoading: false,
-        isSubmitting: false,
-      })
-    }
-  }, [])
+        toast.error(t("generated.scanner.failedFetchProductDataScanned"))
+        setScannerState({
+          step: "camera",
+          isLoading: false,
+          isSubmitting: false,
+        })
+      }
+    },
+    [t]
+  )
 
-  const onTakePhoto = useCallback(async (file: File) => {
-    setError(null)
-    setScannerState((current) => ({
-      ...current,
-      isLoading: true,
-    }))
-    try {
-      const result = await apiFetch("/api/items/identify", ItemIdentifySchema, {
-        method: "POST",
-        body: { file },
-        formData: (formData, data) => {
-          formData.append("file", data.file)
-        },
-      })
+  const onManualScan = useCallback(
+    async (code: string) => {
+      setLastManualCode(code)
+      const trimmed = code.trim()
+      if (!trimmed) {
+        return
+      }
 
-      if (!result.itemId) {
-        setError(translateMessage("generated.scanner.failedIdentifyItemPhoto"))
-        toast.error(
-          translateMessage("generated.scanner.failedIdentifyItemPhoto")
+      setError(null)
+      setScannerState((current) => ({
+        ...current,
+        isLoading: true,
+      }))
+
+      try {
+        const item = await apiFetch(
+          `/api/items/code/${encodeURIComponent(trimmed)}`,
+          ItemByCodeSchema
+        )
+
+        setScannedItem(item)
+        setScannedCode(trimmed)
+        setLastManualCode("")
+        setPlacementPlan(null)
+        setCurrentWarehouseId(null)
+        setEditablePlacements([])
+        setConfirmedPlacementsCount(0)
+        setScannerState({
+          step: "quantity",
+          isLoading: false,
+          isSubmitting: false,
+        })
+      } catch (scanError) {
+        setScannedItem(null)
+        setScannedCode("")
+        setPlacementPlan(null)
+        setCurrentWarehouseId(null)
+        setEditablePlacements([])
+        setError(
+          getScannerErrorMessage(
+            scanError,
+            t("generated.scanner.failedFetchProductDataEntered")
+          )
+        )
+        setScannerState({
+          step: "manual-input",
+          isLoading: false,
+          isSubmitting: false,
+        })
+      }
+    },
+    [t]
+  )
+
+  const onTakePhoto = useCallback(
+    async (file: File) => {
+      setError(null)
+      setScannerState((current) => ({
+        ...current,
+        isLoading: true,
+      }))
+      try {
+        const result = await apiFetch(
+          "/api/items/identify",
+          ItemIdentifySchema,
+          {
+            method: "POST",
+            body: { file },
+            formData: (formData, data) => {
+              formData.append("file", data.file)
+            },
+          }
+        )
+
+        if (!result.itemId) {
+          setError(t("generated.scanner.failedIdentifyItemPhoto"))
+          toast.error(t("generated.scanner.failedIdentifyItemPhoto"))
+          setScannerState({
+            step: "camera",
+            isLoading: false,
+            isSubmitting: false,
+          })
+          return
+        }
+
+        setIdentificationResult(result)
+        setScannerState({
+          step: "identify",
+          isLoading: false,
+          isSubmitting: false,
+        })
+      } catch (photoError) {
+        setError(
+          getScannerErrorMessage(
+            photoError,
+            t("generated.scanner.failedIdentifyItemPhoto")
+          )
         )
         setScannerState({
           step: "camera",
           isLoading: false,
           isSubmitting: false,
         })
-        return
       }
-
-      setIdentificationResult(result)
-      setScannerState({
-        step: "identify",
-        isLoading: false,
-        isSubmitting: false,
-      })
-    } catch (photoError) {
-      setError(
-        getScannerErrorMessage(
-          photoError,
-          translateMessage("generated.scanner.failedIdentifyItemPhoto")
-        )
-      )
-      setScannerState({
-        step: "camera",
-        isLoading: false,
-        isSubmitting: false,
-      })
-    }
-  }, [])
+    },
+    [t]
+  )
 
   const onAcceptIdentification = useCallback(
     async (candidate: IdentificationCandidate) => {
@@ -461,7 +463,7 @@ export function Scanner({
         setError(
           getScannerErrorMessage(
             fetchError,
-            translateMessage("generated.scanner.failedFetchItemData")
+            t("generated.scanner.failedFetchItemData")
           )
         )
         setScannerState({
@@ -471,7 +473,7 @@ export function Scanner({
         })
       }
     },
-    []
+    [t]
   )
 
   const onReportMismatch = useCallback(
@@ -500,14 +502,14 @@ export function Scanner({
         setError(
           getScannerErrorMessage(
             mismatchError,
-            translateMessage("generated.scanner.failedReportMismatch")
+            t("generated.scanner.failedReportMismatch")
           )
         )
       } finally {
         setIsReportingMismatch(false)
       }
     },
-    [identificationResult]
+    [identificationResult, t]
   )
 
   const handleSubmit = useCallback(async () => {
@@ -562,9 +564,7 @@ export function Scanner({
       setError(
         getScannerErrorMessage(
           planError,
-          translateMessage(
-            "generated.scanner.failedPreparePlacementPlanProduct"
-          )
+          t("generated.scanner.failedPreparePlacementPlanProduct")
         )
       )
       setScannerState((current) => ({
@@ -578,6 +578,7 @@ export function Scanner({
     reserve,
     resolveCurrentWarehouseId,
     scannedItem,
+    t,
   ])
 
   const handleConfirmPlacement = useCallback(async () => {
@@ -586,7 +587,7 @@ export function Scanner({
     }
 
     if (editablePlacements.length === 0) {
-      setError(translateMessage("generated.scanner.addLeastOneLocationBefore"))
+      setError(t("generated.scanner.addLeastOneLocationBefore"))
       return
     }
 
@@ -632,7 +633,7 @@ export function Scanner({
       setError(
         getScannerErrorMessage(
           confirmError,
-          translateMessage("generated.scanner.failedConfirmPlacementAgain")
+          t("generated.scanner.failedConfirmPlacementAgain")
         )
       )
       setScannerState((current) => ({
@@ -640,7 +641,7 @@ export function Scanner({
         isSubmitting: false,
       }))
     }
-  }, [editablePlacements, queryClient, scannedCode, scannedItem])
+  }, [editablePlacements, queryClient, scannedCode, scannedItem, t])
 
   const handleQuantityDecrease = useCallback(() => {
     setQuantity((current) => Math.max(1, current - 1))
@@ -806,14 +807,14 @@ export function Scanner({
   const renderScannerFallback = useCallback(
     (_error: Error, reset: () => void) => (
       <ScannerErrorState
-        error={translateMessage("generated.scanner.problemScannerAgain")}
+        error={t("generated.scanner.problemScannerAgain")}
         onRetry={() => {
           handleReset()
           reset()
         }}
       />
     ),
-    [handleReset]
+    [handleReset, t]
   )
 
   const queueOutboundScanCode = useCallback((rawCode: string) => {
@@ -883,28 +884,22 @@ export function Scanner({
     if (step === "choose-method") {
       return (
         <ScannerChooseMethod
-          description={translateMessage(
-            "generated.scanner.chooseHowIndicateGoodsInbound"
-          )}
-          manualDescription={translateMessage(
-            "generated.scanner.enterGs1128CodeManually"
-          )}
-          manualLabel={translateMessage("generated.scanner.enterCodeManually")}
+          description={t("generated.scanner.chooseHowIndicateGoodsInbound")}
+          manualDescription={t("generated.scanner.enterGs1128CodeManually")}
+          manualLabel={t("generated.scanner.enterCodeManually")}
           onCancel={() =>
             setScannerState((prev) => ({ ...prev, step: "choose-mode" }))
           }
           onManual={handleManualInputOpen}
           onScan={handleChooseMethodScan}
           onSelect={handleChooseMethodSelect}
-          scanDescription={translateMessage(
-            "generated.scanner.scanBarcodeQrCodeProduct"
-          )}
+          scanDescription={t("generated.scanner.scanBarcodeQrCodeProduct")}
           scanLabel="Zeskanuj kod"
-          selectDescription={translateMessage(
+          selectDescription={t(
             "generated.scanner.searchProductSpecifyQuantityReceive"
           )}
           selectLabel="Wybierz z listy"
-          title={translateMessage("generated.scanner.goodsReceiving")}
+          title={t("generated.scanner.goodsReceiving")}
         />
       )
     }
@@ -912,9 +907,7 @@ export function Scanner({
     if (step === "select-item") {
       return (
         <ScannerSelectItem
-          description={translateMessage(
-            "generated.scanner.findProductWantReceiveWarehouse"
-          )}
+          description={t("generated.scanner.findProductWantReceiveWarehouse")}
           onCancel={() =>
             setScannerState({
               step: "choose-method",
@@ -923,7 +916,7 @@ export function Scanner({
             })
           }
           onSelect={handleInboundItemSelected}
-          title={translateMessage("generated.scanner.shared.selectProduct")}
+          title={t("generated.scanner.shared.selectProduct")}
         />
       )
     }
@@ -1012,21 +1005,17 @@ export function Scanner({
     // Default: show choose-method
     return (
       <ScannerChooseMethod
-        description={translateMessage(
-          "generated.scanner.chooseHowIndicateGoodsInbound"
-        )}
+        description={t("generated.scanner.chooseHowIndicateGoodsInbound")}
         onCancel={closeDialog}
         onScan={handleChooseMethodScan}
         onSelect={handleChooseMethodSelect}
-        scanDescription={translateMessage(
-          "generated.scanner.scanBarcodeQrCodeProduct"
-        )}
+        scanDescription={t("generated.scanner.scanBarcodeQrCodeProduct")}
         scanLabel="Zeskanuj kod"
-        selectDescription={translateMessage(
+        selectDescription={t(
           "generated.scanner.searchProductSpecifyQuantityReceive"
         )}
         selectLabel="Wybierz z listy"
-        title={translateMessage("generated.scanner.goodsReceiving")}
+        title={t("generated.scanner.goodsReceiving")}
       />
     )
   }
@@ -1063,21 +1052,17 @@ export function Scanner({
   } else if (step === "choose-mode") {
     content = (
       <ScannerChooseMethod
-        description={translateMessage(
-          "generated.scanner.chooseWhetherWantReceiveGoods"
-        )}
+        description={t("generated.scanner.chooseWhetherWantReceiveGoods")}
         onCancel={closeDialog}
         onScan={handleChooseTakeMode}
         onSelect={handleChooseRemoveMode}
-        scanDescription={translateMessage(
-          "generated.scanner.startReceivingGoodsChooseMethod"
-        )}
+        scanDescription={t("generated.scanner.startReceivingGoodsChooseMethod")}
         scanLabel="Przyjmowanie"
-        selectDescription={translateMessage(
+        selectDescription={t(
           "generated.scanner.startRemovingGoodsChooseMethod"
         )}
         selectLabel="Zdejmowanie"
-        title={translateMessage("generated.scanner.chooseScannerMode")}
+        title={t("generated.scanner.chooseScannerMode")}
       />
     )
   } else if (step === "manual-input") {
@@ -1087,34 +1072,32 @@ export function Scanner({
     if (step === "choose-method") {
       content = (
         <ScannerChooseMethod
-          description={translateMessage(
+          description={t(
             "generated.scanner.shared.chooseHowIndicateGoodsRemove"
           )}
-          manualDescription={translateMessage(
-            "generated.scanner.enterGs1128CodeManually"
-          )}
-          manualLabel={translateMessage("generated.scanner.enterCodeManually")}
+          manualDescription={t("generated.scanner.enterGs1128CodeManually")}
+          manualLabel={t("generated.scanner.enterCodeManually")}
           onCancel={() =>
             setScannerState((prev) => ({ ...prev, step: "choose-mode" }))
           }
           onManual={handleManualInputOpen}
           onScan={handleChooseMethodScan}
           onSelect={handleChooseMethodSelect}
-          scanDescription={translateMessage(
+          scanDescription={t(
             "generated.scanner.shared.scanGs1128CodeAssortment"
           )}
           scanLabel="Zeskanuj kod"
-          selectDescription={translateMessage(
+          selectDescription={t(
             "generated.scanner.shared.searchProductSpecifyQuantityRemove"
           )}
           selectLabel="Wybierz z listy"
-          title={translateMessage("generated.scanner.shared.goodsRemoval")}
+          title={t("generated.scanner.shared.goodsRemoval")}
         />
       )
     } else if (step === "select-item") {
       content = (
         <ScannerSelectItem
-          description={translateMessage(
+          description={t(
             "generated.scanner.shared.findProductWantRemoveWarehouse"
           )}
           onCancel={() =>
@@ -1125,7 +1108,7 @@ export function Scanner({
             })
           }
           onSelect={handleOutboundItemSelected}
-          title={translateMessage("generated.scanner.shared.selectProduct")}
+          title={t("generated.scanner.shared.selectProduct")}
         />
       )
     } else if (step === "camera") {
@@ -1168,13 +1151,13 @@ export function Scanner({
         dialogTrigger
       ) : (
         <DialogTrigger
-          aria-label={translateMessage("generated.shared.barcodeScanner")}
+          aria-label={t("generated.shared.barcodeScanner")}
           className={buttonVariants({
             variant: "ghost",
             size: "icon",
             className: "mr-1 ml-auto size-8 rounded-xl sm:size-10",
           })}
-          title={translateMessage("generated.shared.barcodeScanner")}
+          title={t("generated.shared.barcodeScanner")}
         >
           <HugeiconsIcon icon={QrCodeIcon} />
         </DialogTrigger>

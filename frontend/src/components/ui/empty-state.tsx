@@ -11,8 +11,9 @@ import {
   Settings01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { Button } from "@/components/ui/button"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { IconComponent } from "../dashboard/types"
 
@@ -249,22 +250,22 @@ export function SearchEmptyState({
   onClear?: () => void
   className?: string
 }) {
+  const t = useAppTranslations()
+
   return (
     <EmptyState
       action={
         onClear
           ? {
-              label: translateMessage("generated.ui.clearSearch"),
+              label: t("generated.ui.clearSearch"),
               onClick: onClear,
               variant: "outline",
             }
           : undefined
       }
       className={className}
-      description={translateMessage(
-        "generated.ui.changingSearchCriteriaUsingDifferent"
-      )}
-      title={translateMessage("generated.shared.results")}
+      description={t("generated.ui.changingSearchCriteriaUsingDifferent")}
+      title={t("generated.shared.results")}
       variant="search"
     />
   )
@@ -273,20 +274,22 @@ export function SearchEmptyState({
 export function FilterEmptyState({
   onClear,
   className,
-  description = translateMessage(
-    "generated.ui.itemsMatchSelectedFiltersChanging"
-  ),
+  description,
 }: {
   onClear?: () => void
   className?: string
   description?: string
 }) {
+  const t = useAppTranslations()
+  const resolvedDescription =
+    description ?? t("generated.ui.itemsMatchSelectedFiltersChanging")
+
   return (
     <EmptyState
       action={
         onClear
           ? {
-              label: translateMessage("generated.shared.clearFilters"),
+              label: t("generated.shared.clearFilters"),
               onClick: onClear,
               variant: "outline",
               icon: Delete02Icon,
@@ -294,8 +297,8 @@ export function FilterEmptyState({
           : undefined
       }
       className={className}
-      description={description}
-      title={translateMessage("generated.ui.matchingItems")}
+      description={resolvedDescription}
+      title={t("generated.ui.matchingItems")}
       variant="filter"
     />
   )
@@ -310,32 +313,36 @@ export function NoItemsEmptyState({
   itemName?: string
   className?: string
 }) {
+  const t = useAppTranslations()
+
   return (
     <EmptyState
       action={
         onAdd
           ? {
-              label: translateMessage("generated.ui.add", { value0: itemName }),
+              label: t("generated.ui.add", { value0: itemName }),
               onClick: onAdd,
             }
           : undefined
       }
       className={className}
-      description={translateMessage("generated.ui.dontAnySYetStart", {
+      description={t("generated.ui.dontAnySYetStart", {
         value0: itemName,
       })}
-      title={translateMessage("generated.ui.s", { value0: itemName })}
+      title={t("generated.ui.s", { value0: itemName })}
       variant="noItems"
     />
   )
 }
 
 export function NoDataEmptyState({ className }: { className?: string }) {
+  const t = useAppTranslations()
+
   return (
     <EmptyState
       className={className}
-      description={translateMessage("generated.ui.dataBeenLoadedYetRefreshing")}
-      title={translateMessage("generated.shared.dataAvailable")}
+      description={t("generated.ui.dataBeenLoadedYetRefreshing")}
+      title={t("generated.shared.dataAvailable")}
       variant="noData"
     />
   )
@@ -348,12 +355,14 @@ export function ErrorEmptyState({
   onRetry?: () => void
   className?: string
 }) {
+  const t = useAppTranslations()
+
   return (
     <EmptyState
       action={
         onRetry
           ? {
-              label: translateMessage("generated.shared.again"),
+              label: t("generated.shared.again"),
               onClick: onRetry,
               variant: "outline",
               icon: ReloadIcon,
@@ -361,8 +370,8 @@ export function ErrorEmptyState({
           : undefined
       }
       className={className}
-      description={translateMessage("generated.ui.problemLoadingDataAgain")}
-      title={translateMessage("generated.ui.somethingWentWrong")}
+      description={t("generated.ui.problemLoadingDataAgain")}
+      title={t("generated.ui.somethingWentWrong")}
       variant="error"
     />
   )

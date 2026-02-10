@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { MAX_TOAST_ROWS } from "../lib/constants"
 import { parseCsvFile } from "../warehouses/csv/utils/csv-utils"
 import type {
@@ -23,6 +23,8 @@ export function useCsvImporter<T extends CsvImporterType>({
   type,
   onImport,
 }: UseCsvImporterProps<T>) {
+  const t = useAppTranslations()
+
   const [open, setOpen] = useState(false)
   const [sourceFile, setSourceFile] = useState<File | null>(null)
   const [rawPreviewData, setRawPreviewData] = useState<
@@ -55,13 +57,13 @@ export function useCsvImporter<T extends CsvImporterType>({
         const remaining = result.errors.length - MAX_TOAST_ROWS
         const suffix =
           remaining > 0
-            ? translateMessage("generated.admin.shared.more", {
+            ? t("generated.admin.shared.more", {
                 value0: remaining,
               })
             : ""
 
         toast.error(
-          translateMessage("generated.admin.shared.csvParsingErrors", {
+          t("generated.admin.shared.csvParsingErrors", {
             value0: result.errors.length,
           }),
           {
@@ -77,9 +79,7 @@ export function useCsvImporter<T extends CsvImporterType>({
       setPreviewHeaders(result.headers)
       return true
     } catch {
-      toast.error(
-        translateMessage("generated.admin.shared.csvFileFailedProcess")
-      )
+      toast.error(t("generated.admin.shared.csvFileFailedProcess"))
       resetFile()
       return false
     }
@@ -95,14 +95,12 @@ export function useCsvImporter<T extends CsvImporterType>({
 
   async function confirmImport() {
     if (parseErrors.length > 0) {
-      toast.error(
-        translateMessage("generated.admin.shared.csvFileContainsErrorsCorrect")
-      )
+      toast.error(t("generated.admin.shared.csvFileContainsErrorsCorrect"))
       return
     }
 
     if (!sourceFile) {
-      toast.error(translateMessage("generated.admin.shared.firstSelectCsvFile"))
+      toast.error(t("generated.admin.shared.firstSelectCsvFile"))
       return
     }
 

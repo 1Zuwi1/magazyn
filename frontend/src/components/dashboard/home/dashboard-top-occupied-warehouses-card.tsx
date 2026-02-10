@@ -6,7 +6,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { ErrorEmptyState } from "@/components/ui/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
 import useWarehouses from "@/hooks/use-warehouses"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { InsightCard } from "../stat-card"
 import { formatNumber } from "./dashboard-home.constants"
@@ -55,6 +55,8 @@ function TopOccupiedWarehousesSkeleton() {
 }
 
 export default function DashboardTopOccupiedWarehousesCard() {
+  const t = useAppTranslations()
+
   const locale = useLocale()
   const {
     data: topWarehouses,
@@ -97,7 +99,7 @@ export default function DashboardTopOccupiedWarehousesCard() {
               />
             </div>
             <p className="font-mono text-muted-foreground text-xs">
-              {translateMessage("generated.dashboard.home.slots", {
+              {t("generated.dashboard.home.slots", {
                 value0: formatNumber(warehouse.occupiedSlots, locale),
                 value1: formatNumber(
                   warehouse.occupiedSlots + warehouse.freeSlots,
@@ -115,7 +117,7 @@ export default function DashboardTopOccupiedWarehousesCard() {
           })}
           href="/dashboard/warehouse"
         >
-          {translateMessage("generated.dashboard.home.viewAllWarehouses")}
+          {t("generated.dashboard.home.viewAllWarehouses")}
         </Link>
       </div>
     )
@@ -123,11 +125,9 @@ export default function DashboardTopOccupiedWarehousesCard() {
 
   return (
     <InsightCard
-      description={translateMessage(
-        "generated.dashboard.home.mostFilledLocations"
-      )}
+      description={t("generated.dashboard.home.mostFilledLocations")}
       icon={Package}
-      title={translateMessage("generated.dashboard.home.warehouseOccupancy")}
+      title={t("generated.dashboard.home.warehouseOccupancy")}
     >
       {renderContent()}
     </InsightCard>

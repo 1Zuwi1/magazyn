@@ -32,7 +32,7 @@ import PaginationFull from "@/components/ui/pagination-component"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import useAlerts, { usePatchAlert } from "@/hooks/use-alerts"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import {
   ALERT_TYPE_OPTIONS,
@@ -51,16 +51,18 @@ type AlertTypeValue = (typeof ALERT_TYPE_OPTIONS)[number]["value"]
 
 type AlertStatusValue = "OPEN" | "ACTIVE" | "RESOLVED" | "DISMISSED"
 
-const ALERT_STATUS_OPTIONS: {
+const getAlertStatusOptions = (
+  t: ReturnType<typeof useAppTranslations>
+): {
   value: AlertStatusValue
   label: string
-}[] = [
-  { value: "OPEN", label: translateMessage("generated.shared.open") },
-  { value: "ACTIVE", label: translateMessage("generated.shared.active") },
-  { value: "RESOLVED", label: translateMessage("generated.shared.solved") },
+}[] => [
+  { value: "OPEN", label: t("generated.shared.open") },
+  { value: "ACTIVE", label: t("generated.shared.active") },
+  { value: "RESOLVED", label: t("generated.shared.solved") },
   {
     value: "DISMISSED",
-    label: translateMessage("generated.admin.alerts.rejected"),
+    label: t("generated.admin.alerts.rejected"),
   },
 ]
 
@@ -74,7 +76,10 @@ function getAlertIcon(alertType: string): IconSvgElement {
   }
 }
 
-function getStatusConfig(status: string): {
+function getStatusConfig(
+  t: ReturnType<typeof useAppTranslations>,
+  status: string
+): {
   badgeVariant: "default" | "destructive" | "secondary"
   cardClassName: string
   label: string
@@ -85,7 +90,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "destructive",
       cardClassName: "bg-destructive/10 text-destructive",
-      label: translateMessage("generated.shared.open"),
+      label: t("generated.shared.open"),
     }
   }
 
@@ -93,7 +98,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "secondary",
       cardClassName: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-      label: translateMessage("generated.shared.solved"),
+      label: t("generated.shared.solved"),
     }
   }
 
@@ -101,7 +106,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "secondary",
       cardClassName: "bg-muted text-muted-foreground",
-      label: translateMessage("generated.admin.alerts.rejected"),
+      label: t("generated.admin.alerts.rejected"),
     }
   }
 
@@ -109,7 +114,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "default",
       cardClassName: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
-      label: translateMessage("generated.shared.active"),
+      label: t("generated.shared.active"),
     }
   }
 
@@ -181,6 +186,8 @@ function AlertListBody({
   selectedAlertId: number | null
   dateFnsLocale: DateFnsLocale
 }) {
+  const t = useAppTranslations()
+
   if (isPending) {
     return (
       <>
@@ -198,10 +205,10 @@ function AlertListBody({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <p className="font-medium">
-          {translateMessage("generated.admin.alerts.failedDownloadAlerts")}
+          {t("generated.admin.alerts.failedDownloadAlerts")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage("generated.shared.againMoment")}
+          {t("generated.shared.againMoment")}
         </p>
       </div>
     )
@@ -216,11 +223,9 @@ function AlertListBody({
             icon={InboxIcon}
           />
         </div>
-        <p className="mt-3 font-medium">
-          {translateMessage("generated.admin.alerts.alerts")}
-        </p>
+        <p className="mt-3 font-medium">{t("generated.admin.alerts.alerts")}</p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage("generated.shared.entriesSelectedFilter")}
+          {t("generated.shared.entriesSelectedFilter")}
         </p>
       </div>
     )
@@ -229,7 +234,7 @@ function AlertListBody({
   return (
     <>
       {alerts.map((alert) => {
-        const statusConfig = getStatusConfig(alert.status)
+        const statusConfig = getStatusConfig(t, alert.status)
         const isSelected = selectedAlertId === alert.id
 
         return (
@@ -281,24 +286,24 @@ function AlertListBody({
   )
 }
 
-const STATUSES = {
+const getStatuses = (t: ReturnType<typeof useAppTranslations>) => ({
   OPEN: {
-    label: translateMessage("generated.admin.alerts.markOpen"),
+    label: t("generated.admin.alerts.markOpen"),
     icon: Time01Icon,
   },
   ACTIVE: {
-    label: translateMessage("generated.admin.alerts.markActive"),
+    label: t("generated.admin.alerts.markActive"),
     icon: AlertCircleIcon,
   },
   RESOLVED: {
-    label: translateMessage("generated.admin.alerts.markSolved"),
+    label: t("generated.admin.alerts.markSolved"),
     icon: CheckmarkBadge01Icon,
   },
   DISMISSED: {
-    label: translateMessage("generated.admin.alerts.dismissAlert"),
+    label: t("generated.admin.alerts.dismissAlert"),
     icon: Alert01Icon,
   },
-}
+})
 
 function AlertDetailsPanel({
   alert,
@@ -309,6 +314,9 @@ function AlertDetailsPanel({
   onStatusChange: (status: AlertStatusValue) => void
   dateFnsLocale: DateFnsLocale
 }) {
+  const t = useAppTranslations()
+  const statuses = useMemo(() => getStatuses(t), [t])
+
   if (!alert) {
     return (
       <div className="flex h-full flex-col items-center justify-center p-12">
@@ -319,16 +327,16 @@ function AlertDetailsPanel({
           />
         </div>
         <p className="mt-4 font-medium text-lg">
-          {translateMessage("generated.admin.alerts.selectAlert")}
+          {t("generated.admin.alerts.selectAlert")}
         </p>
         <p className="mt-1 text-center text-muted-foreground text-sm">
-          {translateMessage("generated.shared.clickEntryListSeeDetails")}
+          {t("generated.shared.clickEntryListSeeDetails")}
         </p>
       </div>
     )
   }
 
-  const statusConfig = getStatusConfig(alert.status)
+  const statusConfig = getStatusConfig(t, alert.status)
   const differenceValue =
     alert.actualValue != null && alert.thresholdValue != null
       ? alert.actualValue - alert.thresholdValue
@@ -353,39 +361,39 @@ function AlertDetailsPanel({
       <div className="flex-1 space-y-6 p-6">
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.shared.location")}
+            {t("generated.shared.location")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <DetailsCard
-              label={translateMessage("generated.shared.warehouse")}
+              label={t("generated.shared.warehouse")}
               value={alert.warehouseName ?? alert.warehouseId ?? "—"}
             />
             <DetailsCard
-              label={translateMessage("generated.shared.rack")}
+              label={t("generated.shared.rack")}
               value={alert.rackMarker ?? alert.rackId ?? "—"}
             />
             <DetailsCard
-              label={translateMessage("generated.shared.status")}
-              value={getStatusConfig(alert.status).label}
+              label={t("generated.shared.status")}
+              value={getStatusConfig(t, alert.status).label}
             />
           </div>
         </section>
 
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.shared.metrics")}
+            {t("generated.shared.metrics")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-3">
             <DetailsCard
-              label={translateMessage("generated.shared.threshold")}
+              label={t("generated.shared.threshold")}
               value={formatMetricValue(alert.thresholdValue)}
             />
             <DetailsCard
-              label={translateMessage("generated.shared.value")}
+              label={t("generated.shared.value")}
               value={formatMetricValue(alert.actualValue)}
             />
             <DetailsCard
-              label={translateMessage("generated.shared.difference")}
+              label={t("generated.shared.difference")}
               value={differenceValue == null ? "—" : differenceValue.toString()}
             />
           </div>
@@ -393,19 +401,19 @@ function AlertDetailsPanel({
 
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.shared.time")}
+            {t("generated.shared.time")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <DetailsCard
-              label={translateMessage("generated.shared.created")}
+              label={t("generated.shared.created")}
               value={formatDateTime(alert.createdAt?.toString(), dateFnsLocale)}
             />
             <DetailsCard
-              label={translateMessage("generated.admin.alerts.update")}
+              label={t("generated.admin.alerts.update")}
               value={formatDateTime(alert.updatedAt?.toString(), dateFnsLocale)}
             />
             <DetailsCard
-              label={translateMessage("generated.admin.alerts.solved")}
+              label={t("generated.admin.alerts.solved")}
               value={formatDateTime(
                 alert.resolvedAt?.toString(),
                 dateFnsLocale
@@ -417,11 +425,11 @@ function AlertDetailsPanel({
         {hasResolutionData ? (
           <section className="space-y-3">
             <h3 className="font-medium text-muted-foreground text-sm">
-              {translateMessage("generated.shared.solutionNote")}
+              {t("generated.shared.solutionNote")}
             </h3>
             <div className="rounded-lg border bg-muted/20 p-3">
               <p className="text-muted-foreground text-xs">
-                {translateMessage("generated.shared.solved2")}
+                {t("generated.shared.solved2")}
               </p>
               <p className="mt-0.5 font-medium">
                 {alert.resolvedByName ?? "—"}
@@ -443,7 +451,7 @@ function AlertDetailsPanel({
             })}
             href={locationHref}
           >
-            {translateMessage("generated.shared.goLocation")}
+            {t("generated.shared.goLocation")}
             <HugeiconsIcon className="ml-2 size-4" icon={ArrowRight02Icon} />
           </Link>
         ) : null}
@@ -457,15 +465,15 @@ function AlertDetailsPanel({
               })
             )}
           >
-            {translateMessage("generated.admin.shared.changeStatus")}
+            {t("generated.admin.shared.changeStatus")}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="center" className="w-fit" side="top">
             <DropdownMenuGroup>
               <DropdownMenuLabel>
-                {translateMessage("generated.shared.shares")}
+                {t("generated.shared.shares")}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {Object.entries(STATUSES).map(([status, config]) => (
+              {Object.entries(statuses).map(([status, config]) => (
                 <DropdownMenuItem
                   className="gap-2"
                   key={status}
@@ -484,6 +492,9 @@ function AlertDetailsPanel({
 }
 
 export default function AlertsMain() {
+  const t = useAppTranslations()
+  const alertStatusOptions = useMemo(() => getAlertStatusOptions(t), [t])
+
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)
 
@@ -589,15 +600,13 @@ export default function AlertsMain() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description={translateMessage(
-          "generated.admin.alerts.viewSystemAlertsWarehouses"
-        )}
+        description={t("generated.admin.alerts.viewSystemAlertsWarehouses")}
         icon={Alert01Icon}
         navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title={translateMessage("generated.shared.alerts")}
+        title={t("generated.shared.alerts")}
       >
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
@@ -605,7 +614,7 @@ export default function AlertsMain() {
               {allAlerts?.totalElements ?? 0}
             </span>
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.shared.together")}
+              {t("generated.shared.together")}
             </span>
           </div>
           {(activeAlerts?.totalElements ?? 0) > 0 ? (
@@ -615,7 +624,7 @@ export default function AlertsMain() {
                 {activeAlerts?.totalElements ?? 0}
               </span>
               <span className="text-muted-foreground text-xs">
-                {translateMessage("generated.admin.alerts.open")}
+                {t("generated.admin.alerts.open")}
               </span>
             </div>
           ) : null}
@@ -634,7 +643,7 @@ export default function AlertsMain() {
                   )}
                 >
                   <HugeiconsIcon className="size-4" icon={FilterIcon} />
-                  {translateMessage("generated.shared.status")}
+                  {t("generated.shared.status")}
                   {statusFilter.length > 0 && (
                     <Badge className="ml-1" variant="secondary">
                       {statusFilter.length}
@@ -648,10 +657,10 @@ export default function AlertsMain() {
                 >
                   <DropdownMenuGroup>
                     <DropdownMenuLabel>
-                      {translateMessage("generated.admin.alerts.filterStatus")}
+                      {t("generated.admin.alerts.filterStatus")}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {ALERT_STATUS_OPTIONS.map((option) => (
+                    {alertStatusOptions.map((option) => (
                       <DropdownMenuCheckboxItem
                         checked={statusFilter.includes(option.value)}
                         key={option.value}
@@ -668,7 +677,7 @@ export default function AlertsMain() {
                           onClick={handleClearStatusFilter}
                           type="button"
                         >
-                          {translateMessage("generated.shared.clearFilters")}
+                          {t("generated.shared.clearFilters")}
                         </button>
                       </>
                     )}
@@ -684,7 +693,7 @@ export default function AlertsMain() {
                   )}
                 >
                   <HugeiconsIcon className="size-4" icon={FilterIcon} />
-                  {translateMessage("generated.admin.alerts.alertType")}
+                  {t("generated.admin.alerts.alertType")}
                   {alertTypeFilter.length > 0 && (
                     <Badge className="ml-1" variant="secondary">
                       {alertTypeFilter.length}
@@ -698,9 +707,7 @@ export default function AlertsMain() {
                 >
                   <DropdownMenuGroup>
                     <DropdownMenuLabel>
-                      {translateMessage(
-                        "generated.admin.alerts.filterAlertType"
-                      )}
+                      {t("generated.admin.alerts.filterAlertType")}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {ALERT_TYPE_OPTIONS.map((option) => (
@@ -720,7 +727,7 @@ export default function AlertsMain() {
                           onClick={handleClearAlertTypeFilter}
                           type="button"
                         >
-                          {translateMessage("generated.shared.clearFilters")}
+                          {t("generated.shared.clearFilters")}
                         </button>
                       </>
                     )}
@@ -763,7 +770,7 @@ export default function AlertsMain() {
       {selectedAlert ? (
         <div className="rounded-lg border border-dashed p-3 text-muted-foreground text-xs">
           <HugeiconsIcon className="mr-1 inline size-3.5" icon={Time01Icon} />
-          {translateMessage("generated.shared.lastUpdated", {
+          {t("generated.shared.lastUpdated", {
             value0: formatDateTime(
               selectedAlert.updatedAt?.toString(),
               dateFnsLocale

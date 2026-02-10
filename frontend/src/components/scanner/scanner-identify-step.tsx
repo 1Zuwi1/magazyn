@@ -6,8 +6,9 @@ import {
   SearchList01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { useCallback, useState } from "react"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type {
   IdentificationCandidate,
   IdentificationResult,
@@ -19,14 +20,18 @@ import { ScrollArea } from "../ui/scroll-area"
 import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 
-const CONFIDENCE_LABELS: Record<string, string> = {
-  HIGH_CONFIDENCE: translateMessage("generated.scanner.highConfidence"),
-  MEDIUM_CONFIDENCE: translateMessage("generated.scanner.mediumConfidence"),
+const getConfidenceLevelLabel = (
+  t: ReturnType<typeof useAppTranslations>,
+  level: string
+): string => {
+  if (level === "HIGH_CONFIDENCE") {
+    return t("generated.scanner.highConfidence")
+  }
+  if (level === "MEDIUM_CONFIDENCE") {
+    return t("generated.scanner.mediumConfidence")
+  }
+  return t("generated.scanner.lowConfidence")
 }
-
-const getConfidenceLevelLabel = (level: string): string =>
-  CONFIDENCE_LABELS[level] ??
-  translateMessage("generated.scanner.lowConfidence")
 
 interface ScannerIdentifyStepProps {
   result: IdentificationResult
@@ -46,6 +51,8 @@ function CandidateCard({
   isSelected: boolean
   onSelect: (candidate: IdentificationCandidate) => void
 }) {
+  const t = useAppTranslations()
+
   return (
     <button
       className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors ${
@@ -68,26 +75,26 @@ function CandidateCard({
           <h4 className="truncate font-medium text-sm">{candidate.itemName}</h4>
           {candidate.isDangerous ? (
             <Badge className="shrink-0" variant="destructive">
-              {translateMessage("generated.shared.dangerous")}
+              {t("generated.shared.dangerous")}
             </Badge>
           ) : null}
         </div>
         <p className="mt-0.5 font-mono text-muted-foreground text-xs">
-          {translateMessage("generated.scanner.shared.code", {
+          {t("generated.scanner.shared.code", {
             value0: candidate.code,
           })}
         </p>
         <div className="mt-1 flex items-center gap-3 text-muted-foreground text-xs">
           <span>
-            {translateMessage("generated.scanner.similarity")}{" "}
+            {t("generated.scanner.similarity")}{" "}
             <span className="font-medium text-foreground">
               {Math.round(candidate.similarityScore * 100)}%
             </span>
           </span>
           <span>
-            {translateMessage("generated.scanner.weight")}{" "}
+            {t("generated.scanner.weight")}{" "}
             <span className="font-medium text-foreground">
-              {candidate.weight} {translateMessage("generated.shared.kg")}
+              {candidate.weight} {t("generated.shared.kg")}
             </span>
           </span>
         </div>
@@ -112,6 +119,8 @@ export function ScannerIdentifyStep({
   onMismatch,
   onCancel,
 }: ScannerIdentifyStepProps) {
+  const t = useAppTranslations()
+
   const [selectedCandidate, setSelectedCandidate] =
     useState<IdentificationCandidate | null>(
       result.candidates.length > 0 ? result.candidates[0] : null
@@ -146,7 +155,7 @@ export function ScannerIdentifyStep({
             </div>
             <div>
               <h2 className="font-semibold text-xl tracking-tight">
-                {translateMessage("generated.scanner.identifiedItem")}
+                {t("generated.scanner.identifiedItem")}
               </h2>
               <p className="mt-1 text-muted-foreground text-sm">
                 {result.message}
@@ -162,10 +171,10 @@ export function ScannerIdentifyStep({
                   : "secondary"
               }
             >
-              {getConfidenceLevelLabel(result.confidenceLevel)}
+              {getConfidenceLevelLabel(t, result.confidenceLevel)}
             </Badge>
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.scanner.confidence", {
+              {t("generated.scanner.confidence", {
                 value0: Math.round(result.similarityScore * 100),
               })}
             </span>
@@ -182,12 +191,10 @@ export function ScannerIdentifyStep({
             </div>
             <div className="max-w-sm space-y-2">
               <h3 className="font-semibold text-lg">
-                {translateMessage("generated.scanner.matchingItems")}
+                {t("generated.scanner.matchingItems")}
               </h3>
               <p className="text-muted-foreground text-sm">
-                {translateMessage(
-                  "generated.scanner.itemsMatchingPhotoFoundScanning"
-                )}
+                {t("generated.scanner.itemsMatchingPhotoFoundScanning")}
               </p>
             </div>
           </div>
@@ -214,7 +221,7 @@ export function ScannerIdentifyStep({
               type="button"
               variant="outline"
             >
-              {translateMessage("generated.scanner.backScanner")}
+              {t("generated.scanner.backScanner")}
             </Button>
           ) : (
             <>
@@ -225,7 +232,7 @@ export function ScannerIdentifyStep({
                 onClick={handleAccept}
                 type="button"
               >
-                {translateMessage("generated.scanner.confirmSelection")}
+                {t("generated.scanner.confirmSelection")}
               </Button>
               <Button
                 className="h-12 w-full rounded-xl"
@@ -235,7 +242,7 @@ export function ScannerIdentifyStep({
                 type="button"
                 variant="outline"
               >
-                {translateMessage("generated.scanner.item")}
+                {t("generated.scanner.item")}
               </Button>
             </>
           )}

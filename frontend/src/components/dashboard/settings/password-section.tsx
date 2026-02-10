@@ -1,18 +1,20 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
+
 import { useRef } from "react"
 import { toast } from "sonner"
 import { useTwoFactorVerificationDialog } from "@/components/dashboard/settings/two-factor-verification-dialog-store"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { Button } from "@/components/ui/button"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { apiFetch } from "@/lib/fetcher"
 import { ChangePasswordFormSchema, ChangePasswordSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
-
 export function PasswordSection() {
+  const t = useAppTranslations()
+
   const { open } = useTwoFactorVerificationDialog()
   const isTwoFactorVerifiedRef = useRef(false)
 
@@ -48,17 +50,13 @@ export function PasswordSection() {
       if (error) {
         handleApiError(
           error,
-          translateMessage(
-            "generated.dashboard.settings.failedChangePasswordAgain"
-          )
+          t("generated.dashboard.settings.failedChangePasswordAgain")
         )
         return
       }
 
       form.reset()
-      toast.success(
-        translateMessage("generated.dashboard.settings.passwordBeenChanged")
-      )
+      toast.success(t("generated.dashboard.settings.passwordBeenChanged"))
     },
     validators: {
       onSubmitAsync: ChangePasswordFormSchema,
@@ -82,10 +80,8 @@ export function PasswordSection() {
                   autoComplete="current-password"
                   field={field}
                   id="current-password"
-                  label={translateMessage(
-                    "generated.dashboard.settings.currentPassword"
-                  )}
-                  placeholder={translateMessage(
+                  label={t("generated.dashboard.settings.currentPassword")}
+                  placeholder={t(
                     "generated.dashboard.settings.enterCurrentPassword"
                   )}
                   type="password"
@@ -101,10 +97,8 @@ export function PasswordSection() {
                 autoComplete="new-password"
                 field={field}
                 id="new-password"
-                label={translateMessage("generated.shared.newPassword")}
-                placeholder={translateMessage(
-                  "generated.dashboard.settings.least8Characters"
-                )}
+                label={t("generated.shared.newPassword")}
+                placeholder={t("generated.dashboard.settings.least8Characters")}
                 type="password"
               />
             )
@@ -117,8 +111,8 @@ export function PasswordSection() {
                 autoComplete="new-password"
                 field={field}
                 id="confirm-password"
-                label={translateMessage("generated.shared.confirmPassword")}
-                placeholder={translateMessage(
+                label={t("generated.shared.confirmPassword")}
+                placeholder={t(
                   "generated.dashboard.settings.repeatNewPassword"
                 )}
                 type="password"
@@ -130,9 +124,7 @@ export function PasswordSection() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground text-xs">
-          {translateMessage(
-            "generated.dashboard.settings.min8CharactersIncludingNumbers"
-          )}
+          {t("generated.dashboard.settings.min8CharactersIncludingNumbers")}
         </p>
         <form.Subscribe
           selector={(state) => [state.canSubmit, state.isSubmitting]}
@@ -143,7 +135,7 @@ export function PasswordSection() {
               isLoading={isSubmitting}
               type="submit"
             >
-              {translateMessage("generated.dashboard.settings.changePassword")}
+              {t("generated.dashboard.settings.changePassword")}
             </Button>
           )}
         </form.Subscribe>

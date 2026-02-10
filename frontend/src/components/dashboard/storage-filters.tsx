@@ -1,5 +1,6 @@
 import { Filter } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
@@ -9,7 +10,7 @@ import {
 } from "@/components/ui/popover"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { FilterState } from "./types"
 
@@ -28,6 +29,8 @@ export function WarehouseFilters({
   filters,
   onFilterChange,
 }: WarehouseFiltersProps) {
+  const t = useAppTranslations()
+
   return (
     <Popover>
       <PopoverTrigger
@@ -42,15 +45,13 @@ export function WarehouseFilters({
         <div className="grid gap-4">
           <div className="space-y-2">
             <h4 className="font-medium leading-none">
-              {translateMessage("generated.dashboard.storage.advancedFilters")}
+              {t("generated.dashboard.storage.advancedFilters")}
             </h4>
           </div>
 
           <div className="space-y-2">
             <div className="flex justify-between">
-              <Label>
-                {translateMessage("generated.dashboard.storage.minFill")}
-              </Label>
+              <Label>{t("generated.dashboard.storage.minFill")}</Label>
               <span className="text-muted-foreground text-sm">
                 {filters.minOccupancy}%
               </span>
@@ -71,9 +72,7 @@ export function WarehouseFilters({
 
           <div className="flex items-center justify-between">
             <Label htmlFor="showEmpty">
-              {translateMessage(
-                "generated.dashboard.storage.showEmptyWarehouses"
-              )}
+              {t("generated.dashboard.storage.showEmptyWarehouses")}
             </Label>
             <Switch
               checked={filters.showEmpty}
@@ -92,7 +91,7 @@ export function WarehouseFilters({
             size="sm"
             variant="ghost"
           >
-            {translateMessage("generated.dashboard.storage.resetFilters")}
+            {t("generated.dashboard.storage.resetFilters")}
           </Button>
         </div>
       </PopoverContent>

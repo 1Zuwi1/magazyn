@@ -31,7 +31,7 @@ import useNotifications, {
   useMarkNotification,
 } from "@/hooks/use-notifications"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { findAlertTitle } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 
@@ -71,6 +71,8 @@ function getStatusConfig(status: string) {
 }
 
 export function NotificationInbox() {
+  const t = useAppTranslations()
+
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)
 
@@ -149,12 +151,10 @@ export function NotificationInbox() {
           />
         </div>
         <p className="mt-3 font-medium">
-          {translateMessage("generated.dashboard.notifications.notifications")}
+          {t("generated.dashboard.notifications.notifications")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage(
-            "generated.dashboard.notifications.everythingLooksGood"
-          )}
+          {t("generated.dashboard.notifications.everythingLooksGood")}
         </p>
       </motion.div>
     )
@@ -241,7 +241,7 @@ export function NotificationInbox() {
           buttonVariants({ variant: "ghost", size: "icon" }),
           "relative mr-2"
         )}
-        title={translateMessage("generated.shared.notifications")}
+        title={t("generated.shared.notifications")}
       >
         <HugeiconsIcon
           className="size-5 text-muted-foreground transition-colors group-hover:text-foreground"
@@ -272,11 +272,11 @@ export function NotificationInbox() {
           <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="font-semibold">
-                {translateMessage("generated.shared.notifications")}
+                {t("generated.shared.notifications")}
               </h3>
               {unreadCount > 0 && (
                 <Badge className="h-5 px-1.5 text-[10px]" variant="secondary">
-                  {translateMessage("generated.dashboard.notifications.new", {
+                  {t("generated.dashboard.notifications.new", {
                     value0: unreadCount,
                   })}
                 </Badge>
@@ -290,7 +290,7 @@ export function NotificationInbox() {
               variant="ghost"
             >
               <HugeiconsIcon className="size-3.5" icon={TickDouble02Icon} />
-              {translateMessage("generated.dashboard.notifications.readAll")}
+              {t("generated.dashboard.notifications.readAll")}
             </Button>
           </div>
         </div>
@@ -303,7 +303,7 @@ export function NotificationInbox() {
             href="/dashboard/notifications"
             onClick={() => setOpen(false)}
           >
-            {translateMessage("generated.shared.seeAll")}
+            {t("generated.shared.seeAll")}
             <HugeiconsIcon className="size-3.5" icon={ArrowRight02Icon} />
           </Link>
         </div>

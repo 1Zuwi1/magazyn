@@ -2,6 +2,7 @@
 
 import { Image01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { useState } from "react"
 import {
   Dialog,
@@ -10,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 const DEFAULT_IMAGE_SIZE = 100
@@ -50,6 +51,8 @@ export function ItemPhoto({
   height = DEFAULT_IMAGE_SIZE,
   zoomable = false,
 }: ItemPhotoProps) {
+  const t = useAppTranslations()
+
   const [failedImageSource, setFailedImageSource] = useState<string | null>(
     null
   )
@@ -97,7 +100,7 @@ export function ItemPhoto({
   return (
     <>
       <button
-        aria-label={translateMessage("generated.ui.enlargePhoto", {
+        aria-label={t("generated.ui.enlargePhoto", {
           value0: alt,
         })}
         className="cursor-zoom-in rounded-lg transition-opacity hover:opacity-90"
@@ -109,9 +112,7 @@ export function ItemPhoto({
       <Dialog onOpenChange={setPreviewOpen} open={previewOpen}>
         <DialogContent className="max-w-[calc(100%-1rem)] p-3 sm:max-w-4xl sm:p-4">
           <DialogHeader className="sr-only">
-            <DialogTitle>
-              {translateMessage("generated.ui.enlargedProductPhoto")}
-            </DialogTitle>
+            <DialogTitle>{t("generated.ui.enlargedProductPhoto")}</DialogTitle>
             <DialogDescription>{alt}</DialogDescription>
           </DialogHeader>
           <div className="max-h-[80vh] overflow-hidden rounded-lg bg-muted">

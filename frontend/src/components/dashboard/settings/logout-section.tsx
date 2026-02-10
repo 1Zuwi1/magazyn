@@ -1,13 +1,15 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+
 import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useLogout } from "@/hooks/use-session"
-import { translateMessage } from "@/i18n/translate-message"
-
+import { useAppTranslations } from "@/i18n/use-translations"
 export function LogoutSection() {
+  const t = useAppTranslations()
+
   const router = useRouter()
   const logoutMutation = useLogout()
 
@@ -17,23 +19,16 @@ export function LogoutSection() {
       router.replace("/login")
       router.refresh()
     } catch (error) {
-      handleApiError(
-        error,
-        translateMessage("generated.dashboard.settings.failedLogOutAgain")
-      )
+      handleApiError(error, t("generated.dashboard.settings.failedLogOutAgain"))
     }
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          {translateMessage("generated.dashboard.settings.logout")}
-        </CardTitle>
+        <CardTitle>{t("generated.dashboard.settings.logout")}</CardTitle>
         <p className="text-muted-foreground text-sm">
-          {translateMessage(
-            "generated.dashboard.settings.endCurrentSessionReturnLogin"
-          )}
+          {t("generated.dashboard.settings.endCurrentSessionReturnLogin")}
         </p>
       </CardHeader>
       <CardContent>
@@ -43,7 +38,7 @@ export function LogoutSection() {
           type="button"
           variant="destructive"
         >
-          {translateMessage("generated.dashboard.settings.logOut")}
+          {t("generated.dashboard.settings.logOut")}
         </Button>
       </CardContent>
     </Card>

@@ -5,10 +5,11 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { format } from "date-fns"
+
 import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { Rack, RackAssortment } from "@/lib/schemas"
 import type { SlotCoordinates } from "../types"
 import { getSlotCoordinate } from "../utils/helpers"
@@ -41,6 +42,8 @@ export function RackShelfDetailsCard({
   assortment,
   onClearSelection,
 }: RackShelfDetailsCardProps) {
+  const t = useAppTranslations()
+
   const hasSelection = selectedSlotCoordinates !== null
   const selectedPosition = selectedSlotCoordinates
     ? {
@@ -63,19 +66,15 @@ export function RackShelfDetailsCard({
           </div>
           <div>
             <h3 className="font-semibold text-sm">
-              {translateMessage(
-                "generated.dashboard.rackVisualization.shelfDetails"
-              )}
+              {t("generated.dashboard.rackVisualization.shelfDetails")}
             </h3>
             <p className="text-muted-foreground text-xs">
               {selectedPosition
-                ? translateMessage("generated.dashboard.shared.rowShelf", {
+                ? t("generated.dashboard.shared.rowShelf", {
                     value0: selectedPosition.row + 1,
                     value1: selectedPosition.col + 1,
                   })
-                : translateMessage(
-                    "generated.dashboard.rackVisualization.selectShelf"
-                  )}
+                : t("generated.dashboard.rackVisualization.selectShelf")}
             </p>
           </div>
         </div>
@@ -88,7 +87,7 @@ export function RackShelfDetailsCard({
           )}
           {selectedPosition && (
             <Button onClick={onClearSelection} size="sm" variant="ghost">
-              {translateMessage("generated.shared.clear")}
+              {t("generated.shared.clear")}
             </Button>
           )}
         </div>
@@ -103,10 +102,10 @@ export function RackShelfDetailsCard({
             />
           </div>
           <p className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.dashboard.shared.clickShelf")}
+            {t("generated.dashboard.shared.clickShelf")}
           </p>
           <p className="text-muted-foreground/70 text-xs">
-            {translateMessage("generated.dashboard.shared.seeItemDetails")}
+            {t("generated.dashboard.shared.seeItemDetails")}
           </p>
         </div>
       )}
@@ -120,13 +119,13 @@ export function RackShelfDetailsCard({
             />
           </div>
           <p className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.dashboard.shared.emptyShelf")}
+            {t("generated.dashboard.shared.emptyShelf")}
           </p>
           <p className="text-muted-foreground/70 text-xs">
-            {translateMessage("generated.dashboard.shared.itemPosition")}
+            {t("generated.dashboard.shared.itemPosition")}
             <br />
             {selectedPosition
-              ? translateMessage("generated.dashboard.shared.rowShelf", {
+              ? t("generated.dashboard.shared.rowShelf", {
                   value0: selectedPosition.row + 1,
                   value1: selectedPosition.col + 1,
                 })
@@ -139,7 +138,7 @@ export function RackShelfDetailsCard({
         <div className="space-y-3 p-4">
           <div className="space-y-2 text-xs">
             <DetailRow
-              label={translateMessage("generated.dashboard.shared.itemName")}
+              label={t("generated.dashboard.shared.itemName")}
               value={
                 <span className="font-mono font-semibold">
                   {assortment.item.name}
@@ -147,7 +146,7 @@ export function RackShelfDetailsCard({
               }
             />
             <DetailRow
-              label={translateMessage("generated.shared.code")}
+              label={t("generated.shared.code")}
               value={
                 <span className="font-mono font-semibold">
                   {assortment.code}
@@ -155,21 +154,18 @@ export function RackShelfDetailsCard({
               }
             />
             <DetailRow
-              label={translateMessage("generated.shared.position")}
+              label={t("generated.shared.position")}
               value={
                 <span className="font-mono font-semibold">
-                  {translateMessage(
-                    "generated.dashboard.rackVisualization.xY",
-                    {
-                      value0: assortment.positionX,
-                      value1: assortment.positionY,
-                    }
-                  )}
+                  {t("generated.dashboard.rackVisualization.xY", {
+                    value0: assortment.positionX,
+                    value1: assortment.positionY,
+                  })}
                 </span>
               }
             />
             <DetailRow
-              label={translateMessage("generated.shared.created")}
+              label={t("generated.shared.created")}
               value={
                 <span className="font-mono font-semibold">
                   {format(
@@ -180,7 +176,7 @@ export function RackShelfDetailsCard({
               }
             />
             <DetailRow
-              label={translateMessage("generated.dashboard.shared.expires")}
+              label={t("generated.dashboard.shared.expires")}
               value={
                 <span className="font-mono font-semibold">
                   {format(

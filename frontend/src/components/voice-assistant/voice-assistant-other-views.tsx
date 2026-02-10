@@ -1,9 +1,11 @@
 import { AlertCircleIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Button } from "@/components/ui/button"
-import { translateMessage } from "@/i18n/translate-message"
 
+import { Button } from "@/components/ui/button"
+import { useAppTranslations } from "@/i18n/use-translations"
 export function VoiceAssistantProcessingView() {
+  const t = useAppTranslations()
+
   return (
     <div
       className="relative flex h-full flex-col items-center justify-center p-6 text-center"
@@ -19,10 +21,10 @@ export function VoiceAssistantProcessingView() {
 
         <div className="max-w-xs space-y-1.5">
           <h2 className="font-semibold text-foreground text-lg tracking-tight">
-            {translateMessage("generated.voiceAssistant.imProcessing")}
+            {t("generated.voiceAssistant.imProcessing")}
           </h2>
           <p className="text-muted-foreground text-sm">
-            {translateMessage("generated.voiceAssistant.amAnalyzingCommand")}
+            {t("generated.voiceAssistant.amAnalyzingCommand")}
           </p>
         </div>
       </div>
@@ -39,6 +41,8 @@ export function VoiceAssistantErrorView({
   message,
   onReset,
 }: VoiceAssistantErrorViewProps) {
+  const t = useAppTranslations()
+
   return (
     <div
       className="relative flex h-full flex-col items-center justify-center gap-5 p-6 text-center"
@@ -59,7 +63,7 @@ export function VoiceAssistantErrorView({
 
       <div className="max-w-xs space-y-1.5">
         <h2 className="font-semibold text-foreground text-lg tracking-tight">
-          {translateMessage("generated.voiceAssistant.didntWork")}
+          {t("generated.voiceAssistant.didntWork")}
         </h2>
         <p className="text-muted-foreground text-sm leading-relaxed">
           {message}
@@ -67,7 +71,7 @@ export function VoiceAssistantErrorView({
       </div>
 
       <Button className="rounded-full px-6" onClick={onReset} type="button">
-        {translateMessage("generated.shared.again")}
+        {t("generated.shared.again")}
       </Button>
     </div>
   )

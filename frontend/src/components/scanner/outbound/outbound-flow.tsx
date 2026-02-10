@@ -1,9 +1,16 @@
 "use client"
 
 import { useQueryClient } from "@tanstack/react-query"
-import { useCallback, useEffect, useImperativeHandle, useState } from "react"
+
+import {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from "react"
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   type OutboundCheckResult,
@@ -28,25 +35,29 @@ import { OutboundSelectItem } from "./outbound-select-item"
 import { OutboundSelectQuantity } from "./outbound-select-quantity"
 import { OutboundSuccess } from "./outbound-success"
 
-const OUTBOUND_ERROR_MESSAGES: Record<string, string> = {
-  ASSORTMENT_NOT_FOUND: translateMessage(
+const getOutboundErrorMessages = (
+  t: ReturnType<typeof useAppTranslations>
+): Record<string, string> => ({
+  ASSORTMENT_NOT_FOUND: t(
     "generated.scanner.outbound.assortmentFoundScannedCodeCheck"
   ),
-  OUTBOUND_FIFO_VIOLATION: translateMessage(
+  OUTBOUND_FIFO_VIOLATION: t(
     "generated.scanner.outbound.fifoRuleViolationCannotPick"
   ),
-  USER_NOT_FOUND: translateMessage(
-    "generated.scanner.outbound.userFoundSignAgain"
-  ),
-}
+  USER_NOT_FOUND: t("generated.scanner.outbound.userFoundSignAgain"),
+})
 
-const getOutboundErrorMessage = (error: unknown, fallback: string): string => {
+const getOutboundErrorMessage = (
+  error: unknown,
+  fallback: string,
+  errorMessages: Record<string, string>
+): string => {
   if (!FetchError.isError(error)) {
     return fallback
   }
 
   if (error.code) {
-    const msg = OUTBOUND_ERROR_MESSAGES[error.code]
+    const msg = errorMessages[error.code]
     if (msg) {
       return msg
     }
@@ -84,6 +95,9 @@ export const OutboundFlow = ({
   onReset: parentOnReset,
   ref,
 }: OutboundFlowProps) => {
+  const t = useAppTranslations()
+  const outboundErrorMessages = useMemo(() => getOutboundErrorMessages(t), [t])
+
   const queryClient = useQueryClient()
 
   const [step, setStep] = useState<OutboundStep>(
@@ -158,16 +172,15 @@ export const OutboundFlow = ({
         setError(
           getOutboundErrorMessage(
             executeError,
-            translateMessage(
-              "generated.scanner.outbound.failedPerformRemovalOperation"
-            )
+            t("generated.scanner.outbound.failedPerformRemovalOperation"),
+            outboundErrorMessages
           )
         )
       } finally {
         setIsSubmitting(false)
       }
     },
-    [queryClient]
+    [queryClient, t, outboundErrorMessages]
   )
 
   // ── Reset ───────────────────────────────────────────────────────
@@ -194,9 +207,7 @@ export const OutboundFlow = ({
     (code: string) => {
       const scannedCode = code.trim()
       if (!scannedCode) {
-        setError(
-          translateMessage("generated.scanner.shared.failedReadCodeAgain")
-        )
+        setError(t("generated.scanner.shared.failedReadCodeAgain"))
         return
       }
 
@@ -206,11 +217,7 @@ export const OutboundFlow = ({
       )
 
       if (!matchingSlot) {
-        setError(
-          translateMessage(
-            "generated.scanner.outbound.scannedCodeMatchAnySelected"
-          )
-        )
+        setError(t("generated.scanner.outbound.scannedCodeMatchAnySelected"))
         return
       }
 
@@ -221,11 +228,7 @@ export const OutboundFlow = ({
         )
 
         if (alreadyScanned) {
-          setError(
-            translateMessage(
-              "generated.scanner.outbound.itemAlreadyBeenScanned"
-            )
-          )
+          setError(t("generated.scanner.outbound.itemAlreadyBeenScanned"))
           return current
         }
 
@@ -242,7 +245,7 @@ export const OutboundFlow = ({
         ]
       })
     },
-    [selectedPickSlots]
+    [selectedPickSlots, t]
   )
 
   const handleConfirmAfterVerification = useCallback(async () => {
@@ -275,15 +278,14 @@ export const OutboundFlow = ({
       setError(
         getOutboundErrorMessage(
           checkError,
-          translateMessage(
-            "generated.scanner.outbound.failedVerifyFifoCompliance"
-          )
+          t("generated.scanner.outbound.failedVerifyFifoCompliance"),
+          outboundErrorMessages
         )
       )
     } finally {
       setIsSubmitting(false)
     }
-  }, [selectedPickSlots, executeOutbound])
+  }, [selectedPickSlots, executeOutbound, t, outboundErrorMessages])
 
   // ── Scan flow ───────────────────────────────────────────────────
 
@@ -291,9 +293,7 @@ export const OutboundFlow = ({
     async (code: string) => {
       const scannedCode = code.trim()
       if (!scannedCode) {
-        setError(
-          translateMessage("generated.scanner.shared.failedReadCodeAgain")
-        )
+        setError(t("generated.scanner.shared.failedReadCodeAgain"))
         return
       }
 
@@ -328,16 +328,21 @@ export const OutboundFlow = ({
         setError(
           getOutboundErrorMessage(
             scanError,
-            translateMessage(
-              "generated.scanner.outbound.failedVerifyScannedCode"
-            )
+            t("generated.scanner.outbound.failedVerifyScannedCode"),
+            outboundErrorMessages
           )
         )
       } finally {
         setIsSubmitting(false)
       }
     },
-    [executeOutbound, handleVerificationScanResult, step]
+    [
+      executeOutbound,
+      handleVerificationScanResult,
+      step,
+      t,
+      outboundErrorMessages,
+    ]
   )
   useImperativeHandle(ref, () => ({ handleScanResult, reset: handleReset }), [
     handleScanResult,
@@ -394,13 +399,14 @@ export const OutboundFlow = ({
       setError(
         getOutboundErrorMessage(
           planError,
-          translateMessage("generated.scanner.outbound.failedGeneratePickPlan")
+          t("generated.scanner.outbound.failedGeneratePickPlan"),
+          outboundErrorMessages
         )
       )
     } finally {
       setIsSubmitting(false)
     }
-  }, [selectedItem, quantity])
+  }, [selectedItem, quantity, t, outboundErrorMessages])
 
   const handleToggleSlot = useCallback((slot: OutboundPickSlot) => {
     setSelectedPickSlots((current) => {

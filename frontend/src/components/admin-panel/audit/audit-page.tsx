@@ -36,7 +36,7 @@ import {
   useAuditOutboundOperations,
 } from "@/hooks/use-audit"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type {
   AuditInboudOperationsSchema,
@@ -77,6 +77,8 @@ function DateRangeFilter({
   onEndDateChange: (value: string) => void
   onClear: () => void
 }) {
+  const t = useAppTranslations()
+
   const hasFilter = startDate !== "" || endDate !== ""
 
   return (
@@ -84,7 +86,7 @@ function DateRangeFilter({
       <div className="flex items-center gap-1.5 text-muted-foreground">
         <HugeiconsIcon className="size-3.5" icon={Calendar03Icon} />
         <span className="hidden text-xs sm:inline">
-          {translateMessage("generated.admin.audit.dateRange")}
+          {t("generated.admin.audit.dateRange")}
         </span>
       </div>
       <div className="flex items-center gap-1.5">
@@ -144,6 +146,8 @@ function InboundTableContent({
   onClearDates: () => void
   dateFnsLocale: DateFnsLocale
 }) {
+  const t = useAppTranslations()
+
   const [page, setPage] = useState(1)
 
   const query = useAuditInboundOperations({
@@ -174,7 +178,7 @@ function InboundTableContent({
             {totalElements}
           </span>
           <span className="text-muted-foreground text-xs">
-            {translateMessage("generated.admin.audit.pluralLabel", {
+            {t("generated.admin.audit.pluralLabel", {
               value0: totalElements,
             })}
           </span>
@@ -184,28 +188,14 @@ function InboundTableContent({
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/30">
-            <TableHead>
-              {translateMessage("generated.admin.audit.date")}
-            </TableHead>
-            <TableHead>
-              {translateMessage("generated.admin.audit.item")}
-            </TableHead>
-            <TableHead>{translateMessage("generated.shared.code")}</TableHead>
-            <TableHead>
-              {translateMessage("generated.admin.audit.rack")}
-            </TableHead>
-            <TableHead>
-              {translateMessage("generated.shared.position")}
-            </TableHead>
-            <TableHead>
-              {translateMessage("generated.admin.audit.quantity")}
-            </TableHead>
-            <TableHead>
-              {translateMessage("generated.shared.assortment")}
-            </TableHead>
-            <TableHead>
-              {translateMessage("generated.admin.audit.heAccepted")}
-            </TableHead>
+            <TableHead>{t("generated.admin.audit.date")}</TableHead>
+            <TableHead>{t("generated.admin.audit.item")}</TableHead>
+            <TableHead>{t("generated.shared.code")}</TableHead>
+            <TableHead>{t("generated.admin.audit.rack")}</TableHead>
+            <TableHead>{t("generated.shared.position")}</TableHead>
+            <TableHead>{t("generated.admin.audit.quantity")}</TableHead>
+            <TableHead>{t("generated.shared.assortment")}</TableHead>
+            <TableHead>{t("generated.admin.audit.heAccepted")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -228,12 +218,10 @@ function InboundTableContent({
                   <FilterEmptyState />
                 ) : (
                   <EmptyState
-                    description={translateMessage(
+                    description={t(
                       "generated.admin.audit.operationsFoundDatabase"
                     )}
-                    title={translateMessage(
-                      "generated.admin.audit.admissionOperation"
-                    )}
+                    title={t("generated.admin.audit.admissionOperation")}
                   />
                 )}
               </TableCell>
@@ -311,6 +299,8 @@ function OutboundTableContent({
   onClearDates: () => void
   dateFnsLocale: DateFnsLocale
 }) {
+  const t = useAppTranslations()
+
   const [page, setPage] = useState(1)
 
   const query = useAuditOutboundOperations({
@@ -341,7 +331,7 @@ function OutboundTableContent({
             {totalElements}
           </span>
           <span className="text-muted-foreground text-xs">
-            {translateMessage("generated.admin.audit.pluralLabel", {
+            {t("generated.admin.audit.pluralLabel", {
               value0: totalElements,
             })}
           </span>
@@ -351,31 +341,15 @@ function OutboundTableContent({
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/30">
-            <TableHead>
-              {translateMessage("generated.admin.audit.date")}
-            </TableHead>
-            <TableHead>
-              {translateMessage("generated.admin.audit.item")}
-            </TableHead>
-            <TableHead>{translateMessage("generated.shared.code")}</TableHead>
-            <TableHead>
-              {translateMessage("generated.admin.audit.rack")}
-            </TableHead>
-            <TableHead>
-              {translateMessage("generated.shared.position")}
-            </TableHead>
-            <TableHead>
-              {translateMessage("generated.admin.audit.quantity")}
-            </TableHead>
-            <TableHead>
-              {translateMessage("generated.shared.assortment")}
-            </TableHead>
-            <TableHead>
-              {translateMessage("generated.admin.audit.heSpent")}
-            </TableHead>
-            <TableHead>
-              {translateMessage("generated.admin.audit.fifo")}
-            </TableHead>
+            <TableHead>{t("generated.admin.audit.date")}</TableHead>
+            <TableHead>{t("generated.admin.audit.item")}</TableHead>
+            <TableHead>{t("generated.shared.code")}</TableHead>
+            <TableHead>{t("generated.admin.audit.rack")}</TableHead>
+            <TableHead>{t("generated.shared.position")}</TableHead>
+            <TableHead>{t("generated.admin.audit.quantity")}</TableHead>
+            <TableHead>{t("generated.shared.assortment")}</TableHead>
+            <TableHead>{t("generated.admin.audit.heSpent")}</TableHead>
+            <TableHead>{t("generated.admin.audit.fifo")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -398,12 +372,10 @@ function OutboundTableContent({
                   <FilterEmptyState />
                 ) : (
                   <EmptyState
-                    description={translateMessage(
+                    description={t(
                       "generated.admin.audit.operationsFoundDatabase"
                     )}
-                    title={translateMessage(
-                      "generated.admin.audit.releaseOperation"
-                    )}
+                    title={t("generated.admin.audit.releaseOperation")}
                   />
                 )}
               </TableCell>
@@ -454,8 +426,8 @@ function OutboundTableContent({
               <TableCell>
                 <Badge variant={op.fifoCompliant ? "success" : "warning"}>
                   {op.fifoCompliant
-                    ? translateMessage("generated.admin.shared.yes")
-                    : translateMessage("generated.admin.shared.label")}
+                    ? t("generated.admin.shared.yes")
+                    : t("generated.admin.shared.label")}
                 </Badge>
               </TableCell>
             </TableRow>
@@ -474,6 +446,8 @@ function OutboundTableContent({
 }
 
 export default function AuditMain() {
+  const t = useAppTranslations()
+
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)
 
@@ -495,7 +469,7 @@ export default function AuditMain() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description={translateMessage(
+        description={t(
           "generated.admin.audit.warehouseOperationsHistoryInboundOutbound"
         )}
         icon={Analytics01Icon}
@@ -503,7 +477,7 @@ export default function AuditMain() {
           title: link.title,
           url: link.url,
         }))}
-        title={translateMessage("generated.shared.operationsAudit")}
+        title={t("generated.shared.operationsAudit")}
       />
 
       <Tabs defaultValue="inbound">
@@ -512,11 +486,11 @@ export default function AuditMain() {
             <TabsList className="h-auto" variant="line">
               <TabsTrigger className="py-2.5" value="inbound">
                 <HugeiconsIcon className="size-3.5" icon={PackageReceiveIcon} />
-                {translateMessage("generated.admin.audit.parties")}
+                {t("generated.admin.audit.parties")}
               </TabsTrigger>
               <TabsTrigger className="py-2.5" value="outbound">
                 <HugeiconsIcon className="size-3.5" icon={PackageIcon} />
-                {translateMessage("generated.admin.audit.releases")}
+                {t("generated.admin.audit.releases")}
               </TabsTrigger>
             </TabsList>
           </div>

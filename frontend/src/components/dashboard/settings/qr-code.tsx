@@ -1,9 +1,10 @@
 "use client"
 
 import Image from "next/image"
+
 import QRCode from "qrcode"
 import { useEffect, useState } from "react"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { QR_CODE_DEFAULT_SIZE } from "./constants"
 
@@ -24,6 +25,8 @@ export function QRCodeDisplay({
   className,
   errorCorrectionLevel = "M",
 }: QRCodeDisplayProps) {
+  const t = useAppTranslations()
+
   const [dataUrl, setDataUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,9 +63,7 @@ export function QRCodeDisplay({
         if (isCancelled) {
           return
         }
-        setError(
-          translateMessage("generated.dashboard.settings.failedGenerateQrCode")
-        )
+        setError(t("generated.dashboard.settings.failedGenerateQrCode"))
         setDataUrl(null)
       }
     }
@@ -72,7 +73,7 @@ export function QRCodeDisplay({
     return () => {
       isCancelled = true
     }
-  }, [value, size, errorCorrectionLevel])
+  }, [value, size, errorCorrectionLevel, t])
 
   if (error) {
     return (
@@ -100,7 +101,7 @@ export function QRCodeDisplay({
   return (
     <div className={cn("overflow-hidden rounded-lg border", className)}>
       <Image
-        alt={translateMessage("generated.dashboard.settings.qrCodeScan")}
+        alt={t("generated.dashboard.settings.qrCodeScan")}
         className="block"
         height={size}
         priority

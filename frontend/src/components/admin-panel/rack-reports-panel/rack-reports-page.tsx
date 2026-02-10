@@ -28,7 +28,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import useRackReports from "@/hooks/use-rack-reports"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type { RackReportsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
@@ -106,6 +106,8 @@ function RackReportListBody({
   selectedReportId: number | null
   dateFnsLocale: DateFnsLocale
 }) {
+  const t = useAppTranslations()
+
   if (isPending) {
     return (
       <>
@@ -123,12 +125,10 @@ function RackReportListBody({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <p className="font-medium">
-          {translateMessage(
-            "generated.admin.rackReports.failedDownloadReports"
-          )}
+          {t("generated.admin.rackReports.failedDownloadReports")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage("generated.shared.againMoment")}
+          {t("generated.shared.againMoment")}
         </p>
       </div>
     )
@@ -144,10 +144,10 @@ function RackReportListBody({
           />
         </div>
         <p className="mt-3 font-medium">
-          {translateMessage("generated.admin.rackReports.reports")}
+          {t("generated.admin.rackReports.reports")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage("generated.shared.entriesSelectedFilter")}
+          {t("generated.shared.entriesSelectedFilter")}
         </p>
       </div>
     )
@@ -193,8 +193,8 @@ function RackReportListBody({
                   variant={report.alertTriggered ? "destructive" : "secondary"}
                 >
                   {report.alertTriggered
-                    ? translateMessage("generated.admin.rackReports.alert2")
-                    : translateMessage("generated.admin.rackReports.ok")}
+                    ? t("generated.admin.rackReports.alert2")
+                    : t("generated.admin.rackReports.ok")}
                 </Badge>
               </div>
               <p className="mt-0.5 line-clamp-1 text-muted-foreground text-xs">
@@ -218,6 +218,8 @@ function RackReportDetailsPanel({
   report: RackReportItem | null
   dateFnsLocale: DateFnsLocale
 }) {
+  const t = useAppTranslations()
+
   if (!report) {
     return (
       <div className="flex h-full flex-col items-center justify-center p-12">
@@ -228,10 +230,10 @@ function RackReportDetailsPanel({
           />
         </div>
         <p className="mt-4 font-medium text-lg">
-          {translateMessage("generated.admin.rackReports.selectReport")}
+          {t("generated.admin.rackReports.selectReport")}
         </p>
         <p className="mt-1 text-center text-muted-foreground text-sm">
-          {translateMessage("generated.shared.clickEntryListSeeDetails")}
+          {t("generated.shared.clickEntryListSeeDetails")}
         </p>
       </div>
     )
@@ -245,8 +247,8 @@ function RackReportDetailsPanel({
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={report.alertTriggered ? "destructive" : "secondary"}>
             {report.alertTriggered
-              ? translateMessage("generated.admin.rackReports.alertActivated")
-              : translateMessage("generated.admin.rackReports.allOk")}
+              ? t("generated.admin.rackReports.alertActivated")
+              : t("generated.admin.rackReports.allOk")}
           </Badge>
         </div>
         <h2 className="mt-3 font-semibold text-xl">{report.rackMarker}</h2>
@@ -256,17 +258,17 @@ function RackReportDetailsPanel({
       <div className="flex-1 space-y-6 p-6">
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.shared.location")}
+            {t("generated.shared.location")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <MetricCard
               icon={WarehouseIcon}
-              label={translateMessage("generated.shared.warehouse")}
+              label={t("generated.shared.warehouse")}
               value={report.warehouseName}
             />
             <MetricCard
               icon={PackageIcon}
-              label={translateMessage("generated.shared.rack")}
+              label={t("generated.shared.rack")}
               value={report.rackMarker}
             />
           </div>
@@ -274,20 +276,18 @@ function RackReportDetailsPanel({
 
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.shared.metrics")}
+            {t("generated.shared.metrics")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <MetricCard
               icon={WeightScale01Icon}
-              label={translateMessage(
-                "generated.admin.rackReports.currentWeight"
-              )}
+              label={t("generated.admin.rackReports.currentWeight")}
               unit="kg"
               value={report.currentWeight}
             />
             <MetricCard
               icon={ThermometerIcon}
-              label={translateMessage("generated.shared.temperature")}
+              label={t("generated.shared.temperature")}
               unit="°C"
               value={report.currentTemperature}
             />
@@ -296,17 +296,17 @@ function RackReportDetailsPanel({
 
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.admin.rackReports.information")}
+            {t("generated.admin.rackReports.information")}
           </h3>
           <div className="rounded-lg border bg-muted/20 p-3">
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.admin.rackReports.sensorId")}
+              {t("generated.admin.rackReports.sensorId")}
             </p>
             <p className="mt-0.5 font-medium font-mono">{report.sensorId}</p>
           </div>
           <div className="rounded-lg border bg-muted/20 p-3">
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.shared.created")}
+              {t("generated.shared.created")}
             </p>
             <p className="mt-0.5 font-medium">
               {formatDateTime(report.createdAt, dateFnsLocale)}
@@ -320,7 +320,7 @@ function RackReportDetailsPanel({
           className="inline-flex items-center justify-center rounded-md border px-3 py-1.5 font-medium text-sm transition-colors hover:bg-muted"
           href={warehouseHref}
         >
-          {translateMessage("generated.admin.rackReports.goWarehouse")}
+          {t("generated.admin.rackReports.goWarehouse")}
         </Link>
       </div>
     </div>
@@ -328,6 +328,8 @@ function RackReportDetailsPanel({
 }
 
 export default function RackReportsMain() {
+  const t = useAppTranslations()
+
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)
 
@@ -380,15 +382,13 @@ export default function RackReportsMain() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description={translateMessage(
-          "generated.admin.rackReports.viewRackSensorReports"
-        )}
+        description={t("generated.admin.rackReports.viewRackSensorReports")}
         icon={PackageIcon}
         navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title={translateMessage("generated.shared.rackReports")}
+        title={t("generated.shared.rackReports")}
       >
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
@@ -396,7 +396,7 @@ export default function RackReportsMain() {
               {totalReports}
             </span>
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.shared.together")}
+              {t("generated.shared.together")}
             </span>
           </div>
           {alertCount > 0 ? (
@@ -406,7 +406,7 @@ export default function RackReportsMain() {
                 {alertCount}
               </span>
               <span className="text-muted-foreground text-xs">
-                {translateMessage("generated.admin.rackReports.alert")}
+                {t("generated.admin.rackReports.alert")}
               </span>
             </div>
           ) : null}
@@ -425,21 +425,19 @@ export default function RackReportsMain() {
                   )}
                 >
                   <HugeiconsIcon className="size-4" icon={FilterIcon} />
-                  {translateMessage("generated.admin.rackReports.filters")}
+                  {t("generated.admin.rackReports.filters")}
                   {withAlertsFilter !== undefined && (
                     <Badge className="ml-1" variant="secondary">
                       {withAlertsFilter
-                        ? translateMessage("generated.admin.rackReports.only")
-                        : translateMessage("generated.admin.rackReports.all")}
+                        ? t("generated.admin.rackReports.only")
+                        : t("generated.admin.rackReports.all")}
                     </Badge>
                   )}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" side="bottom">
                   <DropdownMenuGroup>
                     <DropdownMenuLabel>
-                      {translateMessage(
-                        "generated.admin.rackReports.filterAlerts"
-                      )}
+                      {t("generated.admin.rackReports.filterAlerts")}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuCheckboxItem
@@ -447,9 +445,7 @@ export default function RackReportsMain() {
                       className="text-nowrap"
                       onClick={() => handleToggleAlertsFilter(true)}
                     >
-                      {translateMessage(
-                        "generated.admin.rackReports.onlyAlerts"
-                      )}
+                      {t("generated.admin.rackReports.onlyAlerts")}
                     </DropdownMenuCheckboxItem>
                     {withAlertsFilter !== undefined && (
                       <>
@@ -459,9 +455,7 @@ export default function RackReportsMain() {
                           onClick={() => setWithAlertsFilter(undefined)}
                           type="button"
                         >
-                          {translateMessage(
-                            "generated.admin.rackReports.cleanFilter"
-                          )}
+                          {t("generated.admin.rackReports.cleanFilter")}
                         </button>
                       </>
                     )}

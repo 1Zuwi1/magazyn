@@ -8,14 +8,15 @@ import {
 import { useLocale } from "next-intl"
 import { PageHeader } from "@/components/dashboard/page-header"
 import useWarehouses from "@/hooks/use-warehouses"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import {
   formatNumber,
   getOccupancyStatVariant,
   TOP_WAREHOUSES_LIMIT,
 } from "./dashboard-home.constants"
-
 export function DashboardHomeHeader() {
+  const t = useAppTranslations()
+
   const locale = useLocale()
   const { data: warehousesData } = useWarehouses({
     page: 0,
@@ -29,24 +30,24 @@ export function DashboardHomeHeader() {
   const totalWarehouses = warehousesData?.summary?.totalWarehouses ?? 0
   return (
     <PageHeader
-      description={translateMessage(
+      description={t(
         "generated.dashboard.home.currentWarehouseStatusOperationalAlerts"
       )}
       icon={Home01Icon}
       stats={[
         {
-          label: translateMessage("generated.shared.warehouses"),
+          label: t("generated.shared.warehouses"),
           value: formatNumber(totalWarehouses, locale),
           icon: Package,
         },
         {
-          label: translateMessage("generated.dashboard.home.occupied"),
+          label: t("generated.dashboard.home.occupied"),
           value: `${occupancyPercentage}%`,
           icon: ChartLineData01Icon,
           variant: getOccupancyStatVariant(occupancyPercentage),
         },
       ]}
-      title={translateMessage("generated.shared.mainPanel")}
+      title={t("generated.shared.mainPanel")}
     />
   )
 }

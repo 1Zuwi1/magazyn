@@ -3,9 +3,10 @@
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
 import { Cancel01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import type * as React from "react"
 import { Button } from "@/components/ui/button"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
@@ -47,6 +48,8 @@ function SheetContent({
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {
+  const t = useAppTranslations()
+
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -72,9 +75,7 @@ function SheetContent({
             }
           >
             <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
-            <span className="sr-only">
-              {translateMessage("generated.shared.close")}
-            </span>
+            <span className="sr-only">{t("generated.shared.close")}</span>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Popup>

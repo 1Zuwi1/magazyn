@@ -2,9 +2,10 @@ import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono, Inter } from "next/font/google"
 import "./globals.css"
 import { NextIntlClientProvider } from "next-intl"
-import { getLocale, getTranslations } from "next-intl/server"
+import { getLocale } from "next-intl/server"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
+import { getAppTranslations } from "@/i18n/get-translations"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -19,7 +20,7 @@ const geistMono = Geist_Mono({
 })
 
 export const generateMetadata = async (): Promise<Metadata> => {
-  const t = await getTranslations()
+  const t = await getAppTranslations()
 
   return {
     title: t("generated.shared.gdzietolezy"),
@@ -50,7 +51,7 @@ export default async function RootLayout({
           disableTransitionOnChange
           enableSystem
         >
-          <NextIntlClientProvider>
+          <NextIntlClientProvider locale={locale}>
             <Toaster richColors />
             {children}
           </NextIntlClientProvider>

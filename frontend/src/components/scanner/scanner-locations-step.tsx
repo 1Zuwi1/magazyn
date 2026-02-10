@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useLocale } from "next-intl"
 import { useMemo } from "react"
 import { useInfiniteRacks } from "@/hooks/use-racks"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
 import { CancelButton } from "./cancel-button"
@@ -62,6 +62,8 @@ export function ScannerLocationsStep({
   onRemovePlacement,
   onPlacementChange,
 }: ScannerLocationsStepProps) {
+  const t = useAppTranslations()
+
   const locale = useLocale()
   const reservedUntilLabel = formatReservedUntil(plan.reservedUntil, locale)
   const {
@@ -105,12 +107,10 @@ export function ScannerLocationsStep({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              {translateMessage("generated.scanner.editPlacement")}
+              {t("generated.scanner.editPlacement")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              {translateMessage(
-                "generated.scanner.changePositionsManuallyWantPlace"
-              )}
+              {t("generated.scanner.changePositionsManuallyWantPlace")}
             </p>
           </div>
         </div>
@@ -118,19 +118,19 @@ export function ScannerLocationsStep({
         <div className="mb-4 grid grid-cols-3 gap-2">
           <div className="rounded-xl border bg-card/40 p-3 text-center">
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.scanner.requested")}
+              {t("generated.scanner.requested")}
             </p>
             <p className="font-semibold text-lg">{plan.requestedQuantity}</p>
           </div>
           <div className="rounded-xl border bg-card/40 p-3 text-center">
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.scanner.allocated")}
+              {t("generated.scanner.allocated")}
             </p>
             <p className="font-semibold text-lg">{plan.allocatedQuantity}</p>
           </div>
           <div className="rounded-xl border bg-card/40 p-3 text-center">
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.scanner.missing")}
+              {t("generated.scanner.missing")}
             </p>
             <p className="font-semibold text-lg">{plan.remainingQuantity}</p>
           </div>
@@ -139,12 +139,12 @@ export function ScannerLocationsStep({
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Badge variant={plan.reserved ? "default" : "outline"}>
             {plan.reserved
-              ? translateMessage("generated.scanner.reservationActive")
-              : translateMessage("generated.scanner.reservation")}
+              ? t("generated.scanner.reservationActive")
+              : t("generated.scanner.reservation")}
           </Badge>
           {reservedUntilLabel ? (
             <Badge variant="outline">
-              {translateMessage("generated.scanner.until", {
+              {t("generated.scanner.until", {
                 value0: reservedUntilLabel,
               })}
             </Badge>
@@ -180,7 +180,7 @@ export function ScannerLocationsStep({
 
         <div className="space-y-3">
           <Button onClick={onAddPlacement} type="button" variant="outline">
-            {translateMessage("generated.scanner.addLocation")}
+            {t("generated.scanner.addLocation")}
           </Button>
           <Button
             className="h-12 w-full rounded-xl"
@@ -189,7 +189,7 @@ export function ScannerLocationsStep({
             onClick={onConfirm}
             type="button"
           >
-            {translateMessage("generated.scanner.confirmPlacement")}
+            {t("generated.scanner.confirmPlacement")}
           </Button>
         </div>
       </div>

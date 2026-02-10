@@ -1,6 +1,7 @@
 import type { VariantProps } from "class-variance-authority"
+
 import type { Dispatch, SetStateAction } from "react"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "./button"
 import {
@@ -11,7 +12,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "./pagination"
-
 export default function PaginationFull({
   currentPage,
   totalPages,
@@ -25,6 +25,8 @@ export default function PaginationFull({
   className?: string
   variant?: "default" | "compact"
 }) {
+  const t = useAppTranslations()
+
   const isCompact = variant === "compact"
   const buttonVariantsProps = {
     variant: isCompact ? "outline" : "ghost",
@@ -45,7 +47,7 @@ export default function PaginationFull({
     >
       {isCompact && (
         <p className="text-muted-foreground text-xs">
-          {translateMessage("generated.ui.page", {
+          {t("generated.ui.page", {
             value0: currentPage,
             value1: Math.max(totalPages, 1),
           })}

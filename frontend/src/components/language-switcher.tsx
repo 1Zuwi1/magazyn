@@ -1,13 +1,10 @@
 "use client"
 
-import { useLocale } from "next-intl"
-import { useCallback } from "react"
-import {
-  type AppLocale,
-  createLocaleCookie,
-  normalizeAppLocale,
-} from "@/i18n/locale"
-import { translateMessage } from "@/i18n/translate-message"
+import { useParams } from "next/navigation"
+import { useTransition } from "react"
+import type { AppLocale } from "@/i18n/locale"
+import { usePathname, useRouter } from "@/i18n/navigation"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 const LANGUAGES: { locale: AppLocale; label: string; flag: string }[] = [
@@ -16,20 +13,26 @@ const LANGUAGES: { locale: AppLocale; label: string; flag: string }[] = [
 ]
 
 export function LanguageSwitcher({ className }: { className?: string }) {
-  const currentLocale = normalizeAppLocale(useLocale())
+  const t = useAppTranslations()
 
-  const handleLocaleChange = useCallback(
-    (nextLocale: AppLocale): void => {
-      if (nextLocale === currentLocale) {
-        return
-      }
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const pathname = usePathname()
+  const params = useParams()
+  const currentLocale = params.locale as AppLocale
 
-      // biome-ignore lint/suspicious/noDocumentCookie: Locale is persisted in a cookie to drive Next.js request locale on reload.
-      document.cookie = createLocaleCookie(nextLocale)
-      window.location.reload()
-    },
-    [currentLocale]
-  )
+  const handleLocaleChange = (nextLocale: AppLocale): void => {
+    startTransition(() => {
+      router.replace(
+        // @ts-expect-error -- TypeScript will validate that only known `params`
+        // are used in combination with a given `pathname`. Since the two will
+        // always match for the current route, we can skip runtime checks.
+        { pathname, params },
+        { locale: nextLocale }
+      )
+      router.refresh()
+    })
+  }
 
   const activeIndex = LANGUAGES.findIndex((l) => l.locale === currentLocale)
 
@@ -38,6 +41,9 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       aria-label="Select language"
       className={cn(
         "relative inline-flex h-8 items-center gap-0 rounded-full border border-border/60 bg-muted/40 p-0.5 backdrop-blur-sm",
+        {
+          "transition-opacity disabled:opacity-30": isPending,
+        },
         className
       )}
     >
@@ -54,7 +60,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
         const isActive = locale === currentLocale
         return (
           <button
-            aria-label={translateMessage(
+            aria-label={t(
               locale === "pl"
                 ? "generated.global.language.polish"
                 : "generated.global.language.english"

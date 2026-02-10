@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useForm, useStore } from "@tanstack/react-form"
+
 import { useEffect, useMemo } from "react"
 import { toast } from "sonner"
 import z from "zod"
@@ -19,87 +20,65 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { Rack } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { DEFAULT_RACK } from "../../lib/constants"
 import type { RackFormData } from "../csv/utils/types"
 
-const RackDialogFormSchema = z
-  .object({
-    marker: z
-      .string()
-      .trim()
-      .min(1, "Marker jest wymagany")
-      .max(
-        100,
-        translateMessage(
-          "generated.admin.warehouses.markerMaximum100Characters"
-        )
+const createRackDialogFormSchema = (t: ReturnType<typeof useAppTranslations>) =>
+  z
+    .object({
+      marker: z
+        .string()
+        .trim()
+        .min(1, "Marker jest wymagany")
+        .max(100, t("generated.admin.warehouses.markerMaximum100Characters")),
+      rows: z
+        .number()
+        .int(t("generated.admin.warehouses.numberRowsMustInteger"))
+        .min(1, t("generated.admin.warehouses.numberRowsMustGreater0")),
+      cols: z
+        .number()
+        .int(t("generated.admin.warehouses.numberColumnsMustInteger"))
+        .min(1, t("generated.admin.warehouses.numberColumnsMustGreater0")),
+      minTemp: z.number(),
+      maxTemp: z.number(),
+      maxWeight: z
+        .number()
+        .nonnegative(
+          t("generated.admin.warehouses.maximumWeightCannotNegative")
+        ),
+      maxItemWidth: z
+        .number()
+        .positive(
+          t("generated.admin.warehouses.maximumAssortmentWidthMustGreater")
+        ),
+      maxItemHeight: z
+        .number()
+        .positive(
+          t("generated.admin.warehouses.maximumHeightAssortmentMustGreater")
+        ),
+      maxItemDepth: z
+        .number()
+        .positive(
+          t("generated.admin.warehouses.maximumAssortmentDepthMustGreater")
+        ),
+      acceptsDangerous: z.boolean(),
+      comment: z
+        .string()
+        .trim()
+        .max(
+          1000,
+          t("generated.admin.warehouses.commentMaximum1000Characters")
+        ),
+    })
+    .refine((value) => value.maxTemp >= value.minTemp, {
+      message: t(
+        "generated.admin.warehouses.maximumTemperatureCannotLowerMinimum"
       ),
-    rows: z
-      .number()
-      .int(translateMessage("generated.admin.warehouses.numberRowsMustInteger"))
-      .min(
-        1,
-        translateMessage("generated.admin.warehouses.numberRowsMustGreater0")
-      ),
-    cols: z
-      .number()
-      .int(
-        translateMessage("generated.admin.warehouses.numberColumnsMustInteger")
-      )
-      .min(
-        1,
-        translateMessage("generated.admin.warehouses.numberColumnsMustGreater0")
-      ),
-    minTemp: z.number(),
-    maxTemp: z.number(),
-    maxWeight: z
-      .number()
-      .nonnegative(
-        translateMessage(
-          "generated.admin.warehouses.maximumWeightCannotNegative"
-        )
-      ),
-    maxItemWidth: z
-      .number()
-      .positive(
-        translateMessage(
-          "generated.admin.warehouses.maximumAssortmentWidthMustGreater"
-        )
-      ),
-    maxItemHeight: z
-      .number()
-      .positive(
-        translateMessage(
-          "generated.admin.warehouses.maximumHeightAssortmentMustGreater"
-        )
-      ),
-    maxItemDepth: z
-      .number()
-      .positive(
-        translateMessage(
-          "generated.admin.warehouses.maximumAssortmentDepthMustGreater"
-        )
-      ),
-    acceptsDangerous: z.boolean(),
-    comment: z
-      .string()
-      .trim()
-      .max(
-        1000,
-        translateMessage(
-          "generated.admin.warehouses.commentMaximum1000Characters"
-        )
-      ),
-  })
-  .refine((value) => value.maxTemp >= value.minTemp, {
-    message: translateMessage(
-      "generated.admin.warehouses.maximumTemperatureCannotLowerMinimum"
-    ),
-    path: ["maxTemp"],
-  })
+      path: ["maxTemp"],
+    })
 
 const getNumericInputValue = (value: string): number => {
   const parsedValue = Number(value)
@@ -136,6 +115,9 @@ export function RackDialog({
   onOpenChange,
   onSubmit,
 }: RackDialogProps) {
+  const t = useAppTranslations()
+  const rackDialogFormSchema = useMemo(() => createRackDialogFormSchema(t), [t])
+
   const isEdit = !!currentRow
   const formValues = useMemo(
     () => ({
@@ -173,14 +155,14 @@ export function RackDialog({
       })
       toast.success(
         isEdit
-          ? translateMessage("generated.admin.warehouses.bookcaseUpdated")
-          : translateMessage("generated.admin.warehouses.bookcaseAdded")
+          ? t("generated.admin.warehouses.bookcaseUpdated")
+          : t("generated.admin.warehouses.bookcaseAdded")
       )
       form.reset(formValues)
       onOpenChange(false)
     },
     validators: {
-      onSubmit: RackDialogFormSchema,
+      onSubmit: rackDialogFormSchema,
     },
   })
 
@@ -196,10 +178,8 @@ export function RackDialog({
     <FormDialog
       description={
         isEdit
-          ? translateMessage("generated.admin.warehouses.changeRackParameters")
-          : translateMessage(
-              "generated.admin.warehouses.enterParametersNewRack"
-            )
+          ? t("generated.admin.warehouses.changeRackParameters")
+          : t("generated.admin.warehouses.enterParametersNewRack")
       }
       formId="rack-form"
       isLoading={isSubmitting}
@@ -208,8 +188,8 @@ export function RackDialog({
       open={open}
       title={
         isEdit
-          ? translateMessage("generated.admin.warehouses.editRack")
-          : translateMessage("generated.admin.warehouses.addRack")
+          ? t("generated.admin.warehouses.editRack")
+          : t("generated.admin.warehouses.addRack")
       }
     >
       <form
@@ -223,7 +203,7 @@ export function RackDialog({
         <section className="space-y-3">
           <SectionHeader
             icon={Tag01Icon}
-            title={translateMessage("generated.admin.shared.identification")}
+            title={t("generated.admin.shared.identification")}
           />
           <FieldGroup className="gap-4">
             <form.Field name="marker">
@@ -231,11 +211,9 @@ export function RackDialog({
                 <FieldWithState
                   autoComplete="off"
                   field={field}
-                  label={translateMessage("generated.admin.warehouses.marker")}
+                  label={t("generated.admin.warehouses.marker")}
                   layout="grid"
-                  placeholder={translateMessage(
-                    "generated.admin.warehouses.a101"
-                  )}
+                  placeholder={t("generated.admin.warehouses.a101")}
                 />
               )}
             </form.Field>
@@ -247,12 +225,12 @@ export function RackDialog({
         <section className="space-y-3">
           <SectionHeader
             icon={ThermometerIcon}
-            title={translateMessage("generated.admin.shared.storage")}
+            title={t("generated.admin.shared.storage")}
           />
           <FieldGroup className="gap-4">
             <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
               <span className="col-span-2 text-start font-medium text-sm">
-                {translateMessage("generated.shared.temperature")}
+                {t("generated.shared.temperature")}
               </span>
               <div className="col-span-4 flex items-center gap-2">
                 <form.Field name="minTemp">
@@ -265,9 +243,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder={translateMessage(
-                        "generated.admin.shared.minC"
-                      )}
+                      placeholder={t("generated.admin.shared.minC")}
                       type="number"
                       value={field.state.value}
                     />
@@ -284,9 +260,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder={translateMessage(
-                        "generated.admin.shared.maxC"
-                      )}
+                      placeholder={t("generated.admin.shared.maxC")}
                       type="number"
                       value={field.state.value}
                     />
@@ -302,9 +276,7 @@ export function RackDialog({
                     className="col-span-2 cursor-pointer text-nowrap text-end"
                     htmlFor={field.name}
                   >
-                    {translateMessage(
-                      "generated.admin.warehouses.acceptsDangerous"
-                    )}
+                    {t("generated.admin.warehouses.acceptsDangerous")}
                   </Label>
                   <FieldContent className="col-span-4 flex items-center">
                     <Checkbox
@@ -326,16 +298,12 @@ export function RackDialog({
         <section className="space-y-3">
           <SectionHeader
             icon={RulerIcon}
-            title={translateMessage(
-              "generated.admin.shared.physicalDimensions"
-            )}
+            title={t("generated.admin.shared.physicalDimensions")}
           />
           <FieldGroup className="gap-4">
             <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
               <span className="col-span-2 font-medium text-sm">
-                {translateMessage(
-                  "generated.admin.warehouses.dimensionsRowsColumns"
-                )}
+                {t("generated.admin.warehouses.dimensionsRowsColumns")}
               </span>
               <div className="col-span-4 flex items-center gap-2">
                 <form.Field name="rows">
@@ -349,9 +317,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder={translateMessage(
-                        "generated.admin.warehouses.poems"
-                      )}
+                      placeholder={t("generated.admin.warehouses.poems")}
                       type="number"
                       value={field.state.value}
                     />
@@ -369,9 +335,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder={translateMessage(
-                        "generated.admin.warehouses.columns"
-                      )}
+                      placeholder={t("generated.admin.warehouses.columns")}
                       type="number"
                       value={field.state.value}
                     />
@@ -384,9 +348,7 @@ export function RackDialog({
               {(field) => (
                 <FieldWithState
                   field={field}
-                  label={translateMessage(
-                    "generated.admin.warehouses.maxWeightKg2"
-                  )}
+                  label={t("generated.admin.warehouses.maxWeightKg2")}
                   layout="grid"
                   renderInput={({ id, isInvalid }) => (
                     <Input
@@ -411,9 +373,7 @@ export function RackDialog({
 
             <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
               <span className="col-span-2 font-medium text-sm">
-                {translateMessage(
-                  "generated.admin.warehouses.assortmentDimensionsMm"
-                )}
+                {t("generated.admin.warehouses.assortmentDimensionsMm")}
               </span>
               <div className="col-span-4 flex items-center gap-2">
                 <form.Field name="maxItemWidth">
@@ -427,9 +387,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder={translateMessage(
-                        "generated.admin.shared.lat"
-                      )}
+                      placeholder={t("generated.admin.shared.lat")}
                       type="number"
                       value={field.state.value}
                     />
@@ -447,9 +405,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder={translateMessage(
-                        "generated.admin.shared.height"
-                      )}
+                      placeholder={t("generated.admin.shared.height")}
                       type="number"
                       value={field.state.value}
                     />
@@ -467,9 +423,7 @@ export function RackDialog({
                       onChange={(e) =>
                         field.handleChange(getNumericInputValue(e.target.value))
                       }
-                      placeholder={translateMessage(
-                        "generated.admin.warehouses.main"
-                      )}
+                      placeholder={t("generated.admin.warehouses.main")}
                       type="number"
                       value={field.state.value}
                     />
@@ -485,7 +439,7 @@ export function RackDialog({
         <section className="space-y-3">
           <SectionHeader
             icon={Tag01Icon}
-            title={translateMessage("generated.admin.shared.additional")}
+            title={t("generated.admin.shared.additional")}
           />
           <FieldGroup className="gap-4">
             <form.Field name="comment">
@@ -493,7 +447,7 @@ export function RackDialog({
                 <FieldWithState
                   field={field}
                   fieldClassName="items-start"
-                  label={translateMessage("generated.shared.comment")}
+                  label={t("generated.shared.comment")}
                   labelClassName="pt-2 text-left"
                   layout="grid"
                   renderInput={({ id, isInvalid }) => (
@@ -505,9 +459,7 @@ export function RackDialog({
                       name={field.name}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder={translateMessage(
-                        "generated.admin.shared.optionalComment"
-                      )}
+                      placeholder={t("generated.admin.shared.optionalComment")}
                       rows={3}
                       value={field.state.value ?? ""}
                     />

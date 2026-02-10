@@ -3,8 +3,9 @@ import {
   useInfiniteQuery,
   useQueries,
 } from "@tanstack/react-query"
+
 import { useMemo } from "react"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import {
   apiFetch,
   type FetchError,
@@ -193,13 +194,15 @@ export function useInfiniteRacks(
   }: InfiniteRacksParams,
   options?: SafeInfiniteQueryOptions<RacksList, number>
 ) {
+  const t = useAppTranslations()
+
   const infiniteQuery = useInfiniteQuery({
     queryKey: ["infinite-racks", warehouseId, pageSize],
     enabled: warehouseId !== null,
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
       if (warehouseId === null) {
-        throw new Error(translateMessage("generated.hooks.activeStorage"))
+        throw new Error(t("generated.hooks.activeStorage"))
       }
 
       return await apiFetch(

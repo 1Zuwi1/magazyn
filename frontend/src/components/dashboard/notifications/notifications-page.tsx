@@ -25,7 +25,7 @@ import useNotifications, {
   useMarkNotification,
 } from "@/hooks/use-notifications"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { findAlertTitle } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { toTitleCase } from "../utils/helpers"
@@ -43,7 +43,10 @@ function getNotificationIcon(alertType: string): IconSvgElement {
   }
 }
 
-function getStatusConfig(status: string): {
+function getStatusConfig(
+  t: ReturnType<typeof useAppTranslations>,
+  status: string
+): {
   badgeVariant: "default" | "destructive" | "secondary"
   cardClassName: string
   label: string
@@ -54,7 +57,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "destructive",
       cardClassName: "bg-destructive/10 text-destructive",
-      label: translateMessage("generated.shared.open"),
+      label: t("generated.shared.open"),
     }
   }
 
@@ -62,7 +65,7 @@ function getStatusConfig(status: string): {
     return {
       badgeVariant: "secondary",
       cardClassName: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-      label: translateMessage("generated.shared.solved"),
+      label: t("generated.shared.solved"),
     }
   }
 
@@ -127,6 +130,8 @@ function NotificationListBody({
   selectedNotificationId: number | null
   dateFnsLocale: DateFnsLocale
 }) {
+  const t = useAppTranslations()
+
   if (isPending) {
     return (
       <>
@@ -144,12 +149,10 @@ function NotificationListBody({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <p className="font-medium">
-          {translateMessage(
-            "generated.dashboard.notifications.failedDownloadNotifications"
-          )}
+          {t("generated.dashboard.notifications.failedDownloadNotifications")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage("generated.shared.againMoment")}
+          {t("generated.shared.againMoment")}
         </p>
       </div>
     )
@@ -165,10 +168,10 @@ function NotificationListBody({
           />
         </div>
         <p className="mt-3 font-medium">
-          {translateMessage("generated.dashboard.notifications.notifications")}
+          {t("generated.dashboard.notifications.notifications")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage("generated.shared.entriesSelectedFilter")}
+          {t("generated.shared.entriesSelectedFilter")}
         </p>
       </div>
     )
@@ -177,7 +180,7 @@ function NotificationListBody({
   return (
     <>
       {notifications.map((notification) => {
-        const statusConfig = getStatusConfig(notification.alert.status)
+        const statusConfig = getStatusConfig(t, notification.alert.status)
         const isSelected = selectedNotificationId === notification.id
 
         return (
@@ -239,6 +242,8 @@ function NotificationDetailsPanel({
   onToggleReadStatus: () => void
   dateFnsLocale: DateFnsLocale
 }) {
+  const t = useAppTranslations()
+
   if (!notification) {
     return (
       <div className="flex h-full flex-col items-center justify-center p-12">
@@ -249,18 +254,16 @@ function NotificationDetailsPanel({
           />
         </div>
         <p className="mt-4 font-medium text-lg">
-          {translateMessage(
-            "generated.dashboard.notifications.selectNotification"
-          )}
+          {t("generated.dashboard.notifications.selectNotification")}
         </p>
         <p className="mt-1 text-center text-muted-foreground text-sm">
-          {translateMessage("generated.shared.clickEntryListSeeDetails")}
+          {t("generated.shared.clickEntryListSeeDetails")}
         </p>
       </div>
     )
   }
 
-  const statusConfig = getStatusConfig(notification.alert.status)
+  const statusConfig = getStatusConfig(t, notification.alert.status)
   const differenceValue =
     notification.alert.actualValue != null &&
     notification.alert.thresholdValue != null
@@ -280,7 +283,7 @@ function NotificationDetailsPanel({
           </Badge>
           {!notification.read && (
             <Badge variant="secondary">
-              {translateMessage("generated.dashboard.notifications.unread")}
+              {t("generated.dashboard.notifications.unread")}
             </Badge>
           )}
         </div>
@@ -295,11 +298,11 @@ function NotificationDetailsPanel({
       <div className="flex-1 space-y-6 p-6">
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.shared.location")}
+            {t("generated.shared.location")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <DetailsCard
-              label={translateMessage("generated.shared.warehouse")}
+              label={t("generated.shared.warehouse")}
               value={
                 notification.alert.warehouseName ??
                 notification.alert.warehouseId ??
@@ -307,7 +310,7 @@ function NotificationDetailsPanel({
               }
             />
             <DetailsCard
-              label={translateMessage("generated.shared.rack")}
+              label={t("generated.shared.rack")}
               value={
                 notification.alert.rackMarker ??
                 notification.alert.rackId ??
@@ -315,27 +318,27 @@ function NotificationDetailsPanel({
               }
             />
             <DetailsCard
-              label={translateMessage("generated.shared.status")}
-              value={getStatusConfig(notification.alert.status).label}
+              label={t("generated.shared.status")}
+              value={getStatusConfig(t, notification.alert.status).label}
             />
           </div>
         </section>
 
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.shared.metrics")}
+            {t("generated.shared.metrics")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-3">
             <DetailsCard
-              label={translateMessage("generated.shared.threshold")}
+              label={t("generated.shared.threshold")}
               value={formatMetricValue(notification.alert.thresholdValue)}
             />
             <DetailsCard
-              label={translateMessage("generated.shared.value")}
+              label={t("generated.shared.value")}
               value={formatMetricValue(notification.alert.actualValue)}
             />
             <DetailsCard
-              label={translateMessage("generated.shared.difference")}
+              label={t("generated.shared.difference")}
               value={differenceValue == null ? "—" : differenceValue.toString()}
             />
           </div>
@@ -343,30 +346,26 @@ function NotificationDetailsPanel({
 
         <section className="space-y-3">
           <h3 className="font-medium text-muted-foreground text-sm">
-            {translateMessage("generated.shared.time")}
+            {t("generated.shared.time")}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <DetailsCard
-              label={translateMessage("generated.shared.created")}
+              label={t("generated.shared.created")}
               value={formatDateTime(notification.createdAt, dateFnsLocale)}
             />
             <DetailsCard
-              label={translateMessage("generated.dashboard.notifications.read")}
+              label={t("generated.dashboard.notifications.read")}
               value={formatDateTime(notification.readAt, dateFnsLocale)}
             />
             <DetailsCard
-              label={translateMessage(
-                "generated.dashboard.notifications.alertUpdate"
-              )}
+              label={t("generated.dashboard.notifications.alertUpdate")}
               value={formatDateTime(
                 notification.alert.updatedAt,
                 dateFnsLocale
               )}
             />
             <DetailsCard
-              label={translateMessage(
-                "generated.dashboard.notifications.resolvingAlert"
-              )}
+              label={t("generated.dashboard.notifications.resolvingAlert")}
               value={formatDateTime(
                 notification.alert.resolvedAt,
                 dateFnsLocale
@@ -378,11 +377,11 @@ function NotificationDetailsPanel({
         {hasResolutionData ? (
           <section className="space-y-3">
             <h3 className="font-medium text-muted-foreground text-sm">
-              {translateMessage("generated.shared.solutionNote")}
+              {t("generated.shared.solutionNote")}
             </h3>
             <div className="rounded-lg border bg-muted/20 p-3">
               <p className="text-muted-foreground text-xs">
-                {translateMessage("generated.shared.solved2")}
+                {t("generated.shared.solved2")}
               </p>
               <p className="mt-0.5 font-medium">
                 {notification.alert.resolvedByName ?? "—"}
@@ -403,8 +402,8 @@ function NotificationDetailsPanel({
           variant={notification.read ? "outline" : "default"}
         >
           {notification.read
-            ? translateMessage("generated.dashboard.notifications.markUnread")
-            : translateMessage("generated.dashboard.notifications.markRead")}
+            ? t("generated.dashboard.notifications.markUnread")
+            : t("generated.dashboard.notifications.markRead")}
         </Button>
         {locationHref ? (
           <Link
@@ -414,7 +413,7 @@ function NotificationDetailsPanel({
             })}
             href={locationHref}
           >
-            {translateMessage("generated.shared.goLocation")}
+            {t("generated.shared.goLocation")}
             <HugeiconsIcon className="ml-2 size-4" icon={ArrowRight02Icon} />
           </Link>
         ) : null}
@@ -424,6 +423,8 @@ function NotificationDetailsPanel({
 }
 
 export default function NotificationsMain() {
+  const t = useAppTranslations()
+
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)
 
@@ -556,10 +557,10 @@ export default function NotificationsMain() {
               </div>
               <div className="space-y-2">
                 <h1 className="font-semibold text-2xl tracking-tight sm:text-3xl">
-                  {translateMessage("generated.shared.notifications")}
+                  {t("generated.shared.notifications")}
                 </h1>
                 <p className="max-w-md text-muted-foreground text-sm">
-                  {translateMessage(
+                  {t(
                     "generated.dashboard.notifications.viewManageNotifications"
                   )}
                 </p>
@@ -569,7 +570,7 @@ export default function NotificationsMain() {
                       {totalNotifications}
                     </span>
                     <span className="text-muted-foreground text-xs">
-                      {translateMessage("generated.shared.together")}
+                      {t("generated.shared.together")}
                     </span>
                   </div>
                   {unreadCount > 0 ? (
@@ -579,9 +580,7 @@ export default function NotificationsMain() {
                         {unreadCount}
                       </span>
                       <span className="text-muted-foreground text-xs">
-                        {translateMessage(
-                          "generated.dashboard.notifications.unread2"
-                        )}
+                        {t("generated.dashboard.notifications.unread2")}
                       </span>
                     </div>
                   ) : null}
@@ -599,9 +598,7 @@ export default function NotificationsMain() {
                   className="mr-2 size-4"
                   icon={CheckmarkBadge01Icon}
                 />
-                {translateMessage(
-                  "generated.dashboard.notifications.markAllRead"
-                )}
+                {t("generated.dashboard.notifications.markAllRead")}
               </Button>
             </div>
           </div>
@@ -623,7 +620,7 @@ export default function NotificationsMain() {
                   onClick={() => handleFeedFilterChange("ALL")}
                   type="button"
                 >
-                  {translateMessage("generated.shared.all")}
+                  {t("generated.shared.all")}
                 </button>
                 <button
                   className={cn(
@@ -635,7 +632,7 @@ export default function NotificationsMain() {
                   onClick={() => handleFeedFilterChange("UNREAD")}
                   type="button"
                 >
-                  {translateMessage("generated.dashboard.notifications.unread")}
+                  {t("generated.dashboard.notifications.unread")}
                 </button>
               </div>
             </div>
@@ -675,7 +672,7 @@ export default function NotificationsMain() {
       {selectedNotification ? (
         <div className="rounded-lg border border-dashed p-3 text-muted-foreground text-xs">
           <HugeiconsIcon className="mr-1 inline size-3.5" icon={Time01Icon} />
-          {translateMessage("generated.shared.lastUpdated", {
+          {t("generated.shared.lastUpdated", {
             value0: formatDateTime(
               selectedNotification.alert.updatedAt,
               dateFnsLocale

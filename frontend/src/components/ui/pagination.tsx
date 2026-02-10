@@ -4,15 +4,18 @@ import {
   MoreHorizontalCircle01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import type * as React from "react"
 import { Button } from "@/components/ui/button"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
+  const t = useAppTranslations()
+
   return (
     <nav
-      aria-label={translateMessage("generated.ui.pagination")}
+      aria-label={t("generated.ui.pagination")}
       className={cn("mx-auto flex w-full justify-center", className)}
       data-slot="pagination"
       {...props}
@@ -66,9 +69,11 @@ function PaginationPrevious({
   text?: string
   showIcon?: boolean
 }) {
+  const t = useAppTranslations()
+
   return (
     <PaginationLink
-      aria-label={translateMessage("generated.ui.goPreviousPage")}
+      aria-label={t("generated.ui.goPreviousPage")}
       className={cn("pl-2!", className)}
       size="default"
       {...props}
@@ -87,21 +92,24 @@ function PaginationPrevious({
 
 function PaginationNext({
   className,
-  text = translateMessage("generated.ui.next"),
+  text,
   showIcon = true,
   ...props
 }: React.ComponentProps<typeof PaginationLink> & {
   text?: string
   showIcon?: boolean
 }) {
+  const t = useAppTranslations()
+  const resolvedText = text ?? t("generated.ui.next")
+
   return (
     <PaginationLink
-      aria-label={translateMessage("generated.ui.goNextPage")}
+      aria-label={t("generated.ui.goNextPage")}
       className={cn("pr-2!", className)}
       size="default"
       {...props}
     >
-      <span className="hidden sm:block">{text}</span>
+      <span className="hidden sm:block">{resolvedText}</span>
       {showIcon && (
         <HugeiconsIcon
           data-icon="inline-end"
@@ -117,6 +125,8 @@ function PaginationEllipsis({
   className,
   ...props
 }: React.ComponentProps<"span">) {
+  const t = useAppTranslations()
+
   return (
     <span
       aria-hidden
@@ -128,9 +138,7 @@ function PaginationEllipsis({
       {...props}
     >
       <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} />
-      <span className="sr-only">
-        {translateMessage("generated.ui.morePages")}
-      </span>
+      <span className="sr-only">{t("generated.ui.morePages")}</span>
     </span>
   )
 }

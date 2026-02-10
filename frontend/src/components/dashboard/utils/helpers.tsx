@@ -6,7 +6,6 @@ import {
 } from "date-fns"
 import { toast } from "sonner"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { translateMessage } from "@/i18n/translate-message"
 import { FetchError } from "@/lib/fetcher"
 import type { RackAssortment } from "@/lib/schemas"
 import type { Item, ItemSlot } from "../types"
@@ -40,15 +39,9 @@ export function getDaysUntilExpiry(today: Date, expiryDate: Date): number {
 }
 
 export const handleApiError = (err: unknown, fallback?: string) => {
+  const defaultMessage = fallback ?? "Unexpected error occurred"
   toast.error(
-    FetchError.isError(err)
-      ? translateMessage(`errorCodes.${err.code}`) ||
-          fallback ||
-          translateMessage("generated.dashboard.shared.unexpectedErrorOccurred")
-      : (fallback ??
-          translateMessage(
-            "generated.dashboard.shared.unexpectedErrorOccurred"
-          ))
+    FetchError.isError(err) ? err.message || defaultMessage : defaultMessage
   )
 }
 export const getOccupancyPercentage = (

@@ -10,7 +10,8 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
+
+import { useEffect, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import {
   ErrorEmptyState,
@@ -36,7 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import useItems, { type Item } from "@/hooks/use-items"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { CodeCell } from "./components/code-cell"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 
@@ -121,12 +122,14 @@ interface ItemsTableProps {
   initialSearch?: string
 }
 
-const itemsColumns: ColumnDef<Item>[] = [
+const createItemsColumns = (
+  t: ReturnType<typeof useAppTranslations>
+): ColumnDef<Item>[] => [
   {
     accessorKey: "name",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.shared.name")}
+        {t("generated.shared.name")}
       </SortableHeader>
     ),
     cell: ({ row }) => {
@@ -149,7 +152,7 @@ const itemsColumns: ColumnDef<Item>[] = [
     accessorKey: "code",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.shared.code")}
+        {t("generated.shared.code")}
       </SortableHeader>
     ),
     cell: ({ row }) => <CodeCell value={row.original.code} />,
@@ -160,7 +163,7 @@ const itemsColumns: ColumnDef<Item>[] = [
     accessorFn: (item) => `${item.sizeX}×${item.sizeY}×${item.sizeZ}`,
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.dashboard.shared.dimensions")}
+        {t("generated.dashboard.shared.dimensions")}
       </SortableHeader>
     ),
     cell: ({ row }) => (
@@ -174,12 +177,12 @@ const itemsColumns: ColumnDef<Item>[] = [
     accessorKey: "weight",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.shared.weight")}
+        {t("generated.shared.weight")}
       </SortableHeader>
     ),
     cell: ({ row }) => (
       <span className="font-mono">
-        {row.original.weight} {translateMessage("generated.shared.kg")}
+        {row.original.weight} {t("generated.shared.kg")}
       </span>
     ),
     enableSorting: true,
@@ -188,12 +191,12 @@ const itemsColumns: ColumnDef<Item>[] = [
     accessorKey: "expireAfterDays",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.dashboard.shared.shelfLife")}
+        {t("generated.dashboard.shared.shelfLife")}
       </SortableHeader>
     ),
     cell: ({ row }) => (
       <Badge variant="outline">
-        {translateMessage("generated.dashboard.shared.pluralLabel", {
+        {t("generated.dashboard.shared.pluralLabel", {
           value0: row.original.expireAfterDays,
         })}
       </Badge>
@@ -204,29 +207,21 @@ const itemsColumns: ColumnDef<Item>[] = [
     accessorKey: "dangerous",
     header: ({ column }) => (
       <SortableHeader column={column}>
-        {translateMessage("generated.shared.status")}
+        {t("generated.shared.status")}
       </SortableHeader>
     ),
     cell: ({ row }) =>
       row.original.dangerous ? (
-        <Badge variant="destructive">
-          {translateMessage("generated.shared.dangerous")}
-        </Badge>
+        <Badge variant="destructive">{t("generated.shared.dangerous")}</Badge>
       ) : (
-        <Badge variant="secondary">
-          {translateMessage("generated.shared.safe")}
-        </Badge>
+        <Badge variant="secondary">{t("generated.shared.safe")}</Badge>
       ),
     enableSorting: true,
   },
   {
     id: "comment",
     accessorKey: "comment",
-    header: () => (
-      <StaticHeader>
-        {translateMessage("generated.shared.comment")}
-      </StaticHeader>
-    ),
+    header: () => <StaticHeader>{t("generated.shared.comment")}</StaticHeader>,
     cell: ({ row }) => (
       <span className="line-clamp-2 text-muted-foreground text-sm">
         {row.original.comment || "Brak"}
@@ -237,6 +232,9 @@ const itemsColumns: ColumnDef<Item>[] = [
 ]
 
 export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
+  const t = useAppTranslations()
+  const itemsColumns = useMemo(() => createItemsColumns(t), [t])
+
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState(initialSearch)
   const [debouncedSearch] = useDebouncedValue(search, { wait: 500 })
@@ -298,9 +296,9 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
   const totalPages = items?.totalPages ?? 1
 
   const itemLabel = {
-    singular: translateMessage("generated.shared.item"),
-    plural: translateMessage("generated.shared.items2"),
-    genitive: translateMessage("generated.shared.items3"),
+    singular: t("generated.shared.item"),
+    plural: t("generated.shared.items2"),
+    genitive: t("generated.shared.items3"),
   }
 
   const clearAllFilters = () => {
@@ -313,13 +311,9 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
         <FilterBar className="gap-3">
           <FilterGroup>
             <SearchInput
-              aria-label={translateMessage(
-                "generated.dashboard.items.searchItems"
-              )}
+              aria-label={t("generated.dashboard.items.searchItems")}
               onChange={handleSearchChange}
-              placeholder={translateMessage(
-                "generated.dashboard.items.searchNameCodeComment"
-              )}
+              placeholder={t("generated.dashboard.items.searchNameCodeComment")}
               value={search}
             />
             {isFiltered && <ClearFiltersButton onClick={clearAllFilters} />}

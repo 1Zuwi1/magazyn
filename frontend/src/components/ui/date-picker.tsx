@@ -12,8 +12,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { translateMessage } from "@/i18n/translate-message"
-
+import { useAppTranslations } from "@/i18n/use-translations"
 export function DatePicker({
   date,
   onDateChange,
@@ -23,6 +22,8 @@ export function DatePicker({
   onDateChange: (date: string) => void
   setTimeToEndOfDay?: boolean
 }) {
+  const t = useAppTranslations()
+
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)
 
@@ -40,7 +41,7 @@ export function DatePicker({
                 locale: dateFnsLocale,
               })
             ) : (
-              <span>{translateMessage("generated.ui.selectDate")}</span>
+              <span>{t("generated.ui.selectDate")}</span>
             )}
             <HugeiconsIcon icon={ArrowDown01Icon} />
           </Button>

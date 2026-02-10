@@ -11,6 +11,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
+
 import { type ReactNode, useCallback, useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -19,7 +20,7 @@ import useAdminUsers from "@/hooks/use-admin-users"
 import useAlerts from "@/hooks/use-alerts"
 import useAssortments from "@/hooks/use-assortment"
 import useWarehouses from "@/hooks/use-warehouses"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { getAdminNavLinks, THRESHOLD } from "../lib/constants"
@@ -29,6 +30,8 @@ const ADMIN_OVERVIEW_FETCH_SIZE = 1
 const CRITICAL_WAREHOUSES_FETCH_SIZE = 3
 
 export function AdminOverview() {
+  const t = useAppTranslations()
+
   const {
     data: usersData,
     isPending: isUsersPending,
@@ -161,9 +164,7 @@ export function AdminOverview() {
     criticalWarehousesContent = (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-destructive/30 border-dashed bg-destructive/5 py-12">
         <p className="font-medium text-foreground">
-          {translateMessage(
-            "generated.admin.overview.failedRetrieveStorageData"
-          )}
+          {t("generated.admin.overview.failedRetrieveStorageData")}
         </p>
         <button
           className="mt-3 flex items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
@@ -171,7 +172,7 @@ export function AdminOverview() {
           type="button"
         >
           <HugeiconsIcon className="size-4" icon={RefreshIcon} />
-          {translateMessage("generated.admin.overview.retry")}
+          {t("generated.admin.overview.retry")}
         </button>
       </div>
     )
@@ -182,12 +183,10 @@ export function AdminOverview() {
           <HugeiconsIcon className="size-6 text-emerald-500" icon={Warehouse} />
         </div>
         <p className="mt-4 font-medium text-foreground">
-          {translateMessage("generated.admin.overview.everythingsAllRight")}
+          {t("generated.admin.overview.everythingsAllRight")}
         </p>
         <p className="mt-1 text-muted-foreground text-sm">
-          {translateMessage(
-            "generated.admin.overview.warehousesRequiringImmediateAttention"
-          )}
+          {t("generated.admin.overview.warehousesRequiringImmediateAttention")}
         </p>
       </div>
     )
@@ -216,13 +215,10 @@ export function AdminOverview() {
                         {warehouse.name}
                       </h3>
                       <p className="text-muted-foreground text-sm">
-                        {translateMessage(
-                          "generated.admin.overview.slotsOccupied",
-                          {
-                            value0: warehouse.occupiedSlots,
-                            value1: capacity,
-                          }
-                        )}
+                        {t("generated.admin.overview.slotsOccupied", {
+                          value0: warehouse.occupiedSlots,
+                          value1: capacity,
+                        })}
                       </p>
                     </div>
                     <Badge variant="destructive">
@@ -241,7 +237,7 @@ export function AdminOverview() {
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">
-                        {translateMessage("generated.shared.pluralLabel", {
+                        {t("generated.shared.pluralLabel", {
                           value0: warehouse.racksCount,
                         })}
                       </span>
@@ -254,10 +250,8 @@ export function AdminOverview() {
                         )}
                       >
                         {warehouse.occupancy >= 95
-                          ? translateMessage(
-                              "generated.admin.overview.critical"
-                            )
-                          : translateMessage("generated.admin.overview.high")}
+                          ? t("generated.admin.overview.critical")
+                          : t("generated.admin.overview.high")}
                       </span>
                     </div>
                   </div>
@@ -284,7 +278,7 @@ export function AdminOverview() {
     <div className="space-y-8">
       {/* Admin Header */}
       <AdminPageHeader
-        description={translateMessage(
+        description={t(
           "generated.admin.overview.manageUsersWarehousesSystemNotifications"
         )}
         icon={Settings02Icon}
@@ -292,7 +286,7 @@ export function AdminOverview() {
           title: link.title,
           url: link.url,
         }))}
-        title={translateMessage("generated.shared.administrationPanel")}
+        title={t("generated.shared.administrationPanel")}
       />
 
       {/* Stats Grid */}
@@ -301,7 +295,7 @@ export function AdminOverview() {
           description={
             isUsersStatsPending
               ? undefined
-              : translateMessage("generated.admin.overview.active", {
+              : t("generated.admin.overview.active", {
                   value0: stats.users.active,
                 })
           }
@@ -310,20 +304,18 @@ export function AdminOverview() {
           isError={isUsersStatsError}
           isLoading={isUsersStatsPending}
           onRetry={refetchUsersStats}
-          title={translateMessage("generated.shared.users")}
+          title={t("generated.shared.users")}
           value={stats.users.total}
           variant="primary"
         />
         <AdminStatCard
-          description={translateMessage(
-            "generated.admin.overview.allLocations"
-          )}
+          description={t("generated.admin.overview.allLocations")}
           href="/admin/warehouses"
           icon={Warehouse}
           isError={isWarehousesError}
           isLoading={isWarehousesPending}
           onRetry={() => refetchWarehouses()}
-          title={translateMessage("generated.shared.warehouses")}
+          title={t("generated.shared.warehouses")}
           value={stats.warehouses.total ?? "—"}
           variant="default"
         />
@@ -331,14 +323,14 @@ export function AdminOverview() {
           description={
             isAssortmentsPending
               ? undefined
-              : translateMessage("generated.admin.overview.allWarehouses")
+              : t("generated.admin.overview.allWarehouses")
           }
           href="/dashboard/items"
           icon={Package}
           isError={isAssortmentsError}
           isLoading={isAssortmentsPending}
           onRetry={() => refetchAssortments()}
-          title={translateMessage("generated.shared.items")}
+          title={t("generated.shared.items")}
           value={stats.items.total}
           variant="success"
         />
@@ -346,7 +338,7 @@ export function AdminOverview() {
           description={
             isAlertsStatsPending
               ? undefined
-              : translateMessage("generated.admin.overview.total", {
+              : t("generated.admin.overview.total", {
                   value0: stats.alerts.total,
                 })
           }
@@ -355,7 +347,7 @@ export function AdminOverview() {
           isError={isAlertsStatsError}
           isLoading={isAlertsStatsPending}
           onRetry={() => refetchAlerts()}
-          title={translateMessage("generated.admin.overview.openAlerts")}
+          title={t("generated.admin.overview.openAlerts")}
           value={stats.alerts.open}
           variant={stats.alerts.open > 0 ? "warning" : "default"}
         />
@@ -366,22 +358,19 @@ export function AdminOverview() {
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h2 className="font-semibold text-xl tracking-tight">
-              {translateMessage(
-                "generated.admin.overview.warehousesRequiringAttention"
-              )}
+              {t("generated.admin.overview.warehousesRequiringAttention")}
             </h2>
             <p className="text-muted-foreground text-sm">
-              {translateMessage(
-                "generated.admin.overview.warehousesAboveOccupancy",
-                { value0: THRESHOLD }
-              )}
+              {t("generated.admin.overview.warehousesAboveOccupancy", {
+                value0: THRESHOLD,
+              })}
             </p>
           </div>
           <Link
             className={buttonVariants({ variant: "outline", size: "sm" })}
             href="/admin/warehouses"
           >
-            {translateMessage("generated.shared.seeAll")}
+            {t("generated.shared.seeAll")}
             <HugeiconsIcon className="ml-2 size-4" icon={ArrowRight02Icon} />
           </Link>
         </div>

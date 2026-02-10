@@ -5,7 +5,8 @@ import {
   ThermometerIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { translateMessage } from "@/i18n/translate-message"
+
+import { useAppTranslations } from "@/i18n/use-translations"
 
 interface RackParametersCardProps {
   maxElementSize: { width: number; height: number; depth: number }
@@ -18,12 +19,12 @@ export function RackParametersCard({
   tempRange,
   gridDimensions,
 }: RackParametersCardProps) {
+  const t = useAppTranslations()
+
   const parameters = [
     {
       icon: RulerIcon,
-      label: translateMessage(
-        "generated.dashboard.rackVisualization.maxElementSize"
-      ),
+      label: t("generated.dashboard.rackVisualization.maxElementSize"),
       value: `${maxElementSize.width} × ${maxElementSize.height} × ${maxElementSize.depth}`,
       unit: "mm",
       color: "text-blue-500",
@@ -31,9 +32,7 @@ export function RackParametersCard({
     },
     {
       icon: ThermometerIcon,
-      label: translateMessage(
-        "generated.dashboard.rackVisualization.temperatureRange"
-      ),
+      label: t("generated.dashboard.rackVisualization.temperatureRange"),
       value: `${tempRange.min}°C – ${tempRange.max}°C`,
       unit: null,
       color: "text-orange-500",
@@ -41,9 +40,7 @@ export function RackParametersCard({
     },
     {
       icon: GridViewIcon,
-      label: translateMessage(
-        "generated.dashboard.rackVisualization.gridDimensions"
-      ),
+      label: t("generated.dashboard.rackVisualization.gridDimensions"),
       value: `${gridDimensions.rows} × ${gridDimensions.cols}`,
       unit: "miejsc",
       color: "text-primary",
@@ -62,9 +59,7 @@ export function RackParametersCard({
           />
         </div>
         <h3 className="font-semibold text-sm">
-          {translateMessage(
-            "generated.dashboard.rackVisualization.rackParameters"
-          )}
+          {t("generated.dashboard.rackVisualization.rackParameters")}
         </h3>
       </div>
 

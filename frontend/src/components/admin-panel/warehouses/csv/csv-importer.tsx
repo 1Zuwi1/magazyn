@@ -2,6 +2,7 @@
 
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { useMemo } from "react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
@@ -12,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { useCsvImporter } from "../../hooks/use-csv-importer"
 import { FileUploader } from "./file-uploader"
@@ -38,6 +39,8 @@ export function CsvImporter<T extends CsvImporterType>({
   type,
   onImport,
 }: CsvImporterProps<T>) {
+  const t = useAppTranslations()
+
   const handleImport = async ({
     file,
     rows,
@@ -70,7 +73,7 @@ export function CsvImporter<T extends CsvImporterType>({
   if (type === "warehouse") {
     dialogTitle = "Importuj magazyny z CSV"
   } else if (type === "rack") {
-    dialogTitle = translateMessage("generated.admin.warehouses.importRacksCsv")
+    dialogTitle = t("generated.admin.warehouses.importRacksCsv")
   }
 
   const labels = useMemo(() => {
@@ -101,7 +104,7 @@ export function CsvImporter<T extends CsvImporterType>({
       <DialogTrigger
         className={cn(buttonVariants({ variant: "default" }), "w-fit gap-2")}
       >
-        {translateMessage("generated.admin.warehouses.importCsv")}
+        {t("generated.admin.warehouses.importCsv")}
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] min-w-fit overflow-auto sm:min-w-125">
         <DialogHeader>
@@ -129,7 +132,7 @@ export function CsvImporter<T extends CsvImporterType>({
                 }}
                 variant="destructive"
               >
-                {translateMessage("generated.shared.remove")}
+                {t("generated.shared.remove")}
               </Button>
               <Button
                 disabled={isImporting}
@@ -137,7 +140,7 @@ export function CsvImporter<T extends CsvImporterType>({
                   await confirmImport()
                 }}
               >
-                {translateMessage("generated.admin.warehouses.import")}
+                {t("generated.admin.warehouses.import")}
                 <HugeiconsIcon
                   className="ml-2 size-4"
                   icon={ArrowRight01Icon}
@@ -150,7 +153,7 @@ export function CsvImporter<T extends CsvImporterType>({
               onClick={() => setOpen(false)}
               variant="outline"
             >
-              {translateMessage("generated.shared.cancel")}
+              {t("generated.shared.cancel")}
             </Button>
           )}
         </DialogFooter>

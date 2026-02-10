@@ -1,12 +1,12 @@
 "use client"
 
 import { useForm, useStore } from "@tanstack/react-form"
+
 import { useEffect } from "react"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { FieldGroup } from "@/components/ui/field"
-import { translateMessage } from "@/i18n/translate-message"
-
+import { useAppTranslations } from "@/i18n/use-translations"
 export interface WarehouseFormData {
   id: string
   name: string
@@ -27,6 +27,8 @@ export function WarehouseDialog({
   onSubmit,
   formId,
 }: WarehouseDialogProps) {
+  const t = useAppTranslations()
+
   const isEdit = !!currentRow
 
   const form = useForm({
@@ -53,12 +55,8 @@ export function WarehouseDialog({
     <FormDialog
       description={
         isEdit
-          ? translateMessage(
-              "generated.admin.warehouses.changeStockInformation"
-            )
-          : translateMessage(
-              "generated.admin.warehouses.enterInformationAboutNewWarehouse"
-            )
+          ? t("generated.admin.warehouses.changeStockInformation")
+          : t("generated.admin.warehouses.enterInformationAboutNewWarehouse")
       }
       formId={formId}
       isLoading={isSubmitting}
@@ -67,8 +65,8 @@ export function WarehouseDialog({
       open={open}
       title={
         isEdit
-          ? translateMessage("generated.admin.warehouses.editWarehouse")
-          : translateMessage("generated.admin.warehouses.addWarehouse2")
+          ? t("generated.admin.warehouses.editWarehouse")
+          : t("generated.admin.warehouses.addWarehouse2")
       }
     >
       <form
@@ -85,11 +83,9 @@ export function WarehouseDialog({
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label={translateMessage("generated.shared.name")}
+                label={t("generated.shared.name")}
                 layout="grid"
-                placeholder={translateMessage(
-                  "generated.admin.warehouses.a1Warehouse"
-                )}
+                placeholder={t("generated.admin.warehouses.a1Warehouse")}
               />
             )}
           </form.Field>

@@ -7,8 +7,9 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { Column, SortDirection } from "@tanstack/react-table"
+
 import { Button } from "@/components/ui/button"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 function SortIcon({ isSorted }: { isSorted: false | SortDirection }) {
@@ -53,6 +54,8 @@ export function SortableHeader<TData, TValue>({
   children,
   className,
 }: SortableHeaderProps<TData, TValue>) {
+  const t = useAppTranslations()
+
   const isSorted = column.getIsSorted()
   const canSort = column.getCanSort()
   const nextSortingOrder = column.getNextSortingOrder()
@@ -61,11 +64,11 @@ export function SortableHeader<TData, TValue>({
     return <span className={className}>{children}</span>
   }
 
-  let sortingTitle = translateMessage("generated.dashboard.items.clearSorting")
+  let sortingTitle = t("generated.dashboard.items.clearSorting")
   if (nextSortingOrder === "asc") {
-    sortingTitle = translateMessage("generated.dashboard.items.sortAscending")
+    sortingTitle = t("generated.dashboard.items.sortAscending")
   } else if (nextSortingOrder === "desc") {
-    sortingTitle = translateMessage("generated.dashboard.items.sortDescending")
+    sortingTitle = t("generated.dashboard.items.sortDescending")
   }
 
   return (

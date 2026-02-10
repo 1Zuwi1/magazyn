@@ -1,7 +1,8 @@
 import { Mic01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { Button } from "@/components/ui/button"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 
 interface VoiceAssistantIdleViewProps {
   buttonId?: string
@@ -14,6 +15,8 @@ export function VoiceAssistantNormalView({
   onStartListening,
   onSuggestionSelect,
 }: VoiceAssistantIdleViewProps) {
+  const t = useAppTranslations()
+
   return (
     <div
       className="relative flex h-full flex-col items-center justify-center p-6 text-center"
@@ -29,9 +32,7 @@ export function VoiceAssistantNormalView({
         <div className="relative">
           <span className="pointer-events-none absolute -inset-3 rounded-full bg-primary/8 blur-xl" />
           <Button
-            aria-label={translateMessage(
-              "generated.voiceAssistant.startListening"
-            )}
+            aria-label={t("generated.voiceAssistant.startListening")}
             className="relative size-22 rounded-full shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 hover:shadow-primary/30 hover:shadow-xl active:scale-95"
             id={buttonId}
             onClick={onStartListening}
@@ -47,27 +48,23 @@ export function VoiceAssistantNormalView({
 
         <div className="max-w-xs space-y-1.5">
           <h2 className="font-semibold text-foreground text-lg tracking-tight">
-            {translateMessage("generated.shared.voiceAssistant")}
+            {t("generated.shared.voiceAssistant")}
           </h2>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            {translateMessage(
-              "generated.voiceAssistant.pressMicrophoneSayCommand"
-            )}
+            {t("generated.voiceAssistant.pressMicrophoneSayCommand")}
           </p>
         </div>
 
         <div className="w-full pt-3">
           <p className="mb-2.5 font-medium text-muted-foreground/70 text-xs uppercase tracking-wider">
-            {translateMessage("generated.voiceAssistant.sampleCommands")}
+            {t("generated.voiceAssistant.sampleCommands")}
           </p>
           <div className="flex flex-wrap justify-center gap-2">
             {[
-              translateMessage("generated.voiceAssistant.showA1Warehouse"),
+              t("generated.voiceAssistant.showA1Warehouse"),
               "Dodaj przedmiot",
-              translateMessage("generated.voiceAssistant.showNotifications"),
-              translateMessage(
-                "generated.voiceAssistant.openAdministrationPanel"
-              ),
+              t("generated.voiceAssistant.showNotifications"),
+              t("generated.voiceAssistant.openAdministrationPanel"),
             ].map((suggestion) => (
               <Button
                 className="h-8 rounded-full px-4 text-xs transition-colors duration-200"

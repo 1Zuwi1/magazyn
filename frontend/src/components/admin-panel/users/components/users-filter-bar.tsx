@@ -2,6 +2,7 @@
 
 import { FilterIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -11,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { AdminUser } from "@/hooks/use-admin-users"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { getStatusLabel } from "../lib/user-utils"
 
 type AccountStatus = AdminUser["account_status"]
@@ -38,12 +39,14 @@ export function UsersFilterBar({
   statusFilter,
   onStatusFilterChange,
 }: UsersFilterBarProps) {
+  const t = useAppTranslations()
+
   return (
     <div className="flex flex-col gap-3 border-b bg-muted/30 p-4 sm:flex-row sm:items-center">
       <Input
         className="max-w-sm"
         onChange={(event) => onSearchChange(event.target.value)}
-        placeholder={translateMessage("generated.admin.users.searchUsers")}
+        placeholder={t("generated.admin.users.searchUsers")}
         type="search"
         value={search}
       />
@@ -64,19 +67,19 @@ export function UsersFilterBar({
         >
           <SelectTrigger className="w-fit pl-9" size="sm">
             <SelectValue
-              placeholder={translateMessage("generated.shared.status")}
+              placeholder={t("generated.shared.status")}
               render={
                 <span>
                   {statusFilter
                     ? getStatusLabel(statusFilter)
-                    : translateMessage("generated.admin.users.allStatuses")}
+                    : t("generated.admin.users.allStatuses")}
                 </span>
               }
             />
           </SelectTrigger>
           <SelectContent className="w-fit">
             <SelectItem value={ALL_STATUSES_VALUE}>
-              {translateMessage("generated.admin.users.allStatuses")}
+              {t("generated.admin.users.allStatuses")}
             </SelectItem>
             {STATUS_OPTIONS.map((status) => (
               <SelectItem key={status} value={status}>

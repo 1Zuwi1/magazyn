@@ -11,6 +11,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useQueryClient } from "@tanstack/react-query"
+
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
@@ -43,7 +44,7 @@ import useDeletePasskey from "@/hooks/use-delete-passkey"
 import { LINKED_2FA_METHODS_QUERY_KEY } from "@/hooks/use-linked-methods"
 import usePasskeys, { PASSKEYS_QUERY_KEY } from "@/hooks/use-passkeys"
 import useRenamePasskey from "@/hooks/use-rename-passkey"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   type Passkey,
@@ -81,6 +82,8 @@ interface PasskeyItemProps {
 }
 
 function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
+  const t = useAppTranslations()
+
   return (
     <div
       className="group/item relative flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-linear-to-r from-background to-muted/20 p-4 shadow-xs transition-all duration-300 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5"
@@ -117,7 +120,7 @@ function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
             </div>
           </div>
           <p className="text-muted-foreground/70 text-xs">
-            {translateMessage("generated.dashboard.settings.keyActive", {
+            {t("generated.dashboard.settings.keyActive", {
               value0: passkey.id,
             })}
           </p>
@@ -139,7 +142,7 @@ function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
             size={14}
           />
           <span className="sr-only">
-            {translateMessage("generated.dashboard.settings.changeName")}
+            {t("generated.dashboard.settings.changeName")}
           </span>
         </Button>
         <Button
@@ -154,9 +157,7 @@ function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
             icon={Delete02Icon}
             size={14}
           />
-          <span className="sr-only">
-            {translateMessage("generated.shared.remove")}
-          </span>
+          <span className="sr-only">{t("generated.shared.remove")}</span>
         </Button>
       </div>
     </div>
@@ -193,6 +194,8 @@ function PasskeysListSkeleton() {
 }
 
 function PasskeysEmptyState() {
+  const t = useAppTranslations()
+
   return (
     <div className="flex flex-col items-center gap-4 rounded-xl border border-border/60 border-dashed bg-linear-to-b from-muted/30 to-transparent px-6 py-8 text-center">
       <div className="relative">
@@ -207,12 +210,10 @@ function PasskeysEmptyState() {
       </div>
       <div className="space-y-1">
         <p className="font-medium text-foreground/80 text-sm">
-          {translateMessage("generated.dashboard.settings.securityKeys2")}
+          {t("generated.dashboard.settings.securityKeys2")}
         </p>
         <p className="max-w-60 text-muted-foreground text-xs">
-          {translateMessage(
-            "generated.dashboard.settings.addFirstKeyLogQuickly"
-          )}
+          {t("generated.dashboard.settings.addFirstKeyLogQuickly")}
         </p>
       </div>
     </div>
@@ -227,6 +228,8 @@ function PasskeysList({
   onDelete,
   onRetry,
 }: PasskeysListProps) {
+  const t = useAppTranslations()
+
   if (isLoading) {
     return <PasskeysListSkeleton />
   }
@@ -243,12 +246,10 @@ function PasskeysList({
         </div>
         <div className="space-y-1">
           <p className="font-medium text-foreground/80 text-sm">
-            {translateMessage("generated.dashboard.settings.failedLoadKeys")}
+            {t("generated.dashboard.settings.failedLoadKeys")}
           </p>
           <p className="text-muted-foreground text-xs">
-            {translateMessage(
-              "generated.dashboard.settings.problemDownloadingData"
-            )}
+            {t("generated.dashboard.settings.problemDownloadingData")}
           </p>
         </div>
         {onRetry && (
@@ -257,7 +258,7 @@ function PasskeysList({
             onClick={onRetry}
             type="button"
           >
-            {translateMessage("generated.shared.again")}
+            {t("generated.shared.again")}
           </button>
         )}
       </div>
@@ -284,6 +285,8 @@ function PasskeysList({
 }
 
 export function PasskeysSection() {
+  const t = useAppTranslations()
+
   const [supportState, setSupportState] = useState<SupportState>("checking")
   const [isRegistering, setIsRegistering] = useState(false)
   const queryClient = useQueryClient()
@@ -322,14 +325,12 @@ export function PasskeysSection() {
 
   const handleAddPasskey = async () => {
     if (supportState !== "supported") {
-      toast.error(
-        translateMessage("generated.shared.deviceSupportSecurityKeys")
-      )
+      toast.error(t("generated.shared.deviceSupportSecurityKeys"))
       return
     }
 
     if (!navigator.credentials) {
-      toast.error(translateMessage("generated.shared.browserSupportWebauthn"))
+      toast.error(t("generated.shared.browserSupportWebauthn"))
       return
     }
 
@@ -359,9 +360,7 @@ export function PasskeysSection() {
         }
         handleApiError(
           startError,
-          translateMessage(
-            "generated.dashboard.settings.failedStartAddingSecurityKey"
-          )
+          t("generated.dashboard.settings.failedStartAddingSecurityKey")
         )
         return
       }
@@ -375,16 +374,14 @@ export function PasskeysSection() {
         toast.error(
           getWebAuthnErrorMessage(
             credentialError,
-            translateMessage(
-              "generated.dashboard.settings.failedCreateSecurityKey"
-            )
+            t("generated.dashboard.settings.failedCreateSecurityKey")
           )
         )
         return
       }
 
       if (!isPublicKeyCredential(credential)) {
-        toast.error(translateMessage("generated.shared.securityKeyDataRead"))
+        toast.error(t("generated.shared.securityKeyDataRead"))
         return
       }
 
@@ -432,9 +429,7 @@ export function PasskeysSection() {
       }
       handleApiError(
         finishError,
-        translateMessage(
-          "generated.dashboard.settings.failedCompleteAddingSecurityKey"
-        )
+        t("generated.dashboard.settings.failedCompleteAddingSecurityKey")
       )
       return
     }
@@ -442,9 +437,7 @@ export function PasskeysSection() {
     setIsNamingDialogOpen(false)
     setPendingCredentialJson(null)
     setNewKeyName("")
-    toast.success(
-      translateMessage("generated.dashboard.settings.securityKeyBeenAdded")
-    )
+    toast.success(t("generated.dashboard.settings.securityKeyBeenAdded"))
     queryClient.invalidateQueries({ queryKey: PASSKEYS_QUERY_KEY })
     queryClient.invalidateQueries({ queryKey: LINKED_2FA_METHODS_QUERY_KEY })
   }
@@ -453,9 +446,7 @@ export function PasskeysSection() {
     setIsNamingDialogOpen(false)
     setPendingCredentialJson(null)
     setNewKeyName("")
-    toast.info(
-      translateMessage("generated.dashboard.settings.addingKeyBeenCanceled")
-    )
+    toast.info(t("generated.dashboard.settings.addingKeyBeenCanceled"))
   }
 
   const handleOpenRename = (passkey: Passkey) => {
@@ -476,9 +467,7 @@ export function PasskeysSection() {
           setIsRenameDialogOpen(false)
           setRenamingPasskey(null)
           setRenameValue("")
-          toast.success(
-            translateMessage("generated.dashboard.settings.keyNameBeenChanged")
-          )
+          toast.success(t("generated.dashboard.settings.keyNameBeenChanged"))
         },
       }
     )
@@ -501,11 +490,7 @@ export function PasskeysSection() {
         queryClient.invalidateQueries({
           queryKey: LINKED_2FA_METHODS_QUERY_KEY,
         })
-        toast.success(
-          translateMessage(
-            "generated.dashboard.settings.securityKeyBeenDeleted"
-          )
-        )
+        toast.success(t("generated.dashboard.settings.securityKeyBeenDeleted"))
       },
     })
   }
@@ -534,19 +519,17 @@ export function PasskeysSection() {
               </div>
               <div className="space-y-1.5">
                 <CardTitle className="text-lg tracking-tight">
-                  {translateMessage(
-                    "generated.dashboard.settings.securityKeys"
-                  )}
+                  {t("generated.dashboard.settings.securityKeys")}
                 </CardTitle>
                 <p className="max-w-70 text-muted-foreground text-sm leading-relaxed">
-                  {translateMessage(
+                  {t(
                     "generated.dashboard.settings.logFasterMoreSecurelyWithout"
                   )}
                 </p>
               </div>
             </div>
             <Badge className="mt-1" variant={SUPPORT_VARIANTS[supportState]}>
-              {translateMessage(SUPPORT_LABEL_KEYS[supportState])}
+              {t(SUPPORT_LABEL_KEYS[supportState])}
             </Badge>
           </div>
         </CardHeader>
@@ -578,12 +561,10 @@ export function PasskeysSection() {
                 </div>
                 <div className="space-y-0.5">
                   <p className="font-semibold text-sm tracking-tight">
-                    {translateMessage("generated.dashboard.settings.addNewKey")}
+                    {t("generated.dashboard.settings.addNewKey")}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    {translateMessage(
-                      "generated.dashboard.settings.biometricsDonglePin"
-                    )}
+                    {t("generated.dashboard.settings.biometricsDonglePin")}
                   </p>
                 </div>
               </div>
@@ -595,7 +576,7 @@ export function PasskeysSection() {
                 type="button"
               >
                 <HugeiconsIcon icon={Key01Icon} size={16} />
-                {translateMessage("generated.dashboard.settings.addKey")}
+                {t("generated.dashboard.settings.addKey")}
               </Button>
             </div>
           </div>
@@ -622,12 +603,10 @@ export function PasskeysSection() {
               />
             </div>
             <DialogTitle className="text-center">
-              {translateMessage("generated.dashboard.settings.nameSecurityKey")}
+              {t("generated.dashboard.settings.nameSecurityKey")}
             </DialogTitle>
             <DialogDescription className="text-center">
-              {translateMessage(
-                "generated.dashboard.settings.giveNameWillHelpRecognize"
-              )}
+              {t("generated.dashboard.settings.giveNameWillHelpRecognize")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 pt-2">
@@ -641,22 +620,18 @@ export function PasskeysSection() {
                   handleSaveNewPasskey()
                 }
               }}
-              placeholder={translateMessage(
-                "generated.dashboard.settings.eGMacbookProIphone"
-              )}
+              placeholder={t("generated.dashboard.settings.eGMacbookProIphone")}
               value={newKeyName}
             />
             <p className="text-center text-muted-foreground/70 text-xs">
-              {translateMessage(
-                "generated.dashboard.settings.maximum50Characters"
-              )}
+              {t("generated.dashboard.settings.maximum50Characters")}
             </p>
           </div>
           <DialogFooter className="gap-2 pt-2 sm:gap-2">
             <DialogClose
               render={<Button className="flex-1" variant="outline" />}
             >
-              {translateMessage("generated.shared.cancel")}
+              {t("generated.shared.cancel")}
             </DialogClose>
             <Button
               className="flex-1"
@@ -664,7 +639,7 @@ export function PasskeysSection() {
               isLoading={isSavingName}
               onClick={handleSaveNewPasskey}
             >
-              {translateMessage("generated.dashboard.settings.saveKey")}
+              {t("generated.dashboard.settings.saveKey")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -692,12 +667,10 @@ export function PasskeysSection() {
               />
             </div>
             <DialogTitle className="text-center">
-              {translateMessage("generated.dashboard.settings.renameKey")}
+              {t("generated.dashboard.settings.renameKey")}
             </DialogTitle>
             <DialogDescription className="text-center">
-              {translateMessage(
-                "generated.dashboard.settings.enterNewNameSecurityKey"
-              )}
+              {t("generated.dashboard.settings.enterNewNameSecurityKey")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 pt-2">
@@ -711,22 +684,18 @@ export function PasskeysSection() {
                   handleRename()
                 }
               }}
-              placeholder={translateMessage(
-                "generated.dashboard.settings.eGMacbookProIphone"
-              )}
+              placeholder={t("generated.dashboard.settings.eGMacbookProIphone")}
               value={renameValue}
             />
             <p className="text-center text-muted-foreground/70 text-xs">
-              {translateMessage(
-                "generated.dashboard.settings.maximum50Characters"
-              )}
+              {t("generated.dashboard.settings.maximum50Characters")}
             </p>
           </div>
           <DialogFooter className="gap-2 pt-2 sm:gap-2">
             <DialogClose
               render={<Button className="flex-1" variant="outline" />}
             >
-              {translateMessage("generated.shared.cancel")}
+              {t("generated.shared.cancel")}
             </DialogClose>
             <Button
               className="flex-1"
@@ -734,7 +703,7 @@ export function PasskeysSection() {
               isLoading={renamePasskey.isPending}
               onClick={handleRename}
             >
-              {translateMessage("generated.dashboard.settings.saveChanges")}
+              {t("generated.dashboard.settings.saveChanges")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -760,29 +729,24 @@ export function PasskeysSection() {
               />
             </AlertDialogMedia>
             <AlertDialogTitle>
-              {translateMessage(
-                "generated.dashboard.settings.deleteSecurityKey"
-              )}
+              {t("generated.dashboard.settings.deleteSecurityKey")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {translateMessage(
-                "generated.dashboard.settings.keyWillPermanentlyDeletedWont",
-                {
-                  value0: deletingPasskey?.name ?? "",
-                }
-              )}
+              {t("generated.dashboard.settings.keyWillPermanentlyDeletedWont", {
+                value0: deletingPasskey?.name ?? "",
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>
-              {translateMessage("generated.shared.cancel")}
+              {t("generated.shared.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               isLoading={deletePasskey.isPending}
               onClick={handleDelete}
               variant="destructive"
             >
-              {translateMessage("generated.dashboard.settings.deleteKey")}
+              {t("generated.dashboard.settings.deleteKey")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

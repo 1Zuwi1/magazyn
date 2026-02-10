@@ -2,7 +2,6 @@ import {
   type AppLocale,
   DEFAULT_APP_LOCALE,
   getClientAppLocale,
-  getServerRuntimeLocale,
 } from "@/i18n/locale"
 import { translateMessage } from "@/i18n/translate-message"
 
@@ -469,7 +468,7 @@ const resolveCurrentLocale = (): AppLocale => {
     return getClientAppLocale()
   }
 
-  return getServerRuntimeLocale() ?? DEFAULT_APP_LOCALE
+  return DEFAULT_APP_LOCALE
 }
 
 const buildVoiceCommands = (locale: AppLocale): VoiceCommand[] =>

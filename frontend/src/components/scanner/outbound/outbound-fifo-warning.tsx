@@ -2,7 +2,7 @@ import { AlertCircleIcon, Location04Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useLocale } from "next-intl"
 import { formatDateTimeLabel } from "@/components/dashboard/utils/helpers"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { OutboundCheckResult } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
 import { Button } from "../../ui/button"
@@ -24,6 +24,8 @@ export function OutboundFifoWarning({
   onTakeFifoCompliant,
   onCancel,
 }: OutboundFifoWarningProps) {
+  const t = useAppTranslations()
+
   const locale = useLocale()
   const { requestedAssortment, olderAssortments, warning } = checkResult
 
@@ -41,14 +43,12 @@ export function OutboundFifoWarning({
           </div>
           <div>
             <h2 className="font-semibold text-xl tracking-tight">
-              {translateMessage("generated.scanner.outbound.fifoViolation")}
+              {t("generated.scanner.outbound.fifoViolation")}
             </h2>
             <p className="mt-1 text-muted-foreground text-sm">
-              {translateMessage(
-                "generated.scanner.outbound.selectedAssortmentFifoCompliant"
-              )}
+              {t("generated.scanner.outbound.selectedAssortmentFifoCompliant")}
               {warning
-                ? ` ${translateMessage("generated.scanner.outbound.olderItems", { value0: warning })}`
+                ? ` ${t("generated.scanner.outbound.olderItems", { value0: warning })}`
                 : ""}
             </p>
           </div>
@@ -57,18 +57,18 @@ export function OutboundFifoWarning({
         <div className="mb-4 overflow-hidden rounded-xl border bg-card/50">
           <div className="border-b bg-muted/30 px-4 py-2.5">
             <p className="font-medium text-sm">
-              {translateMessage("generated.scanner.outbound.scannedAssortment")}
+              {t("generated.scanner.outbound.scannedAssortment")}
             </p>
           </div>
           <div className="p-4">
             <div className="flex items-center gap-2">
               <p className="font-medium text-sm">
-                {translateMessage("generated.shared.rack2", {
+                {t("generated.shared.rack2", {
                   value0: requestedAssortment.rackMarker,
                 })}
               </p>
               <Badge variant="outline">
-                {translateMessage("generated.scanner.outbound.xY", {
+                {t("generated.scanner.outbound.xY", {
                   value0: requestedAssortment.positionX,
                   value1: requestedAssortment.positionY,
                 })}
@@ -78,7 +78,7 @@ export function OutboundFifoWarning({
               {requestedAssortment.assortmentCode}
             </p>
             <p className="mt-1 text-muted-foreground text-xs">
-              {translateMessage("generated.scanner.outbound.received", {
+              {t("generated.scanner.outbound.received", {
                 value0: formatDateTimeLabel(
                   requestedAssortment.createdAt,
                   locale
@@ -93,9 +93,7 @@ export function OutboundFifoWarning({
             <div className="absolute inset-x-0 top-0 z-10 h-4 bg-linear-to-b from-background to-transparent" />
             <div className="h-full space-y-2 overflow-y-auto px-2 py-2">
               <p className="px-1 font-medium text-sm">
-                {translateMessage(
-                  "generated.scanner.outbound.olderEntriesFifoCompliant"
-                )}
+                {t("generated.scanner.outbound.olderEntriesFifoCompliant")}
               </p>
               {olderAssortments.map((slot) => (
                 <div
@@ -108,12 +106,12 @@ export function OutboundFifoWarning({
                       icon={Location04Icon}
                     />
                     <p className="font-medium text-sm">
-                      {translateMessage("generated.shared.rack2", {
+                      {t("generated.shared.rack2", {
                         value0: slot.rackMarker,
                       })}
                     </p>
                     <Badge variant="outline">
-                      {translateMessage("generated.scanner.outbound.xY", {
+                      {t("generated.scanner.outbound.xY", {
                         value0: slot.positionX,
                         value1: slot.positionY,
                       })}
@@ -124,12 +122,12 @@ export function OutboundFifoWarning({
                   </p>
                   <div className="mt-1 flex gap-3 text-muted-foreground text-xs">
                     <span>
-                      {translateMessage("generated.scanner.outbound.received", {
+                      {t("generated.scanner.outbound.received", {
                         value0: formatDateTimeLabel(slot.createdAt, locale),
                       })}
                     </span>
                     <span>
-                      {translateMessage("generated.scanner.outbound.expires", {
+                      {t("generated.scanner.outbound.expires", {
                         value0: formatDateTimeLabel(slot.expiresAt, locale),
                       })}
                     </span>
@@ -147,7 +145,7 @@ export function OutboundFifoWarning({
             onClick={onTakeFifoCompliant}
             type="button"
           >
-            {translateMessage("generated.scanner.outbound.pickFifoCompliant")}
+            {t("generated.scanner.outbound.pickFifoCompliant")}
           </Button>
           <Button
             className="h-12 w-full rounded-xl"
@@ -156,9 +154,7 @@ export function OutboundFifoWarning({
             type="button"
             variant="outline"
           >
-            {translateMessage(
-              "generated.scanner.outbound.continueAnywaySkipFifo"
-            )}
+            {t("generated.scanner.outbound.continueAnywaySkipFifo")}
           </Button>
         </div>
       </div>

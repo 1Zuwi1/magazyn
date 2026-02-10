@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import type { AdminUser } from "@/hooks/use-admin-users"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import {
   getStatusLabel,
   getStatusVariant,
@@ -55,6 +55,8 @@ export function StatusChangeDialog({
   user,
   onConfirm,
 }: StatusChangeDialogProps) {
+  const t = useAppTranslations()
+
   const [selectedStatus, setSelectedStatus] = useState<AccountStatus | "">("")
   const [reason, setReason] = useState("")
 
@@ -87,10 +89,10 @@ export function StatusChangeDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {translateMessage("generated.admin.users.changeAccountStatus")}
+            {t("generated.admin.users.changeAccountStatus")}
           </DialogTitle>
           <DialogDescription>
-            {translateMessage("generated.admin.users.changeStatusUserAccount")}{" "}
+            {t("generated.admin.users.changeStatusUserAccount")}{" "}
             <strong>
               {normalizeValue(user?.full_name) || user?.email || ""}
             </strong>
@@ -101,7 +103,7 @@ export function StatusChangeDialog({
           <div className="space-y-4 py-2">
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground text-sm">
-                {translateMessage("generated.admin.users.currentStatus")}
+                {t("generated.admin.users.currentStatus")}
               </span>
               <Badge variant={getStatusVariant(user.account_status)}>
                 {getStatusLabel(user.account_status)}
@@ -110,7 +112,7 @@ export function StatusChangeDialog({
 
             <div className="space-y-2">
               <Label htmlFor="new-status">
-                {translateMessage("generated.admin.users.newStatus")}
+                {t("generated.admin.users.newStatus")}
               </Label>
               <Select
                 onValueChange={(value) =>
@@ -120,16 +122,12 @@ export function StatusChangeDialog({
               >
                 <SelectTrigger className="w-full" id="new-status">
                   <SelectValue
-                    placeholder={translateMessage(
-                      "generated.admin.users.selectNewStatus"
-                    )}
+                    placeholder={t("generated.admin.users.selectNewStatus")}
                     render={
                       <span>
                         {selectedStatus
                           ? getStatusLabel(selectedStatus)
-                          : translateMessage(
-                              "generated.admin.users.selectNewStatus"
-                            )}
+                          : t("generated.admin.users.selectNewStatus")}
                       </span>
                     }
                   />
@@ -146,13 +144,13 @@ export function StatusChangeDialog({
 
             <div className="space-y-2">
               <Label htmlFor="status-reason">
-                {translateMessage("generated.admin.users.reasonOptional")}
+                {t("generated.admin.users.reasonOptional")}
               </Label>
               <Input
                 id="status-reason"
                 maxLength={500}
                 onChange={(event) => setReason(event.target.value)}
-                placeholder={translateMessage(
+                placeholder={t(
                   "generated.admin.users.provideReasonChangingStatus"
                 )}
                 value={reason}
@@ -162,10 +160,10 @@ export function StatusChangeDialog({
         ) : null}
         <DialogFooter className="gap-1">
           <Button onClick={() => handleOpenChange(false)} variant="outline">
-            {translateMessage("generated.shared.cancel")}
+            {t("generated.shared.cancel")}
           </Button>
           <Button disabled={!selectedStatus} onClick={handleConfirm}>
-            {translateMessage("generated.admin.shared.changeStatus")}
+            {t("generated.admin.shared.changeStatus")}
           </Button>
         </DialogFooter>
       </DialogContent>

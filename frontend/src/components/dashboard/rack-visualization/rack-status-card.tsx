@@ -5,7 +5,7 @@ import {
   SquareLock02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 interface RackStatusCardProps {
@@ -15,7 +15,10 @@ interface RackStatusCardProps {
   occupancyPercentage: number
 }
 
-function getOccupancyColor(percentage: number): {
+function getOccupancyColor(
+  t: ReturnType<typeof useAppTranslations>,
+  percentage: number
+): {
   text: string
   bg: string
   bar: string
@@ -26,7 +29,7 @@ function getOccupancyColor(percentage: number): {
       text: "text-destructive",
       bg: "bg-destructive/10",
       bar: "bg-destructive",
-      label: translateMessage("generated.dashboard.shared.critical"),
+      label: t("generated.dashboard.shared.critical"),
     }
   }
   if (percentage >= 75) {
@@ -34,7 +37,7 @@ function getOccupancyColor(percentage: number): {
       text: "text-orange-500",
       bg: "bg-orange-500/10",
       bar: "bg-orange-500",
-      label: translateMessage("generated.dashboard.shared.high"),
+      label: t("generated.dashboard.shared.high"),
     }
   }
   if (percentage >= 50) {
@@ -42,14 +45,14 @@ function getOccupancyColor(percentage: number): {
       text: "text-primary",
       bg: "bg-primary/10",
       bar: "bg-primary",
-      label: translateMessage("generated.dashboard.shared.moderate"),
+      label: t("generated.dashboard.shared.moderate"),
     }
   }
   return {
     text: "text-emerald-500",
     bg: "bg-emerald-500/10",
     bar: "bg-emerald-500",
-    label: translateMessage("generated.dashboard.shared.low"),
+    label: t("generated.dashboard.shared.low"),
   }
 }
 
@@ -59,26 +62,28 @@ export function RackStatusCard({
   totalCapacity,
   occupancyPercentage,
 }: RackStatusCardProps) {
-  const occupancyColors = getOccupancyColor(occupancyPercentage)
+  const t = useAppTranslations()
+
+  const occupancyColors = getOccupancyColor(t, occupancyPercentage)
 
   const stats = [
     {
       icon: SquareLock02Icon,
-      label: translateMessage("generated.dashboard.shared.occupied"),
+      label: t("generated.dashboard.shared.occupied"),
       value: occupiedSlots,
       color: "text-muted-foreground",
       bgColor: "bg-muted",
     },
     {
       icon: CheckmarkCircle02Icon,
-      label: translateMessage("generated.dashboard.shared.free2"),
+      label: t("generated.dashboard.shared.free2"),
       value: freeSlots,
       color: "text-emerald-500",
       bgColor: "bg-emerald-500/10",
     },
     {
       icon: PackageIcon,
-      label: translateMessage("generated.dashboard.shared.capacity"),
+      label: t("generated.dashboard.shared.capacity"),
       value: totalCapacity,
       color: "text-primary",
       bgColor: "bg-primary/10",
@@ -96,7 +101,7 @@ export function RackStatusCard({
           />
         </div>
         <h3 className="font-semibold text-sm">
-          {translateMessage("generated.dashboard.rackVisualization.rackStatus")}
+          {t("generated.dashboard.rackVisualization.rackStatus")}
         </h3>
       </div>
 
@@ -105,7 +110,7 @@ export function RackStatusCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-sm">
-              {translateMessage("generated.dashboard.shared.occupancy")}
+              {t("generated.dashboard.shared.occupancy")}
             </span>
             <span
               className={cn(

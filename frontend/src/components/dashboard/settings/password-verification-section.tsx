@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Spinner } from "@/components/ui/spinner"
 import { OTP_LENGTH } from "@/config/constants"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { TwoFactorMethod } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { RESEND_COOLDOWN_SECONDS } from "./constants"
@@ -14,7 +14,6 @@ import { OtpInput } from "./otp-input"
 import type { PasswordVerificationStage } from "./types"
 import { useCountdown } from "./use-countdown"
 import { formatCountdown } from "./utils"
-
 export interface PasswordVerificationCopy {
   title?: string
   description?: string | ((context: { method: TwoFactorMethod }) => string)
@@ -57,6 +56,8 @@ function usePasswordVerificationFlow({
   onResendCooldownChange,
   onRequestCode,
 }: PasswordVerificationFlowHandlers) {
+  const t = useAppTranslations()
+
   const requestCode = async (startTimer = true): Promise<void> => {
     onStageChange("SENDING")
     onErrorChange("")
@@ -69,9 +70,7 @@ function usePasswordVerificationFlow({
       }
     } catch {
       onStageChange("ERROR")
-      const message = translateMessage(
-        "generated.dashboard.settings.failedSendCodeAgain"
-      )
+      const message = t("generated.dashboard.settings.failedSendCodeAgain")
       onErrorChange(message)
       toast.error(message)
     }
@@ -81,16 +80,14 @@ function usePasswordVerificationFlow({
 }
 
 function PasswordVerificationAlerts() {
+  const t = useAppTranslations()
+
   return (
     <Alert>
       <Spinner className="text-muted-foreground" />
-      <AlertTitle>
-        {translateMessage("generated.dashboard.settings.sendCode")}
-      </AlertTitle>
+      <AlertTitle>{t("generated.dashboard.settings.sendCode")}</AlertTitle>
       <AlertDescription>
-        {translateMessage(
-          "generated.dashboard.settings.codeGoesSelectedMethod"
-        )}
+        {t("generated.dashboard.settings.codeGoesSelectedMethod")}
       </AlertDescription>
     </Alert>
   )
@@ -115,10 +112,12 @@ function CodeInputEntry({
   onResend: () => void
   onVerify: () => void
 }) {
+  const t = useAppTranslations()
+
   return (
     <div className="space-y-3">
       <Label htmlFor="password-2fa-code">
-        {translateMessage("generated.dashboard.settings.value2faCode")}
+        {t("generated.dashboard.settings.value2faCode")}
       </Label>
       <OtpInput
         disabled={isBusy}
@@ -133,7 +132,7 @@ function CodeInputEntry({
           onClick={onVerify}
           type="button"
         >
-          {translateMessage("generated.shared.verifyCode")}
+          {t("generated.shared.verifyCode")}
         </Button>
         {method !== "AUTHENTICATOR" ? (
           <>
@@ -146,10 +145,10 @@ function CodeInputEntry({
               variant="outline"
             >
               {resendCooldown > 0
-                ? translateMessage("generated.dashboard.settings.resend", {
+                ? t("generated.dashboard.settings.resend", {
                     value0: formatCountdown(resendCooldown),
                   })
-                : translateMessage("generated.shared.resend")}
+                : t("generated.shared.resend")}
             </Button>
             <span
               aria-atomic="true"
@@ -158,10 +157,10 @@ function CodeInputEntry({
               id="resend-status"
             >
               {resendCooldown > 0
-                ? translateMessage(
+                ? t(
                     "generated.dashboard.settings.resendWillAvailableAfterCountdown"
                   )
-                : translateMessage("generated.dashboard.settings.nowResend")}
+                : t("generated.dashboard.settings.nowResend")}
             </span>
           </>
         ) : null}
@@ -184,6 +183,8 @@ export function PasswordVerificationSection({
   verificationError,
   autoVerify = false,
 }: PasswordVerificationSectionProps) {
+  const t = useAppTranslations()
+
   const [state, setState] = useState<PasswordVerificationState>({
     stage: "IDLE",
     error: "",
@@ -244,7 +245,7 @@ export function PasswordVerificationSection({
     }
 
     if (code.length !== OTP_LENGTH) {
-      const message = translateMessage(
+      const message = t(
         "generated.dashboard.settings.enterFullVerificationCode"
       )
       setState((current) => ({ ...current, error: message }))
@@ -284,14 +285,12 @@ export function PasswordVerificationSection({
   }, [autoVerify, code, complete, isVerifying, onVerify])
 
   const title =
-    copy?.title ??
-    translateMessage("generated.dashboard.settings.confirm2faBeforeChanging")
+    copy?.title ?? t("generated.dashboard.settings.confirm2faBeforeChanging")
   const verifiedTitle =
-    copy?.verifiedTitle ??
-    translateMessage("generated.dashboard.settings.verified3")
+    copy?.verifiedTitle ?? t("generated.dashboard.settings.verified3")
   const verifiedDescription =
     copy?.verifiedDescription ??
-    translateMessage("generated.dashboard.settings.safelyChangePassword")
+    t("generated.dashboard.settings.safelyChangePassword")
   const description = (() => {
     if (copy?.description) {
       return typeof copy.description === "function"
@@ -299,12 +298,8 @@ export function PasswordVerificationSection({
         : copy.description
     }
     return method === "AUTHENTICATOR"
-      ? translateMessage(
-          "generated.dashboard.settings.enterCodeAuthenticatorApp"
-        )
-      : translateMessage(
-          "generated.dashboard.settings.willSendCodeSelectedMethod"
-        )
+      ? t("generated.dashboard.settings.enterCodeAuthenticatorApp")
+      : t("generated.dashboard.settings.willSendCodeSelectedMethod")
   })()
   const resolvedError = verificationError ?? error
 
@@ -317,8 +312,8 @@ export function PasswordVerificationSection({
         </div>
         <Badge variant={complete ? "success" : "warning"}>
           {complete
-            ? translateMessage("generated.dashboard.settings.verified3")
-            : translateMessage("generated.dashboard.settings.required")}
+            ? t("generated.dashboard.settings.verified3")
+            : t("generated.dashboard.settings.required")}
         </Badge>
       </div>
 
@@ -332,7 +327,7 @@ export function PasswordVerificationSection({
           {resolvedError ? (
             <Alert variant="destructive">
               <AlertTitle>
-                {translateMessage("generated.dashboard.settings.verified")}
+                {t("generated.dashboard.settings.verified")}
               </AlertTitle>
               <AlertDescription>{resolvedError}</AlertDescription>
             </Alert>

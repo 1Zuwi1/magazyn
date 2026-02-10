@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { User } from "@/lib/schemas"
 import type { IconComponent } from "../types"
 import { getRoleLabels, getStatusConfig } from "./constants"
@@ -63,6 +63,7 @@ function ProfileDetailRow({ detail }: { detail: ProfileDetail }) {
 }
 
 function buildProfileDetails(
+  t: ReturnType<typeof useAppTranslations>,
   user: User,
   dateFnsLocale: DateFnsLocale,
   statusConfig: ReturnType<typeof getStatusConfig>,
@@ -70,15 +71,15 @@ function buildProfileDetails(
 ): ProfileDetail[] {
   return [
     {
-      label: translateMessage("generated.dashboard.settings.accountStatus"),
+      label: t("generated.dashboard.settings.accountStatus"),
       value: statusConfig[user.account_status].label,
     },
     {
-      label: translateMessage("generated.shared.role"),
+      label: t("generated.shared.role"),
       value: roleLabels[user.role],
     },
     {
-      label: translateMessage("generated.dashboard.settings.lastLogin"),
+      label: t("generated.dashboard.settings.lastLogin"),
       value: format(new Date(user.last_login ?? Date.now()), "EEEE, H:mm", {
         locale: dateFnsLocale,
       }),
@@ -124,30 +125,30 @@ function InfoField({ icon, label, value }: InfoFieldProps) {
 }
 
 export function ProfileSection({ user }: ProfileSectionProps) {
+  const t = useAppTranslations()
+
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)
   const statusConfig = getStatusConfig()
   const roleLabels = getRoleLabels()
   const statusBadge = statusConfig[user.account_status]
   const profileDetails = buildProfileDetails(
+    t,
     user,
     dateFnsLocale,
     statusConfig,
     roleLabels
   )
   const displayName =
-    user.full_name?.trim() ||
-    translateMessage("generated.dashboard.settings.username")
+    user.full_name?.trim() || t("generated.dashboard.settings.username")
 
   return (
     <Card>
       <CardHeader>
         <div>
-          <CardTitle>
-            {translateMessage("generated.dashboard.settings.userProfile")}
-          </CardTitle>
+          <CardTitle>{t("generated.dashboard.settings.userProfile")}</CardTitle>
           <p className="text-muted-foreground text-sm">
-            {translateMessage(
+            {t(
               "generated.dashboard.settings.accountDetailsContactInformationAssigned"
             )}
           </p>
@@ -176,24 +177,22 @@ export function ProfileSection({ user }: ProfileSectionProps) {
         <div className="grid gap-3 sm:grid-cols-2">
           <InfoField
             icon={Mail01Icon}
-            label={translateMessage(
-              "generated.dashboard.settings.emailAddress"
-            )}
+            label={t("generated.dashboard.settings.emailAddress")}
             value={user.email}
           />
           <InfoField
             icon={SmartPhone01Icon}
-            label={translateMessage("generated.shared.phone")}
+            label={t("generated.shared.phone")}
             value={user.phone ?? "—"}
           />
           <InfoField
             icon={Location04Icon}
-            label={translateMessage("generated.shared.location")}
+            label={t("generated.shared.location")}
             value={user.location ?? "—"}
           />
           <InfoField
             icon={UserGroupIcon}
-            label={translateMessage("generated.shared.team")}
+            label={t("generated.shared.team")}
             value={user.team ?? "—"}
           />
         </div>
@@ -202,7 +201,7 @@ export function ProfileSection({ user }: ProfileSectionProps) {
 
         <div>
           <p className="mb-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">
-            {translateMessage("generated.dashboard.settings.systemInformation")}
+            {t("generated.dashboard.settings.systemInformation")}
           </p>
           <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
             {profileDetails.map((detail) => (
@@ -213,7 +212,7 @@ export function ProfileSection({ user }: ProfileSectionProps) {
 
         <div className="rounded-lg border border-muted-foreground/30 border-dashed bg-muted/20 px-4 py-3">
           <p className="text-muted-foreground text-xs">
-            {translateMessage(
+            {t(
               "generated.dashboard.settings.profileDataManagedSystemAdministrator"
             )}
           </p>

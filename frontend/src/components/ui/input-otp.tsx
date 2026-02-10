@@ -3,8 +3,9 @@
 import { MinusSignIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { OTPInput, OTPInputContext } from "input-otp"
+
 import * as React from "react"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 function InputOTP({
@@ -78,6 +79,8 @@ function InputOTPSlot({
 }
 
 function InputOTPStatus({ className, id }: { className?: string; id: string }) {
+  const t = useAppTranslations()
+
   const inputOTPContext = React.useContext(OTPInputContext)
   const slots = inputOTPContext?.slots ?? []
   const totalSlots = slots.length
@@ -87,20 +90,17 @@ function InputOTPStatus({ className, id }: { className?: string; id: string }) {
   )
   const activeIndex = slots.findIndex((slot) => slot.isActive)
   const activePosition = activeIndex >= 0 ? activeIndex + 1 : null
-  let statusMessage = translateMessage("inputOtp.status.prompt")
+  let statusMessage = t("inputOtp.status.prompt")
 
   if (totalSlots > 0) {
     if (activePosition) {
-      statusMessage = translateMessage(
-        "inputOtp.status.filledWithActivePosition",
-        {
-          value0: filledCount,
-          value1: totalSlots,
-          value2: activePosition,
-        }
-      )
+      statusMessage = t("inputOtp.status.filledWithActivePosition", {
+        value0: filledCount,
+        value1: totalSlots,
+        value2: activePosition,
+      })
     } else {
-      statusMessage = translateMessage("inputOtp.status.filled", {
+      statusMessage = t("inputOtp.status.filled", {
         value0: filledCount,
         value1: totalSlots,
       })

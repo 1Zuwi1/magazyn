@@ -58,14 +58,13 @@ import useAssortment from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import { useMultipleRacks } from "@/hooks/use-racks"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type { AssortmentsSchema, RackAssortmentsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { getDaysUntilExpiry } from "../utils/helpers"
 import { CodeCell } from "./components/code-cell"
 import { SortableHeader } from "./sortable-header"
-
 export type ExpiryFilters = "DAYS_14" | "DAYS_7" | "DAYS_3" | "EXPIRED" | "ALL"
 
 type RackAssortmentList = InferApiOutput<typeof RackAssortmentsSchema, "GET">
@@ -75,26 +74,28 @@ type RackAssortmentItem = RackAssortmentList["content"][number]
 type AssortmentItemWithItemId = AssortmentList["content"][number]
 type AssortmentItem = SupportedAssortmentList["content"][number]
 
-const EXPIRY_FILTER_OPTIONS: {
+const getExpiryFilterOptions = (
+  t: ReturnType<typeof useAppTranslations>
+): {
   value: ExpiryFilters
   label: string
-}[] = [
-  { value: "ALL", label: translateMessage("generated.shared.all") },
+}[] => [
+  { value: "ALL", label: t("generated.shared.all") },
   {
     value: "EXPIRED",
-    label: translateMessage("generated.dashboard.shared.expired"),
+    label: t("generated.dashboard.shared.expired"),
   },
   {
     value: "DAYS_3",
-    label: translateMessage("generated.dashboard.items.value3Days"),
+    label: t("generated.dashboard.items.value3Days"),
   },
   {
     value: "DAYS_7",
-    label: translateMessage("generated.dashboard.items.value7Days"),
+    label: t("generated.dashboard.items.value7Days"),
   },
   {
     value: "DAYS_14",
-    label: translateMessage("generated.dashboard.items.value14Days"),
+    label: t("generated.dashboard.items.value14Days"),
   },
 ]
 
@@ -163,21 +164,21 @@ const buildRackWarehouseHref = ({
 }
 
 function ExpiryStatusBadge({ value }: { value: string }) {
+  const t = useAppTranslations()
+
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)
   const daysUntilExpiry = getDaysToExpiry(value)
 
   if (typeof daysUntilExpiry !== "number") {
     return (
-      <Badge variant="outline">
-        {translateMessage("generated.dashboard.items.date")}
-      </Badge>
+      <Badge variant="outline">{t("generated.dashboard.items.date")}</Badge>
     )
   }
   if (daysUntilExpiry < 0) {
     return (
       <Badge variant="destructive">
-        {translateMessage("generated.dashboard.shared.expired")}
+        {t("generated.dashboard.shared.expired")}
       </Badge>
     )
   }
@@ -345,9 +346,11 @@ function AssortmentTableSkeleton() {
   )
 }
 
-const isExpiryFilterValue = (value: string | null): value is ExpiryFilters =>
-  typeof value === "string" &&
-  EXPIRY_FILTER_OPTIONS.some((option) => option.value === value)
+const isExpiryFilterValue = (
+  options: Array<{ value: ExpiryFilters }>,
+  value: string | null
+): value is ExpiryFilters =>
+  typeof value === "string" && options.some((option) => option.value === value)
 
 function AssortmentTableContent({
   assortmentData,
@@ -365,6 +368,9 @@ function AssortmentTableContent({
   onSortingChange,
   manualServerControls = false,
 }: AssortmentTableContentProps) {
+  const t = useAppTranslations()
+  const expiryFilterOptions = useMemo(() => getExpiryFilterOptions(t), [t])
+
   const assortmentItems = assortmentData?.content ?? []
   const itemIdsToFetch = useMemo(
     () => [
@@ -434,7 +440,7 @@ function AssortmentTableContent({
         accessorKey: "code",
         header: ({ column }) => (
           <SortableHeader column={column}>
-            {translateMessage("generated.shared.code")}
+            {t("generated.shared.code")}
           </SortableHeader>
         ),
         cell: ({ row }) => <CodeCell value={row.original.code} />,
@@ -445,7 +451,7 @@ function AssortmentTableContent({
         accessorFn: (row) => getItemName(row, itemNamesById),
         header: ({ column }) => (
           <SortableHeader column={column}>
-            {translateMessage("generated.dashboard.items.product")}
+            {t("generated.dashboard.items.product")}
           </SortableHeader>
         ),
         cell: ({ row }) => (
@@ -463,13 +469,13 @@ function AssortmentTableContent({
         accessorFn: (row) => rackNamesById.get(row.rackId) ?? "",
         header: ({ column }) => (
           <SortableHeader column={column}>
-            {translateMessage("generated.shared.rack")}
+            {t("generated.shared.rack")}
           </SortableHeader>
         ),
         cell: ({ row }) => {
           const rackName =
             rackNamesById.get(row.original.rackId) ??
-            translateMessage("generated.dashboard.items.unknownBookcase")
+            t("generated.dashboard.items.unknownBookcase")
           const rackWarehouseId = rackWarehouseIdsById.get(row.original.rackId)
 
           if (rackWarehouseId === undefined) {
@@ -499,12 +505,12 @@ function AssortmentTableContent({
         accessorFn: (item) => `${item.positionX + 1}:${item.positionY + 1}`,
         header: ({ column }) => (
           <SortableHeader column={column}>
-            {translateMessage("generated.shared.position")}
+            {t("generated.shared.position")}
           </SortableHeader>
         ),
         cell: ({ row }) => (
           <span className="font-mono text-sm">
-            {translateMessage("generated.dashboard.items.rowCol", {
+            {t("generated.dashboard.items.rowCol", {
               value0: row.original.positionX + 1,
               value1: row.original.positionY + 1,
             })}
@@ -516,7 +522,7 @@ function AssortmentTableContent({
         accessorKey: "createdAt",
         header: ({ column }) => (
           <SortableHeader column={column}>
-            {translateMessage("generated.dashboard.items.added")}
+            {t("generated.dashboard.items.added")}
           </SortableHeader>
         ),
         cell: ({ row }) => (
@@ -530,7 +536,7 @@ function AssortmentTableContent({
         accessorKey: "expiresAt",
         header: ({ column }) => (
           <SortableHeader column={column}>
-            {translateMessage("generated.dashboard.shared.shelfLife")}
+            {t("generated.dashboard.shared.shelfLife")}
           </SortableHeader>
         ),
         cell: ({ row }) => (
@@ -544,7 +550,13 @@ function AssortmentTableContent({
         enableSorting: true,
       },
     ],
-    [itemNamesById, manualServerControls, rackNamesById, rackWarehouseIdsById]
+    [
+      itemNamesById,
+      manualServerControls,
+      rackNamesById,
+      rackWarehouseIdsById,
+      t,
+    ]
   )
 
   const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
@@ -598,9 +610,9 @@ function AssortmentTableContent({
   }
 
   const itemLabel = {
-    singular: translateMessage("generated.shared.item"),
-    plural: translateMessage("generated.shared.items2"),
-    genitive: translateMessage("generated.shared.items3"),
+    singular: t("generated.shared.item"),
+    plural: t("generated.shared.items2"),
+    genitive: t("generated.shared.items3"),
   }
 
   if (isLoading) {
@@ -617,11 +629,11 @@ function AssortmentTableContent({
         <FilterBar className="gap-3">
           <FilterGroup>
             <SearchInput
-              aria-label={translateMessage(
+              aria-label={t(
                 "generated.dashboard.items.filterAssortmentCodeIdentifiers"
               )}
               onChange={handleSearchChange}
-              placeholder={translateMessage(
+              placeholder={t(
                 "generated.dashboard.items.searchBarcodeProductNameRack"
               )}
               value={search}
@@ -633,7 +645,7 @@ function AssortmentTableContent({
             >
               <Select
                 onValueChange={(value) => {
-                  if (isExpiryFilterValue(value)) {
+                  if (isExpiryFilterValue(expiryFilterOptions, value)) {
                     onExpiryFilterChange(value)
                     setPage(1)
                   }
@@ -641,7 +653,7 @@ function AssortmentTableContent({
                 value={expiryFilter}
               >
                 <SelectTrigger
-                  aria-label={translateMessage(
+                  aria-label={t(
                     "generated.dashboard.items.filterExpirationDate"
                   )}
                   className={cn(
@@ -654,7 +666,7 @@ function AssortmentTableContent({
                     render={
                       <span className="truncate">
                         {
-                          EXPIRY_FILTER_OPTIONS.find(
+                          expiryFilterOptions.find(
                             (option) => option.value === expiryFilter
                           )?.label
                         }
@@ -663,7 +675,7 @@ function AssortmentTableContent({
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {EXPIRY_FILTER_OPTIONS.map((option) => (
+                  {expiryFilterOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       <span
                         className={cn(

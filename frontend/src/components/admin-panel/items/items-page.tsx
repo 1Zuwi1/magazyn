@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useDebouncedValue } from "@tanstack/react-pacer"
+
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
@@ -20,7 +21,7 @@ import useItems, {
   useImportItems,
   useUpdateItem,
 } from "@/hooks/use-items"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { getAdminNavLinks } from "../lib/constants"
 import { ItemDialog, type ItemFormData, PhotoPromptDialog } from "./item-dialog"
@@ -64,6 +65,8 @@ const buildItemMutationData = (data: ItemFormData) => {
 }
 
 export default function ItemsMain() {
+  const t = useAppTranslations()
+
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
   const [debouncedSearch] = useDebouncedValue(search, {
@@ -148,7 +151,7 @@ export default function ItemsMain() {
     const itemId = itemToDelete.id
 
     await deleteItemMutation.mutateAsync(itemId)
-    toast.success(translateMessage("generated.admin.items.itemRemoved"))
+    toast.success(t("generated.admin.items.itemRemoved"))
     setItemToDelete(undefined)
   }
 
@@ -162,7 +165,7 @@ export default function ItemsMain() {
         itemId,
         ...buildItemMutationData(data),
       })
-      toast.success(translateMessage("generated.admin.items.itemUpdated"))
+      toast.success(t("generated.admin.items.itemUpdated"))
       setSelectedItem(undefined)
       return undefined
     }
@@ -170,7 +173,7 @@ export default function ItemsMain() {
     const created = await createItemMutation.mutateAsync(
       buildItemMutationData(data)
     )
-    toast.success(translateMessage("generated.admin.items.newItemAdded"))
+    toast.success(t("generated.admin.items.newItemAdded"))
     setSelectedItem(undefined)
     return created.id
   }
@@ -179,7 +182,7 @@ export default function ItemsMain() {
     const report = await importItemsMutation.mutateAsync(file)
     if (report.errors.length > 0) {
       toast.warning(
-        translateMessage("generated.admin.shared.importPartiallyCompleted", {
+        t("generated.admin.shared.importPartiallyCompleted", {
           value0: report.imported,
           value1: report.processedLines,
         })
@@ -188,7 +191,7 @@ export default function ItemsMain() {
     }
 
     toast.success(
-      translateMessage("generated.admin.items.imported", {
+      t("generated.admin.items.imported", {
         value0: report.imported,
       })
     )
@@ -212,19 +215,17 @@ export default function ItemsMain() {
             />
             <Button disabled={isMutating} onClick={handleAddItem}>
               <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-              {translateMessage("generated.admin.items.addItem")}
+              {t("generated.admin.items.addItem")}
             </Button>
           </div>
         }
-        description={translateMessage(
-          "generated.admin.items.manageCatalogInventoryItems"
-        )}
+        description={t("generated.admin.items.manageCatalogInventoryItems")}
         icon={Package}
         navLinks={getAdminNavLinks().map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title={translateMessage("generated.shared.items")}
+        title={t("generated.shared.items")}
       >
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-background/50 px-3 py-1.5 backdrop-blur-sm">
@@ -236,7 +237,7 @@ export default function ItemsMain() {
               {totalItemsCount}
             </span>
             <span className="text-muted-foreground text-xs">
-              {translateMessage("generated.admin.shared.items")}
+              {t("generated.admin.shared.items")}
             </span>
           </div>
           {dangerousCount > 0 && (
@@ -249,7 +250,7 @@ export default function ItemsMain() {
                 {dangerousCount}
               </span>
               <span className="text-destructive/80 text-xs">
-                {translateMessage("generated.admin.items.dangerous")}
+                {t("generated.admin.items.dangerous")}
               </span>
             </div>
           )}
@@ -280,16 +281,13 @@ export default function ItemsMain() {
       />
 
       <ConfirmDialog
-        description={translateMessage(
-          "generated.admin.items.sureWantDeleteItemOperation",
-          {
-            value0: itemToDelete?.name,
-          }
-        )}
+        description={t("generated.admin.items.sureWantDeleteItemOperation", {
+          value0: itemToDelete?.name,
+        })}
         onConfirm={confirmDeleteItem}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
-        title={translateMessage("generated.admin.items.deleteItem")}
+        title={t("generated.admin.items.deleteItem")}
       />
 
       <PhotoPromptDialog

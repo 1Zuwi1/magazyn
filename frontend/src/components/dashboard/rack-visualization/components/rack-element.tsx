@@ -1,5 +1,5 @@
 import { ItemPhoto } from "@/components/ui/item-photo"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { ItemSlot } from "../../types"
 import { getItemStatus, getStatusColors } from "../../utils/item-status"
@@ -19,6 +19,8 @@ export default function RackElement({
   className,
   ...props
 }: ElementProps) {
+  const t = useAppTranslations()
+
   const status = item ? getItemStatus(item) : null
   const statusColors = status ? getStatusColors(status) : null
   let statusRing: string | null = null
@@ -30,14 +32,13 @@ export default function RackElement({
     statusRing = "ring-2 ring-destructive/50"
   }
   const ariaLabel = isEmpty
-    ? translateMessage("generated.dashboard.rackVisualization.emptyShelf", {
+    ? t("generated.dashboard.rackVisualization.emptyShelf", {
         value0: coordinate,
       })
-    : translateMessage("generated.dashboard.rackVisualization.shelf", {
+    : t("generated.dashboard.rackVisualization.shelf", {
         value0: coordinate,
         value1:
-          item?.name ??
-          translateMessage("generated.dashboard.rackVisualization.unknownItem"),
+          item?.name ?? t("generated.dashboard.rackVisualization.unknownItem"),
       })
 
   return (

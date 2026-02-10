@@ -1,5 +1,5 @@
 import type { AdminUsersList } from "@/hooks/use-admin-users"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { TABLE_PAGE_SIZE } from "../lib/user-utils"
 
 interface UseUsersPaginationParams {
@@ -27,13 +27,15 @@ export function useUsersPagination({
   isUsersPending,
   setPage,
 }: UseUsersPaginationParams): UseUsersPaginationResult {
+  const t = useAppTranslations()
+
   const totalPages = Math.max(usersData?.totalPages ?? 1, 1)
   const totalElements = usersData?.totalElements ?? 0
   const currentPage = page + 1
   const firstVisible = usersCount > 0 ? page * TABLE_PAGE_SIZE + 1 : 0
   const lastVisible = page * TABLE_PAGE_SIZE + usersCount
   const paginationSummaryText = isUsersPending
-    ? translateMessage("generated.admin.users.landing")
+    ? t("generated.admin.users.landing")
     : null
 
   const handleSetPage = (nextPage: number) => {

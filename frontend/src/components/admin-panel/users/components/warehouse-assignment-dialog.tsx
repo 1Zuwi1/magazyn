@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useDebouncedValue } from "@tanstack/react-pacer"
+
 import { useCallback, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -27,7 +28,7 @@ import {
   useInfiniteWarehouses,
   useMultipleWarehouses,
 } from "@/hooks/use-warehouses"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { normalizeValue } from "../lib/user-utils"
@@ -127,6 +128,8 @@ export function WarehouseAssignmentDialog({
   onAssign,
   onRemove,
 }: WarehouseAssignmentDialogProps) {
+  const t = useAppTranslations()
+
   const [search, setSearch] = useState("")
   const [showAssignedOnly, setShowAssignedOnly] = useState(false)
   const [selectedWarehouseIds, setSelectedWarehouseIds] = useState<number[]>([])
@@ -229,14 +232,14 @@ export function WarehouseAssignmentDialog({
                 icon={Building06Icon}
               />
             </span>
-            {translateMessage("generated.admin.users.assignWarehouse")}
+            {t("generated.admin.users.assignWarehouse")}
           </DialogTitle>
           <DialogDescription>
-            {translateMessage("generated.admin.users.assignWarehouseUser")}{" "}
+            {t("generated.admin.users.assignWarehouseUser")}{" "}
             <strong>
               {normalizeValue(user?.full_name) || user?.email || ""}
             </strong>
-            {translateMessage("generated.admin.users.receiveAlertsWarehouse")}
+            {t("generated.admin.users.receiveAlertsWarehouse")}
           </DialogDescription>
         </DialogHeader>
         <Separator />
@@ -253,7 +256,7 @@ export function WarehouseAssignmentDialog({
               onChange={(event) => {
                 setSearch(event.target.value)
               }}
-              placeholder={translateMessage("generated.shared.searchWarehouse")}
+              placeholder={t("generated.shared.searchWarehouse")}
               type="text"
               value={search}
             />
@@ -264,7 +267,7 @@ export function WarehouseAssignmentDialog({
               className="cursor-pointer text-sm"
               htmlFor="show-assigned-warehouses-only"
             >
-              {translateMessage("generated.admin.users.assignedOnly", {
+              {t("generated.admin.users.assignedOnly", {
                 value0: assignedWarehouseIds.length,
               })}
             </Label>
@@ -311,15 +314,12 @@ export function WarehouseAssignmentDialog({
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-sm">
-                  {translateMessage(
-                    "generated.admin.users.selectedWarehouses",
-                    {
-                      value0: selectedWarehouseIds.length,
-                    }
-                  )}
+                  {t("generated.admin.users.selectedWarehouses", {
+                    value0: selectedWarehouseIds.length,
+                  })}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  {translateMessage("generated.admin.users.assignAssigned", {
+                  {t("generated.admin.users.assignAssigned", {
                     value0: selectedUnassignedWarehouseIds.length,
                     value1: selectedAssignedWarehouseIds.length,
                   })}
@@ -334,10 +334,10 @@ export function WarehouseAssignmentDialog({
                 }
               >
                 {lastSelectedWarehouse
-                  ? translateMessage("warehouseAssignment.lastSelected", {
+                  ? t("warehouseAssignment.lastSelected", {
                       value0: lastSelectedWarehouse.name,
                     })
-                  : translateMessage("warehouseAssignment.selected")}
+                  : t("warehouseAssignment.selected")}
               </Badge>
             </div>
           ) : null}
@@ -353,21 +353,21 @@ export function WarehouseAssignmentDialog({
               onClick={handleRemove}
               variant="destructive"
             >
-              {translateMessage("generated.admin.users.removeAssignment", {
+              {t("generated.admin.users.removeAssignment", {
                 value0: selectedAssignedWarehouseIds.length,
               })}
             </Button>
           ) : null}
           <div className="flex flex-1 justify-end gap-2">
             <Button onClick={() => handleOpenChange(false)} variant="outline">
-              {translateMessage("generated.shared.cancel")}
+              {t("generated.shared.cancel")}
             </Button>
             {canAssignSelectedWarehouses ? (
               <Button
                 disabled={!canAssignSelectedWarehouses}
                 onClick={handleAssign}
               >
-                {translateMessage("generated.admin.users.assign", {
+                {t("generated.admin.users.assign", {
                   value0: selectedUnassignedWarehouseIds.length,
                 })}
               </Button>

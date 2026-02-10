@@ -13,7 +13,7 @@ import {
   useUsersWarehouseAssignments,
   useUsersWarehouseAssignmentsDelete,
 } from "@/hooks/use-admin-users"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { EditUserFormValues } from "../components/action-dialog"
 import { normalizeValue, resolveTeamValue } from "../lib/user-utils"
 
@@ -58,6 +58,8 @@ export function useUsersActions({
   userIdToDelete,
   clearUserIdToDelete,
 }: UseUsersActionsParams) {
+  const t = useAppTranslations()
+
   const updateProfileMutation = useUpdateAdminUserProfile()
   const changeEmailMutation = useChangeAdminUserEmail()
   const deleteUserMutation = useDeleteAdminUser()
@@ -73,10 +75,10 @@ export function useUsersActions({
     deleteUserMutation.mutate(userIdToDelete, {
       onSuccess: () => {
         clearUserIdToDelete()
-        toast.success(translateMessage("generated.admin.users.userBeenDeleted"))
+        toast.success(t("generated.admin.users.userBeenDeleted"))
       },
       onError: () => {
-        toast.error(translateMessage("generated.admin.users.failedDeleteUser"))
+        toast.error(t("generated.admin.users.failedDeleteUser"))
       },
     })
   }
@@ -94,14 +96,10 @@ export function useUsersActions({
       { userId, status, reason },
       {
         onSuccess: () => {
-          toast.success(
-            translateMessage("generated.admin.users.usersStatusBeenChanged")
-          )
+          toast.success(t("generated.admin.users.usersStatusBeenChanged"))
         },
         onError: () => {
-          toast.error(
-            translateMessage("generated.admin.users.failedChangeUserStatus")
-          )
+          toast.error(t("generated.admin.users.failedChangeUserStatus"))
         },
       }
     )
@@ -118,14 +116,10 @@ export function useUsersActions({
       { userId, warehouseId },
       {
         onSuccess: () => {
-          toast.success(
-            translateMessage("generated.admin.users.warehouseBeenAssignedUser")
-          )
+          toast.success(t("generated.admin.users.warehouseBeenAssignedUser"))
         },
         onError: () => {
-          toast.error(
-            translateMessage("generated.admin.users.failedAssignWarehouse")
-          )
+          toast.error(t("generated.admin.users.failedAssignWarehouse"))
         },
       }
     )
@@ -143,17 +137,11 @@ export function useUsersActions({
       {
         onSuccess: () => {
           toast.success(
-            translateMessage(
-              "generated.admin.users.warehouseAssignmentBeenDeleted"
-            )
+            t("generated.admin.users.warehouseAssignmentBeenDeleted")
           )
         },
         onError: () => {
-          toast.error(
-            translateMessage(
-              "generated.admin.users.failedDeleteStorageAssignment"
-            )
-          )
+          toast.error(t("generated.admin.users.failedDeleteStorageAssignment"))
         },
       }
     )
@@ -197,14 +185,10 @@ export function useUsersActions({
         },
         {
           onSuccess: () => {
-            toast.success(
-              translateMessage("generated.admin.users.usersEmailBeenUpdated")
-            )
+            toast.success(t("generated.admin.users.usersEmailBeenUpdated"))
           },
           onError: () => {
-            toast.error(
-              translateMessage("generated.admin.users.failedUpdateUserEmail")
-            )
+            toast.error(t("generated.admin.users.failedUpdateUserEmail"))
           },
         }
       )
@@ -223,14 +207,10 @@ export function useUsersActions({
         },
         {
           onSuccess: () => {
-            toast.success(
-              translateMessage("generated.admin.users.userProfileBeenUpdated")
-            )
+            toast.success(t("generated.admin.users.userProfileBeenUpdated"))
           },
           onError: () => {
-            toast.error(
-              translateMessage("generated.admin.users.failedUpdateUserProfile")
-            )
+            toast.error(t("generated.admin.users.failedUpdateUserProfile"))
           },
         }
       )

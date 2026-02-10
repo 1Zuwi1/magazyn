@@ -1,8 +1,9 @@
 import { Tick02Icon, UnfoldMoreIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
+
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { Badge } from "../ui/badge"
 import { Button, buttonVariants } from "../ui/button"
@@ -80,6 +81,8 @@ function RackSelect({
   onFetchNextRackPage,
   onChange,
 }: RackSelectProps) {
+  const t = useAppTranslations()
+
   const [isRackSelectOpen, setIsRackSelectOpen] = useState(false)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(
     null
@@ -128,8 +131,7 @@ function RackSelect({
     virtualRackItems,
   ])
 
-  const triggerLabel =
-    selectedRackName || translateMessage("generated.shared.selectRack")
+  const triggerLabel = selectedRackName || t("generated.shared.selectRack")
 
   return (
     <Popover onOpenChange={setIsRackSelectOpen} open={isRackSelectOpen}>
@@ -148,7 +150,7 @@ function RackSelect({
       </PopoverTrigger>
       <PopoverContent align="start" className="w-(--anchor-width) gap-0 p-0">
         <ScrollArea
-          aria-label={translateMessage("generated.scanner.rackList")}
+          aria-label={t("generated.scanner.rackList")}
           className="h-56 p-1 pr-3"
           ref={scrollAreaRef}
           role="listbox"
@@ -210,13 +212,13 @@ function RackSelect({
           {!(isRackOptionsPending || isRackOptionsError) &&
           rackOptions.length === 0 ? (
             <p className="px-2 py-3 text-muted-foreground text-sm">
-              {translateMessage("generated.scanner.racksAvailable")}
+              {t("generated.scanner.racksAvailable")}
             </p>
           ) : null}
 
           {isRackOptionsError ? (
             <p className="px-2 py-3 text-destructive text-sm">
-              {translateMessage("generated.scanner.failedFetchRackList")}
+              {t("generated.scanner.failedFetchRackList")}
             </p>
           ) : null}
         </ScrollArea>
@@ -224,7 +226,7 @@ function RackSelect({
         {isFetchingNextRackPage && (
           <div className="flex items-center gap-2 border-t px-2 py-1.5 text-muted-foreground text-xs">
             <Spinner className="size-3.5" />
-            <span>{translateMessage("generated.scanner.loadingRacks")}</span>
+            <span>{t("generated.scanner.loadingRacks")}</span>
           </div>
         )}
       </PopoverContent>
@@ -247,6 +249,8 @@ export function LocationCard({
   onRemove,
   onChange,
 }: LocationCardProps) {
+  const t = useAppTranslations()
+
   const baseId = `placement-${placement.id}`
 
   const selectedRack = useMemo(
@@ -267,7 +271,7 @@ export function LocationCard({
             {index + 1}
           </div>
           <p className="font-medium text-sm">
-            {translateMessage("generated.shared.location")}
+            {t("generated.shared.location")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -279,16 +283,14 @@ export function LocationCard({
             type="button"
             variant="ghost"
           >
-            {translateMessage("generated.shared.remove")}
+            {t("generated.shared.remove")}
           </Button>
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label htmlFor={`${baseId}-rack`}>
-            {translateMessage("generated.shared.rack")}
-          </Label>
+          <Label htmlFor={`${baseId}-rack`}>{t("generated.shared.rack")}</Label>
           <RackSelect
             disabled={isRackSelectDisabled}
             hasNextRackPage={hasNextRackPage}
@@ -307,9 +309,7 @@ export function LocationCard({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor={`${baseId}-x`}>
-            {translateMessage("generated.scanner.shelf")}
-          </Label>
+          <Label htmlFor={`${baseId}-x`}>{t("generated.scanner.shelf")}</Label>
           <Input
             id={`${baseId}-x`}
             max={maxColumn}
@@ -326,15 +326,13 @@ export function LocationCard({
           />
           {maxColumn !== undefined ? (
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.scanner.max", { value0: maxColumn })}
+              {t("generated.scanner.max", { value0: maxColumn })}
             </p>
           ) : null}
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor={`${baseId}-y`}>
-            {translateMessage("generated.scanner.row")}
-          </Label>
+          <Label htmlFor={`${baseId}-y`}>{t("generated.scanner.row")}</Label>
           <Input
             id={`${baseId}-y`}
             max={maxRow}
@@ -351,7 +349,7 @@ export function LocationCard({
           />
           {maxRow !== undefined ? (
             <p className="text-muted-foreground text-xs">
-              {translateMessage("generated.scanner.max", { value0: maxRow })}
+              {t("generated.scanner.max", { value0: maxRow })}
             </p>
           ) : null}
         </div>

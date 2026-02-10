@@ -5,7 +5,6 @@ import {
   type AppLocale,
   DEFAULT_APP_LOCALE,
   getClientAppLocale,
-  getServerRuntimeLocale,
   normalizeAppLocale,
 } from "./locale"
 
@@ -39,11 +38,6 @@ const resolveCurrentLocale = (locale?: string): AppLocale => {
 
   if (typeof window !== "undefined") {
     return getClientAppLocale()
-  }
-
-  const serverLocale = getServerRuntimeLocale()
-  if (serverLocale) {
-    return serverLocale
   }
 
   return DEFAULT_APP_LOCALE

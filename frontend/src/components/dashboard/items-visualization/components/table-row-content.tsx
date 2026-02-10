@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { TableCell } from "@/components/ui/table"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { RackAssortment } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 
@@ -48,6 +48,8 @@ export function TableRowContent({
   onEdit,
   onDelete,
 }: TableRowContentProps) {
+  const t = useAppTranslations()
+
   const locale = useLocale()
   const expired = isExpired(assortment.expiresAt)
 
@@ -68,15 +70,13 @@ export function TableRowContent({
         </span>
         {expired && (
           <Badge className="ml-2" variant="destructive">
-            {translateMessage("generated.shared.expired")}
+            {t("generated.shared.expired")}
           </Badge>
         )}
       </TableCell>
       <TableCell className="text-right">
         <DropdownMenu>
-          <DropdownMenuTrigger
-            aria-label={translateMessage("generated.shared.openMenu")}
-          >
+          <DropdownMenuTrigger aria-label={t("generated.shared.openMenu")}>
             <HugeiconsIcon
               className={cn(
                 buttonVariants({
@@ -93,25 +93,21 @@ export function TableRowContent({
               onClick={() => onView(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={ViewIcon} />
-              <span>
-                {translateMessage(
-                  "generated.dashboard.itemsVisualization.preview"
-                )}
-              </span>
+              <span>{t("generated.dashboard.itemsVisualization.preview")}</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => onEdit(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilEdit01Icon} />
-              <span>{translateMessage("generated.shared.edit")}</span>
+              <span>{t("generated.shared.edit")}</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer text-destructive focus:text-destructive"
               onClick={() => onDelete(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={Delete02Icon} />
-              <span>{translateMessage("generated.shared.remove")}</span>
+              <span>{t("generated.shared.remove")}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

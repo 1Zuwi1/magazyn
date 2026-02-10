@@ -6,11 +6,12 @@ import {
   Search01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { IconComponent } from "../dashboard/types"
 
@@ -65,10 +66,11 @@ export function SearchInput({
   className,
   "aria-label": ariaLabel,
 }: SearchInputProps) {
+  const t = useAppTranslations()
+
   const isFiltered = value.length > 0
-  const resolvedPlaceholder =
-    placeholder ?? translateMessage("search.placeholder")
-  const resolvedAriaLabel = ariaLabel ?? translateMessage("search.label")
+  const resolvedPlaceholder = placeholder ?? t("search.placeholder")
+  const resolvedAriaLabel = ariaLabel ?? t("search.label")
 
   return (
     <div className={cn("relative flex-1 sm:min-w-70 sm:max-w-sm", className)}>
@@ -85,7 +87,7 @@ export function SearchInput({
       />
       {isFiltered && (
         <button
-          aria-label={translateMessage("generated.ui.clearSearch")}
+          aria-label={t("generated.ui.clearSearch")}
           className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           onClick={() => onChange("")}
           type="button"
@@ -116,11 +118,13 @@ export function FilterResults({
   itemLabel,
   className,
 }: FilterResultsProps) {
+  const t = useAppTranslations()
+
   return (
     <div className={cn("flex items-center gap-2 text-sm", className)}>
       {isFiltered ? (
         <span className="rounded-md bg-primary/10 px-2.5 py-1 font-medium text-primary">
-          {translateMessage("generated.ui.pluralLabel2", {
+          {t("generated.ui.pluralLabel2", {
             value0: filteredCount,
             value1: totalCount,
             singular: itemLabel.singular,
@@ -130,7 +134,7 @@ export function FilterResults({
         </span>
       ) : (
         <span className="text-muted-foreground">
-          {translateMessage("generated.ui.pluralLabel3", {
+          {t("generated.ui.pluralLabel3", {
             value0: totalCount,
             singular: itemLabel.singular,
             plural: itemLabel.plural,
@@ -151,6 +155,8 @@ export function ClearFiltersButton({
   onClick,
   className,
 }: ClearFiltersButtonProps) {
+  const t = useAppTranslations()
+
   return (
     <Button
       className={cn("gap-1.5 text-muted-foreground", className)}
@@ -159,7 +165,7 @@ export function ClearFiltersButton({
       variant="ghost"
     >
       <HugeiconsIcon className="size-3.5" icon={FilterIcon} />
-      <span>{translateMessage("generated.shared.clear")}</span>
+      <span>{t("generated.shared.clear")}</span>
     </Button>
   )
 }
@@ -173,13 +179,15 @@ export function ActiveFiltersBadge({
   count,
   className,
 }: ActiveFiltersBadgeProps) {
+  const t = useAppTranslations()
+
   if (count === 0) {
     return null
   }
 
   return (
     <Badge className={cn("font-normal", className)} variant="secondary">
-      {translateMessage("generated.ui.pluralLabel", { value0: count })}
+      {t("generated.ui.pluralLabel", { value0: count })}
     </Badge>
   )
 }

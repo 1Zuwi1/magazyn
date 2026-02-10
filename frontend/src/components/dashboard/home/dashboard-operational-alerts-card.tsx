@@ -12,7 +12,7 @@ import useAssortments from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import useWarehouses from "@/hooks/use-warehouses"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { translateMessage } from "@/i18n/translate-message"
+import { useAppTranslations } from "@/i18n/use-translations"
 import {
   EXPIRING_ITEMS_LIMIT,
   EXPIRY_WARNING_DAYS,
@@ -52,6 +52,8 @@ function OperationalAlertsSkeleton() {
 }
 
 export function DashboardOperationalAlertsCard() {
+  const t = useAppTranslations()
+
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)
 
@@ -159,7 +161,7 @@ export function DashboardOperationalAlertsCard() {
         <div className="space-y-2 text-sm">
           <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
             <span>
-              {translateMessage("generated.dashboard.home.warehousesAbove", {
+              {t("generated.dashboard.home.warehousesAbove", {
                 value0: OCCUPANCY_CRITICAL_THRESHOLD,
               })}
             </span>
@@ -175,12 +177,9 @@ export function DashboardOperationalAlertsCard() {
           </div>
           <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
             <span>
-              {translateMessage(
-                "generated.dashboard.home.productsExpiringUnderDays",
-                {
-                  value0: EXPIRY_WARNING_DAYS,
-                }
-              )}
+              {t("generated.dashboard.home.productsExpiringUnderDays", {
+                value0: EXPIRY_WARNING_DAYS,
+              })}
             </span>
             <Badge
               variant={
@@ -193,9 +192,7 @@ export function DashboardOperationalAlertsCard() {
             </Badge>
           </div>
           <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
-            <span>
-              {translateMessage("generated.dashboard.home.dangerousProducts")}
-            </span>
+            <span>{t("generated.dashboard.home.dangerousProducts")}</span>
             <Badge variant={dangerousItemsCount > 0 ? "warning" : "success"}>
               {formatNumber(dangerousItemsCount, locale)}
             </Badge>
@@ -205,7 +202,7 @@ export function DashboardOperationalAlertsCard() {
         {expiringSoonItems.length > 0 ? (
           <div className="space-y-2">
             <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-              {translateMessage("generated.dashboard.home.upcomingDates")}
+              {t("generated.dashboard.home.upcomingDates")}
             </p>
             <ul className="space-y-2 text-sm">
               {expiringSoonItems.map((item) => (
@@ -227,16 +224,14 @@ export function DashboardOperationalAlertsCard() {
           </div>
         ) : (
           <p className="text-muted-foreground text-sm">
-            {translateMessage(
-              "generated.dashboard.home.productsShortExpirationDate"
-            )}
+            {t("generated.dashboard.home.productsShortExpirationDate")}
           </p>
         )}
 
         {(criticalWarehousesData?.totalElements ?? 0) > 0 && (
           <div className="space-y-2">
             <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-              {translateMessage("generated.dashboard.home.criticalLocations")}
+              {t("generated.dashboard.home.criticalLocations")}
             </p>
             <div className="flex flex-wrap gap-2">
               {criticalWarehousesData?.content.map((warehouse) => (
@@ -253,11 +248,9 @@ export function DashboardOperationalAlertsCard() {
 
   return (
     <InsightCard
-      description={translateMessage(
-        "generated.dashboard.home.listRisksRequiringAttention"
-      )}
+      description={t("generated.dashboard.home.listRisksRequiringAttention")}
       icon={AlertCircleIcon}
-      title={translateMessage("generated.dashboard.home.operationalAlerts")}
+      title={t("generated.dashboard.home.operationalAlerts")}
     >
       {renderContent()}
     </InsightCard>
