@@ -14,8 +14,10 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.*;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.*;
 import com.github.dawid_stolarczyk.magazyn.Scheduler.BackupSchedulerManager;
+import com.github.dawid_stolarczyk.magazyn.Services.EmailService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
+import com.github.dawid_stolarczyk.magazyn.Utils.LinksUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -34,6 +36,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -65,6 +68,7 @@ public class BackupService {
     private final AlertRepository alertRepository;
     private final UserRepository userRepository;
     private final UserNotificationRepository userNotificationRepository;
+    private final EmailService emailService;
 
     @Qualifier("backupStreamingExecutor")
     private final ExecutorService streamingExecutor;
@@ -829,7 +833,7 @@ public class BackupService {
             alertRepository.save(alert);
             log.info("Created backup alert: type={}, warehouse={}, success={}", alertType, warehouse.getId(), success);
 
-            distributeBackupNotifications(alert, warehouse);
+            distributeBackupNotifications(alert, warehouse, record, success);
         } catch (Exception e) {
             log.error("Failed to create backup alert for warehouse {}", warehouse.getId(), e);
         }
@@ -852,7 +856,7 @@ public class BackupService {
             alertRepository.save(alert);
             log.info("Created restore alert: type={}, warehouse={}, success={}", alertType, warehouse.getId(), success);
 
-            distributeBackupNotifications(alert, warehouse);
+            distributeBackupNotifications(alert, warehouse, null, success);
         } catch (Exception e) {
             log.error("Failed to create restore alert for record {}", record.getId(), e);
         }
@@ -888,7 +892,7 @@ public class BackupService {
         }
     }
 
-    private void distributeBackupNotifications(Alert alert, Warehouse warehouse) {
+    private void distributeBackupNotifications(Alert alert, Warehouse warehouse, BackupRecord backupRecord, boolean success) {
         List<User> adminUsers = userRepository.findByRoleAndStatus(UserRole.ADMIN, AccountStatus.ACTIVE);
 
         if (adminUsers.isEmpty()) {
@@ -909,6 +913,43 @@ public class BackupService {
         if (!notifications.isEmpty()) {
             userNotificationRepository.saveAll(notifications);
             log.info("Distributed {} backup notifications to admin users", notifications.size());
+        }
+
+        String backupLink = LinksUtils.getWebAppUrl("/backups", null);
+        String triggeredByName = null;
+        if (backupRecord != null && backupRecord.getTriggeredBy() != null) {
+            try {
+                User triggeredBy = userRepository.findById(backupRecord.getTriggeredBy().getId()).orElse(null);
+                triggeredByName = triggeredBy != null ? triggeredBy.getFullName() : null;
+            } catch (Exception e) {
+                log.warn("Could not load triggered by user for backup notification", e);
+            }
+        }
+
+        for (User admin : adminUsers) {
+            if (admin.getEmail() != null) {
+                if (backupRecord != null && alert.getAlertType() != AlertType.RESTORE_COMPLETED && alert.getAlertType() != AlertType.RESTORE_FAILED) {
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    String formattedCompletedAt = backupRecord.getCompletedAt() != null
+                            ? dateFormat.format(Date.from(backupRecord.getCompletedAt())) : "N/A";
+                    emailService.sendBackupNotificationEmail(
+                            admin.getEmail(),
+                            warehouse.getName(),
+                            success,
+                            backupRecord.getTotalRecords() != null ? backupRecord.getTotalRecords().longValue() : null,
+                            backupRecord.getSizeBytes(),
+                            formattedCompletedAt,
+                            backupRecord.getBackupType() != null ? backupRecord.getBackupType().name() : null,
+                            triggeredByName,
+                            backupRecord.getErrorMessage(),
+                            backupLink
+                    );
+                    log.info("Sent backup notification email to {}", admin.getEmail());
+                } else {
+                    emailService.sendBatchNotificationEmail(admin.getEmail(), List.of(alert.getMessage()), backupLink);
+                    log.info("Sent notification email to {}", admin.getEmail());
+                }
+            }
         }
     }
 

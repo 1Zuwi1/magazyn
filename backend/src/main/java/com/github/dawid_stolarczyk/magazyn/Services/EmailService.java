@@ -95,4 +95,23 @@ public class EmailService {
         String subject = "Nowe kody zapasowe wygenerowane";
         sendSimpleEmail(to, subject, htmlContent);
     }
+
+    @Async
+    public void sendBackupNotificationEmail(String to, String warehouseName, boolean success, Long totalRecords,
+                                             Long sizeBytes, String completedAt, String backupType, String triggeredByName,
+                                             String errorMessage, String backupLink) {
+        Context context = new Context();
+        context.setVariable("warehouseName", warehouseName);
+        context.setVariable("success", success);
+        context.setVariable("totalRecords", totalRecords);
+        context.setVariable("sizeBytes", sizeBytes + " B");
+        context.setVariable("completedAt", completedAt);
+        context.setVariable("backupType", backupType);
+        context.setVariable("triggeredByName", triggeredByName);
+        context.setVariable("errorMessage", errorMessage);
+        context.setVariable("backupLink", backupLink);
+        String htmlContent = templateEngine.process("mail/backup-notification", context);
+        String subject = success ? "Backup zakończony pomyślnie" : "Backup nie powiódł się";
+        sendSimpleEmail(to, subject, htmlContent);
+    }
 }

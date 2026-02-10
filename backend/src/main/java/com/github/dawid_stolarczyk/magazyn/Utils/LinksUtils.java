@@ -24,7 +24,7 @@ public class LinksUtils {
         if (path != null && !path.isEmpty()) {
             if (webAppUrlStatic != null) {
                 finalUrl = webAppUrlStatic.endsWith("/") ? webAppUrlStatic + path : webAppUrlStatic + "/" + path;
-            } else {
+            } else if (request != null) {
                 finalUrl = ServletUriComponentsBuilder.fromContextPath(request)
                         .replacePath(null)
                         .path(path)
