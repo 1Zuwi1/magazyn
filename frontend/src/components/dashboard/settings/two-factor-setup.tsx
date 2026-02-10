@@ -757,9 +757,8 @@ function AuthenticatorSetup({
 }) {
   const [copied, setCopied] = useState(false)
   const secret = authenticatorSetupData?.secret ?? ""
-  const accountName =
-    authenticatorSetupData?.accountName ?? userEmail ?? "user@magazynpro.pl"
-  const issuer = authenticatorSetupData?.issuer ?? "MagazynPro"
+  const accountName = authenticatorSetupData?.accountName ?? userEmail ?? ""
+  const issuer = authenticatorSetupData?.issuer ?? ""
   const totpUri = generateTotpUri(secret, accountName, issuer)
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -828,7 +827,11 @@ function AuthenticatorSetup({
             value={secret}
           />
           <Button
-            aria-label={copied ? "Klucz skopiowany" : "Skopiuj klucz"}
+            aria-label={
+              copied
+                ? translateMessage("generated.m1155")
+                : translateMessage("generated.m1156")
+            }
             aria-pressed={copied}
             onClick={handleCopySecret}
             size="icon"

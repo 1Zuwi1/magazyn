@@ -206,7 +206,9 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
               <span>{translateMessage("generated.m0372")}</span>
             </div>
             <span className="font-medium font-mono">
-              {rack.acceptsDangerous ? "Tak" : "Nie"}
+              {rack.acceptsDangerous
+                ? translateMessage("generated.m1129")
+                : translateMessage("generated.m1130")}
             </span>
           </div>
 

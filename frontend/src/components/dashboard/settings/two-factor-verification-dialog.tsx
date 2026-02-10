@@ -168,7 +168,8 @@ export function TwoFactorVerificationDialog({
     typeof resolvedCopy.description === "function"
       ? resolvedCopy.description({ method: "PASSKEYS" })
       : resolvedCopy.description
-  const passkeyVerifiedTitle = copy?.verifiedTitle ?? "Zweryfikowano"
+  const passkeyVerifiedTitle =
+    copy?.verifiedTitle ?? translateMessage("generated.m1153")
   const passkeyVerifiedDescription =
     copy?.verifiedDescription ?? translateMessage("generated.m0647")
 
@@ -194,7 +195,9 @@ export function TwoFactorVerificationDialog({
               </p>
             </div>
             <Badge variant={isVerified ? "success" : "warning"}>
-              {isVerified ? "Zweryfikowano" : "Wymagane"}
+              {isVerified
+                ? translateMessage("generated.m1153")
+                : translateMessage("generated.m1154")}
             </Badge>
           </div>
           {isVerified ? (

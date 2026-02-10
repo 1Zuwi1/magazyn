@@ -272,7 +272,8 @@ export function PasswordVerificationSection({
   }, [autoVerify, code, complete, isVerifying, onVerify])
 
   const title = copy?.title ?? translateMessage("generated.m0565")
-  const verifiedTitle = copy?.verifiedTitle ?? "Zweryfikowano"
+  const verifiedTitle =
+    copy?.verifiedTitle ?? translateMessage("generated.m1153")
   const verifiedDescription =
     copy?.verifiedDescription ?? translateMessage("generated.m0566")
   const description = (() => {
@@ -295,7 +296,9 @@ export function PasswordVerificationSection({
           <p className="text-muted-foreground text-sm">{description}</p>
         </div>
         <Badge variant={complete ? "success" : "warning"}>
-          {complete ? "Zweryfikowano" : "Wymagane"}
+          {complete
+            ? translateMessage("generated.m1153")
+            : translateMessage("generated.m1154")}
         </Badge>
       </div>
 

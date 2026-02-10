@@ -218,7 +218,11 @@ function CodeDialog({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{isQr ? "Kod QR" : "Kod kreskowy"}</DialogTitle>
+          <DialogTitle>
+            {isQr
+              ? translateMessage("generated.m1150")
+              : translateMessage("generated.m1151")}
+          </DialogTitle>
           <DialogDescription>
             {translateMessage("generated.m0470")}
           </DialogDescription>
@@ -236,7 +240,9 @@ function CodeDialog({
               className="mr-2 size-4"
               icon={copied ? Tick02Icon : Copy01Icon}
             />
-            {copied ? "Skopiowano!" : "Kopiuj kod"}
+            {copied
+              ? translateMessage("generated.m1148")
+              : translateMessage("generated.m1149")}
           </Button>
         </div>
       </DialogContent>

@@ -61,7 +61,11 @@ export function WarehouseDialog({
       onFormReset={() => form.reset()}
       onOpenChange={onOpenChange}
       open={open}
-      title={isEdit ? "Edytuj magazyn" : "Dodaj magazyn"}
+      title={
+        isEdit
+          ? translateMessage("generated.m1146")
+          : translateMessage("generated.m1147")
+      }
     >
       <form
         className="space-y-4 px-0.5"

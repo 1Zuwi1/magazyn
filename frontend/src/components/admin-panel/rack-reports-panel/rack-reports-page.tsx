@@ -188,7 +188,9 @@ function RackReportListBody({
                   className="shrink-0"
                   variant={report.alertTriggered ? "destructive" : "secondary"}
                 >
-                  {report.alertTriggered ? "Alert" : "OK"}
+                  {report.alertTriggered
+                    ? translateMessage("generated.m1140")
+                    : translateMessage("generated.m1141")}
                 </Badge>
               </div>
               <p className="mt-0.5 line-clamp-1 text-muted-foreground text-xs">
@@ -238,7 +240,9 @@ function RackReportDetailsPanel({
       <div className="border-b bg-muted/20 p-6">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={report.alertTriggered ? "destructive" : "secondary"}>
-            {report.alertTriggered ? "Alert aktywowany" : "Wszystko OK"}
+            {report.alertTriggered
+              ? translateMessage("generated.m1142")
+              : translateMessage("generated.m1143")}
           </Badge>
         </div>
         <h2 className="mt-3 font-semibold text-xl">{report.rackMarker}</h2>
@@ -416,7 +420,9 @@ export default function RackReportsMain() {
                   {translateMessage("generated.m0938")}
                   {withAlertsFilter !== undefined && (
                     <Badge className="ml-1" variant="secondary">
-                      {withAlertsFilter ? "Tylko" : "Wszystkie"}
+                      {withAlertsFilter
+                        ? translateMessage("generated.m1144")
+                        : translateMessage("generated.m1145")}
                     </Badge>
                   )}
                 </DropdownMenuTrigger>

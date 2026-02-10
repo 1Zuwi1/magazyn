@@ -345,8 +345,8 @@ export function PhotoPromptDialog({
       await uploadMutation.mutateAsync({ itemId, photo: selectedFile })
       toast.success(
         hasExistingPhoto
-          ? "Zmieniono zdjecie przedmiotu"
-          : "Dodano zdjecie przedmiotu"
+          ? translateMessage("generated.m1131")
+          : translateMessage("generated.m1132")
       )
       cleanup()
       onOpenChange(false)
@@ -427,7 +427,9 @@ export function PhotoPromptDialog({
 
             <DialogFooter>
               <Button onClick={() => handleOpenChange(false)} variant="ghost">
-                {hasExistingPhoto ? "Anuluj" : "Pomin"}
+                {hasExistingPhoto
+                  ? translateMessage("generated.m0885")
+                  : translateMessage("generated.m1133")}
               </Button>
             </DialogFooter>
           </>
@@ -570,15 +572,19 @@ export function ItemDialog({
       <FormDialog
         description={
           isEdit
-            ? "Zmien parametry przedmiotu"
-            : "Wprowadz parametry nowego przedmiotu."
+            ? translateMessage("generated.m1134")
+            : translateMessage("generated.m1135")
         }
         formId="item-form"
         isLoading={isSubmitting}
         onFormReset={() => setPendingFormReset(true)}
         onOpenChange={onOpenChange}
         open={open}
-        title={isEdit ? "Edytuj przedmiot" : "Dodaj przedmiot"}
+        title={
+          isEdit
+            ? translateMessage("generated.m1136")
+            : translateMessage("generated.m1137")
+        }
       >
         <form
           className="space-y-5 px-0.5 py-4"

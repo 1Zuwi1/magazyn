@@ -246,7 +246,9 @@ export function AdminOverview() {
                             : "text-orange-500"
                         )}
                       >
-                        {warehouse.occupancy >= 95 ? "Krytyczne" : "Wysokie"}
+                        {warehouse.occupancy >= 95
+                          ? translateMessage("generated.m1138")
+                          : translateMessage("generated.m1139")}
                       </span>
                     </div>
                   </div>

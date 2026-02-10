@@ -33,7 +33,7 @@ export default function RackElement({
     ? translateMessage("generated.m0496", { value0: coordinate })
     : translateMessage("generated.m0497", {
         value0: coordinate,
-        value1: item?.name ?? "nieznany element",
+        value1: item?.name ?? translateMessage("generated.m1152"),
       })
 
   return (

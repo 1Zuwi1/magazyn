@@ -415,7 +415,9 @@ function OutboundTableContent({
               </TableCell>
               <TableCell>
                 <Badge variant={op.fifoCompliant ? "success" : "warning"}>
-                  {op.fifoCompliant ? "Tak" : "Nie"}
+                  {op.fifoCompliant
+                    ? translateMessage("generated.m1129")
+                    : translateMessage("generated.m1130")}
                 </Badge>
               </TableCell>
             </TableRow>
