@@ -2,6 +2,7 @@ import type { MutationFunctionContext } from "@tanstack/query-core"
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { useState } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { translateMessage } from "@/i18n/translate-message"
 import { apiFetch } from "@/lib/fetcher"
 import { BackupCodesGenerateSchema, type TwoFactorMethod } from "@/lib/schemas"
 import { TwoFactorSetup } from "./two-factor-setup"
@@ -79,11 +80,11 @@ vi.mock("./use-countdown", async () => {
   }
 })
 
-const START_SETUP_REGEX = /rozpocznij konfigurację/i
-const ADD_METHOD_REGEX = /dodaj metodę/i
-const ACTIVE_STATUS_REGEX = /aktywna/i
-const GENERATE_CODES_REGEX = /wygeneruj/i
-const GENERATE_NEW_CODES_REGEX = /wygeneruj nowe kody/i
+const START_SETUP_BUTTON_LABEL = translateMessage("generated.m0628")
+const ADD_METHOD_BUTTON_LABEL = translateMessage("generated.m0629")
+const ACTIVE_STATUS_LABEL = translateMessage("generated.m1003")
+const GENERATE_CODES_BUTTON_LABEL = translateMessage("generated.m1005")
+const GENERATE_NEW_CODES_BUTTON_LABEL = translateMessage("generated.m0624")
 
 function TwoFactorSetupHarness({
   initialStatus = "ENABLED",
@@ -137,15 +138,17 @@ describe("TwoFactorSetup", () => {
   it("renders enabled state by default", () => {
     render(<TwoFactorSetupHarness />)
 
-    expect(screen.getByText(ACTIVE_STATUS_REGEX)).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: ADD_METHOD_REGEX })).toBeEnabled()
+    expect(screen.getByText(ACTIVE_STATUS_LABEL)).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: ADD_METHOD_BUTTON_LABEL })
+    ).toBeEnabled()
   })
 
   it("shows start action when 2FA is disabled", () => {
     render(<TwoFactorSetupHarness initialStatus="DISABLED" />)
 
     expect(
-      screen.getByRole("button", { name: START_SETUP_REGEX })
+      screen.getByRole("button", { name: START_SETUP_BUTTON_LABEL })
     ).toBeInTheDocument()
   })
 
@@ -153,9 +156,11 @@ describe("TwoFactorSetup", () => {
     apiFetchMock.mockResolvedValue(["A1B2-C3D4", "E5F6-G7H8"])
     render(<TwoFactorSetupHarness initialStatus="ENABLED" />)
 
-    fireEvent.click(screen.getByRole("button", { name: GENERATE_CODES_REGEX }))
     fireEvent.click(
-      screen.getByRole("button", { name: GENERATE_NEW_CODES_REGEX })
+      screen.getByRole("button", { name: GENERATE_CODES_BUTTON_LABEL })
+    )
+    fireEvent.click(
+      screen.getByRole("button", { name: GENERATE_NEW_CODES_BUTTON_LABEL })
     )
 
     await waitFor(() => {

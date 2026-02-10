@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { translateMessage } from "@/i18n/translate-message"
 import {
   ApiMeSchema,
   FormRegisterSchema,
@@ -23,7 +24,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi zawierać co najmniej jedną wielką literę"
+        translateMessage("generated.m0845")
       )
     }
   })
@@ -34,7 +35,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi zawierać co najmniej jedną małą literę"
+        translateMessage("generated.m0846")
       )
     }
   })
@@ -45,7 +46,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi zawierać co najmniej jedną cyfrę"
+        translateMessage("generated.m0847")
       )
     }
   })
@@ -56,7 +57,7 @@ describe("PasswordSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi zawierać co najmniej jeden znak specjalny"
+        translateMessage("generated.m0848")
       )
     }
   })
@@ -87,7 +88,7 @@ describe("LoginSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Hasło musi mieć co najmniej 8 znaków"
+        translateMessage("generated.m0844")
       )
     }
   })
@@ -102,7 +103,9 @@ describe("LoginSchema", () => {
 
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe("Nieprawidłowy adres email")
+      expect(result.error.issues[0].message).toBe(
+        translateMessage("generated.m0854")
+      )
     }
   })
 
@@ -161,7 +164,9 @@ describe("RegisterSchema", () => {
 
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues[0].message).toBe("Hasła nie są zgodne")
+      expect(result.error.issues[0].message).toBe(
+        translateMessage("generated.m0853")
+      )
     }
   })
 
@@ -191,7 +196,7 @@ describe("RegisterSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Imię i nazwisko musi mieć co najmniej 2 znaki"
+        translateMessage("generated.m0855")
       )
     }
   })
@@ -250,7 +255,7 @@ describe("Verify2FASchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "Kod musi mieć dokładnie 6 cyfr"
+        translateMessage("generated.m0858")
       )
     }
   })

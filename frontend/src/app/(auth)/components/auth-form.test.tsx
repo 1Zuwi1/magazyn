@@ -1,17 +1,18 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { translateMessage } from "@/i18n/translate-message"
 import AuthForm from "./auth-form"
 
-// Constants for regex patterns
-const PASSWORD_REGEX = /^hasło$/i
-const EXACT_PASSWORD_REGEX = /^hasło$/i
-const CONFIRM_PASSWORD_REGEX = /potwierdź hasło/i
-const EMAIL_REGEX = /email/i
-const FULLNAME_REGEX = /pełne imię i nazwisko/i
-const LOGIN_BUTTON_REGEX = /zaloguj się/i
-const REGISTER_BUTTON_REGEX = /zarejestruj się/i
-const PHONE_REGEX = /numer telefonu/i
-const MISMATCH_ERROR_REGEX = /hasła nie są zgodne/i
+const PASSWORD_LABEL = translateMessage("generated.m0011")
+const CONFIRM_PASSWORD_LABEL = translateMessage("generated.m0013")
+const EMAIL_LABEL = translateMessage("generated.m0874")
+const FULLNAME_LABEL = translateMessage("generated.m0007")
+const LOGIN_BUTTON_LABEL = translateMessage("generated.m0014")
+const REGISTER_BUTTON_LABEL = translateMessage("generated.m0015")
+const PHONE_LABEL = translateMessage("generated.m0009")
+const MISMATCH_ERROR_TEXT = translateMessage("generated.m0853")
+const LOGIN_ERROR_TEXT = translateMessage("generated.m0001")
+const REGISTER_ERROR_TEXT = translateMessage("generated.m0003")
 
 // Mock next/navigation
 const mockPush = vi.fn()
@@ -63,11 +64,11 @@ describe("AuthForm", () => {
     it("renders login fields correctly", () => {
       render(<AuthForm mode="login" />)
 
-      expect(screen.getByLabelText(PASSWORD_REGEX)).toBeInTheDocument()
-      expect(screen.queryByLabelText(EMAIL_REGEX)).toBeInTheDocument()
-      expect(screen.queryByLabelText(FULLNAME_REGEX)).not.toBeInTheDocument()
+      expect(screen.getByLabelText(PASSWORD_LABEL)).toBeInTheDocument()
+      expect(screen.queryByLabelText(EMAIL_LABEL)).toBeInTheDocument()
+      expect(screen.queryByLabelText(FULLNAME_LABEL)).not.toBeInTheDocument()
       expect(
-        screen.getByRole("button", { name: LOGIN_BUTTON_REGEX })
+        screen.getByRole("button", { name: LOGIN_BUTTON_LABEL })
       ).toBeInTheDocument()
     })
 
@@ -75,14 +76,14 @@ describe("AuthForm", () => {
       mockApiFetch.mockResolvedValue({})
       render(<AuthForm mode="login" />)
 
-      fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
+      fireEvent.change(screen.getByLabelText(EMAIL_LABEL), {
         target: { value: "testuser@example.com" },
       })
-      fireEvent.change(screen.getByLabelText(PASSWORD_REGEX), {
+      fireEvent.change(screen.getByLabelText(PASSWORD_LABEL), {
         target: { value: "Password123!" },
       })
 
-      fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_REGEX }))
+      fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_LABEL }))
 
       await waitFor(() => {
         expect(mockApiFetch).toHaveBeenCalledWith(
@@ -108,14 +109,14 @@ describe("AuthForm", () => {
       mockApiFetch.mockResolvedValue({})
       render(<AuthForm mode="login" />)
 
-      fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
+      fireEvent.change(screen.getByLabelText(EMAIL_LABEL), {
         target: { value: "testuser@example.com" },
       })
-      fireEvent.change(screen.getByLabelText(PASSWORD_REGEX), {
+      fireEvent.change(screen.getByLabelText(PASSWORD_LABEL), {
         target: { value: "Password123!" },
       })
 
-      fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_REGEX }))
+      fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_LABEL }))
 
       await waitFor(() => {
         expect(mockPush).toHaveBeenCalledWith("/login/2fa")
@@ -127,19 +128,19 @@ describe("AuthForm", () => {
       mockApiFetch.mockRejectedValue(error)
       render(<AuthForm mode="login" />)
 
-      fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
+      fireEvent.change(screen.getByLabelText(EMAIL_LABEL), {
         target: { value: "testuser@example.com" },
       })
-      fireEvent.change(screen.getByLabelText(PASSWORD_REGEX), {
+      fireEvent.change(screen.getByLabelText(PASSWORD_LABEL), {
         target: { value: "Password123!" },
       })
 
-      fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_REGEX }))
+      fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_LABEL }))
 
       await waitFor(() => {
         expect(mockHandleApiError).toHaveBeenCalledWith(
           error,
-          expect.stringContaining("Wystąpił błąd")
+          expect.stringContaining(LOGIN_ERROR_TEXT)
         )
       })
     })
@@ -147,7 +148,7 @@ describe("AuthForm", () => {
     it("validates empty fields", async () => {
       render(<AuthForm mode="login" />)
 
-      fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_REGEX }))
+      fireEvent.click(screen.getByRole("button", { name: LOGIN_BUTTON_LABEL }))
 
       await waitFor(() => {
         const errors = screen.getAllByRole("paragraph")
@@ -162,11 +163,11 @@ describe("AuthForm", () => {
     it("renders register fields correctly", () => {
       render(<AuthForm mode="register" />)
 
-      expect(screen.getByLabelText(PASSWORD_REGEX)).toBeInTheDocument()
-      expect(screen.getByLabelText(EMAIL_REGEX)).toBeInTheDocument()
-      expect(screen.getByLabelText(FULLNAME_REGEX)).toBeInTheDocument()
+      expect(screen.getByLabelText(PASSWORD_LABEL)).toBeInTheDocument()
+      expect(screen.getByLabelText(EMAIL_LABEL)).toBeInTheDocument()
+      expect(screen.getByLabelText(FULLNAME_LABEL)).toBeInTheDocument()
       expect(
-        screen.getByRole("button", { name: REGISTER_BUTTON_REGEX })
+        screen.getByRole("button", { name: REGISTER_BUTTON_LABEL })
       ).toBeInTheDocument()
     })
 
@@ -174,32 +175,31 @@ describe("AuthForm", () => {
       mockApiFetch.mockResolvedValue({})
       render(<AuthForm mode="register" />)
 
-      fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
+      fireEvent.change(screen.getByLabelText(EMAIL_LABEL), {
         target: { value: "test@example.com" },
       })
-      fireEvent.change(screen.getByLabelText(FULLNAME_REGEX), {
+      fireEvent.change(screen.getByLabelText(FULLNAME_LABEL), {
         target: { value: "Test User" },
       })
-      fireEvent.change(screen.getByLabelText(PHONE_REGEX), {
+      fireEvent.change(screen.getByLabelText(PHONE_LABEL), {
         target: { value: "+48123456789" },
       })
-      fireEvent.change(screen.getAllByLabelText(PASSWORD_REGEX)[0], {
-        // Password field
+      fireEvent.change(screen.getByLabelText(PASSWORD_LABEL), {
         target: { value: "Password123!" },
       })
-      fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_REGEX), {
+      fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_LABEL), {
         target: { value: "Password123!" },
       })
 
       await waitFor(() => {
         const submitButton = screen.getByRole("button", {
-          name: REGISTER_BUTTON_REGEX,
+          name: REGISTER_BUTTON_LABEL,
         })
         expect(submitButton).not.toBeDisabled()
       })
 
       fireEvent.click(
-        screen.getByRole("button", { name: REGISTER_BUTTON_REGEX })
+        screen.getByRole("button", { name: REGISTER_BUTTON_LABEL })
       )
 
       await waitFor(() => {
@@ -226,29 +226,29 @@ describe("AuthForm", () => {
     it("validates password mismatch", async () => {
       render(<AuthForm mode="register" />)
 
-      fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
+      fireEvent.change(screen.getByLabelText(EMAIL_LABEL), {
         target: { value: "test@example.com" },
       })
-      fireEvent.change(screen.getByLabelText(FULLNAME_REGEX), {
+      fireEvent.change(screen.getByLabelText(FULLNAME_LABEL), {
         target: { value: "Test User" },
       })
-      fireEvent.change(screen.getByLabelText(PHONE_REGEX), {
+      fireEvent.change(screen.getByLabelText(PHONE_LABEL), {
         target: { value: "+48123456789" },
       })
 
-      fireEvent.change(screen.getByLabelText(EXACT_PASSWORD_REGEX), {
+      fireEvent.change(screen.getByLabelText(PASSWORD_LABEL), {
         target: { value: "Password123!" },
       })
-      fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_REGEX), {
+      fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_LABEL), {
         target: { value: "Password456!" },
       })
 
       fireEvent.click(
-        screen.getByRole("button", { name: REGISTER_BUTTON_REGEX })
+        screen.getByRole("button", { name: REGISTER_BUTTON_LABEL })
       )
 
       await waitFor(() => {
-        expect(screen.getByText(MISMATCH_ERROR_REGEX)).toBeInTheDocument()
+        expect(screen.getByText(MISMATCH_ERROR_TEXT)).toBeInTheDocument()
       })
 
       expect(mockApiFetch).not.toHaveBeenCalled()
@@ -259,30 +259,30 @@ describe("AuthForm", () => {
       mockApiFetch.mockRejectedValue(error)
       render(<AuthForm mode="register" />)
 
-      fireEvent.change(screen.getByLabelText(EMAIL_REGEX), {
+      fireEvent.change(screen.getByLabelText(EMAIL_LABEL), {
         target: { value: "test@example.com" },
       })
-      fireEvent.change(screen.getByLabelText(FULLNAME_REGEX), {
+      fireEvent.change(screen.getByLabelText(FULLNAME_LABEL), {
         target: { value: "Test User" },
       })
-      fireEvent.change(screen.getByLabelText(PHONE_REGEX), {
+      fireEvent.change(screen.getByLabelText(PHONE_LABEL), {
         target: { value: "+48123456789" },
       })
-      fireEvent.change(screen.getByLabelText(EXACT_PASSWORD_REGEX), {
+      fireEvent.change(screen.getByLabelText(PASSWORD_LABEL), {
         target: { value: "Password123!" },
       })
-      fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_REGEX), {
+      fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_LABEL), {
         target: { value: "Password123!" },
       })
 
       fireEvent.click(
-        screen.getByRole("button", { name: REGISTER_BUTTON_REGEX })
+        screen.getByRole("button", { name: REGISTER_BUTTON_LABEL })
       )
 
       await waitFor(() => {
         expect(mockHandleApiError).toHaveBeenCalledWith(
           error,
-          expect.stringContaining("Wystąpił błąd")
+          expect.stringContaining(REGISTER_ERROR_TEXT)
         )
       })
     })

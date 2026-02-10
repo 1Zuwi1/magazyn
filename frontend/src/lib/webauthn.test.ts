@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { translateMessage } from "@/i18n/translate-message"
 import {
   getWebAuthnErrorMessage,
   getWebAuthnSupport,
@@ -118,7 +119,7 @@ describe("getWebAuthnErrorMessage", () => {
     const error = new DOMException("", "NotAllowedError")
 
     expect(getWebAuthnErrorMessage(error, "fallback")).toBe(
-      "Operacja została anulowana lub przekroczono limit czasu."
+      translateMessage("generated.m0870")
     )
   })
 

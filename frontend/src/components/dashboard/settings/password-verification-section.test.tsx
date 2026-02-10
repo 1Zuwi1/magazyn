@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react"
 import { useState } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { translateMessage } from "@/i18n/translate-message"
 import type { TwoFactorMethod } from "@/lib/schemas"
 import { PasswordVerificationSection } from "./password-verification-section"
 
@@ -51,11 +52,10 @@ vi.mock("./use-countdown", async () => {
   }
 })
 
-const RESEND_BUTTON_REGEX = /wyślij ponownie/i
-const CODE_INPUT_REGEX = /kod 2fa/i
-const VERIFY_BUTTON_REGEX = /zweryfikuj kod/i
-const VERIFIED_TEXT_REGEX = /zweryfikowano/i
-const SAFE_CHANGE_TEXT_REGEX = /możesz bezpiecznie zmienić hasło/i
+const CODE_INPUT_LABEL = translateMessage("generated.m0560")
+const VERIFY_BUTTON_LABEL = translateMessage("generated.m0052")
+const VERIFIED_TEXT = translateMessage("generated.m1153")
+const SAFE_CHANGE_TEXT = translateMessage("generated.m0566")
 
 function PasswordVerificationHarness({
   method,
@@ -105,8 +105,14 @@ describe("PasswordVerificationSection", () => {
       expect(onRequestCode).toHaveBeenCalledWith("EMAIL")
     })
 
-    const resendButton = await screen.findByRole("button", {
-      name: RESEND_BUTTON_REGEX,
+    const resendButton = await waitFor(() => {
+      const button = screen
+        .getAllByRole("button")
+        .find((candidate) => candidate.getAttribute("aria-describedby"))
+      if (!button) {
+        throw new Error("Resend button not found")
+      }
+      return button
     })
 
     expect(resendButton).toBeDisabled()
@@ -123,12 +129,12 @@ describe("PasswordVerificationSection", () => {
       />
     )
 
-    const codeInput = await screen.findByLabelText(CODE_INPUT_REGEX)
+    const codeInput = await screen.findByLabelText(CODE_INPUT_LABEL)
     fireEvent.change(codeInput, {
       target: { value: "654321" },
     })
 
-    fireEvent.click(screen.getByRole("button", { name: VERIFY_BUTTON_REGEX }))
+    fireEvent.click(screen.getByRole("button", { name: VERIFY_BUTTON_LABEL }))
 
     await waitFor(() => {
       expect(onVerify).toHaveBeenCalledWith("654321")
@@ -144,8 +150,8 @@ describe("PasswordVerificationSection", () => {
     )
 
     const alert = await screen.findByRole("alert")
-    expect(within(alert).getByText(VERIFIED_TEXT_REGEX)).toBeInTheDocument()
-    expect(within(alert).getByText(SAFE_CHANGE_TEXT_REGEX)).toBeInTheDocument()
+    expect(within(alert).getByText(VERIFIED_TEXT)).toBeInTheDocument()
+    expect(within(alert).getByText(SAFE_CHANGE_TEXT)).toBeInTheDocument()
   })
 
   it("auto-submits when the last digit is entered", async () => {
@@ -160,7 +166,7 @@ describe("PasswordVerificationSection", () => {
       />
     )
 
-    const codeInput = await screen.findByLabelText(CODE_INPUT_REGEX)
+    const codeInput = await screen.findByLabelText(CODE_INPUT_LABEL)
     fireEvent.change(codeInput, {
       target: { value: "123456" },
     })

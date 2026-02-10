@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { toast } from "sonner"
 import { describe, expect, it, vi } from "vitest"
+import { translateMessage } from "@/i18n/translate-message"
 import { ChangePasswordSchema } from "@/lib/schemas"
 import { PasswordSection } from "./password-section"
 
@@ -29,10 +30,10 @@ vi.mock(
   })
 )
 
-const OLD_PASSWORD_REGEX = /obecne hasło/i
-const NEW_PASSWORD_REGEX = /nowe hasło/i
-const CONFIRM_PASSWORD_REGEX = /potwierdź hasło/i
-const CHANGE_PASSWORD_BUTTON_REGEX = /zmień hasło/i
+const OLD_PASSWORD_LABEL = translateMessage("generated.m0551")
+const NEW_PASSWORD_LABEL = translateMessage("generated.m0055")
+const CONFIRM_PASSWORD_LABEL = translateMessage("generated.m0013")
+const CHANGE_PASSWORD_BUTTON_LABEL = translateMessage("generated.m0556")
 
 describe("PasswordSection", () => {
   it("calls password change API after successful 2FA verification", async () => {
@@ -47,18 +48,18 @@ describe("PasswordSection", () => {
 
     render(<PasswordSection />)
 
-    fireEvent.change(screen.getByLabelText(OLD_PASSWORD_REGEX), {
+    fireEvent.change(screen.getByLabelText(OLD_PASSWORD_LABEL), {
       target: { value: "OldPassword1!" },
     })
-    fireEvent.change(screen.getByLabelText(NEW_PASSWORD_REGEX), {
+    fireEvent.change(screen.getByLabelText(NEW_PASSWORD_LABEL), {
       target: { value: "Password123!" },
     })
-    fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_REGEX), {
+    fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_LABEL), {
       target: { value: "Password123!" },
     })
 
     fireEvent.click(
-      screen.getByRole("button", { name: CHANGE_PASSWORD_BUTTON_REGEX })
+      screen.getByRole("button", { name: CHANGE_PASSWORD_BUTTON_LABEL })
     )
 
     await waitFor(() => {
@@ -74,7 +75,9 @@ describe("PasswordSection", () => {
           },
         }
       )
-      expect(toast.success).toHaveBeenCalledWith("Hasło zostało zmienione.")
+      expect(toast.success).toHaveBeenCalledWith(
+        translateMessage("generated.m0550")
+      )
     })
   })
 })
