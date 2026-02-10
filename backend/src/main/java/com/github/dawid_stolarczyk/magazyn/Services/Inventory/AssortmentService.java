@@ -44,6 +44,7 @@ public class AssortmentService {
     private final RackRepository rackRepository;
     private final UserRepository userRepository;
     private final BarcodeService barcodeService;
+    private final SmartCodeService smartCodeService;
     private final Bucket4jRateLimiter rateLimiter;
 
     private static final double EPS = 1e-6;
@@ -57,7 +58,7 @@ public class AssortmentService {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
 
         var spec = AssortmentSpecifications.withFilters(
-                search, weekToExpire, null, null, null);
+                search, weekToExpire, null, null, null, null);
 
         Page<AssortmentDto> page = assortmentRepository.findAll(spec, pageable)
                 .map(this::mapToDto);
@@ -103,17 +104,50 @@ public class AssortmentService {
         }
 
         var spec = AssortmentSpecifications.withFilters(
-                search, weekToExpire, rackId, positionX, positionY);
+                search, weekToExpire, rackId, positionX, positionY, null);
 
         return assortmentRepository.findAll(spec, pageable)
                 .map(this::mapToDtoWithItem);
     }
 
-    public Page<AssortmentWithItemDto> getAssortmentsByWarehouseIdPaged(Long warehouseId, HttpServletRequest request, Pageable pageable) {
+    public Page<AssortmentWithItemDto> getAssortmentsByWarehouseIdPaged(
+            Long warehouseId,
+            HttpServletRequest request,
+            Pageable pageable,
+            ArrayList<ExpiryFilters> expiryFilters,
+            String search,
+            Boolean weekToExpire) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
 
-        return assortmentRepository.findByRack_WarehouseId(warehouseId, pageable)
+        var spec = AssortmentSpecifications.withFilters(
+                search, weekToExpire, null, null, null, warehouseId);
+
+        Page<AssortmentWithItemDto> page = assortmentRepository.findAll(spec, pageable)
                 .map(this::mapToDtoWithItem);
+
+        if (!expiryFilters.isEmpty() && !expiryFilters.contains(ExpiryFilters.ALL)) {
+            Instant now = Instant.now();
+            int maxDays = expiryFilters.stream()
+                    .filter(f -> f != ExpiryFilters.EXPIRED)
+                    .mapToInt(f -> Integer.parseInt(f.name().split("_")[1]))
+                    .max()
+                    .orElse(0);
+            Instant threshold = now.plus(maxDays, ChronoUnit.DAYS);
+            log.info("Applying expiry filters: {}, threshold date: {}", expiryFilters, threshold);
+
+
+            page = new PageImpl<>(page
+                    .stream()
+                    .filter(dto -> dto.getExpiresAt() != null
+                            && dto.getExpiresAt().toInstant().isBefore(threshold)
+                            && dto.getExpiresAt().toInstant().isAfter(now)
+                            || (dto.getExpiresAt() != null
+                            && expiryFilters.contains(ExpiryFilters.EXPIRED)
+                            && dto.getExpiresAt().toInstant().isBefore(now))
+                    )
+                    .toList(), pageable, page.getTotalElements());
+        }
+        return page;
     }
 
     public AssortmentDto getAssortmentById(Long id, HttpServletRequest request) {
@@ -125,8 +159,7 @@ public class AssortmentService {
 
     public AssortmentDto getAssortmentByCode(String code, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
-        Assortment assortment = assortmentRepository.findByCode(code)
-                .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
+        Assortment assortment = smartCodeService.findAssortmentBySmartCode(code);
         return mapToDto(assortment);
     }
 
@@ -158,6 +191,7 @@ public class AssortmentService {
         }
 
         barcodeService.ensureItemCode(item);
+        barcodeService.ensureItemQrCode(item);
 
         // Retry logic for race condition in code (barcode) generation
         int maxRetries = 3;
@@ -169,8 +203,8 @@ public class AssortmentService {
                         .item(item)
                         .rack(rack)
                         .user(user)
-                        .created_at(createdAt)
-                        .expires_at(expiresAt)
+                        .createdAt(createdAt)
+                        .expiresAt(expiresAt)
                         .positionX(dto.getPositionX())
                         .positionY(dto.getPositionY())
                         .code(placementCode)
@@ -244,10 +278,10 @@ public class AssortmentService {
 
         // Only allow updating expiration date
         if (dto.getExpiresAt() != null) {
-            if (dto.getExpiresAt().before(assortment.getCreated_at())) {
+            if (dto.getExpiresAt().before(assortment.getCreatedAt())) {
                 throw new IllegalArgumentException(InventoryError.INVALID_EXPIRY_DATE.name());
             }
-            assortment.setExpires_at(dto.getExpiresAt());
+            assortment.setExpiresAt(dto.getExpiresAt());
         }
 
         return mapToDto(assortmentRepository.save(assortment));
@@ -272,7 +306,7 @@ public class AssortmentService {
         assortment.setPositionX(dto.getPositionX());
         assortment.setPositionY(dto.getPositionY());
         if (dto.getExpiresAt() != null) {
-            assortment.setExpires_at(dto.getExpiresAt());
+            assortment.setExpiresAt(dto.getExpiresAt());
         }
 
         return mapToDto(assortmentRepository.save(assortment));
@@ -330,8 +364,8 @@ public class AssortmentService {
                 .itemId(assortment.getItem().getId())
                 .rackId(assortment.getRack().getId())
                 .userId(assortment.getUser() != null ? assortment.getUser().getId() : null)
-                .createdAt(assortment.getCreated_at())
-                .expiresAt(assortment.getExpires_at())
+                .createdAt(assortment.getCreatedAt())
+                .expiresAt(assortment.getExpiresAt())
                 .positionX(assortment.getPositionX())
                 .positionY(assortment.getPositionY())
                 .build();
@@ -360,8 +394,8 @@ public class AssortmentService {
                 .code(assortment.getCode())
                 .rackId(assortment.getRack().getId())
                 .userId(assortment.getUser() != null ? assortment.getUser().getId() : null)
-                .createdAt(assortment.getCreated_at())
-                .expiresAt(assortment.getExpires_at())
+                .createdAt(assortment.getCreatedAt())
+                .expiresAt(assortment.getExpiresAt())
                 .positionX(assortment.getPositionX())
                 .positionY(assortment.getPositionY())
                 .item(itemDto)

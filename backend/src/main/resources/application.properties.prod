@@ -25,6 +25,8 @@ auth.token.expiration-seconds=3600
 app.domain=${DOMAIN}
 app.name=${APP_NAME}
 app.url=${APP_URL}
+# url to links in emails
+app.webapp.url=${WEB_URL}
 
 auth.password.min-length=8
 
@@ -49,3 +51,15 @@ webauthn.allow-untrusted-attestation:false
 app.background-removal.enabled=true
 app.background-removal.url=${DOMAIN}:7000/api/remove
 app.background-removal.timeout-seconds=30
+
+# Backup streaming timeout (in minutes)
+app.backup.streaming-timeout-minutes=15
+# Backup scheduler thread pool size
+app.backup.scheduler-pool-size=10
+# Backup streaming executor thread pool size (for concurrent uploads/downloads)
+app.backup.streaming-pool-size=8
+# Backup deletion retry configuration
+# Backup retention policy (in days) - old backups will be automatically deleted
+app.backup.retention-days=30
+# Minimum number of backups to keep per warehouse (regardless of age)
+app.backup.min-keep-count=3

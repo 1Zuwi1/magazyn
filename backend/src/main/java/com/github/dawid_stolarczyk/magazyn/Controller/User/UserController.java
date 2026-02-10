@@ -282,26 +282,40 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "Get user's warehouse assignments (ADMIN only)",
-            description = "Returns list of warehouse IDs that the user has access to")
+    @Operation(summary = "Send notification to users (ADMIN only)",
+            description = """
+                    Sends a custom notification message to users.
+                    - If userIds is provided: sends notification only to those specific users
+                    - If userIds is null or empty: sends notification to all ACTIVE users
+                    
+                    The notification will appear in users' notification list as an ADMIN_MESSAGE type alert.
+                    """)
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success - warehouse list returned",
+            @ApiResponse(responseCode = "200", description = "Success - notification sent",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: INVALID_INPUT, NO_VALID_USERS",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "Error codes: ACCESS_FORBIDDEN",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
             @ApiResponse(responseCode = "404", description = "Error codes: RESOURCE_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @GetMapping("/{userId}/warehouses")
+    @PostMapping("/notifications/send")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<List<Long>>> getUserWarehouses(
-            @PathVariable Long userId,
+    public ResponseEntity<ResponseTemplate<Void>> sendNotification(
+            @Valid @RequestBody SendNotificationRequest notificationRequest,
             HttpServletRequest request) {
         try {
-            List<Long> warehouseIds = userService.getUserWarehouseIds(userId, request);
-            return ResponseEntity.ok(ResponseTemplate.success(warehouseIds));
+            userService.sendNotification(notificationRequest, request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (IllegalArgumentException e) {
+            log.error("Failed to send notification", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getMessage()));
         } catch (AuthenticationException e) {
-            log.error("Failed to get user warehouses for user {}", userId, e);
+            log.error("Failed to send notification", e);
             HttpStatus status = AuthUtil.getHttpStatusForAuthError(e.getCode());
             return ResponseEntity.status(status).body(ResponseTemplate.error(e.getCode()));
         }
     }
+
 }

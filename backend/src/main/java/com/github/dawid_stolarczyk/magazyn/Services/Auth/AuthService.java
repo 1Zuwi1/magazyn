@@ -21,13 +21,14 @@ import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimi
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.CodeGenerator;
 import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
+import com.github.dawid_stolarczyk.magazyn.Utils.LinksUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -36,6 +37,7 @@ import java.util.UUID;
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 import static com.github.dawid_stolarczyk.magazyn.Utils.StringUtils.checkPasswordStrength;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -93,6 +95,11 @@ public class AuthService {
         }
         User newUser = new User();
         newUser.setEmail(registerRequest.getEmail());
+
+        if (userRepository.existsByPhone(registerRequest.getPhoneNumber())) {
+            throw new AuthenticationException(AuthError.PHONE_NUMBER_TAKEN.name());
+        }
+
         newUser.setRawPassword(registerRequest.getPassword());
         newUser.setFullName(registerRequest.getFullName());
         newUser.setRole(UserRole.USER);
@@ -113,11 +120,8 @@ public class AuthService {
         newUser.setEmailVerifications(emailVerification);
         userRepository.save(newUser);
 
-        String baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
-                .replacePath(null)
-                .path("/verify-mail")
-                .toUriString();
-        emailService.sendVerificationEmail(newUser.getEmail(), baseUrl + "?token=" + emailVerificationToken);
+        String url = LinksUtils.getWebAppUrl("/verify-mail?token=" + emailVerificationToken, request);
+        emailService.sendVerificationEmail(newUser.getEmail(), url);
     }
 
     @Transactional
@@ -131,7 +135,7 @@ public class AuthService {
         }
         User user = emailVerification.getUser();
         user.removeEmailVerifications();
-        user.setStatus(AccountStatus.ACTIVE);
+        user.setEmailStatus(EmailStatus.VERIFIED);
         userRepository.save(user);
     }
 
@@ -142,8 +146,9 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthenticationException(AuthError.EMAIL_NOT_FOUND.name()));
 
-        // Delete any existing password reset tokens for this user
         passwordResetTokenRepository.deleteByUser(user);
+
+        passwordResetTokenRepository.flush();
 
         // Generate new reset token
         String resetToken = UUID.randomUUID().toString();
@@ -154,12 +159,8 @@ public class AuthService {
         passwordResetToken.setUsed(false);
         passwordResetTokenRepository.save(passwordResetToken);
 
-        // Send password reset email
-        String baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
-                .replacePath(null)
-                .path("/reset-password")
-                .toUriString();
-        emailService.sendPasswordResetEmail(user.getEmail(), baseUrl + "?token=" + resetToken);
+        String url = LinksUtils.getWebAppUrl("/reset-password?token=" + resetToken, request);
+        emailService.sendPasswordResetEmail(user.getEmail(), url);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -196,8 +197,12 @@ public class AuthService {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.EMAIL_VERIFICATION_RESEND);
 
         // Delete existing verification token if present
-        if (user.getEmailVerifications() != null) {
+        EmailVerification existingVerification = user.getEmailVerifications();
+        if (existingVerification != null) {
             user.removeEmailVerifications();
+
+            emailVerificationRepository.deleteById(existingVerification.getId());
+            emailVerificationRepository.flush();
         }
 
         // Generate new verification token
@@ -208,12 +213,8 @@ public class AuthService {
         user.setEmailVerifications(emailVerification);
         userRepository.save(user);
 
-        // Send verification email
-        String baseUrl = ServletUriComponentsBuilder.fromContextPath(request)
-                .replacePath(null)
-                .path("/verify-mail")
-                .toUriString();
-        emailService.sendVerificationEmail(user.getEmail(), baseUrl + "?token=" + emailVerificationToken);
+        String url = LinksUtils.getWebAppUrl("/verify-mail?token=" + emailVerificationToken, request);
+        emailService.sendVerificationEmail(user.getEmail(), url);
     }
 
 }

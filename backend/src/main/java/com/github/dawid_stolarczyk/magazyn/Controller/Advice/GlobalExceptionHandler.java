@@ -5,6 +5,7 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ResponseTemplate;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Exception.RateLimitExceededException;
 import com.github.dawid_stolarczyk.magazyn.Exception.TwoFactorNotVerifiedException;
+import com.github.dawid_stolarczyk.magazyn.Exceptions.BackupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -25,6 +26,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseTemplate<String>> handleValidation(
             MethodArgumentNotValidException ex
     ) {
+        log.info("Validation error", ex);
         log.debug("Validation error", ex);
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
@@ -51,7 +53,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ResponseTemplate<String>> handleAuthException(AuthenticationException ex) {
-        log.debug("Authentication error: {}", ex.getCode());
+//        log.debug("Authentication error: {}", ex.getCode());
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ResponseTemplate.error(ex.getCode() != null ? ex.getCode() : "UNAUTHORIZED"));
@@ -63,6 +65,28 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ResponseTemplate.error("TWO_FACTOR_REQUIRED"));
+    }
+
+    @ExceptionHandler(BackupException.class)
+    public ResponseEntity<ResponseTemplate<String>> handleBackupException(BackupException ex) {
+        log.warn("Backup error: {} - {}", ex.getCode(), ex.getError().getDescription());
+        HttpStatus status = determineHttpStatus(ex.getCode());
+        return ResponseEntity
+                .status(status)
+                .body(ResponseTemplate.error(ex.getCode()));
+    }
+
+    private HttpStatus determineHttpStatus(String errorCode) {
+        return switch (errorCode) {
+            case "WAREHOUSE_NOT_FOUND", "BACKUP_NOT_FOUND", "NO_WAREHOUSES_FOUND", "NO_COMPLETED_BACKUP",
+                 "SCHEDULE_NOT_FOUND", "BACKUP_CORRUPTED", "RACK_MAPPING_NOT_FOUND",
+                 "ITEM_MAPPING_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+            case "WAREHOUSE_ACCESS_DENIED" -> HttpStatus.FORBIDDEN;
+            case "BACKUP_ALREADY_IN_PROGRESS", "RESTORE_ALREADY_IN_PROGRESS",
+                 "BACKUP_LOCK_ACQUISITION_FAILED", "RESTORE_LOCK_ACQUISITION_FAILED" -> HttpStatus.CONFLICT;
+            case "BACKUP_TIMEOUT" -> HttpStatus.REQUEST_TIMEOUT;
+            default -> HttpStatus.INTERNAL_SERVER_ERROR;
+        };
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

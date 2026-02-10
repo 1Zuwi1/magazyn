@@ -15,11 +15,25 @@ import java.util.Optional;
 public interface ItemRepository extends JpaRepository<Item, Long>, JpaSpecificationExecutor<Item> {
     boolean existsByCode(String code);
 
+    boolean existsByQrCode(String qrCode);
+
     Optional<Item> findByCode(String code);
+
+    Optional<Item> findByQrCode(String qrCode);
+
+    @Query("SELECT i FROM Item i WHERE i.code = :identifier OR i.qrCode = :identifier")
+    Optional<Item> findByCodeOrQrCode(@Param("identifier") String identifier);
 
     Page<Item> findAll(Pageable pageable);
 
     Page<Item> findByDangerousTrue(Pageable pageable);
+
+    /**
+     * Finds all distinct items that have assortments in a given warehouse.
+     * Uses a single query with JOIN through Assortment → Rack → Warehouse.
+     */
+    @Query("SELECT DISTINCT a.item FROM Assortment a WHERE a.rack.warehouse.id = :warehouseId")
+    List<Item> findDistinctByWarehouseId(@Param("warehouseId") Long warehouseId);
 
     /**
      * Finds items with embeddings that are most similar to the provided vector.

@@ -28,7 +28,7 @@ auth:
       duration: PT1M
 
     FORGOT_PASSWORD:
-      capacity: 1          # ogólne operacje auth
+      capacity: 2          # ogólne operacje auth
       refill: 1
       duration: PT3M
 
@@ -85,4 +85,15 @@ auth:
       capacity: 30          # dodawanie/edycja/usuwanie
       refill: 15
       duration: PT1M
+
+    # === Backup ===
+    BACKUP_READ:
+      capacity: 30
+      refill: 15
+      duration: PT1M
+
+    BACKUP_WRITE:
+      capacity: 5
+      refill: 2
+      duration: PT5M
 

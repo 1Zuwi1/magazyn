@@ -19,18 +19,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Page<User> findByIdNot(Long id, Pageable pageable);
 
+    boolean existsByPhone(String phone);
+
     /**
      * Find users with optional filtering by name, email, and status
      * Excludes the specified user ID (typically current admin)
      */
     @Query("SELECT u FROM User u WHERE u.id <> :excludeId " +
-            "AND (:name IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :name, '%'))) " +
-            "AND (:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%'))) " +
+            "AND (:namePattern IS NULL OR LOWER(u.fullName) LIKE :namePattern) " +
+            "AND (:emailPattern IS NULL OR LOWER(u.email) LIKE :emailPattern) " +
             "AND (:status IS NULL OR u.status = :status)")
     Page<User> findUsersWithFilters(
             @Param("excludeId") Long excludeId,
-            @Param("name") String name,
-            @Param("email") String email,
+            @Param("namePattern") String namePattern,
+            @Param("emailPattern") String emailPattern,
             @Param("status") AccountStatus status,
             Pageable pageable);
 
@@ -40,12 +42,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByStatus(AccountStatus status);
 
     /**
-     * Find active users assigned to a specific warehouse.
+     * Find active users assigned to a specific warehouse or admin.
      * Used for warehouse-based notification filtering.
      */
-    @Query("SELECT DISTINCT u FROM User u JOIN u.assignedWarehouses w " +
-            "WHERE w.id = :warehouseId AND u.status = :status")
-    List<User> findByWarehouseIdAndStatus(
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN u.assignedWarehouses w " +
+            "WHERE u.status = :status AND (w.id = :warehouseId OR u.role = 'ADMIN')")
+    List<User> findByWarehouseIdAndStatusOrAdmin(
             @Param("warehouseId") Long warehouseId,
             @Param("status") AccountStatus status);
 

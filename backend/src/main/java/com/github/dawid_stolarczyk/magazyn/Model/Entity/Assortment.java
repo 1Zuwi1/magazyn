@@ -24,11 +24,13 @@ public class Assortment {
     @ManyToOne
     @JoinColumn(name = "rack_id", nullable = false)
     private Rack rack;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User user;
-    private Timestamp created_at;
-    private Timestamp expires_at;
+    @Column(name = "created_at")
+    private Timestamp createdAt;
+    @Column(name = "expires_at")
+    private Timestamp expiresAt;
     @Column(name = "position_x")
     private Integer positionX;
 
@@ -37,8 +39,8 @@ public class Assortment {
 
     @PrePersist
     public void initializeCreatedAt() {
-        if (created_at == null) {
-            created_at = Timestamp.from(Instant.now());
+        if (createdAt == null) {
+            createdAt = Timestamp.from(Instant.now());
         }
     }
 }

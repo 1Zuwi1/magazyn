@@ -31,4 +31,16 @@ public class Warehouse {
     @ManyToMany(mappedBy = "assignedWarehouses", fetch = FetchType.LAZY)
     @Builder.Default
     private Set<User> assignedUsers = new HashSet<>();
+
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Alert> alerts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<BackupRecord> backupRecords = new ArrayList<>();
+
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<BackupSchedule> backupSchedules = new ArrayList<>();
 }

@@ -65,7 +65,7 @@ public class InboundController {
     }
 
     @Operation(summary = "Execute inbound operation",
-            description = "Accepts either itemId or barcode (14 digits) to identify the item. Creates assortments with generated GS1-128 barcodes.")
+            description = "Accepts either itemId or barcode (16 digits with 01 prefix) to identify the item. Creates assortments with generated GS1-128 barcodes.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Success - returns created assortments list",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = PlacementConfirmationResponse.class))),

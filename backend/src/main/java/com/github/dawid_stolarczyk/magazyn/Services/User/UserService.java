@@ -2,16 +2,16 @@ package com.github.dawid_stolarczyk.magazyn.Services.User;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.AuthError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ChangePasswordRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.SendNotificationRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UpdateUserProfileRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.UserInfoResponse;
 import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
-import com.github.dawid_stolarczyk.magazyn.Model.Entity.EmailVerification;
-import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
-import com.github.dawid_stolarczyk.magazyn.Model.Entity.Warehouse;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertStatus;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertType;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.EmailStatus;
-import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
-import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.WarehouseRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.*;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.SessionManager;
@@ -29,7 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
@@ -43,22 +45,31 @@ public class UserService {
     private final Bucket4jRateLimiter rateLimiter;
     private final EmailService emailService;
     private final SessionManager sessionManager;
+    private final EmailVerificationRepository emailVerificationRepository;
+    private final AlertRepository alertRepository;
+    private final UserNotificationRepository userNotificationRepository;
+    private final AssortmentRepository assortmentRepository;
 
 
     public UserInfoResponse getBasicInformation(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
-        return new UserInfoResponse(
-                user.getId().intValue(),
-                user.getFullName(),
-                user.getEmail(),
-                user.getRole().name(),
-                user.getStatus().name(),
-                user.getPhone(),
-                user.getLocation(),
-                user.getTeam() != null ? user.getTeam().name() : null,
-                user.getLastLogin() != null ? user.getLastLogin().toInstant().toString() : null);
+        return UserInfoResponse.builder()
+                .id(user.getId().intValue())
+                .full_name(user.getFullName())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .account_status(user.getStatus().name())
+                .phone(user.getPhone())
+                .location(user.getLocation())
+                .team(user.getTeam() != null ? user.getTeam().name() : null)
+                .last_login(user.getLastLogin() != null ? user.getLastLogin().toInstant().toString() : null)
+                .warehouse_ids(user.getAssignedWarehouses().stream()
+                        .map(Warehouse::getId)
+                        .toList())
+                .backup_codes_refresh_needed(user.getBackupCodes().stream().filter(BackupCode::isUsed).count() >= 4)
+                .build();
     }
 
     @Transactional
@@ -108,27 +119,33 @@ public class UserService {
     public Page<UserInfoResponse> adminGetAllUsersPaged(HttpServletRequest request, String name, String email, AccountStatus status, Pageable pageable) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        String namePattern = name != null ? "%" + name.toLowerCase() + "%" : null;
+        String emailPattern = email != null ? "%" + email.toLowerCase() + "%" : null;
         return userRepository.findUsersWithFilters(
                         authPrincipal.getUserId(),
-                        name,
-                        email,
+                        namePattern,
+                        emailPattern,
                         status,
                         pageable)
                 .map(this::mapToUserInfoResponse);
     }
 
     private UserInfoResponse mapToUserInfoResponse(User user) {
-        return new UserInfoResponse(
-                user.getId().intValue(),
-                user.getFullName(),
-                user.getEmail(),
-                user.getRole().name(),
-                user.getStatus().name(),
-                user.getPhone(),
-                user.getLocation(),
-                user.getTeam() != null ? user.getTeam().name() : null,
-                user.getLastLogin() != null ? user.getLastLogin().toInstant().toString() : null
-        );
+        return UserInfoResponse.builder()
+                .id(user.getId().intValue())
+                .full_name(user.getFullName())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .account_status(user.getStatus().name())
+                .phone(user.getPhone())
+                .location(user.getLocation())
+                .team(user.getTeam() != null ? user.getTeam().name() : null)
+                .last_login(user.getLastLogin() != null ? user.getLastLogin().toInstant().toString() : null)
+                .warehouse_ids(user.getAssignedWarehouses().stream()
+                        .map(Warehouse::getId)
+                        .toList())
+                .backup_codes_refresh_needed(user.getBackupCodes().stream().filter(BackupCode::isUsed).count() >= 4)
+                .build();
     }
 
     /**
@@ -156,7 +173,11 @@ public class UserService {
             }
         });
 
-        targetUser.removeEmailVerifications();
+        EmailVerification existEmailVerification = targetUser.getEmailVerifications();
+        if (existEmailVerification != null) {
+            emailVerificationRepository.deleteById(targetUser.getEmailVerifications().getId());
+            emailVerificationRepository.flush();
+        }
         targetUser.setEmail(newEmail);
         targetUser.setStatus(AccountStatus.PENDING_VERIFICATION);
         targetUser.setEmailStatus(EmailStatus.UNVERIFIED);
@@ -238,8 +259,19 @@ public class UserService {
     @Transactional
     public void adminDeleteAccount(Long targetUserId, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
+
+        if (AuthUtil.getCurrentAuthPrincipal().getUserId().equals(targetUserId)) {
+            throw new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name());
+        }
+
         User targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+
+        List<Assortment> userAssortments = assortmentRepository.findByUserId(targetUserId);
+        for (Assortment assortment : userAssortments) {
+            assortment.setUser(null);
+        }
+        assortmentRepository.saveAll(userAssortments);
 
         userRepository.delete(targetUser);
     }
@@ -281,16 +313,50 @@ public class UserService {
     }
 
     /**
-     * Admin: Get all warehouses assigned to a user
+     * Admin: Send custom notification to users
+     * Creates an alert and distributes notifications to specified users or all active users
      */
-    public List<Long> getUserWarehouseIds(Long userId, HttpServletRequest request) {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_FREE);
+    @Transactional(rollbackFor = Exception.class)
+    public void sendNotification(SendNotificationRequest notificationRequest, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.USER_ACTION_STRICT);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
+        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
+        User adminUser = userRepository.findById(authPrincipal.getUserId())
+                .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
 
-        return user.getAssignedWarehouses().stream()
-                .map(Warehouse::getId)
-                .toList();
+        List<User> targetUsers;
+        if (notificationRequest.getUserIds() == null || notificationRequest.getUserIds().isEmpty()) {
+            targetUsers = userRepository.findByStatus(AccountStatus.ACTIVE);
+        } else {
+            targetUsers = userRepository.findAllById(notificationRequest.getUserIds());
+        }
+
+        if (targetUsers.isEmpty()) {
+            throw new IllegalArgumentException("No valid users found");
+        }
+        targetUsers = targetUsers.stream().filter(u -> !Objects.equals(u.getId(), adminUser.getId())).toList();
+
+        Alert alert = Alert.builder()
+                .alertType(AlertType.ADMIN_MESSAGE)
+                .status(AlertStatus.OPEN)
+                .message(notificationRequest.getMessage())
+                .resolvedBy(adminUser)
+                .createdAt(Instant.now())
+                .userNotifications(new ArrayList<>())
+                .build();
+
+        alertRepository.save(alert);
+
+        for (User targetUser : targetUsers) {
+            UserNotification userNotification = UserNotification.builder()
+                    .user(targetUser)
+                    .alert(alert)
+                    .isRead(false)
+                    .createdAt(Instant.now())
+                    .build();
+            userNotificationRepository.save(userNotification);
+            alert.getUserNotifications().add(userNotification);
+        }
     }
+
 }

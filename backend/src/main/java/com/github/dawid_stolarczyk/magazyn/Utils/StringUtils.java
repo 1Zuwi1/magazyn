@@ -64,6 +64,18 @@ public class StringUtils {
         // Trim and convert to uppercase
         String normalized = marker.trim().toUpperCase();
 
+        // Explicitly replace Polish characters with their base equivalents
+        // Uppercase Polish characters
+        normalized = normalized.replace("Ą", "A")
+                .replace("Ć", "C")
+                .replace("Ę", "E")
+                .replace("Ł", "L")
+                .replace("Ń", "N")
+                .replace("Ó", "O")
+                .replace("Ś", "S")
+                .replace("Ź", "Z")
+                .replace("Ż", "Z");
+
         // Remove any characters except alphanumeric, dashes, underscores, and spaces
         normalized = normalized.replaceAll("[^A-Z0-9_\\-\\s]", "");
 

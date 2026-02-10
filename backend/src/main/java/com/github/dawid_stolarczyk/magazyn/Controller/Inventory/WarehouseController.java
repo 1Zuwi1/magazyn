@@ -2,6 +2,7 @@ package com.github.dawid_stolarczyk.magazyn.Controller.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Common.ConfigurationConstants;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.ExpiryFilters;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.WarehouseImportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.WarehouseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +23,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/warehouses")
@@ -45,12 +48,12 @@ public class WarehouseController {
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir,
             @Parameter(description = "Filter by warehouse name containing this string", example = "Central") @RequestParam(required = false) String nameFilter,
-            @RequestParam(required = false) Integer percentOfFreeSlots,
+            @RequestParam(required = false) Integer minPercentOfOccupiedSlots,
             @RequestParam(required = false, defaultValue = "false") boolean onlyNonEmpty) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
-                warehouseService.getAllWarehousesPaged(request, pageable, nameFilter, percentOfFreeSlots, onlyNonEmpty)));
+                warehouseService.getAllWarehousesPaged(request, pageable, nameFilter, minPercentOfOccupiedSlots, onlyNonEmpty)));
     }
 
     @Operation(summary = "Get warehouse by ID",
@@ -108,7 +111,7 @@ public class WarehouseController {
     @ApiResponse(responseCode = "200", description = "Success",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseTemplate.PagedRacksResponse.class)))
     @GetMapping("/{warehouseId}/racks")
-    public ResponseEntity<ResponseTemplate<PagedResponse<RackDto>>> getRacksByWarehouse(
+    public ResponseEntity<ResponseTemplate<RackPagedResponse>> getRacksByWarehouse(
             @PathVariable Long warehouseId,
             HttpServletRequest request,
             @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
@@ -117,8 +120,7 @@ public class WarehouseController {
             @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
-        return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(rackService.getRacksByWarehousePaged(warehouseId, request, pageable))));
+        return ResponseEntity.ok(ResponseTemplate.success((rackService.getRacksByWarehousePaged(warehouseId, request, pageable))));
     }
 
     @Operation(summary = "Get assortments by warehouse ID with pagination",
@@ -136,11 +138,14 @@ public class WarehouseController {
             @Parameter(description = "Page number (0-indexed)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "20") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort by field", example = "id") @RequestParam(defaultValue = "id") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir) {
+            @Parameter(description = "Sort direction (asc/desc)", example = "asc") @RequestParam(defaultValue = "asc") String sortDir,
+            @Parameter(description = "Filter by expiration") @RequestParam(defaultValue = "ALL") ArrayList<ExpiryFilters> expiryFilters,
+            @Parameter(description = "Search by item name or code (case-insensitive)", example = "milk") @RequestParam(required = false) String search,
+            @Parameter(description = "Filter by week to expire (expires within 7 days)", example = "true") @RequestParam(required = false) Boolean weekToExpire) {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(assortmentService.getAssortmentsByWarehouseIdPaged(warehouseId, request, pageable))));
+                PagedResponse.from(assortmentService.getAssortmentsByWarehouseIdPaged(warehouseId, request, pageable, expiryFilters, search, weekToExpire))));
     }
 
     @Operation(

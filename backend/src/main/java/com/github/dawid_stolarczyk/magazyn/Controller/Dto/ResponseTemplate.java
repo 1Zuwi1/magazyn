@@ -174,6 +174,22 @@ public class ResponseTemplate<T> {
         private PagedResponse<RackReportDto> data;
     }
 
+    @Schema(name = "PagedBackupRecordsResponse")
+    @Getter
+    public static class PagedBackupRecordsResponse {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private PagedResponse<BackupRecordDto> data;
+    }
+
+    @Schema(name = "PagedBackupSchedulesResponse")
+    @Getter
+    public static class PagedBackupSchedulesResponse {
+        @Schema(example = "true")
+        private final boolean success = true;
+        private PagedResponse<BackupScheduleDto> data;
+    }
+
     @Schema(name = "ApiError")
     @Getter
     public static class ApiError {

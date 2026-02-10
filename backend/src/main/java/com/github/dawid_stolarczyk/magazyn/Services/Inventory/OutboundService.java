@@ -2,7 +2,10 @@ package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
-import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.Assortment;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.OutboundOperation;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.*;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
@@ -29,6 +32,7 @@ public class OutboundService {
     private final InboundOperationRepository inboundOperationRepository;
     private final OutboundOperationRepository outboundOperationRepository;
     private final Bucket4jRateLimiter rateLimiter;
+    private final SmartCodeService smartCodeService;
 
     /**
      * Plan: zwraca FIFO-ordered pick list dla podanego produktu.
@@ -80,16 +84,15 @@ public class OutboundService {
     public OutboundCheckResponse check(OutboundPickPosition request, HttpServletRequest httpRequest) {
         rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
 
-        Assortment assortment = assortmentRepository.findByCode(request.getCode())
-                .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
+        Assortment assortment = smartCodeService.findAssortmentBySmartCode(request.getCode());
 
         // Sprawdź czy assortment jest wygasły
-        boolean isExpired = assortment.getExpires_at() != null &&
-                assortment.getExpires_at().toInstant().isBefore(java.time.Instant.now());
+        boolean isExpired = assortment.getExpiresAt() != null &&
+                assortment.getExpiresAt().toInstant().isBefore(java.time.Instant.now());
 
         // Znajdź starsze niewygasłe assortmenty
         List<Assortment> older = assortmentRepository.findOlderAssortments(
-                assortment.getItem().getId(), assortment.getCreated_at());
+                assortment.getItem().getId(), assortment.getCreatedAt());
 
         boolean fifoCompliant = older.isEmpty();
         List<OutboundPickSlot> olderSlots = older.stream().map(this::mapToPickSlot).toList();
@@ -130,8 +133,8 @@ public class OutboundService {
                     .orElseThrow(() -> new IllegalArgumentException(InventoryError.ASSORTMENT_NOT_FOUND.name()));
 
             // Sprawdź czy assortment jest wygasły
-            boolean isExpired = assortment.getExpires_at() != null &&
-                    assortment.getExpires_at().toInstant().isBefore(java.time.Instant.now());
+            boolean isExpired = assortment.getExpiresAt() != null &&
+                    assortment.getExpiresAt().toInstant().isBefore(java.time.Instant.now());
 
             if (isExpired) {
                 throw new IllegalArgumentException(InventoryError.OUTBOUND_ASSORTMENT_EXPIRED.name());
@@ -139,7 +142,7 @@ public class OutboundService {
 
             // Sprawdź FIFO compliance (tylko dla niewygasłych)
             List<Assortment> older = assortmentRepository.findOlderAssortments(
-                    assortment.getItem().getId(), assortment.getCreated_at());
+                    assortment.getItem().getId(), assortment.getCreatedAt());
             boolean fifoCompliant = older.isEmpty();
 
             if (!fifoCompliant && !request.isSkipFifo()) {
@@ -148,9 +151,8 @@ public class OutboundService {
 
             // Utwórz rekord audytu (zdenormalizowane dane, bo assortment zostanie usunięty)
             OutboundOperation operation = new OutboundOperation();
-            operation.setItem(assortment.getItem());
-            operation.setRack(assortment.getRack());
-            operation.setIssuedBy(user);
+            operation.setRackMarker(assortment.getRack().getMarker());
+            operation.setIssuedByName(user.getFullName());
             operation.setPositionX(assortment.getPositionX());
             operation.setPositionY(assortment.getPositionY());
             operation.setQuantity(1);
@@ -160,13 +162,6 @@ public class OutboundService {
             operation.setFifoCompliant(fifoCompliant);
 
             outboundOperationRepository.save(operation);
-
-            // Wyczyść FK w InboundOperation przed usunięciem assortmentu
-            List<InboundOperation> inboundOps = inboundOperationRepository.findByAssortmentId(assortment.getId());
-            for (InboundOperation inboundOp : inboundOps) {
-                inboundOp.setAssortment(null);
-                inboundOperationRepository.save(inboundOp);
-            }
 
             // Usuń assortment
             assortmentRepository.delete(assortment);
@@ -190,21 +185,18 @@ public class OutboundService {
                 .rackMarker(assortment.getRack().getMarker())
                 .positionX(assortment.getPositionX())
                 .positionY(assortment.getPositionY())
-                .createdAt(assortment.getCreated_at() != null ? assortment.getCreated_at().toInstant().toString() : null)
-                .expiresAt(assortment.getExpires_at() != null ? assortment.getExpires_at().toInstant().toString() : null)
+                .createdAt(assortment.getCreatedAt() != null ? assortment.getCreatedAt().toInstant().toString() : null)
+                .expiresAt(assortment.getExpiresAt() != null ? assortment.getExpiresAt().toInstant().toString() : null)
                 .build();
     }
 
     private OutboundOperationDto mapToOperationDto(OutboundOperation operation) {
         OutboundOperationDto dto = new OutboundOperationDto();
         dto.setId(operation.getId());
-        dto.setItemId(operation.getItem().getId());
         dto.setItemName(operation.getItemName());
         dto.setItemCode(operation.getItemCode());
-        dto.setRackId(operation.getRack().getId());
-        dto.setRackMarker(operation.getRack().getMarker());
-        dto.setIssuedBy(operation.getIssuedBy().getId());
-        dto.setIssuedByName(operation.getIssuedBy().getFullName());
+        dto.setRackMarker(operation.getRackMarker());
+        dto.setIssuedByName(operation.getIssuedByName());
         dto.setOperationTimestamp(operation.getOperationTimestamp().toInstant().toString());
         dto.setPositionX(operation.getPositionX());
         dto.setPositionY(operation.getPositionY());

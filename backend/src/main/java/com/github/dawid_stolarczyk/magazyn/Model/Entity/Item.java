@@ -22,6 +22,8 @@ public class Item {
     private String name;
     @Column(unique = true, length = 32)
     private String code;
+    @Column(unique = true, length = 32)
+    private String qrCode;
     private String photo_url;
     private float min_temp;
     private float max_temp;
@@ -44,6 +46,5 @@ public class Item {
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Assortment> assortments = new ArrayList<>();
-
 
 }

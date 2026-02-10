@@ -149,7 +149,7 @@ public class VerificationLevelFilter extends OncePerRequestFilter {
         if (authPrincipal.getStatus2FA() != Status2FA.VERIFIED) {
             return "2FA_NOT_VERIFIED";
         }
-        
+
         if (user.getStatus() == AccountStatus.PENDING_VERIFICATION) {
             return "NOT_VERIFIED_BY_ADMIN";
         }

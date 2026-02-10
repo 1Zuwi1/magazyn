@@ -48,14 +48,6 @@ public class AlertService {
     }
 
     /**
-     * Get alerts filtered by status
-     */
-    public Page<AlertDto> getAlertsByStatus(AlertStatus status, HttpServletRequest httpRequest, Pageable pageable) {
-        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
-        return alertRepository.findByStatusOrderByCreatedAtDesc(status, pageable).map(this::mapToDto);
-    }
-
-    /**
      * Get only active (unresolved) alerts
      */
     public Page<AlertDto> getActiveAlerts(HttpServletRequest httpRequest, Pageable pageable) {
@@ -81,11 +73,19 @@ public class AlertService {
     }
 
     /**
-     * Get alerts by type
+     * Get alerts by multiple statuses
      */
-    public Page<AlertDto> getAlertsByType(AlertType alertType, HttpServletRequest httpRequest, Pageable pageable) {
+    public Page<AlertDto> getAlertsByStatuses(List<AlertStatus> statuses, HttpServletRequest httpRequest, Pageable pageable) {
         rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
-        return alertRepository.findByAlertTypeOrderByCreatedAtDesc(alertType, pageable).map(this::mapToDto);
+        return alertRepository.findByStatusInOrderByCreatedAtDesc(statuses, pageable).map(this::mapToDto);
+    }
+
+    /**
+     * Get alerts by multiple types
+     */
+    public Page<AlertDto> getAlertsByTypes(List<AlertType> types, HttpServletRequest httpRequest, Pageable pageable) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
+        return alertRepository.findByAlertTypeInOrderByCreatedAtDesc(types, pageable).map(this::mapToDto);
     }
 
     /**

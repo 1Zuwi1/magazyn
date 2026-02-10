@@ -14,10 +14,11 @@ import java.time.Instant;
 @Entity
 @Table(name = "inbound_operations",
         indexes = {
-                @Index(name = "idx_inbound_operation_user", columnList = "received_by"),
+                @Index(name = "idx_inbound_operation_user", columnList = "received_by_name"),
                 @Index(name = "idx_inbound_operation_date", columnList = "operation_timestamp"),
-                @Index(name = "idx_inbound_operation_rack", columnList = "rack_id"),
-                @Index(name = "idx_inbound_operation_item", columnList = "item_id")
+                @Index(name = "idx_inbound_operation_rack_marker", columnList = "rack_marker"),
+                @Index(name = "idx_inbound_operation_item_code", columnList = "item_code"),
+                @Index(name = "idx_inbound_operation_assortment_code", columnList = "assortment_code")
         }
 )
 @Getter
@@ -27,37 +28,20 @@ public class InboundOperation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * Produkt, który został przyjęty
-     */
-    @ManyToOne
-    @JoinColumn(name = "item_id", nullable = false)
-    private Item item;
+    private String itemName;
 
-    /**
-     * Regał, na który umieszczono towar
-     */
-    @ManyToOne
-    @JoinColumn(name = "rack_id", nullable = false)
-    private Rack rack;
+    private String itemCode;
 
-    /**
-     * Przypisanie (Assortment) stworzone podczas tej operacji
-     */
-    @OneToOne
-    @JoinColumn(name = "assortment_id")
-    private Assortment assortment;
+    private String rackMarker;
 
-    /**
-     * Użytkownik, który wykonał operację przyjęcia
-     */
-    @ManyToOne
-    @JoinColumn(name = "received_by", nullable = false)
-    private User receivedBy;
+    private String assortmentCode;
 
     /**
      * Data i czas wykonania operacji
      */
+    @Column(name = "received_by_name", nullable = false)
+    private String receivedByName;
+
     @Column(name = "operation_timestamp", nullable = false)
     private Timestamp operationTimestamp;
 

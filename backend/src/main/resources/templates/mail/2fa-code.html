@@ -1,77 +1,62 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html dir="ltr" lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html
+        PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" lang="pl" xmlns:th="http://www.w3.org/1999/xhtml">
+
 <head>
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/>
-    <meta name="x-apple-disable-message-reformatting"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 </head>
-<body class="font-plaid" style="background-color:rgb(255,255,255)">
-<!--$--><!--html--><!--head--><!--body-->
-<table
-        border="0"
-        width="100%"
-        cellpadding="0"
-        cellspacing="0"
-        role="presentation"
-        align="center">
-    <tbody>
+
+<body
+        style="background-color:rgb(245,247,249); margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<table border="0" width="100%" cellpadding="0" cellspacing="0" role="presentation">
     <tr>
-        <td style="background-color:rgb(255,255,255)">
-            <table
-                    align="center"
-                    width="100%"
-                    border="0"
-                    cellpadding="0"
-                    cellspacing="0"
-                    role="presentation"
-                    style="max-width:360px;background-color:rgb(255,255,255);border-radius:0.25rem;margin-top:0;margin-right:auto;margin-left:auto;margin-bottom:0;padding-top:68px;padding-right:0;padding-left:0;padding-bottom:130px">
-                <tbody>
-                <tr style="width:100%">
-                    <td>
-                        <p
-                                style="font-size:11px;line-height:16px;color:rgb(10,133,234);font-weight:700;height:16px;letter-spacing:0;margin-top:16px;margin-bottom:8px;margin-right:8px;margin-left:8px;text-transform:uppercase;text-align:center">
-                            Potwierdź swoją tożsamość
-                        </p>
+        <td align="center" style="padding: 60px 0;">
+            <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation"
+                   style="max-width:440px; background-color:rgb(255,255,255); border-radius:16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow:hidden;">
+                <tr>
+                    <td style="padding: 40px 32px; text-align: center;">
+                        <div
+                                style="background-color:rgba(10,133,234,0.1); width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 24px auto; display: table;">
+                            <span style="display: table-cell; vertical-align: middle; font-size: 32px;">🛡️</span>
+                        </div>
+
                         <h1
-                                style="color:rgb(0,0,0);font-weight:500;font-family:HelveticaNeue-Medium,Helvetica,Arial,sans-serif;display:inline-block;font-size:20px;line-height:24px;margin-bottom:0;margin-top:0;text-align:center">
-                            Wprowadź poniższy kod, aby zweryfikować swoją tożsamość.
+                                style="color:rgb(17,24,39); font-size:24px; font-weight:700; line-height:32px; margin:0 0 12px 0;">
+                            Kod weryfikacyjny
                         </h1>
-                        <table
-                                align="center"
-                                width="100%"
-                                border="0"
-                                cellpadding="0"
-                                cellspacing="0"
-                                role="presentation"
-                                style="background-color:rgba(0,0,0,.05);border-radius:0.25rem;margin-right:auto;margin-left:auto;font-family:HelveticaNeue-Bold;margin-top:16px;margin-bottom:14px;vertical-align:middle;width:280px">
-                            <tbody>
-                            <tr>
-                                <td>
-                                    <p
-                                            style="font-size:32px;line-height:40px;color:rgb(0,0,0);font-weight:700;letter-spacing:6px;padding-bottom:8px;padding-top:8px;margin-right:auto;margin-left:auto;margin-bottom:0;margin-top:0;display:block;text-align:center">
-                                        <span th:text="${code}">000000</span>
-                                    </p>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                        <p
-                                style="font-size:15px;line-height:23px;color:rgb(68,68,68);letter-spacing:0;padding-bottom:0;padding-top:0;padding-right:40px;padding-left:40px;margin:0;text-align:center;margin-top:0;margin-bottom:0;margin-left:0;margin-right:0">
-                            Kod jest ważny przez 15 minut.
+                        <p style="color:rgb(75,85,99); font-size:16px; line-height:24px; margin:0 0 32px 0;">
+                            Twój jednorazowy kod dostępu do konta to:
                         </p>
-                        <p
-                                style="font-size:15px;line-height:23px;color:rgb(68,68,68);letter-spacing:0;padding-bottom:0;padding-top:0;padding-right:40px;padding-left:40px;margin:0;text-align:center;margin-top:0;margin-bottom:0;margin-left:0;margin-right:0">
-                            Jeżeli nie próbowałeś zalogować się na swoje konto,
-                            zignoruj tę wiadomość.
+
+                        <div
+                                style="background-color:rgb(249,250,251); border: 1px solid rgb(229,231,235); border-radius: 12px; padding: 24px; margin-bottom: 32px;">
+                                <span th:text="${code}"
+                                      style="font-family: 'Courier New', Courier, monospace; font-size: 48px; font-weight: 800; letter-spacing: 8px; color: rgb(10,133,234); display: block;">
+                                    000000
+                                </span>
+                        </div>
+
+                        <p style="color:rgb(107,114,128); font-size:14px; line-height:22px; margin-bottom: 0;">
+                            Kod jest ważny przez <strong>15 minut</strong>. <br>
+                            Jeśli nie próbowałeś się zalogować, zignoruj tę wiadomość i zadbaj o bezpieczeństwo
+                            swojego hasła.
                         </p>
                     </td>
                 </tr>
-                </tbody>
+            </table>
+
+            <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation"
+                   style="max-width:440px; width: 100%;">
+                <tr>
+                    <td style="padding: 24px; text-align: center; color: rgb(156,163,175); font-size: 12px;">
+                        Wiadomość została wysłana automatycznie przez system zabezpieczeń.
+                    </td>
+                </tr>
             </table>
         </td>
     </tr>
-    </tbody>
 </table>
-<!--/$-->
 </body>
+
 </html>

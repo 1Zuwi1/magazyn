@@ -23,10 +23,18 @@ public class Rack {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    public Long getId() {
+        return id;
+    }
+
     @Column(nullable = false)
     private String marker;
 
-    @ManyToOne
+    public String getMarker() {
+        return marker;
+    }
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "warehouse_id")
     private Warehouse warehouse;
 
@@ -52,4 +60,10 @@ public class Rack {
 
     @OneToMany(mappedBy = "rack", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Assortment> assortments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "rack", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RackReport> rackReports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "rack", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Alert> alerts = new ArrayList<>();
 }

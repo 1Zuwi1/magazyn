@@ -38,6 +38,7 @@ public class InboundService {
     private final UserRepository userRepository;
     private final WarehouseRepository warehouseRepository;
     private final BarcodeService barcodeService;
+    private final SmartCodeService smartCodeService;
     private final PositionReservationRepository reservationRepository;
     private final InboundOperationRepository inboundOperationRepository;
     private final Bucket4jRateLimiter rateLimiter;
@@ -214,9 +215,9 @@ public class InboundService {
             item = itemRepository.findById(request.getItemId())
                     .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
         } else {
-            item = itemRepository.findByCode(request.getCode())
-                    .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
+            item = smartCodeService.findItemBySmartCode(request.getCode());
         }
+
 
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.USER_NOT_FOUND.name()));
@@ -237,6 +238,7 @@ public class InboundService {
         }
 
         barcodeService.ensureItemCode(item);
+        barcodeService.ensureItemQrCode(item);
 
         for (Map.Entry<Long, List<PlacementSlotRequest>> entry : placementsByRack.entrySet()) {
             Rack rack = rackRepository.findById(entry.getKey())
@@ -288,8 +290,8 @@ public class InboundService {
                 assortment.setItem(item);
                 assortment.setRack(rack);
                 assortment.setUser(user);
-                assortment.setCreated_at(createdAt);
-                assortment.setExpires_at(expiresAt);
+                assortment.setCreatedAt(createdAt);
+                assortment.setExpiresAt(expiresAt);
                 assortment.setPositionX(slot.getPositionX());
                 assortment.setPositionY(slot.getPositionY());
                 newAssortments.add(assortment);
@@ -313,15 +315,7 @@ public class InboundService {
         // Tworzenie wpisów audytowych dla każdego przyjęcia
         List<InboundOperation> inboundOperations = new ArrayList<>();
         for (Assortment assortment : newAssortments) {
-            InboundOperation operation = new InboundOperation();
-            operation.setItem(assortment.getItem());
-            operation.setRack(assortment.getRack());
-            operation.setAssortment(assortment);
-            operation.setReceivedBy(user);
-            operation.setOperationTimestamp(createdAt);
-            operation.setPositionX(assortment.getPositionX());
-            operation.setPositionY(assortment.getPositionY());
-            operation.setQuantity(1);
+            InboundOperation operation = getInboundOperation(assortment, user, createdAt);
             inboundOperations.add(operation);
         }
         inboundOperationRepository.saveAll(inboundOperations);
@@ -343,6 +337,20 @@ public class InboundService {
                 .map(Assortment::getCode)
                 .toList());
         return response;
+    }
+
+    private static InboundOperation getInboundOperation(Assortment assortment, User user, Timestamp createdAt) {
+        InboundOperation operation = new InboundOperation();
+        operation.setItemName(assortment.getItem().getName());
+        operation.setItemCode(assortment.getItem().getCode());
+        operation.setRackMarker(assortment.getRack().getMarker());
+        operation.setAssortmentCode(assortment.getCode());
+        operation.setReceivedByName(user.getFullName());
+        operation.setOperationTimestamp(createdAt);
+        operation.setPositionX(assortment.getPositionX());
+        operation.setPositionY(assortment.getPositionY());
+        operation.setQuantity(1);
+        return operation;
     }
 
     /**

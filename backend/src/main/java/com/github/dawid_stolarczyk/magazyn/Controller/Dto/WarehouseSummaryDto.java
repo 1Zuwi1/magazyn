@@ -22,6 +22,9 @@ public class WarehouseSummaryDto {
     @Schema(description = "Total occupied slots across all warehouses", example = "3500")
     private Integer occupiedSlots;
 
+    @Schema(description = "Occupancy percentage across all warehouses (0-100)", example = "35")
+    private Integer occupancy;
+
     @Schema(description = "Total number of warehouses", example = "5")
     private Integer totalWarehouses;
 

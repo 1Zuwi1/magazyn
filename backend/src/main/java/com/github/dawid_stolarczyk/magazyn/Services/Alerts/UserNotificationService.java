@@ -59,16 +59,6 @@ public class UserNotificationService {
     }
 
     /**
-     * Get count of unread notifications for the current user
-     */
-    public long getUnreadCount(HttpServletRequest httpRequest) {
-        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
-
-        AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
-        return notificationRepository.countByUserIdAndIsReadFalse(authPrincipal.getUserId());
-    }
-
-    /**
      * Mark a notification as read
      */
     @Transactional
@@ -152,13 +142,17 @@ public class UserNotificationService {
      */
     private UserNotificationDto mapToDto(UserNotification notification) {
         Alert alert = notification.getAlert();
+        String rackMarker = alert.getRack() != null ? alert.getRack().getMarker() : null;
+        Long rackId = alert.getRack() != null ? alert.getRack().getId() : null;
+        Long warehouseId = alert.getWarehouse() != null ? alert.getWarehouse().getId() : null;
+        String warehouseName = alert.getWarehouse() != null ? alert.getWarehouse().getName() : null;
 
         AlertDto alertDto = AlertDto.builder()
                 .id(alert.getId())
-                .rackId(alert.getRack().getId())
-                .rackMarker(alert.getRack().getMarker())
-                .warehouseId(alert.getWarehouse().getId())
-                .warehouseName(alert.getWarehouse().getName())
+                .rackId(rackId)
+                .rackMarker(rackMarker)
+                .warehouseId(warehouseId)
+                .warehouseName(warehouseName)
                 .alertType(alert.getAlertType())
                 .alertTypeDescription(alert.getAlertType().getDescription())
                 .status(alert.getStatus())

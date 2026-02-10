@@ -69,6 +69,42 @@ public class DbConfig {
                                 "WHERE status IN ('OPEN', 'ACTIVE')"
                 );
                 log.info("Alert idempotency index created successfully");
+
+                // Update alerts table to allow warehouse_id to be nullable
+                log.info("Updating alerts.warehouse_id to be nullable...");
+                try {
+                    jdbcTemplate.execute("ALTER TABLE alerts ALTER COLUMN warehouse_id DROP NOT NULL");
+                    log.info("warehouse_id nullable constraint updated successfully");
+                } catch (Exception e) {
+                    log.info("warehouse_id may already be nullable or error occurred: {}", e.getMessage());
+                }
+
+                // Update alert_type check constraint to include ADMIN_MESSAGE
+                log.info("Updating alert_type check constraint to include ADMIN_MESSAGE...");
+                try {
+                    jdbcTemplate.execute("ALTER TABLE alerts DROP CONSTRAINT IF EXISTS alerts_alert_type_check");
+                    jdbcTemplate.execute(
+                            "ALTER TABLE alerts ADD CONSTRAINT alerts_alert_type_check " +
+                                    "CHECK (alert_type IN (" +
+                                    "'WEIGHT_EXCEEDED', " +
+                                    "'TEMPERATURE_TOO_HIGH', " +
+                                    "'TEMPERATURE_TOO_LOW', " +
+                                    "'LOW_VISUAL_SIMILARITY', " +
+                                    "'ITEM_TEMPERATURE_TOO_HIGH', " +
+                                    "'ITEM_TEMPERATURE_TOO_LOW', " +
+                                    "'EMBEDDING_GENERATION_COMPLETED', " +
+                                    "'EMBEDDING_GENERATION_FAILED', " +
+                                    "'ASSORTMENT_EXPIRED', " +
+                                    "'ASSORTMENT_CLOSE_TO_EXPIRY', " +
+                                    "'BACKUP_COMPLETED', " +
+                                    "'BACKUP_FAILED', " +
+                                    "'ADMIN_MESSAGE'" +
+                                    "))"
+                    );
+                    log.info("alert_type check constraint updated successfully");
+                } catch (Exception e) {
+                    log.info("alert_type check constraint may already be updated or error occurred: {}", e.getMessage());
+                }
             } else {
                 log.info("Skipping PostgreSQL-specific initialization for database: {}", dbName);
             }

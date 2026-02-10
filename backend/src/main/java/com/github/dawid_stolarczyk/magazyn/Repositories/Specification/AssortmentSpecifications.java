@@ -17,19 +17,17 @@ public class AssortmentSpecifications {
             Boolean weekToExpire,
             Long rackId,
             Integer positionX,
-            Integer positionY) {
+            Integer positionY,
+            Long warehouseId) {
 
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Text search on item name or item code
+            // Text search on assortment code
             if (search != null && !search.isBlank()) {
                 String searchPattern = "%" + search.toLowerCase() + "%";
-                Predicate namePredicate = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("item").get("name")), searchPattern);
-                Predicate codePredicate = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("item").get("code")), searchPattern);
-                predicates.add(criteriaBuilder.or(namePredicate, codePredicate));
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("code")), searchPattern));
             }
 
             // Week to expire filter (expires within 7 days)
@@ -40,9 +38,9 @@ public class AssortmentSpecifications {
                 Timestamp nowTimestamp = Timestamp.from(now);
 
                 predicates.add(criteriaBuilder.and(
-                        criteriaBuilder.isNotNull(root.get("expires_at")),
-                        criteriaBuilder.greaterThan(root.get("expires_at"), nowTimestamp),
-                        criteriaBuilder.lessThanOrEqualTo(root.get("expires_at"), weekThreshold)
+                        criteriaBuilder.isNotNull(root.get("expiresAt")),
+                        criteriaBuilder.greaterThan(root.get("expiresAt"), nowTimestamp),
+                        criteriaBuilder.lessThanOrEqualTo(root.get("expiresAt"), weekThreshold)
                 ));
             }
 
@@ -59,6 +57,11 @@ public class AssortmentSpecifications {
             // Position Y filter
             if (positionY != null) {
                 predicates.add(criteriaBuilder.equal(root.get("positionY"), positionY));
+            }
+
+            // Warehouse filter (for /warehouses/{warehouseId}/assortments endpoint)
+            if (warehouseId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("rack").get("warehouse").get("id"), warehouseId));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

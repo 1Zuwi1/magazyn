@@ -2,16 +2,23 @@ package com.github.dawid_stolarczyk.magazyn.Services;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.util.List;
+
 @Service
 public class EmailService {
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
+
     @Autowired
     private JavaMailSender mailSender;
     @Autowired
@@ -23,6 +30,7 @@ public class EmailService {
     @Value("${app.name}")
     private String appName;
 
+    @Async
     public void sendSimpleEmail(String to, String subject, String html) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -35,11 +43,13 @@ public class EmailService {
             helper.setText(html, true);
 
             mailSender.send(message);
+            log.info("Email sent successfully to {}", to);
         } catch (MessagingException e) {
-            throw new RuntimeException("Error sending email", e);
+            log.error("Error sending email to {}: {}", to, e.getMessage(), e);
         }
     }
 
+    @Async
     public void sendTwoFactorCode(String to, String code) {
         Context context = new Context();
         context.setVariable("code", code);
@@ -48,6 +58,7 @@ public class EmailService {
         sendSimpleEmail(to, subject, htmlContent);
     }
 
+    @Async
     public void sendVerificationEmail(String to, String verificationLink) {
         Context context = new Context();
         context.setVariable("verificationLink", verificationLink);
@@ -56,11 +67,51 @@ public class EmailService {
         sendSimpleEmail(to, subject, htmlContent);
     }
 
+    @Async
     public void sendPasswordResetEmail(String to, String resetLink) {
         Context context = new Context();
         context.setVariable("resetLink", resetLink);
         String htmlContent = templateEngine.process("mail/password-reset", context);
         String subject = "Resetowanie hasła";
+        sendSimpleEmail(to, subject, htmlContent);
+    }
+
+    @Async
+    public void sendBatchNotificationEmail(String to, List<String> alertMessages, String notificationsLink) {
+        Context context = new Context();
+        context.setVariable("alertMessages", alertMessages);
+        context.setVariable("alertCount", alertMessages.size());
+        context.setVariable("notificationsLink", notificationsLink);
+        String htmlContent = templateEngine.process("mail/batch-notification", context);
+        String subject = alertMessages.size() == 1 ? "Nowe powiadomienie" : "Nowe powiadomienia (" + alertMessages.size() + ")";
+        sendSimpleEmail(to, subject, htmlContent);
+    }
+
+    @Async
+    public void sendBackupCodesGeneratedInfoEmail(String to, String settingsLink) {
+        Context context = new Context();
+        context.setVariable("settingsLink", settingsLink);
+        String htmlContent = templateEngine.process("mail/backupcodes-generated-information", context);
+        String subject = "Nowe kody zapasowe wygenerowane";
+        sendSimpleEmail(to, subject, htmlContent);
+    }
+
+    @Async
+    public void sendBackupNotificationEmail(String to, String warehouseName, boolean success, Long totalRecords,
+                                            Long sizeBytes, String completedAt, String backupType, String triggeredByName,
+                                            String errorMessage, String backupLink) {
+        Context context = new Context();
+        context.setVariable("warehouseName", warehouseName);
+        context.setVariable("success", success);
+        context.setVariable("totalRecords", totalRecords);
+        context.setVariable("sizeBytes", sizeBytes + " B");
+        context.setVariable("completedAt", completedAt);
+        context.setVariable("backupType", backupType);
+        context.setVariable("triggeredByName", triggeredByName);
+        context.setVariable("errorMessage", errorMessage);
+        context.setVariable("backupLink", backupLink);
+        String htmlContent = templateEngine.process("mail/backup-notification", context);
+        String subject = success ? "Backup zakończony pomyślnie" : "Backup nie powiódł się";
         sendSimpleEmail(to, subject, htmlContent);
     }
 }

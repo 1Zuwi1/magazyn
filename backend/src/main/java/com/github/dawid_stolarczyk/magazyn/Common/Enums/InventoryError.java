@@ -37,13 +37,15 @@ public enum InventoryError {
     // Barcode generation errors
     BARCODE_GENERATION_FAILED,
     PLACEMENT_BARCODE_GENERATION_FAILED,
-    BARCODE_MUST_BE_14_DIGITS,
+    BARCODE_MUST_BE_16_DIGITS,
 
-    // Outbound operation errors
-    OUTBOUND_INSUFFICIENT_STOCK,
     OUTBOUND_FIFO_VIOLATION,
     OUTBOUND_ASSORTMENT_EXPIRED,
 
     // Rack update errors
-    RACK_HAS_DANGEROUS_ITEMS
+    RACK_HAS_DANGEROUS_ITEMS,
+
+    // Bulk operation errors
+    NO_WAREHOUSES_FOUND,
+    RESTORE_ALREADY_IN_PROGRESS
 }

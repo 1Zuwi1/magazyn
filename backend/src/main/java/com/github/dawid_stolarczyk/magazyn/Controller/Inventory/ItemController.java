@@ -87,7 +87,7 @@ public class ItemController {
         }
     }
 
-    @Operation(summary = "Get item by code (14-digit GS1-128 barcode)")
+    @Operation(summary = "Get item by code or QR code", description = "Accepts either 16-digit GS1-128 barcode with 01 prefix or QR code (format: QR-XXXXX)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),
@@ -104,7 +104,7 @@ public class ItemController {
     }
 
     @Operation(summary = "Create item (ADMIN only)",
-            description = "Creates a new item with physical properties only. Name is optional. GS1-128 barcode code is auto-generated (14-digit).")
+            description = "Creates a new item with physical properties only. Name is optional. GS1-128 barcode code is auto-generated (16-digit with 01 prefix).")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Success - returns created item with generated barcode code",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ItemDto.class))),
@@ -311,7 +311,7 @@ public class ItemController {
                     ```
                     
                     **Uwagi:**
-                    - GS1-128 barcode code produktu jest generowany automatycznie (14-cyfrowy kod produktu)
+                    - GS1-128 barcode code produktu jest generowany automatycznie (16-cyfrowy kod produktu z prefiksem 01)
                     - Zdjęcia należy uploadować osobno przez endpoint POST /items/{id}/photo
                     - Wartości NULL lub puste dla kolumn opcjonalnych są ignorowane
                     
