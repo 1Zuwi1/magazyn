@@ -18,7 +18,7 @@ load_env_file() {
   fi
 }
 
-echo "Building backend..."
+echo "Budowanie backendu..."
 (cd "$ROOT_DIR/backend" && ./mvnw clean package -DskipTests)
 
 BACKEND_JAR="$(ls "$ROOT_DIR/backend"/target/*.jar 2>/dev/null | head -n 1)"
@@ -27,21 +27,21 @@ if [[ -z "$BACKEND_JAR" ]]; then
   exit 1
 fi
 
-echo "Building frontend..."
+echo "Budowanie frontend..."
 (cd "$ROOT_DIR/frontend" && bun install && bun run build)
 
-echo "Starting backend..."
+echo "Uruchamianie backendu..."
 load_env_file "$BACKEND_ENV_FILE"
 SPRING_PROFILES_ACTIVE="$BACKEND_PROFILE" java -jar "$BACKEND_JAR" &
 BACKEND_PID=$!
 
-echo "Starting frontend on port $FRONTEND_PORT..."
+echo "Uruchamianie frontend na porcie $FRONTEND_PORT..."
 load_env_file "$FRONTEND_ENV_FILE"
 PORT="$FRONTEND_PORT" bun run --cwd "$ROOT_DIR/frontend" start &
 FRONTEND_PID=$!
 
 cleanup() {
-  echo "Stopping services..."
+  echo "Zatrzymywanie usług..."
   kill "$BACKEND_PID" "$FRONTEND_PID" 2>/dev/null || true
 }
 
