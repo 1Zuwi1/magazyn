@@ -3,6 +3,7 @@ package com.github.dawid_stolarczyk.magazyn.Security.Filter;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.ApiKey;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ApiKeyRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.ApiKeyPrincipal;
+import com.github.dawid_stolarczyk.magazyn.Services.ApiKeyBatchUpdateService;
 import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -44,6 +45,7 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
     private static final long BATCH_UPDATE_INTERVAL_SECONDS = 30;
 
     private final ApiKeyRepository apiKeyRepository;
+    private final ApiKeyBatchUpdateService batchUpdateService;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final Map<Long, AtomicInteger> usageCounters = new ConcurrentHashMap<>();
     private final Map<Long, Instant> pendingUpdates = new ConcurrentHashMap<>();
@@ -64,17 +66,17 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        try {
-            pendingUpdates.forEach((apiKeyId, timestamp) -> {
-                apiKeyRepository.updateLastUsedAt(apiKeyId, timestamp);
-            });
-            log.debug("Flushed {} pending API key updates", pendingUpdates.size());
-        } catch (Exception e) {
-            log.error("Failed to flush pending API key updates", e);
-        } finally {
+        Map<Long, Instant> updatesToFlush;
+        synchronized (this) {
+            if (pendingUpdates.isEmpty()) {
+                return;
+            }
+            updatesToFlush = new ConcurrentHashMap<>(pendingUpdates);
             pendingUpdates.clear();
             usageCounters.clear();
         }
+
+        batchUpdateService.batchUpdateLastUsedAt(updatesToFlush);
     }
 
     @Override
@@ -84,6 +86,7 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
         String rawKey = request.getHeader(API_KEY_HEADER);
 
         if (rawKey == null || rawKey.isBlank()) {
+            request.getSession().invalidate();
             filterChain.doFilter(request, response);
             return;
         }
@@ -93,6 +96,7 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
         if (apiKey == null || !apiKey.isActive()) {
             log.warn("Invalid or inactive API key attempt from IP: {}", request.getRemoteAddr());
+            request.getSession().invalidate();
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or inactive API key");
             return;
         }

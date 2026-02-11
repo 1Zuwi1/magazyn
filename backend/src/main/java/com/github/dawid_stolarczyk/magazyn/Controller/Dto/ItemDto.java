@@ -53,4 +53,7 @@ public class ItemDto {
 
     @Schema(description = "Whether the item is dangerous", example = "false")
     private boolean isDangerous;
+
+    @Schema(description = "Whether the item's image has been uploaded to S3", example = "false")
+    private boolean imageUploaded;
 }

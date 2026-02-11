@@ -103,6 +103,7 @@ public class SessionManager {
             sessionService.delete2faAuth(twoFactorAuthId);
         }
 
+        request.getSession().invalidate();
         sessionService.deleteSessionsCookies(response);
     }
 }

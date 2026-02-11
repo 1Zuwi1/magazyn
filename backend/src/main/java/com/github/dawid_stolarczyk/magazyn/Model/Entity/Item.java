@@ -34,6 +34,7 @@ public class Item {
     private String comment;
     private Long expireAfterDays;
     private boolean isDangerous;
+    private boolean imageUploaded = false;
 
     /**
      * 1000-dimensional vector embedding from ResNet model for image similarity search.

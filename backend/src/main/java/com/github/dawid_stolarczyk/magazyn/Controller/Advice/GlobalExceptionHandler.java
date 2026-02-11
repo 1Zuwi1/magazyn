@@ -46,7 +46,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ResponseTemplate<String>> handleAccessDenied(AccessDeniedException ex) {
-        log.debug("Access denied: {}", ex.getMessage());
+        log.debug("Access denied", ex);
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ResponseTemplate.error(AuthError.ACCESS_FORBIDDEN.name()));

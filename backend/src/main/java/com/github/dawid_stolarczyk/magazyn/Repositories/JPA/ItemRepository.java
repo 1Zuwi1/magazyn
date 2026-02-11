@@ -24,6 +24,12 @@ public interface ItemRepository extends JpaRepository<Item, Long>, JpaSpecificat
     @Query("SELECT i FROM Item i WHERE i.code = :identifier OR i.qrCode = :identifier")
     Optional<Item> findByCodeOrQrCode(@Param("identifier") String identifier);
 
+    @Query("SELECT i FROM Item i WHERE i.photo_url = :photoUrl")
+    Optional<Item> findByPhoto_url(@Param("photoUrl") String photoUrl);
+
+    @Query("SELECT COUNT(i) > 0 FROM Item i WHERE i.photo_url = :photoUrl")
+    boolean existsByPhotoUrl(@Param("photoUrl") String photoUrl);
+
     Page<Item> findAll(Pageable pageable);
 
     Page<Item> findByDangerousTrue(Pageable pageable);

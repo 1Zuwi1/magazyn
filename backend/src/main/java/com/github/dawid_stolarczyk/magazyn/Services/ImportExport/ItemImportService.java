@@ -115,6 +115,16 @@ public class ItemImportService extends AbstractImportService<ItemDto, ItemImport
         String comment = emptyToNull(getColumn(columns, COL_KOMENTARZ));
         dto.setComment(comment);
 
+        // Zdjęcie (OPCJONALNE) - nazwa pliku zdjęcia
+        String photoName = getColumn(columns, COL_ZDJECIE);
+        if (!photoName.isEmpty()) {
+            // Check if photo name already exists in database
+            if (itemService.existsByPhotoUrl(photoName)) {
+                throw new IllegalArgumentException("DUPLICATE_PHOTO_NAME: Photo name '" + photoName + "' already exists");
+            }
+            dto.setPhotoUrl(photoName);
+        }
+
         return dto;
     }
 

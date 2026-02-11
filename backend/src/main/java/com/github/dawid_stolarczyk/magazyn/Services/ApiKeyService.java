@@ -19,7 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
@@ -132,12 +135,14 @@ public class ApiKeyService {
         List<User> admins = userRepository.findByRoleAndStatus(UserRole.ADMIN, AccountStatus.ACTIVE);
         String warehouseName = apiKey.getWarehouse() != null ? apiKey.getWarehouse().getName() : "Globalny (wszystkie magazyny)";
 
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String createdAtFormatted = simpleDateFormat.format(new Date(apiKey.getCreatedAt().toEpochMilli()));
         for (User admin : admins) {
             emailService.sendApiKeyCreatedEmail(
                     admin.getEmail(),
                     apiKey.getName(),
                     warehouseName,
-                    apiKey.getCreatedAt().toString()
+                    createdAtFormatted
             );
         }
 

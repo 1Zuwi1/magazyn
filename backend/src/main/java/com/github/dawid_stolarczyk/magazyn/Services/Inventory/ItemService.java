@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -96,6 +97,13 @@ public class ItemService {
      * @param code The code/identifier to search for
      * @return Found item or throws ITEM_NOT_FOUND
      */
+    public boolean existsByPhotoUrl(String photoUrl) {
+        if (photoUrl == null || photoUrl.isBlank()) {
+            return false;
+        }
+        return itemRepository.existsByPhotoUrl(photoUrl);
+    }
+
     private Item findItemBySmartCode(String code) {
         log.debug("Searching for item with smart code: {}", code);
 
@@ -167,6 +175,12 @@ public class ItemService {
         }
 
         item.setQrCode(determineQrCode(dto.getQrCode(), item.getCode()));
+
+        // Set photo_url if provided in import, imageUploaded is false by default
+        if (dto.getPhotoUrl() != null && !dto.getPhotoUrl().isBlank()) {
+            item.setPhoto_url(dto.getPhotoUrl());
+            item.setImageUploaded(false);
+        }
 
         mapToDto(itemRepository.save(item));
     }
@@ -305,6 +319,7 @@ public class ItemService {
 
         try {
             item.setPhoto_url(fileName);
+            item.setImageUploaded(true);
             // Image embedding is optional - if model isn't available, photo upload still works
             if (imageEmbeddingService.isModelLoaded()) {
                 try {
@@ -347,6 +362,85 @@ public class ItemService {
         }
     }
 
+    /**
+     * Batch upload photos - matches photos to items by filename
+     * Only updates items that have matching photo_url from CSV import
+     */
+    @Transactional
+    public List<String> uploadPhotosBatch(List<MultipartFile> files) throws Exception {
+        List<String> results = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null || originalFilename.isBlank()) {
+                results.add("SKIPPED: No filename");
+                continue;
+            }
+
+            validateImageFile(file);
+
+            // Find item with matching photo_url
+            Optional<Item> itemOpt = itemRepository.findByPhoto_url(originalFilename);
+            if (itemOpt.isEmpty()) {
+                results.add("NOT_FOUND: " + originalFilename);
+                continue;
+            }
+
+            Item item = itemOpt.get();
+
+            byte[] originalBytes = file.getBytes();
+            byte[] imageBytes = originalBytes;
+            byte[] processed = backgroundRemovalService.removeBackground(originalBytes);
+            if (processed != null) {
+                imageBytes = processed;
+            }
+
+            String previousPhoto = item.getPhoto_url();
+            String fileName = UUID.randomUUID() + ".enc";
+
+            final byte[] finalImageBytes = imageBytes;
+
+            try (PipedInputStream pipedIn = new PipedInputStream(1024 * 64);
+                 PipedOutputStream pipedOut = new PipedOutputStream(pipedIn)) {
+
+                CompletableFuture<Void> encryptionFuture = CompletableFuture.runAsync(
+                        () -> encryptToStream(finalImageBytes, pipedOut),
+                        asyncTaskExecutor
+                );
+
+                try {
+                    storageService.uploadStream(fileName, pipedIn, "image/png");
+                    encryptionFuture.get(30, TimeUnit.SECONDS);
+                } catch (Exception ex) {
+                    encryptionFuture.cancel(true);
+                    cleanupFailedUpload(fileName);
+                    results.add("FAILED: " + originalFilename + " - " + ex.getMessage());
+                    continue;
+                }
+            }
+
+            try {
+                item.setPhoto_url(fileName);
+                item.setImageUploaded(true);
+
+                if (imageEmbeddingService.isModelLoaded()) {
+                    try {
+                        item.setImageEmbedding(imageEmbeddingService.getEmbeddingFromProcessedImage(imageBytes));
+                    } catch (ImageEmbeddingService.ImageEmbeddingException e) {
+                        log.warn("Failed to generate image embedding for {}: {}", originalFilename, e.getMessage());
+                    }
+                }
+                itemRepository.save(item);
+                results.add("UPLOADED: " + originalFilename + " -> item_id=" + item.getId());
+            } catch (Exception ex) {
+                cleanupFailedUpload(fileName);
+                results.add("DB_FAILED: " + originalFilename + " - " + ex.getMessage());
+            }
+        }
+
+        return results;
+    }
+
     private void updateItemFromDto(Item item, ItemDto dto) {
         item.setMin_temp(dto.getMinTemp());
         item.setMax_temp(dto.getMaxTemp());
@@ -358,6 +452,7 @@ public class ItemService {
         item.setExpireAfterDays(dto.getExpireAfterDays());
         item.setDangerous(dto.isDangerous());
         item.setName(dto.getName());
+        item.setImageUploaded(dto.isImageUploaded());
 
         if (dto.getQrCode() != null && !dto.getQrCode().isBlank()) {
             item.setQrCode(determineQrCode(dto.getQrCode(), item.getCode()));
@@ -493,6 +588,8 @@ public class ItemService {
         return ItemDto.builder()
                 .id(item.getId())
                 .code(item.getCode())
+                .qrCode(item.getQrCode())
+                .photoUrl(item.getPhoto_url())
                 .minTemp(item.getMin_temp())
                 .maxTemp(item.getMax_temp())
                 .weight(item.getWeight())
@@ -503,6 +600,7 @@ public class ItemService {
                 .expireAfterDays(item.getExpireAfterDays())
                 .isDangerous(item.isDangerous())
                 .name(item.getName())
+                .imageUploaded(item.isImageUploaded())
                 .build();
     }
 }
