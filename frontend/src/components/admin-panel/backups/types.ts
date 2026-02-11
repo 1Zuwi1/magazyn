@@ -23,7 +23,7 @@ export interface Backup {
 
 export interface BackupSchedule {
   id: string
-  warehouseId: number
+  warehouseId: number | null
   warehouseName: string
   frequency: ScheduleFrequency
   backupHour: number
@@ -36,7 +36,7 @@ export interface BackupSchedule {
 }
 
 export interface ScheduleSubmitPayload {
-  warehouseId: number
+  warehouseId: number | null
   warehouseName: string
   frequency: ScheduleFrequency
   backupHour: number

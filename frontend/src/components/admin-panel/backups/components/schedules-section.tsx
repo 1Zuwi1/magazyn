@@ -34,8 +34,8 @@ interface SchedulesSectionProps {
   isLoading?: boolean
   onAdd: () => void
   onEdit: (schedule: BackupSchedule) => void
-  onToggle: (warehouseId: number, schedule: BackupSchedule) => void
-  onDelete: (warehouseId: number) => void
+  onToggle: (warehouseId: number | null, schedule: BackupSchedule) => void
+  onDelete: (warehouseId: number | null) => void
 }
 
 function SchedulesEmptyState({ onAdd }: { onAdd: () => void }) {
@@ -171,7 +171,10 @@ export function SchedulesSection({
 
       <ConfirmDialog
         description={t("generated.admin.backups.deleteScheduleDescription", {
-          value0: scheduleToDelete?.warehouseName ?? "",
+          value0:
+            scheduleToDelete?.warehouseName === "GLOBAL"
+              ? t("generated.admin.backups.allWarehouses")
+              : (scheduleToDelete?.warehouseName ?? ""),
         })}
         onConfirm={confirmDelete}
         onOpenChange={setDeleteDialogOpen}
@@ -190,7 +193,7 @@ function ScheduleCard({
 }: {
   schedule: BackupSchedule
   onEdit: (schedule: BackupSchedule) => void
-  onToggle: (warehouseId: number, schedule: BackupSchedule) => void
+  onToggle: (warehouseId: number | null, schedule: BackupSchedule) => void
   onDelete: (schedule: BackupSchedule) => void
 }) {
   const t = useTranslations()
@@ -222,7 +225,9 @@ function ScheduleCard({
                 !schedule.enabled && "text-muted-foreground"
               )}
             >
-              {schedule.warehouseName}
+              {schedule.warehouseName === "GLOBAL"
+                ? t("generated.admin.backups.allWarehouses")
+                : schedule.warehouseName}
             </span>
             <Badge
               className="transition-all duration-500"

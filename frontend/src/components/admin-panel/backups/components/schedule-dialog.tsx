@@ -9,7 +9,6 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useForm } from "@tanstack/react-form"
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect } from "react"
-import { toast } from "sonner"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { FieldGroup } from "@/components/ui/field"
@@ -105,13 +104,14 @@ export function ScheduleDialog({
   const getFormValues = useCallback(
     () => ({
       warehouseId: schedule?.warehouseId ?? null,
-      warehouseName: schedule?.warehouseName ?? "",
+      warehouseName:
+        schedule?.warehouseName ?? t("generated.admin.backups.allWarehouses"),
       frequency: schedule?.frequency ?? ("DAILY" as ScheduleFrequency),
       backupHour: schedule?.backupHour ?? 2,
       dayOfWeek: schedule?.dayOfWeek ?? 1,
       dayOfMonth: schedule?.dayOfMonth ?? 1,
     }),
-    [schedule]
+    [schedule, t]
   )
 
   const form = useForm({
@@ -123,11 +123,6 @@ export function ScheduleDialog({
       const selectedWarehouseName = isEdit
         ? (schedule?.warehouseName ?? "")
         : value.warehouseName.trim()
-
-      if (selectedWarehouseId == null || selectedWarehouseName.length === 0) {
-        toast.error(t("generated.admin.backups.selectedWarehouseNotFound"))
-        return
-      }
 
       onSubmit({
         warehouseId: selectedWarehouseId,
@@ -153,7 +148,10 @@ export function ScheduleDialog({
       description={
         isEdit
           ? t("generated.admin.backups.editScheduleDescription", {
-              value0: schedule?.warehouseName,
+              value0:
+                schedule?.warehouseName === "GLOBAL"
+                  ? t("generated.admin.backups.allWarehouses")
+                  : (schedule?.warehouseName ?? ""),
             })
           : t("generated.admin.backups.addScheduleDescription")
       }
@@ -193,6 +191,7 @@ export function ScheduleDialog({
                 <div className="rounded-lg border border-dashed bg-muted/20 p-3">
                   <WarehouseSelector
                     excludedWarehouseIds={usedWarehouseIds}
+                    includeAllOption
                     onValueChange={(warehouseId, warehouseName) => {
                       form.setFieldValue("warehouseId", warehouseId)
                       form.setFieldValue("warehouseName", warehouseName ?? "")
