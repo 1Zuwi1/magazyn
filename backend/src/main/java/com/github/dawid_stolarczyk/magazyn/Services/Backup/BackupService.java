@@ -203,6 +203,7 @@ public class BackupService {
         }
     }
 
+    @Transactional(rollbackFor = Exception.class, propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     private void executeBackup(Long recordId) {
         BackupRecord record = backupRecordRepository.findById(recordId).orElse(null);
         if (record == null) return;
@@ -395,6 +396,7 @@ public class BackupService {
                 .build();
     }
 
+    @Transactional(rollbackFor = Exception.class, propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     private void executeRestore(Long recordId) {
         BackupRecord record = backupRecordRepository.findById(recordId).orElse(null);
         if (record == null) return;
@@ -820,6 +822,7 @@ public class BackupService {
                 .build();
     }
 
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     private void createBackupAlert(Warehouse warehouse, BackupRecord record, boolean success) {
         try {
             AlertType alertType = success ? AlertType.BACKUP_COMPLETED : AlertType.BACKUP_FAILED;
@@ -842,6 +845,7 @@ public class BackupService {
         }
     }
 
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     private void createRestoreAlert(BackupRecord record, boolean success) {
         try {
             Warehouse warehouse = record.getWarehouse();
