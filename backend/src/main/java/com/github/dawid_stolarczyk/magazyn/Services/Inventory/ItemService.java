@@ -225,11 +225,12 @@ public class ItemService {
     }
 
     /**
-     * Uploads multiple photos for an item.
+     * Uploads multiple photos for an item asynchronously.
+     * Returns immediately while processing continues in background.
      */
-    @Transactional
     public List<ItemImageDto> uploadMultiplePhotos(Long id, List<MultipartFile> files, HttpServletRequest request) throws Exception {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
+
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
 
@@ -244,48 +245,87 @@ public class ItemService {
             throw new IllegalArgumentException(InventoryError.MAX_IMAGES_EXCEEDED.name());
         }
 
-        List<ItemImageDto> results = new ArrayList<>();
-
+        List<FileData> fileDataList = new ArrayList<>();
         for (MultipartFile file : files) {
             validateImageFile(file);
-
-            byte[] imageBytes = processImage(file);
-            String fileName = encryptAndUpload(imageBytes, id);
-
-            float[] embedding = generateEmbedding(imageBytes);
-            boolean shouldBePrimary = currentCount == 0;
-            int displayOrder = itemImageRepository.getNextDisplayOrder(id);
-
-            try {
-                if (shouldBePrimary) {
-                    itemImageRepository.clearPrimaryForItem(id);
-                }
-
-                ItemImage newImage = ItemImage.builder()
-                        .item(item)
-                        .photoUrl(fileName)
-                        .imageEmbedding(embedding)
-                        .isPrimary(shouldBePrimary)
-                        .displayOrder(displayOrder)
-                        .build();
-                newImage = itemImageRepository.save(newImage);
-
-                // If this is the first image, update denormalized fields
-                if (shouldBePrimary) {
-                    item.setPhoto_url(fileName);
-                    item.setImageUploaded(true);
-                    itemRepository.save(item);
-                }
-
-                results.add(mapToImageDto(newImage));
-                currentCount++;
-            } catch (Exception ex) {
-                cleanupFailedUpload(fileName);
-                throw ex;
-            }
+            fileDataList.add(new FileData(file.getOriginalFilename(), file.getBytes()));
         }
 
-        return results;
+        final int finalCurrentCount = currentCount;
+        final List<FileData> finalFileDataList = fileDataList;
+        CompletableFuture.runAsync(() -> {
+            for (int i = 0; i < finalFileDataList.size(); i++) {
+                final int fileIndex = i;
+                final int fileCurrentCount = finalCurrentCount + i;
+                FileData fileData = finalFileDataList.get(i);
+
+                try {
+                    uploadPhotoAsync(id, fileData, fileCurrentCount, item);
+                } catch (Exception ex) {
+                    log.error("Async photo upload failed for file {}: {}", fileData.filename, ex.getMessage(), ex);
+                }
+            }
+            log.info("Background upload completed for item {}: {} files processed", id, finalFileDataList.size());
+        }, asyncTaskExecutor);
+
+        List<ItemImageDto> placeholder = new ArrayList<>();
+        for (int i = 0; i < files.size(); i++) {
+            placeholder.add(ItemImageDto.builder()
+                    .itemId(id)
+                    .photoUrl("UPLOADING")
+                    .isPrimary(finalCurrentCount + i == 0)
+                    .displayOrder(finalCurrentCount + i)
+                    .hasEmbedding(false)
+                    .build());
+        }
+
+        return placeholder;
+    }
+
+    private static class FileData {
+        final String filename;
+        final byte[] bytes;
+
+        FileData(String filename, byte[] bytes) {
+            this.filename = filename;
+            this.bytes = bytes;
+        }
+    }
+
+    @Transactional
+    private void uploadPhotoAsync(Long itemId, FileData fileData, int fileCurrentCount, Item item) throws Exception {
+        ProcessedImage processedImage = processImageBytes(fileData.bytes);
+        String fileName = encryptAndUpload(processedImage.original, itemId);
+
+        float[] embedding = generateEmbedding(processedImage.processed);
+        boolean shouldBePrimary = fileCurrentCount == 0;
+        int displayOrder = fileCurrentCount;
+
+        if (shouldBePrimary) {
+            itemImageRepository.clearPrimaryForItem(itemId);
+        }
+
+        ItemImage newImage = ItemImage.builder()
+                .item(item)
+                .photoUrl(fileName)
+                .imageEmbedding(embedding)
+                .isPrimary(shouldBePrimary)
+                .displayOrder(displayOrder)
+                .build();
+        itemImageRepository.save(newImage);
+
+        if (shouldBePrimary) {
+            item.setPhoto_url(fileName);
+            item.setImageUploaded(true);
+            itemRepository.save(item);
+        }
+
+        log.debug("Successfully uploaded photo for item {}: displayOrder={}", itemId, displayOrder);
+    }
+
+    private ProcessedImage processImageBytes(byte[] imageBytes) throws IOException {
+        byte[] processed = backgroundRemovalService.removeBackground(imageBytes);
+        return new ProcessedImage(imageBytes, processed != null ? processed : imageBytes);
     }
 
     /**
@@ -423,10 +463,10 @@ public class ItemService {
 
             Item item = itemOpt.get();
 
-            byte[] imageBytes = processImage(file);
+            ProcessedImage processedImage = processImage(file);
             String fileName = UUID.randomUUID() + ".enc";
 
-            final byte[] finalImageBytes = imageBytes;
+            final byte[] finalImageBytes = processedImage.original;
 
             try (PipedInputStream pipedIn = new PipedInputStream(1024 * 64);
                  PipedOutputStream pipedOut = new PipedOutputStream(pipedIn)) {
@@ -448,7 +488,7 @@ public class ItemService {
             }
 
             try {
-                float[] embedding = generateEmbedding(imageBytes);
+                float[] embedding = generateEmbedding(processedImage.processed);
 
                 // Create primary ItemImage for this item
                 ItemImage newImage = ItemImage.builder()
@@ -475,13 +515,20 @@ public class ItemService {
 
     // === Helper methods ===
 
-    private byte[] processImage(MultipartFile file) throws IOException {
+    private static class ProcessedImage {
+        final byte[] original;
+        final byte[] processed;
+
+        ProcessedImage(byte[] original, byte[] processed) {
+            this.original = original;
+            this.processed = processed;
+        }
+    }
+
+    private ProcessedImage processImage(MultipartFile file) throws IOException {
         byte[] originalBytes = file.getBytes();
         byte[] processed = backgroundRemovalService.removeBackground(originalBytes);
-        if (processed != null) {
-            return processed;
-        }
-        return originalBytes;
+        return new ProcessedImage(originalBytes, processed != null ? processed : originalBytes);
     }
 
     private String encryptAndUpload(byte[] imageBytes, Long itemId) throws Exception {

@@ -52,7 +52,7 @@ public class WarehouseExportService {
         for (Item item : items) {
             sb.append(escapeCsv(item.getName())).append(";");
             sb.append(escapeCsv(item.getCode() != null ? item.getCode() : (item.getQrCode() != null ? item.getQrCode() : ""))).append(";");
-            sb.append(escapeCsv(item.getPhoto_url() != null ? item.getPhoto_url() : "")).append(";");
+            sb.append(";");
             sb.append(item.getMin_temp()).append(";");
             sb.append(item.getMax_temp()).append(";");
             sb.append(item.getWeight()).append(";");
@@ -66,8 +66,17 @@ public class WarehouseExportService {
         return sb.toString();
     }
 
+    public String exportAllRacks() {
+        List<Rack> racks = rackRepository.findAll();
+        return exportRacksToCsv(racks);
+    }
+
     public String exportRacksByWarehouseId(Long warehouseId) {
         List<Rack> racks = rackRepository.findByWarehouseId(warehouseId);
+        return exportRacksToCsv(racks);
+    }
+
+    private String exportRacksToCsv(List<Rack> racks) {
         StringBuilder sb = new StringBuilder();
         for (Rack rack : racks) {
             sb.append(escapeCsv(rack.getMarker())).append(";");
@@ -85,8 +94,17 @@ public class WarehouseExportService {
         return sb.toString();
     }
 
+    public String exportAllAssortments() {
+        List<Assortment> assortments = assortmentRepository.findAllForInventoryReport(null);
+        return exportAssortmentsToCsv(assortments);
+    }
+
     public String exportAssortmentsByWarehouseId(Long warehouseId) {
         List<Assortment> assortments = assortmentRepository.findAllForInventoryReport(warehouseId);
+        return exportAssortmentsToCsv(assortments);
+    }
+
+    private String exportAssortmentsToCsv(List<Assortment> assortments) {
         StringBuilder sb = new StringBuilder();
         sb.append("item_id;rack_id;position_x;position_y;expires_at\n");
         for (Assortment a : assortments) {

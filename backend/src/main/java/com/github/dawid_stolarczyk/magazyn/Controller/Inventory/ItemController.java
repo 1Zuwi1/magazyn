@@ -287,9 +287,13 @@ public class ItemController {
     }
 
     @Operation(summary = "Upload multiple photos for item (ADMIN only)",
-            description = "Uploads multiple photos to the item's image gallery. Max 10 images per item.")
+            description = """
+                    Uploads multiple photos to the item's image gallery. Max 10 images per item.
+                    Processing happens asynchronously - response is returned immediately.
+                    Check the item's photos endpoint for uploaded images.
+                    """)
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Photos uploaded successfully"),
+            @ApiResponse(responseCode = "202", description = "Photos upload started - processing in background"),
             @ApiResponse(responseCode = "400", description = "Error codes: MAX_IMAGES_EXCEEDED, FILE_IS_EMPTY, INVALID_FILE_TYPE"),
             @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND")
     })
@@ -301,7 +305,7 @@ public class ItemController {
             HttpServletRequest request) {
         try {
             List<ItemImageDto> result = itemService.uploadMultiplePhotos(id, files, request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(result));
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body(ResponseTemplate.success(result));
         } catch (IllegalArgumentException e) {
             log.warn("Invalid photos upload for item {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getMessage()));

@@ -27,7 +27,18 @@ app.s3.secret-key=minioadmin
 app.s3.items-prefix=items-photos/
 
 webauthn.allow-untrusted-attestation:true
+# Visual Identification
+app.visual-identification.high-confidence-threshold=0.9
+app.visual-identification.verification-threshold=0.7
+app.visual-identification.low-confidence-candidate-count=5
+app.visual-identification.mismatch-alternative-count=3
+app.visual-identification.embedding-cache-ttl-minutes=15
+app.visual-identification.inner-query-limit=50
+app.visual-identification.mismatch-inner-query-limit=200
 
 app.background-removal.enabled=true
 app.background-removal.url=http://localhost:7000/api/remove
 app.background-removal.timeout-seconds=30
+# Multipart upload size limits
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=50MB

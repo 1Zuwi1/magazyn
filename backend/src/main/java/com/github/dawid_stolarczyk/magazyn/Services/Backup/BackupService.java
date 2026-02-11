@@ -62,6 +62,7 @@ public class BackupService {
     @org.springframework.beans.factory.annotation.Qualifier("backupObjectMapper")
     private final ObjectMapper objectMapper;
     private final Bucket4jRateLimiter rateLimiter;
+    @org.springframework.beans.factory.annotation.Qualifier("asyncTaskExecutor")
     private final AsyncTaskExecutor asyncTaskExecutor;
     private final AlertRepository alertRepository;
     private final UserRepository userRepository;

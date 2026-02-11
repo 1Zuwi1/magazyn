@@ -72,6 +72,9 @@ public class VisualIdentificationService {
     @Value("${app.visual-identification.inner-query-limit:50}")
     private int innerQueryLimit;
 
+    @Value("${app.visual-identification.mismatch-inner-query-limit:200}")
+    private int mismatchInnerQueryLimit;
+
     private Cache<String, IdentificationSession> sessionCache;
 
     @PostConstruct
@@ -277,8 +280,9 @@ public class VisualIdentificationService {
         logMismatch(currentUser, rejectedItemId, allExcluded, identificationId, ipAddress, userAgent);
 
         // Query excluding ALL previously rejected items (best match per item across all images)
+        // Use larger inner query limit to ensure we have enough candidates after exclusions
         List<ItemSimilarityProjection> results = itemImageRepository.findBestMatchPerItemExcluding(
-                session.embeddingStr, allExcluded, innerQueryLimit, mismatchAlternativeCount);
+                session.embeddingStr, allExcluded, mismatchInnerQueryLimit, mismatchAlternativeCount);
 
         if (results == null || results.isEmpty()) {
             return ItemIdentificationResponse.builder()
