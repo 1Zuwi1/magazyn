@@ -32,7 +32,7 @@ export function ExpiryBadge({ expiryDate }: ExpiryBadgeProps) {
     return (
       <Badge variant="destructive">
         {t("generated.dashboard.shared.pluralLabel", {
-          value0: days.toString(),
+          value0: days,
         })}
       </Badge>
     )
@@ -47,7 +47,7 @@ export function ExpiryBadge({ expiryDate }: ExpiryBadgeProps) {
   return (
     <Badge variant="outline">
       {t("generated.dashboard.shared.pluralLabel", {
-        value0: days.toString(),
+        value0: days,
       })}
     </Badge>
   )

@@ -590,7 +590,7 @@
         "dimensions": "Wymiary",
         "expires": "Wygasa",
         "free2": "Wolne",
-        "pluralLabel": "{value0} {value0, plural, one {dzień} few {dni} many {dni} other {dni}}"
+        "pluralLabel": "{value0, number} {value0, plural, one {dzień} few {dni} many {dni} other {dni}}"
       },
       "visualization3d": {
         "warehouseReview": "Przegląd Magazynu",
@@ -1556,8 +1556,8 @@
       "landing": "Ładowanie",
       "page": "Strona {value0} z {value1}",
       "pluralLabel": "{value0, plural, one {# filtr aktywny} few {# filtry aktywne} many {# filtrów aktywnych} other {# filtrów aktywnych}}",
-      "pluralLabel2": "{value0} z {value1} {value1, plural, one {{singular}} few {{plural}} many {{genitive}} other {{genitive}}}",
-      "pluralLabel3": "{value0} {value0, plural, one {{singular}} few {{plural}} many {{genitive}} other {{genitive}}}"
+      "pluralLabel2": "{value0, number} z {value1, number} {value1, plural, one {{singular}} few {{plural}} many {{genitive}} other {{genitive}}}",
+      "pluralLabel3": "{value0, number} {value0, plural, one {{singular}} few {{plural}} many {{genitive}} other {{genitive}}}"
     },
     "global": {
       "brand": {

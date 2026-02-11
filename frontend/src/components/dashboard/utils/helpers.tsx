@@ -62,9 +62,15 @@ export const translateErrorCode = (
   errorCode: string,
   fallback?: string
 ): string => {
+  const translateUnsafe = t as unknown as {
+    (key: string, values?: Record<string, unknown>): string
+    has: (key: string) => boolean
+  }
+
   try {
-    if (t.has(`errorCodes.${errorCode}`)) {
-      return t(`errorCodes.${errorCode}`)
+    const translationKey = `errorCodes.${errorCode}`
+    if (translateUnsafe.has(translationKey)) {
+      return translateUnsafe(translationKey)
     }
     return fallback ?? errorCode
   } catch {

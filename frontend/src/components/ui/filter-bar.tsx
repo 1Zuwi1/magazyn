@@ -124,8 +124,8 @@ export function FilterResults({
       {isFiltered ? (
         <span className="rounded-md bg-primary/10 px-2.5 py-1 font-medium text-primary">
           {t("generated.ui.pluralLabel2", {
-            value0: filteredCount.toString(),
-            value1: totalCount.toString(),
+            value0: filteredCount,
+            value1: totalCount,
             singular: itemLabel.singular,
             plural: itemLabel.plural,
             genitive: itemLabel.genitive,
@@ -134,7 +134,7 @@ export function FilterResults({
       ) : (
         <span className="text-muted-foreground">
           {t("generated.ui.pluralLabel3", {
-            value0: totalCount.toString(),
+            value0: totalCount,
             singular: itemLabel.singular,
             plural: itemLabel.plural,
             genitive: itemLabel.genitive,

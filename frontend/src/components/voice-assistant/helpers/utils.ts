@@ -64,7 +64,11 @@ export const getCommandLabel = (
     }
   }
 
-  return t(match.command.description)
+  const translateUnsafe = t as unknown as (
+    key: string,
+    values?: Record<string, unknown>
+  ) => string
+  return translateUnsafe(match.command.description)
 }
 
 export const isCommandMatchValid = (

@@ -42,7 +42,7 @@ function formatExpiryHint(t: AppTranslate, daysUntilExpiry: number): string {
 
   const absDays = Math.abs(daysUntilExpiry)
   const daysLabel = t("generated.dashboard.shared.pluralLabel", {
-    value0: absDays.toString(),
+    value0: absDays,
   })
   if (daysUntilExpiry < 0) {
     return t("generated.dashboard.rackVisualization.expiredAgo", {

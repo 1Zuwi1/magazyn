@@ -54,11 +54,15 @@ export const translateZodMessage = (
   message: string,
   translate: AppTranslate
 ): string => {
+  const translateUnsafe = translate as unknown as (
+    key: string,
+    values?: MessageValues
+  ) => string
   const parsedMessage = parseZodMessage(message)
 
   if (parsedMessage) {
     try {
-      return translate(parsedMessage.key, parsedMessage.values)
+      return translateUnsafe(parsedMessage.key, parsedMessage.values)
     } catch {
       return parsedMessage.key
     }
@@ -69,7 +73,7 @@ export const translateZodMessage = (
   }
 
   try {
-    return translate(message)
+    return translateUnsafe(message)
   } catch {
     return message
   }

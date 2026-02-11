@@ -180,8 +180,8 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
                 })}
               >
                 {t("generated.admin.warehouses.kg", {
-                  value0: rack.totalWeight,
-                  value1: rack.maxWeight,
+                  value0: rack.totalWeight.toString(),
+                  value1: rack.maxWeight.toString(),
                 })}
               </span>
               {isOverweight && (

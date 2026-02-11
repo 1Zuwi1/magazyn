@@ -339,7 +339,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
         description={t(
           "generated.admin.warehouses.sureWantDeleteRackOperation",
           {
-            value0: rackToDelete?.marker,
+            value0: rackToDelete?.marker ?? "",
           }
         )}
         onConfirm={confirmDeleteRack}

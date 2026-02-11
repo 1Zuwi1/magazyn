@@ -590,7 +590,7 @@
         "dimensions": "Dimensions",
         "expires": "Expires",
         "free2": "Free",
-        "pluralLabel": "{value0} {value0, plural, one {day} other {days}}"
+        "pluralLabel": "{value0, number} {value0, plural, one {day} other {days}}"
       },
       "visualization3d": {
         "warehouseReview": "Warehouse Review",
@@ -1556,8 +1556,8 @@
       "landing": "Landing",
       "page": "Page {value0} of {value1}",
       "pluralLabel": "{value0, plural, one {# active filter} other {# active filters}}",
-      "pluralLabel2": "{value0} of {value1} {value1, plural, one {{singular}} other {{plural}}}",
-      "pluralLabel3": "{value0} {value0, plural, one {{singular}} other {{plural}}}"
+      "pluralLabel2": "{value0, number} of {value1, number} {value1, plural, one {{singular}} other {{plural}}}",
+      "pluralLabel3": "{value0, number} {value0, plural, one {{singular}} other {{plural}}}"
     },
     "global": {
       "brand": {

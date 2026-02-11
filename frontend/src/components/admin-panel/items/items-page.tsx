@@ -87,15 +87,21 @@ const formatBatchPhotoImportError = (
     BATCH_IMPORT_FALLBACK_CODE_MAP[
       rawCode as keyof typeof BATCH_IMPORT_FALLBACK_CODE_MAP
     ]
-  let translationKey: string | undefined
-  if (t.has(`errorCodes.${rawCode}`)) {
-    translationKey = rawCode
-  } else if (fallbackCode && t.has(`errorCodes.${fallbackCode}`)) {
-    translationKey = fallbackCode
+  const translateUnsafe = t as unknown as {
+    (key: string, values?: Record<string, unknown>): string
+    has: (key: string) => boolean
   }
-  const translatedCode = translationKey
-    ? t(`errorCodes.${translationKey}`)
-    : rawCode
+  const rawCodeKey = `errorCodes.${rawCode}`
+  const fallbackCodeKey = fallbackCode
+    ? `errorCodes.${fallbackCode}`
+    : undefined
+
+  let translatedCode = rawCode
+  if (translateUnsafe.has(rawCodeKey)) {
+    translatedCode = translateUnsafe(rawCodeKey)
+  } else if (fallbackCodeKey && translateUnsafe.has(fallbackCodeKey)) {
+    translatedCode = translateUnsafe(fallbackCodeKey)
+  }
 
   return details.length > 0 ? `${translatedCode}: ${details}` : translatedCode
 }

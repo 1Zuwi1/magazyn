@@ -199,7 +199,7 @@ const createItemsColumns = (t: AppTranslate): ColumnDef<Item>[] => [
     cell: ({ row }) => (
       <Badge variant="outline">
         {t("generated.dashboard.shared.pluralLabel", {
-          value0: row.original.expireAfterDays.toString(),
+          value0: row.original.expireAfterDays,
         })}
       </Badge>
     ),
