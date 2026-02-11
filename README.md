@@ -29,6 +29,14 @@ Przy uruchamianiu projektu inną metodą niż Docker Compose, pamiętaj o odpowi
    - `REDIS_PASSWORD` (opcjonalnie)
    - `REDIS_HOST` (opcjonalnie, domyślnie `redis`)
    - `REDIS_PORT` (opcjonalnie, domyślnie `6379`)
+   - `BACKGROUND_REMOVAL_URL`
+   - `AES_ACTIVE_KEY`
+   - `AES_KEY_V1` (klucz 256-bitowy)
+   - `S3_ENDPOINT`
+   - `S3_REGION`
+   - `S3_BUCKET`
+   - `S3_ACCESS_KEY`
+   - `S3_SECRET_KEY`
 
 2. Zbuduj aplikację:
 
