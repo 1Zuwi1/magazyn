@@ -67,11 +67,11 @@ interface ScannerProps {
 
 export const TAB_TRIGGERS = [
   {
-    text: "Receiving",
+    text: "generated.scanner.receiving",
     action: "take",
   },
   {
-    text: "Removing",
+    text: "generated.scanner.removing",
     action: "remove",
   },
 ] as const

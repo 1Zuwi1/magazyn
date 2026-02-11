@@ -142,9 +142,9 @@ export function ScannerCamera({
     )
   }, [onTakePhoto, t])
 
-  const modeLabel = TAB_TRIGGERS.find(
-    (trigger) => trigger.action === mode
-  )?.text
+  const code = TAB_TRIGGERS.find((trigger) => trigger.action === mode)?.text
+
+  const modeLabel = code ? t(code) : null
 
   const stopAfterScan = useCallback(() => {
     controlsRef.current?.stop()
