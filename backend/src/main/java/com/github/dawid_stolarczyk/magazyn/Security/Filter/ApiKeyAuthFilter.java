@@ -61,20 +61,14 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
         flushPendingUpdates();
     }
 
-    private void flushPendingUpdates() {
+    private synchronized void flushPendingUpdates() {
         if (pendingUpdates.isEmpty()) {
             return;
         }
 
-        Map<Long, Instant> updatesToFlush;
-        synchronized (this) {
-            if (pendingUpdates.isEmpty()) {
-                return;
-            }
-            updatesToFlush = new ConcurrentHashMap<>(pendingUpdates);
-            pendingUpdates.clear();
-            usageCounters.clear();
-        }
+        Map<Long, Instant> updatesToFlush = new ConcurrentHashMap<>(pendingUpdates);
+        pendingUpdates.clear();
+        usageCounters.clear();
 
         batchUpdateService.batchUpdateLastUsedAt(updatesToFlush);
     }
@@ -109,10 +103,6 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
         if (usageCounters.get(apiKeyId).get() >= UPDATE_THRESHOLD) {
             pendingUpdates.put(apiKeyId, now);
             usageCounters.remove(apiKeyId);
-        }
-
-        if (!pendingUpdates.containsKey(apiKeyId)) {
-            pendingUpdates.put(apiKeyId, now);
         }
 
         List<SimpleGrantedAuthority> authorities = apiKey.getScopes().stream()
