@@ -175,7 +175,9 @@ public class ReportDataService {
         List<InventoryStockReportRow> rows = new ArrayList<>();
         for (InventoryGrouping g : grouped.values()) {
             String oldestCreatedAt = sdf.format(Timestamp.from(g.oldestCreatedAt.atZone(ZoneId.systemDefault()).toInstant()));
-            String nearestExpiresAt = sdf.format(Timestamp.valueOf(g.nearestExpiresAt.atStartOfDay()));
+            String nearestExpiresAt = g.nearestExpiresAt != null
+                    ? sdf.format(Timestamp.from(g.nearestExpiresAt.atStartOfDay(ZoneId.systemDefault()).toInstant()))
+                    : "";
             rows.add(InventoryStockReportRow.builder()
                     .warehouseName(g.warehouseName)
                     .warehouseId(g.warehouseId)
