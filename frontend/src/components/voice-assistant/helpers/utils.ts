@@ -152,7 +152,7 @@ export const handleConfirmCommandAction = (
       return
     case "add-item":
       actions.openAddItemDialog()
-      actions.navigateAndClose("/admin/assortment")
+      actions.navigateAndClose("/admin/items")
       return
     case "search-product":
       {
