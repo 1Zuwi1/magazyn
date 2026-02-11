@@ -45,8 +45,12 @@ public class EmailService {
 
             mailSender.send(message);
             log.info("Email sent successfully to {}", to);
+        } catch (org.springframework.mail.MailSendException e) {
+            log.error("Mail server connection failed - check SMTP settings. Could not send email to {}: {}", to, e.getMessage());
         } catch (MessagingException e) {
             log.error("Error sending email to {}: {}", to, e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Unexpected error sending email to {}: {}", to, e.getMessage(), e);
         }
     }
 

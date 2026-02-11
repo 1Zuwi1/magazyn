@@ -6,6 +6,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -111,4 +112,11 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
      */
     @Query("SELECT COUNT(a) FROM Alert a WHERE a.warehouse.id = :warehouseId AND a.status IN ('OPEN', 'ACTIVE')")
     long countUnresolvedAlertsByWarehouse(@Param("warehouseId") Long warehouseId);
+
+    /**
+     * Delete old resolved/dismissed alerts
+     */
+    @Modifying
+    @Query("DELETE FROM Alert a WHERE a.status IN ('RESOLVED', 'DISMISSED') AND a.resolvedAt < :cutoffDate")
+    int deleteOldResolvedAlerts(@Param("cutoffDate") java.time.Instant cutoffDate);
 }

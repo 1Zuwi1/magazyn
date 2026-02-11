@@ -187,7 +187,7 @@ public class PdfReportGenerator {
             addTitle(document, "Raport stanu magazynu");
             addMeta(document);
 
-            PdfPTable table = new PdfPTable(9);
+            PdfPTable table = new PdfPTable(8);
             table.setWidthPercentage(100);
             table.setWidths(new float[]{2f, 1f, 1.5f, 1f, 2.5f, 2.5f, 1f, 2f});
 

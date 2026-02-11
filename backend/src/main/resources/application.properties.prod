@@ -7,13 +7,18 @@ spring.datasource.driver-class-name=org.postgresql.Driver
 spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 
 spring.mail.host=${MAIL_HOST}
-spring.mail.port=${MAIL_PORT}
+spring.mail.port=${MAIL_PORT:587}
 spring.mail.username=${MAIL_USERNAME}
 spring.mail.password=${MAIL_PASSWORD}
-
-server.forward-headers-strategy=framework
+spring.mail.protocol=smtp
+spring.mail.properties.mail.smtp.connectiontimeout=5000
+spring.mail.properties.mail.smtp.timeout=5000
+spring.mail.properties.mail.smtp.writetimeout=5000
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
+spring.mail.properties.mail.smtp.starttls.required=true
+spring.mail.properties.mail.smtp.ssl.trust=${MAIL_HOST}
+spring.mail.properties.mail.smtp.ssl.checkserveridentity=false
 
 server.servlet.context-path=/api
 
@@ -45,6 +50,7 @@ app.s3.access-key=${S3_ACCESS_KEY}
 app.s3.secret-key=${S3_SECRET_KEY}
 
 app.s3.items-prefix=items-photos/
+app.s3.backups-prefix=backups/
 
 webauthn.allow-untrusted-attestation:true
 # Visual Identification
@@ -74,5 +80,6 @@ app.backup.streaming-pool-size=8
 app.backup.retention-days=30
 # Minimum number of backups to keep per warehouse (regardless of age)
 app.backup.min-keep-count=3
+# Alert retention policy (in hours) - old resolved/dismissed alerts will be automatically deleted
+app.alert.retention-hours=1
 
-logging.level.com.github.dawid_stolarczyk.magazyn.Services=DEBUG
