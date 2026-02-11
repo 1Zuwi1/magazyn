@@ -128,11 +128,14 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
         usageCounters.computeIfAbsent(apiKeyId, k -> new AtomicInteger(0)).incrementAndGet();
         usageCounterLastAccess.put(apiKeyId, now);
 
-        if (usageCounters.get(apiKeyId).get() >= UPDATE_THRESHOLD) {
-            pendingUpdates.put(apiKeyId, now);
-            usageCounters.remove(apiKeyId);
-            usageCounterLastAccess.remove(apiKeyId);
-        }
+        usageCounters.computeIfPresent(apiKeyId, (id, counter) -> {
+            if (counter.get() >= UPDATE_THRESHOLD) {
+                pendingUpdates.put(id, now);
+                usageCounterLastAccess.remove(id);
+                return null;
+            }
+            return counter;
+        });
 
         List<SimpleGrantedAuthority> authorities = apiKey.getScopes().stream()
                 .map(scope -> new SimpleGrantedAuthority("SCOPE_" + scope.name()))
