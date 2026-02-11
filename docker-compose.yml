@@ -85,6 +85,7 @@ services:
     networks: [app_back]
 
   rembg:
+    image: danielgatis/rembg:latest
     restart: unless-stopped
     command: s --host 0.0.0.0 --port 80
     networks: [app_back]
