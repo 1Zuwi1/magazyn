@@ -20,6 +20,9 @@ import { cn } from "@/lib/utils"
 
 const profilePhonePattern = /^[+\d\s()-]*$/
 
+const ROLE_OPTIONS = ["USER", "ADMIN"] as const
+type UserRole = (typeof ROLE_OPTIONS)[number]
+
 const createEditUserFormSchema = (t: AppTranslate) =>
   z.object({
     fullName: z
@@ -41,6 +44,7 @@ const createEditUserFormSchema = (t: AppTranslate) =>
       .trim()
       .max(100, t("generated.admin.users.locationMaximum100Characters")),
     team: z.string(),
+    role: z.enum(ROLE_OPTIONS),
   })
 
 export type EditUserFormValues = z.infer<
@@ -54,6 +58,7 @@ export interface EditableAdminUser {
   phone: string
   location: string
   team: string
+  role: UserRole
 }
 
 interface ActionDialogProps {
@@ -87,6 +92,7 @@ export function ActionDialog({
       phone: currentRow?.phone ?? "",
       location: currentRow?.location ?? "",
       team: currentRow?.team ?? "",
+      role: currentRow?.role ?? "USER",
     }),
     [currentRow]
   )
@@ -233,6 +239,50 @@ export function ActionDialog({
                           value={teamOption.value}
                         >
                           {teamTranslations(teamOption.value)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            )}
+          </form.Field>
+
+          <form.Field name="role">
+            {(field) => (
+              <FieldWithState
+                field={field}
+                label={t("generated.shared.role")}
+                layout="grid"
+                renderInput={({ id, isInvalid }) => (
+                  <Select
+                    onValueChange={(value) =>
+                      field.handleChange((value as UserRole) ?? "USER")
+                    }
+                    value={field.state.value}
+                  >
+                    <SelectTrigger
+                      className={cn("w-fit", {
+                        "border-destructive": isInvalid,
+                      })}
+                      id={id}
+                    >
+                      <SelectValue
+                        render={
+                          <span className="capitalize">
+                            {t(`adminUsers.roles.${field.state.value}`)}
+                          </span>
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="w-fit">
+                      {ROLE_OPTIONS.map((role) => (
+                        <SelectItem
+                          className="capitalize"
+                          key={role}
+                          value={role}
+                        >
+                          {t(`adminUsers.roles.${role}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>

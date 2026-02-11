@@ -546,6 +546,7 @@ export const AdminUpdateUserProfileSchema = createApiSchema({
       fullName: z.string().trim().min(3).max(100).nullish(),
       location: z.string().trim().max(100).nullish(),
       team: AdminTeamSchema.nullish(),
+      role: z.enum(["USER", "ADMIN"]).nullish(),
     }),
     output: z.null(),
   },

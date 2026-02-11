@@ -110,6 +110,10 @@
     "UNEXPECTED_ERROR": "Wystąpił nieoczekiwany błąd."
   },
   "adminUsers": {
+    "roles": {
+      "ADMIN": "Administrator",
+      "USER": "Użytkownik"
+    },
     "teams": {
       "OPERATIONS": "Operacje magazynowe",
       "LOGISTICS": "Logistyka",

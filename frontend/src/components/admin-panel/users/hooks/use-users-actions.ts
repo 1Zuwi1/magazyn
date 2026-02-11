@@ -36,16 +36,19 @@ const createProfilePayload = ({
   phone,
   location,
   selectedTeam,
+  role,
 }: {
   fullName: string
   phone: string
   location: string
   selectedTeam?: AdminTeamOption
+  role?: "USER" | "ADMIN"
 }): UpdateAdminUserProfileInput => ({
   fullName: fullName || undefined,
   phone: phone || undefined,
   location: location || undefined,
   team: selectedTeam?.value,
+  role,
 })
 
 const createEmailPayload = (email: string): ChangeAdminUserEmailInput => ({
@@ -158,6 +161,7 @@ export function useUsersActions({
     const nextPhone = values.phone.trim()
     const nextLocation = values.location.trim()
     const nextTeam = values.team.trim()
+    const nextRole = values.role
 
     const currentEmail = normalizeValue(currentUser.email)
     const currentFullName = normalizeValue(currentUser.full_name)
@@ -171,7 +175,8 @@ export function useUsersActions({
       nextFullName !== currentFullName ||
       nextPhone !== currentPhone ||
       nextLocation !== currentLocation ||
-      nextTeam !== currentTeam
+      nextTeam !== currentTeam ||
+      nextRole !== currentUser.role
 
     if (!(didEmailChange || didProfileChange)) {
       return
@@ -203,6 +208,7 @@ export function useUsersActions({
             phone: nextPhone,
             location: nextLocation,
             selectedTeam: selectedTeamOption,
+            role: nextRole,
           }),
         },
         {

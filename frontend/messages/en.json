@@ -110,6 +110,10 @@
     "UNEXPECTED_ERROR": "An unexpected error occurred."
   },
   "adminUsers": {
+    "roles": {
+      "ADMIN": "Admin",
+      "USER": "User"
+    },
     "teams": {
       "OPERATIONS": "Warehouse Operations",
       "LOGISTICS": "Logistics",

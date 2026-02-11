@@ -59,7 +59,7 @@ export const resolveTeamValue = (
 export const createEditableUser = (
   user: Pick<
     AdminUser,
-    "id" | "full_name" | "email" | "phone" | "location" | "team"
+    "id" | "full_name" | "email" | "phone" | "location" | "team" | "role"
   >,
   teams: AdminTeamOption[]
 ): EditableAdminUser => ({
@@ -69,4 +69,5 @@ export const createEditableUser = (
   phone: normalizeValue(user.phone),
   location: normalizeValue(user.location),
   team: resolveTeamValue(user.team, teams),
+  role: user.role,
 })
