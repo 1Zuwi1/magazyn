@@ -73,12 +73,17 @@ export function BackupsMain() {
   const [createBackupDialogOpen, setCreateBackupDialogOpen] = useState(false)
   const [restoreAllDialogOpen, setRestoreAllDialogOpen] = useState(false)
 
-  const schedules = useMemo(() => {
+  const { schedules, hasGlobalSchedule } = useMemo(() => {
     const warehouseSchedules = (schedulesData ?? []).map(
       mapApiScheduleToViewModel
     )
 
-    return warehouseSchedules
+    return {
+      schedules: warehouseSchedules,
+      hasGlobalSchedule: warehouseSchedules.some(
+        (schedule) => schedule.warehouseName === "GLOBAL"
+      ),
+    }
   }, [schedulesData])
 
   const usedScheduleWarehouseIds = useMemo(
@@ -406,6 +411,7 @@ export function BackupsMain() {
       />
 
       <ScheduleDialog
+        hasGlobalSchedule={hasGlobalSchedule}
         isSubmitting={isScheduleMutationPending}
         onOpenChange={setScheduleDialogOpen}
         onSubmit={(payload) => {

@@ -36,6 +36,7 @@ interface ScheduleDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: ScheduleSubmitPayload) => void
+  hasGlobalSchedule: boolean
 }
 
 const getFrequencyLabel = (frequency: ScheduleFrequency, t: AppTranslate) => {
@@ -97,6 +98,7 @@ export function ScheduleDialog({
   open,
   onOpenChange,
   onSubmit,
+  hasGlobalSchedule,
 }: ScheduleDialogProps) {
   const t = useTranslations()
   const isEdit = !!schedule
@@ -191,7 +193,7 @@ export function ScheduleDialog({
                 <div className="rounded-lg border border-dashed bg-muted/20 p-3">
                   <WarehouseSelector
                     excludedWarehouseIds={usedWarehouseIds}
-                    includeAllOption
+                    includeAllOption={!hasGlobalSchedule}
                     onValueChange={(warehouseId, warehouseName) => {
                       form.setFieldValue("warehouseId", warehouseId)
                       form.setFieldValue("warehouseName", warehouseName ?? "")
