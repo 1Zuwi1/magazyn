@@ -37,7 +37,15 @@ SPRING_PROFILES_ACTIVE="$BACKEND_PROFILE" java -jar "$BACKEND_JAR" &
 BACKEND_PID=$!
 
 echo "Uruchamianie frontend na porcie $FRONTEND_PORT..."
-PORT="$FRONTEND_PORT" bun run --cwd "$ROOT_DIR/frontend" start &
+cd "$ROOT_DIR/frontend"
+rm -rf .next/standalone/.next/static
+mkdir -p .next/standalone/.next
+cp -R .next/static .next/standalone/.next/static
+
+rm -rf .next/standalone/public
+cp -R public .next/standalone/public
+cd "$ROOT_DIR"
+PORT="$FRONTEND_PORT" bun run --cwd "$ROOT_DIR/frontend" .next/standalone/server.js &
 FRONTEND_PID=$!
 
 cleanup() {

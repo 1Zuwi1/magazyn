@@ -1,50 +1,39 @@
 import { headers } from "next/headers"
 import type { NextRequest } from "next/server"
-import { getAppTranslations } from "@/i18n/get-translations"
 
-const DEFAULT_PORT = "3001"
-
-function parsePort(port: string | undefined): string {
-  const parsed = Number.parseInt(port ?? "", 10)
-  // Port 0 is rejected to avoid using a random port
-  if (Number.isNaN(parsed) || parsed < 1 || parsed > 65_535) {
-    return DEFAULT_PORT
-  }
-  return parsed.toString()
+function isStandardPort(proto: string, port: string) {
+  return (
+    (proto === "https" && port === "443") || (proto === "http" && port === "80")
+  )
 }
-
-function parseHost(host: string | null): string {
-  if (!host) {
-    return "localhost"
-  }
-  return host.includes(":") ? host.split(":")[0] : host
-}
-
-const PORT = parsePort(process.env.PORT)
 
 export async function getUrl(data: NextRequest | Headers): Promise<URL> {
   const h: Headers = data instanceof Headers ? data : await headers()
 
-  // x-forwarded headers are set by proxy (nginx)
-  const proto = h.get("x-forwarded-proto") || "http"
-  const host = h.get("x-forwarded-host") || h.get("host") || "localhost"
-  const port = h.get("x-forwarded-port") || PORT
+  const proto = (h.get("x-forwarded-proto") || "http").split(",")[0].trim()
 
-  try {
-    const url = new URL(
-      data instanceof Headers ? `http://localhost:${PORT}` : data.url
-    )
-    url.protocol = proto
-    url.host = parseHost(host)
-    url.port = parsePort(port)
-    return url
-  } catch (error) {
-    const t = await getAppTranslations()
-    const message = error instanceof Error ? error.message : String(error)
-    throw new Error(
-      t("generated.system.api.invalidUrlConstruction", {
-        value0: message,
-      })
-    )
+  // Prefer x-forwarded-host, but keep any port if present
+  const forwardedHost = (h.get("x-forwarded-host") || "").split(",")[0].trim()
+  const hostHeader = (h.get("host") || "localhost").split(",")[0].trim()
+  const host = forwardedHost || hostHeader
+
+  // If x-forwarded-port exists, use it, otherwise derive from proto
+  const xfPort = (h.get("x-forwarded-port") || "").split(",")[0].trim()
+  const derivedPort = proto === "https" ? "443" : "80"
+  const port = xfPort || derivedPort
+
+  const base = new URL(
+    data instanceof Headers ? `${proto}://${host}` : data.url
+  )
+
+  // If host already includes a port, trust it and do nothing
+  if (!(host.includes(":") || isStandardPort(proto, port))) {
+    // Only set port when it's non-standard
+    base.port = port
   }
+
+  base.protocol = proto
+  base.hostname = host.includes(":") ? host.split(":")[0] : host
+
+  return base
 }
