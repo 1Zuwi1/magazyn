@@ -44,7 +44,7 @@ public class ReportExportService {
     }
 
     public byte[] generateTemperatureAlertReport(Long warehouseId, ReportFormat format,
-                                                  Instant startDate, Instant endDate) {
+                                                 Instant startDate, Instant endDate) {
         validateWarehouse(warehouseId);
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
             throw new ReportException(ReportError.INVALID_DATE_RANGE);

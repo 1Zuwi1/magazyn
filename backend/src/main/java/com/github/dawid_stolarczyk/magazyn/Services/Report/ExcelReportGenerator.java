@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +31,7 @@ public class ExcelReportGenerator {
             Sheet sheet = workbook.createSheet("Raport wygasania");
             CellStyle headerStyle = createHeaderStyle(workbook);
 
-            String[] headers = {"Produkt", "Kod", "Data wygaśnięcia", "Regał", "Magazyn", "Ilość", "Wygasły"};
+            String[] headers = {"Produkt", "Kod", "Regał", "Magazyn", "Ilość", "Data przeterminowania", "Wygasły"};
             createHeaderRow(sheet, headers, headerStyle);
 
             int rowNum = 1;
@@ -41,10 +39,10 @@ public class ExcelReportGenerator {
                 Row excelRow = sheet.createRow(rowNum++);
                 excelRow.createCell(0).setCellValue(row.getItemName());
                 excelRow.createCell(1).setCellValue(row.getItemCode());
-                excelRow.createCell(2).setCellValue(row.getExpirationDate() != null ? row.getExpirationDate().toString() : "");
-                excelRow.createCell(3).setCellValue(row.getRackMarker());
-                excelRow.createCell(4).setCellValue(row.getWarehouseName());
-                excelRow.createCell(5).setCellValue(row.getQuantity());
+                excelRow.createCell(2).setCellValue(row.getRackMarker());
+                excelRow.createCell(3).setCellValue(row.getWarehouseName());
+                excelRow.createCell(4).setCellValue(row.getQuantity());
+                excelRow.createCell(5).setCellValue(row.getExpirationDate() != null ? row.getExpirationDate().toString() : "");
                 excelRow.createCell(6).setCellValue(row.isAlreadyExpired() ? "Tak" : "Nie");
             }
 
@@ -172,7 +170,7 @@ public class ExcelReportGenerator {
                 excelRow.createCell(4).setCellValue(row.getItemName());
                 excelRow.createCell(5).setCellValue(row.getItemCode());
                 excelRow.createCell(6).setCellValue(row.getQuantity());
-                excelRow.createCell(8).setCellValue(row.getNearestExpiresAt() != null ? row.getNearestExpiresAt().toString() : "");
+                excelRow.createCell(7).setCellValue(row.getNearestExpiresAt() != null ? row.getNearestExpiresAt().toString() : "");
             }
 
             return toBytes(workbook);

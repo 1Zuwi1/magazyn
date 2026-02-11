@@ -20,11 +20,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -34,8 +29,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.time.Instant;
 
 @RestController
 @RequestMapping("/reports")
@@ -58,7 +51,6 @@ public class ReportController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/expiry")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> generateExpiryReport(
             @Valid @RequestBody ExpiryReportRequest request,
             HttpServletRequest httpRequest) {
@@ -85,7 +77,6 @@ public class ReportController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/temperature-alerts")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> generateTemperatureAlertReport(
             @Valid @RequestBody TemperatureAlertReportRequest request,
             HttpServletRequest httpRequest) {
@@ -112,7 +103,6 @@ public class ReportController {
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/inventory-stock")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> generateInventoryStockReport(
             @Valid @RequestBody InventoryStockReportRequest request,
             HttpServletRequest httpRequest) {

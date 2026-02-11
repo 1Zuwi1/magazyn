@@ -38,8 +38,8 @@ public class ReportDataService {
         Instant now = Instant.now();
         // Group by (item, rack) to aggregate quantity
         Map<String, ExpiryGrouping> grouped = new LinkedHashMap<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         for (Assortment a : assortments) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             String dateStr = sdf.format(Timestamp.from(a.getExpiresAt().toInstant()));
             String key = a.getItem().getId() + "-" + a.getRack().getId() + "-" + dateStr;
 
@@ -72,6 +72,7 @@ public class ReportDataService {
     @Transactional(readOnly = true)
     public List<TemperatureAlertRackReportRow> collectTemperatureAlertRacksData(Long warehouseId, Instant start, Instant end) {
         List<RackReport> reports = rackReportRepository.findAlertTriggeredReports(warehouseId, start, end);
+        SimpleDateFormat sdfCreated = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
         List<TemperatureAlertRackReportRow> rows = new ArrayList<>();
         for (RackReport r : reports.stream().sorted((r1, r2) -> r2.getCreatedAt().compareTo(r1.getCreatedAt())).toList()) {
@@ -84,7 +85,6 @@ public class ReportDataService {
                 violationType = "Nieznany typ naruszenia";
             }
 
-            SimpleDateFormat sdfCreated = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             String createdAtStr = sdfCreated.format(Timestamp.from(r.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()));
             rows.add(TemperatureAlertRackReportRow.builder()
                     .rackId(r.getRack().getId())
@@ -104,12 +104,13 @@ public class ReportDataService {
     @Transactional(readOnly = true)
     public List<TemperatureAlertAssortmentReportRow> collectTemperatureAlertAssortmentsData(Long warehouseId, Instant start, Instant end) {
         List<RackReport> rackReports = assortmentRepository.findAlertTriggeredReports(warehouseId, start, end);
+        SimpleDateFormat sdfCreated = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
         List<TemperatureAlertAssortmentReportRow> rows = new ArrayList<>();
         for (RackReport r : rackReports.stream().sorted((r1, r2) -> r2.getCreatedAt().compareTo(r1.getCreatedAt())).toList()) {
             for (Assortment a : r.getRack().getAssortments()) {
                 // Only include assortments that were on the rack at the time of the alert
-                if (a.getCreatedAt().toInstant().isAfter(r.getCreatedAt())) {
+                if (a.getCreatedAt().toInstant().isBefore(r.getCreatedAt())) {
                     continue;
                 }
 
@@ -123,7 +124,6 @@ public class ReportDataService {
                     continue;
                 }
 
-                SimpleDateFormat sdfCreated = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 String createdAtStr = sdfCreated.format(Timestamp.from(r.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()));
                 rows.add(TemperatureAlertAssortmentReportRow.builder()
                         .rackMarker(r.getRack().getMarker())
@@ -171,9 +171,9 @@ public class ReportDataService {
             }
         }
 
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         List<InventoryStockReportRow> rows = new ArrayList<>();
         for (InventoryGrouping g : grouped.values()) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             String oldestCreatedAt = sdf.format(Timestamp.from(g.oldestCreatedAt.atZone(ZoneId.systemDefault()).toInstant()));
             String nearestExpiresAt = sdf.format(Timestamp.valueOf(g.nearestExpiresAt.atStartOfDay()));
             rows.add(InventoryStockReportRow.builder()

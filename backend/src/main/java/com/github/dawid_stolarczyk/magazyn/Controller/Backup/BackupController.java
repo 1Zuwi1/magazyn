@@ -120,19 +120,37 @@ public class BackupController {
         return ResponseEntity.ok(ResponseTemplate.success(backupService.getAllSchedules()));
     }
 
-    @Operation(summary = "Create or update a backup schedule for a warehouse",
-            description = "Upserts a backup schedule. Each warehouse can have at most one schedule.")
+    @Operation(summary = "Get global backup schedule")
+    @ApiResponse(responseCode = "200", description = "Global schedule returned")
+    @GetMapping("/schedules/global")
+    public ResponseEntity<ResponseTemplate<BackupScheduleDto>> getGlobalSchedule() {
+        return ResponseEntity.ok(ResponseTemplate.success(backupService.getGlobalSchedule()));
+    }
+
+    @Operation(summary = "Create or update global backup schedule",
+            description = "Upserts a global backup schedule that applies to all warehouses without specific schedules.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Schedule created/updated"),
-            @ApiResponse(responseCode = "400", description = "Error codes: WAREHOUSE_NOT_FOUND",
+            @ApiResponse(responseCode = "200", description = "Global schedule created/updated"),
+            @ApiResponse(responseCode = "400", description = "Error codes: NO_WAREHOUSES_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @PutMapping("/schedules/{warehouseId}")
-    public ResponseEntity<ResponseTemplate<BackupScheduleDto>> upsertSchedule(
-            @PathVariable Long warehouseId,
+    @PutMapping("/schedules/global")
+    public ResponseEntity<ResponseTemplate<BackupScheduleDto>> upsertGlobalSchedule(
             @Valid @RequestBody CreateBackupScheduleRequest request) {
         return ResponseEntity.ok(ResponseTemplate.success(
-                backupService.upsertSchedule(warehouseId, request)));
+                backupService.upsertGlobalSchedule(request)));
+    }
+
+    @Operation(summary = "Delete global backup schedule")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Global schedule deleted"),
+            @ApiResponse(responseCode = "400", description = "Error codes: SCHEDULE_NOT_FOUND",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
+    @DeleteMapping("/schedules/global")
+    public ResponseEntity<ResponseTemplate<Void>> deleteGlobalSchedule() {
+        backupService.deleteGlobalSchedule();
+        return ResponseEntity.ok(ResponseTemplate.success());
     }
 
     @Operation(summary = "Delete a backup schedule for a warehouse")
@@ -147,34 +165,19 @@ public class BackupController {
         return ResponseEntity.ok(ResponseTemplate.success());
     }
 
-    @Operation(summary = "Backup all warehouses",
-            description = "Initiates async encrypted backups for all warehouses with all resource types (racks, items, assortments)")
+    @Operation(summary = "Create or update a backup schedule for a warehouse",
+            description = "Upserts a backup schedule. Each warehouse can have at most one specific schedule.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "202", description = "Backups initiated for all warehouses"),
-            @ApiResponse(responseCode = "400", description = "Error codes: NO_WAREHOUSES_FOUND",
+            @ApiResponse(responseCode = "200", description = "Schedule created/updated"),
+            @ApiResponse(responseCode = "400", description = "Error codes: WAREHOUSE_NOT_FOUND",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
-    @PostMapping("/backup-all")
-    public ResponseEntity<ResponseTemplate<List<BackupRecordDto>>> backupAllWarehouses(
-            HttpServletRequest httpRequest) {
-        User currentUser = resolveCurrentUser();
-        List<BackupRecordDto> dtos = backupService.backupAllWarehouses(currentUser, httpRequest);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ResponseTemplate.success(dtos));
-    }
-
-    @Operation(summary = "Restore all warehouses",
-            description = "Restores all warehouses from their latest completed backup")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "202", description = "Restores initiated for all warehouses"),
-            @ApiResponse(responseCode = "400", description = "Error codes: NO_WAREHOUSES_FOUND",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
-    })
-    @PostMapping("/restore-all")
-    public ResponseEntity<ResponseTemplate<RestoreAllWarehousesResult>> restoreAllWarehouses(
-            HttpServletRequest httpRequest) {
-        User currentUser = resolveCurrentUser();
-        RestoreAllWarehousesResult result = backupService.restoreAllWarehouses(currentUser, httpRequest);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ResponseTemplate.success(result));
+    @PutMapping("/schedules/{warehouseId}")
+    public ResponseEntity<ResponseTemplate<BackupScheduleDto>> upsertSchedule(
+            @PathVariable Long warehouseId,
+            @Valid @RequestBody CreateBackupScheduleRequest request) {
+        return ResponseEntity.ok(ResponseTemplate.success(
+                backupService.upsertSchedule(warehouseId, request)));
     }
 
     private User resolveCurrentUser() {

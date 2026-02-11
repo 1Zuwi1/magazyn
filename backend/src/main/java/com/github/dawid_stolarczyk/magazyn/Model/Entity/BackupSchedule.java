@@ -12,9 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity
-@Table(name = "backup_schedules", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"warehouse_id"}, name = "uk_backup_schedule_warehouse")
-})
+@Table(name = "backup_schedules")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,8 +25,12 @@ public class BackupSchedule {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "warehouse_id", nullable = false)
+    @JoinColumn(name = "warehouse_id")
     private Warehouse warehouse;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean global = false;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "schedule_code", nullable = false, length = 20)

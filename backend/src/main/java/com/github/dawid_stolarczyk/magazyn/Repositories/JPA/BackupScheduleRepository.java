@@ -10,7 +10,11 @@ public interface BackupScheduleRepository extends JpaRepository<BackupSchedule, 
 
     Optional<BackupSchedule> findByWarehouseId(Long warehouseId);
 
+    Optional<BackupSchedule> findByGlobalTrue();
+
     List<BackupSchedule> findByEnabledTrue();
 
     void deleteByWarehouseId(Long warehouseId);
+
+    void deleteByGlobalTrue();
 }

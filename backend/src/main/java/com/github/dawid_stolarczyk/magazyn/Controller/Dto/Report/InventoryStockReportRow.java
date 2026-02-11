@@ -6,9 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 @NoArgsConstructor
@@ -41,5 +38,5 @@ public class InventoryStockReportRow {
     private String oldestCreatedAt;
 
     @Schema(description = "Nearest expiration date")
-    private String  nearestExpiresAt;
+    private String nearestExpiresAt;
 }

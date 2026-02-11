@@ -7,8 +7,6 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Report.TemperatureAler
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -23,14 +21,14 @@ public class CsvReportGenerator {
 
     public byte[] generateExpiryReport(List<ExpiryReportRow> rows) {
         StringBuilder sb = new StringBuilder(UTF8_BOM);
-        sb.append("Produkt,Kod,Data wygaśnięcia,Regał,Magazyn,Ilość,Wygasły\n");
+        sb.append("Produkt,Kod,Regał,Magazyn,Ilość,Data wygaśnięcia,Wygasły\n");
         for (ExpiryReportRow row : rows) {
             sb.append(escapeCsv(row.getItemName())).append(',');
             sb.append(escapeCsv(row.getItemCode())).append(',');
-            sb.append(row.getExpirationDate()).append(',');
             sb.append(escapeCsv(row.getRackMarker())).append(',');
             sb.append(escapeCsv(row.getWarehouseName())).append(',');
             sb.append(row.getQuantity()).append(',');
+            sb.append(row.getExpirationDate()).append(',');
             sb.append(row.isAlreadyExpired() ? "Tak" : "Nie").append('\n');
         }
         return sb.toString().getBytes(StandardCharsets.UTF_8);

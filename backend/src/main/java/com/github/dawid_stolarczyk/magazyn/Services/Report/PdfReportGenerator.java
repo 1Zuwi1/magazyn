@@ -6,22 +6,16 @@ import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Report.TemperatureAler
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Report.TemperatureAlertRackReportRow;
 import com.github.dawid_stolarczyk.magazyn.Exceptions.ReportError;
 import com.github.dawid_stolarczyk.magazyn.Exceptions.ReportException;
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.Element;
+import com.lowagie.text.*;
 import com.lowagie.text.Font;
-import com.lowagie.text.PageSize;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.Phrase;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import org.springframework.stereotype.Service;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -55,20 +49,19 @@ public class PdfReportGenerator {
 
             addHeaderCell(table, "Produkt");
             addHeaderCell(table, "Kod");
-            addHeaderCell(table, "Data wygaśnięcia");
             addHeaderCell(table, "Regał");
             addHeaderCell(table, "Magazyn");
             addHeaderCell(table, "Ilość");
+            addHeaderCell(table, "Data przeterminowania");
             addHeaderCell(table, "Wygasły");
 
             for (ExpiryReportRow row : rows) {
                 addCell(table, row.getItemName());
                 addCell(table, row.getItemCode());
-                addCell(table, row.getExpirationDate() != null ? row.getExpirationDate() : "");
-                addCell(table, row.getExpirationDate() != null ? row.getExpirationDate() : "");
                 addCell(table, row.getRackMarker());
                 addCell(table, row.getWarehouseName());
                 addCell(table, String.valueOf(row.getQuantity()));
+                addCell(table, row.getExpirationDate() != null ? row.getExpirationDate() : "");
                 addCell(table, row.isAlreadyExpired() ? "Tak" : "Nie");
             }
 
