@@ -27,6 +27,7 @@ const Racks_QUERY_KEY = ["Racks"] as const
 const RACK_DETAILS_QUERY_KEY = [...Racks_QUERY_KEY, "details"] as const
 const RACK_DETAILS_STALE_TIME_MS = 5 * 60 * 1000
 const INFINITE_RACKS_DEFAULT_PAGE_SIZE = 50
+const CSV_IMPORT_TIMEOUT_MS = 60_000
 
 export type RacksList = InferApiOutput<typeof RacksSchema, "GET">
 export type RackDetails = InferApiOutput<typeof RackDetailsSchema, "GET">
@@ -167,6 +168,7 @@ export function useImportRacks() {
         RackImportSchema,
         {
           method: "POST",
+          timeoutMs: CSV_IMPORT_TIMEOUT_MS,
           body: { file },
           formData: (formData, data) => {
             formData.append("file", data.file)

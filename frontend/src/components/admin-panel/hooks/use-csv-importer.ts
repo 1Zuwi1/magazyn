@@ -4,6 +4,8 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { useAppTranslations } from "@/i18n/use-translations"
 import { MAX_TOAST_ROWS } from "../lib/constants"
+import { formatBytes } from "../lib/utils"
+import { DEFAULT_CONFIG } from "../warehouses/csv/utils/constants"
 import { parseCsvFile } from "../warehouses/csv/utils/csv-utils"
 import type {
   CsvImporterType,
@@ -13,6 +15,7 @@ import type {
 
 interface UseCsvImporterProps<T extends CsvImporterType> {
   type: T
+  maxFileSizeInBytes?: number
   onImport: (payload: {
     file: File
     rows: CsvRowType<T>[]
@@ -21,6 +24,7 @@ interface UseCsvImporterProps<T extends CsvImporterType> {
 
 export function useCsvImporter<T extends CsvImporterType>({
   type,
+  maxFileSizeInBytes = DEFAULT_CONFIG.maxSizeInBytes,
   onImport,
 }: UseCsvImporterProps<T>) {
   const t = useAppTranslations()
@@ -41,6 +45,15 @@ export function useCsvImporter<T extends CsvImporterType>({
     }
 
     resetFile()
+    if (file.size > maxFileSizeInBytes) {
+      toast.error(
+        t("generated.admin.warehouses.formattedValue", {
+          value0: file.name,
+          value1: `File is too large. Maximum size: ${formatBytes(maxFileSizeInBytes)}.`,
+        })
+      )
+      return false
+    }
 
     try {
       const result = await parseCsvFile(file, type, t)

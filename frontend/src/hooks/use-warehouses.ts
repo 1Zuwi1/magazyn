@@ -28,6 +28,7 @@ const WAREHOUSE_DETAILS_QUERY_KEY = [
   "details",
 ] as const
 const WAREHOUSE_DETAILS_STALE_TIME_MS = 5 * 60 * 1000
+const CSV_IMPORT_TIMEOUT_MS = 60_000
 
 export type WarehousesList = InferApiOutput<typeof WarehousesSchema, "GET">
 export type WarehouseDetails = InferApiOutput<
@@ -166,6 +167,7 @@ export function useImportWarehouses() {
     mutationFn: async (file: File) => {
       return await apiFetch("/api/warehouses/import", WarehouseImportSchema, {
         method: "POST",
+        timeoutMs: CSV_IMPORT_TIMEOUT_MS,
         body: { file },
         formData: (formData, data) => {
           formData.append("file", data.file)

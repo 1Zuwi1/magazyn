@@ -73,6 +73,7 @@ export type InferApiInput<
 
 export type ApiMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
 export type ApiResponseType = "json" | "blob"
+export const DEFAULT_API_TIMEOUT_MS = 30_000
 
 type MethodsWithoutBody = "GET"
 type MethodsWithOptionalBody = "DELETE" // add more if you have such endpoints
@@ -89,6 +90,7 @@ type InitGet<S extends ApiSchema, M extends MethodsWithoutBody> = Omit<
 > & {
   method?: MethodsWithoutBody | undefined
   responseType?: ApiResponseType
+  timeoutMs?: number
   body?: never
   formData?: never
   queryParams?: InferApiInput<S, M>
@@ -100,6 +102,7 @@ type InitWithBodyRequired<
 > = Omit<RequestInit, "body"> & {
   method: M
   responseType?: ApiResponseType
+  timeoutMs?: number
 } & (
     | { body: InferApiInput<S, M>; formData?: never }
     | {
@@ -114,6 +117,7 @@ type InitWithBodyOptional<
 > = Omit<RequestInit, "body"> & {
   method: M
   responseType?: ApiResponseType
+  timeoutMs?: number
 } & ( // no body at all
     | { body?: never; formData?: never }
     // or body present (and therefore optional formData path)
@@ -157,13 +161,15 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
   init?: Omit<RequestInit, "body"> & {
     method?: string | undefined
     responseType?: ApiResponseType
+    timeoutMs?: number
     body?: unknown
     formData?: unknown
   }
 ): Promise<InferApiOutput<S, M>> {
   const abortController = new AbortController()
   const abort = abortController.abort.bind(abortController)
-  const timeoutId = setTimeout(abort, 15_000, "Request timed out")
+  const timeoutMs = resolveTimeoutMs(init?.timeoutMs)
+  const timeoutId = setTimeout(abort, timeoutMs, "Request timed out")
 
   try {
     return await performApiFetch(path, dataSchema, init, abortController.signal)
@@ -198,9 +204,22 @@ function assertMethod(m: string): asserts m is ApiMethod {
 type ExtendedInit = Omit<RequestInit, "body"> & {
   method?: string | undefined
   responseType?: ApiResponseType
+  timeoutMs?: number
   body?: unknown
   formData?: unknown
   queryParams?: Record<string, unknown>
+}
+
+function resolveTimeoutMs(timeoutMs?: number): number {
+  if (timeoutMs === undefined) {
+    return DEFAULT_API_TIMEOUT_MS
+  }
+
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new FetchError("timeoutMs must be a positive number", 500)
+  }
+
+  return timeoutMs
 }
 
 function normalizeMethod(init?: ExtendedInit): ApiMethod {
@@ -284,12 +303,14 @@ function stripExtendedInit(init?: ExtendedInit): RequestInit {
     body: _ignored,
     queryParams: _queryParams,
     responseType: _responseType,
+    timeoutMs: _timeoutMs,
     ...restInit
   } = (init ?? {}) as RequestInit & {
     formData?: unknown
     body?: unknown
     queryParams?: unknown
     responseType?: unknown
+    timeoutMs?: unknown
   }
   return restInit
 }

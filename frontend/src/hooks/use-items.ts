@@ -28,6 +28,7 @@ const ITEMS_QUERY_KEY = ["items"] as const
 const ITEM_DETAILS_QUERY_KEY = [...ITEMS_QUERY_KEY, "details"] as const
 const ITEM_DETAILS_STALE_TIME_MS = 5 * 60 * 1000
 const INFINITE_ITEMS_STALE_TIME_MS = 60_000
+const CSV_IMPORT_TIMEOUT_MS = 60_000
 
 export type ItemsList = InferApiOutput<typeof ItemsSchema, "GET">
 export type Item = ItemsList["content"][number]
@@ -176,6 +177,7 @@ export function useImportItems() {
     mutationFn: async (file: File) => {
       return await apiFetch("/api/items/import", ItemImportSchema, {
         method: "POST",
+        timeoutMs: CSV_IMPORT_TIMEOUT_MS,
         body: { file },
         formData: (formData, data) => {
           formData.append("file", data.file)

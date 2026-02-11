@@ -28,6 +28,7 @@ import type { CsvImporterType, CsvRowType } from "./utils/types"
 interface CsvImporterProps<T extends CsvImporterType> {
   type: T
   isImporting?: boolean
+  maxFileSizeInBytes?: number
   onImport: (payload: {
     file: File
     rows: CsvRowType<T>[]
@@ -36,6 +37,7 @@ interface CsvImporterProps<T extends CsvImporterType> {
 
 export function CsvImporter<T extends CsvImporterType>({
   isImporting = false,
+  maxFileSizeInBytes,
   type,
   onImport,
 }: CsvImporterProps<T>) {
@@ -60,7 +62,11 @@ export function CsvImporter<T extends CsvImporterType>({
     previewRows,
     previewHeaders,
     resetFile,
-  } = useCsvImporter<T>({ type, onImport: handleImport })
+  } = useCsvImporter<T>({
+    type,
+    maxFileSizeInBytes,
+    onImport: handleImport,
+  })
 
   let columns: ReadonlyArray<{ key: string; label: string }> = getItemColumns(t)
   if (type === "warehouse") {
@@ -118,7 +124,10 @@ export function CsvImporter<T extends CsvImporterType>({
           />
         ) : (
           <div>
-            <FileUploader onUpload={processFile} />
+            <FileUploader
+              maxFileSizeInBytes={maxFileSizeInBytes}
+              onUpload={processFile}
+            />
           </div>
         )}
 

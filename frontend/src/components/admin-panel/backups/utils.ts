@@ -63,9 +63,9 @@ export function mapApiScheduleToViewModel(
   schedule: ApiBackupSchedule
 ): BackupSchedule {
   return {
-    id: String(schedule.warehouseId),
-    warehouseId: schedule.warehouseId,
-    warehouseName: schedule.warehouseName,
+    id: String(schedule.warehouseId ?? 0),
+    warehouseId: schedule.warehouseId ?? 0,
+    warehouseName: schedule.warehouseName ?? "",
     frequency: schedule.scheduleCode,
     backupHour: schedule.backupHour,
     dayOfWeek: schedule.dayOfWeek ?? null,

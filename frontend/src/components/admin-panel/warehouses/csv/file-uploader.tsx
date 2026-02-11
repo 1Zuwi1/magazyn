@@ -27,6 +27,7 @@ interface FileUploaderProps {
   onValueChange?: (files: File[]) => void
   onUpload?: (files: File[]) => boolean | Promise<boolean>
   disabled?: boolean
+  maxFileSizeInBytes?: number
 }
 
 export function FileUploader({
@@ -34,6 +35,7 @@ export function FileUploader({
   onValueChange,
   onUpload,
   disabled = false,
+  maxFileSizeInBytes = DEFAULT_CONFIG.maxSizeInBytes,
 }: FileUploaderProps) {
   const t = useAppTranslations()
 
@@ -154,7 +156,7 @@ export function FileUploader({
         accept={DEFAULT_CONFIG.accept}
         disabled={isDisabled}
         maxFiles={DEFAULT_CONFIG.maxFileCount}
-        maxSize={DEFAULT_CONFIG.maxSizeInBytes}
+        maxSize={maxFileSizeInBytes}
         onDrop={onDrop}
       >
         {({ getRootProps, getInputProps, isDragActive }) => (
