@@ -71,7 +71,9 @@ export default function SiteHeader() {
     if (paths.has(key)) {
       displayName = paths(key)
     } else {
-      displayName = isDynamic ? splittedPath[0] : decodeURI(path)
+      displayName = isDynamic
+        ? splittedPath[0]
+        : sanitizeVisibleText(safeDecodeURIComponent(path))
     }
     return {
       href: currPath,
@@ -174,8 +176,8 @@ export default function SiteHeader() {
         <LanguageSwitcher />
         {pathname.includes("/dashboard/warehouse/") && (
           <Scanner
-            warehouseName={decodeURIComponent(
-              sanitizeVisibleText(safeDecodeURIComponent(splitted[2] ?? ""))
+            warehouseName={sanitizeVisibleText(
+              safeDecodeURIComponent(splitted[2] ?? "")
             )}
           />
         )}

@@ -131,9 +131,9 @@ export const handleConfirmCommandAction = (
           actions.setView("error")
           return
         }
-        const encodedName = encodeURIComponent(warehouse.name)
+
         actions.navigateAndClose(
-          `/dashboard/warehouse/id/${warehouse.id}/${encodedName}`
+          `/dashboard/warehouse/id/${warehouse.id}/${warehouse.name}`
         )
       }
       return

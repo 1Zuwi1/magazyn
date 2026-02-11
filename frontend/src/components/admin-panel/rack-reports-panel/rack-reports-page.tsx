@@ -211,7 +211,7 @@ function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
     )
   }
 
-  const warehouseHref = `/admin/warehouses/id/${report.warehouseId}/${encodeURIComponent(report.warehouseName)}`
+  const warehouseHref = `/admin/warehouses/id/${report.warehouseId}/${report.warehouseName}`
 
   return (
     <div className="flex h-full flex-col">

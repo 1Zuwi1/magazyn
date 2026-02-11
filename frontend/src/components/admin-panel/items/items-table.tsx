@@ -196,9 +196,7 @@ function createColumns(
             <DropdownMenuContent align="end" className="w-fit">
               <DropdownMenuItem
                 onClick={() =>
-                  router.push(
-                    `/admin/items/id/${item.id}/${encodeURIComponent(item.name)}`
-                  )
+                  router.push(`/admin/items/id/${item.id}/${item.name}`)
                 }
               >
                 <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />

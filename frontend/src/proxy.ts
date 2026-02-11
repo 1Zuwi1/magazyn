@@ -87,6 +87,21 @@ const localizePathname = (pathname: string, locale: AppLocale): string => {
   return addAppLocaleToPathname(pathname, locale)
 }
 
+const normalizePathSegment = (segment: string): string => {
+  return segment
+    .split("")
+    .filter((char, index) => {
+      if (
+        char === "%" &&
+        segment.charAt(index + 1) + segment.charAt(index + 2) !== "20"
+      ) {
+        return false
+      }
+      return true
+    })
+    .join("")
+}
+
 export async function proxy(request: NextRequest) {
   const intlResponse = intlProxy(request)
   if (intlResponse.headers.has("location")) {
@@ -127,20 +142,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(fallbackPath, base))
   }
 
-  // Normalize name safely (avoid double-encoding)
-  let decodedName: string
-  try {
-    decodedName = decodeURIComponent(nameSegment)
-  } catch {
-    const base = getUrl(request.headers)
-    const fallbackPath = localizePathname(rule.fallbackPath, locale)
-    return NextResponse.redirect(new URL(fallbackPath, base))
-  }
-  const safeName = encodeURIComponent(decodedName)
+  // Normalize safely, including malformed `%` sequences like trailing `%`.
+  const normalizedName = normalizePathSegment(nameSegment)
+
   const tailPath = tail.length ? `/${tail.join("/")}` : ""
 
   const targetPath = localizePathname(
-    `${rule.targetPrefix}${safeName}${tailPath}`,
+    `${rule.targetPrefix}${normalizedName}${tailPath}`,
     locale
   )
 

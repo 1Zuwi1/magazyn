@@ -197,7 +197,7 @@ export function AdminOverview() {
           return (
             <Link
               className="group block"
-              href={`/admin/warehouses/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}`}
+              href={`/admin/warehouses/id/${warehouse.id}/${warehouse.name}`}
               key={warehouse.id}
             >
               <div className="relative overflow-hidden rounded-xl border bg-card p-5 transition-all hover:border-destructive/30 hover:shadow-md">

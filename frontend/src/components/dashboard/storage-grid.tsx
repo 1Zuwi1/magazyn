@@ -262,7 +262,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
                   size: "sm",
                   className: "flex-1 gap-1.5",
                 })}
-                href={`/dashboard/warehouse/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}`}
+                href={`/dashboard/warehouse/id/${warehouse.id}/${warehouse.name}`}
               >
                 <span>{t("generated.shared.racks2")}</span>
                 <HugeiconsIcon className="size-3.5" icon={ArrowRight01Icon} />
@@ -318,7 +318,7 @@ export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
               onClick={() => {
                 if (visualizationTarget) {
                   router.push(
-                    `/dashboard/warehouse/id/${visualizationTarget.id}/${encodeURIComponent(visualizationTarget.name)}/3d-visualization`
+                    `/dashboard/warehouse/id/${visualizationTarget.id}/${visualizationTarget.name}/3d-visualization`
                   )
                 }
               }}

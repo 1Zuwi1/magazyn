@@ -82,9 +82,7 @@ export function Dock() {
     if (!isInWarehouse) {
       return ""
     }
-    return decodeURIComponent(
-      sanitizeVisibleText(safeDecodeURIComponent(splitted[2] ?? ""))
-    )
+    return sanitizeVisibleText(safeDecodeURIComponent(splitted[2] ?? ""))
   }, [isInWarehouse, splitted])
 
   return (

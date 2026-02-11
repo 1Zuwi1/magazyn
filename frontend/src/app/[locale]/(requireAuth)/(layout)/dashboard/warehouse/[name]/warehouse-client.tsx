@@ -1,56 +1,56 @@
 "use client"
 
 import {
-  Alert01Icon,
-  CubeIcon,
-  Layers01Icon,
-  PackageIcon,
-  RulerIcon,
-  ThermometerIcon,
-} from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import Link from "next/link"
-import { useParams, useRouter, useSearchParams } from "next/navigation"
-import { useTranslations } from "next-intl"
+    Alert01Icon,
+    CubeIcon,
+    Layers01Icon,
+    PackageIcon,
+    RulerIcon,
+    ThermometerIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import Link from "next/link";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
-  type Dispatch,
-  type SetStateAction,
-  useEffect,
-  useMemo,
-  useState,
-} from "react"
-import { PageHeader } from "@/components/dashboard/page-header"
-import { ItemDetailsDialog } from "@/components/dashboard/rack-visualization/item-details-dialog"
-import { RackGridView } from "@/components/dashboard/rack-visualization/rack-grid-view"
-import { RackParametersCard } from "@/components/dashboard/rack-visualization/rack-parameters-card"
-import { RackShelfDetailsCard } from "@/components/dashboard/rack-visualization/rack-shelf-details-card"
-import { RackStatusCard } from "@/components/dashboard/rack-visualization/rack-status-card"
+    type Dispatch,
+    type SetStateAction,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
+import { PageHeader } from "@/components/dashboard/page-header";
+import { ItemDetailsDialog } from "@/components/dashboard/rack-visualization/item-details-dialog";
+import { RackGridView } from "@/components/dashboard/rack-visualization/rack-grid-view";
+import { RackParametersCard } from "@/components/dashboard/rack-visualization/rack-parameters-card";
+import { RackShelfDetailsCard } from "@/components/dashboard/rack-visualization/rack-shelf-details-card";
+import { RackStatusCard } from "@/components/dashboard/rack-visualization/rack-status-card";
 import type {
-  IconComponent,
-  SlotCoordinates,
-} from "@/components/dashboard/types"
-import { buildItemsGrid } from "@/components/dashboard/utils/helpers"
+    IconComponent,
+    SlotCoordinates,
+} from "@/components/dashboard/types";
+import { buildItemsGrid } from "@/components/dashboard/utils/helpers";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button, buttonVariants } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import useAssortments from "@/hooks/use-assortment"
-import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
-import useRacks from "@/hooks/use-racks"
-import useWarehouses from "@/hooks/use-warehouses"
-import type { AppTranslate } from "@/i18n/use-translations"
-import type { Rack } from "@/lib/schemas"
-import { cn } from "@/lib/utils"
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogMedia,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import useAssortments from "@/hooks/use-assortment";
+import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id";
+import useRacks from "@/hooks/use-racks";
+import useWarehouses from "@/hooks/use-warehouses";
+import type { AppTranslate } from "@/i18n/use-translations";
+import type { Rack } from "@/lib/schemas";
+import { cn } from "@/lib/utils";
 
 const OCCUPANCY_WARNING_THRESHOLD = 75
 const OCCUPANCY_CRITICAL_THRESHOLD = 90
@@ -711,7 +711,7 @@ export default function WarehouseClient() {
             buttonVariants({ variant: "outline", size: "sm" }),
             "gap-2"
           )}
-          href={`/dashboard/warehouse/${encodeURIComponent(warehouseName)}/assortment`}
+          href={`/dashboard/warehouse/${(warehouseName)}/assortment`}
         >
           <HugeiconsIcon className="size-4" icon={PackageIcon} />
           <span>{t("generated.shared.assortment")}</span>
@@ -751,7 +751,7 @@ export default function WarehouseClient() {
             <AlertDialogAction
               onClick={() =>
                 router.push(
-                  `/dashboard/warehouse/${encodeURIComponent(warehouseName)}/3d-visualization`
+                  `/dashboard/warehouse/${warehouseName}/3d-visualization`
                 )
               }
             >

@@ -189,7 +189,7 @@ export function WarehouseCard({
               "flex w-full items-center justify-center gap-2 rounded-lg border bg-background px-4 py-2.5 font-medium text-sm transition-all",
               "hover:border-primary/30 hover:bg-muted"
             )}
-            href={`/admin/warehouses/id/${warehouse.id}/${encodeURIComponent(warehouse.name)}`}
+            href={`/admin/warehouses/id/${warehouse.id}/${warehouse.name}`}
           >
             {t("generated.admin.warehouses.manageRacks")}
             <HugeiconsIcon

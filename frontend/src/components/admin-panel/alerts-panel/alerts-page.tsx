@@ -139,7 +139,7 @@ const getLocationHref = (alert: AlertItem): string | null => {
     return null
   }
 
-  return `/admin/warehouses/id/${warehouseId}/${encodeURIComponent(warehouseName)}`
+  return `/admin/warehouses/id/${warehouseId}/${warehouseName}`
 }
 
 function DetailsCard({

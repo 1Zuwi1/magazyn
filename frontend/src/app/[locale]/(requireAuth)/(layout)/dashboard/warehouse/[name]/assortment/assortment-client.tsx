@@ -113,7 +113,7 @@ export default function AssortmentClient() {
   return (
     <div className="space-y-8">
       <PageHeader
-        backHref={`/dashboard/warehouse/${encodeURIComponent(warehouse?.name ?? "")}`}
+        backHref={`/dashboard/warehouse/${warehouse?.name ?? ""}`}
         backTitle={t("generated.dashboard.warehouse.backWarehouse")}
         description={t(
           "generated.dashboard.warehouse.browseAllProductsStoredWarehouse"
