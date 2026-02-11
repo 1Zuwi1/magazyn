@@ -195,7 +195,7 @@ export function TemperatureReportCard() {
             key: (row: TemperatureReportRow) => `±${row.deviation}°C`,
           },
           {
-            header: "Poziom",
+            header: "Status",
             key: (row: TemperatureReportRow) =>
               getSeverityConfig(row.severity).label,
           },

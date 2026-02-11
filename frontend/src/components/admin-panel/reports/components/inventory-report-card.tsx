@@ -227,9 +227,9 @@ export function InventoryReportCard() {
 
       <div className="border-b bg-muted/30 p-4">
         <SearchInput
-          aria-label="Szukaj produktu, SKU, regału lub magazynu"
+          aria-label="Szukaj produktu, kodu, regału lub magazynu"
           onChange={setSearch}
-          placeholder="Szukaj po nazwie, SKU, regale, magazynie..."
+          placeholder="Szukaj po nazwie, kodzie, regale, magazynie..."
           value={search}
         />
       </div>
