@@ -45,7 +45,6 @@ import {
 } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { getAdminNavLinks } from "../lib/constants"
 
 type AlertsList = InferApiOutput<typeof AlertsSchema, "GET">
 type AlertItem = AlertsList["content"][number]
@@ -596,10 +595,6 @@ export default function AlertsMain() {
       <AdminPageHeader
         description={t("generated.admin.alerts.viewSystemAlertsWarehouses")}
         icon={Alert01Icon}
-        navLinks={getAdminNavLinks(t).map((link) => ({
-          title: link.title,
-          url: link.url,
-        }))}
         title={t("generated.shared.alerts")}
       >
         <div className="mt-3 flex flex-wrap items-center gap-3">

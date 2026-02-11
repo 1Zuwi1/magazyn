@@ -23,7 +23,6 @@ import useItems, {
 } from "@/hooks/use-items"
 import { useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { getAdminNavLinks } from "../lib/constants"
 import { ItemDialog, type ItemFormData, PhotoPromptDialog } from "./item-dialog"
 import { AdminItemsTable } from "./items-table"
 
@@ -221,10 +220,6 @@ export default function ItemsMain() {
         }
         description={t("generated.admin.items.manageCatalogInventoryItems")}
         icon={Package}
-        navLinks={getAdminNavLinks(t).map((link) => ({
-          title: link.title,
-          url: link.url,
-        }))}
         title={t("generated.shared.items")}
       >
         <div className="mt-3 flex flex-wrap items-center gap-3">

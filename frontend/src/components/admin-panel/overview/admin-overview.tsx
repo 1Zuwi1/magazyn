@@ -23,7 +23,7 @@ import useWarehouses from "@/hooks/use-warehouses"
 import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { getAdminNavLinks, THRESHOLD } from "../lib/constants"
+import { THRESHOLD } from "../lib/constants"
 import { AdminStatCard } from "./stat-card"
 
 const ADMIN_OVERVIEW_FETCH_SIZE = 1
@@ -282,10 +282,6 @@ export function AdminOverview() {
           "generated.admin.overview.manageUsersWarehousesSystemNotifications"
         )}
         icon={Settings02Icon}
-        navLinks={getAdminNavLinks(t).map((link) => ({
-          title: link.title,
-          url: link.url,
-        }))}
         title={t("generated.shared.administrationPanel")}
       />
 

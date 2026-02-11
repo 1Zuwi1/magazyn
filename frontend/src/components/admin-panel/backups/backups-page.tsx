@@ -23,7 +23,6 @@ import useWarehouses from "@/hooks/use-warehouses"
 import { useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ConfirmDialog } from "../components/dialogs"
-import { getAdminNavLinks } from "../lib/constants"
 import { BackupDetailDialog } from "./components/backup-detail-dialog"
 import { BackupsHeaderStats } from "./components/backups-header-stats"
 import { BackupsTable } from "./components/backups-table"
@@ -297,10 +296,6 @@ export function BackupsMain() {
         }
         description={t("generated.admin.backups.pageDescription")}
         icon={DatabaseIcon}
-        navLinks={getAdminNavLinks(t).map((link) => ({
-          title: link.title,
-          url: link.url,
-        }))}
         title={t("generated.shared.backups")}
       >
         <BackupsHeaderStats />

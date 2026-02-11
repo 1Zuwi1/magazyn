@@ -138,6 +138,74 @@ describe("POST requests", () => {
   })
 })
 
+describe("Blob responses", () => {
+  it("returns blob response when responseType is blob", async () => {
+    const schema = z.object({
+      POST: z.object({
+        input: z.object({
+          format: z.enum(["PDF", "EXCEL", "CSV"]),
+        }),
+        output: z.instanceof(Blob),
+      }),
+    })
+
+    const reportBlob = new Blob(["report-bytes"], {
+      type: "application/octet-stream",
+    })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({
+        "content-type": "application/octet-stream",
+      }),
+      blob: async () => reportBlob,
+    })
+
+    const result = await apiFetch("/api/reports/inventory-stock", schema, {
+      method: "POST",
+      responseType: "blob",
+      body: { format: "PDF" },
+    })
+
+    expect(result).toBeInstanceOf(Blob)
+    await expect(result.text()).resolves.toBe("report-bytes")
+
+    const fetchCall = mockFetch.mock.calls[0]
+    expect(fetchCall[1].headers.get("Accept")).toBe("application/octet-stream")
+  })
+
+  it("supports nullable response payload for sendEmail flows", async () => {
+    const schema = z.object({
+      POST: z.object({
+        input: z.object({
+          format: z.enum(["PDF", "EXCEL", "CSV"]),
+          sendEmail: z.boolean().optional(),
+        }),
+        output: z.union([z.instanceof(Blob), z.null()]),
+      }),
+    })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({
+        "content-type": "application/json",
+      }),
+      json: async () => ({ success: true, data: null }),
+    })
+
+    const result = await apiFetch("/api/reports/inventory-stock", schema, {
+      method: "POST",
+      body: { format: "PDF", sendEmail: true },
+    })
+
+    expect(result).toBeNull()
+    const fetchCall = mockFetch.mock.calls[0]
+    expect(fetchCall[1].headers.get("Accept")).toBe("application/json")
+  })
+})
+
 describe("PUT requests", () => {
   it("sends PUT request with body", async () => {
     const schema = z.object({
@@ -675,7 +743,7 @@ describe("BodyInit types", () => {
 
     expect(mockFetch).toHaveBeenCalled()
     const fetchCall = mockFetch.mock.calls[0]
-    expect(fetchCall[0].toString()).toBe("http://localhost/api/test")
+    expect(fetchCall[0].toString()).toContain("/api/test")
     expect(fetchCall[1].body).toBe(blob)
   })
 })

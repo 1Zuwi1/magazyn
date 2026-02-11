@@ -20,22 +20,13 @@ import { TableCell } from "@/components/ui/table"
 import { useAppTranslations } from "@/i18n/use-translations"
 import type { RackAssortment } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
+import { formatDateTime } from "../../utils/helpers"
 
 interface TableRowContentProps {
   assortment: RackAssortment
   onView: (id: number) => void
   onEdit: (id: number) => void
   onDelete: (id: number) => void
-}
-
-function formatDateTime(dateString: string, locale: string) {
-  return new Date(dateString).toLocaleDateString(locale, {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
 }
 
 function isExpired(expiresAt: string) {

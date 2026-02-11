@@ -23,7 +23,6 @@ import useWarehouses from "@/hooks/use-warehouses"
 import { useAppTranslations } from "@/i18n/use-translations"
 import type { Rack } from "@/lib/schemas"
 import { AdminPageHeader } from "../../components/admin-page-header"
-import { getAdminNavLinks } from "../../lib/constants"
 import type { RackFormData } from "../csv/utils/types"
 import { RackDialog } from "./rack-dialog"
 import { RackGrid } from "./racks-grid"
@@ -279,10 +278,6 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
           value0: warehouseName,
         })}
         icon={GridIcon}
-        navLinks={getAdminNavLinks(t).map((link) => ({
-          title: link.title,
-          url: link.url,
-        }))}
         onBack={handleBack}
         title={t("generated.shared.racks2")}
       >

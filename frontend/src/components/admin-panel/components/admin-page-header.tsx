@@ -8,13 +8,9 @@ import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { removeAppLocalePrefix } from "@/i18n/locale"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
-
-interface NavLink {
-  title: string
-  url: string
-  icon?: IconSvgElement
-}
+import { getAdminNavLinks } from "../lib/constants"
 
 interface AdminPageHeaderProps {
   /** Main title of the page */
@@ -32,7 +28,6 @@ interface AdminPageHeaderProps {
   /** Optional click handler for the back button */
   onBack?: () => void
   /** Navigation links */
-  navLinks?: NavLink[]
   /** Additional badge to display next to the title */
   titleBadge?: string
   /** Additional content to render in the header actions area */
@@ -49,12 +44,12 @@ export function AdminPageHeader({
   backHref,
   backTitle = "Wstecz",
   onBack,
-  navLinks,
   titleBadge,
   actions,
   children,
 }: AdminPageHeaderProps) {
   const pathname = usePathname()
+  const t = useAppTranslations()
   const renderIconOrBackButton = () => {
     if (onBack) {
       return (
@@ -108,6 +103,11 @@ export function AdminPageHeader({
 
     return null
   }
+
+  const navLinks = getAdminNavLinks(t).map((link) => ({
+    title: link.title,
+    url: link.url,
+  }))
 
   return (
     <header className="relative overflow-hidden rounded-2xl border bg-linear-to-br from-card via-card to-primary/2">
@@ -171,9 +171,6 @@ export function AdminPageHeader({
                   href={link.url}
                   key={link.url}
                 >
-                  {link.icon && (
-                    <HugeiconsIcon className="size-4" icon={link.icon} />
-                  )}
                   {link.title}
                   {isActive && (
                     <span className="absolute bottom-0 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-primary" />

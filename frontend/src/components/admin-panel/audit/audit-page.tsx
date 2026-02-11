@@ -10,9 +10,9 @@ import {
   UserIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { format } from "date-fns"
 import { useLocale } from "next-intl"
 import { useState } from "react"
+import { formatDateTime } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
@@ -35,7 +35,6 @@ import {
   useAuditInboundOperations,
   useAuditOutboundOperations,
 } from "@/hooks/use-audit"
-import { getDateFnsLocale } from "@/i18n/date-fns-locale"
 import { useAppTranslations } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type {
@@ -43,26 +42,14 @@ import type {
   AuditOutboundOperationsSchema,
 } from "@/lib/schemas"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { getAdminNavLinks } from "../lib/constants"
 
 type InboundList = InferApiOutput<typeof AuditInboudOperationsSchema, "GET">
 type InboundOperation = InboundList["content"][number]
 
 type OutboundList = InferApiOutput<typeof AuditOutboundOperationsSchema, "GET">
 type OutboundOperation = OutboundList["content"][number]
-type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
 
 const PAGE_SIZE = 20
-
-const formatDateTime = (date: string, dateFnsLocale: DateFnsLocale): string => {
-  try {
-    return format(new Date(date), "dd MMM yyyy, HH:mm", {
-      locale: dateFnsLocale,
-    })
-  } catch {
-    return "\u2014"
-  }
-}
 
 function DateRangeFilter({
   startDate,
@@ -137,16 +124,15 @@ function InboundTableContent({
   onStartDateChange,
   onEndDateChange,
   onClearDates,
-  dateFnsLocale,
 }: {
   startDate: string
   endDate: string
   onStartDateChange: (value: string) => void
   onEndDateChange: (value: string) => void
   onClearDates: () => void
-  dateFnsLocale: DateFnsLocale
 }) {
   const t = useAppTranslations()
+  const locale = useLocale()
 
   const [page, setPage] = useState(1)
 
@@ -236,7 +222,7 @@ function InboundTableContent({
                     icon={Time01Icon}
                   />
                   <span className="text-xs">
-                    {formatDateTime(op.operationTimestamp, dateFnsLocale)}
+                    {formatDateTime(op.operationTimestamp, locale)}
                   </span>
                 </div>
               </TableCell>
@@ -290,16 +276,15 @@ function OutboundTableContent({
   onStartDateChange,
   onEndDateChange,
   onClearDates,
-  dateFnsLocale,
 }: {
   startDate: string
   endDate: string
   onStartDateChange: (value: string) => void
   onEndDateChange: (value: string) => void
   onClearDates: () => void
-  dateFnsLocale: DateFnsLocale
 }) {
   const t = useAppTranslations()
+  const locale = useLocale()
 
   const [page, setPage] = useState(1)
 
@@ -390,7 +375,7 @@ function OutboundTableContent({
                     icon={Time01Icon}
                   />
                   <span className="text-xs">
-                    {formatDateTime(op.operationTimestamp, dateFnsLocale)}
+                    {formatDateTime(op.operationTimestamp, locale)}
                   </span>
                 </div>
               </TableCell>
@@ -448,9 +433,6 @@ function OutboundTableContent({
 export default function AuditMain() {
   const t = useAppTranslations()
 
-  const locale = useLocale()
-  const dateFnsLocale = getDateFnsLocale(locale)
-
   const [inboundStartDate, setInboundStartDate] = useState("")
   const [inboundEndDate, setInboundEndDate] = useState("")
   const [outboundStartDate, setOutboundStartDate] = useState("")
@@ -473,10 +455,6 @@ export default function AuditMain() {
           "generated.admin.audit.warehouseOperationsHistoryInboundOutbound"
         )}
         icon={Analytics01Icon}
-        navLinks={getAdminNavLinks(t).map((link) => ({
-          title: link.title,
-          url: link.url,
-        }))}
         title={t("generated.shared.operationsAudit")}
       />
 
@@ -497,7 +475,6 @@ export default function AuditMain() {
 
           <TabsContent value="inbound">
             <InboundTableContent
-              dateFnsLocale={dateFnsLocale}
               endDate={inboundEndDate}
               onClearDates={handleClearInboundDates}
               onEndDateChange={(v) => {
@@ -512,7 +489,6 @@ export default function AuditMain() {
 
           <TabsContent value="outbound">
             <OutboundTableContent
-              dateFnsLocale={dateFnsLocale}
               endDate={outboundEndDate}
               onClearDates={handleClearOutboundDates}
               onEndDateChange={(v) => {

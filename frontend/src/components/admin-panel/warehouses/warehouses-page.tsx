@@ -25,7 +25,6 @@ import useWarehouses, {
 } from "@/hooks/use-warehouses"
 import { useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { getAdminNavLinks } from "../lib/constants"
 import { WarehouseCard } from "./components/warehouse-card"
 import {
   WarehouseDialog,
@@ -228,10 +227,6 @@ export default function WarehousesMain() {
         }
         description={t("generated.admin.warehouses.manageWarehousesRacks")}
         icon={WarehouseIcon}
-        navLinks={getAdminNavLinks(t).map((link) => ({
-          title: link.title,
-          url: link.url,
-        }))}
         title={t("generated.shared.warehouses")}
       >
         {/* Quick Stats */}

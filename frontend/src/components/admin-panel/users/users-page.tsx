@@ -18,7 +18,6 @@ import { useUsersPagination } from "@/components/admin-panel/users/hooks/use-use
 import PaginationFull from "@/components/ui/pagination-component"
 import { useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { getAdminNavLinks } from "../lib/constants"
 export default function UsersMain() {
   const t = useAppTranslations()
 
@@ -115,10 +114,6 @@ export default function UsersMain() {
       <AdminPageHeader
         description={t("generated.admin.users.manageUserAccountsProfileData")}
         icon={UserMultiple02Icon}
-        navLinks={getAdminNavLinks(t).map((link) => ({
-          title: link.title,
-          url: link.url,
-        }))}
         title={t("generated.shared.users")}
       >
         <UsersStats

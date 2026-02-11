@@ -72,6 +72,7 @@ export type InferApiInput<
 // ----------------- Init typing (method-aware) -----------------
 
 export type ApiMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
+export type ApiResponseType = "json" | "blob"
 
 type MethodsWithoutBody = "GET"
 type MethodsWithOptionalBody = "DELETE" // add more if you have such endpoints
@@ -87,6 +88,7 @@ type InitGet<S extends ApiSchema, M extends MethodsWithoutBody> = Omit<
   "body"
 > & {
   method?: MethodsWithoutBody | undefined
+  responseType?: ApiResponseType
   body?: never
   formData?: never
   queryParams?: InferApiInput<S, M>
@@ -97,6 +99,7 @@ type InitWithBodyRequired<
   M extends MethodWithBodyRequired,
 > = Omit<RequestInit, "body"> & {
   method: M
+  responseType?: ApiResponseType
 } & (
     | { body: InferApiInput<S, M>; formData?: never }
     | {
@@ -110,6 +113,7 @@ type InitWithBodyOptional<
   M extends MethodsWithOptionalBody,
 > = Omit<RequestInit, "body"> & {
   method: M
+  responseType?: ApiResponseType
 } & ( // no body at all
     | { body?: never; formData?: never }
     // or body present (and therefore optional formData path)
@@ -152,6 +156,7 @@ export async function apiFetch<S extends ApiSchema, M extends ApiMethod>(
   // single impl signature keeps it strict without `any`
   init?: Omit<RequestInit, "body"> & {
     method?: string | undefined
+    responseType?: ApiResponseType
     body?: unknown
     formData?: unknown
   }
@@ -192,6 +197,7 @@ function assertMethod(m: string): asserts m is ApiMethod {
 
 type ExtendedInit = Omit<RequestInit, "body"> & {
   method?: string | undefined
+  responseType?: ApiResponseType
   body?: unknown
   formData?: unknown
   queryParams?: Record<string, unknown>
@@ -276,8 +282,15 @@ function stripExtendedInit(init?: ExtendedInit): RequestInit {
   const {
     formData: _fdHandler,
     body: _ignored,
+    queryParams: _queryParams,
+    responseType: _responseType,
     ...restInit
-  } = (init ?? {}) as RequestInit & { formData?: unknown; body?: unknown }
+  } = (init ?? {}) as RequestInit & {
+    formData?: unknown
+    body?: unknown
+    queryParams?: unknown
+    responseType?: unknown
+  }
   return restInit
 }
 
@@ -364,12 +377,19 @@ async function performApiFetch<S extends ApiSchema, M extends ApiMethod>(
   validatePayloadRules(method, payloadFlags)
   const bodyToSend = buildRequestBody(init, payloadFlags)
   const restInit = stripExtendedInit(init)
+  const responseType = init?.responseType ?? "json"
 
   const headersInit: HeadersInit = mergeHeaders(
     restInit.headers,
     bodyToSend instanceof FormData
       ? undefined
-      : { "Content-Type": "application/json", Accept: "application/json" }
+      : {
+          "Content-Type": "application/json",
+          Accept:
+            responseType === "blob"
+              ? "application/octet-stream"
+              : "application/json",
+        }
   )
 
   const url = buildRequestUrl(path, resolveBaseUrl(), method, init?.queryParams)
@@ -383,7 +403,12 @@ async function performApiFetch<S extends ApiSchema, M extends ApiMethod>(
     body: bodyToSend,
   })
 
-  return (await parseResponse(res, dataSchema, method)) as InferApiOutput<S, M>
+  return (await parseResponse(
+    res,
+    dataSchema,
+    method,
+    responseType
+  )) as InferApiOutput<S, M>
 }
 
 function resolveBaseUrl(): string | undefined {
@@ -443,10 +468,25 @@ async function resolveHeaders(headersInit: HeadersInit): Promise<HeadersInit> {
 async function parseResponse<S extends ApiSchema>(
   res: Response,
   dataSchema: S,
-  method: ApiMethod
+  method: ApiMethod,
+  responseType: ApiResponseType
 ): Promise<InferApiOutput<S, ApiMethod>> {
   if (!res.ok) {
     await throwFetchErrorFromResponse(res)
+  }
+
+  const outputSchema = resolveOutputSchema(dataSchema, method)
+
+  if (responseType === "blob") {
+    const [blobErr, blob] = await tryCatch(res.blob())
+    if (blobErr) {
+      throw new FetchError(
+        `Failed to parse blob response from server: ${blobErr.message}`,
+        500
+      )
+    }
+
+    return outputSchema.parse(blob) as InferApiOutput<S, ApiMethod>
   }
 
   const [err, json] = await tryCatch(res.json())
@@ -457,7 +497,6 @@ async function parseResponse<S extends ApiSchema>(
     )
   }
 
-  const outputSchema = resolveOutputSchema(dataSchema, method)
   const parsed = getCachedSchema(outputSchema).parse(json)
 
   if (parsed.success) {

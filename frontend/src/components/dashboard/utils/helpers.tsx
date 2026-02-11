@@ -21,10 +21,13 @@ export function getSlotCoordinate(index: number, cols: number): string {
   return `${rowLabel}-${colLabel}`
 }
 
-export const formatDateTime = (value: string, locale: string): string => {
-  const parsedDate = parseISO(value)
+export const formatDateTime = (
+  value: string | Date,
+  locale: string
+): string => {
+  const parsedDate = typeof value === "string" ? parseISO(value) : value
   if (!isValid(parsedDate)) {
-    return value
+    return value.toString()
   }
 
   return formatDate(parsedDate, "Pp", {

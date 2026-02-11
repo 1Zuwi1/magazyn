@@ -1167,6 +1167,41 @@ export const RackReportsSchema = createApiSchema({
   },
 })
 
+export const ReportFileFormatSchema = z.enum(["PDF", "EXCEL", "CSV"])
+export type ReportFileFormat = z.infer<typeof ReportFileFormatSchema>
+
+const BaseReportRequestSchema = z.object({
+  format: ReportFileFormatSchema,
+  warehouseId: z.number().int().nonnegative().nullable(),
+  sendEmail: z.boolean().optional(),
+})
+
+export const TemperatureAlertReportSchema = createApiSchema({
+  POST: {
+    input: BaseReportRequestSchema.extend({
+      startDate: z.string().nullish(),
+      endDate: z.string().nullish(),
+    }),
+    output: z.union([z.instanceof(Blob), z.null()]),
+  },
+})
+
+export const InventoryStockReportSchema = createApiSchema({
+  POST: {
+    input: BaseReportRequestSchema,
+    output: z.union([z.instanceof(Blob), z.null()]),
+  },
+})
+
+export const ExpiryReportSchema = createApiSchema({
+  POST: {
+    input: BaseReportRequestSchema.extend({
+      daysAhead: z.number().int().nonnegative().optional(),
+    }),
+    output: z.union([z.instanceof(Blob), z.null()]),
+  },
+})
+
 // --- Backup Management ---
 
 export const BackupResourceTypeSchema = z.enum([
