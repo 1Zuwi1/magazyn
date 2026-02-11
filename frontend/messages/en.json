@@ -843,6 +843,12 @@
         "releases": "Releases"
       },
       "items": {
+        "primaryLabel": "Primary photo",
+        "productPhotos": "Product photos",
+        "manageProductPhotos": "Manage product photos",
+        "setAsPrimary": "Set as primary",
+        "primaryPhotoSet": "Primary photo set successfully",
+        "photoDeleted": "Photo deleted successfully",
         "failedAccessCameraMakeSure": "Failed to access the camera. Make sure permission is granted.",
         "again": "Try again",
         "takePhoto": "Take photo",
@@ -852,6 +858,7 @@
         "milk32": "Milk 3.2%",
         "shelfLifeDays": "Shelf life (days)",
         "hazardousMaterial": "Hazardous material",
+        "noPhotosYet": "This item has no photos yet.",
         "weightKg": "Weight (kg)",
         "dimensionsMm": "Dimensions (mm)",
         "itemRemoved": "Item removed",
@@ -889,7 +896,24 @@
         "changeProductParameters": "Change product parameters",
         "enterNewProductParameters": "Enter new product parameters",
         "editProduct": "Edit product",
-        "addProduct": "Add product"
+        "addProduct": "Add product",
+        "detail": {
+          "itemDetails": "Item details and management",
+          "editItem": "Edit item",
+          "backToItems": "Back to items",
+          "photoGallery": "Photo Gallery",
+          "uploadPhoto": "Upload photo",
+          "noPhotos": "No photos available. Upload your first photo.",
+          "setPrimary": "Set as primary",
+          "photoUploaded": "Photo uploaded successfully",
+          "photoDeleted": "Photo deleted successfully",
+          "primaryPhotoSet": "Primary photo set successfully",
+          "confirmDeletePhoto": "Are you sure you want to delete this photo? This action cannot be undone.",
+          "deletePhoto": "Delete photo",
+          "generateEmbeddings": "Generate embeddings",
+          "generatingEmbeddings": "Generating embeddings...",
+          "embeddingsGenerated": "Embeddings generated successfully"
+        }
       },
       "overview": {
         "failedRetrieveStorageData": "Failed to retrieve storage data",

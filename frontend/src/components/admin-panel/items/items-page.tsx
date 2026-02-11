@@ -25,7 +25,7 @@ import useItems, {
 import { type AppTranslate, useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ImportItemPhotosDialog } from "./import-item-photos-dialog"
-import { ItemDialog, type ItemFormData, PhotoPromptDialog } from "./item-dialog"
+import { ItemDialog, type ItemFormData } from "./item-dialog"
 import { AdminItemsTable } from "./items-table"
 
 const mapApiItemToViewModel = (item: ApiItem): DashboardItem => {
@@ -132,10 +132,6 @@ export default function ItemsMain() {
   const [itemToDelete, setItemToDelete] = useState<DashboardItem | undefined>(
     undefined
   )
-  const [photoDialogOpen, setPhotoDialogOpen] = useState(false)
-  const [photoItem, setPhotoItem] = useState<DashboardItem | undefined>(
-    undefined
-  )
   const [importPhotosDialogOpen, setImportPhotosDialogOpen] = useState(false)
 
   const items = useMemo(() => {
@@ -165,19 +161,9 @@ export default function ItemsMain() {
     setPage(1)
   }
 
-  const handleEditItem = (item: DashboardItem) => {
-    setSelectedItem(item)
-    setDialogOpen(true)
-  }
-
   const handleDeleteItem = (item: DashboardItem) => {
     setItemToDelete(item)
     setDeleteDialogOpen(true)
-  }
-
-  const handleUploadPhoto = (item: DashboardItem) => {
-    setPhotoItem(item)
-    setPhotoDialogOpen(true)
   }
 
   const handleOpenImportPhotosDialog = () => {
@@ -342,10 +328,8 @@ export default function ItemsMain() {
         isLoading={isItemsPending}
         items={items}
         onDelete={handleDeleteItem}
-        onEdit={handleEditItem}
         onSearchChange={handleSearchChange}
         onSetPage={handleSetPage}
-        onUploadPhoto={handleUploadPhoto}
         refetch={refetchItems}
         search={search}
         totalPages={totalPages}
@@ -366,13 +350,6 @@ export default function ItemsMain() {
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
         title={t("generated.admin.items.deleteItem")}
-      />
-
-      <PhotoPromptDialog
-        hasExistingPhoto
-        itemId={photoItem ? Number(photoItem.id) : null}
-        onOpenChange={setPhotoDialogOpen}
-        open={photoDialogOpen}
       />
 
       <ImportItemPhotosDialog

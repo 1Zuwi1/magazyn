@@ -57,7 +57,7 @@ const getErrorCode = (value: string | undefined): string | undefined => {
   return ERROR_CODE_PATTERN.test(value) ? value : undefined
 }
 
-const translateErrorCode = (
+export const translateErrorCode = (
   t: AppTranslate,
   errorCode: string,
   fallback?: string

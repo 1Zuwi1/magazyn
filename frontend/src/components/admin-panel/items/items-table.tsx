@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  ImageUploadIcon,
   MoreHorizontalIcon,
   PencilIcon,
   Trash,
@@ -15,7 +14,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
-
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import {
   SortableHeader,
@@ -64,9 +63,7 @@ interface AdminItemsTableProps {
   debouncedSearch: string
   onSetPage: (nextPage: number) => void
   onSearchChange: (value: string) => void
-  onEdit: (item: Item) => void
   onDelete: (item: Item) => void
-  onUploadPhoto: (item: Item) => void
   isError: boolean
   isLoading: boolean
   refetch: () => void
@@ -74,9 +71,8 @@ interface AdminItemsTableProps {
 
 function createColumns(
   t: ReturnType<typeof useAppTranslations>,
-  onEdit: (item: Item) => void,
   onDelete: (item: Item) => void,
-  onUploadPhoto: (item: Item) => void
+  router: ReturnType<typeof useRouter>
 ): ColumnDef<Item>[] {
   return [
     {
@@ -195,16 +191,11 @@ function createColumns(
               />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-fit">
-              <DropdownMenuItem onClick={() => onUploadPhoto(item)}>
-                <HugeiconsIcon
-                  className="mr-2 h-4 w-4"
-                  icon={ImageUploadIcon}
-                />
-                {item.imageUrl
-                  ? t("generated.admin.items.changePhoto")
-                  : t("generated.admin.items.addPhoto")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit(item)}>
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(`/admin/items/id/${item.id}/${item.name}`)
+                }
+              >
                 <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
                 {t("generated.shared.edit")}
               </DropdownMenuItem>
@@ -232,18 +223,17 @@ export function AdminItemsTable({
   debouncedSearch,
   onSetPage,
   onSearchChange,
-  onEdit,
   onDelete,
-  onUploadPhoto,
   isError,
   isLoading,
   refetch,
 }: AdminItemsTableProps) {
   const t = useAppTranslations()
+  const router = useRouter()
 
   const [sorting, setSorting] = useState<SortingState>([])
 
-  const columns = createColumns(t, onEdit, onDelete, onUploadPhoto)
+  const columns = createColumns(t, onDelete, router)
 
   const table = useReactTable({
     data: items,

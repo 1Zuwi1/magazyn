@@ -11,6 +11,7 @@ import {
   BackupRestoreAllSchema,
   BackupRestoreSchema,
   BackupScheduleByWarehouseSchema,
+  BackupScheduleGlobalSchema,
   BackupSchedulesSchema,
   BackupsSchema,
 } from "@/lib/schemas"
@@ -27,6 +28,10 @@ export const BACKUP_SCHEDULES_QUERY_KEY = [
   ...BACKUPS_QUERY_KEY,
   "schedules",
 ] as const
+export const BACKUP_GLOBAL_SCHEDULE_QUERY_KEY = [
+  ...BACKUP_SCHEDULES_QUERY_KEY,
+  "global",
+] as const
 
 export type BackupsList = InferApiOutput<typeof BackupsSchema, "GET">
 export type Backup = BackupsList["content"][number]
@@ -36,6 +41,10 @@ export type BackupSchedules = InferApiOutput<
   "GET"
 >
 export type BackupSchedule = BackupSchedules[number]
+export type GlobalBackupSchedule = InferApiOutput<
+  typeof BackupScheduleGlobalSchema,
+  "GET"
+>
 export type BackupCreateInput = InferApiInput<typeof BackupsSchema, "POST">
 export type BackupListParams = InferApiInput<typeof BackupsSchema, "GET">
 export type BackupScheduleUpsertInput = InferApiInput<
@@ -95,6 +104,19 @@ export function useBackupSchedules(
     queryKey: BACKUP_SCHEDULES_QUERY_KEY,
     queryFn: () =>
       apiFetch("/api/backups/schedules", BackupSchedulesSchema, {
+        method: "GET",
+      }),
+    ...options,
+  })
+}
+
+export function useGlobalBackupSchedule(
+  options?: SafeQueryOptions<GlobalBackupSchedule>
+): UseQueryResult<GlobalBackupSchedule, FetchError> {
+  return useApiQuery({
+    queryKey: BACKUP_GLOBAL_SCHEDULE_QUERY_KEY,
+    queryFn: () =>
+      apiFetch("/api/backups/schedules/global", BackupScheduleGlobalSchema, {
         method: "GET",
       }),
     ...options,
@@ -197,6 +219,31 @@ export function useDeleteBackupSchedule() {
           method: "DELETE",
         }
       ),
+    onSuccess: (_, __, ___, context) => {
+      invalidateBackupsCache(context.client)
+    },
+  })
+}
+
+export function useUpsertGlobalBackupSchedule() {
+  return useApiMutation({
+    mutationFn: (params: BackupScheduleUpsertInput) =>
+      apiFetch("/api/backups/schedules/global", BackupScheduleGlobalSchema, {
+        method: "PUT",
+        body: params,
+      }),
+    onSuccess: (_, __, ___, context) => {
+      invalidateBackupsCache(context.client)
+    },
+  })
+}
+
+export function useDeleteGlobalBackupSchedule() {
+  return useApiMutation({
+    mutationFn: () =>
+      apiFetch("/api/backups/schedules/global", BackupScheduleGlobalSchema, {
+        method: "DELETE",
+      }),
     onSuccess: (_, __, ___, context) => {
       invalidateBackupsCache(context.client)
     },

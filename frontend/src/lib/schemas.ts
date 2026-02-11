@@ -852,13 +852,13 @@ export const BatchUploadPhotoSchema = createApiSchema({
 export const SetPrimaryItemPhotoSchema = createApiSchema({
   PUT: {
     input: z.null(),
-    output: z.unknown(),
+    output: z.null(),
   },
 })
 
 export const DeleteItemPhotoSchema = createApiSchema({
   DELETE: {
-    output: z.unknown(),
+    output: z.null(),
   },
 })
 
@@ -877,7 +877,7 @@ export const DownloadItemPhotoByImageIdSchema = createApiSchema({
 export const GenerateItemEmbeddingsSchema = createApiSchema({
   POST: {
     input: z.null(),
-    output: z.unknown(),
+    output: z.null(),
   },
 })
 
@@ -1093,7 +1093,11 @@ export const InboundOperationExecuteSchema = createApiSchema({
         itemId: z.undefined().optional(), // explicitly forbid
       }),
     ]),
-    output: z.unknown(),
+    output: z.object({
+      itemId: z.number().int().nonnegative(),
+      storedQuantity: z.number().int().nonnegative(),
+      codes: z.array(z.string()),
+    }),
   },
 })
 
@@ -1453,6 +1457,84 @@ export const BackupScheduleByWarehouseSchema = createApiSchema({
   },
   DELETE: {
     output: z.null(),
+  },
+})
+
+export const BackupScheduleGlobalSchema = createApiSchema({
+  GET: {
+    output: BackupScheduleSchema,
+  },
+  PUT: {
+    input: BackupScheduleUpsertInputSchema,
+    output: BackupScheduleSchema,
+  },
+  DELETE: {
+    output: z.null(),
+  },
+})
+
+// --- API Keys ---
+
+export const ApiKeyScopeSchema = z.enum([
+  "SENSOR_WRITE",
+  "REPORTS_GENERATE",
+  "INVENTORY_READ",
+  "STRUCTURE_READ",
+])
+
+const ApiKeyScopesArraySchema = z
+  .array(ApiKeyScopeSchema)
+  .min(1, "At least one scope is required")
+  .refine((scopes) => new Set(scopes).size === scopes.length, {
+    message: "Scopes must be unique",
+  })
+
+const ApiKeyResponseSchema = z.object({
+  id: z.number().int().nonnegative(),
+  keyPrefix: z.string(),
+  name: z.string(),
+  warehouseId: z.number().int().nonnegative().nullish(),
+  warehouseName: z.string().nullish(),
+  scopes: z.array(ApiKeyScopeSchema),
+  createdAt: z.string(),
+  lastUsedAt: z.string().nullish(),
+  createdByUserId: z.number().int().nonnegative(),
+  active: z.boolean(),
+})
+
+const ApiKeyCreatedResponseSchema = z.object({
+  id: z.number().int().nonnegative(),
+  rawKey: z.string(),
+  keyPrefix: z.string(),
+  name: z.string(),
+  warehouseId: z.number().int().nonnegative().nullish(),
+  warehouseName: z.string().nullish(),
+  scopes: z.array(ApiKeyScopeSchema),
+  createdAt: z.string(),
+})
+
+const CreateApiKeyInputSchema = z.object({
+  name: z.string().trim().min(3).max(100),
+  warehouseId: z.number().int().nonnegative().optional(),
+  scopes: ApiKeyScopesArraySchema,
+})
+
+export const ApiKeysSchema = createApiSchema({
+  GET: {
+    output: z.array(ApiKeyResponseSchema),
+  },
+  POST: {
+    input: CreateApiKeyInputSchema,
+    output: ApiKeyCreatedResponseSchema,
+  },
+})
+
+export const ApiKeyDetailsSchema = createApiSchema({
+  GET: {
+    output: ApiKeyResponseSchema,
+  },
+  DELETE: {
+    output: z.string(),
   },
 })
 

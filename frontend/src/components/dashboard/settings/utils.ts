@@ -3,8 +3,6 @@ import { OTP_LENGTH } from "@/config/constants"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   Check2FASchema,
-  Resend2FASchema,
-  type ResendType,
   TFAAuthenticatorFinishSchema,
   TFAAuthenticatorStartSchema,
   type TwoFactorMethod,
@@ -43,13 +41,6 @@ export const createAuthenticatorSetupData = async (
     issuer: response.issuer,
     issuedAt,
   }
-}
-
-export const sendTwoFactorCode = async (method: ResendType): Promise<void> => {
-  await apiFetch("/api/2fa/send", Resend2FASchema, {
-    method: "POST",
-    body: { method },
-  })
 }
 
 export const verifyOneTimeCode = async (

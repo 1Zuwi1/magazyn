@@ -20,7 +20,7 @@ export function useApiMutation<
   options: UseMutationOptions<TData, TError, TVariables, TContext>
 ): UseMutationResult<TData, TError, TVariables, TContext> {
   const t = useAppTranslations()
-  const { mutationFn, ...mutationOptions } = options
+  const { mutationFn, onError, ...mutationOptions } = options
   const pendingMutateOptionsRef = useRef<MutateOptions<
     TData,
     TError,
@@ -41,7 +41,7 @@ export function useApiMutation<
             return await mutationFn(variables, context)
           } catch (error) {
             if (FetchError.isError(error)) {
-              if (error.code === "INSUFFICIENT_PERMISSIONS") {
+              if (error.message === "INSUFFICIENT_PERMISSIONS") {
                 const mutateOptions = pendingMutateOptionsRef.current
                 useTwoFactorVerificationDialogStore.getState().open({
                   onVerified: () => {
@@ -69,6 +69,17 @@ export function useApiMutation<
 
   const mutation = useMutation({
     ...mutationOptions,
+    onError: (error, variables, context, mutationContext) => {
+      if (
+        FetchError.isError(error) &&
+        error.message === "INSUFFICIENT_PERMISSIONS"
+      ) {
+        return
+      }
+      if (onError) {
+        onError(error, variables, context, mutationContext)
+      }
+    },
     mutationFn: wrappedMutationFn,
   })
   mutateRef.current = mutation.mutate

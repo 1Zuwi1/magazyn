@@ -843,6 +843,12 @@
         "releases": "Wydania"
       },
       "items": {
+        "primaryLabel": "Zdjęcie główne",
+        "productPhotos": "Zdjęcia produktu",
+        "manageProductPhotos": "Zarządzaj zdjęciami produktu",
+        "setAsPrimary": "Ustaw jako główne",
+        "primaryPhotoSet": "Zdjęcie główne ustawione pomyślnie",
+        "photoDeleted": "Zdjęcie usunięte pomyślnie",
         "failedAccessCameraMakeSure": "Nie udało się uzyskać dostępu do kamery. Upewnij się, że udzielono pozwolenia.",
         "again": "Spróbuj ponownie",
         "takePhoto": "Zrób zdjęcie",
@@ -872,6 +878,7 @@
         "sureWantDeleteItemOperation": "Czy na pewno chcesz usunąć przedmiot \"{value0}\"? Ta operacja jest nieodwracalna.",
         "deleteItem": "Usuń przedmiot",
         "changePhoto": "Zmień zdjęcie",
+        "noPhotosYet": "Ten przedmiot nie ma jeszcze żadnych zdjęć.",
         "addPhoto": "Dodaj zdjęcie",
         "filterItemsNameId": "Filtruj przedmioty po nazwie lub ID",
         "searchNameId": "Szukaj po nazwie lub ID...",
@@ -889,7 +896,24 @@
         "changeProductParameters": "Zmień parametry przedmiotu",
         "enterNewProductParameters": "Wprowadź parametry nowego przedmiotu",
         "editProduct": "Edytuj przedmiot",
-        "addProduct": "Dodaj przedmiot"
+        "addProduct": "Dodaj przedmiot",
+        "detail": {
+          "itemDetails": "Szczegóły i zarządzanie przedmiotem",
+          "editItem": "Edytuj przedmiot",
+          "backToItems": "Powrót do przedmiotów",
+          "photoGallery": "Galeria zdjęć",
+          "uploadPhoto": "Wgraj zdjęcie",
+          "noPhotos": "Brak dostępnych zdjęć. Wgraj pierwsze zdjęcie.",
+          "setPrimary": "Ustaw jako główne",
+          "photoUploaded": "Zdjęcie wgrane pomyślnie",
+          "photoDeleted": "Zdjęcie usunięte pomyślnie",
+          "primaryPhotoSet": "Zdjęcie główne ustawione pomyślnie",
+          "confirmDeletePhoto": "Czy na pewno chcesz usunąć to zdjęcie? Tej operacji nie można cofnąć.",
+          "deletePhoto": "Usuń zdjęcie",
+          "generateEmbeddings": "Generuj embeddingi",
+          "generatingEmbeddings": "Generowanie embeddingów...",
+          "embeddingsGenerated": "Embeddingi wygenerowane pomyślnie"
+        }
       },
       "overview": {
         "failedRetrieveStorageData": "Nie udało się pobrać danych magazynów",

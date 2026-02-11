@@ -33,6 +33,12 @@ const REDIRECT_RULES: readonly RedirectRule[] = [
     queryParamName: "warehouseId",
     fallbackPath: "/admin/warehouses",
   },
+  {
+    sourcePrefix: "/admin/items/id/",
+    targetPrefix: "/admin/items/",
+    queryParamName: "itemId",
+    fallbackPath: "/admin/items",
+  },
 ] as const
 
 const PROTECTED_PATH_PREFIXES = ["/dashboard", "/settings", "/admin"] as const

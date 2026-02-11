@@ -254,16 +254,14 @@ function CameraView({
           <HugeiconsIcon className="mr-1.5 size-4" icon={Cancel01Icon} />
           {t("generated.shared.cancel")}
         </Button>
-        <button
-          aria-label={t("generated.admin.items.takePhoto")}
-          className="flex size-14 items-center justify-center rounded-full border-4 border-primary bg-primary/10 transition-colors hover:bg-primary/20 active:bg-primary/30 disabled:opacity-50"
-          disabled={!isActive}
+        <Button
+          disabled={!isActive || !!error}
           onClick={handleCapture}
-          type="button"
+          size="sm"
         >
-          <div className="size-10 rounded-full bg-primary" />
-        </button>
-        <div className="w-19" />
+          <HugeiconsIcon className="mr-1.5 size-4" icon={Camera01Icon} />
+          {t("generated.admin.items.takePhoto")}
+        </Button>
       </div>
     </div>
   )

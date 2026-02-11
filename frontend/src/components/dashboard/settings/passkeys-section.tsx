@@ -14,7 +14,6 @@ import { useQueryClient } from "@tanstack/react-query"
 
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { handleApiError } from "@/components/dashboard/utils/helpers"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,25 +39,14 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import { usePasskeyRegistration } from "@/hooks/use-2fa"
 import useDeletePasskey from "@/hooks/use-delete-passkey"
 import { LINKED_2FA_METHODS_QUERY_KEY } from "@/hooks/use-linked-methods"
 import usePasskeys, { PASSKEYS_QUERY_KEY } from "@/hooks/use-passkeys"
 import useRenamePasskey from "@/hooks/use-rename-passkey"
 import { useAppTranslations } from "@/i18n/use-translations"
-import { apiFetch, FetchError } from "@/lib/fetcher"
-import {
-  type Passkey,
-  WebAuthnFinishRegistrationSchema,
-  WebAuthnStartRegistrationSchema,
-} from "@/lib/schemas"
-import tryCatch from "@/lib/try-catch"
-import {
-  getWebAuthnErrorMessage,
-  getWebAuthnSupport,
-  isPublicKeyCredential,
-  serializeCredential,
-} from "@/lib/webauthn"
-import { useTwoFactorVerificationDialog } from "./two-factor-verification-dialog-store"
+import type { Passkey } from "@/lib/schemas"
+import { getWebAuthnSupport } from "@/lib/webauthn"
 
 type SupportState = "checking" | "supported" | "unsupported"
 
@@ -288,9 +276,7 @@ export function PasskeysSection() {
   const t = useAppTranslations()
 
   const [supportState, setSupportState] = useState<SupportState>("checking")
-  const [isRegistering, setIsRegistering] = useState(false)
   const queryClient = useQueryClient()
-  const { open } = useTwoFactorVerificationDialog()
 
   // Queries and mutations
   const {
@@ -308,7 +294,23 @@ export function PasskeysSection() {
   const [pendingCredentialJson, setPendingCredentialJson] = useState<
     string | null
   >(null)
-  const [isSavingName, setIsSavingName] = useState(false)
+  const {
+    handleAddPasskey,
+    handleSaveNewPasskey,
+    isRegistering,
+    isSavingName,
+  } = usePasskeyRegistration({
+    isSupported: supportState === "supported",
+    newKeyName,
+    pendingCredentialJson,
+    setIsNamingDialogOpen,
+    setNewKeyName,
+    setPendingCredentialJson,
+    onSaveSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PASSKEYS_QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: LINKED_2FA_METHODS_QUERY_KEY })
+    },
+  })
 
   // Rename dialog state
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
@@ -322,128 +324,6 @@ export function PasskeysSection() {
   useEffect(() => {
     setSupportState(getWebAuthnSupport())
   }, [])
-
-  const handleAddPasskey = async () => {
-    if (supportState !== "supported") {
-      toast.error(t("generated.shared.deviceSupportSecurityKeys"))
-      return
-    }
-
-    if (!navigator.credentials) {
-      toast.error(t("generated.shared.browserSupportWebauthn"))
-      return
-    }
-
-    setIsRegistering(true)
-
-    try {
-      const [startError, startResponse] = await tryCatch(
-        apiFetch(
-          "/api/webauthn/register/start",
-          WebAuthnStartRegistrationSchema,
-          {
-            method: "POST",
-            body: null,
-          }
-        )
-      )
-
-      if (startError) {
-        if (
-          FetchError.isError(startError) &&
-          startError.message === "INSUFFICIENT_PERMISSIONS"
-        ) {
-          open({
-            onVerified: handleAddPasskey,
-          })
-          return
-        }
-        handleApiError(
-          startError,
-          t("generated.dashboard.settings.failedStartAddingSecurityKey"),
-          t
-        )
-        return
-      }
-
-      const [credentialError, credential] = await tryCatch(
-        navigator.credentials.create({
-          publicKey: startResponse,
-        })
-      )
-      if (credentialError) {
-        toast.error(
-          getWebAuthnErrorMessage(
-            credentialError,
-            t("generated.dashboard.settings.failedCreateSecurityKey"),
-            t
-          )
-        )
-        return
-      }
-
-      if (!isPublicKeyCredential(credential)) {
-        toast.error(t("generated.shared.securityKeyDataRead"))
-        return
-      }
-
-      const credentialJson = serializeCredential(credential)
-
-      // Open naming dialog
-      setPendingCredentialJson(credentialJson)
-      setNewKeyName("")
-      setIsNamingDialogOpen(true)
-    } finally {
-      setIsRegistering(false)
-    }
-  }
-
-  const handleSaveNewPasskey = async () => {
-    if (!(pendingCredentialJson && newKeyName.trim())) {
-      return
-    }
-
-    setIsSavingName(true)
-
-    const [finishError] = await tryCatch(
-      apiFetch(
-        "/api/webauthn/register/finish",
-        WebAuthnFinishRegistrationSchema,
-        {
-          method: "POST",
-          body: {
-            credentialJson: pendingCredentialJson,
-            keyName: newKeyName.trim(),
-          },
-        }
-      )
-    )
-
-    setIsSavingName(false)
-
-    if (finishError) {
-      if (
-        FetchError.isError(finishError) &&
-        finishError.code === "INSUFFICIENT_PERMISSIONS"
-      ) {
-        // Keep the dialog open, 2FA dialog will open
-        return
-      }
-      handleApiError(
-        finishError,
-        t("generated.dashboard.settings.failedCompleteAddingSecurityKey"),
-        t
-      )
-      return
-    }
-
-    setIsNamingDialogOpen(false)
-    setPendingCredentialJson(null)
-    setNewKeyName("")
-    toast.success(t("generated.dashboard.settings.securityKeyBeenAdded"))
-    queryClient.invalidateQueries({ queryKey: PASSKEYS_QUERY_KEY })
-    queryClient.invalidateQueries({ queryKey: LINKED_2FA_METHODS_QUERY_KEY })
-  }
 
   const handleCancelNaming = () => {
     setIsNamingDialogOpen(false)

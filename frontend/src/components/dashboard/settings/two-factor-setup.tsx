@@ -56,6 +56,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { OTP_LENGTH } from "@/config/constants"
+import {
+  useAuthenticatorData,
+  useResendCode,
+  useVerifyOneTimeCode,
+} from "@/hooks/use-2fa"
 import { useApiMutation } from "@/hooks/use-api-mutation"
 import useLinkedMethods, {
   LINKED_2FA_METHODS_QUERY_KEY,
@@ -86,12 +91,7 @@ import type {
   TwoFactorStatus,
 } from "./types"
 import { useCountdown } from "./use-countdown"
-import {
-  createAuthenticatorSetupData,
-  formatCountdown,
-  sendTwoFactorCode,
-  verifyOneTimeCode,
-} from "./utils"
+import { formatCountdown } from "./utils"
 
 const getTwoFactorMethodLabels = (
   t: ReturnType<typeof useAppTranslations>
@@ -406,6 +406,33 @@ function useTwoFactorSetupFlow({
     startTimer()
   }, [dispatch, startTimer])
   const locale = useLocale()
+  const handleError = () => {
+    const message = t(
+      "generated.dashboard.settings.failedInitializeConfigurationAgain"
+    )
+    dispatch({ type: "set_error", error: message })
+    dispatch({ type: "set_stage", stage: "ERROR" })
+    toast.error(message)
+  }
+  const { mutateAsync: createAuthenticatorSetupData } = useAuthenticatorData({
+    onSuccess: (data) => {
+      dispatch({
+        type: "set_authenticator_setup_data",
+        authenticatorSetupData: data,
+      })
+      dispatch({ type: "set_stage", stage: "AWAITING" })
+    },
+    onError: handleError,
+  })
+
+  const { mutateAsync: sendTwoFactorCode } = useResendCode({
+    onSuccess: () => {
+      startTimer(TWO_FACTOR_RESEND_SECONDS)
+      dispatch({ type: "set_stage", stage: "AWAITING" })
+    },
+    onError: handleError,
+  })
+  const { mutateAsync: verifyOneTimeCode } = useVerifyOneTimeCode()
 
   useEffect(() => {
     if (status === "DISABLED") {
@@ -425,35 +452,20 @@ function useTwoFactorSetupFlow({
       type: "set_authenticator_setup_data",
       authenticatorSetupData: null,
     })
-    dispatch({ type: "set_stage", stage: "REQUESTING" })
+    dispatch({ type: "set_stage", stage: "IDLE" })
 
-    try {
-      if (method === "AUTHENTICATOR") {
-        const setupData = await createAuthenticatorSetupData(locale)
-        dispatch({
-          type: "set_authenticator_setup_data",
-          authenticatorSetupData: setupData,
-        })
-      } else {
-        const resendMethod = getResendMethod(method)
-        if (!resendMethod) {
-          throw new Error(
-            t("generated.dashboard.settings.unsupportedResendMethod")
-          )
-        }
-        dispatch({ type: "set_stage", stage: "SENDING" })
-        await sendTwoFactorCode(resendMethod)
-        startTimer(TWO_FACTOR_RESEND_SECONDS)
+    if (method === "AUTHENTICATOR") {
+      await createAuthenticatorSetupData(locale)
+    } else {
+      const resendMethod = getResendMethod(method)
+      if (!resendMethod) {
+        throw new Error(
+          t("generated.dashboard.settings.unsupportedResendMethod")
+        )
       }
-
-      dispatch({ type: "set_stage", stage: "AWAITING" })
-    } catch {
-      const message = t(
-        "generated.dashboard.settings.failedInitializeConfigurationAgain"
-      )
-      dispatch({ type: "set_error", error: message })
-      dispatch({ type: "set_stage", stage: "ERROR" })
-      toast.error(message)
+      dispatch({ type: "set_stage", stage: "SENDING" })
+      await sendTwoFactorCode(resendMethod)
+      startTimer(TWO_FACTOR_RESEND_SECONDS)
     }
   }
 
@@ -484,7 +496,10 @@ function useTwoFactorSetupFlow({
     dispatch({ type: "set_error", error: "" })
 
     try {
-      const isValid = await verifyOneTimeCode(codeToVerify, method)
+      const isValid = await verifyOneTimeCode({
+        code: codeToVerify,
+        method,
+      })
 
       if (isValid) {
         dispatch({ type: "set_stage", stage: "SUCCESS" })
@@ -985,7 +1000,6 @@ function RecoveryCodesSection({
   enabled: boolean
   refreshNeeded: boolean
 }) {
-  refreshNeeded = true
   const t = useAppTranslations()
 
   const locale = useLocale()

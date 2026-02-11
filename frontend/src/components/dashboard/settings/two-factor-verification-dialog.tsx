@@ -3,7 +3,6 @@
 import { Alert02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useEffect, useMemo, useState } from "react"
-import { toast } from "sonner"
 import PasskeyLogin from "@/app/[locale]/(auth)/components/passkey-login"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -19,17 +18,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useCheck2FA, useRequestTwoFactorCode } from "@/hooks/use-2fa"
 import useLinkedMethods from "@/hooks/use-linked-methods"
 import { useAppTranslations } from "@/i18n/use-translations"
-import { apiFetch, FetchError } from "@/lib/fetcher"
-import {
-  Check2FASchema,
-  Resend2FASchema,
-  ResendMethods,
-  type TwoFactorMethod,
-} from "@/lib/schemas"
+import type { TwoFactorMethod } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
-import { translateZodMessage } from "@/lib/zod-message"
+import { translateErrorCode } from "../utils/helpers"
 import { getTwoFactorMethods, METHOD_ICONS } from "./constants"
 import {
   type PasswordVerificationCopy,
@@ -214,17 +208,25 @@ export function TwoFactorVerificationDialog({
     setVerificationError("")
   }, [defaultMethod, open])
 
-  const handleRequestCode = async (method: TwoFactorMethod): Promise<void> => {
-    const validatedMethod = ResendMethods.safeParse(method)
-    if (validatedMethod.success === false) {
-      return
-    }
+  const { mutateAsync: requestCode } = useRequestTwoFactorCode()
 
-    await apiFetch("/api/2fa/send", Resend2FASchema, {
-      method: "POST",
-      body: { method: validatedMethod.data },
-    })
-  }
+  const { mutateAsync: verify } = useCheck2FA({
+    onSuccess: () => {
+      setIsVerified(true)
+      if (autoClose) {
+        onOpenChange(false)
+      }
+
+      onVerified?.()
+    },
+    onError: (e) => {
+      setIsVerified(false)
+      setVerificationError(translateErrorCode(t, e.message))
+    },
+    onSettled: () => {
+      setIsVerifying(false)
+    },
+  })
 
   const handleVerify = async (value: string): Promise<void> => {
     if (isVerifying) {
@@ -233,29 +235,7 @@ export function TwoFactorVerificationDialog({
 
     setIsVerifying(true)
     setVerificationError("")
-    try {
-      await apiFetch("/api/2fa/check", Check2FASchema, {
-        method: "POST",
-        body: { code: value, method: selectedMethod },
-      })
-
-      setIsVerified(true)
-      if (autoClose) {
-        onOpenChange(false)
-      }
-
-      onVerified?.()
-    } catch (e) {
-      const rawMessage = FetchError.isError(e)
-        ? e.message
-        : t("generated.dashboard.settings.codeInvalidAgain")
-      const message = translateZodMessage(rawMessage, t)
-      setIsVerified(false)
-      setVerificationError(message)
-      toast.error(message)
-    } finally {
-      setIsVerifying(false)
-    }
+    await verify({ value, selectedMethod })
   }
 
   const resolvedTitle =
@@ -364,7 +344,7 @@ export function TwoFactorVerificationDialog({
             setVerificationError("")
           }
         }}
-        onRequestCode={handleRequestCode}
+        onRequestCode={requestCode}
         onVerify={handleVerify}
         showTitle={false}
         verificationError={verificationError}
