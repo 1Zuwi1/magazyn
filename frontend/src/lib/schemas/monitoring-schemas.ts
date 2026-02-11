@@ -4,30 +4,30 @@ import { createPaginatedSchema, createPaginatedSchemaInput } from "../schemas"
 
 export const AlertSchema = z.object({
   id: z.coerce.number().int().nonnegative(),
-  rackId: z.coerce.number().int().nonnegative().nullable().optional(),
-  rackMarker: z.string().nullable().optional(),
-  warehouseId: z.coerce.number().int().nonnegative().nullable().optional(),
-  warehouseName: z.string().nullable().optional(),
+  rackId: z.coerce.number().int().nonnegative().nullable().nullish(),
+  rackMarker: z.string().nullable().nullish(),
+  warehouseId: z.coerce.number().int().nonnegative().nullable().nullish(),
+  warehouseName: z.string().nullable().nullish(),
   alertType: z.string(),
-  alertTypeDescription: z.string().nullable().optional(),
+  alertTypeDescription: z.string().nullable().nullish(),
   status: z.string(),
   message: z.string(),
-  thresholdValue: z.number().nullable().optional(),
-  actualValue: z.number().nullable().optional(),
+  thresholdValue: z.number().nullable().nullish(),
+  actualValue: z.number().nullable().nullish(),
   createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date().nullable().optional(),
-  resolvedAt: z.coerce.date().nullable().optional(),
-  resolvedByName: z.string().nullable().optional(),
-  resolutionNotes: z.string().nullable().optional(),
+  updatedAt: z.coerce.date().nullable().nullish(),
+  resolvedAt: z.coerce.date().nullable().nullish(),
+  resolvedByName: z.string().nullable().nullish(),
+  resolutionNotes: z.string().nullable().nullish(),
 })
 
 const RawUserNotificationSchema = z.object({
   id: z.coerce.number().int().nonnegative(),
   alert: AlertSchema,
   createdAt: z.coerce.date(),
-  readAt: z.coerce.date().nullable().optional(),
-  read: z.boolean().optional(),
-  isRead: z.boolean().optional(),
+  readAt: z.coerce.date().nullable().nullish(),
+  read: z.boolean().nullish(),
+  isRead: z.boolean().nullish(),
 })
 
 export const UserNotificationSchema = RawUserNotificationSchema.transform(
@@ -41,8 +41,8 @@ export const UserNotificationSchema = RawUserNotificationSchema.transform(
 export const ApiNotificationsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
-      read: z.boolean().optional(),
-      alertId: z.number().int().nonnegative().optional(),
+      read: z.boolean().nullish(),
+      alertId: z.number().int().nonnegative().nullish(),
     }),
     output: createPaginatedSchema(UserNotificationSchema),
   },

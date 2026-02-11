@@ -3,7 +3,7 @@
 import { PackageIcon } from "@hugeicons/core-free-icons"
 import { useDebouncedValue } from "@tanstack/react-pacer"
 import type { SortingState } from "@tanstack/react-table"
-
+import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 import {
   AssortmentTableWithData,
@@ -14,7 +14,6 @@ import { ErrorEmptyState } from "@/components/ui/empty-state"
 import useAssortments from "@/hooks/use-assortment"
 import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
 import useWarehouses from "@/hooks/use-warehouses"
-import { useTranslations } from "next-intl"
 export default function AssortmentClient() {
   const t = useTranslations()
 

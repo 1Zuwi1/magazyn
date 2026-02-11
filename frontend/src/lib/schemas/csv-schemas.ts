@@ -47,8 +47,8 @@ export const RackCsvSchema = z.object({
   maxItemWidth: z.coerce.number().positive(),
   maxItemHeight: z.coerce.number().positive(),
   maxItemDepth: z.coerce.number().positive(),
-  isDangerous: csvBoolean.optional(),
-  comment: z.coerce.string().optional(),
+  isDangerous: csvBoolean.nullish(),
+  comment: z.coerce.string().nullish(),
 })
 
 export const ItemCsvSchema = z.object({
@@ -59,9 +59,9 @@ export const ItemCsvSchema = z.object({
   width: z.coerce.number().positive(),
   height: z.coerce.number().positive(),
   depth: z.coerce.number().positive(),
-  daysToExpiry: z.coerce.number().int().nonnegative().optional(),
-  isDangerous: csvBoolean.optional(),
-  comment: z.string().optional(),
+  daysToExpiry: z.coerce.number().int().nonnegative().nullish(),
+  isDangerous: csvBoolean.nullish(),
+  comment: z.string().nullish(),
 })
 
 const usernameSchema = z

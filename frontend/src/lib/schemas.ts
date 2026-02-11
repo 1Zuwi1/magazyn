@@ -521,9 +521,9 @@ const ImportReportSchema = z.object({
 export const AdminUsersSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
-      name: z.string().optional(),
-      email: z.string().optional(),
-      status: UserAccountStatusSchema.optional(),
+      name: z.string().nullish(),
+      email: z.string().nullish(),
+      status: UserAccountStatusSchema.nullish(),
     }),
     output: createPaginatedSchema(AdminUserSchema),
   },
@@ -542,10 +542,10 @@ export const AdminUpdateUserProfileSchema = createApiSchema({
         .string()
         .max(20)
         .regex(/^[+\d\s()-]*$/)
-        .optional(),
-      fullName: z.string().trim().min(3).max(100).optional(),
-      location: z.string().trim().max(100).optional(),
-      team: AdminTeamSchema.optional(),
+        .nullish(),
+      fullName: z.string().trim().min(3).max(100).nullish(),
+      location: z.string().trim().max(100).nullish(),
+      team: AdminTeamSchema.nullish(),
     }),
     output: z.null(),
   },
@@ -555,7 +555,7 @@ export const AdminUpdateUserStatusSchema = createApiSchema({
   PATCH: {
     input: z.object({
       status: UserAccountStatusSchema,
-      reason: z.string().trim().max(500).optional(),
+      reason: z.string().trim().max(500).nullish(),
     }),
     output: z.null(),
   },
@@ -607,9 +607,9 @@ export type Warehouse = z.infer<typeof WarehouseSchema>
 export const WarehousesSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
-      nameFilter: z.string().optional(),
-      minPercentOfOccupiedSlots: z.number().int().min(0).max(100).optional(),
-      onlyNonEmpty: z.boolean().optional(),
+      nameFilter: z.string().nullish(),
+      minPercentOfOccupiedSlots: z.number().int().min(0).max(100).nullish(),
+      onlyNonEmpty: z.boolean().nullish(),
     }),
     output: createPaginatedSchema(WarehouseSchema, {
       summary: z.object({
@@ -687,9 +687,9 @@ export const ItemDefinitionSchema = z.object({
   sizeZ: z.number(),
   comment: z.string().nullable(),
   expireAfterDays: z.number().int().nonnegative(),
-  imageUploaded: z.boolean().optional(),
-  imageCount: z.number().int().nonnegative().optional(),
-  images: z.array(ItemImageSchema).optional(),
+  imageUploaded: z.boolean().nullish(),
+  imageCount: z.number().int().nonnegative().nullish(),
+  images: z.array(ItemImageSchema).nullish(),
   dangerous: z.boolean(),
 })
 
@@ -717,9 +717,9 @@ export const WarehouseAssortmentsSchema = createApiSchema({
     input: createPaginatedSchemaInput({
       expiryFilters: z
         .array(z.enum(["ALL", "EXPIRED", "DAYS_3", "DAYS_7", "DAYS_14"]))
-        .optional(),
-      search: z.string().optional(),
-      weekToExpire: z.boolean().optional(),
+        .nullish(),
+      search: z.string().nullish(),
+      weekToExpire: z.boolean().nullish(),
     }),
     output: createPaginatedSchema(RackAssortmentSchema),
   },
@@ -730,9 +730,9 @@ export const AssortmentsSchema = createApiSchema({
     input: createPaginatedSchemaInput({
       expiryFilters: z
         .array(z.enum(["ALL", "EXPIRED", "DAYS_3", "DAYS_7", "DAYS_14"]))
-        .optional(),
-      search: z.string().optional(),
-      weekToExpire: z.boolean().optional(),
+        .nullish(),
+      search: z.string().nullish(),
+      weekToExpire: z.boolean().nullish(),
     }),
     output: createPaginatedSchema(AssortmentSchema),
   },
@@ -741,10 +741,10 @@ export const AssortmentsSchema = createApiSchema({
 export const RackAssortmentsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
-      search: z.string().optional(),
-      positionX: z.number().int().nonnegative().optional(),
-      positionY: z.number().int().nonnegative().optional(),
-      weekToExpire: z.boolean().optional(),
+      search: z.string().nullish(),
+      positionX: z.number().int().nonnegative().nullish(),
+      positionY: z.number().int().nonnegative().nullish(),
+      weekToExpire: z.boolean().nullish(),
     }),
     output: createPaginatedSchema(RackAssortmentSchema),
   },
@@ -770,16 +770,16 @@ export const UpdateAssortmentSchema = createApiSchema({
 export const ItemsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
-      search: z.string().optional(),
-      dangerous: z.boolean().optional(),
-      minTempFrom: z.number().optional(),
-      minTempTo: z.number().optional(),
-      maxTempFrom: z.number().optional(),
-      maxTempTo: z.number().optional(),
-      weightFrom: z.number().optional(),
-      weightTo: z.number().optional(),
-      expireAfterDaysFrom: z.number().int().nonnegative().optional(),
-      expireAfterDaysTo: z.number().int().nonnegative().optional(),
+      search: z.string().nullish(),
+      dangerous: z.boolean().nullish(),
+      minTempFrom: z.number().nullish(),
+      minTempTo: z.number().nullish(),
+      maxTempFrom: z.number().nullish(),
+      maxTempTo: z.number().nullish(),
+      weightFrom: z.number().nullish(),
+      weightTo: z.number().nullish(),
+      expireAfterDaysFrom: z.number().int().nonnegative().nullish(),
+      expireAfterDaysTo: z.number().int().nonnegative().nullish(),
     }),
     output: createPaginatedSchema(ItemDefinitionSchema),
   },
@@ -792,15 +792,15 @@ export const ItemDetailsSchema = createApiSchema({
 })
 
 const ItemMutationInputSchema = z.object({
-  name: z.string().trim().max(255).optional(),
-  qrCode: z.string().trim().max(32).optional(),
+  name: z.string().trim().max(255).nullish(),
+  qrCode: z.string().trim().max(32).nullish(),
   minTemp: z.number().min(-273.15),
   maxTemp: z.number().min(-273.15),
   weight: z.number().nonnegative(),
   sizeX: z.number().nonnegative(),
   sizeY: z.number().nonnegative(),
   sizeZ: z.number().nonnegative(),
-  comment: z.string().trim().max(1000).optional(),
+  comment: z.string().trim().max(1000).nullish(),
   expireAfterDays: z.number().int().nonnegative(),
   dangerous: z.boolean(),
 })
@@ -1085,12 +1085,12 @@ export const InboundOperationExecuteSchema = createApiSchema({
       z.object({
         itemId: z.number().int().nonnegative(),
         placements: PlacementsSchema,
-        code: z.undefined().optional(), // explicitly forbid
+        code: z.undefined().nullish(), // explicitly forbid
       }),
       z.object({
         code: z.string().min(1),
         placements: PlacementsSchema,
-        itemId: z.undefined().optional(), // explicitly forbid
+        itemId: z.undefined().nullish(), // explicitly forbid
       }),
     ]),
     output: z.object({
@@ -1214,9 +1214,9 @@ export type OutboundExecuteResult = z.infer<
 export const RackReportsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
-      rackId: z.number().int().nonnegative().optional(),
-      warehouseId: z.number().int().nonnegative().optional(),
-      withAlerts: z.boolean().optional(),
+      rackId: z.number().int().nonnegative().nullish(),
+      warehouseId: z.number().int().nonnegative().nullish(),
+      withAlerts: z.boolean().nullish(),
     }),
     output: createPaginatedSchema(
       z.object({
@@ -1241,7 +1241,7 @@ export type ReportFileFormat = z.infer<typeof ReportFileFormatSchema>
 const BaseReportRequestSchema = z.object({
   format: ReportFileFormatSchema,
   warehouseId: z.number().int().nonnegative().nullable(),
-  sendEmail: z.boolean().optional(),
+  sendEmail: z.boolean().nullish(),
 })
 
 export const TemperatureAlertReportSchema = createApiSchema({
@@ -1264,7 +1264,7 @@ export const InventoryStockReportSchema = createApiSchema({
 export const ExpiryReportSchema = createApiSchema({
   POST: {
     input: BaseReportRequestSchema.extend({
-      daysAhead: z.number().int().nonnegative().optional(),
+      daysAhead: z.number().int().nonnegative().nullish(),
     }),
     output: z.union([z.instanceof(Blob), z.null()]),
   },
@@ -1352,10 +1352,10 @@ const BackupScheduleUpsertInputSchema = z
   .object({
     scheduleCode: BackupScheduleCodeSchema,
     backupHour: z.number().int().min(0).max(23),
-    dayOfWeek: z.number().int().min(1).max(7).optional(),
-    dayOfMonth: z.number().int().min(1).max(31).optional(),
+    dayOfWeek: z.number().int().min(1).max(7).nullish(),
+    dayOfMonth: z.number().int().min(1).max(31).nullish(),
     resourceTypes: BackupResourceTypesArraySchema,
-    enabled: z.boolean().optional(),
+    enabled: z.boolean().nullish(),
   })
   .superRefine((value, ctx) => {
     if (value.scheduleCode === "WEEKLY" && value.dayOfWeek == null) {
@@ -1404,7 +1404,7 @@ export type RestoreAllWarehousesResult = z.infer<
 export const BackupsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
-      warehouseId: z.number().int().nonnegative().optional(),
+      warehouseId: z.number().int().nonnegative().nullish(),
     }),
     output: createPaginatedSchema(BackupRecordSchema),
   },
@@ -1515,7 +1515,7 @@ const ApiKeyCreatedResponseSchema = z.object({
 
 const CreateApiKeyInputSchema = z.object({
   name: z.string().trim().min(3).max(100),
-  warehouseId: z.number().int().nonnegative().optional(),
+  warehouseId: z.number().int().nonnegative().nullish(),
   scopes: ApiKeyScopesArraySchema,
 })
 
@@ -1554,11 +1554,11 @@ const InboudOperationSchema = z.object({
 export const AuditInboudOperationsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
-      userId: z.number().int().nonnegative().optional(),
-      itemId: z.number().int().nonnegative().optional(),
-      rackId: z.number().int().nonnegative().optional(),
-      startDate: z.string().optional(),
-      endDate: z.string().optional(),
+      userId: z.number().int().nonnegative().nullish(),
+      itemId: z.number().int().nonnegative().nullish(),
+      rackId: z.number().int().nonnegative().nullish(),
+      startDate: z.string().nullish(),
+      endDate: z.string().nullish(),
     }),
     output: createPaginatedSchema(InboudOperationSchema),
   },
@@ -1567,11 +1567,11 @@ export const AuditInboudOperationsSchema = createApiSchema({
 export const AuditOutboundOperationsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
-      userId: z.number().int().nonnegative().optional(),
-      itemId: z.number().int().nonnegative().optional(),
-      rackId: z.number().int().nonnegative().optional(),
-      startDate: z.string().optional(),
-      endDate: z.string().optional(),
+      userId: z.number().int().nonnegative().nullish(),
+      itemId: z.number().int().nonnegative().nullish(),
+      rackId: z.number().int().nonnegative().nullish(),
+      startDate: z.string().nullish(),
+      endDate: z.string().nullish(),
     }),
     output: createPaginatedSchema(OutboundOperationSchema),
   },
@@ -1680,12 +1680,12 @@ export const findAlertTitle = (alert: { alertType: string }, t: AppTranslate) =>
 export const AlertsSchema = createApiSchema({
   GET: {
     input: createPaginatedSchemaInput({
-      type: z.array(AlertTypeSchema).optional(),
-      warehouseId: z.number().int().nonnegative().optional(),
+      type: z.array(AlertTypeSchema).nullish(),
+      warehouseId: z.number().int().nonnegative().nullish(),
       status: z
         .array(z.enum(["OPEN", "ACTIVE", "RESOLVED", "DISMISSED"]))
-        .optional(),
-      rackId: z.number().int().nonnegative().optional(),
+        .nullish(),
+      rackId: z.number().int().nonnegative().nullish(),
     }),
     output: createPaginatedSchema(AlertSchema),
   },
@@ -1704,7 +1704,7 @@ export const ApiAlertsStatusSchema = createApiSchema({
         .array(z.number().int().nonnegative())
         .min(1, "At least one alert ID is required"),
       status: z.enum(["OPEN", "ACTIVE", "RESOLVED", "DISMISSED"]),
-      resolutionNotes: z.string().optional(),
+      resolutionNotes: z.string().nullish(),
     }),
     output: z.array(AlertSchema),
   },

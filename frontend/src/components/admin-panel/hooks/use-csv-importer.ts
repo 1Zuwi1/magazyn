@@ -117,13 +117,17 @@ export function useCsvImporter<T extends CsvImporterType>({
       return
     }
 
-    await onImport({
-      file: sourceFile,
-      rows: validatedData,
-    })
-
-    setOpen(false)
-    resetFile()
+    try {
+      await onImport({
+        file: sourceFile,
+        rows: validatedData,
+      })
+      setOpen(false)
+      resetFile()
+    } catch (error) {
+      console.error(error)
+      toast.error("Failed to import CSV file. Please try again.")
+    }
   }
 
   return {

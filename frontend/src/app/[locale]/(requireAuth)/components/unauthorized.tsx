@@ -1,7 +1,7 @@
 import { CircleLock01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -10,8 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-
-import { useTranslations } from "next-intl"
 export default function UnauthorizedComponent() {
   const t = useTranslations()
 

@@ -1,13 +1,12 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { useTranslations } from "next-intl"
 import { apiFetch } from "@/lib/fetcher"
 import {
   WebAuthnFinishAssertionSchema,

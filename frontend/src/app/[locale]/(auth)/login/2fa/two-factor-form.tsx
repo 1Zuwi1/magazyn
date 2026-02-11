@@ -6,7 +6,7 @@ import { useForm } from "@tanstack/react-form"
 import { REGEXP_ONLY_DIGITS } from "input-otp"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import AuthCard from "@/app/[locale]/(auth)/components/auth-card"
@@ -23,7 +23,6 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { useTranslations } from "next-intl"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   Resend2FASchema,

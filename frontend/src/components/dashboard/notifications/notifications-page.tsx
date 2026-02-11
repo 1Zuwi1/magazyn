@@ -85,7 +85,7 @@ const getLocationHref = (notification: UserNotification): string | null => {
     return null
   }
 
-  return `/dashboard/warehouse/${encodeURIComponent(warehouseName)}`
+  return `/dashboard/warehouse/id/${notification.alert.warehouseId}/${encodeURIComponent(warehouseName)}`
 }
 
 function DetailsCard({

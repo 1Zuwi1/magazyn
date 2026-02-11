@@ -1,3 +1,3 @@
-export default function ComponentName() {
+export default function InboundOperationsPage() {
   return <div />
 }

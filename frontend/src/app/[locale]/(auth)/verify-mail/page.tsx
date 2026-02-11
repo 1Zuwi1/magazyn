@@ -8,11 +8,10 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-
+import { useTranslations } from "next-intl"
 import { Suspense, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import { useTranslations } from "next-intl"
 import { apiFetch } from "@/lib/fetcher"
 import { VerifyMailSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"

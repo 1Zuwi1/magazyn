@@ -10,7 +10,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useLocale, useTranslations } from "next-intl"
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { formatDateTime } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
@@ -195,32 +195,13 @@ function ScheduleCard({
 }) {
   const t = useTranslations()
   const locale = useLocale()
-  const [justToggled, setJustToggled] = useState(false)
-  const isFirstRender = useRef(true)
-
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      return
-    }
-
-    setJustToggled(true)
-    const timeout = setTimeout(() => setJustToggled(false), 600)
-    return () => clearTimeout(timeout)
-  }, [])
 
   return (
     <Card
       className={cn(
         "relative overflow-hidden p-4 transition-all duration-500 ease-in-out",
         !schedule.enabled && "bg-muted/30 opacity-60",
-        schedule.enabled && "opacity-100",
-        justToggled &&
-          schedule.enabled &&
-          "scale-[1.02] shadow-md ring-2 ring-green-500/40",
-        justToggled &&
-          !schedule.enabled &&
-          "scale-[0.98] ring-2 ring-muted-foreground/20"
+        schedule.enabled && "opacity-100"
       )}
       key={schedule.id}
     >

@@ -28,7 +28,7 @@ describe("GET requests", () => {
   it("fetches data with GET method and validates with schema", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({
           id: z.number(),
           name: z.string(),
@@ -56,7 +56,7 @@ describe("GET requests", () => {
   it("rejects GET with body parameter", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })
@@ -76,7 +76,7 @@ describe("GET requests", () => {
   it("rejects GET with formData parameter", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })
@@ -180,7 +180,7 @@ describe("Blob responses", () => {
       POST: z.object({
         input: z.object({
           format: z.enum(["PDF", "EXCEL", "CSV"]),
-          sendEmail: z.boolean().optional(),
+          sendEmail: z.boolean().nullish(),
         }),
         output: z.union([z.instanceof(Blob), z.null()]),
       }),
@@ -284,7 +284,7 @@ describe("DELETE requests", () => {
   it("sends DELETE request without body", async () => {
     const schema = z.object({
       DELETE: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ deleted: z.boolean() }),
       }),
     })
@@ -341,7 +341,7 @@ describe("Error handling", () => {
   it("throws FetchError when response is not ok", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })
@@ -359,7 +359,7 @@ describe("Error handling", () => {
   it("throws FetchError with custom message from server", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })
@@ -381,7 +381,7 @@ describe("Error handling", () => {
   it("throws FetchError when JSON parsing fails", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })
@@ -400,7 +400,7 @@ describe("Error handling", () => {
   it("throws FetchError when schema validation fails", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({
           id: z.number(),
           name: z.string(),
@@ -423,7 +423,7 @@ describe("Error handling", () => {
   it("throws FetchError when server returns success: false", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })
@@ -445,7 +445,7 @@ describe("Error handling", () => {
   it("throws FetchError for unsupported HTTP method", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })
@@ -459,7 +459,7 @@ describe("Error handling", () => {
   it("throws FetchError when no schema defined for method", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })
@@ -481,7 +481,7 @@ describe("Timeout handling", () => {
   it("passes abort signal to fetch", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })
@@ -501,7 +501,7 @@ describe("Timeout handling", () => {
   it("uses default timeout when timeoutMs is not provided", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })
@@ -527,7 +527,7 @@ describe("Timeout handling", () => {
   it("uses custom timeout when timeoutMs is provided", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })
@@ -556,7 +556,7 @@ describe("Timeout handling", () => {
   it("rejects invalid timeout values", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })
@@ -614,7 +614,7 @@ describe("Header merging", () => {
   it("merges custom headers with defaults", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })
@@ -690,7 +690,7 @@ describe("Credentials", () => {
   it("defaults to include credentials", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })
@@ -720,7 +720,7 @@ describe("Credentials", () => {
   it("respects custom credentials setting", async () => {
     const schema = z.object({
       GET: z.object({
-        input: z.any().optional(),
+        input: z.any().nullish(),
         output: z.object({ id: z.number() }),
       }),
     })

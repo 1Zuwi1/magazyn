@@ -10,7 +10,7 @@ import {
 import { useForm } from "@tanstack/react-form"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { FieldWithState } from "@/components/helpers/field-state"
@@ -24,7 +24,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import { useTranslations } from "next-intl"
 import { apiFetch } from "@/lib/fetcher"
 import { FormRegisterSchema, LoginSchema, RegisterSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
