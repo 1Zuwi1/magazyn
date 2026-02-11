@@ -48,4 +48,4 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
-wait "$BACKEND_PID" "$FRONTEND_PID"
+wait
