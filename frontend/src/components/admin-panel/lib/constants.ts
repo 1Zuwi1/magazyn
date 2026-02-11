@@ -29,6 +29,10 @@ export const getAdminNavLinks = (t: AppTranslate) =>
       title: t("generated.shared.backups"),
       url: "/admin/backups",
     },
+    {
+      title: t("generated.shared.apiKeys"),
+      url: "/admin/api-keys",
+    },
   ] as const
 
 export const DEFAULT_RACK = {

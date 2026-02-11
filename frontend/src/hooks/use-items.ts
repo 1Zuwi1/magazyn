@@ -24,7 +24,6 @@ import {
   ItemsSchema,
   SetPrimaryItemPhotoSchema,
   UpdateItemSchema,
-  UploadItemPhotoSchema,
 } from "@/lib/schemas"
 import type { SafeInfiniteQueryOptions, SafeQueryOptions } from "./helper"
 import { useApiMutation } from "./use-api-mutation"
@@ -271,32 +270,11 @@ export function useDeleteItem() {
 export function useUploadItemPhoto() {
   return useApiMutation({
     mutationFn: ({ itemId, photo }: { itemId: number; photo: File }) =>
-      apiFetch(`/api/items/${itemId}/photo`, UploadItemPhotoSchema, {
-        method: "POST",
-        body: { photo },
-        formData: (formData, data) => {
-          formData.append("file", data.photo)
-        },
-      }),
-    onSuccess: (_, { itemId }, ___, context) => {
-      context.client.invalidateQueries({
-        queryKey: ITEMS_QUERY_KEY,
-      })
-      context.client.invalidateQueries({
-        queryKey: [...ITEM_PHOTOS_QUERY_KEY, itemId],
-      })
-    },
-  })
-}
-
-export function useUploadAdditionalItemPhoto() {
-  return useApiMutation({
-    mutationFn: ({ itemId, photo }: { itemId: number; photo: File }) =>
       apiFetch(`/api/items/${itemId}/photos`, ItemPhotosSchema, {
         method: "POST",
-        body: { photo },
+        body: { file: photo },
         formData: (formData, data) => {
-          formData.append("file", data.photo)
+          formData.append("file", data.file)
         },
       }),
     onSuccess: (_, { itemId }, ___, context) => {

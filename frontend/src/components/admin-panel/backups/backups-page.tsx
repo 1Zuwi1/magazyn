@@ -9,7 +9,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import {
+import useBackups, {
   useBackupAllWarehouses,
   useBackupSchedules,
   useCreateBackup,
@@ -37,6 +37,7 @@ import {
 
 export function BackupsMain() {
   const t = useAppTranslations()
+  const { data: backupsData } = useBackups()
   const { data: schedulesData, isLoading: isSchedulesLoading } =
     useBackupSchedules()
   const { data: warehousesSummaryData } = useWarehouses({
@@ -298,7 +299,10 @@ export function BackupsMain() {
         icon={DatabaseIcon}
         title={t("generated.shared.backups")}
       >
-        <BackupsHeaderStats />
+        <BackupsHeaderStats
+          backupsData={backupsData}
+          schedulesData={schedulesData}
+        />
       </AdminPageHeader>
 
       <SchedulesSection

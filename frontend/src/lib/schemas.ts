@@ -837,7 +837,7 @@ export const ItemPhotosSchema = createApiSchema({
     output: z.array(ItemImageSchema),
   },
   POST: {
-    input: z.object({ photo: z.instanceof(File) }),
+    input: z.object({ file: z.instanceof(File) }),
     output: ItemImageSchema,
   },
 })
@@ -1534,7 +1534,7 @@ export const ApiKeyDetailsSchema = createApiSchema({
     output: ApiKeyResponseSchema,
   },
   DELETE: {
-    output: z.string(),
+    output: z.null(),
   },
 })
 

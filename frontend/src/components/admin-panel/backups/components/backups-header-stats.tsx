@@ -6,19 +6,21 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { useMemo } from "react"
-import useBackups, { useBackupSchedules } from "@/hooks/use-backups"
+import type { BackupSchedules, BackupsList } from "@/hooks/use-backups"
 import { useAppTranslations } from "@/i18n/use-translations"
-import { BACKUPS_PAGE_SIZE } from "../lib/backups-table-query"
 import { mapApiBackupToViewModel, mapApiScheduleToViewModel } from "../utils"
 import { StatBadge, type StatBadgeConfig } from "./stat-badge"
 
-export function BackupsHeaderStats() {
+interface BackupsHeaderStatsProps {
+  backupsData: BackupsList | undefined
+  schedulesData: BackupSchedules | undefined
+}
+
+export function BackupsHeaderStats({
+  backupsData,
+  schedulesData,
+}: BackupsHeaderStatsProps) {
   const t = useAppTranslations()
-  const { data: backupsData } = useBackups({
-    page: 0,
-    size: BACKUPS_PAGE_SIZE,
-  })
-  const { data: schedulesData } = useBackupSchedules()
 
   const backups = useMemo(
     () =>

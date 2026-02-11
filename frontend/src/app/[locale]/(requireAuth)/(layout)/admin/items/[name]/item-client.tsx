@@ -35,7 +35,7 @@ import useItems, {
   useItemPhotos,
   useSetPrimaryItemPhoto,
   useUpdateItem,
-  useUploadAdditionalItemPhoto,
+  useUploadItemPhoto,
 } from "@/hooks/use-items"
 import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
@@ -96,7 +96,7 @@ function PhotoUploadSection({
 }) {
   const t = useAppTranslations()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const uploadMutation = useUploadAdditionalItemPhoto()
+  const uploadMutation = useUploadItemPhoto()
   const [preview, setPreview] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [step, setStep] = useState<PhotoUploadStep>("idle")
