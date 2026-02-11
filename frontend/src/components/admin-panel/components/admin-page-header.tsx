@@ -42,7 +42,7 @@ export function AdminPageHeader({
   icon,
   iconBadge,
   backHref,
-  backTitle = "Wstecz",
+  backTitle,
   onBack,
   titleBadge,
   actions,
@@ -50,17 +50,18 @@ export function AdminPageHeader({
 }: AdminPageHeaderProps) {
   const pathname = usePathname()
   const t = useTranslations()
+  const backTitleT = backTitle ?? t("generated.admin.reports.shared.back")
   const renderIconOrBackButton = () => {
     if (onBack) {
       return (
         <Button
-          aria-label={backTitle}
+          aria-label={backTitleT}
           className={cn(
             "relative flex size-14 shrink-0 items-center justify-center rounded-xl transition-all hover:bg-primary/5 hover:ring-primary/30 sm:size-16"
           )}
           onClick={onBack}
           size="icon"
-          title={backTitle}
+          title={backTitleT}
           type="button"
           variant="outline"
         >

@@ -12,7 +12,7 @@ import { PasswordVerificationSection } from "./password-verification-section"
 
 const NON_EMPTY_TEXT_REGEX = /.+/
 
-vi.mock("@/i18n/use-translations", () => ({
+vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }))
 

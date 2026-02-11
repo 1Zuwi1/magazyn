@@ -18,6 +18,7 @@ vi.mock("@tanstack/react-query", () => ({
 
 vi.mock("next-intl", () => ({
   useLocale: () => "pl",
+  useTranslations: () => (key: string) => key,
 }))
 
 vi.mock("@/i18n/use-translations", () => ({

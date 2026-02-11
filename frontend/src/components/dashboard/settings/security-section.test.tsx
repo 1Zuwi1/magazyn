@@ -3,21 +3,23 @@ import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import { SecuritySection } from "./security-section"
 
-vi.mock("@/i18n/use-translations", () => ({
-  useTranslations: () => (key: string) => key,
-}))
+vi.mock("./password-section", () => {
+  return {
+    PasswordSection: () => <div data-testid="password-section" />,
+  }
+})
 
-vi.mock("./password-section", () => ({
-  PasswordSection: () => <div data-testid="password-section" />,
-}))
+vi.mock("./two-factor-setup", () => {
+  return {
+    TwoFactorSetup: () => <div data-testid="two-factor-setup" />,
+  }
+})
 
-vi.mock("./two-factor-setup", () => ({
-  TwoFactorSetup: () => <div data-testid="two-factor-setup" />,
-}))
-
-vi.mock("./passkeys-section", () => ({
-  PasskeysSection: () => <div data-testid="passkeys-section" />,
-}))
+vi.mock("./passkeys-section", () => {
+  return {
+    PasskeysSection: () => <div data-testid="passkeys-section" />,
+  }
+})
 
 vi.mock("@tanstack/react-query", async () => {
   const mod = await vi.importActual<typeof import("@tanstack/react-query")>(

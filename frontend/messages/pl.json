@@ -1079,7 +1079,8 @@
           "noData": "Brak danych",
           "noDataToDisplay": "Brak danych do wyświetlenia",
           "generatedAt": "Data wygenerowania",
-          "unitPieces": "szt."
+          "unitPieces": "szt.",
+          "back": "Wstecz"
         },
         "inventory": {
           "title": "Pełna inwentaryzacja magazynu",

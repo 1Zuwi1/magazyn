@@ -1079,7 +1079,8 @@
           "noData": "No data",
           "noDataToDisplay": "No data to display",
           "generatedAt": "Generated at",
-          "unitPieces": "pcs."
+          "unitPieces": "pcs.",
+          "back": "Back"
         },
         "inventory": {
           "title": "Full warehouse inventory",

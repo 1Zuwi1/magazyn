@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import AuthForm from "./auth-form"
 
-vi.mock("@/i18n/use-translations", () => ({
+vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }))
 
