@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -23,7 +24,12 @@ public class ApiKeyBatchUpdateService {
         }
 
         try {
-            updates.forEach(apiKeyRepository::updateLastUsedAt);
+            Instant latestTimestamp = updates.values().stream()
+                    .max(Instant::compareTo)
+                    .orElse(Instant.now());
+
+            List<Long> apiKeyIds = new java.util.ArrayList<>(updates.keySet());
+            apiKeyRepository.bulkUpdateLastUsedAt(apiKeyIds, latestTimestamp);
             log.debug("Updated last used timestamp for {} API keys", updates.size());
         } catch (Exception e) {
             log.error("Failed to batch update API key last used timestamps", e);

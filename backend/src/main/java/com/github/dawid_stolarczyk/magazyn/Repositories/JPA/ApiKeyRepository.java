@@ -20,7 +20,11 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, Long> {
 
     boolean existsByName(String name);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("UPDATE ApiKey a SET a.lastUsedAt = :timestamp WHERE a.id = :apiKeyId")
     void updateLastUsedAt(@Param("apiKeyId") Long apiKeyId, @Param("timestamp") Instant timestamp);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE ApiKey a SET a.lastUsedAt = :timestamp WHERE a.id IN :apiKeyIds")
+    void bulkUpdateLastUsedAt(@Param("apiKeyIds") List<Long> apiKeyIds, @Param("timestamp") Instant timestamp);
 }

@@ -40,4 +40,7 @@ public interface ItemRepository extends JpaRepository<Item, Long>, JpaSpecificat
     @Query("SELECT DISTINCT a.item FROM Assortment a WHERE a.rack.warehouse.id = :warehouseId")
     List<Item> findDistinctByWarehouseId(@Param("warehouseId") Long warehouseId);
 
+    @Query("SELECT DISTINCT a.item FROM Assortment a JOIN FETCH a.item.images WHERE a.rack.warehouse.id = :warehouseId")
+    List<Item> findDistinctByWarehouseIdWithImages(@Param("warehouseId") Long warehouseId);
+
 }
