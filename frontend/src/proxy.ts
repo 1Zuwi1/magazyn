@@ -88,11 +88,6 @@ const localizePathname = (pathname: string, locale: AppLocale): string => {
 }
 
 export async function proxy(request: NextRequest) {
-  console.info("host", request.headers.get("host"))
-  console.info("xf-host", request.headers.get("x-forwarded-host"))
-  console.info("xf-port", request.headers.get("x-forwarded-port"))
-  console.info("xf-proto", request.headers.get("x-forwarded-proto"))
-  console.info("url", request.url)
   const intlResponse = intlProxy(request)
   if (intlResponse.headers.has("location")) {
     return intlResponse
@@ -104,8 +99,9 @@ export async function proxy(request: NextRequest) {
   if (isProtectedPath(pathname)) {
     const session = await getSession()
     if (!session) {
+      const base = getUrl(request.headers)
       return NextResponse.redirect(
-        new URL(localizePathname("/login", locale), request.url)
+        new URL(localizePathname("/login", locale), base)
       )
     }
   }
@@ -126,7 +122,7 @@ export async function proxy(request: NextRequest) {
   const [id, nameSegment, ...tail] = parts
 
   if (!(id && nameSegment && ID_REGEX.test(id))) {
-    const base = await getUrl(request)
+    const base = getUrl(request.headers)
     const fallbackPath = localizePathname(rule.fallbackPath, locale)
     return NextResponse.redirect(new URL(fallbackPath, base))
   }
@@ -136,7 +132,7 @@ export async function proxy(request: NextRequest) {
   try {
     decodedName = decodeURIComponent(nameSegment)
   } catch {
-    const base = await getUrl(request)
+    const base = getUrl(request.headers)
     const fallbackPath = localizePathname(rule.fallbackPath, locale)
     return NextResponse.redirect(new URL(fallbackPath, base))
   }
@@ -148,7 +144,7 @@ export async function proxy(request: NextRequest) {
     locale
   )
 
-  const base = await getUrl(request)
+  const base = getUrl(request.headers)
   const url = new URL(targetPath, base)
   for (const [param, value] of request.nextUrl.searchParams.entries()) {
     url.searchParams.append(param, value)

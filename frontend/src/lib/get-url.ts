@@ -1,39 +1,25 @@
-import { headers } from "next/headers"
 import type { NextRequest } from "next/server"
 
-function isStandardPort(proto: string, port: string) {
-  return (
-    (proto === "https" && port === "443") || (proto === "http" && port === "80")
-  )
-}
+const first = (v: string | null) => (v ?? "").split(",")[0].trim()
 
-export async function getUrl(data: NextRequest | Headers): Promise<URL> {
-  const h: Headers = data instanceof Headers ? data : await headers()
+const isStandardPort = (proto: string, port: string) =>
+  (proto === "https" && port === "443") || (proto === "http" && port === "80")
 
-  const proto = (h.get("x-forwarded-proto") || "http").split(",")[0].trim()
+export function getUrl(data: NextRequest | Headers): URL {
+  const h = data instanceof Headers ? data : data.headers
 
-  // Prefer x-forwarded-host, but keep any port if present
-  const forwardedHost = (h.get("x-forwarded-host") || "").split(",")[0].trim()
-  const hostHeader = (h.get("host") || "localhost").split(",")[0].trim()
-  const host = forwardedHost || hostHeader
+  const proto = first(h.get("x-forwarded-proto")) || "http"
+  const host =
+    first(h.get("x-forwarded-host")) || first(h.get("host")) || "localhost"
+  const port =
+    first(h.get("x-forwarded-port")) || (proto === "https" ? "443" : "80")
 
-  // If x-forwarded-port exists, use it, otherwise derive from proto
-  const xfPort = (h.get("x-forwarded-port") || "").split(",")[0].trim()
-  const derivedPort = proto === "https" ? "443" : "80"
-  const port = xfPort || derivedPort
+  // If host already includes a port, keep it. Otherwise only add non-standard ports.
+  const hostHasPort = host.includes(":")
+  const origin =
+    hostHasPort || isStandardPort(proto, port)
+      ? `${proto}://${host}`
+      : `${proto}://${host}:${port}`
 
-  const base = new URL(
-    data instanceof Headers ? `${proto}://${host}` : data.url
-  )
-
-  // If host already includes a port, trust it and do nothing
-  if (!(host.includes(":") || isStandardPort(proto, port))) {
-    // Only set port when it's non-standard
-    base.port = port
-  }
-
-  base.protocol = proto
-  base.hostname = host.includes(":") ? host.split(":")[0] : host
-
-  return base
+  return new URL(origin)
 }
