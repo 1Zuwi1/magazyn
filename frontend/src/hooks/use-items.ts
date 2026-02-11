@@ -13,10 +13,16 @@ import {
 import {
   BatchUploadPhotoSchema,
   CreateItemSchema,
+  DeleteItemPhotoSchema,
   DeleteItemSchema,
+  DownloadItemPhotoByImageIdSchema,
+  DownloadItemPhotoSchema,
+  GenerateItemEmbeddingsSchema,
   ItemDetailsSchema,
   ItemImportSchema,
+  ItemPhotosSchema,
   ItemsSchema,
+  SetPrimaryItemPhotoSchema,
   UpdateItemSchema,
   UploadItemPhotoSchema,
 } from "@/lib/schemas"
@@ -26,6 +32,7 @@ import { useApiQuery } from "./use-api-query"
 
 const ITEMS_QUERY_KEY = ["items"] as const
 const ITEM_DETAILS_QUERY_KEY = [...ITEMS_QUERY_KEY, "details"] as const
+const ITEM_PHOTOS_QUERY_KEY = [...ITEMS_QUERY_KEY, "photos"] as const
 const ITEM_DETAILS_STALE_TIME_MS = 5 * 60 * 1000
 const INFINITE_ITEMS_STALE_TIME_MS = 60_000
 const CSV_IMPORT_TIMEOUT_MS = 60_000
@@ -33,6 +40,8 @@ const CSV_IMPORT_TIMEOUT_MS = 60_000
 export type ItemsList = InferApiOutput<typeof ItemsSchema, "GET">
 export type Item = ItemsList["content"][number]
 export type ItemDetails = InferApiOutput<typeof ItemDetailsSchema, "GET">
+export type ItemPhotos = InferApiOutput<typeof ItemPhotosSchema, "GET">
+export type ItemPhoto = ItemPhotos[number]
 
 type ItemsListParams = InferApiInput<typeof ItemsSchema, "GET">
 
@@ -47,6 +56,10 @@ interface ItemsByWarehouseParams extends ItemsListParams {
 interface MultipleItemsParams {
   itemIds: readonly number[]
   staleTime?: number
+}
+
+interface ItemPhotosParams {
+  itemId: number
 }
 
 interface InfiniteItemsParams {
@@ -117,6 +130,20 @@ export function useInfiniteItems(
     ...infiniteQuery,
     items,
   }
+}
+
+export function useItemPhotos(
+  { itemId }: ItemPhotosParams,
+  options?: SafeQueryOptions<ItemPhotos>
+): UseQueryResult<ItemPhotos, FetchError> {
+  return useApiQuery({
+    queryKey: [...ITEM_PHOTOS_QUERY_KEY, itemId],
+    queryFn: async () =>
+      await apiFetch(`/api/items/${itemId}/photos`, ItemPhotosSchema, {
+        method: "GET",
+      }),
+    ...(options as SafeQueryOptions<ItemPhotos> | undefined),
+  })
 }
 
 interface UseItemsHook {
@@ -251,18 +278,109 @@ export function useUploadItemPhoto() {
           formData.append("file", data.photo)
         },
       }),
-    onSuccess: (_, __, ___, context) => {
+    onSuccess: (_, { itemId }, ___, context) => {
       context.client.invalidateQueries({
         queryKey: ITEMS_QUERY_KEY,
       })
+      context.client.invalidateQueries({
+        queryKey: [...ITEM_PHOTOS_QUERY_KEY, itemId],
+      })
     },
+  })
+}
+
+export function useUploadAdditionalItemPhoto() {
+  return useApiMutation({
+    mutationFn: ({ itemId, photo }: { itemId: number; photo: File }) =>
+      apiFetch(`/api/items/${itemId}/photos`, ItemPhotosSchema, {
+        method: "POST",
+        body: { photo },
+        formData: (formData, data) => {
+          formData.append("file", data.photo)
+        },
+      }),
+    onSuccess: (_, { itemId }, ___, context) => {
+      context.client.invalidateQueries({
+        queryKey: ITEMS_QUERY_KEY,
+      })
+      context.client.invalidateQueries({
+        queryKey: [...ITEM_PHOTOS_QUERY_KEY, itemId],
+      })
+    },
+  })
+}
+
+export function useDeleteItemPhoto() {
+  return useApiMutation({
+    mutationFn: ({ itemId, imageId }: { itemId: number; imageId: number }) =>
+      apiFetch(
+        `/api/items/${itemId}/photos/${imageId}`,
+        DeleteItemPhotoSchema,
+        {
+          method: "DELETE",
+        }
+      ),
+    onSuccess: (_, { itemId }, ___, context) => {
+      context.client.invalidateQueries({
+        queryKey: ITEMS_QUERY_KEY,
+      })
+      context.client.invalidateQueries({
+        queryKey: [...ITEM_PHOTOS_QUERY_KEY, itemId],
+      })
+    },
+  })
+}
+
+export function useSetPrimaryItemPhoto() {
+  return useApiMutation({
+    mutationFn: ({ itemId, imageId }: { itemId: number; imageId: number }) =>
+      apiFetch(
+        `/api/items/${itemId}/photos/${imageId}/primary`,
+        SetPrimaryItemPhotoSchema,
+        {
+          method: "PUT",
+          body: null,
+        }
+      ),
+    onSuccess: (_, { itemId }, ___, context) => {
+      context.client.invalidateQueries({
+        queryKey: ITEMS_QUERY_KEY,
+      })
+      context.client.invalidateQueries({
+        queryKey: [...ITEM_PHOTOS_QUERY_KEY, itemId],
+      })
+    },
+  })
+}
+
+export function useDownloadItemPhoto() {
+  return useApiMutation({
+    mutationFn: ({ itemId }: { itemId: number }) =>
+      apiFetch(`/api/items/${itemId}/photo`, DownloadItemPhotoSchema, {
+        method: "GET",
+        responseType: "blob",
+      }),
+  })
+}
+
+export function useDownloadItemPhotoByImageId() {
+  return useApiMutation({
+    mutationFn: ({ itemId, imageId }: { itemId: number; imageId: number }) =>
+      apiFetch(
+        `/api/items/${itemId}/photos/${imageId}`,
+        DownloadItemPhotoByImageIdSchema,
+        {
+          method: "GET",
+          responseType: "blob",
+        }
+      ),
   })
 }
 
 export function useBatchUploadItemPhotos() {
   return useApiMutation({
     mutationFn: ({ files }: { files: File[] }) =>
-      apiFetch("/api/items/photo/import", BatchUploadPhotoSchema, {
+      apiFetch("/api/items/photos/batch-upload", BatchUploadPhotoSchema, {
         method: "POST",
         body: { files },
         formData: (formData, data) => {
@@ -274,6 +392,37 @@ export function useBatchUploadItemPhotos() {
     onSuccess: (_, __, ___, context) => {
       context.client.invalidateQueries({
         queryKey: ITEMS_QUERY_KEY,
+      })
+      context.client.invalidateQueries({
+        queryKey: ITEM_PHOTOS_QUERY_KEY,
+      })
+    },
+  })
+}
+
+export function useGenerateItemEmbeddings() {
+  return useApiMutation({
+    mutationFn: ({
+      forceRegenerate = false,
+    }: {
+      forceRegenerate?: boolean
+    } = {}) => {
+      const queryParam = forceRegenerate ? "?forceRegenerate=true" : ""
+      return apiFetch(
+        `/api/items/generate-embeddings${queryParam}`,
+        GenerateItemEmbeddingsSchema,
+        {
+          method: "POST",
+          body: null,
+        }
+      )
+    },
+    onSuccess: (_, __, ___, context) => {
+      context.client.invalidateQueries({
+        queryKey: ITEMS_QUERY_KEY,
+      })
+      context.client.invalidateQueries({
+        queryKey: ITEM_PHOTOS_QUERY_KEY,
       })
     },
   })

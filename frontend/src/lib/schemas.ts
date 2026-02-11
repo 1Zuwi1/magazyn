@@ -663,9 +663,20 @@ export const WarehouseImportSchema = createApiSchema({
   },
 })
 
+export const ItemImageSchema = z.object({
+  id: z.number().int().nonnegative(),
+  itemId: z.number().int().nonnegative(),
+  photoUrl: z.string(),
+  displayOrder: z.number().int().nonnegative(),
+  hasEmbedding: z.boolean(),
+  createdAt: z.string(),
+  primary: z.boolean(),
+})
+
 export const ItemDefinitionSchema = z.object({
   id: z.number().int().nonnegative(),
   code: z.string(),
+  qrCode: z.string().nullish(),
   name: z.string(),
   photoUrl: z.string().nullable(),
   minTemp: z.number(),
@@ -675,7 +686,10 @@ export const ItemDefinitionSchema = z.object({
   sizeY: z.number(),
   sizeZ: z.number(),
   comment: z.string().nullable(),
-  expireAfterDays: z.number(),
+  expireAfterDays: z.number().int().nonnegative(),
+  imageUploaded: z.boolean().optional(),
+  imageCount: z.number().int().nonnegative().optional(),
+  images: z.array(ItemImageSchema).optional(),
   dangerous: z.boolean(),
 })
 
@@ -779,8 +793,9 @@ export const ItemDetailsSchema = createApiSchema({
 
 const ItemMutationInputSchema = z.object({
   name: z.string().trim().max(255).optional(),
-  minTemp: z.number(),
-  maxTemp: z.number(),
+  qrCode: z.string().trim().max(32).optional(),
+  minTemp: z.number().min(-273.15),
+  maxTemp: z.number().min(-273.15),
   weight: z.number().nonnegative(),
   sizeX: z.number().nonnegative(),
   sizeY: z.number().nonnegative(),
@@ -817,10 +832,52 @@ export const UploadItemPhotoSchema = createApiSchema({
   },
 })
 
+export const ItemPhotosSchema = createApiSchema({
+  GET: {
+    output: z.array(ItemImageSchema),
+  },
+  POST: {
+    input: z.object({ photo: z.instanceof(File) }),
+    output: ItemImageSchema,
+  },
+})
+
 export const BatchUploadPhotoSchema = createApiSchema({
   POST: {
     input: z.object({ files: z.array(z.instanceof(File)) }),
     output: z.array(z.string()),
+  },
+})
+
+export const SetPrimaryItemPhotoSchema = createApiSchema({
+  PUT: {
+    input: z.null(),
+    output: z.unknown(),
+  },
+})
+
+export const DeleteItemPhotoSchema = createApiSchema({
+  DELETE: {
+    output: z.unknown(),
+  },
+})
+
+export const DownloadItemPhotoSchema = createApiSchema({
+  GET: {
+    output: z.instanceof(Blob),
+  },
+})
+
+export const DownloadItemPhotoByImageIdSchema = createApiSchema({
+  GET: {
+    output: z.instanceof(Blob),
+  },
+})
+
+export const GenerateItemEmbeddingsSchema = createApiSchema({
+  POST: {
+    input: z.null(),
+    output: z.unknown(),
   },
 })
 
