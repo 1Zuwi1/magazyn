@@ -102,6 +102,7 @@ function TwoFactorSetupHarness({
 
   return (
     <TwoFactorSetup
+      backupCodesRefreshNeeded={false}
       method={method}
       onMethodChange={setMethod}
       status={status}

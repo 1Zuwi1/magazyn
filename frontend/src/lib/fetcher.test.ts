@@ -10,7 +10,7 @@ vi.mock("next/headers", () => ({
   headers: vi.fn(() => new Headers()),
 }))
 
-import { apiFetch, FetchError } from "./fetcher"
+import { apiFetch, DEFAULT_API_TIMEOUT_MS, FetchError } from "./fetcher"
 
 const mockFetch = vi.fn()
 
@@ -159,7 +159,7 @@ describe("Blob responses", () => {
       headers: new Headers({
         "content-type": "application/octet-stream",
       }),
-      blob: async () => reportBlob,
+      blob: () => reportBlob,
     })
 
     const result = await apiFetch("/api/reports/inventory-stock", schema, {
@@ -169,7 +169,7 @@ describe("Blob responses", () => {
     })
 
     expect(result).toBeInstanceOf(Blob)
-    await expect(result.text()).resolves.toBe("report-bytes")
+    expect(result).toEqual(reportBlob)
 
     const fetchCall = mockFetch.mock.calls[0]
     expect(fetchCall[1].headers.get("Accept")).toBe("application/octet-stream")
@@ -496,6 +496,76 @@ describe("Timeout handling", () => {
 
     const fetchCall = mockFetch.mock.calls[0]
     expect(fetchCall[1]?.signal).toBeInstanceOf(AbortSignal)
+  })
+
+  it("uses default timeout when timeoutMs is not provided", async () => {
+    const schema = z.object({
+      GET: z.object({
+        input: z.any().optional(),
+        output: z.object({ id: z.number() }),
+      }),
+    })
+
+    const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout")
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ success: true, data: { id: 1 } }),
+    })
+
+    await apiFetch("/api/test", schema)
+
+    expect(setTimeoutSpy).toHaveBeenCalledWith(
+      expect.any(Function),
+      DEFAULT_API_TIMEOUT_MS,
+      "Request timed out"
+    )
+    setTimeoutSpy.mockRestore()
+  })
+
+  it("uses custom timeout when timeoutMs is provided", async () => {
+    const schema = z.object({
+      GET: z.object({
+        input: z.any().optional(),
+        output: z.object({ id: z.number() }),
+      }),
+    })
+
+    const customTimeoutMs = 60_000
+    const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout")
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ success: true, data: { id: 1 } }),
+    })
+
+    await apiFetch("/api/test", schema, {
+      timeoutMs: customTimeoutMs,
+    })
+
+    expect(setTimeoutSpy).toHaveBeenCalledWith(
+      expect.any(Function),
+      customTimeoutMs,
+      "Request timed out"
+    )
+    setTimeoutSpy.mockRestore()
+  })
+
+  it("rejects invalid timeout values", async () => {
+    const schema = z.object({
+      GET: z.object({
+        input: z.any().optional(),
+        output: z.object({ id: z.number() }),
+      }),
+    })
+
+    await expect(
+      apiFetch("/api/test", schema, {
+        timeoutMs: 0,
+      })
+    ).rejects.toThrow("timeoutMs must be a positive number")
   })
 })
 

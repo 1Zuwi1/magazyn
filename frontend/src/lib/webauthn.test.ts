@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import type { AppTranslate } from "@/i18n/use-translations"
 import {
   getWebAuthnErrorMessage,
   getWebAuthnSupport,
@@ -7,7 +8,8 @@ import {
   serializeCredential,
 } from "./webauthn"
 
-const t = (key: string): string => key
+const t: AppTranslate = ((key: string): string => key) as AppTranslate
+t.has = (_key: string): boolean => true
 
 const setupWebAuthnGlobals = () => {
   if (typeof window === "undefined") {

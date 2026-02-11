@@ -44,9 +44,15 @@ function createQueryClientWrapper() {
 
 describe("SecuritySection", () => {
   it("keeps 2FA enabled by default and updates method", () => {
-    render(<SecuritySection userEmail="user@site.pl" />, {
-      wrapper: createQueryClientWrapper(),
-    })
+    render(
+      <SecuritySection
+        backupCodesRefreshNeeded={false}
+        userEmail="user@site.pl"
+      />,
+      {
+        wrapper: createQueryClientWrapper(),
+      }
+    )
 
     expect(screen.getByTestId("password-section")).toBeInTheDocument()
     expect(screen.getByTestId("two-factor-setup")).toBeInTheDocument()
