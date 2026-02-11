@@ -6,7 +6,7 @@
 
 - Java 17 (backend).
 - Bun (frontend) oraz dostęp do instalacji paczek.
-- Baza danych (np. MySQL), Redis i SMTP skonfigurowane w środowisku produkcyjnym.
+- Baza danych PostgreSQL z rozszerzeniem pgvector, Redis i SMTP skonfigurowane w środowisku produkcyjnym.
 
 ## Disclaimer
 Przy uruchamianiu projektu inną metodą niż Docker Compose, pamiętaj o odpowiednim skonfigurowaniu środowiska, zwłaszcza zmiennych środowiskowych dla backendu i frontendu. Upewnij się, że backend jest dostępny pod adresem wskazanym w `NEXT_PUBLIC_API_URL` w konfiguracji frontendu. Oraz że inne usługi, takie jak baza danych, redis oraz rembg są poprawnie skonfigurowane i dostępne dla aplikacji.  
@@ -85,6 +85,7 @@ Następnie możesz użyć pliku `docker-compose.yml` do uruchomienia wszystkich 
 ```bash
 docker compose pull # Pobierz najnowsze obrazy
 docker compose up -d # Uruchom usługi w tle
-# Opcjonalnie możesz wskazać wlasny plik compose:
+# Opcjonalnie możesz wskazać własny plik compose:
 docker compose -f docker-compose.yml up -d
 ```
+

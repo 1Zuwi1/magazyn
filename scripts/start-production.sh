@@ -28,6 +28,7 @@ if [[ -z "$BACKEND_JAR" ]]; then
 fi
 
 echo "Budowanie frontend..."
+load_env_file "$FRONTEND_ENV_FILE"
 (cd "$ROOT_DIR/frontend" && bun install && bun run build)
 
 echo "Uruchamianie backendu..."
@@ -36,13 +37,13 @@ SPRING_PROFILES_ACTIVE="$BACKEND_PROFILE" java -jar "$BACKEND_JAR" &
 BACKEND_PID=$!
 
 echo "Uruchamianie frontend na porcie $FRONTEND_PORT..."
-load_env_file "$FRONTEND_ENV_FILE"
 PORT="$FRONTEND_PORT" bun run --cwd "$ROOT_DIR/frontend" start &
 FRONTEND_PID=$!
 
 cleanup() {
   echo "Zatrzymywanie usług..."
-  kill "$BACKEND_PID" "$FRONTEND_PID" 2>/dev/null || true
+  [[ -n "$BACKEND_PID" ]] && kill "$BACKEND_PID" 2>/dev/null || true
+  [[ -n "$FRONTEND_PID" ]] && kill "$FRONTEND_PID" 2>/dev/null || true
 }
 
 trap cleanup EXIT INT TERM

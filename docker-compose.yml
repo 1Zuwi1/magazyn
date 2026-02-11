@@ -1,5 +1,5 @@
 volumes:
-  mysql_data_public: {}
+  postgres_data: {}
 
 networks:
   proxy:
@@ -86,13 +86,7 @@ services:
 
   rembg:
     image: danielgatis/rembg:latest
-    container_name: magazyn-rembg
-    command: s
     ports:
-      - "7000:7000"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7000/api"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      - "80"
+    restart: unless-stopped
+    command: s --host 0.0.0.0 --port 80
