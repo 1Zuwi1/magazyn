@@ -177,7 +177,9 @@ function createColumns(
     },
     {
       id: "actions",
-      header: () => <StaticHeader>{t("generated.shared.shares")}</StaticHeader>,
+      header: () => (
+        <StaticHeader>{t("generated.shared.actions")}</StaticHeader>
+      ),
       cell: ({ row }) => {
         const item = row.original
 
