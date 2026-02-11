@@ -23,6 +23,8 @@ public class EndpointAccessConfig {
         endpointLevels.put("/api/auth/verify-email", VerificationLevel.PUBLIC);
         endpointLevels.put("/api/auth/forgot-password", VerificationLevel.PUBLIC);
         endpointLevels.put("/api/auth/reset-password", VerificationLevel.PUBLIC);
+        endpointLevels.put("/api/v1/telemetry", VerificationLevel.PUBLIC);
+        endpointLevels.put("/api/v1/external", VerificationLevel.PUBLIC);
 
         // VERIFIED_NO_2FA - admin verified, can configure 2FA
         endpointLevels.put("/api/auth/logout", VerificationLevel.VERIFIED_NO_2FA);

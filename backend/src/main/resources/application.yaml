@@ -103,3 +103,9 @@ auth:
       refill: 5
       duration: PT5M
 
+    # === Telemetry (IoT sensors) ===
+    TELEMETRY_WRITE:
+      capacity: 60          # max 60 raportów na minutę per klucz API
+      refill: 30
+      duration: PT1M
+

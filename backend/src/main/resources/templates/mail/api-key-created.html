@@ -1,0 +1,115 @@
+<!DOCTYPE html
+        PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" lang="pl" xmlns:th="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+
+<body
+        style="background-color:rgb(245,247,249); margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<table border="0" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+    <tr>
+        <td align="center" style="padding: 60px 0;">
+            <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation"
+                   style="max-width:500px; background-color:rgb(255,255,255); border-radius:16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow:hidden;">
+                <tr>
+                    <td style="padding: 40px 32px;">
+                        <div style="text-align: center; margin-bottom: 32px;">
+                            <div
+                                    style="width: 56px; height: 56px; line-height: 56px; background-color: #3B82F6; border-radius: 50%; margin: 0 auto 20px; text-align: center;">
+                                    <span
+                                            style="color: #ffffff; font-size: 28px; font-family: Arial, sans-serif; font-weight: bold;">&#128273;</span>
+                            </div>
+                            <h1
+                                    style="color:rgb(17,24,39); font-size:22px; font-weight:700; line-height:30px; margin:0 0 8px 0;">
+                                Nowy klucz API utworzony
+                            </h1>
+                            <p style="color:rgb(107,114,128); font-size:14px; margin:0;">
+                                Powiadomienie o utworzeniu nowego dostępu do systemu
+                            </p>
+                        </div>
+
+                        <div
+                                style="background-color:rgb(252,253,254); border: 1px solid rgb(234,236,240); border-radius: 12px; overflow: hidden; margin-bottom: 32px;">
+                            <table border="0" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                                <tr>
+                                    <td style="padding: 16px 20px; border-bottom: 1px solid rgb(234,236,240);">
+                                        <table border="0" width="100%" cellpadding="0" cellspacing="0"
+                                               role="presentation">
+                                            <tr>
+                                                <td>
+                                                    <div
+                                                            style="color:rgb(156,163,175); font-size:12px; font-weight:600; margin-bottom:2px;">
+                                                        Nazwa klucza
+                                                    </div>
+                                                    <div style="color:rgb(55,65,81); font-size:15px; font-weight:600;"
+                                                         th:text="${keyName}">Sensor Hala A
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 16px 20px; border-bottom: 1px solid rgb(234,236,240);">
+                                        <table border="0" width="100%" cellpadding="0" cellspacing="0"
+                                               role="presentation">
+                                            <tr>
+                                                <td>
+                                                    <div
+                                                            style="color:rgb(156,163,175); font-size:12px; font-weight:600; margin-bottom:2px;">
+                                                        Przypisany magazyn
+                                                    </div>
+                                                    <div style="color:rgb(55,65,81); font-size:15px;"
+                                                         th:text="${warehouseName}">Magazyn Główny
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 16px 20px;">
+                                        <table border="0" width="100%" cellpadding="0" cellspacing="0"
+                                               role="presentation">
+                                            <tr>
+                                                <td>
+                                                    <div
+                                                            style="color:rgb(156,163,175); font-size:12px; font-weight:600; margin-bottom:2px;">
+                                                        Data utworzenia
+                                                    </div>
+                                                    <div style="color:rgb(55,65,81); font-size:15px;"
+                                                         th:text="${createdAt}">2026-02-11 10:00:00
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div
+                                style="background-color:rgb(254,249,195); border: 1px solid rgb(253,224,71); border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                            <div style="color:rgb(113,63,18); font-size:13px; line-height:20px;">
+                                <strong>Uwaga:</strong> Sam klucz API nie jest zawarty w tej wiadomości ze względów
+                                bezpieczeństwa. Klucz został wyświetlony jednorazowo w panelu administracyjnym.
+                            </div>
+                        </div>
+
+                        <p
+                                style="color:rgb(156,163,175); font-size:12px; text-align:center; margin-top:32px; line-height:20px;">
+                            To powiadomienie zostało wygenerowane automatycznie przez system zarządzania
+                            asortymentem.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+
+</html>

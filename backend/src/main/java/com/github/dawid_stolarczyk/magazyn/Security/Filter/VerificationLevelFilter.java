@@ -8,6 +8,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.VerificationLevel;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
+import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.ApiKeyPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Security.Config.EndpointAccessConfig;
 import jakarta.servlet.FilterChain;
@@ -55,6 +56,12 @@ public class VerificationLevelFilter extends OncePerRequestFilter {
 
         // Not authenticated - Spring Security should handle this, but double-check
         if (auth == null || !auth.isAuthenticated()) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Skip verification level checks for API key-authenticated requests
+        if (auth.getPrincipal() instanceof ApiKeyPrincipal) {
             filterChain.doFilter(request, response);
             return;
         }
