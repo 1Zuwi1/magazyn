@@ -7,6 +7,7 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
 } from "react"
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
@@ -129,6 +130,7 @@ export const OutboundFlow = ({
   const [scannedVerificationEntries, setScannedVerificationEntries] = useState<
     ScannedVerificationEntry[]
   >([])
+  const handledPendingScanCodeRef = useRef<string | null>(null)
 
   // Sync parent-selected item into internal state
   useEffect(() => {
@@ -349,8 +351,15 @@ export const OutboundFlow = ({
 
   useEffect(() => {
     if (!pendingScanCode) {
+      handledPendingScanCodeRef.current = null
       return
     }
+
+    if (handledPendingScanCodeRef.current === pendingScanCode) {
+      return
+    }
+
+    handledPendingScanCodeRef.current = pendingScanCode
 
     handleScanResult(pendingScanCode)
       .catch(() => {
