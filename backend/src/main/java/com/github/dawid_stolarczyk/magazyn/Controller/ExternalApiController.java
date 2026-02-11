@@ -18,6 +18,8 @@ import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperati
 import com.github.dawid_stolarczyk.magazyn.Services.Report.ReportExportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -63,8 +65,10 @@ public class ExternalApiController {
     @Operation(summary = "List items [INVENTORY_READ]",
             description = "Returns paginated list of items. Supports search by name/code.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Success"),
-            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE")
+            @ApiResponse(responseCode = "200", description = "Success - returns paginated items",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.PagedItemsResponse.class))),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @GetMapping("/items")
     public ResponseEntity<ResponseTemplate<PagedResponse<ItemDto>>> getItems(
@@ -80,11 +84,19 @@ public class ExternalApiController {
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         PageRequest pageable = PageRequest.of(page, Math.min(size, ConfigurationConstants.MAX_PAGE_SIZE), sort);
         return ResponseEntity.ok(ResponseTemplate.success(
-                PagedResponse.from(itemService.getAllItemsPaged(request, pageable, search, null,
-                        null, null, null, null, null, null, null, null))));
+                PagedResponse.from(itemService.getAllItemsPaged(request, pageable, search,
+                        null, null, null, null, null, null, null, null, null))));
     }
 
     @Operation(summary = "Get item by ID [INVENTORY_READ]")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - returns item details",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "404", description = "Item not found",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @GetMapping("/items/{id}")
     public ResponseEntity<ResponseTemplate<ItemDto>> getItemById(
             @PathVariable Long id, HttpServletRequest request) {
@@ -99,6 +111,14 @@ public class ExternalApiController {
     }
 
     @Operation(summary = "Get item by barcode or QR code [INVENTORY_READ]")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - returns item details",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "404", description = "Item not found",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @GetMapping("/items/code/{code}")
     public ResponseEntity<ResponseTemplate<ItemDto>> getItemByCode(
             @PathVariable String code, HttpServletRequest request) {
@@ -116,6 +136,12 @@ public class ExternalApiController {
 
     @Operation(summary = "List all assortments [INVENTORY_READ]",
             description = "Returns paginated list of all assortments. For warehouse-scoped data use /warehouses/{id}/assortments.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - returns paginated assortments",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.PagedAssortmentsResponse.class))),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @GetMapping("/assortments")
     public ResponseEntity<ResponseTemplate<PagedResponse<AssortmentDto>>> getAssortments(
             HttpServletRequest request,
@@ -137,6 +163,12 @@ public class ExternalApiController {
 
     @Operation(summary = "List assortments by warehouse [INVENTORY_READ]",
             description = "Returns paginated list of assortments in a specific warehouse with full item details.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - returns paginated assortments",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.PagedAssortmentsWithItemResponse.class))),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @GetMapping("/warehouses/{warehouseId}/assortments")
     public ResponseEntity<ResponseTemplate<PagedResponse<AssortmentWithItemDto>>> getAssortmentsByWarehouse(
             @PathVariable Long warehouseId,
@@ -159,6 +191,14 @@ public class ExternalApiController {
     }
 
     @Operation(summary = "Get assortment by ID [INVENTORY_READ]")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - returns assortment details",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "404", description = "Assortment not found",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @GetMapping("/assortments/{id}")
     public ResponseEntity<ResponseTemplate<AssortmentDto>> getAssortmentById(
             @PathVariable Long id, HttpServletRequest request) {
@@ -173,6 +213,14 @@ public class ExternalApiController {
     }
 
     @Operation(summary = "Get assortment by barcode [INVENTORY_READ]")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - returns assortment details",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "404", description = "Assortment not found",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @GetMapping("/assortments/code/{code}")
     public ResponseEntity<ResponseTemplate<AssortmentDto>> getAssortmentByCode(
             @PathVariable String code, HttpServletRequest request) {
@@ -189,7 +237,13 @@ public class ExternalApiController {
     // ==================== STRUCTURE_READ: Warehouses ====================
 
     @Operation(summary = "List warehouses [STRUCTURE_READ]",
-            description = "Returns paginated list of warehouses. If the API key is bound to a warehouse, only that warehouse is returned.")
+            description = "Returns paginated list of warehouses. If API key is bound to a warehouse, only that warehouse is returned.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - returns paginated warehouses",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessPaged.class))),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @GetMapping("/warehouses")
     public ResponseEntity<ResponseTemplate<WarehousePagedResponse>> getWarehouses(
             HttpServletRequest request,
@@ -201,7 +255,7 @@ public class ExternalApiController {
         rateLimiter.consumeOrThrow("apikey:" + principal.getApiKeyId(), RateLimitOperation.INVENTORY_READ);
 
         if (principal.getWarehouseId() != null) {
-            // Return only the bound warehouse
+            // Return only bound warehouse
             WarehouseDto dto = warehouseService.getWarehouseById(principal.getWarehouseId(), request);
             return ResponseEntity.ok(ResponseTemplate.success(
                     WarehousePagedResponse.builder()
@@ -217,6 +271,14 @@ public class ExternalApiController {
     }
 
     @Operation(summary = "Get warehouse by ID [STRUCTURE_READ]")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - returns warehouse details",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "404", description = "Warehouse not found",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE or WAREHOUSE_ACCESS_DENIED",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @GetMapping("/warehouses/{id}")
     public ResponseEntity<ResponseTemplate<WarehouseDto>> getWarehouseById(
             @PathVariable Long id, HttpServletRequest request) {
@@ -227,10 +289,14 @@ public class ExternalApiController {
         return ResponseEntity.ok(ResponseTemplate.success(warehouseService.getWarehouseById(id, request)));
     }
 
-    // ==================== STRUCTURE_READ: Racks ====================
-
     @Operation(summary = "List racks [STRUCTURE_READ]",
-            description = "Returns paginated list of racks. If the API key is bound to a warehouse, only racks from that warehouse are returned.")
+            description = "Returns paginated list of racks. If API key is bound to a warehouse, only racks from that warehouse are returned.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - returns paginated racks",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.PagedRacksResponse.class))),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @GetMapping("/racks")
     public ResponseEntity<ResponseTemplate<RackPagedResponse>> getRacks(
             HttpServletRequest request,
@@ -254,6 +320,14 @@ public class ExternalApiController {
     }
 
     @Operation(summary = "Get rack by ID [STRUCTURE_READ]")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - returns rack details",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "404", description = "Rack not found",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @GetMapping("/racks/{id}")
     public ResponseEntity<ResponseTemplate<RackDto>> getRackById(
             @PathVariable Long id, HttpServletRequest request) {
@@ -264,6 +338,12 @@ public class ExternalApiController {
 
     @Operation(summary = "Get assortments in a rack [STRUCTURE_READ + INVENTORY_READ]",
             description = "Returns paginated assortments for a specific rack. Requires both STRUCTURE_READ and INVENTORY_READ scopes.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success - returns paginated assortments",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.PagedAssortmentsWithItemResponse.class))),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @GetMapping("/racks/{rackId}/assortments")
     public ResponseEntity<ResponseTemplate<PagedResponse<AssortmentWithItemDto>>> getRackAssortments(
             @PathVariable Long rackId,
@@ -289,8 +369,10 @@ public class ExternalApiController {
     @Operation(summary = "Generate expiry report [REPORTS_GENERATE]",
             description = "Generates a report of products expiring within specified days. Supports PDF, EXCEL, CSV formats.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Report file"),
-            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE or WAREHOUSE_ACCESS_DENIED")
+            @ApiResponse(responseCode = "200", description = "Report file - binary data",
+                    content = @Content(mediaType = "application/octet-stream")),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE or WAREHOUSE_ACCESS_DENIED",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping("/reports/expiry")
     public ResponseEntity<?> generateExpiryReport(
@@ -307,6 +389,12 @@ public class ExternalApiController {
 
     @Operation(summary = "Generate temperature alerts report [REPORTS_GENERATE]",
             description = "Generates a report of temperature alert violations. Supports date range filtering and PDF, EXCEL, CSV formats.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Report file - binary data",
+                    content = @Content(mediaType = "application/octet-stream")),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE or WAREHOUSE_ACCESS_DENIED",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @PostMapping("/reports/temperature-alerts")
     public ResponseEntity<?> generateTemperatureAlertReport(
             @Valid @RequestBody TemperatureAlertReportRequest request,
@@ -322,6 +410,12 @@ public class ExternalApiController {
 
     @Operation(summary = "Generate inventory stock report [REPORTS_GENERATE]",
             description = "Generates a full inventory stock report. Supports PDF, EXCEL, CSV formats.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Report file - binary data",
+                    content = @Content(mediaType = "application/octet-stream")),
+            @ApiResponse(responseCode = "403", description = "INSUFFICIENT_SCOPE or WAREHOUSE_ACCESS_DENIED",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
+    })
     @PostMapping("/reports/inventory-stock")
     public ResponseEntity<?> generateInventoryStockReport(
             @Valid @RequestBody InventoryStockReportRequest request,

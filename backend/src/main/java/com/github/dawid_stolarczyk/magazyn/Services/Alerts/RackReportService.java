@@ -64,7 +64,9 @@ public class RackReportService {
      */
     @Transactional(rollbackFor = Exception.class)
     public RackReportResponse processReport(RackReportRequest request, HttpServletRequest httpRequest) {
-        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
+        if (httpRequest != null) {
+            rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_WRITE);
+        }
 
         if (request.getCurrentTemperature() == null && request.getCurrentWeight() == null) {
             throw new IllegalArgumentException("Temperature or weight must be provided");
@@ -170,7 +172,7 @@ public class RackReportService {
                     userAlertMessages.size(), triggeredAlerts.size());
             userAlertMessages.forEach((userId, messages) -> {
                 User user = usersById.get(userId);
-                emailService.sendBatchNotificationEmail(user.getEmail(), messages, LinksUtils.getWebAppUrl("/alerts", httpRequest));
+                emailService.sendBatchNotificationEmail(user.getEmail(), messages, LinksUtils.getWebAppUrl("/dashboard/notifications", httpRequest));
             });
         }
 

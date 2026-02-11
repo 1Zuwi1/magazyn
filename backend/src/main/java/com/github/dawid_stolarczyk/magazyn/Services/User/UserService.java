@@ -198,7 +198,7 @@ public class UserService {
     }
 
     /**
-     * Admin: Update user profile (phone, location, team, full name)
+     * Admin: Update user profile (phone, location, team, full name, role)
      * Note: DTO validation (@Pattern, @Size) handles format and length constraints
      */
     @Transactional
@@ -227,6 +227,10 @@ public class UserService {
                 throw new IllegalArgumentException(AuthError.INVALID_FULL_NAME.name());
             }
             targetUser.setFullName(fullName);
+        }
+
+        if (profileRequest.getRole() != null) {
+            targetUser.setRole(profileRequest.getRole());
         }
 
         userRepository.save(targetUser);

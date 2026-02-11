@@ -13,10 +13,15 @@ import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ApiKeyRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.WarehouseRepository;
 import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
 import java.security.SecureRandom;
 import java.text.DateFormat;
@@ -39,9 +44,11 @@ public class ApiKeyService {
     private final WarehouseRepository warehouseRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final Bucket4jRateLimiter rateLimiter;
 
     @Transactional(rollbackFor = Exception.class)
-    public ApiKeyCreatedResponse createApiKey(CreateApiKeyRequest request, Long createdByUserId) {
+    public ApiKeyCreatedResponse createApiKey(CreateApiKeyRequest request, Long createdByUserId, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.USER_ACTION_STRICT);
         if (apiKeyRepository.existsByName(request.getName())) {
             throw new IllegalArgumentException("API_KEY_NAME_ALREADY_EXISTS");
         }
@@ -92,7 +99,8 @@ public class ApiKeyService {
     }
 
     @Transactional
-    public void revokeApiKey(Long apiKeyId) {
+    public void revokeApiKey(Long apiKeyId, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.USER_ACTION_STRICT);
         ApiKey apiKey = apiKeyRepository.findById(apiKeyId)
                 .orElseThrow(() -> new IllegalArgumentException(AuthError.RESOURCE_NOT_FOUND.name()));
 
@@ -102,14 +110,16 @@ public class ApiKeyService {
     }
 
     @Transactional(readOnly = true)
-    public List<ApiKeyResponse> listApiKeys() {
+    public List<ApiKeyResponse> listApiKeys(HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
         return apiKeyRepository.findAll().stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public ApiKeyResponse getApiKey(Long apiKeyId) {
+    public ApiKeyResponse getApiKey(Long apiKeyId, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
         ApiKey apiKey = apiKeyRepository.findById(apiKeyId)
                 .orElseThrow(() -> new IllegalArgumentException(AuthError.RESOURCE_NOT_FOUND.name()));
         return toResponse(apiKey);

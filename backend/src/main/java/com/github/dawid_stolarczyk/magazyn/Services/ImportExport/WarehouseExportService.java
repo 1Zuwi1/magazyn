@@ -2,6 +2,9 @@ package com.github.dawid_stolarczyk.magazyn.Services.ImportExport;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.*;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -10,6 +13,8 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
 @Service
 @Slf4j
@@ -20,8 +25,10 @@ public class WarehouseExportService {
     private final WarehouseRepository warehouseRepository;
     private final RackRepository rackRepository;
     private final AssortmentRepository assortmentRepository;
+    private final Bucket4jRateLimiter rateLimiter;
 
-    public String exportAllWarehouses() {
+    public String exportAllWarehouses(HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
         List<Warehouse> warehouses = warehouseRepository.findAll();
         StringBuilder sb = new StringBuilder();
         sb.append("name\n");
@@ -31,13 +38,15 @@ public class WarehouseExportService {
         return sb.toString();
     }
 
-    public String exportWarehouseById(Long warehouseId) {
+    public String exportWarehouseById(Long warehouseId, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
         Warehouse warehouse = warehouseRepository.findById(warehouseId)
                 .orElseThrow(() -> new IllegalArgumentException("WAREHOUSE_NOT_FOUND"));
         return "name\n" + escapeCsv(warehouse.getName()) + "\n";
     }
 
-    public String exportAllItems() {
+    public String exportAllItems(HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
         List<Item> items = itemRepository.findAll();
         return exportItemsToCsv(items);
     }
@@ -66,7 +75,8 @@ public class WarehouseExportService {
         return sb.toString();
     }
 
-    public String exportAllRacks() {
+    public String exportAllRacks(HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
         List<Rack> racks = rackRepository.findAll();
         return exportRacksToCsv(racks);
     }
@@ -94,7 +104,8 @@ public class WarehouseExportService {
         return sb.toString();
     }
 
-    public String exportAllAssortments() {
+    public String exportAllAssortments(HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
         List<Assortment> assortments = assortmentRepository.findAllForInventoryReport(null);
         return exportAssortmentsToCsv(assortments);
     }

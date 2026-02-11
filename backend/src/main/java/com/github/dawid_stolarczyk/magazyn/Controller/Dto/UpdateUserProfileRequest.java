@@ -1,5 +1,6 @@
 package com.github.dawid_stolarczyk.magazyn.Controller.Dto;
 
+import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserTeam;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Pattern;
@@ -28,4 +29,7 @@ public class UpdateUserProfileRequest {
     @Schema(description = "Team/department (optional)", example = "OPERATIONS",
             allowableValues = {"OPERATIONS", "LOGISTICS", "WAREHOUSE", "INVENTORY", "QUALITY_CONTROL", "RECEIVING", "SHIPPING", "IT_SUPPORT", "MANAGEMENT"})
     private UserTeam team;
+
+    @Schema(description = "User role (optional)", example = "ADMIN", allowableValues = {"USER", "ADMIN"})
+    private UserRole role;
 }
