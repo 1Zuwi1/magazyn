@@ -289,11 +289,9 @@ public class ItemController {
     @Operation(summary = "Upload multiple photos for item (ADMIN only)",
             description = """
                     Uploads multiple photos to the item's image gallery. Max 10 images per item.
-                    Processing happens asynchronously - response is returned immediately.
-                    Check the item's photos endpoint for uploaded images.
                     """)
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "202", description = "Photos upload started - processing in background"),
+            @ApiResponse(responseCode = "200", description = "Photos uploaded successfully"),
             @ApiResponse(responseCode = "400", description = "Error codes: MAX_IMAGES_EXCEEDED, FILE_IS_EMPTY, INVALID_FILE_TYPE"),
             @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND")
     })
@@ -302,30 +300,24 @@ public class ItemController {
     public ResponseEntity<ResponseTemplate<List<ItemImageDto>>> uploadMultiplePhotos(
             @PathVariable Long id,
             @RequestPart("files") List<MultipartFile> files,
-            HttpServletRequest request) {
-        try {
+            HttpServletRequest request) throws Exception {
             List<ItemImageDto> result = itemService.uploadMultiplePhotos(id, files, request);
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body(ResponseTemplate.success(result));
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid photos upload for item {}: {}", id, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getMessage()));
-        } catch (Exception e) {
-            log.error("Unexpected error uploading photos for item {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error("PHOTO_UPLOAD_FAILED"));
-        }
+            return ResponseEntity.ok(ResponseTemplate.success(result));
     }
 
     @Operation(summary = "Get all photos for an item",
-            description = "Returns metadata for all photos in the item's gallery, ordered by display order.")
-    @ApiResponse(responseCode = "200", description = "List of item images")
+            description = "Returns list of photo URLs for all photos in the item's gallery, ordered by display order.")
+    @ApiResponse(responseCode = "200", description = "List of photo URLs")
     @GetMapping("/{id}/photos")
-    public ResponseEntity<ResponseTemplate<List<ItemImageDto>>> getItemPhotos(
+    public ResponseEntity<List<String>> getItemPhotos(
             @PathVariable Long id,
             HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(ResponseTemplate.success(itemService.getItemPhotos(id, request)));
+            return ResponseEntity.ok(itemService.getItemPhotos(id, request).stream()
+                    .map(ItemImageDto::getPhotoUrl)
+                    .toList());
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
