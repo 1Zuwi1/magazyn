@@ -13,6 +13,10 @@ vi.mock("./fetcher", () => ({
       this.name = "FetchError"
       this.status = status
     }
+
+    static isError(err: unknown): err is FetchError {
+      return err instanceof FetchError
+    }
   },
 }))
 

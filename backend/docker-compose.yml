@@ -40,7 +40,7 @@ services:
     image: redis:7.0
     container_name: items-redis
     ports:
-      - "6379:6379"
+      - "6378:6379"
     command: redis-server --save 60 1 --loglevel warning
 
   rembg:

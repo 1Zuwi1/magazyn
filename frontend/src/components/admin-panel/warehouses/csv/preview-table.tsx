@@ -1,6 +1,5 @@
 "use client"
 
-import { pluralize } from "@/components/dashboard/utils/helpers"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Table,
@@ -10,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { MAX_PREVIEW_ROWS } from "./utils/constants"
 import { normalizeKey } from "./utils/csv-utils"
@@ -21,6 +21,8 @@ interface PreviewTableProps {
 }
 
 export function PreviewTable({ columns, rows }: PreviewTableProps) {
+  const t = useAppTranslations()
+
   const hasMoreRows = rows.length > MAX_PREVIEW_ROWS
   const previewRows = hasMoreRows ? rows.slice(0, MAX_PREVIEW_ROWS) : rows
 
@@ -53,7 +55,7 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
             ))
           ) : (
             <div className="rounded-md border p-6 text-center text-muted-foreground">
-              Brak danych do wyświetlenia
+              {t("generated.admin.warehouses.dataDisplay")}
             </div>
           )}
         </div>
@@ -98,7 +100,7 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
                       className="h-24 text-center text-muted-foreground"
                       colSpan={columns.length}
                     >
-                      Brak danych do wyświetlenia
+                      {t("generated.admin.warehouses.dataDisplay")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -108,11 +110,16 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
         </ScrollArea>
       </div>
 
-      <div className="text-center text-muted-foreground text-sm">
+      <div className="text-left text-muted-foreground text-sm">
         {hasMoreRows
-          ? `Wyświetlono ${previewRows.length} z ${rows.length} ${pluralize(rows.length, "wiersz", "wiersze", "wierszy")}`
+          ? t("generated.admin.warehouses.showing", {
+              value0: previewRows.length,
+              value1: rows.length,
+            })
           : rows.length > 0 &&
-            `Wyświetlono ${rows.length} ${pluralize(rows.length, "wiersz", "wiersze", "wierszy")}`}
+            t("generated.admin.warehouses.showing2", {
+              value0: rows.length,
+            })}
       </div>
     </div>
   )

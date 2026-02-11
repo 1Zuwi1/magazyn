@@ -3,6 +3,7 @@ import { useMemo, useState } from "react"
 import { VISUALIZATION_CONSTANTS } from "../constants"
 import { useWarehouseStore } from "../store"
 import type { FocusWindow, Rack3D } from "../types"
+import { useClickGuard } from "../use-click-guard"
 import {
   getGridDimensions,
   getRackMetrics,
@@ -31,6 +32,7 @@ export function ShelvesInstanced({
   const [hoveredInstanceId, setHoveredInstanceId] = useState<number | null>(
     null
   )
+  const { onPointerDown, shouldIgnoreClick } = useClickGuard()
   const resolvedMetrics = metrics ?? getRackMetrics(rack)
   const activeWindow = window?.rackId === rack.id ? window : null
 
@@ -134,12 +136,16 @@ export function ShelvesInstanced({
             key={`slot-${i}`}
             onClick={(e) => {
               e.stopPropagation()
+              if (shouldIgnoreClick(e)) {
+                return
+              }
               const meta = instanceMeta[i]
               if (!meta) {
                 return
               }
               selectShelf(rack.id, meta.index, meta.row, meta.col)
             }}
+            onPointerDown={onPointerDown}
             onPointerOut={(e) => {
               e.stopPropagation()
               setHoveredInstanceId(null)

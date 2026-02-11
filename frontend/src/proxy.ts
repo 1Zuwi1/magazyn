@@ -1,67 +1,123 @@
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
+import createIntlMiddleware from "next-intl/middleware"
+import {
+  type AppLocale,
+  addAppLocaleToPathname,
+  getAppLocaleFromPathname,
+  stripAppLocaleFromPathname,
+} from "@/i18n/locale"
+import { routing } from "@/i18n/routing"
 import { getUrl } from "@/lib/get-url"
 import { getSession } from "./lib/session"
 
-const COOKIE_MAX_AGE = 60 * 60 // 1 hour
 const ID_REGEX = /^(?=.*[a-zA-Z0-9])[a-zA-Z0-9-]+$/
 
-// Only the base "id" prefixes. Extras come AFTER [name].
-const REDIRECT_PREFIXES = ["/dashboard/warehouse/id/"] as const
+interface RedirectRule {
+  sourcePrefix: string
+  targetPrefix: string
+  queryParamName: string
+  fallbackPath: string
+}
+
+const REDIRECT_RULES: readonly RedirectRule[] = [
+  {
+    sourcePrefix: "/dashboard/warehouse/id/",
+    targetPrefix: "/dashboard/warehouse/",
+    queryParamName: "warehouseId",
+    fallbackPath: "/dashboard/warehouse",
+  },
+  {
+    sourcePrefix: "/admin/warehouses/id/",
+    targetPrefix: "/admin/warehouses/",
+    queryParamName: "warehouseId",
+    fallbackPath: "/admin/warehouses",
+  },
+] as const
+
+const PROTECTED_PATH_PREFIXES = ["/dashboard", "/settings", "/admin"] as const
+const intlProxy = createIntlMiddleware(routing)
 
 function normalizePrefix(p: string) {
   return p.endsWith("/") ? p : `${p}/`
 }
 
-function getRedirectPrefix(pathname: string) {
-  for (const raw of REDIRECT_PREFIXES) {
-    const prefix = normalizePrefix(raw)
+function getRedirectRule(pathname: string): RedirectRule | null {
+  for (const rule of REDIRECT_RULES) {
+    const prefix = normalizePrefix(rule.sourcePrefix)
     if (pathname.startsWith(prefix)) {
-      return prefix
+      return {
+        ...rule,
+        sourcePrefix: prefix,
+        targetPrefix: normalizePrefix(rule.targetPrefix),
+      }
     }
   }
+
   return null
 }
 
-const ENTITY_REGEX = /^\/dashboard\/([^/]+)\/id\/$/
-function getEntityFromPrefix(prefix: string) {
-  // prefix: /dashboard/<entity>/id/
-  const m = prefix.match(ENTITY_REGEX)
-  return m?.[1] ?? null
+const hasPathPrefix = (pathname: string, prefix: string): boolean =>
+  pathname === prefix || pathname.startsWith(`${prefix}/`)
+
+const isProtectedPath = (pathname: string): boolean => {
+  for (const prefix of PROTECTED_PATH_PREFIXES) {
+    if (hasPathPrefix(pathname, prefix)) {
+      return true
+    }
+  }
+
+  return false
+}
+
+const resolveRequestLocale = (pathname: string): AppLocale =>
+  getAppLocaleFromPathname(pathname) ?? routing.defaultLocale
+
+const localizePathname = (pathname: string, locale: AppLocale): string => {
+  if (locale === routing.defaultLocale) {
+    return pathname
+  }
+
+  return addAppLocaleToPathname(pathname, locale)
 }
 
 export async function proxy(request: NextRequest) {
-  const session = await getSession()
-  if (!session) {
-    return NextResponse.redirect(new URL("/login", request.url))
+  const intlResponse = intlProxy(request)
+  if (intlResponse.headers.has("location")) {
+    return intlResponse
+  }
+
+  const locale = resolveRequestLocale(request.nextUrl.pathname)
+  const pathname = stripAppLocaleFromPathname(request.nextUrl.pathname)
+
+  if (isProtectedPath(pathname)) {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.redirect(
+        new URL(localizePathname("/login", locale), request.url)
+      )
+    }
   }
 
   // Only bother with redirect logic for GET/HEAD
   if (request.method !== "GET" && request.method !== "HEAD") {
-    return NextResponse.next()
+    return intlResponse
   }
 
-  const pathname = request.nextUrl.pathname
-  const prefix = getRedirectPrefix(pathname)
-
-  if (!prefix) {
-    return NextResponse.next()
-  }
-
-  const entity = getEntityFromPrefix(prefix)
-  if (!entity) {
-    return NextResponse.redirect(new URL("/dashboard/", request.url))
+  const rule = getRedirectRule(pathname)
+  if (!rule) {
+    return intlResponse
   }
 
   // After prefix we expect: [id]/[name]/(...optional tail...)
-  const rest = pathname.slice(prefix.length)
+  const rest = pathname.slice(rule.sourcePrefix.length)
   const parts = rest.split("/").filter(Boolean)
-
   const [id, nameSegment, ...tail] = parts
 
   if (!(id && nameSegment && ID_REGEX.test(id))) {
     const base = await getUrl(request)
-    return NextResponse.redirect(new URL("/dashboard/", base))
+    const fallbackPath = localizePathname(rule.fallbackPath, locale)
+    return NextResponse.redirect(new URL(fallbackPath, base))
   }
 
   // Normalize name safely (avoid double-encoding)
@@ -70,33 +126,27 @@ export async function proxy(request: NextRequest) {
     decodedName = decodeURIComponent(nameSegment)
   } catch {
     const base = await getUrl(request)
-    return NextResponse.redirect(new URL("/dashboard/", base))
+    const fallbackPath = localizePathname(rule.fallbackPath, locale)
+    return NextResponse.redirect(new URL(fallbackPath, base))
   }
   const safeName = encodeURIComponent(decodedName)
-
   const tailPath = tail.length ? `/${tail.join("/")}` : ""
 
-  // Redirect target: /dashboard/<entity>/<name>/<tail...>
-  const targetPath = `/dashboard/${entity}/${safeName}${tailPath}`
+  const targetPath = localizePathname(
+    `${rule.targetPrefix}${safeName}${tailPath}`,
+    locale
+  )
 
   const base = await getUrl(request)
-  const res = NextResponse.redirect(new URL(targetPath, base))
+  const url = new URL(targetPath, base)
+  for (const [param, value] of request.nextUrl.searchParams.entries()) {
+    url.searchParams.append(param, value)
+  }
+  url.searchParams.set(rule.queryParamName, id)
 
-  const cookieName = `${entity}Id`
-  res.cookies.set({
-    name: cookieName,
-    value: id,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    // Scope cookie to the resolved page (now includes tail, which is what you're redirecting to)
-    path: targetPath,
-    maxAge: COOKIE_MAX_AGE,
-  })
-
-  return res
+  return NextResponse.redirect(url)
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/settings"],
+  matcher: ["/((?!api|trpc|_next|_vercel|.*\\..*).*)"],
 }

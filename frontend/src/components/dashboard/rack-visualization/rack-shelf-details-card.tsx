@@ -4,57 +4,21 @@ import {
   Tag01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { addDays } from "date-fns"
+import { format } from "date-fns"
+
 import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import type { Rack } from "../types"
-import {
-  formatDate,
-  formatDimensions,
-  getDaysUntilExpiry,
-  getSlotCoordinate,
-  pluralize,
-} from "../utils/helpers"
-import {
-  getItemStatus,
-  getStatusColors,
-  getStatusText,
-  type ItemStatus,
-} from "../utils/item-status"
+import { useAppTranslations } from "@/i18n/use-translations"
+import type { Rack, RackAssortment } from "@/lib/schemas"
+import type { SlotCoordinates } from "../types"
+import { getSlotCoordinate } from "../utils/helpers"
 
 interface RackShelfDetailsCardProps {
   rack: Rack
-  selectedIndex: number | null
+  selectedSlotCoordinates: SlotCoordinates | null
+  assortment: RackAssortment | null
   onClearSelection: () => void
-  onOpenDetails?: () => void
-}
-
-type BadgeVariant = NonNullable<React.ComponentProps<typeof Badge>["variant"]>
-
-function getStatusBadgeVariant(status: ItemStatus): BadgeVariant {
-  if (status === "normal") {
-    return "success"
-  }
-  if (status === "expired") {
-    return "warning"
-  }
-  return "destructive"
-}
-
-function formatExpiryHint(daysUntilExpiry: number): string {
-  if (daysUntilExpiry === 0) {
-    return "Wygasa dzisiaj"
-  }
-
-  const absDays = Math.abs(daysUntilExpiry)
-  const daysLabel = `${absDays} ${pluralize(absDays, "dzień", "dni", "dni")}`
-  if (daysUntilExpiry < 0) {
-    return `Po terminie ${daysLabel}`
-  }
-
-  return `Wygasa za ${daysLabel}`
 }
 
 function DetailRow({
@@ -74,33 +38,24 @@ function DetailRow({
 
 export function RackShelfDetailsCard({
   rack,
-  selectedIndex,
+  selectedSlotCoordinates,
+  assortment,
   onClearSelection,
-  onOpenDetails,
 }: RackShelfDetailsCardProps) {
-  const selectedItem = selectedIndex !== null ? rack.items[selectedIndex] : null
-  const selectedPosition =
-    selectedIndex !== null
-      ? {
-          row: Math.floor(selectedIndex / rack.cols),
-          col: selectedIndex % rack.cols,
-        }
-      : null
-  const coordinate =
-    selectedIndex !== null ? getSlotCoordinate(selectedIndex, rack.cols) : null
-  const daysUntilExpiry = selectedItem
-    ? getDaysUntilExpiry(
-        new Date(),
-        selectedItem.expiryDate ??
-          addDays(new Date(), selectedItem.daysToExpiry)
-      )
+  const t = useAppTranslations()
+
+  const hasSelection = selectedSlotCoordinates !== null
+  const selectedPosition = selectedSlotCoordinates
+    ? {
+        row: selectedSlotCoordinates.y,
+        col: selectedSlotCoordinates.x,
+      }
     : null
-  const status = selectedItem ? getItemStatus(selectedItem) : null
-  const statusColors = status ? getStatusColors(status) : null
-  const statusText = status ? getStatusText(status) : null
-  const badgeVariant = status ? getStatusBadgeVariant(status) : null
-  const expiryHint =
-    daysUntilExpiry !== null ? formatExpiryHint(daysUntilExpiry) : null
+  const selectedIndex = selectedSlotCoordinates
+    ? selectedSlotCoordinates.y * rack.sizeX + selectedSlotCoordinates.x
+    : null
+  const coordinate =
+    selectedIndex !== null ? getSlotCoordinate(selectedIndex, rack.sizeX) : null
 
   return (
     <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
@@ -110,11 +65,16 @@ export function RackShelfDetailsCard({
             <HugeiconsIcon className="size-4 text-primary" icon={Tag01Icon} />
           </div>
           <div>
-            <h3 className="font-semibold text-sm">Szczegóły półki</h3>
+            <h3 className="font-semibold text-sm">
+              {t("generated.dashboard.rackVisualization.shelfDetails")}
+            </h3>
             <p className="text-muted-foreground text-xs">
               {selectedPosition
-                ? `Rząd ${selectedPosition.row + 1}, Półka ${selectedPosition.col + 1}`
-                : "Wybierz półkę"}
+                ? t("generated.dashboard.shared.rowShelf", {
+                    value0: selectedPosition.row + 1,
+                    value1: selectedPosition.col + 1,
+                  })
+                : t("generated.dashboard.rackVisualization.selectShelf")}
             </p>
           </div>
         </div>
@@ -127,13 +87,13 @@ export function RackShelfDetailsCard({
           )}
           {selectedPosition && (
             <Button onClick={onClearSelection} size="sm" variant="ghost">
-              Wyczyść
+              {t("generated.shared.clear")}
             </Button>
           )}
         </div>
       </div>
 
-      {selectedIndex === null && (
+      {!hasSelection && (
         <div className="flex flex-col items-center gap-2 p-6 text-center">
           <div className="flex size-12 items-center justify-center rounded-full bg-muted">
             <HugeiconsIcon
@@ -142,15 +102,15 @@ export function RackShelfDetailsCard({
             />
           </div>
           <p className="font-medium text-muted-foreground text-sm">
-            Kliknij na półkę
+            {t("generated.dashboard.shared.clickShelf")}
           </p>
           <p className="text-muted-foreground/70 text-xs">
-            aby zobaczyć szczegóły elementu
+            {t("generated.dashboard.shared.seeItemDetails")}
           </p>
         </div>
       )}
 
-      {selectedIndex !== null && !selectedItem && (
+      {hasSelection && !assortment && (
         <div className="flex flex-col items-center gap-2 p-6 text-center">
           <div className="flex size-12 items-center justify-center rounded-full bg-muted">
             <HugeiconsIcon
@@ -159,99 +119,74 @@ export function RackShelfDetailsCard({
             />
           </div>
           <p className="font-medium text-muted-foreground text-sm">
-            Pusta półka
+            {t("generated.dashboard.shared.emptyShelf")}
           </p>
           <p className="text-muted-foreground/70 text-xs">
-            Brak elementu na pozycji
+            {t("generated.dashboard.shared.itemPosition")}
             <br />
             {selectedPosition
-              ? `Rząd ${selectedPosition.row + 1}, Półka ${selectedPosition.col + 1}`
+              ? t("generated.dashboard.shared.rowShelf", {
+                  value0: selectedPosition.row + 1,
+                  value1: selectedPosition.col + 1,
+                })
               : ""}
           </p>
         </div>
       )}
 
-      {selectedItem && selectedPosition && statusColors && statusText && (
+      {assortment && selectedPosition && (
         <div className="space-y-3 p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className={cn("size-2.5 rounded-full", statusColors.dot)} />
-            <span className={cn("font-medium text-sm", statusColors.text)}>
-              {statusText}
-            </span>
-            {expiryHint && badgeVariant && (
-              <Badge variant={badgeVariant}>{expiryHint}</Badge>
-            )}
-          </div>
-
           <div className="space-y-2 text-xs">
             <DetailRow
-              label="ID"
+              label={t("generated.dashboard.shared.itemName")}
               value={
                 <span className="font-mono font-semibold">
-                  {selectedItem.id}
+                  {assortment.item.name}
                 </span>
               }
             />
             <DetailRow
-              label="Nazwa"
-              value={<span className="font-medium">{selectedItem.name}</span>}
-            />
-            <DetailRow
-              label="Kod QR"
+              label={t("generated.shared.code")}
               value={
                 <span className="font-mono font-semibold">
-                  {selectedItem.qrCode}
+                  {assortment.code}
                 </span>
               }
             />
             <DetailRow
-              label="Waga"
+              label={t("generated.shared.position")}
               value={
                 <span className="font-mono font-semibold">
-                  {selectedItem.weight.toFixed(2)} kg
+                  {t("generated.dashboard.rackVisualization.xY", {
+                    value0: assortment.positionX,
+                    value1: assortment.positionY,
+                  })}
                 </span>
               }
             />
             <DetailRow
-              label="Wymiary"
+              label={t("generated.shared.created")}
               value={
                 <span className="font-mono font-semibold">
-                  {formatDimensions(selectedItem)}
+                  {format(
+                    new Date(assortment.createdAt),
+                    "yyyy-MM-dd HH:mm:ss"
+                  )}
                 </span>
               }
             />
             <DetailRow
-              label="Temperatura"
+              label={t("generated.dashboard.shared.expires")}
               value={
                 <span className="font-mono font-semibold">
-                  {selectedItem.minTemp}°C – {selectedItem.maxTemp}°C
-                </span>
-              }
-            />
-            <DetailRow
-              label="Ważność"
-              value={
-                <span
-                  className={cn("font-mono font-semibold", statusColors.text)}
-                >
-                  {formatDate(
-                    selectedItem.expiryDate ??
-                      addDays(new Date(), selectedItem.daysToExpiry)
+                  {format(
+                    new Date(assortment.expiresAt),
+                    "yyyy-MM-dd HH:mm:ss"
                   )}
                 </span>
               }
             />
           </div>
-
-          <Button
-            className="w-full"
-            disabled={!onOpenDetails}
-            onClick={onOpenDetails}
-            size="sm"
-            variant="outline"
-          >
-            Podgląd elementu
-          </Button>
         </div>
       )}
     </div>

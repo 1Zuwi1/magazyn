@@ -1,7 +1,8 @@
 import Image from "next/image"
-import LogoImage from "@/../public/Logo.png"
-import { cn } from "@/lib/utils"
 
+import LogoImage from "@/../public/Logo.png"
+import { useAppTranslations } from "@/i18n/use-translations"
+import { cn } from "@/lib/utils"
 export default function Logo<
   T extends string | undefined,
   W = T extends "a"
@@ -15,6 +16,8 @@ export default function Logo<
   href?: T
   className?: string
 } & W) {
+  const t = useAppTranslations()
+
   const Wrapper = href ? "a" : "div"
   return (
     <Wrapper
@@ -23,13 +26,15 @@ export default function Logo<
       {...props}
     >
       <Image
-        alt="GdzieToLeży Logo"
+        alt={t("generated.global.brand.gdzietolezyLogo")}
         className="size-6"
         height={24}
         src={LogoImage}
         width={24}
       />
-      <span className="font-bold text-xl">GdzieToLeży</span>
+      <span className="font-bold text-xl">
+        {t("generated.shared.gdzietolezy")}
+      </span>
     </Wrapper>
   )
 }

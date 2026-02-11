@@ -1,37 +1,16 @@
-export interface Rack {
-  id: string
-  symbol?: string
-  name: string
-  rows: number
-  cols: number
-  minTemp: number
-  maxTemp: number
-  maxWeight: number
-  currentWeight: number
-  maxItemWidth: number
-  maxItemHeight: number
-  maxItemDepth: number
-  comment?: string
-  occupancy: number // 0-100
-  items: ItemSlot[]
-}
+import type { HugeiconsIcon } from "@hugeicons/react"
+import type { ComponentProps } from "react"
 
-export interface Warehouse {
-  id: string
-  name: string
-  capacity: number
-  used: number
-  racks: Rack[]
-}
+export type IconComponent = ComponentProps<typeof HugeiconsIcon>["icon"]
+
 export interface FilterState {
   query: string
   minOccupancy: number
-  tempRange: [number, number]
   showEmpty: boolean
 }
 
 export interface Item {
-  id: string
+  id: number
   name: string
   qrCode: string
   weight: number
@@ -48,6 +27,11 @@ export interface Item {
 }
 
 export type ItemSlot = Item | null
+
+export interface SlotCoordinates {
+  x: number
+  y: number
+}
 
 export type NotificationType =
   | "UNAUTHORIZED_REMOVAL"
@@ -74,12 +58,3 @@ export interface Notification {
 
 export type Role = "USER" | "ADMIN"
 export type Status = "ACTIVE" | "INACTIVE"
-
-export interface User {
-  id: string
-  username: string
-  email: string
-  role: Role
-  team: string
-  status: Status
-}

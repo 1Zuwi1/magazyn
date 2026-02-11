@@ -87,6 +87,7 @@ jobs:
           build-args: |
             APP_SCOPE=web
             APP_PATH=apps/web
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
           cache-from: type=gha,scope=web
           cache-to: type=gha,scope=web,mode=max
 

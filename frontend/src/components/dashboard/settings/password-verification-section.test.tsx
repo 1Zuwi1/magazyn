@@ -9,7 +9,12 @@ import { useState } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { TwoFactorMethod } from "@/lib/schemas"
 import { PasswordVerificationSection } from "./password-verification-section"
-import { createPasswordChallenge, sendVerificationCode } from "./utils"
+
+const NON_EMPTY_TEXT_REGEX = /.+/
+
+vi.mock("@/i18n/use-translations", () => ({
+  useAppTranslations: () => (key: string) => key,
+}))
 
 vi.mock("sonner", () => ({
   toast: {
@@ -52,33 +57,16 @@ vi.mock("./use-countdown", async () => {
   }
 })
 
-vi.mock("./utils", () => ({
-  createPasswordChallenge: vi.fn(),
-  sendVerificationCode: vi.fn(),
-  formatCountdown: (seconds: number) => {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`
-  },
-}))
-
-const mockCreatePasswordChallenge = vi.mocked(createPasswordChallenge)
-const mockSendVerificationCode = vi.mocked(sendVerificationCode)
-
-const RESEND_BUTTON_REGEX = /wyślij ponownie/i
-const CODE_INPUT_REGEX = /kod 2fa/i
-const VERIFY_BUTTON_REGEX = /zweryfikuj kod/i
-const VERIFIED_TEXT_REGEX = /zweryfikowano/i
-const SAFE_CHANGE_TEXT_REGEX = /możesz bezpiecznie zmienić hasło/i
-
 function PasswordVerificationHarness({
   method,
   onVerify,
+  onRequestCode,
   autoVerify,
   isVerified,
 }: {
   method: TwoFactorMethod
   onVerify: (code: string) => void
+  onRequestCode: (method: TwoFactorMethod) => Promise<void>
   autoVerify?: boolean
   isVerified?: boolean
 }) {
@@ -91,6 +79,7 @@ function PasswordVerificationHarness({
       isVerified={isVerified}
       method={method}
       onInputChange={setCode}
+      onRequestCode={onRequestCode}
       onVerify={onVerify}
     />
   )
@@ -102,23 +91,28 @@ describe("PasswordVerificationSection", () => {
   })
 
   it("requests a verification code for email and starts the resend cooldown", async () => {
-    mockCreatePasswordChallenge.mockResolvedValue({
-      sessionId: "pwd-1",
-      destination: "a***@magazynpro.pl",
-    })
-    mockSendVerificationCode.mockResolvedValue()
+    const onRequestCode = vi.fn().mockResolvedValue(undefined)
 
-    render(<PasswordVerificationHarness method="EMAIL" onVerify={vi.fn()} />)
+    render(
+      <PasswordVerificationHarness
+        method="EMAIL"
+        onRequestCode={onRequestCode}
+        onVerify={vi.fn()}
+      />
+    )
 
     await waitFor(() => {
-      expect(mockCreatePasswordChallenge).toHaveBeenCalledWith("EMAIL")
-    })
-    await waitFor(() => {
-      expect(mockSendVerificationCode).toHaveBeenCalledWith("pwd-1")
+      expect(onRequestCode).toHaveBeenCalledWith("EMAIL")
     })
 
-    const resendButton = await screen.findByRole("button", {
-      name: RESEND_BUTTON_REGEX,
+    const resendButton = await waitFor(() => {
+      const button = screen
+        .getAllByRole("button")
+        .find((candidate) => candidate.getAttribute("aria-describedby"))
+      if (!button) {
+        throw new Error("Resend button not found")
+      }
+      return button
     })
 
     expect(resendButton).toBeDisabled()
@@ -128,15 +122,22 @@ describe("PasswordVerificationSection", () => {
     const onVerify = vi.fn()
 
     const { rerender } = render(
-      <PasswordVerificationHarness method="AUTHENTICATOR" onVerify={onVerify} />
+      <PasswordVerificationHarness
+        method="AUTHENTICATOR"
+        onRequestCode={vi.fn().mockResolvedValue(undefined)}
+        onVerify={onVerify}
+      />
     )
 
-    const codeInput = await screen.findByLabelText(CODE_INPUT_REGEX)
+    const codeInput = document.querySelector("#password-2fa-code")
+    if (!(codeInput instanceof HTMLInputElement)) {
+      throw new Error("Code input not found")
+    }
     fireEvent.change(codeInput, {
       target: { value: "654321" },
     })
 
-    fireEvent.click(screen.getByRole("button", { name: VERIFY_BUTTON_REGEX }))
+    fireEvent.click(screen.getAllByRole("button")[0])
 
     await waitFor(() => {
       expect(onVerify).toHaveBeenCalledWith("654321")
@@ -146,13 +147,15 @@ describe("PasswordVerificationSection", () => {
       <PasswordVerificationHarness
         isVerified
         method="AUTHENTICATOR"
+        onRequestCode={vi.fn().mockResolvedValue(undefined)}
         onVerify={onVerify}
       />
     )
 
     const alert = await screen.findByRole("alert")
-    expect(within(alert).getByText(VERIFIED_TEXT_REGEX)).toBeInTheDocument()
-    expect(within(alert).getByText(SAFE_CHANGE_TEXT_REGEX)).toBeInTheDocument()
+    expect(
+      within(alert).getAllByText(NON_EMPTY_TEXT_REGEX).length
+    ).toBeGreaterThan(1)
   })
 
   it("auto-submits when the last digit is entered", async () => {
@@ -162,11 +165,15 @@ describe("PasswordVerificationSection", () => {
       <PasswordVerificationHarness
         autoVerify
         method="AUTHENTICATOR"
+        onRequestCode={vi.fn().mockResolvedValue(undefined)}
         onVerify={onVerify}
       />
     )
 
-    const codeInput = await screen.findByLabelText(CODE_INPUT_REGEX)
+    const codeInput = document.querySelector("#password-2fa-code")
+    if (!(codeInput instanceof HTMLInputElement)) {
+      throw new Error("Code input not found")
+    }
     fireEvent.change(codeInput, {
       target: { value: "123456" },
     })

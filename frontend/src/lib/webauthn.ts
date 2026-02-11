@@ -1,3 +1,5 @@
+import type { AppTranslate } from "@/i18n/use-translations"
+
 const BASE64_TO_URL_REPLACEMENTS = [/\+/g, /\//g] as const
 const BASE64_URL_TO_BASE64_REPLACEMENTS = [/-/g, /_/g] as const
 
@@ -228,18 +230,19 @@ export const isPublicKeyCredential = (
 
 export const getWebAuthnErrorMessage = (
   error: unknown,
-  fallback: string
+  fallback: string,
+  t: AppTranslate
 ): string => {
   if (typeof DOMException !== "undefined" && error instanceof DOMException) {
     switch (error.name) {
       case "NotAllowedError":
-        return "Operacja została anulowana lub przekroczono limit czasu."
+        return t("generated.security.webauthn.operationCanceledTimedOut")
       case "InvalidStateError":
-        return "Ten klucz bezpieczeństwa jest już dodany na tym urządzeniu."
+        return t("generated.security.webauthn.securityKeyAlreadyAddedDevice")
       case "NotSupportedError":
-        return "To urządzenie lub przeglądarka nie obsługuje kluczy bezpieczeństwa."
+        return t("generated.security.webauthn.deviceBrowserSupportSecurityKeys")
       case "SecurityError":
-        return "Operacja zablokowana przez ustawienia bezpieczeństwa."
+        return t("generated.security.webauthn.operationBlockedSecuritySettings")
       default:
         return fallback
     }

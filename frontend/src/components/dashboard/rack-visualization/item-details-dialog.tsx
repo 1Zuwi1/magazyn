@@ -2,8 +2,9 @@
 
 import { PackageIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { addDays } from "date-fns"
+import { addDays, formatDate } from "date-fns"
 import Image from "next/image"
+
 import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -13,14 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { Item } from "../types"
-import {
-  formatDate,
-  formatDimensions,
-  getDaysUntilExpiry,
-  pluralize,
-} from "../utils/helpers"
+import { formatDimensions, getDaysUntilExpiry } from "../utils/helpers"
 import {
   getItemStatus,
   getStatusColors,
@@ -38,18 +35,27 @@ interface ItemDetailsDialogProps {
 
 type BadgeVariant = NonNullable<React.ComponentProps<typeof Badge>["variant"]>
 
-function formatExpiryHint(daysUntilExpiry: number): string {
+function formatExpiryHint(
+  t: ReturnType<typeof useAppTranslations>,
+  daysUntilExpiry: number
+): string {
   if (daysUntilExpiry === 0) {
-    return "Wygasa dzisiaj"
+    return t("generated.dashboard.rackVisualization.expiresToday")
   }
 
   const absDays = Math.abs(daysUntilExpiry)
-  const daysLabel = `${absDays} ${pluralize(absDays, "dzień", "dni", "dni")}`
+  const daysLabel = t("generated.dashboard.shared.pluralLabel", {
+    value0: absDays,
+  })
   if (daysUntilExpiry < 0) {
-    return `Po terminie ${daysLabel}`
+    return t("generated.dashboard.rackVisualization.expiredAgo", {
+      value0: daysLabel,
+    })
   }
 
-  return `Wygasa za ${daysLabel}`
+  return t("generated.dashboard.rackVisualization.expires", {
+    value0: daysLabel,
+  })
 }
 
 function getStatusBadgeVariant(status: ItemStatus): BadgeVariant {
@@ -84,18 +90,20 @@ export function ItemDetailsDialog({
   rackName,
   coordinate,
 }: ItemDetailsDialogProps) {
+  const t = useAppTranslations()
+
   if (!item) {
     return null
   }
 
   const status = getItemStatus(item)
   const statusColors = getStatusColors(status)
-  const statusText = getStatusText(status)
+  const statusText = getStatusText(status, t)
   const daysUntilExpiry = getDaysUntilExpiry(
     new Date(),
     item.expiryDate ?? addDays(new Date(), item.daysToExpiry)
   )
-  const expiryHint = formatExpiryHint(daysUntilExpiry)
+  const expiryHint = formatExpiryHint(t, daysUntilExpiry)
   const badgeVariant = getStatusBadgeVariant(status)
 
   return (
@@ -152,22 +160,35 @@ export function ItemDetailsDialog({
             </div>
 
             <div className="space-y-2 text-xs">
-              <DetailRow label="ID" value={item.id} />
-              <DetailRow label="Kod QR" value={item.qrCode} />
-              <DetailRow label="Waga" value={`${item.weight.toFixed(2)} kg`} />
-              <DetailRow label="Wymiary" value={formatDimensions(item)} />
               <DetailRow
-                label="Temperatura"
+                label={t("generated.dashboard.shared.id")}
+                value={item.id}
+              />
+              <DetailRow
+                label={t("generated.dashboard.rackVisualization.qrCode")}
+                value={item.qrCode}
+              />
+              <DetailRow
+                label={t("generated.shared.weight")}
+                value={`${item.weight.toFixed(2)} kg`}
+              />
+              <DetailRow
+                label={t("generated.dashboard.shared.dimensions")}
+                value={formatDimensions(item)}
+              />
+              <DetailRow
+                label={t("generated.shared.temperature")}
                 value={`${item.minTemp}°C – ${item.maxTemp}°C`}
               />
               <DetailRow
-                label="Ważność"
+                label={t("generated.dashboard.shared.shelfLife")}
                 value={
                   <span
                     className={cn("font-mono font-semibold", statusColors.text)}
                   >
                     {formatDate(
-                      item.expiryDate ?? addDays(new Date(), item.daysToExpiry)
+                      item.expiryDate ?? addDays(new Date(), item.daysToExpiry),
+                      "dd.MM.yyyy"
                     )}
                   </span>
                 }
@@ -176,7 +197,9 @@ export function ItemDetailsDialog({
 
             {item.comment && (
               <div className="rounded-lg border bg-muted/30 p-3 text-xs">
-                <p className="font-semibold text-muted-foreground">Uwagi</p>
+                <p className="font-semibold text-muted-foreground">
+                  {t("generated.dashboard.rackVisualization.comments")}
+                </p>
                 <p className="mt-1 text-foreground text-sm">{item.comment}</p>
               </div>
             )}

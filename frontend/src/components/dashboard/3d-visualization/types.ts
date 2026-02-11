@@ -8,11 +8,9 @@ export type ItemStatus =
 
 export interface Item3D {
   id: string
-  type: string
   status: ItemStatus
   label: string
   imageUrl?: string
-  meta?: Record<string, unknown>
 }
 
 export interface Rack3D {

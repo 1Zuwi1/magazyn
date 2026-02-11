@@ -4,42 +4,30 @@ import {
   ArrowLeft01Icon,
   ArrowRight01Icon,
   GridViewIcon,
-  ViewIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import type * as React from "react"
-import { useEffect, useRef, useState } from "react"
-import { Badge } from "@/components/ui/badge"
+import { useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { RackItemsDialog } from "../items-visualization/rack-items-dialog"
-import type { ItemSlot, Rack } from "../types"
+import PaginationFull from "@/components/ui/pagination-component"
+import { useElementSize } from "@/hooks/use-element-size"
+import { useAppTranslations } from "@/i18n/use-translations"
+import type { ItemSlot, SlotCoordinates } from "../types"
 import Virtualized from "./components/virtualized"
 
 interface RackGridViewProps {
   rows: number
   cols: number
   items: ItemSlot[]
-  currentRackIndex?: number
-  totalRacks?: number
+  currentPage?: number
+  totalPages?: number
   onPreviousRack: () => void
   onNextRack: () => void
-  onSetRack: (index: number) => void
-  onActivateSlot?: (index: number) => void
-  onSelectSlot?: (index: number) => void
-  selectedSlotIndex?: number | null
-  rack?: Rack
-}
-
-function getOccupancyBadgeVariant(
-  occupancy: number
-): "secondary" | "warning" | "destructive" {
-  if (occupancy >= 90) {
-    return "destructive"
-  }
-  if (occupancy >= 75) {
-    return "warning"
-  }
-  return "secondary"
+  onSetPage: (page: number) => void
+  onActivateSlot?: (coordinates: SlotCoordinates) => void
+  onSelectSlot?: (coordinates: SlotCoordinates) => void
+  selectedSlotCoordinates?: SlotCoordinates | null
 }
 
 const ARROW_MOVES = {
@@ -56,109 +44,83 @@ const isArrowKey = (value: string): value is ArrowKey => value in ARROW_MOVES
 const clampValue = (value: number, min: number, max: number): number =>
   Math.min(Math.max(value, min), max)
 
-const getNextIndex = (
-  currentIndex: number,
+const getNextCoordinates = (
+  coordinates: SlotCoordinates,
   rows: number,
   cols: number,
   key: ArrowKey
-): number => {
+): SlotCoordinates => {
   const move = ARROW_MOVES[key]
-  const currentRow = Math.floor(currentIndex / cols)
-  const currentCol = currentIndex % cols
-  const nextRow = clampValue(currentRow + move.row, 0, rows - 1)
-  const nextCol = clampValue(currentCol + move.col, 0, cols - 1)
-  return nextRow * cols + nextCol
+  const nextY = clampValue(coordinates.y + move.row, 0, rows - 1)
+  const nextX = clampValue(coordinates.x + move.col, 0, cols - 1)
+  return { x: nextX, y: nextY }
 }
 
 export function RackGridView({
   rows,
   cols,
   items,
-  currentRackIndex = 0,
-  totalRacks = 1,
+  currentPage = 1,
+  totalPages = 1,
   onPreviousRack,
   onNextRack,
-  onSetRack,
+  onSetPage,
   onActivateSlot,
   onSelectSlot,
-  selectedSlotIndex,
-  rack,
+  selectedSlotCoordinates,
 }: RackGridViewProps) {
-  const [isItemsDialogOpen, setIsItemsDialogOpen] = useState(false)
+  const t = useAppTranslations()
+
   const parentRef = useRef<HTMLDivElement>(null)
 
-  const showNavigation = totalRacks > 1 && (onPreviousRack || onNextRack)
+  const showNavigation = totalPages > 1 && (onPreviousRack || onNextRack)
 
   const containerRef = useRef<HTMLDivElement>(null)
-  const [containerWidth, setContainerWidth] = useState(0)
-  const [containerHeight, setContainerHeight] = useState(0)
+  const { elementHeight: containerHeight, elementWidth: containerWidth } =
+    useElementSize(containerRef)
 
   // Calculate occupancy stats
   const totalSlots = rows * cols
-  const occupiedSlots = items.filter((item) => item !== null).length
-  const occupancyPercentage = Math.round((occupiedSlots / totalSlots) * 100)
 
   const handleSlotKeyDown = (
     event: React.KeyboardEvent<HTMLButtonElement>,
-    index: number
+    coordinates: SlotCoordinates
   ) => {
-    if (!onSelectSlot || rows <= 0 || cols <= 0) {
+    if (rows <= 0 || cols <= 0) {
       return
     }
 
     if (event.key === "Enter") {
-      if (onActivateSlot) {
-        onActivateSlot(index)
-      }
+      onActivateSlot?.({
+        ...coordinates,
+      })
       event.preventDefault()
       return
     }
 
-    if (!isArrowKey(event.key)) {
+    if (!(isArrowKey(event.key) && onSelectSlot)) {
       return
     }
 
     event.preventDefault()
-    const nextIndex = getNextIndex(index, rows, cols, event.key)
-    if (nextIndex !== index) {
-      onSelectSlot(nextIndex)
+    const nextCoordinates = getNextCoordinates(
+      coordinates,
+      rows,
+      cols,
+      event.key
+    )
+    if (
+      nextCoordinates.x !== coordinates.x ||
+      nextCoordinates.y !== coordinates.y
+    ) {
+      onSelectSlot({
+        ...nextCoordinates,
+      })
     }
   }
 
-  useEffect(() => {
-    const element = containerRef.current
-    if (!element) {
-      return
-    }
-
-    const updateSize = (width: number, height: number) => {
-      setContainerWidth(width)
-      setContainerHeight(height)
-    }
-
-    updateSize(element.clientWidth, element.clientHeight)
-
-    if (typeof ResizeObserver === "undefined") {
-      const handleResize = () => {
-        updateSize(element.clientWidth, element.clientHeight)
-      }
-
-      window.addEventListener("resize", handleResize)
-      return () => window.removeEventListener("resize", handleResize)
-    }
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        updateSize(entry.contentRect.width, entry.contentRect.height)
-      }
-    })
-
-    resizeObserver.observe(element)
-    return () => resizeObserver.disconnect()
-  }, [])
-
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border bg-card shadow-sm">
+    <>
       {/* Header Bar */}
       <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
         <div className="flex items-center gap-3">
@@ -169,29 +131,17 @@ export function RackGridView({
             />
           </div>
           <div>
-            <h3 className="font-semibold text-sm">Widok siatki</h3>
+            <h3 className="font-semibold text-sm">
+              {t("generated.dashboard.rackVisualization.gridView")}
+            </h3>
             <p className="text-muted-foreground text-xs">
-              {rows} × {cols} = {totalSlots} miejsc
+              {t("generated.dashboard.rackVisualization.slots", {
+                value0: rows,
+                value1: cols,
+                value2: totalSlots,
+              })}
             </p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Badge
-            className="font-mono"
-            variant={getOccupancyBadgeVariant(occupancyPercentage)}
-          >
-            {occupancyPercentage}% zajęte
-          </Badge>
-          <Button
-            className="gap-1.5"
-            onClick={() => setIsItemsDialogOpen(true)}
-            size="sm"
-            variant="outline"
-          >
-            <HugeiconsIcon className="size-3.5" icon={ViewIcon} />
-            <span className="hidden sm:inline">Lista przedmiotów</span>
-          </Button>
         </div>
       </div>
 
@@ -228,7 +178,7 @@ export function RackGridView({
             onSlotKeyDown={handleSlotKeyDown}
             parentRef={parentRef}
             rows={rows}
-            selectedSlotIndex={selectedSlotIndex}
+            selectedSlotCoordinates={selectedSlotCoordinates}
           />
         </div>
 
@@ -246,45 +196,13 @@ export function RackGridView({
         )}
       </div>
 
-      {/* Footer Bar - Rack Indicator */}
-      {totalRacks > 1 && (
-        <div className="flex items-center justify-center gap-3 border-t bg-muted/20 px-4 py-3">
-          {/* Rack dots indicator */}
-          <div className="flex items-center gap-1.5" role="tablist">
-            {Array.from({ length: totalRacks }).map((_, index) => (
-              <button
-                aria-label={`Regał ${index + 1}`}
-                aria-selected={index === currentRackIndex}
-                className={`size-2 rounded-full transition-all ${
-                  index === currentRackIndex
-                    ? "scale-125 bg-primary"
-                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                }`}
-                key={index}
-                onClick={() => {
-                  // Navigate to specific rack
-                  onSetRack(index)
-                }}
-                role="tab"
-                type="button"
-              />
-            ))}
-          </div>
-          <span className="font-mono text-muted-foreground text-xs">
-            Regał{" "}
-            <span className="font-semibold text-foreground">
-              {currentRackIndex + 1}
-            </span>{" "}
-            z {totalRacks}
-          </span>
-        </div>
-      )}
-
-      <RackItemsDialog
-        onOpenChange={setIsItemsDialogOpen}
-        open={isItemsDialogOpen}
-        rack={rack || null}
+      {/* Footer Bar - Rack Pagination */}
+      <PaginationFull
+        className="mb-2"
+        currentPage={currentPage}
+        setPage={onSetPage}
+        totalPages={totalPages}
       />
-    </div>
+    </>
   )
 }

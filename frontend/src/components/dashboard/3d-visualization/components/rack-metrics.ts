@@ -38,7 +38,7 @@ export const getRackMetrics = (rack: Rack3D): RackMetrics => {
   const gridWidth = getGridSpan(rack.grid.cols, unitX)
   const gridHeight = getGridSpan(rack.grid.rows, unitY)
   const framePadding = rack.frame?.padding ?? 0.05
-  const frameThickness = Math.max(rack.frame?.thickness ?? 0.03, 0.04)
+  const frameThickness = rack.frame?.thickness ?? 0.03
   const slotSize = {
     w: rack.cell.w * 0.8,
     h: rack.cell.h * 0.75,

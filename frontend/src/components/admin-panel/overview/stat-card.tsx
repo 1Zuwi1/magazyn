@@ -1,8 +1,11 @@
 "use client"
 
-import { ArrowRight02Icon } from "@hugeicons/core-free-icons"
+import { ArrowRight02Icon, RefreshIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import Link from "next/link"
+
+import { Skeleton } from "@/components/ui/skeleton"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 interface AdminStatCardProps {
@@ -12,6 +15,9 @@ interface AdminStatCardProps {
   icon: IconSvgElement
   href: string
   variant?: "default" | "primary" | "success" | "warning" | "danger"
+  isLoading?: boolean
+  isError?: boolean
+  onRetry?: () => void
   trend?: {
     value: number
     label: string
@@ -71,9 +77,91 @@ export function AdminStatCard({
   icon,
   href,
   variant = "default",
+  isLoading = false,
+  isError = false,
+  onRetry,
   trend,
 }: AdminStatCardProps) {
+  const t = useAppTranslations()
+
   const styles = getVariantStyles(variant)
+  const errorStyles = getVariantStyles("danger")
+  const activeStyles = isError ? errorStyles : styles
+
+  if (isLoading) {
+    return (
+      <div className="relative overflow-hidden rounded-2xl border bg-card shadow-sm">
+        <div className="relative p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-9 w-16" />
+            </div>
+            <Skeleton className="size-12 rounded-xl" />
+          </div>
+          <div className="mt-3">
+            <Skeleton className="h-4 w-28" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="group relative overflow-hidden rounded-2xl border border-destructive/30 bg-card shadow-sm">
+        {/* Decorative gradient background */}
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-0 bg-linear-to-br opacity-50",
+            activeStyles.decorativeBg
+          )}
+        />
+
+        {/* Error accent line */}
+        <div className="absolute top-0 left-0 h-1 w-full bg-destructive opacity-60" />
+
+        <div className="relative p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-muted-foreground text-sm">{title}</p>
+              <p className="font-medium text-destructive text-sm">
+                {t("generated.admin.overview.failedFetchData")}
+              </p>
+            </div>
+            <div
+              className={cn(
+                "flex size-12 shrink-0 items-center justify-center rounded-xl",
+                activeStyles.iconBg
+              )}
+            >
+              <HugeiconsIcon
+                className={cn("size-6", activeStyles.iconColor)}
+                icon={icon}
+              />
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between gap-2">
+            {onRetry ? (
+              <button
+                className="flex items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
+                onClick={onRetry}
+                type="button"
+              >
+                <HugeiconsIcon className="size-3.5" icon={RefreshIcon} />
+                {t("generated.admin.overview.retry")}
+              </button>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                {t("generated.admin.overview.againLater")}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <Link className="group block" href={href}>

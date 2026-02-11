@@ -1,5 +1,6 @@
 import { headers } from "next/headers"
 import type { NextRequest } from "next/server"
+import { getAppTranslations } from "@/i18n/get-translations"
 
 const DEFAULT_PORT = "3001"
 
@@ -38,7 +39,12 @@ export async function getUrl(data: NextRequest | Headers): Promise<URL> {
     url.port = parsePort(port)
     return url
   } catch (error) {
+    const t = await getAppTranslations()
     const message = error instanceof Error ? error.message : String(error)
-    throw new Error(`Invalid URL construction: ${message}`)
+    throw new Error(
+      t("generated.system.api.invalidUrlConstruction", {
+        value0: message,
+      })
+    )
   }
 }

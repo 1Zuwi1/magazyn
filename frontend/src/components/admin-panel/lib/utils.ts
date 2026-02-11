@@ -1,5 +1,3 @@
-import type { Notification } from "@/components/dashboard/types"
-
 export function formatBytes(
   bytes: number,
   opts: {
@@ -20,10 +18,4 @@ export function formatBytes(
   const size = sizeType === "accurate" ? accurateSizes[i] : sizes[i]
 
   return `${(bytes / 1024 ** i).toFixed(decimals)} ${size}`
-}
-
-export function countUnreadNotifications(
-  notifications: Notification[]
-): number {
-  return notifications.filter((notification) => !notification.read).length
 }

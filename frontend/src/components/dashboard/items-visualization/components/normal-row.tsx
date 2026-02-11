@@ -2,25 +2,25 @@
 
 import { memo } from "react"
 import { TableRow } from "@/components/ui/table"
-import type { Item } from "../../types"
+import type { RackAssortment } from "@/lib/schemas"
 import { TableRowContent } from "./table-row-content"
 
 interface NormalRowProps {
-  item: Item
-  onView: (id: string) => void
-  onEdit: (id: string) => void
-  onDelete: (id: string) => void
+  assortment: RackAssortment
+  onView: (id: number) => void
+  onEdit: (id: number) => void
+  onDelete: (id: number) => void
   rowHeight?: number
 }
 
 export const NormalRow = memo(
-  ({ item, onView, onEdit, onDelete, rowHeight }: NormalRowProps) => {
+  ({ assortment, onView, onEdit, onDelete, rowHeight }: NormalRowProps) => {
     const rowStyle = rowHeight ? { height: rowHeight } : undefined
 
     return (
-      <TableRow key={item.id} style={rowStyle}>
+      <TableRow key={assortment.id} style={rowStyle}>
         <TableRowContent
-          item={item}
+          assortment={assortment}
           onDelete={onDelete}
           onEdit={onEdit}
           onView={onView}

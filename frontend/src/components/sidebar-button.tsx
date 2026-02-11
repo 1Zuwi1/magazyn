@@ -2,9 +2,12 @@ import { ChevronRight } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+
 import { useState } from "react"
 import type { NavigationItem } from "@/config/navigation"
 import { useSession } from "@/hooks/use-session"
+import { removeAppLocalePrefix } from "@/i18n/locale"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { Button } from "./ui/button"
 import {
@@ -19,13 +22,19 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "./ui/sidebar"
-
 export default function SidebarButton({ item }: { item: NavigationItem }) {
+  const t = useAppTranslations()
+
   const pathname = usePathname()
-  const isActive = pathname.startsWith(item.href)
+  const pathnameWithoutLocale = removeAppLocalePrefix(pathname)
+  const isActive = pathnameWithoutLocale.startsWith(item.href)
   const [isOpen, setIsOpen] = useState(isActive)
   const hasItems = item.items && item.items.length > 0
-  const { data: session } = useSession()
+  const { data: session, isPending: isSessionPending } = useSession()
+
+  if (isSessionPending) {
+    return null
+  }
 
   if (item.adminOnly && session?.role !== "ADMIN") {
     return null
@@ -56,7 +65,9 @@ export default function SidebarButton({ item }: { item: NavigationItem }) {
               isActive={isActive}
               render={
                 <Button
-                  aria-label={`Wybierz kategorię ${item.title}`}
+                  aria-label={t("generated.ui.sidebar.chooseCategory", {
+                    value0: item.title,
+                  })}
                   id={`button-${item.href}`}
                   onKeyDown={(event) => {
                     if (
@@ -101,9 +112,9 @@ export default function SidebarButton({ item }: { item: NavigationItem }) {
                 <SidebarMenuSubItem key={subItem.title}>
                   <SidebarMenuSubButton
                     className={cn("w-full", {
-                      "font-semibold": pathname === subItem.href, // overwrite active styles
+                      "font-semibold": pathnameWithoutLocale === subItem.href, // overwrite active styles
                     })}
-                    isActive={pathname === subItem.href}
+                    isActive={pathnameWithoutLocale === subItem.href}
                     render={
                       <Link href={subItem.href}>
                         {subItem.icon && (
