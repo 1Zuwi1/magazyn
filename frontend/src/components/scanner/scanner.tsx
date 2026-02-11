@@ -82,6 +82,7 @@ const SCANNER_ERROR_MESSAGES = {
   PLACEMENT_INVALID: "Selected rack does not meet product requirements.",
   PLACEMENT_CONFLICT: "Selected position is occupied. Choose another.",
 } as const
+const AIM_SYMBOLOGY_IDENTIFIER_REGEX = /^\][A-Z][0-9]/
 
 type Step =
   | "choose-mode"
@@ -118,6 +119,16 @@ const getScannerErrorMessage = (error: unknown, fallback: string): string => {
   }
 
   return error.message || fallback
+}
+
+const normalizeOutboundScannedCode = (rawCode: string): string => {
+  const trimmedCode = rawCode.trim()
+  const codeWithoutSymbology = trimmedCode.replace(
+    AIM_SYMBOLOGY_IDENTIFIER_REGEX,
+    ""
+  )
+  // Some scanners send GS1 separators as ASCII 29; API expects a plain code string.
+  return codeWithoutSymbology.replaceAll("\u001d", "")
 }
 
 export function Scanner({
@@ -817,7 +828,7 @@ export function Scanner({
   )
 
   const queueOutboundScanCode = useCallback((rawCode: string) => {
-    const code = rawCode.trim()
+    const code = normalizeOutboundScannedCode(rawCode)
     if (!code) {
       return false
     }
@@ -837,7 +848,7 @@ export function Scanner({
 
   const handleOutboundManualScan = useCallback(
     (rawCode: string) => {
-      const trimmed = rawCode.trim()
+      const trimmed = normalizeOutboundScannedCode(rawCode)
       if (!trimmed) {
         return
       }
@@ -1111,7 +1122,7 @@ export function Scanner({
         />
       )
     } else if (step === "camera") {
-      content = (
+      content = outboundShowsCamera ? (
         <div className="relative h-full">
           <ScannerCamera
             constraints={constraints}
@@ -1127,6 +1138,8 @@ export function Scanner({
             warehouseName={warehouseName}
           />
         </div>
+      ) : (
+        outboundFlowContent
       )
     } else {
       content = outboundFlowContent
