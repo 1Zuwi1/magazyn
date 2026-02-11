@@ -5,6 +5,8 @@ import {
   SquareLock02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 interface RackStatusCardProps {
@@ -14,7 +16,10 @@ interface RackStatusCardProps {
   occupancyPercentage: number
 }
 
-function getOccupancyColor(percentage: number): {
+function getOccupancyColor(
+  t: AppTranslate,
+  percentage: number
+): {
   text: string
   bg: string
   bar: string
@@ -25,7 +30,7 @@ function getOccupancyColor(percentage: number): {
       text: "text-destructive",
       bg: "bg-destructive/10",
       bar: "bg-destructive",
-      label: "Krytyczne",
+      label: t("generated.dashboard.shared.critical"),
     }
   }
   if (percentage >= 75) {
@@ -33,7 +38,7 @@ function getOccupancyColor(percentage: number): {
       text: "text-orange-500",
       bg: "bg-orange-500/10",
       bar: "bg-orange-500",
-      label: "Wysokie",
+      label: t("generated.dashboard.shared.high"),
     }
   }
   if (percentage >= 50) {
@@ -41,14 +46,14 @@ function getOccupancyColor(percentage: number): {
       text: "text-primary",
       bg: "bg-primary/10",
       bar: "bg-primary",
-      label: "Umiarkowane",
+      label: t("generated.dashboard.shared.moderate"),
     }
   }
   return {
     text: "text-emerald-500",
     bg: "bg-emerald-500/10",
     bar: "bg-emerald-500",
-    label: "Niskie",
+    label: t("generated.dashboard.shared.low"),
   }
 }
 
@@ -58,26 +63,28 @@ export function RackStatusCard({
   totalCapacity,
   occupancyPercentage,
 }: RackStatusCardProps) {
-  const occupancyColors = getOccupancyColor(occupancyPercentage)
+  const t = useTranslations()
+
+  const occupancyColors = getOccupancyColor(t, occupancyPercentage)
 
   const stats = [
     {
       icon: SquareLock02Icon,
-      label: "Zajęte",
+      label: t("generated.dashboard.shared.occupied"),
       value: occupiedSlots,
       color: "text-muted-foreground",
       bgColor: "bg-muted",
     },
     {
       icon: CheckmarkCircle02Icon,
-      label: "Wolne",
+      label: t("generated.dashboard.shared.free2"),
       value: freeSlots,
       color: "text-emerald-500",
       bgColor: "bg-emerald-500/10",
     },
     {
       icon: PackageIcon,
-      label: "Pojemność",
+      label: t("generated.dashboard.shared.capacity"),
       value: totalCapacity,
       color: "text-primary",
       bgColor: "bg-primary/10",
@@ -94,14 +101,18 @@ export function RackStatusCard({
             icon={Analytics01Icon}
           />
         </div>
-        <h3 className="font-semibold text-sm">Status regału</h3>
+        <h3 className="font-semibold text-sm">
+          {t("generated.dashboard.rackVisualization.rackStatus")}
+        </h3>
       </div>
 
       {/* Occupancy Gauge */}
       <div className="border-b px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-sm">Obłożenie</span>
+            <span className="text-muted-foreground text-sm">
+              {t("generated.dashboard.shared.occupancy")}
+            </span>
             <span
               className={cn(
                 "rounded-md px-2 py-0.5 font-medium text-xs",

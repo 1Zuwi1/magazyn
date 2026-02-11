@@ -6,11 +6,13 @@ import {
   Search01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import type { ComponentProps, ReactNode } from "react"
+import { useTranslations } from "next-intl"
+import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import type { IconComponent } from "../dashboard/types"
 
 interface FilterBarProps {
   children?: ReactNode
@@ -59,11 +61,15 @@ interface SearchInputProps {
 export function SearchInput({
   value,
   onChange,
-  placeholder = "Szukaj...",
+  placeholder,
   className,
-  "aria-label": ariaLabel = "Szukaj",
+  "aria-label": ariaLabel,
 }: SearchInputProps) {
+  const t = useTranslations()
+
   const isFiltered = value.length > 0
+  const resolvedPlaceholder = placeholder ?? t("search.placeholder")
+  const resolvedAriaLabel = ariaLabel ?? t("search.label")
 
   return (
     <div className={cn("relative flex-1 sm:min-w-70 sm:max-w-sm", className)}>
@@ -72,15 +78,15 @@ export function SearchInput({
         icon={Search01Icon}
       />
       <Input
-        aria-label={ariaLabel}
+        aria-label={resolvedAriaLabel}
         className="h-10 pr-9 pl-9"
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         value={value}
       />
       {isFiltered && (
         <button
-          aria-label="Wyczyść wyszukiwanie"
+          aria-label={t("generated.ui.clearSearch")}
           className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           onClick={() => onChange("")}
           type="button"
@@ -111,25 +117,28 @@ export function FilterResults({
   itemLabel,
   className,
 }: FilterResultsProps) {
-  const pluralize = (count: number) => {
-    if (count === 1) {
-      return itemLabel.singular
-    }
-    if (count >= 2 && count <= 4) {
-      return itemLabel.plural
-    }
-    return itemLabel.genitive
-  }
+  const t = useTranslations()
 
   return (
     <div className={cn("flex items-center gap-2 text-sm", className)}>
       {isFiltered ? (
         <span className="rounded-md bg-primary/10 px-2.5 py-1 font-medium text-primary">
-          {filteredCount} z {totalCount} {pluralize(totalCount)}
+          {t("generated.ui.pluralLabel2", {
+            value0: filteredCount,
+            value1: totalCount,
+            singular: itemLabel.singular,
+            plural: itemLabel.plural,
+            genitive: itemLabel.genitive,
+          })}
         </span>
       ) : (
         <span className="text-muted-foreground">
-          {totalCount} {pluralize(totalCount)}
+          {t("generated.ui.pluralLabel3", {
+            value0: totalCount,
+            singular: itemLabel.singular,
+            plural: itemLabel.plural,
+            genitive: itemLabel.genitive,
+          })}
         </span>
       )}
     </div>
@@ -145,6 +154,8 @@ export function ClearFiltersButton({
   onClick,
   className,
 }: ClearFiltersButtonProps) {
+  const t = useTranslations()
+
   return (
     <Button
       className={cn("gap-1.5 text-muted-foreground", className)}
@@ -153,7 +164,7 @@ export function ClearFiltersButton({
       variant="ghost"
     >
       <HugeiconsIcon className="size-3.5" icon={FilterIcon} />
-      <span>Wyczyść</span>
+      <span>{t("generated.shared.clear")}</span>
     </Button>
   )
 }
@@ -167,19 +178,21 @@ export function ActiveFiltersBadge({
   count,
   className,
 }: ActiveFiltersBadgeProps) {
+  const t = useTranslations()
+
   if (count === 0) {
     return null
   }
 
   return (
     <Badge className={cn("font-normal", className)} variant="secondary">
-      {count} {count === 1 ? "filtr" : "filtry"} aktywne
+      {t("generated.ui.pluralLabel", { value0: count })}
     </Badge>
   )
 }
 
 interface FilterSelectProps {
-  icon?: ComponentProps<typeof HugeiconsIcon>["icon"]
+  icon?: IconComponent
   isActive?: boolean
   className?: string
   children: ReactNode

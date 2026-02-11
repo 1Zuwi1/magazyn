@@ -1,0 +1,437 @@
+"use client"
+
+import {
+  Add01Icon,
+  DatabaseIcon,
+  DatabaseRestoreIcon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
+import { useMemo, useState } from "react"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import useBackups, {
+  useBackupSchedules,
+  useCreateBackup,
+  useDeleteBackup,
+  useDeleteBackupSchedule,
+  useDeleteGlobalBackupSchedule,
+  useRestoreAllWarehouses,
+  useRestoreBackup,
+  useUpsertBackupSchedule,
+  useUpsertGlobalBackupSchedule,
+} from "@/hooks/use-backups"
+import useWarehouses from "@/hooks/use-warehouses"
+import { AdminPageHeader } from "../components/admin-page-header"
+import { ConfirmDialog } from "../components/dialogs"
+import { BackupDetailDialog } from "./components/backup-detail-dialog"
+import { BackupsHeaderStats } from "./components/backups-header-stats"
+import { BackupsTable } from "./components/backups-table"
+import { CreateBackupDialog } from "./components/create-backup-dialog"
+import { ScheduleDialog } from "./components/schedule-dialog"
+import { SchedulesSection } from "./components/schedules-section"
+import type { Backup, BackupSchedule, ScheduleSubmitPayload } from "./types"
+import {
+  DEFAULT_BACKUP_RESOURCE_TYPES,
+  mapApiScheduleToViewModel,
+} from "./utils"
+
+export function BackupsMain() {
+  const t = useTranslations()
+  const { data: backupsData } = useBackups()
+  const { data: schedulesData, isLoading: isSchedulesLoading } =
+    useBackupSchedules()
+
+  const { data: warehousesSummaryData } = useWarehouses({
+    page: 0,
+    size: 1,
+  })
+
+  const createBackupMutation = useCreateBackup()
+  const restoreAllWarehousesMutation = useRestoreAllWarehouses()
+  const deleteBackupMutation = useDeleteBackup()
+  const restoreBackupMutation = useRestoreBackup()
+  const upsertScheduleMutation = useUpsertBackupSchedule()
+  const deleteScheduleMutation = useDeleteBackupSchedule()
+  const upsertGlobalScheduleMutation = useUpsertGlobalBackupSchedule()
+  const deleteGlobalScheduleMutation = useDeleteGlobalBackupSchedule()
+
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [selectedBackup, setSelectedBackup] = useState<Backup | undefined>()
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [backupToDelete, setBackupToDelete] = useState<Backup | undefined>()
+
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false)
+  const [backupToRestore, setBackupToRestore] = useState<Backup | undefined>()
+
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false)
+  const [selectedSchedule, setSelectedSchedule] = useState<
+    BackupSchedule | undefined
+  >()
+
+  const [createBackupDialogOpen, setCreateBackupDialogOpen] = useState(false)
+  const [restoreAllDialogOpen, setRestoreAllDialogOpen] = useState(false)
+
+  const { schedules, hasGlobalSchedule } = useMemo(() => {
+    const warehouseSchedules = (schedulesData ?? []).map(
+      mapApiScheduleToViewModel
+    )
+
+    return {
+      schedules: warehouseSchedules,
+      hasGlobalSchedule: warehouseSchedules.some(
+        (schedule) => schedule.warehouseName === "GLOBAL"
+      ),
+    }
+  }, [schedulesData])
+
+  const usedScheduleWarehouseIds = useMemo(
+    () =>
+      schedules
+        .map((schedule) => schedule.warehouseId)
+        .filter((id): id is number => id !== null),
+    [schedules]
+  )
+
+  const handleViewBackup = (backup: Backup) => {
+    setSelectedBackup(backup)
+    setDetailOpen(true)
+  }
+
+  const handleDeleteBackup = (backup: Backup) => {
+    setBackupToDelete(backup)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteBackup = async () => {
+    if (!backupToDelete) {
+      return
+    }
+
+    await deleteBackupMutation.mutateAsync(backupToDelete.id)
+    toast.success(
+      t("generated.admin.backups.backupDeletedToast", {
+        value0: backupToDelete.name,
+      })
+    )
+    setBackupToDelete(undefined)
+  }
+
+  const handleRestoreBackup = (backup: Backup) => {
+    setBackupToRestore(backup)
+    setRestoreDialogOpen(true)
+  }
+
+  const confirmRestoreBackup = async () => {
+    if (!backupToRestore) {
+      return
+    }
+
+    await restoreBackupMutation.mutateAsync(backupToRestore.id)
+    toast.success(
+      t("generated.admin.backups.backupRestoreStartedToast", {
+        value0: backupToRestore.name,
+      })
+    )
+    setBackupToRestore(undefined)
+  }
+
+  const handleRestoreAllWarehouses = async () => {
+    const result = await restoreAllWarehousesMutation.mutateAsync()
+    toast.success(
+      t("generated.admin.backups.restoreAllStartedToast", {
+        value0: result.successful.length.toString(),
+      })
+    )
+  }
+
+  const handleCreateManualConfirm = async (
+    warehouseId: number | null,
+    warehouseName: string | null
+  ) => {
+    if (warehouseId == null) {
+      return
+    }
+
+    await createBackupMutation.mutateAsync({
+      warehouseId,
+      resourceTypes: DEFAULT_BACKUP_RESOURCE_TYPES,
+    })
+    toast.success(
+      t("generated.admin.backups.backupCreateStartedToast", {
+        value0: warehouseName ?? t("generated.shared.warehouse"),
+      })
+    )
+  }
+
+  const handleRetryBackup = async (backup: Backup) => {
+    await createBackupMutation.mutateAsync({
+      warehouseId: backup.warehouseId,
+      resourceTypes:
+        backup.resourceTypes.length > 0
+          ? backup.resourceTypes
+          : DEFAULT_BACKUP_RESOURCE_TYPES,
+    })
+    toast.success(
+      t("generated.admin.backups.backupRetryStartedToast", {
+        value0: backup.name,
+      })
+    )
+  }
+
+  const handleAddSchedule = () => {
+    const totalWarehouses = warehousesSummaryData?.totalElements
+
+    if (totalWarehouses != null && schedules.length >= totalWarehouses) {
+      toast.info(t("generated.admin.backups.noWarehousesForSchedule"))
+      return
+    }
+
+    setSelectedSchedule(undefined)
+    setScheduleDialogOpen(true)
+  }
+
+  const handleEditSchedule = (schedule: BackupSchedule) => {
+    setSelectedSchedule(schedule)
+    setScheduleDialogOpen(true)
+  }
+
+  const handleToggleSchedule = async (
+    warehouseId: number | null,
+    schedule: BackupSchedule
+  ) => {
+    const nextEnabled = !schedule.enabled
+    const payload = {
+      scheduleCode: schedule.frequency,
+      backupHour: schedule.backupHour,
+      dayOfWeek: schedule.dayOfWeek ?? undefined,
+      dayOfMonth: schedule.dayOfMonth ?? undefined,
+      resourceTypes:
+        schedule.resourceTypes.length > 0
+          ? schedule.resourceTypes
+          : DEFAULT_BACKUP_RESOURCE_TYPES,
+      enabled: nextEnabled,
+    }
+
+    if (warehouseId == null || warehouseId === 0) {
+      await upsertGlobalScheduleMutation.mutateAsync(payload)
+    } else {
+      await upsertScheduleMutation.mutateAsync({ warehouseId, ...payload })
+    }
+
+    toast.success(
+      nextEnabled
+        ? t("generated.admin.backups.scheduleEnabledToast", {
+            value0:
+              schedule.warehouseName === "GLOBAL"
+                ? t("generated.admin.backups.allWarehouses")
+                : schedule.warehouseName,
+          })
+        : t("generated.admin.backups.scheduleDisabledToast", {
+            value0:
+              schedule.warehouseName === "GLOBAL"
+                ? t("generated.admin.backups.allWarehouses")
+                : schedule.warehouseName,
+          })
+    )
+  }
+
+  const handleDeleteSchedule = async (warehouseId: number | null) => {
+    const scheduleToDelete = schedules.find(
+      (schedule) => schedule.warehouseId === warehouseId
+    )
+
+    if (warehouseId == null || warehouseId === 0) {
+      await deleteGlobalScheduleMutation.mutateAsync()
+    } else {
+      await deleteScheduleMutation.mutateAsync(warehouseId)
+    }
+
+    if (scheduleToDelete) {
+      toast.success(
+        t("generated.admin.backups.scheduleDeletedToast", {
+          value0:
+            scheduleToDelete.warehouseName === "GLOBAL"
+              ? t("generated.admin.backups.allWarehouses")
+              : scheduleToDelete.warehouseName,
+        })
+      )
+    }
+  }
+
+  const handleScheduleSubmit = async (data: ScheduleSubmitPayload) => {
+    const existingSchedule = schedules.find(
+      (schedule) => schedule.warehouseId === data.warehouseId
+    )
+
+    const payload = {
+      scheduleCode: data.frequency,
+      backupHour: data.backupHour,
+      dayOfWeek: data.dayOfWeek ?? undefined,
+      dayOfMonth: data.dayOfMonth ?? undefined,
+      resourceTypes: existingSchedule?.resourceTypes.length
+        ? existingSchedule.resourceTypes
+        : DEFAULT_BACKUP_RESOURCE_TYPES,
+      enabled: data.enabled,
+    }
+
+    if (data.warehouseId == null || data.warehouseId === 0) {
+      await upsertGlobalScheduleMutation.mutateAsync(payload)
+    } else {
+      await upsertScheduleMutation.mutateAsync({
+        warehouseId: data.warehouseId,
+        ...payload,
+      })
+    }
+
+    toast.success(
+      existingSchedule
+        ? t("generated.admin.backups.scheduleUpdatedToast", {
+            value0:
+              data.warehouseName === "GLOBAL"
+                ? t("generated.admin.backups.allWarehouses")
+                : data.warehouseName,
+          })
+        : t("generated.admin.backups.scheduleCreatedToast", {
+            value0:
+              data.warehouseName === "GLOBAL"
+                ? t("generated.admin.backups.allWarehouses")
+                : data.warehouseName,
+          })
+    )
+  }
+
+  const isCreateBackupPending = createBackupMutation.isPending
+  const isRestoreAllPending = restoreAllWarehousesMutation.isPending
+  const isScheduleMutationPending =
+    upsertScheduleMutation.isPending ||
+    deleteScheduleMutation.isPending ||
+    upsertGlobalScheduleMutation.isPending ||
+    deleteGlobalScheduleMutation.isPending
+  const isAnyMutationPending =
+    isCreateBackupPending || isRestoreAllPending || isScheduleMutationPending
+
+  return (
+    <div className="space-y-6">
+      <AdminPageHeader
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              disabled={isAnyMutationPending}
+              onClick={() => setRestoreAllDialogOpen(true)}
+              variant="outline"
+            >
+              <HugeiconsIcon
+                className="mr-2 size-4"
+                icon={DatabaseRestoreIcon}
+              />
+              {t("generated.admin.backups.restoreAllTitle")}
+            </Button>
+            <Button
+              disabled={isAnyMutationPending}
+              onClick={() => setCreateBackupDialogOpen(true)}
+            >
+              <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
+              {t("generated.admin.backups.createBackupTitle")}
+            </Button>
+          </div>
+        }
+        description={t("generated.admin.backups.pageDescription")}
+        icon={DatabaseIcon}
+        title={t("generated.shared.backups")}
+      >
+        <BackupsHeaderStats
+          backupsData={backupsData}
+          schedulesData={schedulesData}
+        />
+      </AdminPageHeader>
+
+      <SchedulesSection
+        isLoading={isSchedulesLoading}
+        onAdd={handleAddSchedule}
+        onDelete={(warehouseId) => {
+          handleDeleteSchedule(warehouseId).catch(() => undefined)
+        }}
+        onEdit={handleEditSchedule}
+        onToggle={(warehouseId, schedule) => {
+          handleToggleSchedule(warehouseId, schedule).catch(() => undefined)
+        }}
+        schedules={schedules}
+      />
+
+      <BackupsTable
+        onCreateManual={() => setCreateBackupDialogOpen(true)}
+        onDelete={handleDeleteBackup}
+        onRestore={handleRestoreBackup}
+        onRetry={(backup) => {
+          handleRetryBackup(backup).catch(() => undefined)
+        }}
+        onView={handleViewBackup}
+      />
+
+      <BackupDetailDialog
+        backup={selectedBackup}
+        onOpenChange={setDetailOpen}
+        open={detailOpen}
+      />
+
+      <ConfirmDialog
+        description={t("generated.admin.backups.deleteBackupDescription", {
+          value0: backupToDelete?.name ?? "",
+        })}
+        onConfirm={() => {
+          confirmDeleteBackup().catch(() => undefined)
+        }}
+        onOpenChange={setDeleteDialogOpen}
+        open={deleteDialogOpen}
+        title={t("generated.admin.backups.deleteBackupTitle")}
+      />
+
+      <ConfirmDialog
+        description={t("generated.admin.backups.restoreBackupDescription", {
+          value0: backupToRestore?.name ?? "",
+        })}
+        onConfirm={() => {
+          confirmRestoreBackup().catch(() => undefined)
+        }}
+        onOpenChange={setRestoreDialogOpen}
+        open={restoreDialogOpen}
+        title={t("generated.admin.backups.restoreBackupTitle")}
+      />
+
+      <ConfirmDialog
+        description={t("generated.admin.backups.restoreAllDescription")}
+        onConfirm={() => {
+          handleRestoreAllWarehouses().catch(() => undefined)
+        }}
+        onOpenChange={setRestoreAllDialogOpen}
+        open={restoreAllDialogOpen}
+        title={t("generated.admin.backups.restoreAllTitle")}
+      />
+
+      <ScheduleDialog
+        hasGlobalSchedule={hasGlobalSchedule}
+        isSubmitting={isScheduleMutationPending}
+        onOpenChange={setScheduleDialogOpen}
+        onSubmit={(payload) => {
+          handleScheduleSubmit(payload).catch(() => undefined)
+        }}
+        open={scheduleDialogOpen}
+        schedule={selectedSchedule}
+        usedWarehouseIds={usedScheduleWarehouseIds}
+      />
+
+      <CreateBackupDialog
+        isSubmitting={isCreateBackupPending}
+        onConfirm={(warehouseId, warehouseName) => {
+          handleCreateManualConfirm(warehouseId, warehouseName).catch(
+            () => undefined
+          )
+        }}
+        onOpenChange={setCreateBackupDialogOpen}
+        open={createBackupDialogOpen}
+      />
+    </div>
+  )
+}

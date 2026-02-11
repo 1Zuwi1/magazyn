@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import { useTranslations } from "next-intl"
 import QRCode from "qrcode"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
@@ -23,19 +24,27 @@ export function QRCodeDisplay({
   className,
   errorCorrectionLevel = "M",
 }: QRCodeDisplayProps) {
+  const t = useTranslations()
+
   const [dataUrl, setDataUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let isCancelled = false
-    if (!value) {
+    const normalizedValue = value.trim()
+
+    if (!normalizedValue) {
       setDataUrl(null)
       setError(null)
       return
     }
+
+    setDataUrl(null)
+    setError(null)
+
     const generateQrCode = async () => {
       try {
-        const url = await QRCode.toDataURL(value, {
+        const url = await QRCode.toDataURL(normalizedValue, {
           width: size,
           margin: 4,
           errorCorrectionLevel,
@@ -49,20 +58,21 @@ export function QRCodeDisplay({
         }
         setDataUrl(url)
         setError(null)
-      } catch (e) {
+      } catch {
         if (isCancelled) {
           return
         }
-        console.error(e)
-        setError("Nie udało się wygenerować kodu QR")
+        setError(t("generated.dashboard.settings.failedGenerateQrCode"))
         setDataUrl(null)
       }
     }
+
     generateQrCode()
+
     return () => {
       isCancelled = true
     }
-  }, [value, size, errorCorrectionLevel])
+  }, [value, size, errorCorrectionLevel, t])
 
   if (error) {
     return (
@@ -90,7 +100,7 @@ export function QRCodeDisplay({
   return (
     <div className={cn("overflow-hidden rounded-lg border", className)}>
       <Image
-        alt="Kod QR do zeskanowania"
+        alt={t("generated.dashboard.settings.qrCodeScan")}
         className="block"
         height={size}
         priority

@@ -1,33 +1,42 @@
-import {
-  Alert01Icon,
-  InboxIcon,
-  WeightScale01Icon,
-} from "@hugeicons/core-free-icons"
-import type { Role, Status, User } from "@/components/dashboard/types"
+import type { AppTranslate } from "@/i18n/use-translations"
 
-export const ADMIN_NAV_LINKS = [
-  { title: "Przegląd", url: "/admin" },
-  { title: "Użytkownicy", url: "/admin/users" },
-  { title: "Magazyny", url: "/admin/warehouses" },
-  { title: "Asortyment", url: "/admin/assortment" },
-  { title: "Powiadomienia", url: "/admin/notifications" },
-] as const
+export const getAdminNavLinks = (t: AppTranslate) =>
+  [
+    { title: t("generated.shared.review"), url: "/admin" },
+    { title: t("generated.shared.users"), url: "/admin/users" },
+    {
+      title: t("generated.shared.warehouses"),
+      url: "/admin/warehouses",
+    },
+    { title: t("generated.shared.items"), url: "/admin/items" },
+    {
+      title: t("generated.shared.alerts"),
+      url: "/admin/alerts",
+    },
+    {
+      title: t("generated.shared.rackReports"),
+      url: "/admin/rack-reports",
+    },
+    {
+      title: t("generated.shared.operationsAudit"),
+      url: "/admin/audit",
+    },
+    {
+      title: t("generated.shared.reports"),
+      url: "/admin/reports",
+    },
+    {
+      title: t("generated.shared.backups"),
+      url: "/admin/backups",
+    },
+    {
+      title: t("generated.shared.apiKeys"),
+      url: "/admin/api-keys",
+    },
+  ] as const
 
-export const NOTIFICATIONS_NAV_LINKS = [
-  { title: "Wszystkie", icon: InboxIcon, filterValue: null },
-  {
-    title: "Przeciążenia",
-    icon: WeightScale01Icon,
-    filterValue: "RACK_OVERWEIGHT" as const,
-  },
-  {
-    title: "Nieautoryzowane",
-    icon: Alert01Icon,
-    filterValue: "UNAUTHORIZED_REMOVAL" as const,
-  },
-]
 export const DEFAULT_RACK = {
-  symbol: "",
+  marker: "",
   name: "",
   rows: 0,
   cols: 0,
@@ -37,16 +46,8 @@ export const DEFAULT_RACK = {
   maxItemWidth: 1,
   maxItemHeight: 1,
   maxItemDepth: 1,
+  acceptsDangerous: false,
   comment: "",
-}
-
-export const DEFAULT_USER: User = {
-  id: "",
-  username: "",
-  email: "",
-  team: "",
-  status: "ACTIVE" as Status,
-  role: "USER" as Role,
 }
 
 export const THRESHOLD = 90

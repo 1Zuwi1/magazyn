@@ -1,8 +1,10 @@
 import { Edges, Html, useCursor } from "@react-three/drei"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { useWarehouseStore } from "../store"
 import type { Rack3D } from "../types"
 import { RACK_ZONE_SIZE } from "../types"
+import { useClickGuard } from "../use-click-guard"
 import type { RackRender } from "../warehouse-layout"
 import { BlocksInstanced, getBlockLayout } from "./blocks-instanced"
 import { getRackMetrics } from "./rack-metrics"
@@ -44,7 +46,10 @@ function RackInstance({
   aisleIndex,
   onFocus,
 }: RackInstanceProps) {
+  const t = useTranslations()
+
   const [hovered, setHovered] = useState(false)
+  const { onPointerDown, shouldIgnoreClick } = useClickGuard()
   const occupiedCount = rack.items.filter((item) => item !== null).length
   const occupancy = (occupiedCount / (rack.grid.rows * rack.grid.cols)) * 100
   const metrics = getRackMetrics(rack)
@@ -108,9 +113,13 @@ function RackInstance({
       )}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Three.js mesh */}
       <mesh
-        onClick={() => {
+        onClick={(e) => {
+          if (shouldIgnoreClick(e)) {
+            return
+          }
           onFocus(rack.id)
         }}
+        onPointerDown={onPointerDown}
         onPointerOut={() => {
           setHovered(false)
         }}
@@ -146,12 +155,18 @@ function RackInstance({
           <div className="rounded border border-white/10 bg-slate-950/80 px-2 py-1 text-slate-100 text-xs">
             <div className="font-bold">{rack.code}</div>
             <div>
-              {Math.round(occupancy)}% zajęte • {rack.grid.cols}×
-              {rack.grid.rows}
+              {t("generated.dashboard.visualization3d.occupied2", {
+                value0: Math.round(occupancy).toString(),
+                value1: rack.grid.cols.toString(),
+                value2: rack.grid.rows.toString(),
+              })}
             </div>
             <div className="text-slate-400">
-              Maks: {rack.maxElementSize.width}×{rack.maxElementSize.height}×
-              {rack.maxElementSize.depth} mm
+              {t("generated.dashboard.visualization3d.maxMm", {
+                value0: rack.maxElementSize.width.toString(),
+                value1: rack.maxElementSize.height.toString(),
+                value2: rack.maxElementSize.depth.toString(),
+              })}
             </div>
           </div>
         </Html>

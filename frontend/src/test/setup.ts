@@ -10,6 +10,11 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
 }))
 
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+  useLocale: () => "pl",
+}))
+
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query) => ({

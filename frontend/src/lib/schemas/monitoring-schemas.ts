@@ -1,36 +1,63 @@
 import z from "zod"
 import { createApiSchema } from "../create-api-schema"
+import { createPaginatedSchema, createPaginatedSchemaInput } from "../schemas"
 
-export const NotificationSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  description: z.string(),
-  type: z.enum([
-    "UNAUTHORIZED_REMOVAL",
-    "RACK_OVERWEIGHT",
-    "ITEM_EXPIRED",
-    "TEMPERATURE_VIOLATION",
-  ]),
-  severity: z.enum(["INFO", "WARNING", "CRITICAL"]),
-  warehouseId: z.string().optional(),
-  rackId: z.string().optional(),
-  itemId: z.string().optional(),
-  metadata: z.record(z.string(), z.unknown()),
+export const AlertSchema = z.object({
+  id: z.coerce.number().int().nonnegative(),
+  rackId: z.coerce.number().int().nonnegative().nullable().nullish(),
+  rackMarker: z.string().nullable().nullish(),
+  warehouseId: z.coerce.number().int().nonnegative().nullable().nullish(),
+  warehouseName: z.string().nullable().nullish(),
+  alertType: z.string(),
+  alertTypeDescription: z.string().nullable().nullish(),
+  status: z.string(),
+  message: z.string(),
+  thresholdValue: z.number().nullable().nullish(),
+  actualValue: z.number().nullable().nullish(),
   createdAt: z.coerce.date(),
-  date: z.coerce.date(),
-  read: z.boolean(),
+  updatedAt: z.coerce.date().nullable().nullish(),
+  resolvedAt: z.coerce.date().nullable().nullish(),
+  resolvedByName: z.string().nullable().nullish(),
+  resolutionNotes: z.string().nullable().nullish(),
 })
 
-export const WeightAlertSchema = z.object({
-  id: z.string(),
-  rackId: z.string(),
-  previousWeight: z.number(),
-  currentWeight: z.number(),
-  timestamp: z.date(),
+const RawUserNotificationSchema = z.object({
+  id: z.coerce.number().int().nonnegative(),
+  alert: AlertSchema,
+  createdAt: z.coerce.date(),
+  readAt: z.coerce.date().nullable().nullish(),
+  read: z.boolean().nullish(),
+  isRead: z.boolean().nullish(),
 })
+
+export const UserNotificationSchema = RawUserNotificationSchema.transform(
+  ({ isRead, read, ...notification }) => ({
+    ...notification,
+    read: read ?? isRead ?? false,
+    readAt: notification.readAt ?? null,
+  })
+)
 
 export const ApiNotificationsSchema = createApiSchema({
   GET: {
-    output: z.array(NotificationSchema),
+    input: createPaginatedSchemaInput({
+      read: z.boolean().nullish(),
+      alertId: z.number().int().nonnegative().nullish(),
+    }),
+    output: createPaginatedSchema(UserNotificationSchema),
+  },
+})
+
+export const ApiMarkNotificationSchema = createApiSchema({
+  PATCH: {
+    input: z.null(),
+    output: UserNotificationSchema,
+  },
+})
+
+export const ApiMarkBulkNotificationsSchema = createApiSchema({
+  PATCH: {
+    input: z.null(),
+    output: z.number().int().nonnegative(),
   },
 })

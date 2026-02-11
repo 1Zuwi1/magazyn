@@ -1,44 +1,25 @@
-import { headers } from "next/headers"
 import type { NextRequest } from "next/server"
 
-const DEFAULT_PORT = "3001"
+const first = (v: string | null) => (v ?? "").split(",")[0].trim()
 
-function parsePort(port: string | undefined): string {
-  const parsed = Number.parseInt(port ?? "", 10)
-  // Port 0 is rejected to avoid using a random port
-  if (Number.isNaN(parsed) || parsed < 1 || parsed > 65_535) {
-    return DEFAULT_PORT
-  }
-  return parsed.toString()
-}
+const isStandardPort = (proto: string, port: string) =>
+  (proto === "https" && port === "443") || (proto === "http" && port === "80")
 
-function parseHost(host: string | null): string {
-  if (!host) {
-    return "localhost"
-  }
-  return host.includes(":") ? host.split(":")[0] : host
-}
+export function getUrl(data: NextRequest | Headers): URL {
+  const h = data instanceof Headers ? data : data.headers
 
-const PORT = parsePort(process.env.PORT)
+  const proto = first(h.get("x-forwarded-proto")) || "http"
+  const host =
+    first(h.get("x-forwarded-host")) || first(h.get("host")) || "localhost"
+  const port =
+    first(h.get("x-forwarded-port")) || (proto === "https" ? "443" : "80")
 
-export async function getUrl(data: NextRequest | Headers): Promise<URL> {
-  const h: Headers = data instanceof Headers ? data : await headers()
+  // If host already includes a port, keep it. Otherwise only add non-standard ports.
+  const hostHasPort = host.includes(":")
+  const origin =
+    hostHasPort || isStandardPort(proto, port)
+      ? `${proto}://${host}`
+      : `${proto}://${host}:${port}`
 
-  // x-forwarded headers are set by proxy (nginx)
-  const proto = h.get("x-forwarded-proto") || "http"
-  const host = h.get("x-forwarded-host") || h.get("host") || "localhost"
-  const port = h.get("x-forwarded-port") || PORT
-
-  try {
-    const url = new URL(
-      data instanceof Headers ? `http://localhost:${PORT}` : data.url
-    )
-    url.protocol = proto
-    url.host = parseHost(host)
-    url.port = parsePort(port)
-    return url
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    throw new Error(`Invalid URL construction: ${message}`)
-  }
+  return new URL(origin)
 }

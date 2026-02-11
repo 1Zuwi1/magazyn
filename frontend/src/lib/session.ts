@@ -1,7 +1,7 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { cache } from "react"
-import { apiFetch } from "./fetcher"
+import { apiFetch, FetchError } from "./fetcher"
 import { ApiMeSchema } from "./schemas"
 
 export const getSession = cache(async (redirectTo?: string) => {
@@ -12,7 +12,13 @@ export const getSession = cache(async (redirectTo?: string) => {
     })
 
     return res
-  } catch {
+  } catch (error) {
+    if (
+      FetchError.isError(error) &&
+      error.message === "NOT_VERIFIED_BY_ADMIN"
+    ) {
+      redirect("/pending-verification")
+    }
     if (redirectTo) {
       redirect(redirectTo)
     }

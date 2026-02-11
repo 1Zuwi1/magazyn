@@ -1,5 +1,6 @@
 import { AlertCircleIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
 import { Button } from "../ui/button"
 
 interface ScannerErrorStateProps {
@@ -8,6 +9,8 @@ interface ScannerErrorStateProps {
 }
 
 export function ScannerErrorState({ error, onRetry }: ScannerErrorStateProps) {
+  const t = useTranslations()
+
   return (
     <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">
       {/* Decorative background gradient */}
@@ -30,7 +33,7 @@ export function ScannerErrorState({ error, onRetry }: ScannerErrorStateProps) {
         {/* Text content */}
         <div className="max-w-sm space-y-2">
           <h2 className="font-semibold text-foreground text-xl">
-            Wystąpił błąd
+            {t("generated.scanner.errorOccurred")}
           </h2>
           <p className="text-muted-foreground text-sm">{error}</p>
         </div>
@@ -38,7 +41,7 @@ export function ScannerErrorState({ error, onRetry }: ScannerErrorStateProps) {
         {/* Action button */}
         <div className="pt-2">
           <Button onClick={onRetry} type="button" variant="outline">
-            Spróbuj ponownie
+            {t("generated.shared.again")}
           </Button>
         </div>
       </div>

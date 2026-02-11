@@ -1,21 +1,36 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 import { MAX_TOAST_ROWS } from "../lib/constants"
+import { formatBytes } from "../lib/utils"
+import { DEFAULT_CONFIG } from "../warehouses/csv/utils/constants"
 import { parseCsvFile } from "../warehouses/csv/utils/csv-utils"
-import type { CsvParseError, CsvRowType } from "../warehouses/csv/utils/types"
+import type {
+  CsvImporterType,
+  CsvParseError,
+  CsvRowType,
+} from "../warehouses/csv/utils/types"
 
-interface UseCsvImporterProps<T extends "rack" | "item"> {
+interface UseCsvImporterProps<T extends CsvImporterType> {
   type: T
-  onImport: (data: CsvRowType<T>[]) => void
+  maxFileSizeInBytes?: number
+  onImport: (payload: {
+    file: File
+    rows: CsvRowType<T>[]
+  }) => Promise<void> | void
 }
 
-export function useCsvImporter<T extends "rack" | "item">({
+export function useCsvImporter<T extends CsvImporterType>({
   type,
+  maxFileSizeInBytes = DEFAULT_CONFIG.maxSizeInBytes,
   onImport,
 }: UseCsvImporterProps<T>) {
+  const t = useTranslations()
+
   const [open, setOpen] = useState(false)
+  const [sourceFile, setSourceFile] = useState<File | null>(null)
   const [rawPreviewData, setRawPreviewData] = useState<
     Record<string, string>[]
   >([])
@@ -23,56 +38,101 @@ export function useCsvImporter<T extends "rack" | "item">({
   const [parseErrors, setParseErrors] = useState<CsvParseError[]>([])
   const [previewHeaders, setPreviewHeaders] = useState<string[]>([])
 
-  async function processFile(files: File[]) {
-    for (const file of files) {
-      if (!file) {
-        return
-      }
-      resetFile()
-      try {
-        const result = await parseCsvFile(file, type)
-        setRawPreviewData(result.rawRows)
-        setValidatedData(result.rows)
-        setParseErrors(result.errors)
-        setPreviewHeaders(result.headers)
+  async function processFile(files: File[]): Promise<boolean> {
+    const [file] = files
+    if (!file) {
+      return false
+    }
 
-        if (result.errors.length > 0) {
-          const displayedErrors = result.errors
-            .slice(0, MAX_TOAST_ROWS)
-            .map((e) => `Wiersz ${e.row}: ${e.message}`)
-            .join("\n")
+    resetFile()
+    if (file.size > maxFileSizeInBytes) {
+      toast.error(
+        t("generated.admin.shared.csvFileTooLarge", {
+          value0: file.name,
+          value1: formatBytes(maxFileSizeInBytes),
+        })
+      )
+      return false
+    }
 
-          const remaining = result.errors.length - MAX_TOAST_ROWS
-          const suffix = remaining > 0 ? `\n...i ${remaining} więcej` : ""
+    try {
+      const result = await parseCsvFile(file, type, t)
+      setParseErrors(result.errors)
 
-          toast.error(`Błędy parsowania CSV (${result.errors.length})`, {
+      if (result.errors.length > 0) {
+        setSourceFile(null)
+
+        const displayedErrors = result.errors
+          .slice(0, MAX_TOAST_ROWS)
+          .map((e) =>
+            t("generated.admin.warehouses.csvImportError", {
+              row: e.row.toString(),
+              error: e.message,
+            })
+          )
+          .join("\n")
+
+        const remaining = result.errors.length - MAX_TOAST_ROWS
+        const suffix =
+          remaining > 0
+            ? t("generated.admin.shared.more", {
+                value0: remaining.toString(),
+              })
+            : ""
+
+        toast.error(
+          t("generated.admin.shared.csvParsingErrors", {
+            value0: result.errors.length.toString(),
+          }),
+          {
             description: displayedErrors + suffix,
-          })
-        }
-      } catch {
-        toast.error("Nie udało się przetworzyć pliku CSV")
-        resetFile()
+          }
+        )
+        return false
       }
+
+      setSourceFile(file)
+      setRawPreviewData(result.rawRows)
+      setValidatedData(result.rows)
+      setPreviewHeaders(result.headers)
+      return true
+    } catch {
+      toast.error(t("generated.admin.shared.csvFileFailedProcess"))
+      resetFile()
+      return false
     }
   }
 
   function resetFile() {
+    setSourceFile(null)
     setRawPreviewData([])
     setValidatedData([])
     setParseErrors([])
     setPreviewHeaders([])
   }
 
-  function confirmImport() {
-    if (validatedData.length === 0) {
-      toast.error("Brak poprawnych danych do zaimportowania")
+  async function confirmImport() {
+    if (parseErrors.length > 0) {
+      toast.error(t("generated.admin.shared.csvFileContainsErrorsCorrect"))
       return
     }
 
-    onImport(validatedData)
-    toast.success(`Zaimportowano ${validatedData.length} wierszy`)
-    setOpen(false)
-    resetFile()
+    if (!sourceFile) {
+      toast.error(t("generated.admin.shared.firstSelectCsvFile"))
+      return
+    }
+
+    try {
+      await onImport({
+        file: sourceFile,
+        rows: validatedData,
+      })
+      setOpen(false)
+      resetFile()
+    } catch (error) {
+      console.error(error)
+      toast.error(t("generated.admin.shared.csvFileFailedImport"))
+    }
   }
 
   return {

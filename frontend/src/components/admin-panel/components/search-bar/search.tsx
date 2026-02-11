@@ -2,6 +2,7 @@
 
 import { Search01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
 import { type KeyboardEvent, useState } from "react"
 import { useSearch } from "@/components/admin-panel/components/search-bar/search-provider"
 import { buttonVariants } from "@/components/ui/button"
@@ -14,9 +15,12 @@ interface SearchProps {
   placeholder?: string
 }
 
-export function Search({ className, placeholder = "Search" }: SearchProps) {
+export function Search({ className, placeholder }: SearchProps) {
+  const t = useTranslations()
+
   const { openWithQuery } = useSearch()
   const [value, setValue] = useState("")
+  const resolvedPlaceholder = placeholder ?? t("search.label")
 
   const handleOpenSearch = () => {
     openWithQuery(value)
@@ -36,14 +40,14 @@ export function Search({ className, placeholder = "Search" }: SearchProps) {
         className="border-0 shadow-none focus-visible:ring-0"
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         value={value}
       />
       <InputGroupButton
-        aria-label="Rozwiń menu wyszukiwania"
+        aria-label={t("generated.admin.shared.expandSearchMenu")}
         className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
         onClick={handleOpenSearch}
-        title="Rozwiń menu"
+        title={t("generated.admin.shared.expandMenu")}
       >
         <HugeiconsIcon icon={Search01Icon} />
       </InputGroupButton>

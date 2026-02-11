@@ -5,13 +5,16 @@ import {
   MoreHorizontalCircle01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
 import type * as React from "react"
 import { cn } from "@/lib/utils"
 
 function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
+  const t = useTranslations()
+
   return (
     <nav
-      aria-label="breadcrumb"
+      aria-label={t("generated.ui.breadcrumbNavigation")}
       className={cn(className)}
       data-slot="breadcrumb"
       {...props}
@@ -96,6 +99,8 @@ function BreadcrumbEllipsis({
   className,
   ...props
 }: React.ComponentProps<"span">) {
+  const t = useTranslations()
+
   return (
     <span
       aria-hidden="true"
@@ -108,7 +113,7 @@ function BreadcrumbEllipsis({
       {...props}
     >
       <HugeiconsIcon icon={MoreHorizontalCircle01Icon} strokeWidth={2} />
-      <span className="sr-only">More</span>
+      <span className="sr-only">{t("generated.ui.more")}</span>
     </span>
   )
 }

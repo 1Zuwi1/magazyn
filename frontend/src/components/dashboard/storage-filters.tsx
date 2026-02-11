@@ -1,5 +1,6 @@
 import { Filter } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
@@ -20,7 +21,6 @@ interface WarehouseFiltersProps {
 export const DEFAULT_FILTERS: FilterState = {
   query: "",
   minOccupancy: 0,
-  tempRange: [-30, 30],
   showEmpty: true,
 }
 
@@ -28,6 +28,8 @@ export function WarehouseFilters({
   filters,
   onFilterChange,
 }: WarehouseFiltersProps) {
+  const t = useTranslations()
+
   return (
     <Popover>
       <PopoverTrigger
@@ -41,12 +43,14 @@ export function WarehouseFilters({
       <PopoverContent className="w-80">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <h4 className="font-medium leading-none">Filtry zaawansowane</h4>
+            <h4 className="font-medium leading-none">
+              {t("generated.dashboard.storage.advancedFilters")}
+            </h4>
           </div>
 
           <div className="space-y-2">
             <div className="flex justify-between">
-              <Label>Min. zapełnienie</Label>
+              <Label>{t("generated.dashboard.storage.minFill")}</Label>
               <span className="text-muted-foreground text-sm">
                 {filters.minOccupancy}%
               </span>
@@ -65,31 +69,10 @@ export function WarehouseFilters({
             />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <Label>Zakres temperatur</Label>
-              <span className="text-muted-foreground text-sm">
-                {filters.tempRange[0]}°C - {filters.tempRange[1]}°C
-              </span>
-            </div>
-            <Slider
-              max={50}
-              min={-30}
-              onValueChange={(value) => {
-                if (Array.isArray(value) && value.length === 2) {
-                  onFilterChange({
-                    ...filters,
-                    tempRange: [value[0], value[1]],
-                  })
-                }
-              }}
-              step={5}
-              value={filters.tempRange}
-            />
-          </div>
-
           <div className="flex items-center justify-between">
-            <Label htmlFor="showEmpty">Pokaż puste magazyny</Label>
+            <Label htmlFor="showEmpty">
+              {t("generated.dashboard.storage.showEmptyWarehouses")}
+            </Label>
             <Switch
               checked={filters.showEmpty}
               id="showEmpty"
@@ -107,7 +90,7 @@ export function WarehouseFilters({
             size="sm"
             variant="ghost"
           >
-            Resetuj filtry
+            {t("generated.dashboard.storage.resetFilters")}
           </Button>
         </div>
       </PopoverContent>

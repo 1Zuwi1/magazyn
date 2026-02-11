@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl"
 import { useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
 import { getDaysUntilExpiry } from "../../utils/helpers"
@@ -7,6 +8,8 @@ interface ExpiryBadgeProps {
 }
 
 export function ExpiryBadge({ expiryDate }: ExpiryBadgeProps) {
+  const t = useTranslations()
+
   const days = useMemo(() => {
     if (!expiryDate) {
       return undefined
@@ -14,20 +17,38 @@ export function ExpiryBadge({ expiryDate }: ExpiryBadgeProps) {
     return getDaysUntilExpiry(new Date(), expiryDate)
   }, [expiryDate])
   if (days === undefined) {
-    return <Badge variant="outline">Brak danych</Badge>
+    return (
+      <Badge variant="outline">{t("generated.shared.dataAvailable")}</Badge>
+    )
   }
   if (days < 0) {
-    return <Badge variant="destructive">Przeterminowane</Badge>
+    return (
+      <Badge variant="destructive">
+        {t("generated.dashboard.shared.expired")}
+      </Badge>
+    )
   }
   if (days <= 3) {
-    return <Badge variant="destructive">{days} dni</Badge>
+    return (
+      <Badge variant="destructive">
+        {t("generated.dashboard.shared.pluralLabel", {
+          value0: days,
+        })}
+      </Badge>
+    )
   }
   if (days <= 7) {
     return (
       <Badge className="bg-yellow-500 text-white" variant="default">
-        za {days} dni
+        {t("generated.dashboard.items.days", { value0: days.toString() })}
       </Badge>
     )
   }
-  return <Badge variant="outline">{days} dni</Badge>
+  return (
+    <Badge variant="outline">
+      {t("generated.dashboard.shared.pluralLabel", {
+        value0: days,
+      })}
+    </Badge>
+  )
 }

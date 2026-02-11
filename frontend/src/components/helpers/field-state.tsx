@@ -1,24 +1,40 @@
-import type { Mail01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { AnyFieldApi } from "@tanstack/react-form"
+import { useTranslations } from "next-intl"
 import type { ZodError } from "zod"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
+import { translateZodMessage } from "@/lib/zod-message"
+import type { IconComponent } from "../dashboard/types"
 import { Field, FieldContent, FieldError, FieldLabel } from "../ui/field"
 import { Input } from "../ui/input"
 
-const getFieldErrorMessage = (field: AnyFieldApi): string | undefined => {
-  const error = field.state.meta.errors[0] as ZodError | string | undefined
-  return typeof error === "string" ? error : error?.message
+const getFieldErrorMessage = (
+  field: AnyFieldApi | string,
+  t: AppTranslate
+): string | undefined => {
+  const error =
+    typeof field === "string"
+      ? field
+      : (field.state.meta.errors[0] as ZodError | string | undefined)
+  const message = typeof error === "string" ? error : error?.message
+
+  if (!message) {
+    return undefined
+  }
+
+  return translateZodMessage(message, t)
 }
 
 export function FieldState({
   field,
   className,
 }: {
-  field: AnyFieldApi
+  field: AnyFieldApi | string
   className?: string
 }) {
-  const message = getFieldErrorMessage(field)
+  const t = useTranslations()
+  const message = getFieldErrorMessage(field, t)
 
   return message ? (
     <p
@@ -53,8 +69,8 @@ export function FieldWithState({
   ...props
 }: {
   field: AnyFieldApi
-  label: string
-  icon?: typeof Mail01Icon
+  label: string | null
+  icon?: IconComponent
   additionalNode?: React.ReactNode
   layout?: "stacked" | "grid"
   fieldClassName?: string
@@ -63,9 +79,10 @@ export function FieldWithState({
   errorClassName?: string
   renderInput?: (args: { id: string; isInvalid: boolean }) => React.ReactNode
 } & React.ComponentProps<"input">) {
+  const t = useTranslations()
   const isInvalid = field.state.meta.errors.length > 0
   const inputId = props.id ?? field.name
-  const errorMessage = getFieldErrorMessage(field)
+  const errorMessage = getFieldErrorMessage(field, t)
   const inputNode = renderInput ? (
     renderInput({ id: inputId, isInvalid })
   ) : (
@@ -110,12 +127,16 @@ export function FieldWithState({
           fieldClassName
         )}
       >
-        <FieldLabel
-          className={cn("col-span-2 text-end", labelClassName)}
-          htmlFor={inputId}
-        >
-          {label}
-        </FieldLabel>
+        {label && (
+          <FieldLabel
+            className={cn("col-span-2 text-end", labelClassName, {
+              hidden: !label,
+            })}
+            htmlFor={inputId}
+          >
+            {label}
+          </FieldLabel>
+        )}
         <FieldContent className={cn("col-span-4", contentClassName)}>
           {inputNode}
         </FieldContent>
@@ -130,16 +151,22 @@ export function FieldWithState({
 
   return (
     <Field className={fieldClassName}>
-      <div className="flex items-center justify-between">
-        <FieldLabel
-          className={cn(
-            "font-medium text-foreground/80 text-xs uppercase tracking-wide",
-            labelClassName
-          )}
-          htmlFor={inputId}
-        >
-          {label}
-        </FieldLabel>
+      <div
+        className={cn("flex items-center justify-between", {
+          hidden: !label,
+        })}
+      >
+        {label && (
+          <FieldLabel
+            className={cn(
+              "font-medium text-foreground/80 text-xs uppercase tracking-wide",
+              labelClassName
+            )}
+            htmlFor={inputId}
+          >
+            {label}
+          </FieldLabel>
+        )}
         {additionalNode}
       </div>
       {inputNode}
