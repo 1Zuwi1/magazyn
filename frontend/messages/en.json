@@ -806,6 +806,7 @@
         "expandMenu": "Expand menu",
         "more": "...and {value0} more",
         "csvParsingErrors": "CSV parsing errors ({value0})",
+        "csvFileTooLarge": "{value0}: file is too large. Maximum size: {value1}.",
         "csvFileFailedProcess": "The CSV file failed to process",
         "csvFileContainsErrorsCorrect": "The CSV file contains errors. Correct the file before importing.",
         "firstSelectCsvFile": "First select the CSV file",

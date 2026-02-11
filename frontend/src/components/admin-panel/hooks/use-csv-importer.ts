@@ -47,9 +47,9 @@ export function useCsvImporter<T extends CsvImporterType>({
     resetFile()
     if (file.size > maxFileSizeInBytes) {
       toast.error(
-        t("generated.admin.warehouses.formattedValue", {
+        t("generated.admin.shared.csvFileTooLarge", {
           value0: file.name,
-          value1: `File is too large. Maximum size: ${formatBytes(maxFileSizeInBytes)}.`,
+          value1: formatBytes(maxFileSizeInBytes),
         })
       )
       return false

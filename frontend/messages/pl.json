@@ -806,6 +806,7 @@
         "expandMenu": "Rozwiń menu",
         "more": "...i {value0} więcej",
         "csvParsingErrors": "Błędy parsowania CSV ({value0})",
+        "csvFileTooLarge": "{value0}: plik jest za duży. Maksymalny rozmiar: {value1}.",
         "csvFileFailedProcess": "Nie udało się przetworzyć pliku CSV",
         "csvFileContainsErrorsCorrect": "Plik CSV zawiera błędy. Popraw plik przed importem.",
         "firstSelectCsvFile": "Najpierw wybierz plik CSV",
