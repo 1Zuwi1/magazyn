@@ -38,7 +38,6 @@ public interface RackReportRepository extends JpaRepository<RackReport, Long> {
     @Query(value = "SELECT r.* FROM rack_reports r " +
             "JOIN racks rk ON rk.id = r.rack_id " +
             "JOIN warehouses w ON w.id = rk.warehouse_id " +
-            "WHERE r.alert_triggered = true " +
             "AND (CAST(:warehouseId AS BIGINT) IS NULL OR w.id = :warehouseId) " +
             "AND (CAST(:startTime AS TIMESTAMP WITH TIME ZONE) IS NULL OR r.created_at >= :startTime) " +
             "AND (CAST(:endTime AS TIMESTAMP WITH TIME ZONE) IS NULL OR r.created_at <= :endTime) " +

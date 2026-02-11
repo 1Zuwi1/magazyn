@@ -47,7 +47,7 @@ public class CsvReportGenerator {
                         Collectors.toList()
                 ));
 
-        sb.append("=== REGAŁY ===\n");
+        sb.append("--- REGAŁY ---\n");
         for (Map.Entry<String, List<TemperatureAlertRackReportRow>> entry : groupedRackRows.entrySet()) {
             sb.append("\nData: ").append(entry.getKey().toString()).append('\n');
             sb.append("ID regału,Regał,Magazyn,Temperatura [°C],Min [°C],Max [°C],Typ naruszenia,Data,Sensor\n");
@@ -73,13 +73,14 @@ public class CsvReportGenerator {
                             Collectors.toList()
                     ));
 
-            sb.append("\n=== ASORTYMENT ===\n");
+            sb.append("\n--- ASORTYMENT ---\n");
             for (Map.Entry<String, List<TemperatureAlertAssortmentReportRow>> entry : groupedAssortmentRows.entrySet()) {
                 sb.append("\nData: ").append(entry.getKey().toString()).append('\n');
-                sb.append("Regał,Magazyn,Produkt,Temperatura [°C],Min [°C],Max [°C],Typ naruszenia,Data,Sensor\n");
+                sb.append("Regał,Magazyn,Asortyment,Produkt,Temperatura [°C],Min [°C],Max [°C],Typ naruszenia,Data,Sensor\n");
                 for (TemperatureAlertAssortmentReportRow row : entry.getValue()) {
                     sb.append(escapeCsv(row.getRackMarker() != null ? row.getRackMarker() : "")).append(',');
                     sb.append(escapeCsv(row.getWarehouseName() != null ? row.getWarehouseName() : "")).append(',');
+                    sb.append(escapeCsv(row.getAssortmentCode() != null ? row.getAssortmentCode() : "")).append(',');
                     sb.append(escapeCsv(row.getItemName() != null ? row.getItemName() : "")).append(',');
                     sb.append(row.getRecordedTemperature()).append(',');
                     sb.append(row.getAllowedMin()).append(',');

@@ -120,7 +120,7 @@ public class ExcelReportGenerator {
                     dateHeaderRow.createCell(0).setCellValue("Data: " + entry.getKey().toString());
                     dateHeaderRow.getCell(0).setCellStyle(dateHeaderStyle);
 
-                    String[] assortmentHeaders = {"Regał", "Magazyn", "Produkt", "Temperatura [°C]", "Min [°C]", "Max [°C]",
+                    String[] assortmentHeaders = {"Regał", "Magazyn", "Produkt", "Kod asortymentu", "Temperatura [°C]", "Min [°C]", "Max [°C]",
                             "Typ naruszenia", "Data", "Sensor"};
                     Row headerRow = assortmentSheet.createRow(rowNum++);
                     for (int i = 0; i < assortmentHeaders.length; i++) {
@@ -134,12 +134,13 @@ public class ExcelReportGenerator {
                         excelRow.createCell(0).setCellValue(row.getRackMarker() != null ? row.getRackMarker() : "");
                         excelRow.createCell(1).setCellValue(row.getWarehouseName() != null ? row.getWarehouseName() : "");
                         excelRow.createCell(2).setCellValue(row.getItemName() != null ? row.getItemName() : "");
-                        excelRow.createCell(3).setCellValue(row.getRecordedTemperature());
-                        excelRow.createCell(4).setCellValue(row.getAllowedMin());
-                        excelRow.createCell(5).setCellValue(row.getAllowedMax());
-                        excelRow.createCell(6).setCellValue(row.getViolationType());
-                        excelRow.createCell(7).setCellValue(row.getViolationTimestamp() != null ? row.getViolationTimestamp() : "");
-                        excelRow.createCell(8).setCellValue(row.getSensorId() != null ? row.getSensorId() : "");
+                        excelRow.createCell(3).setCellValue(row.getAssortmentCode() != null ? row.getAssortmentCode() : "");
+                        excelRow.createCell(4).setCellValue(row.getRecordedTemperature());
+                        excelRow.createCell(5).setCellValue(row.getAllowedMin());
+                        excelRow.createCell(6).setCellValue(row.getAllowedMax());
+                        excelRow.createCell(7).setCellValue(row.getViolationType());
+                        excelRow.createCell(8).setCellValue(row.getViolationTimestamp() != null ? row.getViolationTimestamp() : "");
+                        excelRow.createCell(9).setCellValue(row.getSensorId() != null ? row.getSensorId() : "");
                     }
 
                     rowNum++;

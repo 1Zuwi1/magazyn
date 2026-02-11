@@ -136,16 +136,16 @@ public class PdfReportGenerator {
                 document.add(new Paragraph(" ", new Font(Font.HELVETICA, 10)));
                 addSectionTitle(document, "Asortyment");
 
-                TreeMap<LocalDate, List<TemperatureAlertAssortmentReportRow>> groupedAssortmentRows = assortmentRows.stream()
+                TreeMap<String, List<TemperatureAlertAssortmentReportRow>> groupedAssortmentRows = assortmentRows.stream()
                         .filter(r -> r.getViolationTimestamp() != null)
                         .collect(Collectors.groupingBy(
-                                r -> LocalDateTime.parse(r.getViolationTimestamp(), VIOLATION_TIME_FMT).toLocalDate(),
+                                r -> r.getViolationTimestamp().substring(0, 16),
                                 TreeMap::new,
                                 Collectors.toList()
                         ));
 
-                for (Map.Entry<LocalDate, List<TemperatureAlertAssortmentReportRow>> entry : groupedAssortmentRows.entrySet()) {
-                    addSubSectionTitle(document, entry.getKey().toString());
+                for (Map.Entry<String, List<TemperatureAlertAssortmentReportRow>> entry : groupedAssortmentRows.entrySet()) {
+                    addSubSectionTitle(document, entry.getKey());
 
                     PdfPTable assortmentTable = new PdfPTable(9);
                     assortmentTable.setWidthPercentage(100);

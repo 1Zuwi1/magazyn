@@ -120,7 +120,7 @@ public class ReportDataService {
                 } else if (r.getCurrentTemperature() < a.getItem().getMin_temp()) {
                     violationType = "Za niska temperatura";
                 } else {
-                    violationType = "Nieznany typ naruszenia";
+                    continue;
                 }
 
                 SimpleDateFormat sdfCreated = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -128,11 +128,11 @@ public class ReportDataService {
                 rows.add(TemperatureAlertAssortmentReportRow.builder()
                         .rackMarker(r.getRack().getMarker())
                         .warehouseName(r.getRack().getWarehouse().getName())
-                        .itemName( a.getItem().getName())
+                        .itemName(a.getItem().getName())
                         .assortmentCode(a.getCode())
                         .recordedTemperature(r.getCurrentTemperature())
-                        .allowedMin(r.getRack().getMin_temp())
-                        .allowedMax(r.getRack().getMax_temp())
+                        .allowedMin(a.getItem().getMin_temp())
+                        .allowedMax(a.getItem().getMax_temp())
                         .violationType(violationType)
                         .violationTimestamp(createdAtStr)
                         .sensorId(r.getSensorId())
