@@ -31,7 +31,6 @@ import { cn } from "@/lib/utils"
 import { formatDateTime, toTitleCase } from "../utils/helpers"
 
 type FeedFilter = "ALL" | "UNREAD"
-type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
 
 function getNotificationIcon(alertType: string): IconSvgElement {
   switch (alertType) {
@@ -110,16 +109,15 @@ function NotificationListBody({
   notifications,
   onSelect,
   selectedNotificationId,
-  dateFnsLocale,
 }: {
   isPending: boolean
   isError: boolean
   notifications: UserNotification[]
   onSelect: (notification: UserNotification) => void
   selectedNotificationId: number | null
-  dateFnsLocale: DateFnsLocale
 }) {
   const t = useAppTranslations()
+  const locale = useLocale()
 
   if (isPending) {
     return (
@@ -211,7 +209,7 @@ function NotificationListBody({
               <p className="mt-1 text-[11px] text-muted-foreground">
                 {formatDistanceToNow(notification.createdAt, {
                   addSuffix: true,
-                  locale: dateFnsLocale,
+                  locale: getDateFnsLocale(locale),
                 })}
               </p>
             </div>
@@ -225,13 +223,12 @@ function NotificationListBody({
 function NotificationDetailsPanel({
   notification,
   onToggleReadStatus,
-  dateFnsLocale,
 }: {
   notification: UserNotification | null
   onToggleReadStatus: () => void
-  dateFnsLocale: DateFnsLocale
 }) {
   const t = useAppTranslations()
+  const locale = useLocale()
 
   if (!notification) {
     return (
@@ -340,25 +337,19 @@ function NotificationDetailsPanel({
           <div className="grid gap-3 sm:grid-cols-2">
             <DetailsCard
               label={t("generated.shared.created")}
-              value={formatDateTime(notification.createdAt, dateFnsLocale)}
+              value={formatDateTime(notification.createdAt, locale)}
             />
             <DetailsCard
               label={t("generated.dashboard.notifications.read")}
-              value={formatDateTime(notification.readAt, dateFnsLocale)}
+              value={formatDateTime(notification.readAt, locale)}
             />
             <DetailsCard
               label={t("generated.dashboard.notifications.alertUpdate")}
-              value={formatDateTime(
-                notification.alert.updatedAt,
-                dateFnsLocale
-              )}
+              value={formatDateTime(notification.alert.updatedAt, locale)}
             />
             <DetailsCard
               label={t("generated.dashboard.notifications.resolvingAlert")}
-              value={formatDateTime(
-                notification.alert.resolvedAt,
-                dateFnsLocale
-              )}
+              value={formatDateTime(notification.alert.resolvedAt, locale)}
             />
           </div>
         </section>
@@ -415,7 +406,6 @@ export default function NotificationsMain() {
   const t = useAppTranslations()
 
   const locale = useLocale()
-  const dateFnsLocale = getDateFnsLocale(locale)
 
   const [feedFilter, setFeedFilter] = useState<FeedFilter>("ALL")
   const [page, setPage] = useState(1)
@@ -629,7 +619,6 @@ export default function NotificationsMain() {
             <ScrollArea className="h-112">
               <div className="space-y-2 p-2">
                 <NotificationListBody
-                  dateFnsLocale={dateFnsLocale}
                   isError={isNotificationsError}
                   isPending={isNotificationsPending}
                   notifications={notifications}
@@ -651,7 +640,6 @@ export default function NotificationsMain() {
 
         <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
           <NotificationDetailsPanel
-            dateFnsLocale={dateFnsLocale}
             notification={selectedNotification}
             onToggleReadStatus={handleToggleReadStatus}
           />
@@ -664,7 +652,7 @@ export default function NotificationsMain() {
           {t("generated.shared.lastUpdated", {
             value0: formatDateTime(
               selectedNotification.alert.updatedAt,
-              dateFnsLocale
+              locale
             ),
           })}
         </div>

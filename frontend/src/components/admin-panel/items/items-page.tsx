@@ -23,6 +23,7 @@ import useItems, {
 } from "@/hooks/use-items"
 import { useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
+import { ImportItemPhotosDialog } from "./import-item-photos-dialog"
 import { ItemDialog, type ItemFormData, PhotoPromptDialog } from "./item-dialog"
 import { AdminItemsTable } from "./items-table"
 
@@ -99,6 +100,7 @@ export default function ItemsMain() {
   const [photoItem, setPhotoItem] = useState<DashboardItem | undefined>(
     undefined
   )
+  const [importPhotosDialogOpen, setImportPhotosDialogOpen] = useState(false)
 
   const items = useMemo(() => {
     return (itemsData?.content ?? []).map(mapApiItemToViewModel)
@@ -140,6 +142,10 @@ export default function ItemsMain() {
   const handleUploadPhoto = (item: DashboardItem) => {
     setPhotoItem(item)
     setPhotoDialogOpen(true)
+  }
+
+  const handleOpenImportPhotosDialog = () => {
+    setImportPhotosDialogOpen(true)
   }
 
   const confirmDeleteItem = async () => {
@@ -196,6 +202,11 @@ export default function ItemsMain() {
     )
   }
 
+  const handlePhotosImport = (_files: File[]): Promise<void> => {
+    // TODO: connect batch photo import mutation when API endpoint is available.
+    return Promise.resolve()
+  }
+
   const dangerousCount = dangerousItemsData?.totalElements ?? 0
   const isMutating =
     createItemMutation.isPending ||
@@ -207,9 +218,9 @@ export default function ItemsMain() {
       <AdminPageHeader
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button>
+            <Button onClick={handleOpenImportPhotosDialog}>
               <HugeiconsIcon className="mr-2 size-4" icon={Photo} />
-              Importuj zdjęcia
+              {t("generated.admin.items.importPhotos")}
             </Button>
             <CsvImporter
               isImporting={importItemsMutation.isPending}
@@ -294,6 +305,12 @@ export default function ItemsMain() {
         itemId={photoItem ? Number(photoItem.id) : null}
         onOpenChange={setPhotoDialogOpen}
         open={photoDialogOpen}
+      />
+
+      <ImportItemPhotosDialog
+        onImport={handlePhotosImport}
+        onOpenChange={setImportPhotosDialogOpen}
+        open={importPhotosDialogOpen}
       />
     </div>
   )

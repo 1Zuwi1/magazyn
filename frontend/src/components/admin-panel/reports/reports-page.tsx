@@ -47,6 +47,7 @@ import {
 } from "@/hooks/use-reports"
 import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
+import { WarehouseSelector } from "../backups/components/warehouse-selector"
 import { AdminPageHeader } from "../components/admin-page-header"
 
 type ReportType = "inventory" | "expiry" | "temperature"
@@ -66,7 +67,8 @@ export default function ReportsMain() {
   const [reportType, setReportType] = useState<ReportType>("inventory")
   const [reportFormat, setReportFormat] = useState<ReportFormat>("xlsx")
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("download")
-  const [warehouseFilter, setWarehouseFilter] = useState("")
+  const [warehouseId, setWarehouseId] = useState<number | null>(null)
+  const [warehouseName, setWarehouseName] = useState<string | null>(null)
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
   const [expiryWindowDays, setExpiryWindowDays] = useState("14")
@@ -176,21 +178,6 @@ export default function ReportsMain() {
     return `${type}-report-${dateStamp}.${extension}`
   }
 
-  const parseWarehouseId = (): number | null | undefined => {
-    const trimmedWarehouseFilter = warehouseFilter.trim()
-    if (trimmedWarehouseFilter === "") {
-      return null
-    }
-
-    const parsedWarehouseId = Number.parseInt(trimmedWarehouseFilter, 10)
-    if (Number.isNaN(parsedWarehouseId) || parsedWarehouseId < 0) {
-      toast.error(t("generated.admin.reports.builder.invalidWarehouseId"))
-      return undefined
-    }
-
-    return parsedWarehouseId
-  }
-
   const handleReportOutput = ({
     response,
     sendEmail,
@@ -286,11 +273,6 @@ export default function ReportsMain() {
   }
 
   const handleGenerateReport = async (): Promise<void> => {
-    const warehouseId = parseWarehouseId()
-    if (warehouseId === undefined) {
-      return
-    }
-
     const sendEmail = deliveryMode === "email"
     const format = mapToApiReportFormat(reportFormat)
 
@@ -338,7 +320,7 @@ export default function ReportsMain() {
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-6">
+            <CardContent className="@container space-y-6">
               <div className="space-y-3">
                 <div className="flex items-center gap-2.5">
                   <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary text-xs ring-1 ring-primary/20">
@@ -353,7 +335,7 @@ export default function ReportsMain() {
                 </div>
 
                 <RadioGroup
-                  className="grid gap-3 lg:grid-cols-3"
+                  className="grid @3xl:grid-cols-3 gap-3"
                   onValueChange={(value) => {
                     setReportType(value as ReportType)
                   }}
@@ -435,7 +417,14 @@ export default function ReportsMain() {
                     value={reportFormat}
                   >
                     <SelectTrigger className="w-full" id="report-format">
-                      <SelectValue />
+                      <SelectValue
+                        render={
+                          <span>
+                            {selectedFormat?.label ??
+                              t("generated.admin.reports.formats.selectFormat")}
+                          </span>
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {formatOptions.map((formatOption) => (
@@ -458,15 +447,17 @@ export default function ReportsMain() {
                   <Label htmlFor="warehouse-filter">
                     {t("generated.admin.reports.builder.warehouseOptional")}
                   </Label>
-                  <Input
-                    id="warehouse-filter"
-                    onChange={(event) => {
-                      setWarehouseFilter(event.target.value)
-                    }}
-                    placeholder={t(
-                      "generated.admin.reports.builder.warehousePlaceholder"
+                  <WarehouseSelector
+                    allOptionLabel={t(
+                      "generated.admin.reports.builder.summaryAllWarehouses"
                     )}
-                    value={warehouseFilter}
+                    id="warehouse-filter"
+                    includeAllOption
+                    onValueChange={(nextWarehouseId, nextWarehouseName) => {
+                      setWarehouseId(nextWarehouseId)
+                      setWarehouseName(nextWarehouseName)
+                    }}
+                    value={warehouseId}
                   />
                 </div>
               </div>
@@ -541,7 +532,14 @@ export default function ReportsMain() {
 
               <Separator className="bg-border/50" />
 
-              <div className="space-y-4 rounded-lg border border-border/70 bg-background/75 p-4">
+              <div
+                className={cn(
+                  "space-y-4 rounded-lg border border-border/70 bg-background/75 p-4",
+                  {
+                    hidden: reportType === "inventory",
+                  }
+                )}
+              >
                 <div className="flex items-center gap-2.5">
                   <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary text-xs ring-1 ring-primary/20">
                     4
@@ -643,7 +641,18 @@ export default function ReportsMain() {
                             className="w-full"
                             id="temperature-severity"
                           >
-                            <SelectValue />
+                            <SelectValue
+                              render={
+                                <span>
+                                  {temperatureSeverityLabels[
+                                    temperatureSeverity
+                                  ] ??
+                                    t(
+                                      "generated.admin.reports.builder.selectSeverity"
+                                    )}
+                                </span>
+                              }
+                            />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="ALL">
@@ -793,7 +802,7 @@ export default function ReportsMain() {
                     <span className="text-muted-foreground">
                       {t("generated.admin.reports.builder.summaryWarehouse")}
                     </span>{" "}
-                    {warehouseFilter ||
+                    {warehouseName ??
                       t("generated.admin.reports.builder.summaryAllWarehouses")}
                   </p>
 

@@ -22,9 +22,12 @@ export function getSlotCoordinate(index: number, cols: number): string {
 }
 
 export const formatDateTime = (
-  value: string | Date,
+  value: string | Date | undefined | null,
   locale: string
 ): string => {
+  if (!value) {
+    return "—"
+  }
   const parsedDate = typeof value === "string" ? parseISO(value) : value
   if (!isValid(parsedDate)) {
     return value.toString()

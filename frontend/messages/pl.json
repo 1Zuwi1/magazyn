@@ -852,6 +852,15 @@
         "itemUpdated": "Zaktualizowano przedmiot",
         "newItemAdded": "Dodano nowy przedmiot",
         "imported": "Zaimportowano {value0, plural, one {# produkt} few {# produkty} many {# produktów} other {# produktów}}",
+        "importPhotos": "Importuj zdjęcia",
+        "importPhotosTitle": "Import zdjęć przedmiotów",
+        "importPhotosDialogDescription": "Wybierz wiele zdjęć produktów i przygotuj je do wysłania na serwer.",
+        "selectPhotos": "Wybierz zdjęcia",
+        "supportedPhotoFormats": "Obsługiwane formaty: JPG, PNG, WEBP.",
+        "selectedPhotosCount": "{value0, plural, one {Wybrano # zdjęcie} few {Wybrano # zdjęcia} many {Wybrano # zdjęć} other {Wybrano # zdjęcia}}",
+        "noPhotosSelected": "Nie wybrano żadnych zdjęć.",
+        "removeSelectedPhoto": "Usuń zdjęcie: {value0}",
+        "importPhotosAction": "Importuj zdjęcia",
         "addItem": "Dodaj przedmiot",
         "manageCatalogInventoryItems": "Zarządzaj katalogiem przedmiotów magazynowych",
         "sureWantDeleteItemOperation": "Czy na pewno chcesz usunąć przedmiot \"{value0}\"? Ta operacja jest nieodwracalna.",
@@ -1021,7 +1030,8 @@
         "formats": {
           "excel": "Excel (.xlsx)",
           "pdf": "PDF",
-          "csv": "CSV (.csv)"
+          "csv": "CSV (.csv)",
+          "selectFormat": "Wybierz format"
         },
         "shared": {
           "exportAll": "Eksportuj wszystko",
@@ -1088,7 +1098,7 @@
         "builder": {
           "title": "Kreator raportu",
           "description": "Wybierz typ raportu, format wyjściowy i zakres filtrów przed eksportem.",
-          "warehouseOptional": "ID magazynu (opcjonalnie)",
+          "warehouseOptional": "Wybierz magazyn (opcjonalnie)",
           "warehousePlaceholder": "np. 1",
           "deliveryMethod": "Sposób dostarczenia",
           "deliveryDownload": "Pobierz plik",
@@ -1100,6 +1110,7 @@
           "toDate": "Do daty",
           "daysUntilExpiry": "Dni do wygaśnięcia",
           "severityAll": "Wszystkie poziomy",
+          "selectSeverity": "Wybierz poziom",
           "severityWarningAndCritical": "Ostrzeżenia i krytyczne",
           "severityCriticalOnly": "Tylko krytyczne",
           "generateReport": "Generuj raport",

@@ -852,6 +852,15 @@
         "itemUpdated": "Item updated",
         "newItemAdded": "New item added",
         "imported": "{value0, plural, one {# product} few {# products} other {# products}} imported",
+        "importPhotos": "Import photos",
+        "importPhotosTitle": "Import item photos",
+        "importPhotosDialogDescription": "Select multiple product photos and prepare them for server upload.",
+        "selectPhotos": "Select photos",
+        "supportedPhotoFormats": "Supported formats: JPG, PNG, WEBP.",
+        "selectedPhotosCount": "{value0, plural, one {# photo selected} few {# photos selected} other {# photos selected}}",
+        "noPhotosSelected": "No photos selected.",
+        "removeSelectedPhoto": "Remove photo: {value0}",
+        "importPhotosAction": "Import photos",
         "addItem": "Add an item",
         "manageCatalogInventoryItems": "Manage your catalog of inventory items",
         "sureWantDeleteItemOperation": "Are you sure you want to delete the item \"{value0}\"? This operation is irreversible.",
@@ -1021,7 +1030,8 @@
         "formats": {
           "excel": "Excel (.xlsx)",
           "pdf": "PDF",
-          "csv": "CSV (.csv)"
+          "csv": "CSV (.csv)",
+          "selectFormat": "Select format"
         },
         "shared": {
           "exportAll": "Export all",
@@ -1088,7 +1098,7 @@
         "builder": {
           "title": "Report builder",
           "description": "Choose report type, output format, and filter scope before export.",
-          "warehouseOptional": "Warehouse ID (optional)",
+          "warehouseOptional": "Select warehouse (optional)",
           "warehousePlaceholder": "e.g. 1",
           "deliveryMethod": "Delivery method",
           "deliveryDownload": "Download file",
@@ -1100,6 +1110,7 @@
           "toDate": "To date",
           "daysUntilExpiry": "Days until expiry",
           "severityAll": "All severity levels",
+          "selectSeverity": "Select severity level",
           "severityWarningAndCritical": "Warning and critical",
           "severityCriticalOnly": "Critical only",
           "generateReport": "Generate report",
