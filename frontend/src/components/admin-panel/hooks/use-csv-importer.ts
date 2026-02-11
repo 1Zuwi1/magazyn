@@ -64,7 +64,12 @@ export function useCsvImporter<T extends CsvImporterType>({
 
         const displayedErrors = result.errors
           .slice(0, MAX_TOAST_ROWS)
-          .map((e) => `Wiersz ${e.row}: ${e.message}`)
+          .map((e) =>
+            t("generated.admin.warehouses.csvImportError", {
+              row: e.row.toString(),
+              error: e.message,
+            })
+          )
           .join("\n")
 
         const remaining = result.errors.length - MAX_TOAST_ROWS

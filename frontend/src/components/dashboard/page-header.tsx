@@ -1,10 +1,10 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
+import { type Locale, useLocale } from "next-intl"
 import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { getClientAppLocale } from "@/i18n/locale"
 import { cn } from "@/lib/utils"
 import type { IconComponent } from "./types"
 
@@ -40,8 +40,15 @@ interface PageHeaderProps {
   statsChildren?: ReactNode
 }
 
-function StatCard({ label, value, icon, variant = "default" }: StatItem) {
-  const numberLocale = getClientAppLocale()
+function StatCard({
+  label,
+  value,
+  icon,
+  locale,
+  variant = "default",
+}: StatItem & {
+  locale: Locale
+}) {
   const valueClassName = cn(
     "font-bold font-mono text-lg",
     variant === "destructive" && "text-destructive",
@@ -65,9 +72,7 @@ function StatCard({ label, value, icon, variant = "default" }: StatItem) {
           />
         )}
         <span className={valueClassName}>
-          {typeof value === "number"
-            ? value.toLocaleString(numberLocale)
-            : value}
+          {typeof value === "number" ? value.toLocaleString(locale) : value}
         </span>
       </div>
       <span className="text-muted-foreground text-xs">{label}</span>
@@ -88,6 +93,7 @@ export function PageHeader({
   children,
   statsChildren,
 }: PageHeaderProps) {
+  const locale = useLocale()
   const renderIconOrBackButton = () => {
     if (onBack) {
       return (
@@ -176,7 +182,7 @@ export function PageHeader({
         {(stats || statsChildren) && (
           <div className="flex flex-wrap items-center gap-3">
             {stats?.map((stat, index) => (
-              <StatCard key={stat.label + index} {...stat} />
+              <StatCard key={stat.label + index} locale={locale} {...stat} />
             ))}
             {statsChildren}
           </div>

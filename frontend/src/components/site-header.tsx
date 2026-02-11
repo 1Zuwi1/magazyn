@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Fragment } from "react/jsx-runtime"
+import { removeAppLocalePrefix } from "@/i18n/locale"
 import { NotificationInbox } from "./dashboard/notifications/components/notification-icon"
 import { LanguageSwitcher } from "./language-switcher"
 import { Scanner } from "./scanner/scanner"
@@ -56,7 +57,9 @@ export default function SiteHeader() {
 
   const pathname = usePathname()
   const router = useRouter()
-  const splitted = pathname.split("/").filter((part) => part !== "")
+  const splitted = removeAppLocalePrefix(pathname)
+    .split("/")
+    .filter((part) => part !== "")
   let currPath = "/"
   const paths = useTranslations("breadcrumbs")
   const breadcrumbItems = splitted.map((path) => {

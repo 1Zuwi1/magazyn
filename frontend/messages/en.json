@@ -952,6 +952,7 @@
         "importRacksCsv": "Import racks from CSV",
         "importCsv": "Import CSV",
         "uploadMaximumFileS": "You can upload a maximum of {value0} file(s)",
+        "csvImportError": "Row ${row}: ${error}",
         "formattedValue": "{value0}: {value1}",
         "fileFailedProcess": "The file failed to process",
         "dropFileHere": "Drop file here",

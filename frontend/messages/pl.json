@@ -951,6 +951,7 @@
         "a1Warehouse": "Magazyn A1",
         "importRacksCsv": "Importuj regały z CSV",
         "importCsv": "Importuj CSV",
+        "csvImportError": "Wiersz ${row}: ${error}",
         "uploadMaximumFileS": "Możesz przesłać maksymalnie {value0} plik(ów)",
         "formattedValue": "{value0}: {value1}",
         "fileFailedProcess": "Nie udało się przetworzyć pliku",

@@ -267,11 +267,16 @@ export default function ThreeDVisualizationPage() {
     data: assortmentsData,
     isError: isAssortmentsError,
     isPending: isAssortmentsPending,
-  } = useAssortments({
-    page: 0,
-    size: assortmentsPageSize,
-    warehouseId: apiWarehouse?.id ?? -1,
-  })
+  } = useAssortments(
+    {
+      page: 0,
+      size: assortmentsPageSize,
+      warehouseId: apiWarehouse?.id ?? -1,
+    },
+    {
+      enabled: !!apiWarehouse,
+    }
+  )
 
   const warehouse = useMemo(() => {
     if (!(apiWarehouse && racksData)) {

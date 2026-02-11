@@ -73,13 +73,13 @@ export function AdminPageHeader({
     if (backHref) {
       return (
         <Link
-          aria-label={backTitle}
+          aria-label={backTitleT}
           className={cn(
             buttonVariants({ variant: "outline", size: "icon" }),
             "relative flex size-14 shrink-0 items-center justify-center rounded-xl transition-all hover:bg-primary/5 hover:ring-primary/30 sm:size-16"
           )}
           href={backHref}
-          title={backTitle}
+          title={backTitleT}
         >
           <HugeiconsIcon className="size-6 sm:size-7" icon={ArrowLeft02Icon} />
         </Link>
