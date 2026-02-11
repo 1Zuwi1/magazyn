@@ -10,10 +10,13 @@ import { Field, FieldContent, FieldError, FieldLabel } from "../ui/field"
 import { Input } from "../ui/input"
 
 const getFieldErrorMessage = (
-  field: AnyFieldApi,
+  field: AnyFieldApi | string,
   t: AppTranslate
 ): string | undefined => {
-  const error = field.state.meta.errors[0] as ZodError | string | undefined
+  const error =
+    typeof field === "string"
+      ? field
+      : (field.state.meta.errors[0] as ZodError | string | undefined)
   const message = typeof error === "string" ? error : error?.message
 
   if (!message) {
@@ -27,7 +30,7 @@ export function FieldState({
   field,
   className,
 }: {
-  field: AnyFieldApi
+  field: AnyFieldApi | string
   className?: string
 }) {
   const t = useTranslations()
@@ -66,7 +69,7 @@ export function FieldWithState({
   ...props
 }: {
   field: AnyFieldApi
-  label: string
+  label: string | null
   icon?: IconComponent
   additionalNode?: React.ReactNode
   layout?: "stacked" | "grid"
@@ -124,12 +127,16 @@ export function FieldWithState({
           fieldClassName
         )}
       >
-        <FieldLabel
-          className={cn("col-span-2 text-end", labelClassName)}
-          htmlFor={inputId}
-        >
-          {label}
-        </FieldLabel>
+        {label && (
+          <FieldLabel
+            className={cn("col-span-2 text-end", labelClassName, {
+              hidden: !label,
+            })}
+            htmlFor={inputId}
+          >
+            {label}
+          </FieldLabel>
+        )}
         <FieldContent className={cn("col-span-4", contentClassName)}>
           {inputNode}
         </FieldContent>
@@ -144,16 +151,22 @@ export function FieldWithState({
 
   return (
     <Field className={fieldClassName}>
-      <div className="flex items-center justify-between">
-        <FieldLabel
-          className={cn(
-            "font-medium text-foreground/80 text-xs uppercase tracking-wide",
-            labelClassName
-          )}
-          htmlFor={inputId}
-        >
-          {label}
-        </FieldLabel>
+      <div
+        className={cn("flex items-center justify-between", {
+          hidden: !label,
+        })}
+      >
+        {label && (
+          <FieldLabel
+            className={cn(
+              "font-medium text-foreground/80 text-xs uppercase tracking-wide",
+              labelClassName
+            )}
+            htmlFor={inputId}
+          >
+            {label}
+          </FieldLabel>
+        )}
         {additionalNode}
       </div>
       {inputNode}

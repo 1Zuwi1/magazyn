@@ -161,8 +161,20 @@ export function RackDialog({
       form.reset(formValues)
       onOpenChange(false)
     },
+    onSubmitInvalid: ({ formApi }) => {
+      const error = formApi.getAllErrors().fields.maxTemp.errors[0] as
+        | {
+            message: string
+          }
+        | undefined
+      const potentialMessage = error?.message
+
+      if (potentialMessage) {
+        toast.error(potentialMessage)
+      }
+    },
     validators: {
-      onSubmit: rackDialogFormSchema,
+      onSubmitAsync: rackDialogFormSchema,
     },
   })
 
@@ -195,9 +207,9 @@ export function RackDialog({
       <form
         className="space-y-5 px-0.5 py-4"
         id="rack-form"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault()
-          form.handleSubmit()
+          await form.handleSubmit()
         }}
       >
         <section className="space-y-3">
@@ -268,7 +280,6 @@ export function RackDialog({
                 </form.Field>
               </div>
             </div>
-
             <form.Field name="acceptsDangerous">
               {(field) => (
                 <Field className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
@@ -278,7 +289,7 @@ export function RackDialog({
                   >
                     {t("generated.admin.warehouses.acceptsDangerous")}
                   </Label>
-                  <FieldContent className="col-span-4 flex items-center">
+                  <FieldContent className="col-span-4 flex items-center gap-2.5">
                     <Checkbox
                       checked={field.state.value}
                       id={field.name}
@@ -301,48 +312,61 @@ export function RackDialog({
             title={t("generated.admin.shared.physicalDimensions")}
           />
           <FieldGroup className="gap-4">
-            <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-              <span className="col-span-2 font-medium text-sm">
-                {t("generated.admin.warehouses.dimensionsRowsColumns")}
-              </span>
-              <div className="col-span-4 flex items-center gap-2">
-                <form.Field name="rows">
-                  {(field) => (
-                    <Input
-                      className="w-full"
-                      id={field.name}
-                      min={1}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) =>
-                        field.handleChange(getNumericInputValue(e.target.value))
-                      }
-                      placeholder={t("generated.admin.warehouses.poems")}
-                      type="number"
-                      value={field.state.value}
-                    />
+            <form.Field name="rows">
+              {(rowsField) => (
+                <FieldWithState
+                  field={rowsField}
+                  label={t("generated.admin.warehouses.dimensionsRowsColumns")}
+                  layout="grid"
+                  renderInput={({ isInvalid }) => (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        className={cn("w-full", {
+                          "border-destructive": isInvalid,
+                        })}
+                        id={rowsField.name}
+                        min={1}
+                        name={rowsField.name}
+                        onBlur={rowsField.handleBlur}
+                        onChange={(e) =>
+                          rowsField.handleChange(
+                            getNumericInputValue(e.target.value)
+                          )
+                        }
+                        placeholder={t("generated.admin.warehouses.poems")}
+                        type="number"
+                        value={rowsField.state.value}
+                      />
+                      <span className="shrink-0 text-muted-foreground">×</span>
+                      <form.Field name="cols">
+                        {(colsField) => (
+                          <Input
+                            className={cn("w-full", {
+                              "border-destructive":
+                                colsField.state.meta.errors.length > 0,
+                            })}
+                            id={colsField.name}
+                            min={1}
+                            name={colsField.name}
+                            onBlur={colsField.handleBlur}
+                            onChange={(e) =>
+                              colsField.handleChange(
+                                getNumericInputValue(e.target.value)
+                              )
+                            }
+                            placeholder={t(
+                              "generated.admin.warehouses.columns"
+                            )}
+                            type="number"
+                            value={colsField.state.value}
+                          />
+                        )}
+                      </form.Field>
+                    </div>
                   )}
-                </form.Field>
-                <span className="shrink-0 text-muted-foreground">×</span>
-                <form.Field name="cols">
-                  {(field) => (
-                    <Input
-                      className="w-full"
-                      id={field.name}
-                      min={1}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) =>
-                        field.handleChange(getNumericInputValue(e.target.value))
-                      }
-                      placeholder={t("generated.admin.warehouses.columns")}
-                      type="number"
-                      value={field.state.value}
-                    />
-                  )}
-                </form.Field>
-              </div>
-            </div>
+                />
+              )}
+            </form.Field>
 
             <form.Field name="maxWeight">
               {(field) => (
@@ -371,66 +395,82 @@ export function RackDialog({
               )}
             </form.Field>
 
-            <div className="grid grid-cols-6 items-center gap-x-4 gap-y-1">
-              <span className="col-span-2 font-medium text-sm">
-                {t("generated.admin.warehouses.assortmentDimensionsMm")}
-              </span>
-              <div className="col-span-4 flex items-center gap-2">
-                <form.Field name="maxItemWidth">
-                  {(field) => (
-                    <Input
-                      className="w-full"
-                      id={field.name}
-                      min={1}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) =>
-                        field.handleChange(getNumericInputValue(e.target.value))
-                      }
-                      placeholder={t("generated.admin.shared.lat")}
-                      type="number"
-                      value={field.state.value}
-                    />
+            <form.Field name="maxItemWidth">
+              {(widthField) => (
+                <FieldWithState
+                  field={widthField}
+                  label={t("generated.admin.warehouses.assortmentDimensionsMm")}
+                  layout="grid"
+                  renderInput={({ isInvalid }) => (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        className={cn("w-full", {
+                          "border-destructive": isInvalid,
+                        })}
+                        id={widthField.name}
+                        min={1}
+                        name={widthField.name}
+                        onBlur={widthField.handleBlur}
+                        onChange={(e) =>
+                          widthField.handleChange(
+                            getNumericInputValue(e.target.value)
+                          )
+                        }
+                        placeholder={t("generated.admin.shared.lat")}
+                        type="number"
+                        value={widthField.state.value}
+                      />
+                      <span className="shrink-0 text-muted-foreground">×</span>
+                      <form.Field name="maxItemHeight">
+                        {(heightField) => (
+                          <Input
+                            className={cn("w-full", {
+                              "border-destructive":
+                                heightField.state.meta.errors.length > 0,
+                            })}
+                            id={heightField.name}
+                            min={1}
+                            name={heightField.name}
+                            onBlur={heightField.handleBlur}
+                            onChange={(e) =>
+                              heightField.handleChange(
+                                getNumericInputValue(e.target.value)
+                              )
+                            }
+                            placeholder={t("generated.admin.shared.height")}
+                            type="number"
+                            value={heightField.state.value}
+                          />
+                        )}
+                      </form.Field>
+                      <span className="shrink-0 text-muted-foreground">×</span>
+                      <form.Field name="maxItemDepth">
+                        {(depthField) => (
+                          <Input
+                            className={cn("w-full", {
+                              "border-destructive":
+                                depthField.state.meta.errors.length > 0,
+                            })}
+                            id={depthField.name}
+                            min={1}
+                            name={depthField.name}
+                            onBlur={depthField.handleBlur}
+                            onChange={(e) =>
+                              depthField.handleChange(
+                                getNumericInputValue(e.target.value)
+                              )
+                            }
+                            placeholder={t("generated.admin.warehouses.main")}
+                            type="number"
+                            value={depthField.state.value}
+                          />
+                        )}
+                      </form.Field>
+                    </div>
                   )}
-                </form.Field>
-                <span className="shrink-0 text-muted-foreground">×</span>
-                <form.Field name="maxItemHeight">
-                  {(field) => (
-                    <Input
-                      className="w-full"
-                      id={field.name}
-                      min={1}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) =>
-                        field.handleChange(getNumericInputValue(e.target.value))
-                      }
-                      placeholder={t("generated.admin.shared.height")}
-                      type="number"
-                      value={field.state.value}
-                    />
-                  )}
-                </form.Field>
-                <span className="shrink-0 text-muted-foreground">×</span>
-                <form.Field name="maxItemDepth">
-                  {(field) => (
-                    <Input
-                      className="w-full"
-                      id={field.name}
-                      min={1}
-                      name={field.name}
-                      onBlur={field.handleBlur}
-                      onChange={(e) =>
-                        field.handleChange(getNumericInputValue(e.target.value))
-                      }
-                      placeholder={t("generated.admin.warehouses.main")}
-                      type="number"
-                      value={field.state.value}
-                    />
-                  )}
-                </form.Field>
-              </div>
-            </div>
+                />
+              )}
+            </form.Field>
           </FieldGroup>
         </section>
 

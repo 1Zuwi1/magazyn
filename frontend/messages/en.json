@@ -945,6 +945,8 @@
         "racks": "racks",
         "warehouses": "warehouses",
         "warehouseShares": "Warehouse shares",
+        "warehouseUpdated": "Warehouse updated",
+        "warehouseCreated": "Warehouse created",
         "manageRacks": "Manage racks",
         "changeStockInformation": "Change stock information",
         "enterInformationAboutNewWarehouse": "Enter information about the new warehouse.",

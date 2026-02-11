@@ -945,6 +945,8 @@
         "racks": "regałów",
         "warehouses": "magazynów",
         "warehouseShares": "Akcje magazynu",
+        "warehouseUpdated": "Magazyn zaktualizowany",
+        "warehouseCreated": "Magazyn utworzony",
         "manageRacks": "Zarządzaj regałami",
         "changeStockInformation": "Zmień informacje o magazynie",
         "enterInformationAboutNewWarehouse": "Wprowadź informacje o nowym magazynie.",

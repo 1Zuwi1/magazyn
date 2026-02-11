@@ -3,6 +3,7 @@
 import { useForm, useStore } from "@tanstack/react-form"
 import { useTranslations } from "next-intl"
 import { useEffect } from "react"
+import { toast } from "sonner"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { FieldGroup } from "@/components/ui/field"
@@ -35,6 +36,11 @@ export function WarehouseDialog({
     onSubmit: async ({ value }) => {
       const id = isEdit ? currentRow.id : `warehouse-${Date.now()}`
       await onSubmit({ id, name: value.name })
+      toast.success(
+        isEdit
+          ? t("generated.admin.warehouses.warehouseUpdated")
+          : t("generated.admin.warehouses.warehouseCreated")
+      )
       form.reset()
       onOpenChange(false)
     },
