@@ -1,6 +1,7 @@
 "use client"
 
 import { Badge } from "@/components/ui/badge"
+import { useAppTranslations } from "@/i18n/use-translations"
 import type { BackupStatus } from "../types"
 import { getBackupStatusConfig } from "../utils"
 
@@ -34,14 +35,15 @@ function RestoreSpinner() {
 }
 
 export function BackupStatusBadge({ status }: BackupStatusBadgeProps) {
-  const { label, variant } = getBackupStatusConfig(status)
-  const isPending = status === "PENDING"
+  const t = useAppTranslations()
+  const { label, variant } = getBackupStatusConfig(status, t)
+  const isInProgress = status === "IN_PROGRESS"
   const isRestoring = status === "RESTORING"
 
   return (
     <Badge variant={variant}>
       {label}
-      {isPending && <PulsingDots />}
+      {isInProgress && <PulsingDots />}
       {isRestoring && <RestoreSpinner />}
     </Badge>
   )

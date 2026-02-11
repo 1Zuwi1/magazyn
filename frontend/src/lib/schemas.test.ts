@@ -242,10 +242,10 @@ describe("Verify2FASchema", () => {
     expect(result.success).toBe(false)
   })
 
-  it("rejects code that is not 6 characters", () => {
+  it("rejects invalid code length", () => {
     const invalidInput = {
       method: "AUTHENTICATOR" as const,
-      code: "12345",
+      code: "",
     }
 
     const result =
@@ -254,21 +254,9 @@ describe("Verify2FASchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(
-        "generated.validation.codeMustExactly6Digits"
+        "generated.validation.codeRequired"
       )
     }
-  })
-
-  it("rejects code longer than 6 characters", () => {
-    const invalidInput = {
-      method: "AUTHENTICATOR" as const,
-      code: "1234567",
-    }
-
-    const result =
-      Verify2FASchema.shape.POST.shape.input.safeParse(invalidInput)
-
-    expect(result.success).toBe(false)
   })
 
   it("has null output schema", () => {

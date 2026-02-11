@@ -11,11 +11,14 @@ import {
   WeightScale01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
-import { format, formatDistanceToNow } from "date-fns"
+import { formatDistanceToNow } from "date-fns"
 import Link from "next/link"
 import { useLocale } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
-import { toTitleCase } from "@/components/dashboard/utils/helpers"
+import {
+  formatDateTime,
+  toTitleCase,
+} from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -123,23 +126,6 @@ function getStatusConfig(
     badgeVariant: "default",
     cardClassName: "bg-muted text-muted-foreground",
     label: toTitleCase(status),
-  }
-}
-
-const formatDateTime = (
-  date: string | null | undefined,
-  dateFnsLocale: DateFnsLocale
-): string => {
-  if (!date) {
-    return "—"
-  }
-
-  try {
-    return format(new Date(date), "dd MMMM yyyy, HH:mm", {
-      locale: dateFnsLocale,
-    })
-  } catch {
-    return "—"
   }
 }
 
@@ -309,12 +295,11 @@ const getStatuses = (t: ReturnType<typeof useAppTranslations>) => ({
 function AlertDetailsPanel({
   alert,
   onStatusChange,
-  dateFnsLocale,
 }: {
   alert: AlertItem | null
   onStatusChange: (status: AlertStatusValue) => void
-  dateFnsLocale: DateFnsLocale
 }) {
+  const locale = useLocale()
   const t = useAppTranslations()
   const statuses = useMemo(() => getStatuses(t), [t])
 
@@ -409,18 +394,23 @@ function AlertDetailsPanel({
           <div className="grid gap-3 sm:grid-cols-2">
             <DetailsCard
               label={t("generated.shared.created")}
-              value={formatDateTime(alert.createdAt?.toString(), dateFnsLocale)}
+              value={formatDateTime(alert.createdAt.toISOString(), locale)}
             />
             <DetailsCard
               label={t("generated.admin.alerts.update")}
-              value={formatDateTime(alert.updatedAt?.toString(), dateFnsLocale)}
+              value={
+                alert.updatedAt
+                  ? formatDateTime(alert.updatedAt.toISOString(), locale)
+                  : "—"
+              }
             />
             <DetailsCard
               label={t("generated.admin.alerts.solved")}
-              value={formatDateTime(
-                alert.resolvedAt?.toString(),
-                dateFnsLocale
-              )}
+              value={
+                alert.resolvedAt
+                  ? formatDateTime(alert.resolvedAt.toISOString(), locale)
+                  : "—"
+              }
             />
           </div>
         </section>
@@ -765,7 +755,6 @@ export default function AlertsMain() {
         <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
           <AlertDetailsPanel
             alert={selectedAlert}
-            dateFnsLocale={dateFnsLocale}
             onStatusChange={handleStatusChange}
           />
         </div>
@@ -776,8 +765,8 @@ export default function AlertsMain() {
           <HugeiconsIcon className="mr-1 inline size-3.5" icon={Time01Icon} />
           {t("generated.shared.lastUpdated", {
             value0: formatDateTime(
-              selectedAlert.updatedAt?.toString(),
-              dateFnsLocale
+              selectedAlert.updatedAt?.toString() ?? "—",
+              locale
             ),
           })}
         </div>

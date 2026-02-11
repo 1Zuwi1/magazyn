@@ -1,7 +1,7 @@
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useLocale } from "next-intl"
-import { formatDateTimeLabel } from "@/components/dashboard/utils/helpers"
+import { formatDateTime } from "@/components/dashboard/utils/helpers"
 import { useAppTranslations } from "@/i18n/use-translations"
 import type { OutboundExecuteResult } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
@@ -68,7 +68,7 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
                 <p className="text-muted-foreground text-xs">
                   {t("generated.scanner.outbound.issued", {
                     value0: op.issuedByName,
-                    value1: formatDateTimeLabel(op.operationTimestamp, locale),
+                    value1: formatDateTime(op.operationTimestamp, locale),
                   })}
                 </p>
               </div>

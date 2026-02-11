@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import PasskeyLogin from "@/app/[locale]/(auth)/components/passkey-login"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -33,6 +35,94 @@ import {
   type PasswordVerificationCopy,
   PasswordVerificationSection,
 } from "./password-verification-section"
+
+interface BackupCodeVerificationSectionProps {
+  code: string
+  description: string
+  isVerified: boolean
+  isVerifying: boolean
+  verificationError: string
+  verifiedTitle: string
+  verifiedDescription: string
+  onCodeChange: (value: string) => void
+  onVerify: (code: string) => void
+}
+
+function BackupCodeVerificationSection({
+  code,
+  description,
+  isVerified,
+  isVerifying,
+  verificationError,
+  verifiedTitle,
+  verifiedDescription,
+  onCodeChange,
+  onVerify,
+}: BackupCodeVerificationSectionProps) {
+  const t = useAppTranslations()
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1">
+          <p className="text-muted-foreground text-sm">{description}</p>
+        </div>
+        <Badge variant={isVerified ? "success" : "warning"}>
+          {isVerified
+            ? t("generated.dashboard.settings.verified3")
+            : t("generated.dashboard.settings.required")}
+        </Badge>
+      </div>
+      {isVerified ? (
+        <Alert>
+          <AlertTitle>{verifiedTitle}</AlertTitle>
+          <AlertDescription>{verifiedDescription}</AlertDescription>
+        </Alert>
+      ) : (
+        <div className="space-y-3">
+          {verificationError ? (
+            <Alert variant="destructive">
+              <AlertTitle>
+                {t("generated.dashboard.settings.verified")}
+              </AlertTitle>
+              <AlertDescription>{verificationError}</AlertDescription>
+            </Alert>
+          ) : null}
+          <Label htmlFor="backup-code-input">
+            {t("generated.auth.recoveryCode")}
+          </Label>
+          <Input
+            autoComplete="off"
+            autoFocus
+            className="font-mono tracking-widest"
+            disabled={isVerifying}
+            id="backup-code-input"
+            onChange={(e) => {
+              onCodeChange(e.target.value)
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && code.trim().length > 0) {
+                e.preventDefault()
+                onVerify(code)
+              }
+            }}
+            placeholder={t("generated.auth.backupCodePlaceholder")}
+            spellCheck={false}
+            value={code}
+          />
+          <Button
+            disabled={code.trim().length === 0 || isVerifying}
+            isLoading={isVerifying}
+            onClick={() => onVerify(code)}
+            type="button"
+          >
+            {t("generated.shared.verifyCode")}
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface TwoFactorVerificationDialogProps {
   open: boolean
@@ -77,6 +167,9 @@ export function TwoFactorVerificationDialog({
     }
     if (method === "PASSKEYS") {
       return t("generated.dashboard.settings.confirmSecurityKey")
+    }
+    if (method === "BACKUP_CODES") {
+      return t("generated.dashboard.settings.enterBackupCodeToVerify")
     }
     return t("generated.dashboard.settings.willSendOneTimeCode")
   }
@@ -190,6 +283,17 @@ export function TwoFactorVerificationDialog({
     onVerified?.()
   }
 
+  const backupCodeDescription =
+    typeof resolvedCopy.description === "function"
+      ? resolvedCopy.description({ method: "BACKUP_CODES" })
+      : (resolvedCopy.description ??
+        t("generated.dashboard.settings.enterBackupCodeToVerify"))
+  const backupCodeVerifiedTitle =
+    copy?.verifiedTitle ?? t("generated.dashboard.settings.verified3")
+  const backupCodeVerifiedDescription =
+    copy?.verifiedDescription ??
+    t("generated.dashboard.settings.safelyContinue")
+
   const getInputContent = () => {
     if (isMethodsError || isMethodsPending) {
       return null
@@ -224,6 +328,26 @@ export function TwoFactorVerificationDialog({
             />
           )}
         </div>
+      )
+    }
+    if (selectedMethod === "BACKUP_CODES") {
+      return (
+        <BackupCodeVerificationSection
+          code={code}
+          description={backupCodeDescription}
+          isVerified={isVerified}
+          isVerifying={isVerifying}
+          onCodeChange={(value) => {
+            setCode(value)
+            if (verificationError) {
+              setVerificationError("")
+            }
+          }}
+          onVerify={handleVerify}
+          verificationError={verificationError}
+          verifiedDescription={backupCodeVerifiedDescription}
+          verifiedTitle={backupCodeVerifiedTitle}
+        />
       )
     }
     return (

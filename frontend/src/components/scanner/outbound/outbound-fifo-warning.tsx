@@ -1,7 +1,7 @@
 import { AlertCircleIcon, Location04Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useLocale } from "next-intl"
-import { formatDateTimeLabel } from "@/components/dashboard/utils/helpers"
+import { formatDateTime } from "@/components/dashboard/utils/helpers"
 import { useAppTranslations } from "@/i18n/use-translations"
 import type { OutboundCheckResult } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
@@ -79,10 +79,7 @@ export function OutboundFifoWarning({
             </p>
             <p className="mt-1 text-muted-foreground text-xs">
               {t("generated.scanner.outbound.received", {
-                value0: formatDateTimeLabel(
-                  requestedAssortment.createdAt,
-                  locale
-                ),
+                value0: formatDateTime(requestedAssortment.createdAt, locale),
               })}
             </p>
           </div>
@@ -123,12 +120,12 @@ export function OutboundFifoWarning({
                   <div className="mt-1 flex gap-3 text-muted-foreground text-xs">
                     <span>
                       {t("generated.scanner.outbound.received", {
-                        value0: formatDateTimeLabel(slot.createdAt, locale),
+                        value0: formatDateTime(slot.createdAt, locale),
                       })}
                     </span>
                     <span>
                       {t("generated.scanner.outbound.expires", {
-                        value0: formatDateTimeLabel(slot.expiresAt, locale),
+                        value0: formatDateTime(slot.expiresAt, locale),
                       })}
                     </span>
                   </div>

@@ -1,36 +1,46 @@
-export type BackupStatus = "COMPLETED" | "FAILED" | "PENDING" | "RESTORING"
+import type {
+  Backup as ApiBackup,
+  BackupSchedule as ApiBackupSchedule,
+} from "@/hooks/use-backups"
+import type { BackupResourceType } from "@/lib/schemas"
 
-export type ScheduleFrequency = "DAILY" | "WEEKLY" | "MONTHLY" | "CUSTOM"
+export type BackupStatus = ApiBackup["status"]
+export type ScheduleFrequency = ApiBackupSchedule["scheduleCode"]
 
 export interface Backup {
-  id: string
+  id: number
   name: string
   createdAt: string
   completedAt: string | null
   sizeBytes: number | null
   status: BackupStatus
-  type: "MANUAL" | "SCHEDULED"
-  warehouseId: string | null
-  warehouseName: string | null
-  progress?: number
+  type: ApiBackup["backupType"]
+  warehouseId: number
+  warehouseName: string
+  progress?: number | null
+  resourceTypes: BackupResourceType[]
 }
 
 export interface BackupSchedule {
   id: string
-  warehouseId: string | null
+  warehouseId: number
   warehouseName: string
   frequency: ScheduleFrequency
-  customDays?: number | null
+  backupHour: number
+  dayOfWeek: number | null
+  dayOfMonth: number | null
   enabled: boolean
   lastBackupAt: string | null
   nextBackupAt: string | null
+  resourceTypes: BackupResourceType[]
 }
 
-export type ScheduleSubmitPayload = Omit<
-  BackupSchedule,
-  "nextBackupAt" | "lastBackupAt"
->
-export interface AvailableWarehouse {
-  id: string
-  name: string
+export interface ScheduleSubmitPayload {
+  warehouseId: number
+  warehouseName: string
+  frequency: ScheduleFrequency
+  backupHour: number
+  dayOfWeek: number | null
+  dayOfMonth: number | null
+  enabled: boolean
 }

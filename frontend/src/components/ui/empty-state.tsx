@@ -307,13 +307,25 @@ export function FilterEmptyState({
 export function NoItemsEmptyState({
   onAdd,
   itemName = "element",
+  title,
+  description,
   className,
+  icon,
 }: {
   onAdd?: () => void
   itemName?: string
+  title?: string
+  description?: string
   className?: string
+  icon?: IconComponent
 }) {
   const t = useAppTranslations()
+  const resolvedTitle = title ?? t("generated.ui.s", { value0: itemName })
+  const resolvedDescription =
+    description ??
+    t("generated.ui.dontAnySYetStart", {
+      value0: itemName,
+    })
 
   return (
     <EmptyState
@@ -326,10 +338,9 @@ export function NoItemsEmptyState({
           : undefined
       }
       className={className}
-      description={t("generated.ui.dontAnySYetStart", {
-        value0: itemName,
-      })}
-      title={t("generated.ui.s", { value0: itemName })}
+      description={resolvedDescription}
+      icon={icon}
+      title={resolvedTitle}
       variant="noItems"
     />
   )

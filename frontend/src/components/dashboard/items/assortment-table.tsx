@@ -614,6 +614,18 @@ function AssortmentTableContent({
     plural: t("generated.shared.items2"),
     genitive: t("generated.shared.items3"),
   }
+  const noItemsDescription = t("generated.ui.noItemsDescription", {
+    value0: 0,
+    singular: itemLabel.singular,
+    plural: itemLabel.plural,
+    genitive: itemLabel.genitive,
+  })
+  const noItemsTitle = t("generated.ui.noItemsTitle", {
+    value0: 0,
+    singular: itemLabel.singular,
+    plural: itemLabel.plural,
+    genitive: itemLabel.genitive,
+  })
 
   if (isLoading) {
     return <AssortmentTableSkeleton />
@@ -747,7 +759,11 @@ function AssortmentTableContent({
                 {isFiltered ? (
                   <FilterEmptyState onClear={clearAllFilters} />
                 ) : (
-                  <NoItemsEmptyState itemName="przedmiot" />
+                  <NoItemsEmptyState
+                    description={noItemsDescription}
+                    itemName={itemLabel.singular}
+                    title={noItemsTitle}
+                  />
                 )}
               </TableCell>
             </TableRow>

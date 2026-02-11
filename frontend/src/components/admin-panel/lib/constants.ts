@@ -1,8 +1,3 @@
-import {
-  Alert01Icon,
-  InboxIcon,
-  WeightScale01Icon,
-} from "@hugeicons/core-free-icons"
 import type { AppTranslate } from "@/i18n/use-translations"
 
 export const getAdminNavLinks = (t: AppTranslate) =>
@@ -26,26 +21,12 @@ export const getAdminNavLinks = (t: AppTranslate) =>
       title: t("generated.shared.operationsAudit"),
       url: "/admin/audit",
     },
+    {
+      title: t("generated.shared.backups"),
+      url: "/admin/backups",
+    },
   ] as const
 
-export const getNotificationsNavLinks = (t: AppTranslate) =>
-  [
-    {
-      title: t("generated.shared.all"),
-      icon: InboxIcon,
-      filterValue: null,
-    },
-    {
-      title: t("generated.admin.shared.overloads"),
-      icon: WeightScale01Icon,
-      filterValue: "RACK_OVERWEIGHT" as const,
-    },
-    {
-      title: t("generated.admin.shared.unauthorized"),
-      icon: Alert01Icon,
-      filterValue: "UNAUTHORIZED_REMOVAL" as const,
-    },
-  ] as const
 export const DEFAULT_RACK = {
   marker: "",
   name: "",

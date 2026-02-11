@@ -16,6 +16,7 @@ import { FieldWithState } from "@/components/helpers/field-state"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { FieldDescription, FieldGroup } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import {
   InputOTP,
   InputOTPGroup,
@@ -155,6 +156,148 @@ export default function TwoFactorForm({
     resendCode(defaultMethod as ResendType, false)
   }, [defaultMethod, resendCode])
 
+  const getContent = ({
+    method,
+    isSubmitting,
+    isPasskey,
+    isBackupCode,
+    canResend,
+    slotClassName,
+  }: {
+    method: TwoFactorMethod
+    isSubmitting: boolean
+    isPasskey: boolean
+    isBackupCode: boolean
+    canResend: boolean
+    slotClassName: string
+  }) => {
+    if (isPasskey) {
+      return (
+        <PasskeyLogin
+          disabled={isSubmitting || isResending}
+          label={t("generated.shared.verifySecurityKey")}
+          showSeparator={false}
+        />
+      )
+    }
+    if (isBackupCode) {
+      return (
+        <form.Field name="code">
+          {(field) => (
+            <FieldWithState
+              field={field}
+              label={t("generated.auth.recoveryCode")}
+              labelClassName="sr-only"
+              renderInput={({ id, isInvalid }) => (
+                <Input
+                  aria-invalid={isInvalid}
+                  autoComplete="off"
+                  autoFocus
+                  className="h-12 text-center font-mono text-lg tracking-widest"
+                  disabled={isSubmitting}
+                  id={id}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder={t("generated.auth.backupCodePlaceholder")}
+                  required
+                  spellCheck={false}
+                  value={field.state.value}
+                />
+              )}
+            />
+          )}
+        </form.Field>
+      )
+    }
+    return (
+      <>
+        <form.Field name="code">
+          {(field) => (
+            <FieldWithState
+              field={field}
+              label={t("generated.shared.verificationCode")}
+              labelClassName="sr-only"
+              renderInput={({ id, isInvalid }) => (
+                <InputOTP
+                  aria-invalid={isInvalid}
+                  autoComplete="one-time-code"
+                  autoFocus
+                  containerClassName="items-center justify-center gap-4 flex-col md:flex-row"
+                  disabled={isSubmitting || isResending}
+                  id={id}
+                  inputMode="numeric"
+                  maxLength={otpLength}
+                  onChange={(raw) => {
+                    const code = raw.replace(/\D/g, "").slice(0, otpLength)
+                    field.handleChange(code)
+
+                    if (code.length < otpLength) {
+                      autoSubmittedRef.current = false
+                      return
+                    }
+
+                    if (
+                      code.length === otpLength &&
+                      !autoSubmittedRef.current &&
+                      !form.state.isSubmitting
+                    ) {
+                      autoSubmittedRef.current = true
+                      queueMicrotask(() => {
+                        form.handleSubmit()
+                      })
+                    }
+                  }}
+                  pattern={REGEXP_ONLY_DIGITS}
+                  required
+                  spellCheck={false}
+                  value={field.state.value}
+                >
+                  <InputOTPGroup
+                    className={cn(slotClassName, {
+                      "*:data-[slot=input-otp-slot]:border-destructive":
+                        isInvalid,
+                    })}
+                  >
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                  </InputOTPGroup>
+
+                  <InputOTPSeparator />
+
+                  <InputOTPGroup
+                    className={cn(slotClassName, {
+                      "*:data-[slot=input-otp-slot]:border-destructive":
+                        isInvalid,
+                    })}
+                  >
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              )}
+            />
+          )}
+        </form.Field>
+
+        {canResend ? (
+          <FieldDescription className="text-center">
+            {t("generated.auth.didntArrive")}{" "}
+            <Button
+              className="h-auto p-0 align-baseline"
+              isLoading={isResending}
+              onClick={() => resendCode(method as ResendType)}
+              type="button"
+              variant="link"
+            >
+              {t("generated.shared.resend")}
+            </Button>
+          </FieldDescription>
+        ) : null}
+      </>
+    )
+  }
+
   return (
     <AuthCard>
       <form
@@ -186,6 +329,7 @@ export default function TwoFactorForm({
               const alternatives = linkedMethods.filter((m) => m !== method)
               const canResend = resendMethods.includes(method as ResendType)
               const isPasskey = method === "PASSKEYS"
+              const isBackupCode = method === "BACKUP_CODES"
               const slotClassName =
                 "gap-2.5 *:data-[slot=input-otp-slot]:h-16 *:data-[slot=input-otp-slot]:w-12 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-xl"
 
@@ -207,102 +351,14 @@ export default function TwoFactorForm({
                     className="fade-in mt-2 animate-in space-y-4 duration-500"
                     style={getAnimationStyle("200ms")}
                   >
-                    {isPasskey ? (
-                      <PasskeyLogin
-                        disabled={isSubmitting || isResending}
-                        label={t("generated.shared.verifySecurityKey")}
-                        showSeparator={false}
-                      />
-                    ) : (
-                      <>
-                        <form.Field name="code">
-                          {(field) => (
-                            <FieldWithState
-                              field={field}
-                              label={t("generated.shared.verificationCode")}
-                              labelClassName="sr-only"
-                              renderInput={({ id, isInvalid }) => (
-                                <InputOTP
-                                  aria-invalid={isInvalid}
-                                  autoComplete="one-time-code"
-                                  autoFocus
-                                  containerClassName="items-center justify-center gap-4 flex-col md:flex-row"
-                                  disabled={isSubmitting || isResending}
-                                  id={id}
-                                  inputMode="numeric"
-                                  maxLength={otpLength}
-                                  onChange={(raw) => {
-                                    const code = raw
-                                      .replace(/\D/g, "")
-                                      .slice(0, otpLength)
-                                    field.handleChange(code)
-
-                                    if (code.length < otpLength) {
-                                      autoSubmittedRef.current = false
-                                      return
-                                    }
-
-                                    if (
-                                      code.length === otpLength &&
-                                      !autoSubmittedRef.current &&
-                                      !form.state.isSubmitting
-                                    ) {
-                                      autoSubmittedRef.current = true
-                                      queueMicrotask(() => {
-                                        form.handleSubmit()
-                                      })
-                                    }
-                                  }}
-                                  pattern={REGEXP_ONLY_DIGITS}
-                                  required
-                                  spellCheck={false}
-                                  value={field.state.value}
-                                >
-                                  <InputOTPGroup
-                                    className={cn(slotClassName, {
-                                      "*:data-[slot=input-otp-slot]:border-destructive":
-                                        isInvalid,
-                                    })}
-                                  >
-                                    <InputOTPSlot index={0} />
-                                    <InputOTPSlot index={1} />
-                                    <InputOTPSlot index={2} />
-                                  </InputOTPGroup>
-
-                                  <InputOTPSeparator />
-
-                                  <InputOTPGroup
-                                    className={cn(slotClassName, {
-                                      "*:data-[slot=input-otp-slot]:border-destructive":
-                                        isInvalid,
-                                    })}
-                                  >
-                                    <InputOTPSlot index={3} />
-                                    <InputOTPSlot index={4} />
-                                    <InputOTPSlot index={5} />
-                                  </InputOTPGroup>
-                                </InputOTP>
-                              )}
-                            />
-                          )}
-                        </form.Field>
-
-                        {canResend ? (
-                          <FieldDescription className="text-center">
-                            {t("generated.auth.didntArrive")}{" "}
-                            <Button
-                              className="h-auto p-0 align-baseline"
-                              isLoading={isResending}
-                              onClick={() => resendCode(method as ResendType)}
-                              type="button"
-                              variant="link"
-                            >
-                              {t("generated.shared.resend")}
-                            </Button>
-                          </FieldDescription>
-                        ) : null}
-                      </>
-                    )}
+                    {getContent({
+                      method,
+                      isSubmitting,
+                      isPasskey,
+                      isBackupCode,
+                      canResend,
+                      slotClassName,
+                    })}
 
                     {alternatives.length ? (
                       <div className="mt-3">

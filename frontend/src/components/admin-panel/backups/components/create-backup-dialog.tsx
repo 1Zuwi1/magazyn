@@ -12,60 +12,43 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import type { AvailableWarehouse } from "../types"
-
-const ALL_WAREHOUSES_ID = "__all__"
+import { useAppTranslations } from "@/i18n/use-translations"
+import { WarehouseSelector } from "./warehouse-selector"
 
 interface CreateBackupDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  availableWarehouses: AvailableWarehouse[]
-  onConfirm: (warehouseId: string | null, warehouseName: string | null) => void
+  isSubmitting?: boolean
+  onConfirm: (warehouseId: number | null, warehouseName: string | null) => void
 }
 
 export function CreateBackupDialog({
   open,
   onOpenChange,
-  availableWarehouses,
+  isSubmitting = false,
   onConfirm,
 }: CreateBackupDialogProps) {
-  const [selectedWarehouse, setSelectedWarehouse] =
-    useState<string>(ALL_WAREHOUSES_ID)
+  const t = useAppTranslations()
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | null>(
+    null
+  )
+  const [selectedWarehouseName, setSelectedWarehouseName] = useState<
+    string | null
+  >(null)
 
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
-      setSelectedWarehouse(ALL_WAREHOUSES_ID)
+      setSelectedWarehouseId(null)
+      setSelectedWarehouseName(null)
     }
     onOpenChange(isOpen)
   }
 
   const handleConfirm = () => {
-    if (selectedWarehouse === ALL_WAREHOUSES_ID) {
-      onConfirm(null, null)
-    } else {
-      const warehouse = availableWarehouses.find(
-        (w) => w.id === selectedWarehouse
-      )
-      if (warehouse) {
-        onConfirm(warehouse.id, warehouse.name)
-      }
-    }
+    onConfirm(selectedWarehouseId, selectedWarehouseName)
     handleOpenChange(false)
   }
-
-  const selectedLabel =
-    selectedWarehouse === ALL_WAREHOUSES_ID
-      ? "Wszystkie magazyny"
-      : (availableWarehouses.find((w) => w.id === selectedWarehouse)?.name ??
-        "Wybierz magazyn")
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
@@ -78,10 +61,11 @@ export function CreateBackupDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <DialogTitle>Utwórz kopię zapasową</DialogTitle>
+            <DialogTitle>
+              {t("generated.admin.backups.createBackupTitle")}
+            </DialogTitle>
             <DialogDescription>
-              Wybierz magazyn, dla którego chcesz utworzyć ręczną kopię
-              zapasową.
+              {t("generated.admin.backups.createBackupDescription")}
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -91,46 +75,44 @@ export function CreateBackupDialog({
         <div className="space-y-3 py-2">
           <div className="space-y-2">
             <label className="font-medium text-sm" htmlFor="warehouse-select">
-              Magazyn
+              {t("generated.shared.warehouse")}
             </label>
-            <Select
-              onValueChange={(value) => {
-                if (value) {
-                  setSelectedWarehouse(value)
-                }
+            <WarehouseSelector
+              allOptionLabel={t("generated.admin.backups.allWarehouses")}
+              id="warehouse-select"
+              includeAllOption
+              onValueChange={(warehouseId, warehouseName) => {
+                setSelectedWarehouseId(warehouseId)
+                setSelectedWarehouseName(warehouseName)
               }}
-              value={selectedWarehouse}
-            >
-              <SelectTrigger id="warehouse-select">
-                <SelectValue>{selectedLabel}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_WAREHOUSES_ID}>
-                  Wszystkie magazyny
-                </SelectItem>
-                {availableWarehouses.map((warehouse) => (
-                  <SelectItem key={warehouse.id} value={warehouse.id}>
-                    {warehouse.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder={t("generated.shared.searchWarehouse")}
+              value={selectedWarehouseId}
+            />
           </div>
 
           <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 p-3">
             <p className="text-orange-600 text-sm dark:text-orange-400">
-              {selectedWarehouse === ALL_WAREHOUSES_ID
-                ? "Zostanie utworzona kopia zapasowa dla wszystkich magazynów. Może to potrwać dłużej."
-                : `Zostanie utworzona kopia zapasowa dla magazynu "${selectedLabel}".`}
+              {selectedWarehouseId == null
+                ? t("generated.admin.backups.createAllWarning")
+                : t("generated.admin.backups.createWarehouseWarning", {
+                    value0:
+                      selectedWarehouseName ?? t("generated.shared.warehouse"),
+                  })}
             </p>
           </div>
         </div>
 
         <DialogFooter className="gap-1">
-          <Button onClick={() => handleOpenChange(false)} variant="outline">
-            Anuluj
+          <Button
+            disabled={isSubmitting}
+            onClick={() => handleOpenChange(false)}
+            variant="outline"
+          >
+            {t("generated.shared.cancel")}
           </Button>
-          <Button onClick={handleConfirm}>Utwórz kopię</Button>
+          <Button disabled={isSubmitting} onClick={handleConfirm}>
+            {t("generated.admin.backups.createBackupAction")}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

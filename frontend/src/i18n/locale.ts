@@ -108,3 +108,9 @@ export const addAppLocaleToPathname = (
 
   return `/${locale}${strippedPathname}`
 }
+
+const APP_LOCALE_PATH_REGEX = new RegExp(`^/(${APP_LOCALES.join("|")})(?=/|$)`)
+
+export const removeAppLocalePrefix = (pathname: string): string => {
+  return pathname.replace(APP_LOCALE_PATH_REGEX, "")
+}

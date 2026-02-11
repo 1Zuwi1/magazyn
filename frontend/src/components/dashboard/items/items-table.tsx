@@ -5,7 +5,7 @@ import {
   type ColumnDef,
   flexRender,
   getCoreRowModel,
-  getSortedRowModel,
+  type OnChangeFn,
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
@@ -126,6 +126,7 @@ const createItemsColumns = (
   t: ReturnType<typeof useAppTranslations>
 ): ColumnDef<Item>[] => [
   {
+    id: "name",
     accessorKey: "name",
     header: ({ column }) => (
       <SortableHeader column={column}>
@@ -149,6 +150,7 @@ const createItemsColumns = (
     enableSorting: true,
   },
   {
+    id: "code",
     accessorKey: "code",
     header: ({ column }) => (
       <SortableHeader column={column}>
@@ -174,6 +176,7 @@ const createItemsColumns = (
     enableSorting: true,
   },
   {
+    id: "weight",
     accessorKey: "weight",
     header: ({ column }) => (
       <SortableHeader column={column}>
@@ -188,6 +191,7 @@ const createItemsColumns = (
     enableSorting: true,
   },
   {
+    id: "expireAfterDays",
     accessorKey: "expireAfterDays",
     header: ({ column }) => (
       <SortableHeader column={column}>
@@ -204,6 +208,7 @@ const createItemsColumns = (
     enableSorting: true,
   },
   {
+    id: "dangerous",
     accessorKey: "dangerous",
     header: ({ column }) => (
       <SortableHeader column={column}>
@@ -233,11 +238,23 @@ const createItemsColumns = (
 
 export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
   const t = useAppTranslations()
-  const itemsColumns = useMemo(() => createItemsColumns(t), [t])
+  const itemsColumns = createItemsColumns(t)
 
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState(initialSearch)
   const [debouncedSearch] = useDebouncedValue(search, { wait: 500 })
+
+  const [sorting, setSorting] = useState<SortingState>([])
+
+  const sortParams = useMemo(() => {
+    if (sorting.length === 0) {
+      return {}
+    }
+    return {
+      sortBy: sorting[0].id,
+      sortDir: sorting[0].desc ? ("desc" as const) : ("asc" as const),
+    }
+  }, [sorting])
 
   const {
     data: items,
@@ -248,8 +265,8 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
     page: page - 1,
     size: 10,
     search: debouncedSearch.trim() || undefined,
+    ...sortParams,
   })
-  const [sorting, setSorting] = useState<SortingState>([])
   const tableData = items?.content ?? []
   const pathname = usePathname()
   const router = useRouter()
@@ -270,12 +287,20 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
     setPage(1)
   }
 
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    setSorting((previousSorting) =>
+      typeof updater === "function" ? updater(previousSorting) : updater
+    )
+    setPage(1)
+  }
+
   const table = useReactTable({
     data: tableData,
     columns: itemsColumns,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
+    manualSorting: true,
+    manualFiltering: true,
+    onSortingChange: handleSortingChange,
     state: {
       sorting,
     },
@@ -300,6 +325,18 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
     plural: t("generated.shared.items2"),
     genitive: t("generated.shared.items3"),
   }
+  const noItemsDescription = t("generated.ui.noItemsDescription", {
+    value0: 0,
+    singular: itemLabel.singular,
+    plural: itemLabel.plural,
+    genitive: itemLabel.genitive,
+  })
+  const noItemsTitle = t("generated.ui.noItemsTitle", {
+    value0: 0,
+    singular: itemLabel.singular,
+    plural: itemLabel.plural,
+    genitive: itemLabel.genitive,
+  })
 
   const clearAllFilters = () => {
     handleSearchChange("")
@@ -371,7 +408,11 @@ export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
                 {isFiltered ? (
                   <SearchEmptyState onClear={clearAllFilters} />
                 ) : (
-                  <NoItemsEmptyState itemName="przedmiot" />
+                  <NoItemsEmptyState
+                    description={noItemsDescription}
+                    itemName={itemLabel.singular}
+                    title={noItemsTitle}
+                  />
                 )}
               </TableCell>
             </TableRow>

@@ -9,8 +9,10 @@ import {
   Trash,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useLocale } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
+import { formatDateTime } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -21,8 +23,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Switch } from "@/components/ui/switch"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
-import { formatDateTime } from "../../lib/utils"
+
 import type { BackupSchedule } from "../types"
 import { getFrequencyLabel } from "../utils"
 
@@ -30,11 +33,13 @@ interface SchedulesSectionProps {
   schedules: BackupSchedule[]
   onAdd: () => void
   onEdit: (schedule: BackupSchedule) => void
-  onToggle: (id: string) => void
-  onDelete: (id: string) => void
+  onToggle: (warehouseId: number, schedule: BackupSchedule) => void
+  onDelete: (warehouseId: number) => void
 }
 
 function SchedulesEmptyState({ onAdd }: { onAdd: () => void }) {
+  const t = useAppTranslations()
+
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/20 px-6 py-12 text-center">
       <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
@@ -43,14 +48,15 @@ function SchedulesEmptyState({ onAdd }: { onAdd: () => void }) {
           icon={Calendar03Icon}
         />
       </div>
-      <h3 className="mb-1 font-semibold text-sm">Brak harmonogramów</h3>
+      <h3 className="mb-1 font-semibold text-sm">
+        {t("generated.admin.backups.noSchedulesTitle")}
+      </h3>
       <p className="mb-4 max-w-sm text-muted-foreground text-sm">
-        Nie masz jeszcze żadnych harmonogramów kopii zapasowych. Dodaj pierwszy
-        harmonogram, aby automatycznie tworzyć kopie zapasowe.
+        {t("generated.admin.backups.noSchedulesDescription")}
       </p>
       <Button onClick={onAdd} size="sm" variant="outline">
         <HugeiconsIcon className="mr-1.5 size-3.5" icon={Add01Icon} />
-        Dodaj harmonogram
+        {t("generated.admin.backups.addScheduleTitle")}
       </Button>
     </div>
   )
@@ -63,6 +69,7 @@ export function SchedulesSection({
   onToggle,
   onDelete,
 }: SchedulesSectionProps) {
+  const t = useAppTranslations()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [scheduleToDelete, setScheduleToDelete] = useState<
     BackupSchedule | undefined
@@ -75,7 +82,7 @@ export function SchedulesSection({
 
   const confirmDelete = () => {
     if (scheduleToDelete) {
-      onDelete(scheduleToDelete.id)
+      onDelete(scheduleToDelete.warehouseId)
       setScheduleToDelete(undefined)
     }
   }
@@ -88,12 +95,14 @@ export function SchedulesSection({
             className="size-4 text-muted-foreground"
             icon={Calendar03Icon}
           />
-          <h2 className="font-semibold text-sm">Harmonogramy</h2>
+          <h2 className="font-semibold text-sm">
+            {t("generated.admin.backups.schedulesSectionTitle")}
+          </h2>
         </div>
         {schedules.length > 0 && (
           <Button onClick={onAdd} size="sm" variant="outline">
             <HugeiconsIcon className="mr-1.5 size-3.5" icon={Add01Icon} />
-            Dodaj harmonogram
+            {t("generated.admin.backups.addScheduleTitle")}
           </Button>
         )}
       </div>
@@ -115,11 +124,13 @@ export function SchedulesSection({
       )}
 
       <ConfirmDialog
-        description={`Czy na pewno chcesz usunąć harmonogram dla "${scheduleToDelete?.warehouseName}"? Ta operacja jest nieodwracalna.`}
+        description={t("generated.admin.backups.deleteScheduleDescription", {
+          value0: scheduleToDelete?.warehouseName,
+        })}
         onConfirm={confirmDelete}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
-        title="Usuń harmonogram"
+        title={t("generated.admin.backups.deleteScheduleTitle")}
       />
     </div>
   )
@@ -133,9 +144,11 @@ function ScheduleCard({
 }: {
   schedule: BackupSchedule
   onEdit: (schedule: BackupSchedule) => void
-  onToggle: (id: string) => void
+  onToggle: (warehouseId: number, schedule: BackupSchedule) => void
   onDelete: (schedule: BackupSchedule) => void
 }) {
+  const t = useAppTranslations()
+  const locale = useLocale()
   const [justToggled, setJustToggled] = useState(false)
   const isFirstRender = useRef(true)
 
@@ -180,7 +193,9 @@ function ScheduleCard({
               className="transition-all duration-500"
               variant={schedule.enabled ? "success" : "secondary"}
             >
-              {schedule.enabled ? "Aktywny" : "Wyłączony"}
+              {schedule.enabled
+                ? t("generated.shared.active")
+                : t("generated.shared.disabled")}
             </Badge>
           </div>
 
@@ -192,16 +207,20 @@ function ScheduleCard({
           >
             <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
               <HugeiconsIcon className="size-3" icon={Calendar03Icon} />
-              {getFrequencyLabel(schedule.frequency, schedule.customDays)}
+              {getFrequencyLabel(schedule, t)}
             </div>
             <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
               <HugeiconsIcon className="size-3" icon={Clock01Icon} />
-              Ostatnia: {formatDateTime(schedule.lastBackupAt)}
+              {t("generated.admin.backups.lastBackupLabel")}:{" "}
+              {schedule.lastBackupAt
+                ? formatDateTime(schedule.lastBackupAt, locale)
+                : "—"}
             </div>
             {schedule.nextBackupAt && (
               <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                 <HugeiconsIcon className="size-3" icon={Clock01Icon} />
-                Następna: {formatDateTime(schedule.nextBackupAt)}
+                {t("generated.admin.backups.nextBackupLabel")}:{" "}
+                {formatDateTime(schedule.nextBackupAt, locale)}
               </div>
             )}
           </div>
@@ -211,11 +230,13 @@ function ScheduleCard({
           <Switch
             checked={schedule.enabled}
             className="cursor-pointer transition-all duration-300"
-            onCheckedChange={() => onToggle(schedule.id)}
+            onCheckedChange={() => onToggle(schedule.warehouseId, schedule)}
             size="sm"
           />
           <DropdownMenu>
-            <DropdownMenuTrigger aria-label="Otwórz menu harmonogramu">
+            <DropdownMenuTrigger
+              aria-label={t("generated.admin.backups.openScheduleMenu")}
+            >
               <HugeiconsIcon
                 className={cn(
                   buttonVariants({ variant: "ghost", size: "icon-xs" })
@@ -226,14 +247,14 @@ function ScheduleCard({
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onEdit(schedule)}>
                 <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilIcon} />
-                Edytuj
+                {t("generated.shared.edit")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive"
                 onClick={() => onDelete(schedule)}
               >
                 <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
-                Usuń
+                {t("generated.shared.remove")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

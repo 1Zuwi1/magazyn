@@ -3,7 +3,8 @@
 import { Clock01Icon, DatabaseIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { formatDuration, intervalToDuration } from "date-fns"
-import { pl } from "date-fns/locale"
+import { useLocale } from "next-intl"
+import { formatDateTime } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
@@ -14,7 +15,9 @@ import {
 } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import { formatBytes, formatDateTime } from "../../lib/utils"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import { useAppTranslations } from "@/i18n/use-translations"
+import { formatBytes } from "../../lib/utils"
 import type { Backup } from "../types"
 import { BackupStatusBadge } from "./backup-status-badge"
 
@@ -34,7 +37,9 @@ function DetailRow({ label, children }: DetailRowProps) {
 
 function formatBackupDuration(
   createdAt: string,
-  completedAt: string | null
+  completedAt: string | null,
+  locale: string,
+  fallbackLabel: string
 ): string {
   if (!completedAt) {
     return "—"
@@ -45,7 +50,11 @@ function formatBackupDuration(
     end: new Date(completedAt),
   })
 
-  return formatDuration(duration, { locale: pl }) || "< 1 sek."
+  return (
+    formatDuration(duration, {
+      locale: getDateFnsLocale(locale),
+    }) || fallbackLabel
+  )
 }
 
 interface BackupDetailDialogProps {
@@ -59,12 +68,15 @@ export function BackupDetailDialog({
   open,
   onOpenChange,
 }: BackupDetailDialogProps) {
+  const t = useAppTranslations()
+  const locale = useLocale()
+
   if (!backup) {
     return null
   }
 
   const isInProgress =
-    backup.status === "PENDING" || backup.status === "RESTORING"
+    backup.status === "IN_PROGRESS" || backup.status === "RESTORING"
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -78,7 +90,9 @@ export function BackupDetailDialog({
           </div>
           <div className="space-y-1.5">
             <DialogTitle>{backup.name}</DialogTitle>
-            <DialogDescription>Szczegóły kopii zapasowej</DialogDescription>
+            <DialogDescription>
+              {t("generated.admin.backups.backupDetailsDescription")}
+            </DialogDescription>
           </div>
         </DialogHeader>
 
@@ -88,9 +102,9 @@ export function BackupDetailDialog({
           <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium">
-                {backup.status === "PENDING"
-                  ? "Tworzenie kopii..."
-                  : "Przywracanie danych..."}
+                {backup.status === "IN_PROGRESS"
+                  ? t("generated.admin.backups.creatingBackupProgress")
+                  : t("generated.admin.backups.restoringBackupProgress")}
               </span>
               <span className="font-mono text-muted-foreground">
                 {backup.progress}%
@@ -101,34 +115,43 @@ export function BackupDetailDialog({
         )}
 
         <div className="space-y-1">
-          <DetailRow label="Status">
+          <DetailRow label={t("generated.shared.status")}>
             <BackupStatusBadge status={backup.status} />
           </DetailRow>
-          <DetailRow label="Typ">
+          <DetailRow label={t("generated.admin.backups.typeLabel")}>
             <Badge variant="outline">
-              {backup.type === "MANUAL" ? "Ręczny" : "Zaplanowany"}
+              {backup.type === "MANUAL"
+                ? t("generated.admin.backups.typeManual")
+                : t("generated.admin.backups.typeScheduled")}
             </Badge>
           </DetailRow>
-          <DetailRow label="Magazyn">
-            {backup.warehouseName ?? "Wszystkie"}
+          <DetailRow label={t("generated.shared.warehouse")}>
+            {backup.warehouseName}
           </DetailRow>
-          <DetailRow label="Rozmiar">
+          <DetailRow label={t("generated.admin.backups.sizeLabel")}>
             {backup.sizeBytes != null ? formatBytes(backup.sizeBytes) : "—"}
           </DetailRow>
-          <DetailRow label="Utworzony">
+          <DetailRow label={t("generated.shared.created")}>
             <span className="flex items-center gap-1.5">
               <HugeiconsIcon
                 className="size-3.5 text-muted-foreground"
                 icon={Clock01Icon}
               />
-              {formatDateTime(backup.createdAt)}
+              {formatDateTime(backup.createdAt, locale)}
             </span>
           </DetailRow>
-          <DetailRow label="Ukończony">
-            {formatDateTime(backup.completedAt)}
+          <DetailRow label={t("generated.admin.backups.completedAtLabel")}>
+            {backup.completedAt
+              ? formatDateTime(backup.completedAt, locale)
+              : "—"}
           </DetailRow>
-          <DetailRow label="Czas tworzenia kopii">
-            {formatBackupDuration(backup.createdAt, backup.completedAt)}
+          <DetailRow label={t("generated.admin.backups.durationLabel")}>
+            {formatBackupDuration(
+              backup.createdAt,
+              backup.completedAt,
+              locale,
+              t("generated.admin.backups.durationLessThanSecond")
+            )}
           </DetailRow>
         </div>
       </DialogContent>

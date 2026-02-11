@@ -234,10 +234,7 @@ export const Verify2FASchema = createApiSchema({
       method: TFAMethods,
       code: z
         .string()
-        .length(
-          6,
-          createZodMessage("generated.validation.codeMustExactly6Digits")
-        ),
+        .min(1, createZodMessage("generated.validation.codeRequired")),
     }),
     output: z.null(),
   },
@@ -1166,6 +1163,197 @@ export const RackReportsSchema = createApiSchema({
         createdAt: z.string(),
       })
     ),
+  },
+})
+
+// --- Backup Management ---
+
+export const BackupResourceTypeSchema = z.enum([
+  "RACKS",
+  "ITEMS",
+  "ASSORTMENTS",
+])
+export type BackupResourceType = z.infer<typeof BackupResourceTypeSchema>
+
+export const BackupTypeSchema = z.enum(["SCHEDULED", "MANUAL"])
+export type BackupType = z.infer<typeof BackupTypeSchema>
+
+export const BackupStatusSchema = z.enum([
+  "IN_PROGRESS",
+  "COMPLETED",
+  "FAILED",
+  "RESTORING",
+])
+export type BackupStatus = z.infer<typeof BackupStatusSchema>
+
+export const BackupScheduleCodeSchema = z.enum(["DAILY", "WEEKLY", "MONTHLY"])
+export type BackupScheduleCode = z.infer<typeof BackupScheduleCodeSchema>
+
+const BackupResourceTypesArraySchema = z
+  .array(BackupResourceTypeSchema)
+  .min(1, "At least one resource type is required")
+  .refine(
+    (resourceTypes) => new Set(resourceTypes).size === resourceTypes.length,
+    {
+      message: "Resource types must be unique",
+    }
+  )
+
+const BackupResourceTypesOutputSchema = z.array(BackupResourceTypeSchema)
+
+const BackupRecordSchema = z.object({
+  id: z.number().int().nonnegative(),
+  warehouseId: z.number().int().nonnegative(),
+  warehouseName: z.string(),
+  backupType: BackupTypeSchema,
+  status: BackupStatusSchema,
+  resourceTypes: BackupResourceTypesOutputSchema,
+  totalRecords: z.number().int().nonnegative().nullish(),
+  sizeBytes: z.number().int().nonnegative().nullish(),
+  backupProgressPercentage: z.number().int().min(0).max(100).nullish(),
+  restoreProgressPercentage: z.number().int().min(0).max(100).nullish(),
+  createdAt: z.string(),
+  completedAt: z.string().nullish(),
+  errorMessage: z.string().nullish(),
+  restoreStartedAt: z.string().nullish(),
+  restoreCompletedAt: z.string().nullish(),
+  racksRestored: z.number().int().nonnegative().nullish(),
+  itemsRestored: z.number().int().nonnegative().nullish(),
+  assortmentsRestored: z.number().int().nonnegative().nullish(),
+  triggeredByName: z.string().nullish(),
+})
+
+export type BackupRecord = z.infer<typeof BackupRecordSchema>
+
+const BackupCreateInputSchema = z.object({
+  warehouseId: z.number().int().nonnegative(),
+  resourceTypes: BackupResourceTypesArraySchema,
+})
+
+const BackupScheduleSchema = z.object({
+  warehouseId: z.number().int().nonnegative(),
+  warehouseName: z.string(),
+  scheduleCode: BackupScheduleCodeSchema,
+  backupHour: z.number().int().min(0).max(23),
+  dayOfWeek: z.number().int().min(1).max(7).nullish(),
+  dayOfMonth: z.number().int().min(1).max(31).nullish(),
+  resourceTypes: BackupResourceTypesOutputSchema,
+  enabled: z.boolean(),
+  lastRunAt: z.string().nullish(),
+  nextRunAt: z.string().nullish(),
+})
+
+export type BackupSchedule = z.infer<typeof BackupScheduleSchema>
+
+const BackupScheduleUpsertInputSchema = z
+  .object({
+    scheduleCode: BackupScheduleCodeSchema,
+    backupHour: z.number().int().min(0).max(23),
+    dayOfWeek: z.number().int().min(1).max(7).optional(),
+    dayOfMonth: z.number().int().min(1).max(31).optional(),
+    resourceTypes: BackupResourceTypesArraySchema,
+    enabled: z.boolean().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.scheduleCode === "WEEKLY" && value.dayOfWeek == null) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["dayOfWeek"],
+        message: "dayOfWeek is required for WEEKLY schedules",
+      })
+    }
+
+    if (value.scheduleCode === "MONTHLY" && value.dayOfMonth == null) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["dayOfMonth"],
+        message: "dayOfMonth is required for MONTHLY schedules",
+      })
+    }
+  })
+
+const RestoreResultSchema = z.object({
+  backupId: z.number().int().nonnegative(),
+  warehouseId: z.number().int().nonnegative(),
+  racksRestored: z.number().int().nonnegative(),
+  itemsRestored: z.number().int().nonnegative(),
+  assortmentsRestored: z.number().int().nonnegative(),
+  restoredAt: z.string(),
+})
+
+export type RestoreResult = z.infer<typeof RestoreResultSchema>
+
+const SkippedWarehouseSchema = z.object({
+  warehouseId: z.number().int().nonnegative(),
+  warehouseName: z.string(),
+  reason: z.string(),
+})
+
+const RestoreAllWarehousesResultSchema = z.object({
+  successful: z.array(RestoreResultSchema),
+  skipped: z.array(SkippedWarehouseSchema),
+})
+
+export type RestoreAllWarehousesResult = z.infer<
+  typeof RestoreAllWarehousesResultSchema
+>
+
+export const BackupsSchema = createApiSchema({
+  GET: {
+    input: createPaginatedSchemaInput({
+      warehouseId: z.number().int().nonnegative().optional(),
+    }),
+    output: createPaginatedSchema(BackupRecordSchema),
+  },
+  POST: {
+    input: BackupCreateInputSchema,
+    output: BackupRecordSchema,
+  },
+})
+
+export const BackupDetailsSchema = createApiSchema({
+  GET: {
+    output: BackupRecordSchema,
+  },
+  DELETE: {
+    output: z.null(),
+  },
+})
+
+export const BackupRestoreSchema = createApiSchema({
+  POST: {
+    input: z.null(),
+    output: RestoreResultSchema,
+  },
+})
+
+export const BackupRestoreAllSchema = createApiSchema({
+  POST: {
+    input: z.null(),
+    output: RestoreAllWarehousesResultSchema,
+  },
+})
+
+export const BackupAllSchema = createApiSchema({
+  POST: {
+    input: z.null(),
+    output: z.array(BackupRecordSchema),
+  },
+})
+
+export const BackupSchedulesSchema = createApiSchema({
+  GET: {
+    output: z.array(BackupScheduleSchema),
+  },
+})
+
+export const BackupScheduleByWarehouseSchema = createApiSchema({
+  PUT: {
+    input: BackupScheduleUpsertInputSchema,
+    output: BackupScheduleSchema,
+  },
+  DELETE: {
+    output: z.null(),
   },
 })
 

@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { removeAppLocalePrefix } from "@/i18n/locale"
 import { cn } from "@/lib/utils"
 
 interface NavLink {
@@ -152,9 +153,12 @@ export function AdminPageHeader({
         {navLinks && navLinks.length > 0 && (
           <nav className="mt-6 flex flex-wrap items-center gap-2 border-border/50 border-t pt-4">
             {navLinks.map((link) => {
+              const url = removeAppLocalePrefix(link.url)
+              const pathnameWithoutLocale = removeAppLocalePrefix(pathname)
               const isActive =
-                pathname === link.url ||
-                (link.url === "/admin" && pathname === "/admin/")
+                pathnameWithoutLocale === url ||
+                (url === "/admin" && pathnameWithoutLocale === "/admin/")
+
               return (
                 <Link
                   aria-current={isActive ? "page" : undefined}

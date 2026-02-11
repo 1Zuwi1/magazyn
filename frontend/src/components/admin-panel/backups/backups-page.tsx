@@ -1,40 +1,50 @@
 "use client"
 
-import {
-  Add01Icon,
-  Calendar03Icon,
-  Cancel01Icon,
-  Clock01Icon,
-  DatabaseIcon,
-  Tick02Icon,
-} from "@hugeicons/core-free-icons"
+import { Add01Icon, DatabaseIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { toast } from "sonner"
-import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
-import { MOCK_WAREHOUSES } from "@/components/dashboard/mock-data"
-import { pluralize } from "@/components/dashboard/utils/helpers"
 import { Button } from "@/components/ui/button"
+import {
+  useBackupAllWarehouses,
+  useBackupSchedules,
+  useCreateBackup,
+  useDeleteBackup,
+  useDeleteBackupSchedule,
+  useRestoreBackup,
+  useUpsertBackupSchedule,
+} from "@/hooks/use-backups"
+import useWarehouses from "@/hooks/use-warehouses"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
-import { ADMIN_NAV_LINKS } from "../lib/constants"
+import { ConfirmDialog } from "../components/dialogs"
+import { getAdminNavLinks } from "../lib/constants"
 import { BackupDetailDialog } from "./components/backup-detail-dialog"
+import { BackupsHeaderStats } from "./components/backups-header-stats"
 import { BackupsTable } from "./components/backups-table"
 import { CreateBackupDialog } from "./components/create-backup-dialog"
 import { ScheduleDialog } from "./components/schedule-dialog"
 import { SchedulesSection } from "./components/schedules-section"
-import { StatBadge, type StatBadgeConfig } from "./components/stat-badge"
-import { MOCK_BACKUPS, MOCK_SCHEDULES } from "./mock-data"
 import type { Backup, BackupSchedule, ScheduleSubmitPayload } from "./types"
-import { nextBackupDate } from "./utils"
-
-const AVAILABLE_WAREHOUSES = MOCK_WAREHOUSES.map((w) => ({
-  id: w.id,
-  name: w.name,
-}))
+import {
+  DEFAULT_BACKUP_RESOURCE_TYPES,
+  mapApiScheduleToViewModel,
+} from "./utils"
 
 export function BackupsMain() {
-  const [backups, setBackups] = useState<Backup[]>(MOCK_BACKUPS)
-  const [schedules, setSchedules] = useState<BackupSchedule[]>(MOCK_SCHEDULES)
+  const t = useAppTranslations()
+  const { data: schedulesData } = useBackupSchedules()
+  const { data: warehousesSummaryData } = useWarehouses({
+    page: 0,
+    size: 1,
+  })
+
+  const createBackupMutation = useCreateBackup()
+  const backupAllWarehousesMutation = useBackupAllWarehouses()
+  const deleteBackupMutation = useDeleteBackup()
+  const restoreBackupMutation = useRestoreBackup()
+  const upsertScheduleMutation = useUpsertBackupSchedule()
+  const deleteScheduleMutation = useDeleteBackupSchedule()
 
   const [detailOpen, setDetailOpen] = useState(false)
   const [selectedBackup, setSelectedBackup] = useState<Backup | undefined>()
@@ -52,6 +62,15 @@ export function BackupsMain() {
 
   const [createBackupDialogOpen, setCreateBackupDialogOpen] = useState(false)
 
+  const schedules = useMemo(
+    () => (schedulesData ?? []).map(mapApiScheduleToViewModel),
+    [schedulesData]
+  )
+  const usedScheduleWarehouseIds = useMemo(
+    () => schedules.map((schedule) => schedule.warehouseId),
+    [schedules]
+  )
+
   const handleViewBackup = (backup: Backup) => {
     setSelectedBackup(backup)
     setDetailOpen(true)
@@ -62,12 +81,18 @@ export function BackupsMain() {
     setDeleteDialogOpen(true)
   }
 
-  const confirmDeleteBackup = () => {
-    if (backupToDelete) {
-      setBackups((prev) => prev.filter((b) => b.id !== backupToDelete.id))
-      toast.success(`Kopia zapasowa "${backupToDelete.name}" została usunięta`)
-      setBackupToDelete(undefined)
+  const confirmDeleteBackup = async () => {
+    if (!backupToDelete) {
+      return
     }
+
+    await deleteBackupMutation.mutateAsync(backupToDelete.id)
+    toast.success(
+      t("generated.admin.backups.backupDeletedToast", {
+        value0: backupToDelete.name,
+      })
+    )
+    setBackupToDelete(undefined)
   }
 
   const handleRestoreBackup = (backup: Backup) => {
@@ -75,58 +100,68 @@ export function BackupsMain() {
     setRestoreDialogOpen(true)
   }
 
-  const confirmRestoreBackup = () => {
-    if (backupToRestore) {
-      setBackups((prev) =>
-        prev.map((backup) =>
-          backup.id === backupToRestore.id
-            ? { ...backup, status: "RESTORING" as const }
-            : backup
-        )
-      )
-      toast.success(`Rozpoczęto przywracanie z kopii "${backupToRestore.name}"`)
-      setBackupToRestore(undefined)
+  const confirmRestoreBackup = async () => {
+    if (!backupToRestore) {
+      return
     }
+
+    await restoreBackupMutation.mutateAsync(backupToRestore.id)
+    toast.success(
+      t("generated.admin.backups.backupRestoreStartedToast", {
+        value0: backupToRestore.name,
+      })
+    )
+    setBackupToRestore(undefined)
   }
 
-  const handleCreateManualConfirm = (
-    warehouseId: string | null,
+  const handleCreateManualConfirm = async (
+    warehouseId: number | null,
     warehouseName: string | null
   ) => {
-    const newBackup: Backup = {
-      id: crypto.randomUUID(),
-      name: `backup-${new Date().toISOString().slice(0, 10)}-manual`,
-      createdAt: new Date().toISOString(),
-      completedAt: null,
-      sizeBytes: null,
-      status: "PENDING",
-      type: "MANUAL",
-      warehouseId,
-      warehouseName,
+    if (warehouseId == null) {
+      const createdBackups = await backupAllWarehousesMutation.mutateAsync()
+      toast.success(
+        t("generated.admin.backups.backupAllStartedToast", {
+          value0: createdBackups.length,
+        })
+      )
+      return
     }
-    setBackups((prev) => [newBackup, ...prev])
-    toast.success("Rozpoczęto tworzenie nowej kopii zapasowej")
+
+    await createBackupMutation.mutateAsync({
+      warehouseId,
+      resourceTypes: DEFAULT_BACKUP_RESOURCE_TYPES,
+    })
+    toast.success(
+      t("generated.admin.backups.backupCreateStartedToast", {
+        value0: warehouseName ?? t("generated.shared.warehouse"),
+      })
+    )
   }
 
-  const handleRetryBackup = (backup: Backup) => {
-    setBackups((prev) =>
-      prev.map((b) =>
-        b.id === backup.id
-          ? {
-              ...b,
-              status: "PENDING" as const,
-              progress: 0,
-              createdAt: new Date().toISOString(),
-              completedAt: null,
-              sizeBytes: null,
-            }
-          : b
-      )
+  const handleRetryBackup = async (backup: Backup) => {
+    await createBackupMutation.mutateAsync({
+      warehouseId: backup.warehouseId,
+      resourceTypes:
+        backup.resourceTypes.length > 0
+          ? backup.resourceTypes
+          : DEFAULT_BACKUP_RESOURCE_TYPES,
+    })
+    toast.success(
+      t("generated.admin.backups.backupRetryStartedToast", {
+        value0: backup.name,
+      })
     )
-    toast.success("Ponowiono próbę utworzenia kopii zapasowej")
   }
 
   const handleAddSchedule = () => {
+    const totalWarehouses = warehousesSummaryData?.totalElements
+
+    if (totalWarehouses != null && schedules.length >= totalWarehouses) {
+      toast.info(t("generated.admin.backups.noWarehousesForSchedule"))
+      return
+    }
+
     setSelectedSchedule(undefined)
     setScheduleDialogOpen(true)
   }
@@ -136,194 +171,127 @@ export function BackupsMain() {
     setScheduleDialogOpen(true)
   }
 
-  const handleToggleSchedule = (id: string) => {
-    let toastMessage: string | null = null
+  const handleToggleSchedule = async (
+    warehouseId: number,
+    schedule: BackupSchedule
+  ) => {
+    const nextEnabled = !schedule.enabled
 
-    setSchedules((prev) => {
-      const schedule = prev.find((item) => item.id === id)
-      if (!schedule) {
-        return prev
-      }
-
-      const nextEnabled = !schedule.enabled
-      toastMessage = nextEnabled
-        ? `Harmonogram dla "${schedule.warehouseName}" został włączony`
-        : `Harmonogram dla "${schedule.warehouseName}" został wyłączony`
-
-      return prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              enabled: nextEnabled,
-              nextBackupAt: nextBackupDate(
-                item.frequency,
-                item.customDays ?? null,
-                nextEnabled
-              ),
-            }
-          : item
-      )
+    await upsertScheduleMutation.mutateAsync({
+      warehouseId,
+      scheduleCode: schedule.frequency,
+      backupHour: schedule.backupHour,
+      dayOfWeek: schedule.dayOfWeek ?? undefined,
+      dayOfMonth: schedule.dayOfMonth ?? undefined,
+      resourceTypes:
+        schedule.resourceTypes.length > 0
+          ? schedule.resourceTypes
+          : DEFAULT_BACKUP_RESOURCE_TYPES,
+      enabled: nextEnabled,
     })
 
-    if (toastMessage) {
-      toast.success(toastMessage)
-    }
+    toast.success(
+      nextEnabled
+        ? t("generated.admin.backups.scheduleEnabledToast", {
+            value0: schedule.warehouseName,
+          })
+        : t("generated.admin.backups.scheduleDisabledToast", {
+            value0: schedule.warehouseName,
+          })
+    )
   }
 
-  const handleDeleteSchedule = (id: string) => {
-    const scheduleToDelete = schedules.find((s) => s.id === id)
-    setSchedules((prev) => prev.filter((schedule) => schedule.id !== id))
-    if (scheduleToDelete) {
-      toast.success(
-        `Harmonogram dla "${scheduleToDelete.warehouseName}" został usunięty`
-      )
-    }
-  }
-
-  const handleScheduleSubmit = (data: ScheduleSubmitPayload) => {
-    const customDays: number | null = data.customDays ?? null
-    const nextBackupAt = nextBackupDate(
-      data.frequency,
-      customDays,
-      data.enabled
+  const handleDeleteSchedule = async (warehouseId: number) => {
+    const scheduleToDelete = schedules.find(
+      (schedule) => schedule.warehouseId === warehouseId
     )
 
-    const isExisting = schedules.some((s) => s.id === data.id)
+    await deleteScheduleMutation.mutateAsync(warehouseId)
 
-    if (isExisting) {
-      setSchedules((prev) =>
-        prev.map((schedule) =>
-          schedule.id === data.id
-            ? {
-                ...schedule,
-                frequency: data.frequency,
-                customDays,
-                enabled: data.enabled,
-                nextBackupAt,
-              }
-            : schedule
-        )
+    if (scheduleToDelete) {
+      toast.success(
+        t("generated.admin.backups.scheduleDeletedToast", {
+          value0: scheduleToDelete.warehouseName,
+        })
       )
-      toast.success(`Zaktualizowano harmonogram dla "${data.warehouseName}"`)
-    } else {
-      const newSchedule: BackupSchedule = {
-        id: data.id,
-        warehouseId: data.warehouseId,
-        warehouseName: data.warehouseName,
-        frequency: data.frequency,
-        customDays,
-        enabled: data.enabled,
-        lastBackupAt: null,
-        nextBackupAt,
-      }
-      setSchedules((prev) => [...prev, newSchedule])
-      toast.success(`Dodano nowy harmonogram dla "${data.warehouseName}"`)
     }
   }
 
-  const completedCount = backups.filter(
-    (backup) => backup.status === "COMPLETED"
-  ).length
-  const failedCount = backups.filter(
-    (backup) => backup.status === "FAILED"
-  ).length
-  const pendingCount = backups.filter(
-    (backup) => backup.status === "PENDING" || backup.status === "RESTORING"
-  ).length
-  const activeSchedules = schedules.filter(
-    (schedule) => schedule.enabled
-  ).length
+  const handleScheduleSubmit = async (data: ScheduleSubmitPayload) => {
+    const existingSchedule = schedules.find(
+      (schedule) => schedule.warehouseId === data.warehouseId
+    )
 
-  const statBadges: (StatBadgeConfig & { show: boolean })[] = [
-    {
-      icon: DatabaseIcon,
-      count: backups.length,
-      label: `${pluralize(backups.length, "kopia", "kopie", "kopii")}`,
-      className: "bg-background/50 text-muted-foreground",
-      show: true,
-    },
-    {
-      icon: Tick02Icon,
-      count: completedCount,
-      label: "ukończonych",
-      className:
-        "border-green-500/30 bg-green-500/5 text-green-600 dark:text-green-500",
-      show: completedCount > 0,
-    },
-    {
-      icon: Cancel01Icon,
-      count: failedCount,
-      label: "błędów",
-      className: "border-destructive/30 bg-destructive/5 text-destructive",
-      show: failedCount > 0,
-    },
-    {
-      icon: Clock01Icon,
-      count: pendingCount,
-      label: "w trakcie",
-      className: "border-orange-500/30 bg-orange-500/5 text-orange-500",
-      show: pendingCount > 0,
-    },
-    {
-      icon: Calendar03Icon,
-      count: activeSchedules,
-      label: pluralize(
-        activeSchedules,
-        "harmonogram",
-        "harmonogramy",
-        "harmonogramów"
-      ),
-      className: "bg-background/50 text-muted-foreground",
-      show: true,
-    },
-  ]
+    await upsertScheduleMutation.mutateAsync({
+      warehouseId: data.warehouseId,
+      scheduleCode: data.frequency,
+      backupHour: data.backupHour,
+      dayOfWeek: data.dayOfWeek ?? undefined,
+      dayOfMonth: data.dayOfMonth ?? undefined,
+      resourceTypes: existingSchedule?.resourceTypes.length
+        ? existingSchedule.resourceTypes
+        : DEFAULT_BACKUP_RESOURCE_TYPES,
+      enabled: data.enabled,
+    })
+
+    toast.success(
+      existingSchedule
+        ? t("generated.admin.backups.scheduleUpdatedToast", {
+            value0: data.warehouseName,
+          })
+        : t("generated.admin.backups.scheduleCreatedToast", {
+            value0: data.warehouseName,
+          })
+    )
+  }
+
+  const isCreateBackupPending =
+    createBackupMutation.isPending || backupAllWarehousesMutation.isPending
+  const isScheduleMutationPending =
+    upsertScheduleMutation.isPending || deleteScheduleMutation.isPending
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
         actions={
-          <Button onClick={() => setCreateBackupDialogOpen(true)}>
+          <Button
+            disabled={isCreateBackupPending || isScheduleMutationPending}
+            onClick={() => setCreateBackupDialogOpen(true)}
+          >
             <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-            Utwórz kopię zapasową
+            {t("generated.admin.backups.createBackupTitle")}
           </Button>
         }
-        description="Zarządzaj kopiami zapasowymi i harmonogramami"
+        description={t("generated.admin.backups.pageDescription")}
         icon={DatabaseIcon}
-        navLinks={ADMIN_NAV_LINKS.map((link) => ({
+        navLinks={getAdminNavLinks(t).map((link) => ({
           title: link.title,
           url: link.url,
         }))}
-        title="Kopie zapasowe"
+        title={t("generated.shared.backups")}
       >
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          {statBadges
-            .filter((badge) => badge.show)
-            .map((badge) => (
-              <StatBadge
-                className={badge.className}
-                count={badge.count}
-                icon={badge.icon}
-                key={badge.label}
-                label={badge.label}
-              />
-            ))}
-        </div>
+        <BackupsHeaderStats />
       </AdminPageHeader>
 
       <SchedulesSection
         onAdd={handleAddSchedule}
-        onDelete={handleDeleteSchedule}
+        onDelete={(warehouseId) => {
+          handleDeleteSchedule(warehouseId).catch(() => undefined)
+        }}
         onEdit={handleEditSchedule}
-        onToggle={handleToggleSchedule}
+        onToggle={(warehouseId, schedule) => {
+          handleToggleSchedule(warehouseId, schedule).catch(() => undefined)
+        }}
         schedules={schedules}
       />
 
       <BackupsTable
-        backups={backups}
         onCreateManual={() => setCreateBackupDialogOpen(true)}
         onDelete={handleDeleteBackup}
         onRestore={handleRestoreBackup}
-        onRetry={handleRetryBackup}
+        onRetry={(backup) => {
+          handleRetryBackup(backup).catch(() => undefined)
+        }}
         onView={handleViewBackup}
       />
 
@@ -334,34 +302,47 @@ export function BackupsMain() {
       />
 
       <ConfirmDialog
-        description={`Czy na pewno chcesz usunąć kopię zapasową "${backupToDelete?.name}"? Ta operacja jest nieodwracalna.`}
-        onConfirm={confirmDeleteBackup}
+        description={t("generated.admin.backups.deleteBackupDescription", {
+          value0: backupToDelete?.name,
+        })}
+        onConfirm={() => {
+          confirmDeleteBackup().catch(() => undefined)
+        }}
         onOpenChange={setDeleteDialogOpen}
         open={deleteDialogOpen}
-        title="Usuń kopię zapasową"
+        title={t("generated.admin.backups.deleteBackupTitle")}
       />
 
       <ConfirmDialog
-        description={`Czy na pewno chcesz przywrócić dane z kopii "${backupToRestore?.name}"? Obecne dane zostaną nadpisane.`}
-        onConfirm={confirmRestoreBackup}
+        description={t("generated.admin.backups.restoreBackupDescription", {
+          value0: backupToRestore?.name,
+        })}
+        onConfirm={() => {
+          confirmRestoreBackup().catch(() => undefined)
+        }}
         onOpenChange={setRestoreDialogOpen}
         open={restoreDialogOpen}
-        title="Przywróć z kopii zapasowej"
+        title={t("generated.admin.backups.restoreBackupTitle")}
       />
 
       <ScheduleDialog
-        availableWarehouses={AVAILABLE_WAREHOUSES.filter(
-          (w) => !schedules.some((s) => s.warehouseId === w.id)
-        )}
+        isSubmitting={isScheduleMutationPending}
         onOpenChange={setScheduleDialogOpen}
-        onSubmit={handleScheduleSubmit}
+        onSubmit={(payload) => {
+          handleScheduleSubmit(payload).catch(() => undefined)
+        }}
         open={scheduleDialogOpen}
         schedule={selectedSchedule}
+        usedWarehouseIds={usedScheduleWarehouseIds}
       />
 
       <CreateBackupDialog
-        availableWarehouses={AVAILABLE_WAREHOUSES}
-        onConfirm={handleCreateManualConfirm}
+        isSubmitting={isCreateBackupPending}
+        onConfirm={(warehouseId, warehouseName) => {
+          handleCreateManualConfirm(warehouseId, warehouseName).catch(
+            () => undefined
+          )
+        }}
         onOpenChange={setCreateBackupDialogOpen}
         open={createBackupDialogOpen}
       />

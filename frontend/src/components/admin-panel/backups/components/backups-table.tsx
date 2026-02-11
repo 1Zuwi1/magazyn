@@ -11,21 +11,20 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   type ColumnDef,
-  type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
+  type OnChangeFn,
   type Row,
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
-import { useMemo, useState } from "react"
+import { useLocale } from "next-intl"
+import { useEffect, useMemo, useState } from "react"
 import {
   SortableHeader,
   StaticHeader,
 } from "@/components/dashboard/items/sortable-header"
+import { formatDateTime } from "@/components/dashboard/utils/helpers"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -33,7 +32,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { NoItemsEmptyState } from "@/components/ui/empty-state"
+import {
+  ErrorEmptyState,
+  FilterEmptyState,
+  NoItemsEmptyState,
+} from "@/components/ui/empty-state"
+import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -42,13 +47,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import useBackups from "@/hooks/use-backups"
+import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
-import { formatDateTime } from "../../lib/utils"
+import {
+  BACKUPS_PAGE_SIZE,
+  getBackupsSortParams,
+} from "../lib/backups-table-query"
 import type { Backup } from "../types"
+import { mapApiBackupToViewModel } from "../utils"
 import { BackupStatusBadge } from "./backup-status-badge"
+import { WarehouseSelector } from "./warehouse-selector"
 
 interface BackupsTableProps {
-  backups: Backup[]
   onView: (backup: Backup) => void
   onRestore: (backup: Backup) => void
   onRetry: (backup: Backup) => void
@@ -57,6 +68,8 @@ interface BackupsTableProps {
 }
 
 function createColumns(
+  t: ReturnType<typeof useAppTranslations>,
+  locale: string,
   onView: (backup: Backup) => void,
   onRestore: (backup: Backup) => void,
   onRetry: (backup: Backup) => void,
@@ -64,9 +77,12 @@ function createColumns(
 ): ColumnDef<Backup>[] {
   return [
     {
+      id: "name",
       accessorKey: "name",
       header: ({ column }) => (
-        <SortableHeader column={column}>Nazwa</SortableHeader>
+        <SortableHeader column={column}>
+          {t("generated.shared.name")}
+        </SortableHeader>
       ),
       cell: ({ row }) => {
         const backup = row.original
@@ -82,14 +98,17 @@ function createColumns(
       enableSorting: true,
     },
     {
+      id: "status",
       accessorKey: "status",
       header: ({ column }) => (
-        <SortableHeader column={column}>Status</SortableHeader>
+        <SortableHeader column={column}>
+          {t("generated.shared.status")}
+        </SortableHeader>
       ),
       cell: ({ row }) => {
         const backup = row.original
         const isInProgress =
-          backup.status === "PENDING" || backup.status === "RESTORING"
+          backup.status === "IN_PROGRESS" || backup.status === "RESTORING"
         const hasProgress = isInProgress && backup.progress != null
 
         if (hasProgress) {
@@ -123,18 +142,21 @@ function createColumns(
     },
     {
       accessorKey: "warehouseName",
-      header: () => <StaticHeader>Magazyn</StaticHeader>,
+      header: () => (
+        <StaticHeader>{t("generated.shared.warehouse")}</StaticHeader>
+      ),
       cell: ({ row }) => (
-        <span className="text-sm">
-          {row.original.warehouseName ?? "Wszystkie"}
-        </span>
+        <span className="text-sm">{row.original.warehouseName}</span>
       ),
       enableSorting: false,
     },
     {
+      id: "createdAt",
       accessorKey: "createdAt",
       header: ({ column }) => (
-        <SortableHeader column={column}>Utworzony</SortableHeader>
+        <SortableHeader column={column}>
+          {t("generated.shared.created")}
+        </SortableHeader>
       ),
       cell: ({ row }) => (
         <div className="flex items-center gap-1.5 text-sm">
@@ -142,23 +164,29 @@ function createColumns(
             className="size-3.5 text-muted-foreground"
             icon={Clock01Icon}
           />
-          {formatDateTime(row.original.createdAt)}
+          {formatDateTime(row.original.createdAt, locale)}
         </div>
       ),
       enableSorting: true,
     },
     {
       id: "actions",
-      header: () => <StaticHeader>Akcje</StaticHeader>,
+      header: () => (
+        <StaticHeader>
+          {t("generated.admin.backups.actionsHeader")}
+        </StaticHeader>
+      ),
       cell: ({ row }) => {
         const backup = row.original
         const canRestore = backup.status === "COMPLETED"
         const isInProgress =
-          backup.status === "PENDING" || backup.status === "RESTORING"
+          backup.status === "IN_PROGRESS" || backup.status === "RESTORING"
 
         return (
           <DropdownMenu>
-            <DropdownMenuTrigger aria-label="Otwórz menu">
+            <DropdownMenuTrigger
+              aria-label={t("generated.admin.backups.openBackupMenu")}
+            >
               <HugeiconsIcon
                 className={cn(
                   buttonVariants({ variant: "ghost", size: "icon-xs" })
@@ -169,7 +197,7 @@ function createColumns(
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onView(backup)}>
                 <HugeiconsIcon className="mr-2 h-4 w-4" icon={EyeIcon} />
-                Szczegóły
+                {t("generated.admin.backups.detailsAction")}
               </DropdownMenuItem>
               {canRestore && (
                 <DropdownMenuItem onClick={() => onRestore(backup)}>
@@ -177,7 +205,7 @@ function createColumns(
                     className="mr-2 h-4 w-4"
                     icon={DatabaseRestoreIcon}
                   />
-                  Przywróć
+                  {t("generated.admin.backups.restoreAction")}
                 </DropdownMenuItem>
               )}
               {backup.status === "FAILED" && (
@@ -186,7 +214,7 @@ function createColumns(
                     className="mr-2 h-4 w-4"
                     icon={Refresh01Icon}
                   />
-                  Spróbuj ponownie
+                  {t("generated.admin.backups.retryAction")}
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem
@@ -195,7 +223,9 @@ function createColumns(
                 onClick={() => onDelete(backup)}
               >
                 <HugeiconsIcon className="mr-2 h-4 w-4" icon={Trash} />
-                {isInProgress ? "W trakcie" : "Usuń"}
+                {isInProgress
+                  ? t("generated.admin.backups.statusInProgress")
+                  : t("generated.shared.remove")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -208,7 +238,7 @@ function createColumns(
 
 function getRowClassName(row: Row<Backup>) {
   const status = row.original.status
-  if (status === "PENDING") {
+  if (status === "IN_PROGRESS") {
     return "bg-orange-500/[0.03] dark:bg-orange-500/[0.06]"
   }
   if (status === "RESTORING") {
@@ -220,49 +250,210 @@ function getRowClassName(row: Row<Backup>) {
   return ""
 }
 
+function getVisiblePages(currentPage: number, totalPages: number): number[] {
+  return Array.from({ length: Math.min(totalPages, 5) }, (_, index) => {
+    if (totalPages <= 5) {
+      return index + 1
+    }
+    if (currentPage <= 3) {
+      return index + 1
+    }
+    if (currentPage >= totalPages - 2) {
+      return totalPages - 4 + index
+    }
+    return currentPage - 2 + index
+  })
+}
+
 export function BackupsTable({
-  backups,
   onView,
   onRestore,
   onRetry,
   onDelete,
   onCreateManual,
 }: BackupsTableProps) {
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "createdAt", desc: true },
-  ])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-
-  const columns = useMemo(
-    () => createColumns(onView, onRestore, onRetry, onDelete),
-    [onView, onRestore, onRetry, onDelete]
+  const t = useAppTranslations()
+  const locale = useLocale()
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [warehouseIdFilter, setWarehouseIdFilter] = useState<number | null>(
+    null
   )
+  console.log(sorting)
+  const sortingQuery = useMemo(() => getBackupsSortParams(sorting), [sorting])
+
+  const {
+    data: backupsData,
+    isError,
+    isPending,
+    refetch: refetchBackups,
+  } = useBackups({
+    page: currentPage - 1,
+    size: BACKUPS_PAGE_SIZE,
+    warehouseId: warehouseIdFilter ?? undefined,
+    ...sortingQuery,
+  })
+
+  const backups = useMemo(
+    () =>
+      (backupsData?.content ?? []).map((backup) =>
+        mapApiBackupToViewModel(backup, t)
+      ),
+    [backupsData?.content, t]
+  )
+  const totalPages = Math.max(backupsData?.totalPages ?? 1, 1)
+  const totalItems = backupsData?.totalElements ?? 0
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
+
+  const handlePageChange = (nextPage: number) => {
+    const boundedPage = Math.min(Math.max(nextPage, 1), totalPages)
+    setCurrentPage(boundedPage)
+  }
+
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    setSorting((previousSorting) =>
+      typeof updater === "function" ? updater(previousSorting) : updater
+    )
+    setCurrentPage(1)
+  }
+
+  const handleWarehouseFilterChange = (warehouseId: number | null) => {
+    setWarehouseIdFilter(warehouseId)
+    setCurrentPage(1)
+  }
+
+  const columns = createColumns(t, locale, onView, onRestore, onRetry, onDelete)
 
   const table = useReactTable({
     data: backups,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    manualSorting: true,
+    manualFiltering: true,
+    onSortingChange: handleSortingChange,
     state: {
       sorting,
-      columnFilters,
     },
   })
 
-  const currentPage = table.getState().pagination.pageIndex + 1
-  const totalPages = table.getPageCount()
+  const safeTotalPages = Math.max(totalPages, 1)
+  const startItem =
+    totalItems > 0 ? (currentPage - 1) * BACKUPS_PAGE_SIZE + 1 : 0
+  const endItem = Math.min(currentPage * BACKUPS_PAGE_SIZE, totalItems)
+  const rows = table.getRowModel().rows
+  const backupItemLabel = {
+    singular: t("generated.admin.backups.backupItemLabel"),
+    plural: t("generated.admin.backups.backupItemLabelPlural"),
+    genitive: t("generated.admin.backups.backupItemLabelGenitive"),
+  }
+  const noBackupsDescription = t("generated.ui.noItemsDescription", {
+    value0: 0,
+    singular: backupItemLabel.singular,
+    plural: backupItemLabel.plural,
+    genitive: backupItemLabel.genitive,
+  })
+  const noBackupsTitle = t("generated.ui.noItemsTitle", {
+    value0: 0,
+    singular: backupItemLabel.singular,
+    plural: backupItemLabel.plural,
+    genitive: backupItemLabel.genitive,
+  })
+  const isFiltered = warehouseIdFilter != null
 
-  const pageSize = table.getState().pagination.pageSize
-  const totalItems = table.getFilteredRowModel().rows.length
-  const startItem = totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0
-  const endItem = Math.min(currentPage * pageSize, totalItems)
+  const getTableContent = () => {
+    if (isPending) {
+      return Array.from({ length: 6 }, (_, rowIndex) => (
+        <TableRow key={`backup-skeleton-row-${rowIndex.toString()}`}>
+          {columns.map((column, columnIndex) => (
+            <TableCell
+              key={`backup-skeleton-cell-${column.id ?? columnIndex.toString()}-${columnIndex.toString()}`}
+            >
+              <Skeleton className="h-4 w-full" />
+            </TableCell>
+          ))}
+        </TableRow>
+      ))
+    }
+
+    if (isError) {
+      return (
+        <TableRow>
+          <TableCell className="p-0" colSpan={columns.length}>
+            <ErrorEmptyState className="py-10" onRetry={refetchBackups} />
+          </TableCell>
+        </TableRow>
+      )
+    }
+
+    if (rows.length === 0) {
+      return (
+        <TableRow>
+          <TableCell className="p-0" colSpan={columns.length}>
+            {isFiltered ? (
+              <FilterEmptyState
+                onClear={() => {
+                  handleWarehouseFilterChange(null)
+                }}
+              />
+            ) : (
+              <NoItemsEmptyState
+                description={noBackupsDescription}
+                icon={DatabaseRestoreIcon}
+                itemName={backupItemLabel.singular}
+                onAdd={onCreateManual}
+                title={noBackupsTitle}
+              />
+            )}
+          </TableCell>
+        </TableRow>
+      )
+    }
+
+    return rows.map((row) => (
+      <TableRow
+        className={cn(
+          "transition-all duration-300 hover:bg-muted/50",
+          getRowClassName(row)
+        )}
+        key={row.id}
+      >
+        {row.getVisibleCells().map((cell) => (
+          <TableCell className="px-4 py-3" key={cell.id}>
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        ))}
+      </TableRow>
+    ))
+  }
 
   return (
     <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div className="border-b bg-muted/20 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-3 sm:max-w-md">
+          <Label
+            className="font-medium text-sm"
+            htmlFor="backups-warehouse-filter"
+          >
+            {t("generated.shared.warehouse")}
+          </Label>
+          <WarehouseSelector
+            allOptionLabel={t("generated.admin.backups.allWarehouses")}
+            id="backups-warehouse-filter"
+            includeAllOption
+            onValueChange={(warehouseId) => {
+              handleWarehouseFilterChange(warehouseId)
+            }}
+            placeholder={t("generated.shared.searchWarehouse")}
+            value={warehouseIdFilter}
+          />
+        </div>
+      </div>
+
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -287,103 +478,56 @@ export function BackupsTable({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  className={cn(
-                    "transition-all duration-300 hover:bg-muted/50",
-                    getRowClassName(row)
-                  )}
-                  key={row.id}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell className="px-4 py-3" key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell className="p-0" colSpan={columns.length}>
-                  <NoItemsEmptyState
-                    itemName="kopia zapasowa"
-                    onAdd={onCreateManual}
-                  />
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
+          <TableBody>{getTableContent()}</TableBody>
         </Table>
       </div>
 
-      {totalPages > 1 && (
+      {safeTotalPages > 1 && (
         <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/20 px-4 py-3">
           <p className="text-muted-foreground text-sm">
-            {totalItems > 0 ? (
-              <>
-                Wyświetlanie{" "}
-                <span className="font-medium text-foreground">{startItem}</span>
-                –<span className="font-medium text-foreground">{endItem}</span>{" "}
-                z{" "}
-                <span className="font-medium text-foreground">
-                  {totalItems}
-                </span>{" "}
-                kopii
-              </>
-            ) : (
-              "Brak wyników"
-            )}
+            {totalItems > 0
+              ? t("generated.admin.backups.tableShowing", {
+                  value0: startItem,
+                  value1: endItem,
+                  value2: totalItems,
+                })
+              : t("generated.shared.results")}
           </p>
           <div className="flex items-center gap-2">
             <Button
-              disabled={!table.getCanPreviousPage()}
-              onClick={() => table.previousPage()}
+              disabled={currentPage <= 1}
+              onClick={() => handlePageChange(currentPage - 1)}
               size="sm"
               variant="outline"
             >
-              Poprzednia
+              {t("generated.admin.backups.previousPage")}
             </Button>
             <div className="flex items-center gap-1 px-2">
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                let pageNum: number
-                if (totalPages <= 5) {
-                  pageNum = i + 1
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i
-                } else {
-                  pageNum = currentPage - 2 + i
-                }
-                return (
+              {getVisiblePages(currentPage, safeTotalPages).map(
+                (pageNumber) => (
                   <button
                     className={cn(
                       "flex size-8 items-center justify-center rounded-md text-sm transition-colors",
-                      pageNum === currentPage
+                      pageNumber === currentPage
                         ? "bg-primary font-medium text-primary-foreground"
                         : "hover:bg-muted"
                     )}
-                    key={pageNum}
-                    onClick={() => table.setPageIndex(pageNum - 1)}
+                    key={pageNumber}
+                    onClick={() => handlePageChange(pageNumber)}
                     type="button"
                   >
-                    {pageNum}
+                    {pageNumber}
                   </button>
                 )
-              })}
+              )}
             </div>
             <Button
-              disabled={!table.getCanNextPage()}
-              onClick={() => table.nextPage()}
+              disabled={currentPage >= safeTotalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
               size="sm"
               variant="outline"
             >
-              Następna
+              {t("generated.ui.next")}
             </Button>
           </div>
         </div>

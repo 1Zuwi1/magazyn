@@ -14,72 +14,79 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useAppTranslations } from "@/i18n/use-translations"
+import { cn } from "@/lib/utils"
 import type {
-  AvailableWarehouse,
   BackupSchedule,
   ScheduleFrequency,
   ScheduleSubmitPayload,
 } from "../types"
-import { FREQUENCY_CONFIG } from "../utils"
-
-const ALL_WAREHOUSES_ID = "__all__"
-
-const frequencyOptions = (
-  Object.keys(FREQUENCY_CONFIG) as ScheduleFrequency[]
-).map((value) => ({ label: FREQUENCY_CONFIG[value].label, value }))
+import { FREQUENCY_OPTIONS } from "../utils"
+import { WarehouseSelector } from "./warehouse-selector"
 
 interface ScheduleDialogProps {
   schedule: BackupSchedule | undefined
-  availableWarehouses: AvailableWarehouse[]
+  usedWarehouseIds: number[]
+  isSubmitting?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: ScheduleSubmitPayload) => void
 }
 
-const buildEditPayload = (
-  schedule: BackupSchedule,
+const getFrequencyLabel = (
   frequency: ScheduleFrequency,
-  customDays: number | null
-): ScheduleSubmitPayload => ({
-  id: schedule.id,
-  warehouseId: schedule.warehouseId,
-  warehouseName: schedule.warehouseName,
-  frequency,
-  customDays,
-  enabled: schedule.enabled,
-})
-
-const resolveNewWarehouse = (
-  warehouseId: string,
-  availableWarehouses: AvailableWarehouse[]
-): { id: string | null; name: string } | null => {
-  const isAll = warehouseId === ALL_WAREHOUSES_ID
-  if (isAll) {
-    return { id: null, name: "Wszystkie magazyny" }
+  t: ReturnType<typeof useAppTranslations>
+) => {
+  if (frequency === "DAILY") {
+    return t("generated.admin.backups.frequencyDailySimple")
   }
-
-  const warehouse = availableWarehouses.find((item) => item.id === warehouseId)
-  if (!warehouse) {
-    return null
+  if (frequency === "WEEKLY") {
+    return t("generated.admin.backups.frequencyWeeklySimple")
   }
+  return t("generated.admin.backups.frequencyMonthlySimple")
+}
 
-  return { id: warehouse.id, name: warehouse.name }
+const getWeekdayTranslationKey = (dayOfWeek: number): string => {
+  if (dayOfWeek === 1) {
+    return "generated.admin.backups.weekdayMonday"
+  }
+  if (dayOfWeek === 2) {
+    return "generated.admin.backups.weekdayTuesday"
+  }
+  if (dayOfWeek === 3) {
+    return "generated.admin.backups.weekdayWednesday"
+  }
+  if (dayOfWeek === 4) {
+    return "generated.admin.backups.weekdayThursday"
+  }
+  if (dayOfWeek === 5) {
+    return "generated.admin.backups.weekdayFriday"
+  }
+  if (dayOfWeek === 6) {
+    return "generated.admin.backups.weekdaySaturday"
+  }
+  return "generated.admin.backups.weekdaySunday"
 }
 
 export function ScheduleDialog({
   schedule,
-  availableWarehouses,
+  usedWarehouseIds,
+  isSubmitting = false,
   open,
   onOpenChange,
   onSubmit,
 }: ScheduleDialogProps) {
+  const t = useAppTranslations()
   const isEdit = !!schedule
 
   const getFormValues = useCallback(
     () => ({
-      warehouseId: schedule?.warehouseId ?? ALL_WAREHOUSES_ID,
+      warehouseId: schedule?.warehouseId ?? null,
+      warehouseName: schedule?.warehouseName ?? "",
       frequency: schedule?.frequency ?? ("DAILY" as ScheduleFrequency),
-      customDays: schedule?.customDays ?? 14,
+      backupHour: schedule?.backupHour ?? 2,
+      dayOfWeek: schedule?.dayOfWeek ?? 1,
+      dayOfMonth: schedule?.dayOfMonth ?? 1,
     }),
     [schedule]
   )
@@ -87,32 +94,26 @@ export function ScheduleDialog({
   const form = useForm({
     defaultValues: getFormValues(),
     onSubmit: ({ value }) => {
-      const customDays = value.frequency === "CUSTOM" ? value.customDays : null
+      const selectedWarehouseId = isEdit
+        ? (schedule?.warehouseId ?? null)
+        : value.warehouseId
+      const selectedWarehouseName = isEdit
+        ? (schedule?.warehouseName ?? "")
+        : value.warehouseName.trim()
 
-      if (isEdit && schedule) {
-        onSubmit(buildEditPayload(schedule, value.frequency, customDays))
-        onOpenChange(false)
-        return
-      }
-
-      const warehouse = resolveNewWarehouse(
-        value.warehouseId,
-        availableWarehouses
-      )
-      if (!warehouse) {
-        toast.error(
-          "Nie znaleziono wybranego magazynu. Odśwież listę i spróbuj ponownie."
-        )
+      if (selectedWarehouseId == null || selectedWarehouseName.length === 0) {
+        toast.error(t("generated.admin.backups.selectedWarehouseNotFound"))
         return
       }
 
       onSubmit({
-        id: crypto.randomUUID(),
-        warehouseId: warehouse.id,
-        warehouseName: warehouse.name,
+        warehouseId: selectedWarehouseId,
+        warehouseName: selectedWarehouseName,
         frequency: value.frequency,
-        customDays,
-        enabled: true,
+        backupHour: value.backupHour,
+        dayOfWeek: value.frequency === "WEEKLY" ? value.dayOfWeek : null,
+        dayOfMonth: value.frequency === "MONTHLY" ? value.dayOfMonth : null,
+        enabled: schedule?.enabled ?? true,
       })
       onOpenChange(false)
     },
@@ -122,83 +123,73 @@ export function ScheduleDialog({
     if (open) {
       form.reset(getFormValues())
     }
-  }, [open, getFormValues, form])
+  }, [form, getFormValues, open])
 
   return (
     <FormDialog
       description={
         isEdit
-          ? `Zmień harmonogram kopii zapasowych dla magazynu "${schedule?.warehouseName}"`
-          : "Skonfiguruj harmonogram automatycznych kopii zapasowych"
+          ? t("generated.admin.backups.editScheduleDescription", {
+              value0: schedule?.warehouseName,
+            })
+          : t("generated.admin.backups.addScheduleDescription")
       }
       formId="schedule-form"
       onFormReset={() => form.reset(getFormValues())}
       onOpenChange={onOpenChange}
       open={open}
-      title={isEdit ? "Edytuj harmonogram" : "Dodaj harmonogram"}
+      title={
+        isEdit
+          ? t("generated.admin.backups.editScheduleTitle")
+          : t("generated.admin.backups.addScheduleTitle")
+      }
     >
       <form
         className="space-y-4 px-0.5"
         id="schedule-form"
-        onSubmit={(e) => {
-          e.preventDefault()
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (isSubmitting) {
+            return
+          }
           form.handleSubmit()
         }}
       >
         <FieldGroup className="gap-4">
           {!isEdit && (
-            <form.Field name="warehouseId">
-              {(field) => (
-                <FieldWithState
-                  field={field}
-                  label="Magazyn"
-                  layout="grid"
-                  renderInput={({ id, isInvalid }) => (
-                    <Select
-                      onValueChange={(value) => {
-                        if (value) {
-                          field.handleChange(value)
-                        }
-                      }}
-                      value={String(field.state.value)}
-                    >
-                      <SelectTrigger
-                        className={isInvalid ? "border-destructive" : ""}
-                        id={id}
-                      >
-                        <SelectValue>
-                          {field.state.value === ALL_WAREHOUSES_ID
-                            ? "Wszystkie"
-                            : (availableWarehouses.find(
-                                (w) => w.id === field.state.value
-                              )?.name ?? "Wybierz magazyn")}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={String(ALL_WAREHOUSES_ID)}>
-                          Wszystkie
-                        </SelectItem>
-                        {availableWarehouses.map((warehouse) => (
-                          <SelectItem
-                            key={warehouse.id}
-                            value={String(warehouse.id)}
-                          >
-                            {warehouse.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
+            <form.Subscribe
+              selector={(state) => ({
+                warehouseId: state.values.warehouseId,
+              })}
+            >
+              {(warehouseState) => (
+                <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[140px_1fr]">
+                  <span className="font-medium text-sm">
+                    {t("generated.shared.warehouse")}
+                  </span>
+                  <WarehouseSelector
+                    excludedWarehouseIds={usedWarehouseIds}
+                    onValueChange={(warehouseId, warehouseName) => {
+                      form.setFieldValue("warehouseId", warehouseId)
+                      form.setFieldValue("warehouseName", warehouseName ?? "")
+                    }}
+                    placeholder={t("generated.shared.searchWarehouse")}
+                    triggerClassName={cn(
+                      warehouseState.warehouseId == null &&
+                        "border-destructive text-destructive"
+                    )}
+                    value={warehouseState.warehouseId}
+                  />
+                </div>
               )}
-            </form.Field>
+            </form.Subscribe>
           )}
 
           <form.Field name="frequency">
             {(field) => (
               <FieldWithState
                 field={field}
-                label="Częstotliwość"
+                label={t("generated.admin.backups.frequencyLabel")}
                 layout="grid"
                 renderInput={({ id, isInvalid }) => (
                   <Select
@@ -214,15 +205,13 @@ export function ScheduleDialog({
                       id={id}
                     >
                       <SelectValue>
-                        {frequencyOptions.find(
-                          (f) => f.value === field.state.value
-                        )?.label ?? "Wybierz częstotliwość"}
+                        {getFrequencyLabel(field.state.value, t)}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {frequencyOptions.map((freq) => (
-                        <SelectItem key={freq.value} value={freq.value}>
-                          {freq.label}
+                      {FREQUENCY_OPTIONS.map((frequency) => (
+                        <SelectItem key={frequency} value={frequency}>
+                          {getFrequencyLabel(frequency, t)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -232,18 +221,116 @@ export function ScheduleDialog({
             )}
           </form.Field>
 
+          <form.Field
+            name="backupHour"
+            validators={{
+              onChange: ({ value }) => {
+                if (!Number.isInteger(value)) {
+                  return t("generated.admin.backups.hourMustBeInteger")
+                }
+                if (value < 0 || value > 23) {
+                  return t("generated.admin.backups.hourRangeError")
+                }
+                return undefined
+              },
+            }}
+          >
+            {(field) => (
+              <FieldWithState
+                field={field}
+                label={t("generated.admin.backups.hourLabel")}
+                layout="grid"
+                renderInput={({ id, isInvalid }) => (
+                  <Input
+                    className={isInvalid ? "border-destructive" : ""}
+                    id={id}
+                    max={23}
+                    min={0}
+                    onChange={(event) =>
+                      field.handleChange(Number(event.target.value))
+                    }
+                    type="number"
+                    value={field.state.value}
+                  />
+                )}
+              />
+            )}
+          </form.Field>
+
           <form.Subscribe selector={(state) => state.values.frequency}>
             {(frequency) =>
-              frequency === "CUSTOM" ? (
+              frequency === "WEEKLY" ? (
+                <form.Field name="dayOfWeek">
+                  {(field) => (
+                    <FieldWithState
+                      field={field}
+                      label={t("generated.admin.backups.dayOfWeekLabel")}
+                      layout="grid"
+                      renderInput={({ id, isInvalid }) => (
+                        <Select
+                          onValueChange={(value) => {
+                            if (value) {
+                              field.handleChange(Number(value))
+                            }
+                          }}
+                          value={String(field.state.value)}
+                        >
+                          <SelectTrigger
+                            className={isInvalid ? "border-destructive" : ""}
+                            id={id}
+                          >
+                            <SelectValue>
+                              {t(
+                                getWeekdayTranslationKey(
+                                  Number(field.state.value)
+                                )
+                              )}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">
+                              {t("generated.admin.backups.weekdayMonday")}
+                            </SelectItem>
+                            <SelectItem value="2">
+                              {t("generated.admin.backups.weekdayTuesday")}
+                            </SelectItem>
+                            <SelectItem value="3">
+                              {t("generated.admin.backups.weekdayWednesday")}
+                            </SelectItem>
+                            <SelectItem value="4">
+                              {t("generated.admin.backups.weekdayThursday")}
+                            </SelectItem>
+                            <SelectItem value="5">
+                              {t("generated.admin.backups.weekdayFriday")}
+                            </SelectItem>
+                            <SelectItem value="6">
+                              {t("generated.admin.backups.weekdaySaturday")}
+                            </SelectItem>
+                            <SelectItem value="7">
+                              {t("generated.admin.backups.weekdaySunday")}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  )}
+                </form.Field>
+              ) : null
+            }
+          </form.Subscribe>
+
+          <form.Subscribe selector={(state) => state.values.frequency}>
+            {(frequency) =>
+              frequency === "MONTHLY" ? (
                 <form.Field
-                  name="customDays"
+                  name="dayOfMonth"
                   validators={{
                     onChange: ({ value }) => {
-                      if (value < 1) {
-                        return "Interwał musi wynosić co najmniej 1 dzień"
-                      }
                       if (!Number.isInteger(value)) {
-                        return "Interwał musi być liczbą całkowitą"
+                        return t("generated.admin.backups.dayMustBeInteger")
+                      }
+                      if (value < 1 || value > 31) {
+                        return t("generated.admin.backups.dayRangeError")
                       }
                       return undefined
                     },
@@ -252,24 +339,20 @@ export function ScheduleDialog({
                   {(field) => (
                     <FieldWithState
                       field={field}
-                      label="Interwał"
+                      label={t("generated.admin.backups.dayOfMonthLabel")}
                       layout="grid"
                       renderInput={({ id, isInvalid }) => (
-                        <div className="flex items-center gap-2">
-                          <Input
-                            className={isInvalid ? "border-destructive" : ""}
-                            id={id}
-                            min={1}
-                            onChange={(e) =>
-                              field.handleChange(Number(e.target.value))
-                            }
-                            type="number"
-                            value={field.state.value}
-                          />
-                          <span className="shrink-0 text-muted-foreground text-sm">
-                            (dni)
-                          </span>
-                        </div>
+                        <Input
+                          className={isInvalid ? "border-destructive" : ""}
+                          id={id}
+                          max={31}
+                          min={1}
+                          onChange={(event) =>
+                            field.handleChange(Number(event.target.value))
+                          }
+                          type="number"
+                          value={field.state.value}
+                        />
                       )}
                     />
                   )}

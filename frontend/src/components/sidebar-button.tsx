@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 import type { NavigationItem } from "@/config/navigation"
 import { useSession } from "@/hooks/use-session"
+import { removeAppLocalePrefix } from "@/i18n/locale"
 import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { Button } from "./ui/button"
@@ -25,7 +26,8 @@ export default function SidebarButton({ item }: { item: NavigationItem }) {
   const t = useAppTranslations()
 
   const pathname = usePathname()
-  const isActive = pathname.startsWith(item.href)
+  const pathnameWithoutLocale = removeAppLocalePrefix(pathname)
+  const isActive = pathnameWithoutLocale.startsWith(item.href)
   const [isOpen, setIsOpen] = useState(isActive)
   const hasItems = item.items && item.items.length > 0
   const { data: session, isPending: isSessionPending } = useSession()
@@ -110,9 +112,9 @@ export default function SidebarButton({ item }: { item: NavigationItem }) {
                 <SidebarMenuSubItem key={subItem.title}>
                   <SidebarMenuSubButton
                     className={cn("w-full", {
-                      "font-semibold": pathname === subItem.href, // overwrite active styles
+                      "font-semibold": pathnameWithoutLocale === subItem.href, // overwrite active styles
                     })}
-                    isActive={pathname === subItem.href}
+                    isActive={pathnameWithoutLocale === subItem.href}
                     render={
                       <Link href={subItem.href}>
                         {subItem.icon && (
