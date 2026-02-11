@@ -306,18 +306,16 @@ public class ItemController {
     }
 
     @Operation(summary = "Get all photos for an item",
-            description = "Returns list of photo URLs for all photos in the item's gallery, ordered by display order.")
-    @ApiResponse(responseCode = "200", description = "List of photo URLs")
+            description = "Returns metadata for all photos in the item's gallery, ordered by display order.")
+    @ApiResponse(responseCode = "200", description = "List of item images")
     @GetMapping("/{id}/photos")
-    public ResponseEntity<List<String>> getItemPhotos(
+    public ResponseEntity<ResponseTemplate<List<ItemImageDto>>> getItemPhotos(
             @PathVariable Long id,
             HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(itemService.getItemPhotos(id, request).stream()
-                    .map(ItemImageDto::getPhotoUrl)
-                    .toList());
+            return ResponseEntity.ok(ResponseTemplate.success(itemService.getItemPhotos(id, request)));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
         }
     }
 
