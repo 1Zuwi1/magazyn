@@ -174,7 +174,7 @@ public class TwoFactorService {
      * Must be in sudo mode to call this method.
      *
      * @param finishTwoFactorAuthenticatorRequest containing the verification code
-     * @param request HTTP request
+     * @param request                             HTTP request
      * @throws AuthenticationException if code is invalid or user lacks permissions
      */
     public void finishTwoFactorGoogleSecret(FinishTwoFactorAuthenticatorRequest finishTwoFactorAuthenticatorRequest, HttpServletRequest request) throws AuthenticationException {
@@ -209,8 +209,8 @@ public class TwoFactorService {
     /**
      * Verifies a Google Authenticator TOTP code.
      *
-     * @param code 6-digit TOTP code
-     * @param user the user being verified
+     * @param code        6-digit TOTP code
+     * @param user        the user being verified
      * @param finishSetup true if during initial setup, false if during login
      * @return true if code is valid
      * @throws AuthenticationException if method is not enabled
@@ -238,8 +238,8 @@ public class TwoFactorService {
      * On success, creates 2FA success session.
      *
      * @param codeRequest containing method and code
-     * @param request HTTP request
-     * @param response HTTP response
+     * @param request     HTTP request
+     * @param response    HTTP response
      * @throws AuthenticationException if code is invalid or method not enabled
      */
     public void checkCode(CodeRequest codeRequest, HttpServletRequest request, HttpServletResponse response) {
@@ -316,8 +316,8 @@ public class TwoFactorService {
      * Uses a backup code for 2FA verification.
      * Each code can only be used once.
      *
-     * @param code the 12-character backup code
-     * @param request HTTP request
+     * @param code     the 12-character backup code
+     * @param request  HTTP request
      * @param response HTTP response
      * @throws AuthenticationException if code is invalid or method not enabled
      */
@@ -351,7 +351,7 @@ public class TwoFactorService {
      * Must be in sudo mode and 2FA verified to call this method.
      *
      * @param stringMethod the 2FA method to remove
-     * @param request HTTP request
+     * @param request      HTTP request
      * @throws AuthenticationException if method is invalid or user lacks permissions
      */
     public void removeTwoFactorMethod(String stringMethod, HttpServletRequest request) {
@@ -397,7 +397,7 @@ public class TwoFactorService {
      * Sets the default 2FA method for the user.
      * Must be in sudo mode to call this method.
      *
-     * @param method the default method to use
+     * @param method  the default method to use
      * @param request HTTP request
      * @throws AuthenticationException if user lacks permissions or method not enabled
      */

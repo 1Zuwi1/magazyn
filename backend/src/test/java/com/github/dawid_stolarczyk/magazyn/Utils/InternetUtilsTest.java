@@ -11,7 +11,6 @@ import org.mockito.quality.Strictness;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)

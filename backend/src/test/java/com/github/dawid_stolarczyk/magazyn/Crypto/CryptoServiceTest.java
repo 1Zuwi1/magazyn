@@ -1,6 +1,5 @@
 package com.github.dawid_stolarczyk.magazyn.Crypto;
 
-import com.github.dawid_stolarczyk.magazyn.Crypto.EncryptedData;
 import com.github.dawid_stolarczyk.magazyn.Exception.EncryptionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

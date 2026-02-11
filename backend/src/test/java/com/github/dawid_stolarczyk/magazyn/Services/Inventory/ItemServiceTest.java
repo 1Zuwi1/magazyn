@@ -36,7 +36,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ItemServiceTest {
@@ -294,7 +295,7 @@ class ItemServiceTest {
         void should_ThrowException_When_ItemNotFoundForUpload() {
             // Given
             List<MultipartFile> files = List.of(
-                    new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[] { 1, 2, 3 }));
+                    new MockMultipartFile("file", "photo.jpg", "image/jpeg", new byte[]{1, 2, 3}));
             when(itemRepository.findById(999L)).thenReturn(Optional.empty());
 
             // When / Then

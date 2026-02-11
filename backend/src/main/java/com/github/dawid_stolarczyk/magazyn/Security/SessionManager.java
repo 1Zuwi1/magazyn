@@ -30,10 +30,10 @@ public class SessionManager {
      * Creates a session after successful login.
      * Sets session and remember-me cookies, handles 2FA status.
      *
-     * @param user the authenticated user
-     * @param request HTTP request
-     * @param response HTTP response
-     * @param rememberMe whether to set long-lived remember-me cookie
+     * @param user           the authenticated user
+     * @param request        HTTP request
+     * @param response       HTTP response
+     * @param rememberMe     whether to set long-lived remember-me cookie
      * @param isPasskeyLogin true if login was via passkey (skips 2FA)
      */
     public void createSuccessLoginSession(User user,
@@ -83,8 +83,8 @@ public class SessionManager {
     /**
      * Completes 2FA process by setting 2FA auth cookie and updating session status.
      *
-     * @param user the authenticated user
-     * @param request HTTP request
+     * @param user     the authenticated user
+     * @param request  HTTP request
      * @param response HTTP response
      */
     public void create2FASuccessSession(User user, HttpServletRequest request, HttpServletResponse response) {
@@ -104,7 +104,7 @@ public class SessionManager {
      * Logs out the user by clearing all session-related cookies and invalidating sessions.
      *
      * @param response HTTP response
-     * @param request HTTP request
+     * @param request  HTTP request
      */
     public void logoutUser(HttpServletResponse response, HttpServletRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

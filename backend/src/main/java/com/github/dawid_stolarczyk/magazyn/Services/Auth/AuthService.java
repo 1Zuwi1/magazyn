@@ -194,7 +194,7 @@ public class AuthService {
      * Resets user password using a valid reset token.
      * Token can only be used once and expires after 15 minutes.
      *
-     * @param token password reset token from email link
+     * @param token       password reset token from email link
      * @param newPassword new password to set (must meet strength requirements)
      * @throws AuthenticationException for invalid/expired tokens or weak passwords
      */

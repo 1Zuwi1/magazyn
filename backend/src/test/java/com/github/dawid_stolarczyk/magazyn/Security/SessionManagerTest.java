@@ -7,8 +7,8 @@ import com.github.dawid_stolarczyk.magazyn.Security.Auth.Redis.SessionService;
 import com.github.dawid_stolarczyk.magazyn.Utils.CookiesUtils;
 import com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,11 +19,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -76,8 +72,8 @@ class SessionManagerTest {
 
         // Then
         mockedCookiesUtils.verify(() -> CookiesUtils.setCookie(eq(response), eq("SESSION"), eq("token123"), isNull()));
-        verify(sessionService).createSession(argThat(data -> 
-            data.getUserId().equals(100L) && data.getStatus2FA() == Status2FA.PRE_2FA
+        verify(sessionService).createSession(argThat(data ->
+                data.getUserId().equals(100L) && data.getStatus2FA() == Status2FA.PRE_2FA
         ));
     }
 

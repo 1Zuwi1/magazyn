@@ -1,10 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Auth;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.CodeRequest;
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.FinishTwoFactorAuthenticatorRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.TwoFactorMethodsResponse;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
-import com.github.dawid_stolarczyk.magazyn.Model.Enums.TwoFactor;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.AuthUtil;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.AuthPrincipal;

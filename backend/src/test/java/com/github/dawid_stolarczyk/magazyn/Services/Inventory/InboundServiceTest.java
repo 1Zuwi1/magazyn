@@ -1,6 +1,9 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 
-import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PlacementConfirmationRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PlacementConfirmationResponse;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PlacementPlanRequest;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.PlacementSlotRequest;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.Status2FA;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.*;

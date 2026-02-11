@@ -12,16 +12,14 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ApiKeyRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.WarehouseRepository;
-import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
+import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
@@ -29,6 +27,8 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+
+import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
 @Service
 @RequiredArgsConstructor
@@ -48,9 +48,9 @@ public class ApiKeyService {
     /**
      * Creates a new API key with the specified scopes and optional warehouse binding.
      *
-     * @param request API key configuration (name, scopes, optional warehouse)
+     * @param request         API key configuration (name, scopes, optional warehouse)
      * @param createdByUserId ID of the user creating the key
-     * @param httpRequest HTTP request for rate limiting
+     * @param httpRequest     HTTP request for rate limiting
      * @return response with generated API key (raw key only returned once)
      * @throws IllegalArgumentException if key name already exists or warehouse not found
      */
@@ -114,7 +114,7 @@ public class ApiKeyService {
     /**
      * Revokes (deactivates) an API key.
      *
-     * @param apiKeyId ID of the API key to revoke
+     * @param apiKeyId    ID of the API key to revoke
      * @param httpRequest HTTP request for rate limiting
      * @throws IllegalArgumentException if key not found
      */
@@ -146,7 +146,7 @@ public class ApiKeyService {
     /**
      * Retrieves details of a specific API key.
      *
-     * @param apiKeyId ID of the API key
+     * @param apiKeyId    ID of the API key
      * @param httpRequest HTTP request for rate limiting
      * @return API key DTO (without raw key)
      * @throws IllegalArgumentException if key not found
