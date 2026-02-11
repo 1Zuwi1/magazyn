@@ -93,6 +93,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ReportException.class)
     public ResponseEntity<ResponseTemplate<String>> handleReportException(ReportException ex) {
         log.warn("Report error: {} - {}", ex.getCode(), ex.getError().getDescription());
+        log.warn("Report error stack trace", ex);
         HttpStatus status = determineReportHttpStatus(ex.getCode());
         return ResponseEntity
                 .status(status)
