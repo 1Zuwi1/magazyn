@@ -26,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
@@ -53,6 +54,7 @@ public class ItemService {
     private final SmartCodeService smartCodeService;
     private final ImageEmbeddingService imageEmbeddingService;
     private final BackgroundRemovalService backgroundRemovalService;
+    private final TransactionTemplate transactionTemplate;
     @Qualifier("asyncTaskExecutor")
     private final AsyncTaskExecutor asyncTaskExecutor;
 
@@ -292,7 +294,6 @@ public class ItemService {
         }
     }
 
-    @Transactional
     private void uploadPhotoAsync(Long itemId, FileData fileData, int fileCurrentCount, Item item) throws Exception {
         ProcessedImage processedImage = processImageBytes(fileData.bytes);
         String fileName = encryptAndUpload(processedImage.original, itemId);
@@ -301,24 +302,26 @@ public class ItemService {
         boolean shouldBePrimary = fileCurrentCount == 0;
         int displayOrder = fileCurrentCount;
 
-        if (shouldBePrimary) {
-            itemImageRepository.clearPrimaryForItem(itemId);
-        }
+        transactionTemplate.executeWithoutResult(status -> {
+            if (shouldBePrimary) {
+                itemImageRepository.clearPrimaryForItem(itemId);
+            }
 
-        ItemImage newImage = ItemImage.builder()
-                .item(item)
-                .photoUrl(fileName)
-                .imageEmbedding(embedding)
-                .isPrimary(shouldBePrimary)
-                .displayOrder(displayOrder)
-                .build();
-        itemImageRepository.save(newImage);
+            ItemImage newImage = ItemImage.builder()
+                    .item(item)
+                    .photoUrl(fileName)
+                    .imageEmbedding(embedding)
+                    .isPrimary(shouldBePrimary)
+                    .displayOrder(displayOrder)
+                    .build();
+            itemImageRepository.save(newImage);
 
-        if (shouldBePrimary) {
-            item.setPhoto_url(fileName);
-            item.setImageUploaded(true);
-            itemRepository.save(item);
-        }
+            if (shouldBePrimary) {
+                item.setPhoto_url(fileName);
+                item.setImageUploaded(true);
+                itemRepository.save(item);
+            }
+        });
 
         log.debug("Successfully uploaded photo for item {}: displayOrder={}", itemId, displayOrder);
     }
