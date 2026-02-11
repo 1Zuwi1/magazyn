@@ -272,9 +272,9 @@ export function useUploadItemPhoto() {
     mutationFn: ({ itemId, photo }: { itemId: number; photo: File }) =>
       apiFetch(`/api/items/${itemId}/photos`, ItemPhotosSchema, {
         method: "POST",
-        body: { file: photo },
+        body: { files: photo },
         formData: (formData, data) => {
-          formData.append("file", data.file)
+          formData.append("files", data.files)
         },
       }),
     onSuccess: (_, { itemId }, ___, context) => {

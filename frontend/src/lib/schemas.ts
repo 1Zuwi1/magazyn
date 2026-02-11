@@ -838,7 +838,7 @@ export const ItemPhotosSchema = createApiSchema({
     output: z.array(ItemImageSchema),
   },
   POST: {
-    input: z.object({ file: z.instanceof(File) }),
+    input: z.object({ files: z.instanceof(File) }),
     output: ItemImageSchema,
   },
 })
