@@ -59,6 +59,12 @@ public class TwoFactorService {
     private final GoogleAuthenticator gAuth = new GoogleAuthenticator();
 
 
+    /**
+     * Retrieves the 2FA methods available for the current user.
+     *
+     * @param request HTTP request
+     * @return response with enabled methods and default method
+     */
     public TwoFactorMethodsResponse getUsersTwoFactorMethods(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_FREE);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
@@ -78,6 +84,12 @@ public class TwoFactorService {
                 .build();
     }
 
+    /**
+     * Sends a 2FA code via email to the current user.
+     * Code is valid for 15 minutes.
+     *
+     * @param request HTTP request
+     */
     @Transactional
     public void sendTwoFactorCodeViaEmail(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_STRICT);
@@ -92,6 +104,13 @@ public class TwoFactorService {
         emailService.sendTwoFactorCode(user.getEmail(), code);
     }
 
+    /**
+     * Verifies an email-based 2FA code.
+     *
+     * @param code the 6-digit code from email
+     * @param user the user being verified
+     * @throws AuthenticationException if code is invalid or expired
+     */
     public void checkTwoFactorEmailCode(String code, User user) {
         if (user.getVerifyCodeGeneratedAt() == null
                 || user.getVerifyCodeGeneratedAt().toInstant()
@@ -114,6 +133,13 @@ public class TwoFactorService {
         userRepository.save(user);
     }
 
+    /**
+     * Generates a new Google Authenticator secret for the current user.
+     * Must be in sudo mode to call this method.
+     *
+     * @param request HTTP request
+     * @return response with secret and QR code URL
+     */
     public TwoFactorAuthenticatorResponse generateTwoFactorGoogleSecret(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_STRICT);
         AuthPrincipal authPrincipal = AuthUtil.getCurrentAuthPrincipal();
@@ -143,6 +169,14 @@ public class TwoFactorService {
         return new TwoFactorAuthenticatorResponse(secret, user.getEmail(), appName);
     }
 
+    /**
+     * Completes Google Authenticator setup by verifying the user-provided code.
+     * Must be in sudo mode to call this method.
+     *
+     * @param finishTwoFactorAuthenticatorRequest containing the verification code
+     * @param request HTTP request
+     * @throws AuthenticationException if code is invalid or user lacks permissions
+     */
     public void finishTwoFactorGoogleSecret(FinishTwoFactorAuthenticatorRequest finishTwoFactorAuthenticatorRequest, HttpServletRequest request) throws AuthenticationException {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_VERIFY);
 
@@ -172,6 +206,15 @@ public class TwoFactorService {
     }
 
 
+    /**
+     * Verifies a Google Authenticator TOTP code.
+     *
+     * @param code 6-digit TOTP code
+     * @param user the user being verified
+     * @param finishSetup true if during initial setup, false if during login
+     * @return true if code is valid
+     * @throws AuthenticationException if method is not enabled
+     */
     public boolean checkTwoFactorGoogleCode(int code, User user, boolean finishSetup) {
         TwoFactorMethod method = user.getTwoFactorMethods().stream()
                 .filter(m -> m.getMethodName() == TwoFactor.AUTHENTICATOR && (m.isFinished() || finishSetup))
@@ -190,6 +233,15 @@ public class TwoFactorService {
         return true;
     }
 
+    /**
+     * Verifies a 2FA code using the specified method.
+     * On success, creates 2FA success session.
+     *
+     * @param codeRequest containing method and code
+     * @param request HTTP request
+     * @param response HTTP response
+     * @throws AuthenticationException if code is invalid or method not enabled
+     */
     public void checkCode(CodeRequest codeRequest, HttpServletRequest request, HttpServletResponse response) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_VERIFY);
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
@@ -213,6 +265,14 @@ public class TwoFactorService {
         sessionManager.create2FASuccessSession(user, request, response);
     }
 
+    /**
+     * Generates new backup codes for recovery.
+     * Must be in sudo mode to call this method.
+     * Invalidates all previous backup codes.
+     *
+     * @param request HTTP request
+     * @return list of 8 new backup codes
+     */
     @Transactional
     public List<String> generateBackupCodes(HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_VERIFY);
@@ -252,6 +312,15 @@ public class TwoFactorService {
     }
 
 
+    /**
+     * Uses a backup code for 2FA verification.
+     * Each code can only be used once.
+     *
+     * @param code the 12-character backup code
+     * @param request HTTP request
+     * @param response HTTP response
+     * @throws AuthenticationException if code is invalid or method not enabled
+     */
     public void useBackupCode(String code, HttpServletRequest request, HttpServletResponse response) {
         User user = userRepository.findById(AuthUtil.getCurrentAuthPrincipal().getUserId())
                 .orElseThrow(() -> new AuthenticationException(AuthError.NOT_AUTHENTICATED.name()));
@@ -277,6 +346,14 @@ public class TwoFactorService {
         sessionManager.create2FASuccessSession(user, request, response);
     }
 
+    /**
+     * Removes a 2FA method from the user's account.
+     * Must be in sudo mode and 2FA verified to call this method.
+     *
+     * @param stringMethod the 2FA method to remove
+     * @param request HTTP request
+     * @throws AuthenticationException if method is invalid or user lacks permissions
+     */
     public void removeTwoFactorMethod(String stringMethod, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_FREE);
 
@@ -316,6 +393,14 @@ public class TwoFactorService {
         userRepository.save(user);
     }
 
+    /**
+     * Sets the default 2FA method for the user.
+     * Must be in sudo mode to call this method.
+     *
+     * @param method the default method to use
+     * @param request HTTP request
+     * @throws AuthenticationException if user lacks permissions or method not enabled
+     */
     @Transactional
     public void setDefaultTwoFactorMethod(Default2faMethod method, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.TWO_FACTOR_FREE);

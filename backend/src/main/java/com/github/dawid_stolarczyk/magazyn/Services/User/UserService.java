@@ -95,8 +95,6 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // ===== Admin methods =====
-
     /**
      * Admin: Get all users (non-paginated - deprecated, use paginated version)
      */
@@ -165,8 +163,6 @@ public class UserService {
         User targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new AuthenticationException(AuthError.RESOURCE_NOT_FOUND.name()));
 
-        // Application-level check: provides early validation and better error messages
-        // Note: Race condition possible here, but DB constraint provides final protection
         userRepository.findByEmail(newEmail).ifPresent(existingUser -> {
             if (!existingUser.getId().equals(targetUserId)) {
                 throw new AuthenticationException(AuthError.EMAIL_TAKEN.name());
@@ -199,7 +195,6 @@ public class UserService {
 
     /**
      * Admin: Update user profile (phone, location, team, full name, role)
-     * Note: DTO validation (@Pattern, @Size) handles format and length constraints
      */
     @Transactional
     public void adminUpdateUserProfile(Long targetUserId, UpdateUserProfileRequest profileRequest, HttpServletRequest request) {

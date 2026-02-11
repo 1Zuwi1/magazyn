@@ -84,7 +84,6 @@ public class BackgroundRemovalService {
     public void shutdown() {
         executorService.shutdown();
         try {
-            // Dajemy wątkom 5 sekund na dokończenie zadań
             if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
                 executorService.shutdownNow();
             }
