@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useMemo, useState } from "react"
+import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -36,6 +37,7 @@ import {
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 import { formatDate, INVENTORY_REPORT, REPORT_FORMATS } from "../lib/data"
+import { type ExportFormat, exportReport } from "../lib/export-utils"
 import type { InventoryReportRow, ReportFormat } from "../lib/types"
 import { SortableTableHead } from "./sortable-table-head"
 
@@ -147,6 +149,41 @@ export function InventoryReportCard() {
     []
   )
 
+  const handleExport = async () => {
+    try {
+      let exportFormat: ExportFormat = "csv"
+      if (format === "pdf") {
+        exportFormat = "pdf"
+      } else if (format === "xlsx") {
+        exportFormat = "xlsx"
+      }
+
+      await exportReport({
+        filename: `inwentaryzacja_${new Date().toISOString().split("T")[0]}`,
+        format: exportFormat,
+        data: filtered,
+        columns: [
+          { header: "Produkt", key: "item" },
+          { header: "Kod SKU", key: "sku" },
+          { header: "Regał", key: "rack" },
+          { header: "Magazyn", key: "warehouse" },
+          {
+            header: "Ilość",
+            key: (row: InventoryReportRow) => `${row.quantity} ${row.unit}`,
+          },
+          {
+            header: "Najbliższe przeterminowanie",
+            key: (row: InventoryReportRow) =>
+              row.nearestExpiry ? formatDate(row.nearestExpiry) : "—",
+          },
+        ],
+      })
+      toast.success("Raport został wygenerowany")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Błąd eksportu")
+    }
+  }
+
   return (
     <Card>
       <CardHeader className="gap-2 border-b">
@@ -180,7 +217,7 @@ export function InventoryReportCard() {
                 ))}
               </SelectContent>
             </Select>
-            <Button>
+            <Button onClick={handleExport}>
               <HugeiconsIcon className="mr-2 size-4" icon={FileDownloadIcon} />
               Pobierz raport
             </Button>

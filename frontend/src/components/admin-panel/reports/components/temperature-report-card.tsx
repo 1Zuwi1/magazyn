@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useMemo, useState } from "react"
+import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -41,6 +42,7 @@ import {
   REPORT_FORMATS,
   TEMPERATURE_REPORT,
 } from "../lib/data"
+import { type ExportFormat, exportReport } from "../lib/export-utils"
 import type { ReportFormat, TemperatureReportRow } from "../lib/types"
 import { SortableTableHead } from "./sortable-table-head"
 
@@ -159,6 +161,56 @@ export function TemperatureReportCard() {
     return { criticalCount, warningCount, maxDeviation }
   }, [])
 
+  const handleExport = async () => {
+    try {
+      let exportFormat: ExportFormat = "csv"
+      if (format === "pdf") {
+        exportFormat = "pdf"
+      } else if (format === "xlsx") {
+        exportFormat = "xlsx"
+      }
+
+      await exportReport({
+        filename: `odchylenia_temperatur_${
+          new Date().toISOString().split("T")[0]
+        }`,
+        format: exportFormat,
+        data: filtered,
+        columns: [
+          {
+            header: "Produkt",
+            key: (row: TemperatureReportRow) => row.item ?? "Cały regał",
+          },
+          { header: "Lokalizacja", key: "location" },
+          { header: "Magazyn", key: "warehouse" },
+          {
+            header: "Typ",
+            key: (row: TemperatureReportRow) =>
+              row.scope === "RACK" ? "Regał" : "Asortyment",
+          },
+          { header: "Zakres docelowy", key: "targetRange" },
+          { header: "Zapisana temp.", key: "recordedTemp" },
+          {
+            header: "Odchylenie",
+            key: (row: TemperatureReportRow) => `±${row.deviation}°C`,
+          },
+          {
+            header: "Poziom",
+            key: (row: TemperatureReportRow) =>
+              getSeverityConfig(row.severity).label,
+          },
+          {
+            header: "Data i godzina",
+            key: (row: TemperatureReportRow) => formatDateTime(row.recordedAt),
+          },
+        ],
+      })
+      toast.success("Raport został wygenerowany")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Błąd eksportu")
+    }
+  }
+
   return (
     <Card>
       <CardHeader className="gap-2 border-b">
@@ -192,7 +244,7 @@ export function TemperatureReportCard() {
                 ))}
               </SelectContent>
             </Select>
-            <Button>
+            <Button onClick={handleExport}>
               <HugeiconsIcon className="mr-2 size-4" icon={FileDownloadIcon} />
               Pobierz raport
             </Button>

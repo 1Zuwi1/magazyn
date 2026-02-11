@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useMemo, useState } from "react"
+import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -41,6 +42,7 @@ import {
   getExpiryStatus,
   REPORT_FORMATS,
 } from "../lib/data"
+import { type ExportFormat, exportReport } from "../lib/export-utils"
 import type { ExpiryReportRow, ReportFormat } from "../lib/types"
 import { SortableTableHead } from "./sortable-table-head"
 
@@ -142,6 +144,47 @@ export function ExpiryReportCard({ soonExpiry }: ExpiryReportCardProps) {
     return { expiredCount }
   }, [])
 
+  const handleExport = async () => {
+    try {
+      let exportFormat: ExportFormat = "csv"
+      if (format === "pdf") {
+        exportFormat = "pdf"
+      } else if (format === "xlsx") {
+        exportFormat = "xlsx"
+      }
+
+      await exportReport({
+        filename: `terminy_waznosci_${new Date().toISOString().split("T")[0]}`,
+        format: exportFormat,
+        data: filtered,
+        columns: [
+          { header: "Produkt", key: "item" },
+          { header: "Regał", key: "rack" },
+          { header: "Magazyn", key: "warehouse" },
+          {
+            header: "Ilość",
+            key: (row: ExpiryReportRow) => `${row.quantity} ${row.unit}`,
+          },
+          {
+            header: "Data ważności",
+            key: (row: ExpiryReportRow) => formatDate(row.expiryDate),
+          },
+          {
+            header: "Dni do wygaśnięcia",
+            key: "daysLeft",
+          },
+          {
+            header: "Status",
+            key: (row: ExpiryReportRow) => getExpiryStatus(row.daysLeft).label,
+          },
+        ],
+      })
+      toast.success("Raport został wygenerowany")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Błąd eksportu")
+    }
+  }
+
   return (
     <Card>
       <CardHeader className="gap-2 border-b">
@@ -175,7 +218,7 @@ export function ExpiryReportCard({ soonExpiry }: ExpiryReportCardProps) {
                 ))}
               </SelectContent>
             </Select>
-            <Button>
+            <Button onClick={handleExport}>
               <HugeiconsIcon className="mr-2 size-4" icon={FileDownloadIcon} />
               Pobierz raport
             </Button>
