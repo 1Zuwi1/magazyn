@@ -88,6 +88,11 @@ const localizePathname = (pathname: string, locale: AppLocale): string => {
 }
 
 export async function proxy(request: NextRequest) {
+  console.info("host", request.headers.get("host"))
+  console.info("xf-host", request.headers.get("x-forwarded-host"))
+  console.info("xf-port", request.headers.get("x-forwarded-port"))
+  console.info("xf-proto", request.headers.get("x-forwarded-proto"))
+  console.info("url", request.url)
   const intlResponse = intlProxy(request)
   if (intlResponse.headers.has("location")) {
     return intlResponse
@@ -105,8 +110,8 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Only bother with redirect logic for GET/HEAD
   if (request.method !== "GET" && request.method !== "HEAD") {
+    // Only bother with redirect logic for GET/HEAD
     return intlResponse
   }
 
