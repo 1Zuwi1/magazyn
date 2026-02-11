@@ -80,6 +80,7 @@ function ExpiryRow({ row }: ExpiryRowProps) {
       <TableCell className="font-mono text-sm tabular-nums">
         {formatDate(row.expiryDate)}
       </TableCell>
+
       <TableCell>
         <Badge variant={status.variant}>{status.label}</Badge>
       </TableCell>
@@ -154,8 +155,8 @@ export function ExpiryReportCard({ soonExpiry }: ExpiryReportCardProps) {
               Raport dat ważności
             </CardTitle>
             <CardDescription>
-              Pozycje asortymentu z wygasającą datą ważności w najbliższych 30
-              dniach.
+              Pozycje asortymentu z wygasającą datą ważności — przeterminowane i
+              zbliżające się do końca terminu.
             </CardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -222,13 +223,8 @@ export function ExpiryReportCard({ soonExpiry }: ExpiryReportCardProps) {
                   >
                     Data ważności
                   </SortableTableHead>
-                  <SortableTableHead
-                    active={sortField === "daysLeft"}
-                    direction={sortDirection}
-                    onSort={() => handleSort("daysLeft")}
-                  >
-                    Status
-                  </SortableTableHead>
+
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

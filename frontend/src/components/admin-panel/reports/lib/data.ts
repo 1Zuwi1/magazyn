@@ -337,16 +337,29 @@ export const formatDateTime = (value: string) => {
 }
 
 export const getExpiryStatus = (daysLeft: number) => {
+  let daysText: string
   if (daysLeft <= 0) {
-    return { label: "Przeterminowane", variant: "destructive" as const }
+    daysText = `${Math.abs(daysLeft)} dn. po terminie`
+  } else if (daysLeft === 1) {
+    daysText = "1 dzień"
+  } else {
+    daysText = `${daysLeft} dni`
+  }
+
+  if (daysLeft <= 0) {
+    return {
+      label: "Przeterminowane",
+      variant: "destructive" as const,
+      daysText,
+    }
   }
   if (daysLeft <= 3) {
-    return { label: "Krytyczne", variant: "destructive" as const }
+    return { label: "Krytyczne", variant: "destructive" as const, daysText }
   }
   if (daysLeft <= 10) {
-    return { label: "Wkrótce wygasa", variant: "warning" as const }
+    return { label: "Wkrótce wygasa", variant: "warning" as const, daysText }
   }
-  return { label: "W normie", variant: "success" as const }
+  return { label: "W normie", variant: "success" as const, daysText }
 }
 
 export const getSeverityConfig = (severity: string) => {
