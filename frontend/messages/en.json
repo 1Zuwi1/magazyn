@@ -531,7 +531,8 @@
         "copied": "Copied!",
         "copyCode": "Copy code",
         "qrCode": "QR code",
-        "barcode": "Barcode"
+        "barcode": "Barcode",
+        "printCode": "Print"
       },
       "warehouse": {
         "value3dVisualizationUnavailable": "3D visualization unavailable",

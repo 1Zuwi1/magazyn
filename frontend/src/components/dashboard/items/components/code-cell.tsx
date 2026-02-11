@@ -1,12 +1,13 @@
 "use client"
 
-import { Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
+import { Copy01Icon, PrinterIcon, Tick02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
 import QRCode from "qrcode"
 import { useCallback, useEffect, useRef, useState } from "react"
 import Barcode from "react-barcode"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -29,6 +30,7 @@ const COPY_FEEDBACK_TIMEOUT_MS = 2000
 const QR_PREFIX = "QR-"
 const QR_CODE_SIZE_SMALL = 64
 const QR_CODE_SIZE_MEDIUM = 120
+const QR_CODE_SIZE_PRINT = 200
 
 const isQrCode = (value: string): boolean => value.startsWith(QR_PREFIX)
 
@@ -47,6 +49,55 @@ const formatGs1Code = (code: string): string => {
   const [, productionDate, gtin, serial] = match
   return `(11)${productionDate}(01)${gtin}(21)${serial}`
 }
+
+const getPrintableCodeDocument = (
+  codeHtml: string,
+  formatted: string,
+  isQr: boolean
+): string => `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>${isQr ? "QR Code" : "Barcode"} – ${formatted}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      padding: 24px;
+    }
+    .code-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .code-container img, .code-container svg {
+      max-width: 100%;
+      height: auto;
+    }
+    .code-text {
+      font-size: 14px;
+      color: #333;
+      text-align: center;
+      word-break: break-all;
+    }
+    @media print {
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="code-container">
+    ${codeHtml}
+    <p class="code-text">${formatted}</p>
+  </div>
+</body>
+</html>`
 
 function QrCodeImage({ value, size }: { value: string; size: number }) {
   const [dataUrl, setDataUrl] = useState<string | null>(null)
@@ -213,8 +264,47 @@ function CodeDialog({
   value,
 }: CodeDialogProps) {
   const t = useTranslations()
+  const barcodeRef = useRef<HTMLDivElement>(null)
 
   const { copied, handleCopy } = useCopyToClipboard(value)
+
+  const handlePrint = useCallback(async () => {
+    let codeHtml: string
+
+    if (isQr) {
+      try {
+        const dataUrl = await QRCode.toDataURL(value, {
+          width: QR_CODE_SIZE_PRINT,
+          margin: 1,
+          errorCorrectionLevel: "M",
+          color: { dark: "#18181b", light: "#ffffff" },
+        })
+        codeHtml = `<img src="${dataUrl}" alt="QR Code" width="${QR_CODE_SIZE_PRINT}" height="${QR_CODE_SIZE_PRINT}" />`
+      } catch {
+        return
+      }
+    } else {
+      const svgElement = barcodeRef.current?.querySelector("svg")
+      if (!svgElement) {
+        return
+      }
+      codeHtml = svgElement.outerHTML
+    }
+
+    const printWindow = window.open("", "_blank", "width=600,height=500")
+
+    if (!printWindow) {
+      toast.error(t("generated.dashboard.settings.printPreviewFailedOpenCheck"))
+      return
+    }
+
+    const documentMarkup = getPrintableCodeDocument(codeHtml, formatted, isQr)
+
+    printWindow.document.write(documentMarkup)
+    printWindow.document.close()
+    printWindow.focus()
+    printWindow.print()
+  }, [value, formatted, isQr, t])
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
@@ -231,21 +321,29 @@ function CodeDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-1">
-          <LabelGrid labels={[{ id: value, value }]} />
+          <div ref={barcodeRef}>
+            <LabelGrid labels={[{ id: value, value }]} />
+          </div>
 
           <p className="select-all break-all text-center font-mono text-sm text-zinc-600">
             {formatted}
           </p>
 
-          <Button className="w-full" onClick={handleCopy} variant="outline">
-            <HugeiconsIcon
-              className="mr-2 size-4"
-              icon={copied ? Tick02Icon : Copy01Icon}
-            />
-            {copied
-              ? t("generated.dashboard.items.copied")
-              : t("generated.dashboard.items.copyCode")}
-          </Button>
+          <div className="flex gap-2">
+            <Button className="flex-1" onClick={handleCopy} variant="outline">
+              <HugeiconsIcon
+                className="mr-2 size-4"
+                icon={copied ? Tick02Icon : Copy01Icon}
+              />
+              {copied
+                ? t("generated.dashboard.items.copied")
+                : t("generated.dashboard.items.copyCode")}
+            </Button>
+            <Button className="flex-1" onClick={handlePrint} variant="outline">
+              <HugeiconsIcon className="mr-2 size-4" icon={PrinterIcon} />
+              {t("generated.dashboard.items.printCode")}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -531,7 +531,8 @@
         "copied": "Skopiowano!",
         "copyCode": "Kopiuj kod",
         "qrCode": "Kod QR",
-        "barcode": "Kod kreskowy"
+        "barcode": "Kod kreskowy",
+        "printCode": "Drukuj"
       },
       "warehouse": {
         "value3dVisualizationUnavailable": "Wizualizacja 3D niedostępna",
