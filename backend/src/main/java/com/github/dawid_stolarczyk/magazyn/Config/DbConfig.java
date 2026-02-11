@@ -31,7 +31,7 @@ public class DbConfig {
      *
      * <p>The IVFFlat index provides approximate nearest neighbor (ANN) search with:
      * - Clustering algorithm with 100 lists (recommended for small to medium datasets)
-     * - Cosine distance operator (<=>)
+     * - Cosine distance operator
      * - Significantly faster queries than full table scans
      *
      * <p>Both operations are idempotent and safe to run multiple times.
