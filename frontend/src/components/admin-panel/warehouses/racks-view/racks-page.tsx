@@ -3,7 +3,7 @@
 import { Add01Icon, GridIcon, Package } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
-
+import { useTranslations } from "next-intl"
 import { type ReactNode, useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
@@ -20,7 +20,6 @@ import useRacks, {
   useUpdateRack,
 } from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { Rack } from "@/lib/schemas"
 import { AdminPageHeader } from "../../components/admin-page-header"
 import type { RackFormData } from "../csv/utils/types"
@@ -59,7 +58,7 @@ const buildRackMutationData = ({
 }
 
 export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const router = useRouter()
   const { warehouseIdForQuery, isHydrated, isMissingWarehouseId } =

@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Table,
@@ -9,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { MAX_PREVIEW_ROWS } from "./utils/constants"
 import { normalizeKey } from "./utils/csv-utils"
@@ -21,7 +21,7 @@ interface PreviewTableProps {
 }
 
 export function PreviewTable({ columns, rows }: PreviewTableProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const hasMoreRows = rows.length > MAX_PREVIEW_ROWS
   const previewRows = hasMoreRows ? rows.slice(0, MAX_PREVIEW_ROWS) : rows

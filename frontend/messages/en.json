@@ -233,6 +233,8 @@
       "processing": "Processing"
     },
     "shared": {
+      "errorOccured": "Wystąpił błąd.",
+      "tryAgain": "Spróbuj ponownie.",
       "johnKowalski": "John Kowalski",
       "confirmPassword": "Confirm password",
       "log": "Log in",
@@ -754,7 +756,7 @@
       "backupFailed": "Backup failed",
       "restoreCompleted": "Restore completed",
       "restoreFailed": "Restore failed",
-      "adminMessages": "Admin messages",
+      "adminMessage": "Admin messages",
       "unauthorizedOutbound": "Unauthorized outbound",
       "csv": {
         "usernameMustLeast3Characters": "The username must be at least 3 characters long",
@@ -914,7 +916,8 @@
           "deletePhoto": "Delete photo",
           "generateEmbeddings": "Generate embeddings",
           "generatingEmbeddings": "Generating embeddings...",
-          "embeddingsGenerated": "Embeddings generated successfully"
+          "embeddingsGenerated": "Embeddings generated successfully",
+          "maxPhotosReached": "Maximum number of photos reached ({value0})."
         }
       },
       "overview": {

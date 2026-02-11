@@ -1,6 +1,6 @@
+import { useTranslations } from "next-intl"
 import { useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { getDaysUntilExpiry } from "../../utils/helpers"
 
 interface ExpiryBadgeProps {
@@ -8,7 +8,7 @@ interface ExpiryBadgeProps {
 }
 
 export function ExpiryBadge({ expiryDate }: ExpiryBadgeProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const days = useMemo(() => {
     if (!expiryDate) {

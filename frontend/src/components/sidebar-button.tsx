@@ -2,12 +2,11 @@ import { ChevronRight } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import type { NavigationItem } from "@/config/navigation"
 import { useSession } from "@/hooks/use-session"
 import { removeAppLocalePrefix } from "@/i18n/locale"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { Button } from "./ui/button"
 import {
@@ -23,7 +22,7 @@ import {
   SidebarMenuSubItem,
 } from "./ui/sidebar"
 export default function SidebarButton({ item }: { item: NavigationItem }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const pathname = usePathname()
   const pathnameWithoutLocale = removeAppLocalePrefix(pathname)

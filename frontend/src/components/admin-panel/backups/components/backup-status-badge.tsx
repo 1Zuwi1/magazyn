@@ -1,7 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { BackupStatus } from "../types"
 import { getBackupStatusConfig } from "../utils"
@@ -61,7 +61,7 @@ function StatusDot({ status }: { status: BackupStatus }) {
 }
 
 export function BackupStatusBadge({ status }: BackupStatusBadgeProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const { label, variant } = getBackupStatusConfig(status, t)
   const isInProgress = status === "IN_PROGRESS"
   const isRestoring = status === "RESTORING"

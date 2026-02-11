@@ -23,7 +23,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   Resend2FASchema,
@@ -47,7 +47,7 @@ export default function TwoFactorForm({
   defaultLinkedMethod,
   otpLength,
 }: TwoFactorFormProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   if (linkedMethods.length === 0) {
     throw new Error(t("generated.auth.twofactorformRequiresLeastOneLinked"))

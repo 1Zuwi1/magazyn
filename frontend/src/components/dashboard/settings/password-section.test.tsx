@@ -5,7 +5,7 @@ import { ChangePasswordSchema } from "@/lib/schemas"
 import { PasswordSection } from "./password-section"
 
 vi.mock("@/i18n/use-translations", () => ({
-  useAppTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string) => key,
 }))
 
 const { apiFetchMock, openVerificationDialogMock } = vi.hoisted(() => ({

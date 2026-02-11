@@ -9,7 +9,7 @@ import {
   Trash,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { formatDateTime } from "@/components/dashboard/utils/helpers"
@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 import type { BackupSchedule } from "../types"
@@ -40,7 +39,7 @@ interface SchedulesSectionProps {
 }
 
 function SchedulesEmptyState({ onAdd }: { onAdd: () => void }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed bg-linear-to-br from-muted/30 via-background to-muted/20 px-6 py-14 text-center">
@@ -99,7 +98,7 @@ export function SchedulesSection({
   onToggle,
   onDelete,
 }: SchedulesSectionProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [scheduleToDelete, setScheduleToDelete] = useState<
     BackupSchedule | undefined
@@ -194,7 +193,7 @@ function ScheduleCard({
   onToggle: (warehouseId: number, schedule: BackupSchedule) => void
   onDelete: (schedule: BackupSchedule) => void
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const locale = useLocale()
   const [justToggled, setJustToggled] = useState(false)
   const isFirstRender = useRef(true)

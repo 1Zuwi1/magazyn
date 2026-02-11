@@ -1,6 +1,6 @@
 "use client"
 
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 import { ScannerSelectItem } from "../scanner-select-item"
 import type { ScanItem } from "../scanner-types"
 
@@ -13,7 +13,7 @@ export function OutboundSelectItem({
   onSelect,
   onCancel,
 }: OutboundSelectItemProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <ScannerSelectItem

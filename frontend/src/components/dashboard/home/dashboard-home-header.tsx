@@ -5,17 +5,16 @@ import {
   Home01Icon,
   Package,
 } from "@hugeicons/core-free-icons"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { PageHeader } from "@/components/dashboard/page-header"
 import useWarehouses from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
 import {
   formatNumber,
   getOccupancyStatVariant,
   TOP_WAREHOUSES_LIMIT,
 } from "./dashboard-home.constants"
 export function DashboardHomeHeader() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const { data: warehousesData } = useWarehouses({

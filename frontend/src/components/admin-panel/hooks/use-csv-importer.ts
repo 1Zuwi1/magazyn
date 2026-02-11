@@ -1,8 +1,8 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { MAX_TOAST_ROWS } from "../lib/constants"
 import { formatBytes } from "../lib/utils"
 import { DEFAULT_CONFIG } from "../warehouses/csv/utils/constants"
@@ -27,7 +27,7 @@ export function useCsvImporter<T extends CsvImporterType>({
   maxFileSizeInBytes = DEFAULT_CONFIG.maxSizeInBytes,
   onImport,
 }: UseCsvImporterProps<T>) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [open, setOpen] = useState(false)
   const [sourceFile, setSourceFile] = useState<File | null>(null)

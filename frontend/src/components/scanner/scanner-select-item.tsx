@@ -2,10 +2,9 @@
 
 import { Search01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useInfiniteItems } from "@/hooks/use-items"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Spinner } from "../ui/spinner"
@@ -28,7 +27,7 @@ export function ScannerSelectItem({
   onSelect,
   onCancel,
 }: ScannerSelectItemProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [search, setSearch] = useState("")
   const scrollRef = useRef<HTMLDivElement>(null)

@@ -15,7 +15,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useForm, useStore } from "@tanstack/react-form"
-
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
@@ -38,7 +38,6 @@ import { Separator } from "@/components/ui/separator"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { useUploadItemPhoto } from "@/hooks/use-items"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 export interface ItemFormData {
   name: string
@@ -108,7 +107,7 @@ function SectionHeader({
 type PhotoStep = "prompt" | "camera" | "preview"
 
 function useCamera(videoRef: React.RefObject<HTMLVideoElement | null>) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const streamRef = useRef<MediaStream | null>(null)
   const [isActive, setIsActive] = useState(false)
@@ -203,7 +202,7 @@ function CameraView({
   onCapture: (file: File) => void
   onCancel: () => void
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const { isActive, error, start, stop, capture } = useCamera(videoRef)
@@ -278,7 +277,7 @@ export function PhotoPromptDialog({
   onOpenChange: (open: boolean) => void
   hasExistingPhoto?: boolean
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const uploadMutation = useUploadItemPhoto()
@@ -518,7 +517,7 @@ export function ItemDialog({
   onOpenChange,
   onSubmit,
 }: ItemDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const isEdit = !!currentRow
   const [photoPromptOpen, setPhotoPromptOpen] = useState(false)

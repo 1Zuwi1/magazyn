@@ -3,7 +3,7 @@
 import { Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Image from "next/image"
-
+import { useTranslations } from "next-intl"
 import QRCode from "qrcode"
 import { useCallback, useEffect, useRef, useState } from "react"
 import Barcode from "react-barcode"
@@ -21,7 +21,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 const GS1_BARCODE_PATTERN = /^11(\d{6})01(\d{14})21(\d+)$/
@@ -213,7 +212,7 @@ function CodeDialog({
   open,
   value,
 }: CodeDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const { copied, handleCopy } = useCopyToClipboard(value)
 
@@ -258,7 +257,7 @@ interface CodeCellProps {
 }
 
 export function CodeCell({ value }: CodeCellProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const isQr = isQrCode(value)

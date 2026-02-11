@@ -6,14 +6,13 @@ import {
   File01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 import Dropzone, { type FileRejection } from "react-dropzone"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { formatBytes } from "../../lib/utils"
 import { DEFAULT_CONFIG } from "./utils/constants"
@@ -37,7 +36,7 @@ export function FileUploader({
   disabled = false,
   maxFileSizeInBytes = DEFAULT_CONFIG.maxSizeInBytes,
 }: FileUploaderProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [files, setFiles] = useState<FileWithPreview[]>([])
   const [isUploading, setIsUploading] = useState(false)

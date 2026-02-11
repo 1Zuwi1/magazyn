@@ -4,11 +4,11 @@ import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { removeAppLocalePrefix } from "@/i18n/locale"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { getAdminNavLinks } from "../lib/constants"
 
@@ -49,7 +49,7 @@ export function AdminPageHeader({
   children,
 }: AdminPageHeaderProps) {
   const pathname = usePathname()
-  const t = useAppTranslations()
+  const t = useTranslations()
   const renderIconOrBackButton = () => {
     if (onBack) {
       return (

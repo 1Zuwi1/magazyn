@@ -4,10 +4,9 @@ import {
   ViewIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { useWarehouseStore } from "./store"
 import type { Rack3D } from "./types"
@@ -50,7 +49,7 @@ function getOccupancyColor(percentage: number): {
 }
 
 export function SidebarPanel({ racks }: SidebarPanelProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const { focusRack, selectedRackId, filters, setFilters } = useWarehouseStore()
 

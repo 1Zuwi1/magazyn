@@ -15,12 +15,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { AdminTeamOption } from "@/hooks/use-admin-users"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 const profilePhonePattern = /^[+\d\s()-]*$/
 
-const createEditUserFormSchema = (t: ReturnType<typeof useAppTranslations>) =>
+const createEditUserFormSchema = (t: ReturnType<typeof useTranslations>) =>
   z.object({
     fullName: z
       .string()
@@ -74,7 +73,7 @@ export function ActionDialog({
   onSubmit,
   teams,
 }: ActionDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const editUserFormSchema = useMemo(() => createEditUserFormSchema(t), [t])
 
   const formId = "edit-user-form"

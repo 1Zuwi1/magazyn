@@ -7,9 +7,8 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { Column, SortDirection } from "@tanstack/react-table"
-
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 function SortIcon({ isSorted }: { isSorted: false | SortDirection }) {
@@ -54,7 +53,7 @@ export function SortableHeader<TData, TValue>({
   children,
   className,
 }: SortableHeaderProps<TData, TValue>) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const isSorted = column.getIsSorted()
   const canSort = column.getCanSort()

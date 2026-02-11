@@ -1,6 +1,6 @@
+import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 import type { AdminTeamOption, AdminUser } from "@/hooks/use-admin-users"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { createEditableUser, normalizeValue } from "../lib/user-utils"
 
 interface UseUsersDialogStateParams {
@@ -12,7 +12,7 @@ export function useUsersDialogState({
   users,
   teams,
 }: UseUsersDialogStateParams) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)

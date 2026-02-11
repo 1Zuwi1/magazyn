@@ -2,7 +2,7 @@
 
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { useMemo } from "react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
@@ -13,7 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { useCsvImporter } from "../../hooks/use-csv-importer"
 import { FileUploader } from "./file-uploader"
@@ -41,7 +40,7 @@ export function CsvImporter<T extends CsvImporterType>({
   type,
   onImport,
 }: CsvImporterProps<T>) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const handleImport = async ({
     file,

@@ -1,6 +1,6 @@
 import { Loading02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
 function Spinner({
@@ -8,7 +8,7 @@ function Spinner({
   strokeWidth,
   ...props
 }: React.ComponentProps<"svg">) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <HugeiconsIcon

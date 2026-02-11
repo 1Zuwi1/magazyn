@@ -3,7 +3,7 @@
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { format, formatISO } from "date-fns"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -12,7 +12,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { useAppTranslations } from "@/i18n/use-translations"
 export function DatePicker({
   date,
   onDateChange,
@@ -22,7 +21,7 @@ export function DatePicker({
   onDateChange: (date: string) => void
   setTimeToEndOfDay?: boolean
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)

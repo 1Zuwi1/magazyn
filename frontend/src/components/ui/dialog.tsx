@@ -3,10 +3,9 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { Cancel01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import type * as React from "react"
 import { Button } from "@/components/ui/button"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
@@ -49,7 +48,7 @@ function DialogContent({
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <DialogPortal>
@@ -101,7 +100,7 @@ function DialogFooter({
 }: React.ComponentProps<"div"> & {
   showCloseButton?: boolean
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div

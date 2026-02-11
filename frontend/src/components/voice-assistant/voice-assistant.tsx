@@ -3,7 +3,7 @@
 import { Cancel01Icon, Mic01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
-
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -11,7 +11,6 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition"
 import useWarehouses from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import type { VoiceCommandMatch } from "@/lib/voice/commands"
@@ -44,7 +43,7 @@ interface VoiceAssistantProps {
 type WarehouseReference = Pick<Warehouse, "id" | "name">
 
 export function VoiceAssistant({ dialogTrigger }: VoiceAssistantProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const listenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isMobile = useIsMobile()

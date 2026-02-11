@@ -18,7 +18,7 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import {
   SortableHeader,
@@ -49,7 +49,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import useBackups from "@/hooks/use-backups"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import {
   BACKUPS_PAGE_SIZE,
@@ -69,7 +68,7 @@ interface BackupsTableProps {
 }
 
 function createColumns(
-  t: ReturnType<typeof useAppTranslations>,
+  t: ReturnType<typeof useTranslations>,
   locale: string,
   onView: (backup: Backup) => void,
   onRestore: (backup: Backup) => void,
@@ -258,7 +257,7 @@ export function BackupsTable({
   onDelete,
   onCreateManual,
 }: BackupsTableProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const locale = useLocale()
   const [sorting, setSorting] = useState<SortingState>([])
   const [currentPage, setCurrentPage] = useState(1)

@@ -8,6 +8,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useDebouncedValue } from "@tanstack/react-pacer"
+import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
@@ -22,7 +23,7 @@ import useItems, {
   useImportItems,
   useUpdateItem,
 } from "@/hooks/use-items"
-import { type AppTranslate, useAppTranslations } from "@/i18n/use-translations"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ImportItemPhotosDialog } from "./import-item-photos-dialog"
 import { ItemDialog, type ItemFormData } from "./item-dialog"
@@ -100,7 +101,7 @@ const formatBatchPhotoImportError = (
 }
 
 export default function ItemsMain() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
@@ -210,8 +211,8 @@ export default function ItemsMain() {
     if (report.errors.length > 0) {
       toast.warning(
         t("generated.admin.shared.importPartiallyCompleted", {
-          value0: report.imported,
-          value1: report.processedLines,
+          value0: report.imported.toString(),
+          value1: report.processedLines.toString(),
         })
       )
       return
@@ -234,8 +235,8 @@ export default function ItemsMain() {
       const importedCount = Math.max(files.length - importErrors.length, 0)
       toast.warning(
         t("generated.admin.shared.importPartiallyCompleted", {
-          value0: importedCount,
-          value1: files.length,
+          value0: importedCount.toString(),
+          value1: files.length.toString(),
         })
       )
 
@@ -246,7 +247,7 @@ export default function ItemsMain() {
       const warningMessage =
         hiddenErrorsCount > 0
           ? `${visibleErrors.join("\n")}\n${t("generated.admin.shared.more", {
-              value0: hiddenErrorsCount,
+              value0: hiddenErrorsCount.toString(),
             })}`
           : visibleErrors.join("\n")
 
@@ -344,7 +345,7 @@ export default function ItemsMain() {
 
       <ConfirmDialog
         description={t("generated.admin.items.sureWantDeleteItemOperation", {
-          value0: itemToDelete?.name,
+          value0: itemToDelete?.name ?? "",
         })}
         onConfirm={confirmDeleteItem}
         onOpenChange={setDeleteDialogOpen}

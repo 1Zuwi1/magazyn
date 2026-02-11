@@ -7,7 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useDebouncedValue } from "@tanstack/react-pacer"
-
+import { useTranslations } from "next-intl"
 import { useCallback, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -28,7 +28,6 @@ import {
   useInfiniteWarehouses,
   useMultipleWarehouses,
 } from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { normalizeValue } from "../lib/user-utils"
@@ -128,7 +127,7 @@ export function WarehouseAssignmentDialog({
   onAssign,
   onRemove,
 }: WarehouseAssignmentDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [search, setSearch] = useState("")
   const [showAssignedOnly, setShowAssignedOnly] = useState(false)

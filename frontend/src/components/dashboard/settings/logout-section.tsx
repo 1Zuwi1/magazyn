@@ -1,14 +1,13 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-
+import { useTranslations } from "next-intl"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useLogout } from "@/hooks/use-session"
-import { useAppTranslations } from "@/i18n/use-translations"
 export function LogoutSection() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const router = useRouter()
   const logoutMutation = useLogout()

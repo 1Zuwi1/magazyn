@@ -4,7 +4,7 @@ import {
   Search01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 import { Button } from "../ui/button"
 import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
@@ -38,7 +38,7 @@ export function ScannerChooseMethod({
   onManual,
   onCancel,
 }: ScannerChooseMethodProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const showManualOption =
     manualLabel && manualDescription && typeof onManual === "function"

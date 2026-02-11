@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 import { apiFetch } from "@/lib/fetcher"
 import {
   WebAuthnFinishAssertionSchema,
@@ -43,7 +43,7 @@ export default function PasskeyLogin({
   successMessage,
   showSuccessToast = true,
 }: PasskeyLoginProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const resolvedLabel = label ?? t("generated.auth.logSecurityKey")
   const resolvedSuccessMessage =
     successMessage ?? t("generated.auth.loggedSecurityKey")

@@ -9,6 +9,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useDebouncedValue } from "@tanstack/react-pacer"
 import { useVirtualizer } from "@tanstack/react-virtual"
+import { useTranslations } from "next-intl"
 import {
   type ReactNode,
   useCallback,
@@ -28,7 +29,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import useWarehouses, { useInfiniteWarehouses } from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 
@@ -157,7 +157,7 @@ export function WarehouseSelector({
   placeholder,
   triggerClassName,
 }: WarehouseSelectorProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
   const [debouncedSearch] = useDebouncedValue(search, {

@@ -1,10 +1,9 @@
 import { GroupItemsIcon, Package } from "@hugeicons/core-free-icons"
 import Link from "next/link"
-
+import { useTranslations } from "next-intl"
 import { QuickActionCard } from "@/components/dashboard/stat-card"
-import { useAppTranslations } from "@/i18n/use-translations"
 export function DashboardHomeQuickActions() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <section aria-labelledby="dashboard-actions" className="space-y-4">

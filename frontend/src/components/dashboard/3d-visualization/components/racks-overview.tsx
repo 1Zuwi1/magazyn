@@ -1,7 +1,6 @@
 import { Edges, Html, useCursor } from "@react-three/drei"
-
+import { useTranslations } from "next-intl"
 import { useState } from "react"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { useWarehouseStore } from "../store"
 import type { Rack3D } from "../types"
 import { RACK_ZONE_SIZE } from "../types"
@@ -47,7 +46,7 @@ function RackInstance({
   aisleIndex,
   onFocus,
 }: RackInstanceProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [hovered, setHovered] = useState(false)
   const { onPointerDown, shouldIgnoreClick } = useClickGuard()

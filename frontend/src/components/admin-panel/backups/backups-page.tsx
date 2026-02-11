@@ -6,6 +6,7 @@ import {
   DatabaseRestoreIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -20,7 +21,6 @@ import useBackups, {
   useUpsertBackupSchedule,
 } from "@/hooks/use-backups"
 import useWarehouses from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ConfirmDialog } from "../components/dialogs"
 import { BackupDetailDialog } from "./components/backup-detail-dialog"
@@ -36,7 +36,7 @@ import {
 } from "./utils"
 
 export function BackupsMain() {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const { data: backupsData } = useBackups()
   const { data: schedulesData, isLoading: isSchedulesLoading } =
     useBackupSchedules()

@@ -3,7 +3,7 @@
 import { QrCodeIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useQueryClient } from "@tanstack/react-query"
-
+import { useTranslations } from "next-intl"
 import {
   type ReactNode,
   useCallback,
@@ -16,7 +16,6 @@ import { toast } from "sonner"
 import { SCAN_DELAY_MS, SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
 import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   type IdentificationCandidate,
@@ -130,7 +129,7 @@ export function Scanner({
   dialogTrigger,
   children,
 }: ScannerProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const isMobile = useIsMobile()
   const queryClient = useQueryClient()

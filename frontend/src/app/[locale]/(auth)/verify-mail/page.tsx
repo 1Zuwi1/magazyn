@@ -12,7 +12,7 @@ import { useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 import { apiFetch } from "@/lib/fetcher"
 import { VerifyMailSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -22,7 +22,7 @@ import AuthCard from "../components/auth-card"
 type VerificationState = "loading" | "success" | "error"
 
 function VerifyMailContent() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
@@ -105,7 +105,7 @@ function VerifyMailContent() {
 }
 
 function LoadingState() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -131,7 +131,7 @@ function LoadingState() {
 }
 
 function SuccessState() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -159,7 +159,7 @@ function SuccessState() {
 }
 
 function ErrorState({ message }: { message: string }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className="flex flex-col items-center gap-4">

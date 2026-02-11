@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useForm } from "@tanstack/react-form"
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect } from "react"
 import { toast } from "sonner"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
@@ -20,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type {
   BackupSchedule,
   ScheduleFrequency,
@@ -40,7 +40,7 @@ interface ScheduleDialogProps {
 
 const getFrequencyLabel = (
   frequency: ScheduleFrequency,
-  t: ReturnType<typeof useAppTranslations>
+  t: ReturnType<typeof useTranslations>
 ) => {
   if (frequency === "DAILY") {
     return t("generated.admin.backups.frequencyDailySimple")
@@ -101,7 +101,7 @@ export function ScheduleDialog({
   onOpenChange,
   onSubmit,
 }: ScheduleDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const isEdit = !!schedule
 
   const getFormValues = useCallback(

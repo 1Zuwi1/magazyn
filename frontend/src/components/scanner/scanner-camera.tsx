@@ -16,9 +16,8 @@ import {
   NotFoundException,
   type Result,
 } from "@zxing/library"
-
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { Button } from "../ui/button"
 import { TAB_TRIGGERS } from "./scanner"
@@ -95,7 +94,7 @@ export function ScannerCamera({
   onScan,
   isLoading,
 }: ScannerCameraProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const controlsRef = useRef<IScannerControls | null>(null)

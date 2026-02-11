@@ -1,5 +1,5 @@
+import { useTranslations } from "next-intl"
 import { ItemPhoto } from "@/components/ui/item-photo"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { ItemSlot } from "../../types"
 import { getItemStatus, getStatusColors } from "../../utils/item-status"
@@ -19,7 +19,7 @@ export default function RackElement({
   className,
   ...props
 }: ElementProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const status = item ? getItemStatus(item) : null
   const statusColors = status ? getStatusColors(status) : null

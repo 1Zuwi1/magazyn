@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 import { SecuritySection } from "./security-section"
 
 vi.mock("@/i18n/use-translations", () => ({
-  useAppTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string) => key,
 }))
 
 vi.mock("./password-section", () => ({

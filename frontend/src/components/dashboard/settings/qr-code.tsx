@@ -1,10 +1,9 @@
 "use client"
 
 import Image from "next/image"
-
+import { useTranslations } from "next-intl"
 import QRCode from "qrcode"
 import { useEffect, useState } from "react"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { QR_CODE_DEFAULT_SIZE } from "./constants"
 
@@ -25,7 +24,7 @@ export function QRCodeDisplay({
   className,
   errorCorrectionLevel = "M",
 }: QRCodeDisplayProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [dataUrl, setDataUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)

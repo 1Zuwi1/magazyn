@@ -6,7 +6,7 @@ import {
   GroupItemsIcon,
   Package,
 } from "@hugeicons/core-free-icons"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useMemo } from "react"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { ErrorEmptyState } from "@/components/ui/empty-state"
@@ -14,7 +14,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import useAssortments from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import useWarehouses from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
 import {
   formatNumber,
   OCCUPANCY_CRITICAL_THRESHOLD,
@@ -36,7 +35,7 @@ const getOccupancyCardVariant = (
 }
 
 function DashboardHomeStatsSkeleton() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <section
@@ -67,7 +66,7 @@ function DashboardHomeStatsSkeleton() {
 }
 
 export function DashboardHomeStats() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const {

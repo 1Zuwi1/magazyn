@@ -3,9 +3,8 @@
 import { ArrowRight02Icon, RefreshIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import Link from "next/link"
-
+import { useTranslations } from "next-intl"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 interface AdminStatCardProps {
@@ -82,7 +81,7 @@ export function AdminStatCard({
   onRetry,
   trend,
 }: AdminStatCardProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const styles = getVariantStyles(variant)
   const errorStyles = getVariantStyles("danger")

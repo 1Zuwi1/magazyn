@@ -1,5 +1,5 @@
+import { useTranslations } from "next-intl"
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
@@ -35,7 +35,7 @@ export function ScannerQuantityStep({
   onReserveChange,
   onSubmit,
 }: ScannerQuantityStepProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <ScannerBody>

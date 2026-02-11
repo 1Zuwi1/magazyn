@@ -24,7 +24,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 import { apiFetch } from "@/lib/fetcher"
 import { FormRegisterSchema, LoginSchema, RegisterSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
@@ -56,7 +56,7 @@ const values = {
 type ValueTypes = typeof values
 
 export default function AuthForm({ mode }: AuthFormProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const router = useRouter()
   const isLogin = mode === "login"

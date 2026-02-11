@@ -10,7 +10,7 @@ import {
   UserIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 import { formatDateTime } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
@@ -35,7 +35,6 @@ import {
   useAuditInboundOperations,
   useAuditOutboundOperations,
 } from "@/hooks/use-audit"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type {
   AuditInboudOperationsSchema,
@@ -64,7 +63,7 @@ function DateRangeFilter({
   onEndDateChange: (value: string) => void
   onClear: () => void
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const hasFilter = startDate !== "" || endDate !== ""
 
@@ -131,7 +130,7 @@ function InboundTableContent({
   onEndDateChange: (value: string) => void
   onClearDates: () => void
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const locale = useLocale()
 
   const [page, setPage] = useState(1)
@@ -283,7 +282,7 @@ function OutboundTableContent({
   onEndDateChange: (value: string) => void
   onClearDates: () => void
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const locale = useLocale()
 
   const [page, setPage] = useState(1)
@@ -431,7 +430,7 @@ function OutboundTableContent({
 }
 
 export default function AuditMain() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [inboundStartDate, setInboundStartDate] = useState("")
   const [inboundEndDate, setInboundEndDate] = useState("")

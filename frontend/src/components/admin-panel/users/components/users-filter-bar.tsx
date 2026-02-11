@@ -2,7 +2,7 @@
 
 import { FilterIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -12,7 +12,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { AdminUser } from "@/hooks/use-admin-users"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { getStatusLabel } from "../lib/user-utils"
 
 type AccountStatus = AdminUser["account_status"]
@@ -39,7 +38,7 @@ export function UsersFilterBar({
   statusFilter,
   onStatusFilterChange,
 }: UsersFilterBarProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className="flex flex-col gap-3 border-b bg-muted/30 p-4 sm:flex-row sm:items-center">

@@ -5,11 +5,10 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { format } from "date-fns"
-
+import { useTranslations } from "next-intl"
 import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { Rack, RackAssortment } from "@/lib/schemas"
 import type { SlotCoordinates } from "../types"
 import { getSlotCoordinate } from "../utils/helpers"
@@ -42,7 +41,7 @@ export function RackShelfDetailsCard({
   assortment,
   onClearSelection,
 }: RackShelfDetailsCardProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const hasSelection = selectedSlotCoordinates !== null
   const selectedPosition = selectedSlotCoordinates

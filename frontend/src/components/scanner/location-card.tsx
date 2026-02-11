@@ -1,9 +1,8 @@
 import { Tick02Icon, UnfoldMoreIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { Badge } from "../ui/badge"
 import { Button, buttonVariants } from "../ui/button"
@@ -81,7 +80,7 @@ function RackSelect({
   onFetchNextRackPage,
   onChange,
 }: RackSelectProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [isRackSelectOpen, setIsRackSelectOpen] = useState(false)
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(
@@ -249,7 +248,7 @@ export function LocationCard({
   onRemove,
   onChange,
 }: LocationCardProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const baseId = `placement-${placement.id}`
 

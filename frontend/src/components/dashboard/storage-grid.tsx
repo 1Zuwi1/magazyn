@@ -9,7 +9,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 import {
   AlertDialog,
@@ -31,7 +31,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { Badge } from "../ui/badge"
@@ -123,7 +122,7 @@ function WarehouseGridSkeleton() {
 }
 
 export function WarehouseGrid({ warehouses, isLoading }: WarehouseGridProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const router = useRouter()

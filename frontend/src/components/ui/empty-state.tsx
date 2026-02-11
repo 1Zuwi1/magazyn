@@ -11,9 +11,8 @@ import {
   Settings01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { IconComponent } from "../dashboard/types"
 
@@ -250,7 +249,7 @@ export function SearchEmptyState({
   onClear?: () => void
   className?: string
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <EmptyState
@@ -280,7 +279,7 @@ export function FilterEmptyState({
   className?: string
   description?: string
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const resolvedDescription =
     description ?? t("generated.ui.itemsMatchSelectedFiltersChanging")
 
@@ -319,7 +318,7 @@ export function NoItemsEmptyState({
   className?: string
   icon?: IconComponent
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const resolvedTitle = title ?? t("generated.ui.s", { value0: itemName })
   const resolvedDescription =
     description ??
@@ -347,7 +346,7 @@ export function NoItemsEmptyState({
 }
 
 export function NoDataEmptyState({ className }: { className?: string }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <EmptyState
@@ -366,7 +365,7 @@ export function ErrorEmptyState({
   onRetry?: () => void
   className?: string
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <EmptyState

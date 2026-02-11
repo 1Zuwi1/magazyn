@@ -1,12 +1,11 @@
 import { Package } from "@hugeicons/core-free-icons"
 import Link from "next/link"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { ErrorEmptyState } from "@/components/ui/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
 import useWarehouses from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { InsightCard } from "../stat-card"
 import { formatNumber } from "./dashboard-home.constants"
@@ -55,7 +54,7 @@ function TopOccupiedWarehousesSkeleton() {
 }
 
 export default function DashboardTopOccupiedWarehousesCard() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const {

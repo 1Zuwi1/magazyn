@@ -1,7 +1,6 @@
 import Image from "next/image"
-
+import { useTranslations } from "next-intl"
 import LogoImage from "@/../public/Logo.png"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 export default function Logo<
   T extends string | undefined,
@@ -16,7 +15,7 @@ export default function Logo<
   href?: T
   className?: string
 } & W) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const Wrapper = href ? "a" : "div"
   return (

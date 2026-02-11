@@ -2,7 +2,7 @@
 
 import { PackageReceiveIcon } from "@hugeicons/core-free-icons"
 import { formatDate } from "date-fns"
-
+import { useTranslations } from "next-intl"
 import { useMemo } from "react"
 import { InsightCard } from "@/components/dashboard/stat-card"
 import { Badge } from "@/components/ui/badge"
@@ -11,7 +11,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import useAssortments from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import { useMultipleRacks } from "@/hooks/use-racks"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { RECENT_ITEMS_LIMIT } from "./dashboard-home.constants"
 
 function RecentArrivalsSkeleton() {
@@ -37,7 +36,7 @@ function RecentArrivalsSkeleton() {
 }
 
 export function DashboardRecentArrivalsCard() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const {
     data: assortmentsData,

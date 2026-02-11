@@ -1,19 +1,18 @@
 "use client"
 
 import { useForm } from "@tanstack/react-form"
-
+import { useTranslations } from "next-intl"
 import { useRef } from "react"
 import { toast } from "sonner"
 import { useTwoFactorVerificationDialog } from "@/components/dashboard/settings/two-factor-verification-dialog-store"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { Button } from "@/components/ui/button"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { apiFetch } from "@/lib/fetcher"
 import { ChangePasswordFormSchema, ChangePasswordSchema } from "@/lib/schemas"
 import tryCatch from "@/lib/try-catch"
 export function PasswordSection() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const { open } = useTwoFactorVerificationDialog()
   const isTwoFactorVerifiedRef = useRef(false)

@@ -233,6 +233,8 @@
       "processing": "Przetwarzanie"
     },
     "shared": {
+      "errorOccured": "Wystąpił błąd.",
+      "tryAgain": "Spróbuj ponownie.",
       "johnKowalski": "Jan Kowalski",
       "confirmPassword": "Potwierdź hasło",
       "log": "Zaloguj się",
@@ -754,7 +756,7 @@
       "backupFailed": "Kopia zapasowa nieudana",
       "restoreCompleted": "Przywracanie ukończone",
       "restoreFailed": "Przywracanie nieudane",
-      "adminMessages": "Wiadomość od administratora",
+      "adminMessage": "Wiadomość od administratora",
       "unauthorizedOutbound": "Nieautoryzowane wydanie",
       "csv": {
         "usernameMustLeast3Characters": "Nazwa użytkownika musi mieć co najmniej 3 znaki",
@@ -914,7 +916,8 @@
           "deletePhoto": "Usuń zdjęcie",
           "generateEmbeddings": "Generuj embeddingi",
           "generatingEmbeddings": "Generowanie embeddingów...",
-          "embeddingsGenerated": "Embeddingi wygenerowane pomyślnie"
+          "embeddingsGenerated": "Embeddingi wygenerowane pomyślnie",
+          "maxPhotosReached": "Osiągnięto maksymalną liczbę zdjęć ({value0})."
         }
       },
       "overview": {

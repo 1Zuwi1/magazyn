@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -6,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Spinner } from "@/components/ui/spinner"
 import { OTP_LENGTH } from "@/config/constants"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { TwoFactorMethod } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { RESEND_COOLDOWN_SECONDS } from "./constants"
@@ -56,7 +56,7 @@ function usePasswordVerificationFlow({
   onResendCooldownChange,
   onRequestCode,
 }: PasswordVerificationFlowHandlers) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const requestCode = async (startTimer = true): Promise<void> => {
     onStageChange("SENDING")
@@ -80,7 +80,7 @@ function usePasswordVerificationFlow({
 }
 
 function PasswordVerificationAlerts() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <Alert>
@@ -112,7 +112,7 @@ function CodeInputEntry({
   onResend: () => void
   onVerify: () => void
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className="space-y-3">
@@ -183,7 +183,7 @@ export function PasswordVerificationSection({
   verificationError,
   autoVerify = false,
 }: PasswordVerificationSectionProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [state, setState] = useState<PasswordVerificationState>({
     stage: "IDLE",

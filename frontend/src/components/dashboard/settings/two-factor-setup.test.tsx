@@ -21,7 +21,7 @@ vi.mock("next-intl", () => ({
 }))
 
 vi.mock("@/i18n/use-translations", () => ({
-  useAppTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string) => key,
 }))
 
 vi.mock("sonner", () => ({

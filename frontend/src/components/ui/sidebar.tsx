@@ -5,7 +5,7 @@ import { useRender } from "@base-ui/react/use-render"
 import { SidebarLeftIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { cva, type VariantProps } from "class-variance-authority"
-
+import { useTranslations } from "next-intl"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,7 +24,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
@@ -164,7 +163,7 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offExamples" | "icon" | "none"
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
@@ -266,7 +265,7 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const { toggleSidebar } = useSidebar()
 
@@ -290,7 +289,7 @@ function SidebarTrigger({
 }
 
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const { toggleSidebar } = useSidebar()
 

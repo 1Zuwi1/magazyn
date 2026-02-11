@@ -6,13 +6,12 @@ import {
   GridViewIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import type * as React from "react"
 import { useRef } from "react"
 import { Button } from "@/components/ui/button"
 import PaginationFull from "@/components/ui/pagination-component"
 import { useElementSize } from "@/hooks/use-element-size"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { ItemSlot, SlotCoordinates } from "../types"
 import Virtualized from "./components/virtualized"
 
@@ -69,7 +68,7 @@ export function RackGridView({
   onSelectSlot,
   selectedSlotCoordinates,
 }: RackGridViewProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const parentRef = useRef<HTMLDivElement>(null)
 

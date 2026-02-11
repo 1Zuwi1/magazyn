@@ -6,7 +6,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "@/i18n/use-translations"
 
 interface RackParametersCardProps {
   maxElementSize: { width: number; height: number; depth: number }
@@ -19,7 +19,7 @@ export function RackParametersCard({
   tempRange,
   gridDimensions,
 }: RackParametersCardProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const parameters = [
     {

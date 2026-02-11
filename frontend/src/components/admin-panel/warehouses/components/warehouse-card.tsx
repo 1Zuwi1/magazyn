@@ -10,7 +10,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-
+import { useTranslations } from "next-intl"
 import { getOccupancyPercentage } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -20,7 +20,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { WarehousesList } from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { THRESHOLD } from "../../lib/constants"
 
@@ -37,7 +36,7 @@ export function WarehouseCard({
   onEdit,
   onDelete,
 }: WarehouseCardProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const usedSlots = warehouse.occupiedSlots
   const totalCapacity = warehouse.occupiedSlots + warehouse.freeSlots

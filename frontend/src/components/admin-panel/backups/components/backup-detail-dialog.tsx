@@ -3,7 +3,7 @@
 import { Clock01Icon, DatabaseIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { formatDuration, intervalToDuration } from "date-fns"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { formatDateTime } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -16,7 +16,6 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { formatBytes } from "../../lib/utils"
 import type { Backup } from "../types"
 import { BackupStatusBadge } from "./backup-status-badge"
@@ -68,7 +67,7 @@ export function BackupDetailDialog({
   open,
   onOpenChange,
 }: BackupDetailDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const locale = useLocale()
 
   if (!backup) {

@@ -1,8 +1,7 @@
 import { Mic01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
-import { useAppTranslations } from "@/i18n/use-translations"
 
 interface VoiceAssistantIdleViewProps {
   buttonId?: string
@@ -15,7 +14,7 @@ export function VoiceAssistantNormalView({
   onStartListening,
   onSuggestionSelect,
 }: VoiceAssistantIdleViewProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div

@@ -14,9 +14,9 @@ import { ErrorEmptyState } from "@/components/ui/empty-state"
 import useAssortments from "@/hooks/use-assortment"
 import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
 import useWarehouses from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 export default function AssortmentClient() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const { warehouseIdForQuery, isHydrated, isMissingWarehouseId } =
     useCurrentWarehouseId({

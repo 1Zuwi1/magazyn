@@ -6,7 +6,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { format } from "date-fns"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { User } from "@/lib/schemas"
 import type { IconComponent } from "../types"
 import { getRoleLabels, getStatusConfig } from "./constants"
@@ -63,7 +62,7 @@ function ProfileDetailRow({ detail }: { detail: ProfileDetail }) {
 }
 
 function buildProfileDetails(
-  t: ReturnType<typeof useAppTranslations>,
+  t: ReturnType<typeof useTranslations>,
   user: User,
   dateFnsLocale: DateFnsLocale,
   statusConfig: ReturnType<typeof getStatusConfig>,
@@ -125,7 +124,7 @@ function InfoField({ icon, label, value }: InfoFieldProps) {
 }
 
 export function ProfileSection({ user }: ProfileSectionProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)

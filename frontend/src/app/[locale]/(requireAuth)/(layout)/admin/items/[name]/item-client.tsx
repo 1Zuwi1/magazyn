@@ -16,6 +16,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useForm, useStore } from "@tanstack/react-form"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { AdminPageHeader } from "@/components/admin-panel/components/admin-page-header"
@@ -37,7 +38,6 @@ import useItems, {
   useUpdateItem,
   useUploadItemPhoto,
 } from "@/hooks/use-items"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 const MAX_PHOTOS = 10
@@ -94,7 +94,7 @@ function PhotoUploadSection({
   itemId: number
   currentCount: number
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const uploadMutation = useUploadItemPhoto()
   const [preview, setPreview] = useState<string | null>(null)
@@ -156,7 +156,9 @@ function PhotoUploadSection({
   if (!canUpload && step === "idle") {
     return (
       <p className="text-muted-foreground text-sm">
-        {t("generated.admin.items.maxPhotosReached", { value0: MAX_PHOTOS })}
+        {t("generated.admin.items.detail.maxPhotosReached", {
+          value0: MAX_PHOTOS.toString(),
+        })}
       </p>
     )
   }
@@ -234,7 +236,7 @@ function PhotoUploadSection({
 }
 
 function PhotoGallery({ itemId }: { itemId: number }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const {
     data: photos,
     isPending,
@@ -279,7 +281,7 @@ function PhotoGallery({ itemId }: { itemId: number }) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed p-8 text-center">
         <p className="text-muted-foreground text-sm">
-          {t("generated.shared.errorOccurred")}
+          {t("generated.shared.errorOccured")}
         </p>
         <Button onClick={() => refetch()} size="sm" variant="outline">
           <HugeiconsIcon className="mr-1.5 size-4" icon={RefreshIcon} />
@@ -373,7 +375,7 @@ function PhotoGallery({ itemId }: { itemId: number }) {
 }
 
 export default function ItemClient() {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const router = useRouter()
   const searchParams = useSearchParams()
   const requestedItemIdFromSearchParams = useMemo(

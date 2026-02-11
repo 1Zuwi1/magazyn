@@ -2,7 +2,7 @@
 
 import { Image01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import {
   Dialog,
@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 const DEFAULT_IMAGE_SIZE = 100
@@ -51,7 +50,7 @@ export function ItemPhoto({
   height = DEFAULT_IMAGE_SIZE,
   zoomable = false,
 }: ItemPhotoProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [failedImageSource, setFailedImageSource] = useState<string | null>(
     null

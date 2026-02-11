@@ -8,10 +8,9 @@ import {
   Tag01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { ItemPhoto } from "@/components/ui/item-photo"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { IconComponent } from "../types"
 import { useWarehouseStore } from "./store"
@@ -67,7 +66,7 @@ function getStatusColor(status: Item3D["status"]): {
 }
 
 function getOccupancyColor(
-  t: ReturnType<typeof useAppTranslations>,
+  t: ReturnType<typeof useTranslations>,
   percentage: number
 ): {
   text: string
@@ -137,7 +136,7 @@ function StatCard({
 }
 
 function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const totalSlots = warehouse.racks.reduce(
     (sum: number, rack: Rack3D) => sum + rack.grid.rows * rack.grid.cols,
@@ -255,7 +254,7 @@ function OverviewContent({ warehouse }: { warehouse: Warehouse3D }) {
 }
 
 export function DetailsPanel({ warehouse }: DetailsPanelProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const { mode, selectedRackId, selectedShelf, clearSelection, focusWindow } =
     useWarehouseStore()

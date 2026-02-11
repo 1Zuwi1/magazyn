@@ -2,6 +2,7 @@
 
 import { Cancel01Icon, ImageUploadIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
 import { type ChangeEvent, type FormEvent, useState } from "react"
 import { formatBytes } from "@/components/admin-panel/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -15,7 +16,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAppTranslations } from "@/i18n/use-translations"
 
 const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/webp"
 
@@ -40,7 +40,7 @@ export function ImportItemPhotosDialog({
   onOpenChange,
   open,
 }: ImportItemPhotosDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [selectedPhotos, setSelectedPhotos] = useState<SelectedPhoto[]>([])
 

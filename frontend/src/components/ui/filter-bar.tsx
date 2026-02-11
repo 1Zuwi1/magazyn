@@ -6,12 +6,11 @@ import {
   Search01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { IconComponent } from "../dashboard/types"
 
@@ -66,7 +65,7 @@ export function SearchInput({
   className,
   "aria-label": ariaLabel,
 }: SearchInputProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const isFiltered = value.length > 0
   const resolvedPlaceholder = placeholder ?? t("search.placeholder")
@@ -118,15 +117,15 @@ export function FilterResults({
   itemLabel,
   className,
 }: FilterResultsProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className={cn("flex items-center gap-2 text-sm", className)}>
       {isFiltered ? (
         <span className="rounded-md bg-primary/10 px-2.5 py-1 font-medium text-primary">
           {t("generated.ui.pluralLabel2", {
-            value0: filteredCount,
-            value1: totalCount,
+            value0: filteredCount.toString(),
+            value1: totalCount.toString(),
             singular: itemLabel.singular,
             plural: itemLabel.plural,
             genitive: itemLabel.genitive,
@@ -135,7 +134,7 @@ export function FilterResults({
       ) : (
         <span className="text-muted-foreground">
           {t("generated.ui.pluralLabel3", {
-            value0: totalCount,
+            value0: totalCount.toString(),
             singular: itemLabel.singular,
             plural: itemLabel.plural,
             genitive: itemLabel.genitive,
@@ -155,7 +154,7 @@ export function ClearFiltersButton({
   onClick,
   className,
 }: ClearFiltersButtonProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <Button
@@ -179,7 +178,7 @@ export function ActiveFiltersBadge({
   count,
   className,
 }: ActiveFiltersBadgeProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   if (count === 0) {
     return null

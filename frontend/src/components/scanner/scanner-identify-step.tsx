@@ -6,9 +6,8 @@ import {
   SearchList01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { useCallback, useState } from "react"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type {
   IdentificationCandidate,
   IdentificationResult,
@@ -21,7 +20,7 @@ import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 
 const getConfidenceLevelLabel = (
-  t: ReturnType<typeof useAppTranslations>,
+  t: ReturnType<typeof useTranslations>,
   level: string
 ): string => {
   if (level === "HIGH_CONFIDENCE") {
@@ -51,7 +50,7 @@ function CandidateCard({
   isSelected: boolean
   onSelect: (candidate: IdentificationCandidate) => void
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <button
@@ -119,7 +118,7 @@ export function ScannerIdentifyStep({
   onMismatch,
   onCancel,
 }: ScannerIdentifyStepProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [selectedCandidate, setSelectedCandidate] =
     useState<IdentificationCandidate | null>(

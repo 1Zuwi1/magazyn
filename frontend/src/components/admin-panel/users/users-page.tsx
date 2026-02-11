@@ -1,7 +1,7 @@
 "use client"
 
 import { UserMultiple02Icon } from "@hugeicons/core-free-icons"
-
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { ActionDialog } from "@/components/admin-panel/users/components/action-dialog"
@@ -16,10 +16,9 @@ import { useUsersDialogState } from "@/components/admin-panel/users/hooks/use-us
 import { useUsersFilters } from "@/components/admin-panel/users/hooks/use-users-filters"
 import { useUsersPagination } from "@/components/admin-panel/users/hooks/use-users-pagination"
 import PaginationFull from "@/components/ui/pagination-component"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
 export default function UsersMain() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const {
     page,

@@ -1,6 +1,6 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 import { Button } from "../ui/button"
 
 interface CancelButtonProps {
@@ -8,7 +8,7 @@ interface CancelButtonProps {
 }
 
 export function CancelButton({ onClick }: CancelButtonProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <Button

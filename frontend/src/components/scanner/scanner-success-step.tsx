@@ -1,6 +1,6 @@
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 import { Button } from "../ui/button"
 
 interface ScannerSuccessStepProps {
@@ -14,7 +14,7 @@ export function ScannerSuccessStep({
   itemName,
   placementsCount,
 }: ScannerSuccessStepProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className="relative flex h-full flex-col items-center justify-center p-6 text-center">

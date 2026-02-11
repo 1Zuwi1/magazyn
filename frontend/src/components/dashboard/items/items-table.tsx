@@ -10,7 +10,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-
+import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -37,7 +37,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import useItems, { type Item } from "@/hooks/use-items"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { CodeCell } from "./components/code-cell"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 
@@ -123,7 +122,7 @@ interface ItemsTableProps {
 }
 
 const createItemsColumns = (
-  t: ReturnType<typeof useAppTranslations>
+  t: ReturnType<typeof useTranslations>
 ): ColumnDef<Item>[] => [
   {
     id: "name",
@@ -237,7 +236,7 @@ const createItemsColumns = (
 ]
 
 export function ItemsTable({ isLoading, initialSearch = "" }: ItemsTableProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const itemsColumns = createItemsColumns(t)
 
   const [page, setPage] = useState(1)

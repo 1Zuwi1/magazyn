@@ -1,10 +1,9 @@
 import { AlertCircleIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
-import { useAppTranslations } from "@/i18n/use-translations"
 export function VoiceAssistantProcessingView() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div
@@ -41,7 +40,7 @@ export function VoiceAssistantErrorView({
   message,
   onReset,
 }: VoiceAssistantErrorViewProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div

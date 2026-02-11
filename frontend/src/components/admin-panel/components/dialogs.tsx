@@ -2,7 +2,7 @@
 
 import { Alert01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import type React from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,7 +14,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 interface ConfirmDialogProps {
@@ -32,7 +31,7 @@ export function ConfirmDialog({
   title,
   description,
 }: ConfirmDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const handleConfirm = () => {
     onConfirm()
@@ -89,7 +88,7 @@ export function FormDialog({
   formId,
   isLoading,
 }: FormDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {

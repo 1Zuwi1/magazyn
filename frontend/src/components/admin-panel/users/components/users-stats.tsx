@@ -1,7 +1,7 @@
 import { Cancel01Icon, CheckmarkBadge01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 
 interface UsersStatsProps {
   total: number
@@ -10,7 +10,7 @@ interface UsersStatsProps {
 }
 
 export function UsersStats({ total, active, inactive }: UsersStatsProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className="mt-3 flex flex-wrap items-center gap-3">

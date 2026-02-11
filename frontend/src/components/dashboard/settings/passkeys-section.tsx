@@ -11,7 +11,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useQueryClient } from "@tanstack/react-query"
-
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import {
@@ -44,7 +44,6 @@ import useDeletePasskey from "@/hooks/use-delete-passkey"
 import { LINKED_2FA_METHODS_QUERY_KEY } from "@/hooks/use-linked-methods"
 import usePasskeys, { PASSKEYS_QUERY_KEY } from "@/hooks/use-passkeys"
 import useRenamePasskey from "@/hooks/use-rename-passkey"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { Passkey } from "@/lib/schemas"
 import { getWebAuthnSupport } from "@/lib/webauthn"
 
@@ -70,7 +69,7 @@ interface PasskeyItemProps {
 }
 
 function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div
@@ -182,7 +181,7 @@ function PasskeysListSkeleton() {
 }
 
 function PasskeysEmptyState() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className="flex flex-col items-center gap-4 rounded-xl border border-border/60 border-dashed bg-linear-to-b from-muted/30 to-transparent px-6 py-8 text-center">
@@ -216,7 +215,7 @@ function PasskeysList({
   onDelete,
   onRetry,
 }: PasskeysListProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   if (isLoading) {
     return <PasskeysListSkeleton />
@@ -273,7 +272,7 @@ function PasskeysList({
 }
 
 export function PasskeysSection() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [supportState, setSupportState] = useState<SupportState>("checking")
   const queryClient = useQueryClient()

@@ -8,7 +8,7 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useCallback, useEffect, useReducer, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -67,7 +67,6 @@ import useLinkedMethods, {
 } from "@/hooks/use-linked-methods"
 import useRemoveMethod from "@/hooks/use-remove-method"
 import useSetDefaultMethod from "@/hooks/use-set-default-method"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { apiFetch } from "@/lib/fetcher"
 import {
   BackupCodesGenerateSchema,
@@ -94,7 +93,7 @@ import { useCountdown } from "./use-countdown"
 import { formatCountdown } from "./utils"
 
 const getTwoFactorMethodLabels = (
-  t: ReturnType<typeof useAppTranslations>
+  t: ReturnType<typeof useTranslations>
 ): Record<TwoFactorMethod, string> => {
   const labels = {} as Record<TwoFactorMethod, string>
   for (const method of getTwoFactorMethods(t)) {
@@ -104,7 +103,7 @@ const getTwoFactorMethodLabels = (
 }
 
 const getTwoFactorMethodHints = (
-  t: ReturnType<typeof useAppTranslations>
+  t: ReturnType<typeof useTranslations>
 ): Record<TwoFactorMethod, string> => {
   const hints = {} as Record<TwoFactorMethod, string>
   for (const method of getTwoFactorMethods(t)) {
@@ -117,7 +116,7 @@ const isIdleSetupStage = (stage: TwoFactorSetupStage): boolean =>
   stage === "IDLE" || stage === "SUCCESS"
 
 const getLinkedMethodsState = (
-  t: ReturnType<typeof useAppTranslations>,
+  t: ReturnType<typeof useTranslations>,
   linkedMethods: TwoFactorMethod[] | undefined,
   method: TwoFactorMethod
 ) => {
@@ -177,7 +176,7 @@ const getLinkedMethodsHint = ({
   hasAvailableMethods,
   isSelectedLinked,
 }: {
-  t: ReturnType<typeof useAppTranslations>
+  t: ReturnType<typeof useTranslations>
   status: TwoFactorStatus
   linkedMethods: TwoFactorMethod[] | undefined
   hasAvailableMethods: boolean
@@ -214,7 +213,7 @@ const escapeHtml = (value: string): string =>
     .replaceAll("'", "&#39;")
 
 const getPrintableRecoveryCodesDocument = (
-  t: ReturnType<typeof useAppTranslations>,
+  t: ReturnType<typeof useTranslations>,
   codes: string[],
   generatedAt: string,
   locale: string
@@ -279,7 +278,7 @@ function TwoFactorMethodInput({
   disabled?: boolean
   availableMethods?: TwoFactorMethod[]
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const twoFactorMethods = getTwoFactorMethods(t)
   // If availableMethods is provided, filter to only those; otherwise show all
   const methodsToShow = availableMethods
@@ -398,7 +397,7 @@ function useTwoFactorSetupFlow({
   startTimer,
   onSuccess,
 }: TwoFactorSetupFlowParams) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const { code } = setupState
   const resetFlow = useCallback(() => {
@@ -552,7 +551,7 @@ function ConnectedMethods({
   onRemoveMethod: (method: RemovableTwoFactorMethod) => void
   removingMethod: RemovableTwoFactorMethod | null
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const twoFactorMethodLabels = getTwoFactorMethodLabels(t)
   const twoFactorMethodHints = getTwoFactorMethodHints(t)
@@ -794,7 +793,7 @@ function AuthenticatorSetup({
   authenticatorSetupData: AuthenticatorSetupData | null
   userEmail?: string
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [copied, setCopied] = useState(false)
   const secret = authenticatorSetupData?.secret ?? ""
@@ -919,7 +918,7 @@ function CodeInputEntry({
   onVerify: () => void
   userEmail?: string
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const canSendCode = getResendMethod(method) !== null
 
@@ -1000,7 +999,7 @@ function RecoveryCodesSection({
   enabled: boolean
   refreshNeeded: boolean
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false)
@@ -1227,7 +1226,7 @@ function TwoFactorActionButtons({
   onStartSetup: () => void
   onCancelSetup: () => void
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   if (status === "DISABLED" && !isSetupInProgress) {
     return (
@@ -1294,7 +1293,7 @@ function TwoFactorConfigurationSection({
   onRemoveMethod: (method: RemovableTwoFactorMethod) => void
   removingMethod: RemovableTwoFactorMethod | null
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const isIdleStage = isIdleSetupStage(setupStage)
   const isSetupInProgress = !isIdleStage
@@ -1411,7 +1410,7 @@ export function TwoFactorSetup({
   userEmail,
   backupCodesRefreshNeeded,
 }: TwoFactorSetupProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const twoFactorMethodLabels = getTwoFactorMethodLabels(t)
   const {

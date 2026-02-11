@@ -13,7 +13,7 @@ import {
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import { formatDistanceToNow } from "date-fns"
 import Link from "next/link"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import {
   formatDateTime,
@@ -35,7 +35,6 @@ import PaginationFull from "@/components/ui/pagination-component"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import useAlerts, { usePatchAlert } from "@/hooks/use-alerts"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import {
   type AlertsSchema,
@@ -55,7 +54,7 @@ type AlertTypeValue = AlertType
 type AlertStatusValue = "OPEN" | "ACTIVE" | "RESOLVED" | "DISMISSED"
 
 const getAlertStatusOptions = (
-  t: ReturnType<typeof useAppTranslations>
+  t: ReturnType<typeof useTranslations>
 ): {
   value: AlertStatusValue
   label: string
@@ -80,7 +79,7 @@ function getAlertIcon(alertType: string): IconSvgElement {
 }
 
 function getStatusConfig(
-  t: ReturnType<typeof useAppTranslations>,
+  t: ReturnType<typeof useTranslations>,
   status: string
 ): {
   badgeVariant: "default" | "destructive" | "secondary"
@@ -172,7 +171,7 @@ function AlertListBody({
   selectedAlertId: number | null
   dateFnsLocale: DateFnsLocale
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   if (isPending) {
     return (
@@ -272,7 +271,7 @@ function AlertListBody({
   )
 }
 
-const getStatuses = (t: ReturnType<typeof useAppTranslations>) => ({
+const getStatuses = (t: ReturnType<typeof useTranslations>) => ({
   OPEN: {
     label: t("generated.admin.alerts.markOpen"),
     icon: Time01Icon,
@@ -299,7 +298,7 @@ function AlertDetailsPanel({
   onStatusChange: (status: AlertStatusValue) => void
 }) {
   const locale = useLocale()
-  const t = useAppTranslations()
+  const t = useTranslations()
   const statuses = useMemo(() => getStatuses(t), [t])
 
   if (!alert) {
@@ -484,7 +483,7 @@ function AlertDetailsPanel({
 }
 
 export default function AlertsMain() {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const alertStatusOptions = useMemo(() => getAlertStatusOptions(t), [t])
   const alertTypeOptions = useMemo(() => getAlertTypeOptions(t), [t])
 

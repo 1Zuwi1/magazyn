@@ -1,9 +1,9 @@
 import { formatDate } from "date-fns"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 import type { AuthenticatorSetupData } from "@/components/dashboard/settings/types"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   Check2FASchema,
@@ -221,7 +221,7 @@ export const usePasskeyRegistration = ({
   setPendingCredentialJson,
   onSaveSuccess,
 }: UsePasskeyRegistrationOptions) => {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const [isRegistering, setIsRegistering] = useState(false)
   const [isSavingName, setIsSavingName] = useState(false)
 

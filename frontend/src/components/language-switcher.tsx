@@ -1,10 +1,10 @@
 "use client"
 
 import { useParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useTransition } from "react"
 import type { AppLocale } from "@/i18n/locale"
 import { usePathname, useRouter } from "@/i18n/navigation"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 const LANGUAGES: { locale: AppLocale; label: string; flag: string }[] = [
@@ -13,7 +13,7 @@ const LANGUAGES: { locale: AppLocale; label: string; flag: string }[] = [
 ]
 
 export function LanguageSwitcher({ className }: { className?: string }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const router = useRouter()
   const [isPending, startTransition] = useTransition()

@@ -25,7 +25,7 @@ import { DISABLE_PAGINATION_PAGE_SIZE } from "@/config/constants"
 import useAssortments from "@/hooks/use-assortment"
 import useRacks from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
 const HISTORY_STATE_KEY = "__warehouseView"
@@ -172,7 +172,7 @@ const getHistoryUpdate = (
 }
 
 const renderVisualizationFallback = (
-  t: ReturnType<typeof useAppTranslations>,
+  t: ReturnType<typeof useTranslations>,
   _error: Error,
   reset: () => void
 ) => (
@@ -205,7 +205,7 @@ const decodeWarehouseName = (encodedName: string): string => {
 }
 
 export default function ThreeDVisualizationPage() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const params = useParams<{ name: string }>()
   const encodedWarehouseName = Array.isArray(params?.name)

@@ -10,7 +10,7 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 import { formatDateTime } from "@/components/dashboard/utils/helpers"
@@ -46,7 +46,6 @@ import useApiKeys, {
   useCreateApiKey,
   useDeleteApiKey,
 } from "@/hooks/use-api-keys"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { WarehouseSelector } from "../backups/components/warehouse-selector"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ConfirmDialog } from "../components/dialogs"
@@ -66,7 +65,7 @@ interface CreatedApiKeyPreview {
   keyPrefix: string
   name: string
   warehouseName: string | null | undefined
-  scopes: string[]
+  scopes: ApiKeyScope[]
   createdAt: string
 }
 
@@ -80,7 +79,7 @@ const getScopeFallbackLabel = (scope: string): string => {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <Card className="relative overflow-hidden border-border/70 bg-linear-to-br from-amber-500/[0.08] via-card to-card p-4">
+    <Card className="relative overflow-hidden border-border/70 bg-linear-to-br from-amber-500/8 via-card to-card p-4">
       <div className="pointer-events-none absolute -top-6 -right-10 size-24 rounded-full bg-amber-500/10 blur-2xl" />
       <p className="text-muted-foreground text-xs uppercase tracking-[0.16em]">
         {label}
@@ -90,11 +89,11 @@ function StatCard({ label, value }: { label: string; value: number }) {
   )
 }
 
-function ScopeBadges({ scopes }: { scopes: readonly string[] }) {
-  const t = useAppTranslations()
+function ScopeBadges({ scopes }: { scopes: readonly ApiKeyScope[] }) {
+  const t = useTranslations()
 
-  const getScopeLabel = (scope: string) => {
-    const translationKey = `generated.admin.apiKeys.scopes.${scope}`
+  const getScopeLabel = (scope: ApiKeyScope) => {
+    const translationKey = `generated.admin.apiKeys.scopes.${scope}` as const
     if (t.has(translationKey)) {
       return t(translationKey)
     }
@@ -139,7 +138,7 @@ function ApiKeysTable({
   onDelete: (apiKeyId: number) => void
   onView: (apiKeyId: number) => void
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const locale = useLocale()
 
   return (
@@ -242,7 +241,7 @@ function ApiKeyDetailsDialog({
   apiKeyId: number | null
   onOpenChange: (open: boolean) => void
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const locale = useLocale()
 
   const {
@@ -376,7 +375,7 @@ function NewApiKeyDialog({
   onClose: () => void
   onCopy: () => void
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const locale = useLocale()
 
   return (
@@ -441,7 +440,7 @@ function NewApiKeyDialog({
               </div>
               <div>
                 <p className="text-muted-foreground text-xs uppercase tracking-wider">
-                  {t("generated.admin.apiKeys.prefix")}
+                  {t("generated.admin.apiKeys.key")}
                 </p>
                 <p className="font-mono text-xs">{createdApiKey.keyPrefix}</p>
               </div>
@@ -479,7 +478,7 @@ function NewApiKeyDialog({
 }
 
 export function ApiKeysMain() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const {
     data: apiKeysData,
@@ -772,9 +771,11 @@ export function ApiKeysMain() {
               </p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {API_KEY_SCOPES.map((scope) => {
-                  const labelKey = `generated.admin.apiKeys.scopes.${scope}`
-                  const descriptionKey = `generated.admin.apiKeys.scopeDescriptions.${scope}`
-                  const checkboxId = `api-key-scope-${scope}`
+                  const labelKey =
+                    `generated.admin.apiKeys.scopes.${scope}` as const
+                  const descriptionKey =
+                    `generated.admin.apiKeys.scopeDescriptions.${scope}` as const
+                  const checkboxId = `api-key-scope-${scope}` as const
                   const checked = selectedScopes.includes(scope)
 
                   return (

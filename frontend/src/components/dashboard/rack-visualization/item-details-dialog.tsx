@@ -4,7 +4,7 @@ import { PackageIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { addDays, formatDate } from "date-fns"
 import Image from "next/image"
-
+import { useTranslations } from "next-intl"
 import type * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -14,7 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { Item } from "../types"
 import { formatDimensions, getDaysUntilExpiry } from "../utils/helpers"
@@ -36,7 +35,7 @@ interface ItemDetailsDialogProps {
 type BadgeVariant = NonNullable<React.ComponentProps<typeof Badge>["variant"]>
 
 function formatExpiryHint(
-  t: ReturnType<typeof useAppTranslations>,
+  t: ReturnType<typeof useTranslations>,
   daysUntilExpiry: number
 ): string {
   if (daysUntilExpiry === 0) {
@@ -90,7 +89,7 @@ export function ItemDetailsDialog({
   rackName,
   coordinate,
 }: ItemDetailsDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   if (!item) {
     return null

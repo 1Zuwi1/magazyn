@@ -2,13 +2,12 @@
 
 import { Search01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { type KeyboardEvent, useState } from "react"
 import { useSearch } from "@/components/admin-panel/components/search-bar/search-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { InputGroup, InputGroupButton } from "@/components/ui/input-group"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 interface SearchProps {
@@ -17,7 +16,7 @@ interface SearchProps {
 }
 
 export function Search({ className, placeholder }: SearchProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const { openWithQuery } = useSearch()
   const [value, setValue] = useState("")

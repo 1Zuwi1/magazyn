@@ -1,9 +1,8 @@
 import { Location04Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useMemo } from "react"
 import { useInfiniteRacks } from "@/hooks/use-racks"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { Badge } from "../ui/badge"
 import { Button } from "../ui/button"
 import { CancelButton } from "./cancel-button"
@@ -62,7 +61,7 @@ export function ScannerLocationsStep({
   onRemovePlacement,
   onPlacementChange,
 }: ScannerLocationsStepProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const reservedUntilLabel = formatReservedUntil(plan.reservedUntil, locale)

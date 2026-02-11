@@ -6,7 +6,7 @@ import {
   UserShield01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
@@ -26,7 +26,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { AdminUser } from "@/hooks/use-admin-users"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import {
   getStatusLabel,
@@ -67,7 +66,7 @@ export function UsersTable({
   onChangeStatus,
   onAssignWarehouse,
 }: UsersTableProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const renderRows = () => {
     if (isPending) {

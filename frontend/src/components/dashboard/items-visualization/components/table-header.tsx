@@ -1,7 +1,7 @@
+import { useTranslations } from "next-intl"
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useAppTranslations } from "@/i18n/use-translations"
 export function RackItemsTableHeader() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <TableHeader>

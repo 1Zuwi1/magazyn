@@ -7,7 +7,7 @@ import {
   ViewIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -17,7 +17,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { TableCell } from "@/components/ui/table"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { RackAssortment } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { formatDateTime } from "../../utils/helpers"
@@ -39,7 +38,7 @@ export function TableRowContent({
   onEdit,
   onDelete,
 }: TableRowContentProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const expired = isExpired(assortment.expiresAt)

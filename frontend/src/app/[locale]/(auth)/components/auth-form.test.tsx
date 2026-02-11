@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import AuthForm from "./auth-form"
 
 vi.mock("@/i18n/use-translations", () => ({
-  useAppTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string) => key,
 }))
 
 // Mock next/navigation

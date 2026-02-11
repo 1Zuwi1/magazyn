@@ -7,7 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useSearchParams } from "next/navigation"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { AssortmentTable } from "@/components/dashboard/items/assortment-table"
 import { ItemsTable } from "@/components/dashboard/items/items-table"
@@ -16,7 +16,6 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import useAssortment from "@/hooks/use-assortment"
 import useItems from "@/hooks/use-items"
-import { useAppTranslations } from "@/i18n/use-translations"
 
 type ItemsTab = "assortment" | "definitions"
 
@@ -24,7 +23,7 @@ const isItemsTab = (value: string | null): value is ItemsTab =>
   value === "assortment" || value === "definitions"
 
 export default function ItemsClientPage() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const searchParams = useSearchParams()

@@ -2,11 +2,10 @@
 
 import { Key01Icon, LockIcon, Shield01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { TwoFactorMethod } from "@/lib/schemas"
 import { PasskeysSection } from "./passkeys-section"
 import { PasswordSection } from "./password-section"
@@ -19,7 +18,7 @@ interface SecuritySectionProps {
 }
 
 function SecurityStatusIndicator({ status }: { status: TwoFactorStatus }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const config = {
     ENABLED: {
@@ -55,7 +54,7 @@ export function SecuritySection({
   userEmail,
   backupCodesRefreshNeeded,
 }: SecuritySectionProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [twoFactorMethod, setTwoFactorMethod] =
     useState<TwoFactorMethod>("EMAIL")

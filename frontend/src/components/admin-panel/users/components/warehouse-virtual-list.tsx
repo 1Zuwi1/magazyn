@@ -6,7 +6,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { remToPixels } from "@/components/dashboard/utils/helpers"
 import { Badge } from "@/components/ui/badge"
@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { Warehouse } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 
@@ -108,7 +107,7 @@ function WarehouseRow({
   rowHeight,
   rowOffset,
 }: WarehouseRowProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const rowSurfaceClass = getRowSurfaceClass({ isAssigned, isSelected })
   const rowIconClass = getRowIconClass({ isAssigned, isSelected })
@@ -174,7 +173,7 @@ export function WarehouseVirtualList({
   isPending,
   isError,
 }: WarehouseVirtualListProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const assignedWarehouseIdSet = useMemo(

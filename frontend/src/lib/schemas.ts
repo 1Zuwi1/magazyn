@@ -1600,10 +1600,7 @@ export const AlertTypeSchema = z.enum([
 
 export type AlertType = z.infer<typeof AlertTypeSchema>
 
-const ALERT_TYPE_OPTION_KEYS: ReadonlyArray<{
-  value: AlertType
-  labelKey: string
-}> = [
+const ALERT_TYPE_OPTION_KEYS = [
   {
     value: "WEIGHT_EXCEEDED",
     labelKey: "generated.validation.exceedingWeight",
@@ -1670,9 +1667,7 @@ const ALERT_TYPE_OPTION_KEYS: ReadonlyArray<{
   },
 ] as const
 
-export const getAlertTypeOptions = (
-  t: AppTranslate
-): ReadonlyArray<{ value: AlertType; label: string }> =>
+export const getAlertTypeOptions = (t: AppTranslate) =>
   ALERT_TYPE_OPTION_KEYS.map((option) => ({
     value: option.value,
     label: t(option.labelKey),

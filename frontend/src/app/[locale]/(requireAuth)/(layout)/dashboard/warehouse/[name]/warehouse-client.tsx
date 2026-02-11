@@ -48,7 +48,7 @@ import useAssortments from "@/hooks/use-assortment"
 import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
 import useRacks from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 import type { Rack } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 
@@ -89,7 +89,7 @@ const getWarehouseDisplayMessage = ({
   hasRack,
   warehouseName,
 }: {
-  t: ReturnType<typeof useAppTranslations>
+  t: ReturnType<typeof useTranslations>
   hasFetchError: boolean
   hasWarehouse: boolean
   hasRack: boolean
@@ -116,7 +116,7 @@ function buildHeaderStats({
   warehouseOccupiedSlots,
   warehouseRacksCount,
 }: {
-  t: ReturnType<typeof useAppTranslations>
+  t: ReturnType<typeof useTranslations>
   currentRack: Rack | null
   rackOccupancyPercentage: number
   warehouseFreeSlots: number
@@ -158,7 +158,7 @@ function WarehouseLoadingSkeleton({
 }: {
   warehouseName: string
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className="space-y-6">
@@ -309,7 +309,7 @@ function WarehouseStateView({
   titleBadge?: string
   message: string
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className="space-y-6">
@@ -468,7 +468,7 @@ function useRackSelectionFromLink({
 }
 
 export default function WarehouseClient() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const params = useParams<{ name: string }>()
   const encodedWarehouseName = getEncodedName(params?.name)

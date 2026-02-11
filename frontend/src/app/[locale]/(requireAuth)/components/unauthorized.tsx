@@ -11,9 +11,9 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 export default function UnauthorizedComponent() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center p-6">

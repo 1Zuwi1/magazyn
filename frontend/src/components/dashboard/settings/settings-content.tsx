@@ -1,14 +1,13 @@
 import { Settings01Icon, UserIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { PageHeader } from "@/components/dashboard/page-header"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { LogoutSection } from "./logout-section"
 import { ProfileSection } from "./profile-section"
 import { SecuritySection } from "./security-section"
 import type { SettingsContentProps } from "./types"
 export function SettingsContent({ user }: SettingsContentProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className="space-y-8">

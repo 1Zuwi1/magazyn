@@ -3,9 +3,8 @@
 import { MinusSignIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { OTPInput, OTPInputContext } from "input-otp"
-
+import { useTranslations } from "next-intl"
 import * as React from "react"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 function InputOTP({
@@ -79,7 +78,7 @@ function InputOTPSlot({
 }
 
 function InputOTPStatus({ className, id }: { className?: string; id: string }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const inputOTPContext = React.useContext(OTPInputContext)
   const slots = inputOTPContext?.slots ?? []
@@ -95,14 +94,14 @@ function InputOTPStatus({ className, id }: { className?: string; id: string }) {
   if (totalSlots > 0) {
     if (activePosition) {
       statusMessage = t("inputOtp.status.filledWithActivePosition", {
-        value0: filledCount,
-        value1: totalSlots,
-        value2: activePosition,
+        value0: filledCount.toString(),
+        value1: totalSlots.toString(),
+        value2: activePosition.toString(),
       })
     } else {
       statusMessage = t("inputOtp.status.filled", {
-        value0: filledCount,
-        value1: totalSlots,
+        value0: filledCount.toString(),
+        value1: totalSlots.toString(),
       })
     }
   }

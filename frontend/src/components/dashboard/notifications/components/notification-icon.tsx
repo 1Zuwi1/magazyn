@@ -13,7 +13,7 @@ import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import { formatDistanceToNow } from "date-fns"
 import { AnimatePresence, motion } from "framer-motion"
 import Link from "next/link"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { type ReactNode, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -31,7 +31,6 @@ import useNotifications, {
   useMarkNotification,
 } from "@/hooks/use-notifications"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { findAlertTitle } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 
@@ -71,7 +70,7 @@ function getStatusConfig(status: string) {
 }
 
 export function NotificationInbox() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)

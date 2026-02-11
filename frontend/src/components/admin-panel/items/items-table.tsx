@@ -15,6 +15,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import {
   SortableHeader,
@@ -52,7 +53,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 interface AdminItemsTableProps {
@@ -70,7 +70,7 @@ interface AdminItemsTableProps {
 }
 
 function createColumns(
-  t: ReturnType<typeof useAppTranslations>,
+  t: ReturnType<typeof useTranslations>,
   onDelete: (item: Item) => void,
   router: ReturnType<typeof useRouter>
 ): ColumnDef<Item>[] {
@@ -228,7 +228,7 @@ export function AdminItemsTable({
   isLoading,
   refetch,
 }: AdminItemsTableProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const router = useRouter()
 
   const [sorting, setSorting] = useState<SortingState>([])

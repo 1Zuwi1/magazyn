@@ -5,13 +5,12 @@ import {
   MoreHorizontalCircle01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import type * as React from "react"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <nav
@@ -100,7 +99,7 @@ function BreadcrumbEllipsis({
   className,
   ...props
 }: React.ComponentProps<"span">) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <span

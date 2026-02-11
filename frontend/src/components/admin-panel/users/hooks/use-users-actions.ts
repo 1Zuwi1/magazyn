@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import type {
   AdminTeamOption,
@@ -13,7 +14,6 @@ import {
   useUsersWarehouseAssignments,
   useUsersWarehouseAssignmentsDelete,
 } from "@/hooks/use-admin-users"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { EditUserFormValues } from "../components/action-dialog"
 import { normalizeValue, resolveTeamValue } from "../lib/user-utils"
 
@@ -58,7 +58,7 @@ export function useUsersActions({
   userIdToDelete,
   clearUserIdToDelete,
 }: UseUsersActionsParams) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const updateProfileMutation = useUpdateAdminUserProfile()
   const changeEmailMutation = useChangeAdminUserEmail()

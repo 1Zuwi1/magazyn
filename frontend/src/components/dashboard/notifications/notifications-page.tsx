@@ -12,7 +12,7 @@ import {
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import { formatDistanceToNow } from "date-fns"
 import Link from "next/link"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -25,7 +25,6 @@ import useNotifications, {
   useMarkNotification,
 } from "@/hooks/use-notifications"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { findAlertTitle } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { formatDateTime, toTitleCase } from "../utils/helpers"
@@ -43,7 +42,7 @@ function getNotificationIcon(alertType: string): IconSvgElement {
 }
 
 function getStatusConfig(
-  t: ReturnType<typeof useAppTranslations>,
+  t: ReturnType<typeof useTranslations>,
   status: string
 ): {
   badgeVariant: "default" | "destructive" | "secondary"
@@ -116,7 +115,7 @@ function NotificationListBody({
   onSelect: (notification: UserNotification) => void
   selectedNotificationId: number | null
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const locale = useLocale()
 
   if (isPending) {
@@ -227,7 +226,7 @@ function NotificationDetailsPanel({
   notification: UserNotification | null
   onToggleReadStatus: () => void
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const locale = useLocale()
 
   if (!notification) {
@@ -403,7 +402,7 @@ function NotificationDetailsPanel({
 }
 
 export default function NotificationsMain() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
 

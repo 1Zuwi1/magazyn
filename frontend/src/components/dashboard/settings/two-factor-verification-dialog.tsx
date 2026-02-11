@@ -2,6 +2,7 @@
 
 import { Alert02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import PasskeyLogin from "@/app/[locale]/(auth)/components/passkey-login"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -20,7 +21,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useCheck2FA, useRequestTwoFactorCode } from "@/hooks/use-2fa"
 import useLinkedMethods from "@/hooks/use-linked-methods"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { TwoFactorMethod } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { translateErrorCode } from "../utils/helpers"
@@ -53,7 +53,7 @@ function BackupCodeVerificationSection({
   onCodeChange,
   onVerify,
 }: BackupCodeVerificationSectionProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div className="space-y-3">
@@ -137,7 +137,7 @@ export function TwoFactorVerificationDialog({
   contentClassName = "sm:max-w-lg",
   copy,
 }: TwoFactorVerificationDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const [code, setCode] = useState("")
   const {
     data: methods,

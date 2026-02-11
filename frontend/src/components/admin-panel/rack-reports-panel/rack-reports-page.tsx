@@ -9,7 +9,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 import type { IconComponent } from "@/components/dashboard/types"
 import { formatDateTime } from "@/components/dashboard/utils/helpers"
@@ -27,7 +27,6 @@ import PaginationFull from "@/components/ui/pagination-component"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import useRackReports from "@/hooks/use-rack-reports"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type { RackReportsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
@@ -83,7 +82,7 @@ function RackReportListBody({
   onSelect: (report: RackReportItem) => void
   selectedReportId: number | null
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const locale = useLocale()
 
   if (isPending) {
@@ -190,7 +189,7 @@ function RackReportListBody({
 }
 
 function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const locale = useLocale()
 
   if (!report) {
@@ -301,7 +300,7 @@ function RackReportDetailsPanel({ report }: { report: RackReportItem | null }) {
 }
 
 export default function RackReportsMain() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [withAlertsFilter, setWithAlertsFilter] = useState<boolean | undefined>(
     undefined

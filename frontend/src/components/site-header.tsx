@@ -3,7 +3,6 @@
 import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Fragment } from "react/jsx-runtime"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { NotificationInbox } from "./dashboard/notifications/components/notification-icon"
 import { LanguageSwitcher } from "./language-switcher"
 import { Scanner } from "./scanner/scanner"
@@ -53,7 +52,7 @@ const sanitizeVisibleText = (value: string): string => {
 }
 
 export default function SiteHeader() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const pathname = usePathname()
   const router = useRouter()

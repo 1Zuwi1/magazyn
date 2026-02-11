@@ -7,10 +7,9 @@ import {
   WarehouseIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { type ReactNode, useState } from "react"
 import { toast } from "sonner"
-
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
 import { CsvImporter } from "@/components/admin-panel/warehouses/csv/csv-importer"
 import { Button } from "@/components/ui/button"
@@ -23,7 +22,6 @@ import useWarehouses, {
   useUpdateWarehouse,
   type WarehousesList,
 } from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { WarehouseCard } from "./components/warehouse-card"
 import {
@@ -34,7 +32,7 @@ import {
 type ApiWarehouse = WarehousesList["content"][number]
 
 export default function WarehousesMain() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [page, setPage] = useState(1)
   const {
@@ -289,7 +287,7 @@ export default function WarehousesMain() {
         description={t(
           "generated.admin.warehouses.sureWantDeleteWarehouseAll",
           {
-            value0: warehouseToDelete?.name,
+            value0: warehouseToDelete?.name ?? "",
           }
         )}
         onConfirm={confirmDeleteWarehouse}

@@ -5,9 +5,9 @@ import {
   DatabaseIcon,
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
+import { useTranslations } from "next-intl"
 import { useMemo } from "react"
 import type { BackupSchedules, BackupsList } from "@/hooks/use-backups"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { mapApiBackupToViewModel, mapApiScheduleToViewModel } from "../utils"
 import { StatBadge, type StatBadgeConfig } from "./stat-badge"
 
@@ -20,7 +20,7 @@ export function BackupsHeaderStats({
   backupsData,
   schedulesData,
 }: BackupsHeaderStatsProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const backups = useMemo(
     () =>

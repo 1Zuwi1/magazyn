@@ -11,7 +11,7 @@ import {
   WeightScale01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
@@ -19,7 +19,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { Rack } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { THRESHOLD } from "../../lib/constants"
@@ -31,7 +30,7 @@ interface RackCardProps {
 }
 
 function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const hasActions = onEdit || onDelete
   const isCritical = rack.occupiedSlots / rack.totalSlots >= THRESHOLD
@@ -240,7 +239,7 @@ interface RackGridProps {
 }
 
 export function RackGrid({ racks, onEdit, onDelete }: RackGridProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   if (racks.length === 0) {
     return (

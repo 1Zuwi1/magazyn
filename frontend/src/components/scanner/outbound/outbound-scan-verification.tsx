@@ -5,12 +5,11 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { type KeyboardEvent, useCallback, useRef, useState } from "react"
 import { remToPixels } from "@/components/dashboard/utils/helpers"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useElementSize } from "@/hooks/use-element-size"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { OutboundPickSlot } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
 import { Button } from "../../ui/button"
@@ -47,7 +46,7 @@ export function OutboundScanVerification({
   onConfirm,
   onCancel,
 }: OutboundScanVerificationProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const scannedCodes = new Set(scannedEntries.map((e) => e.assortmentCode))

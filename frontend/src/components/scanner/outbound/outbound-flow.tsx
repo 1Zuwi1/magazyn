@@ -1,7 +1,7 @@
 "use client"
 
 import { useQueryClient } from "@tanstack/react-query"
-
+import { useTranslations } from "next-intl"
 import {
   useCallback,
   useEffect,
@@ -10,7 +10,6 @@ import {
   useState,
 } from "react"
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   type OutboundCheckResult,
@@ -36,7 +35,7 @@ import { OutboundSelectQuantity } from "./outbound-select-quantity"
 import { OutboundSuccess } from "./outbound-success"
 
 const getOutboundErrorMessages = (
-  t: ReturnType<typeof useAppTranslations>
+  t: ReturnType<typeof useTranslations>
 ): Record<string, string> => ({
   ASSORTMENT_NOT_FOUND: t(
     "generated.scanner.outbound.assortmentFoundScannedCodeCheck"
@@ -95,7 +94,7 @@ export const OutboundFlow = ({
   onReset: parentOnReset,
   ref,
 }: OutboundFlowProps) => {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const outboundErrorMessages = useMemo(() => getOutboundErrorMessages(t), [t])
 
   const queryClient = useQueryClient()

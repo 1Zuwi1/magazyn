@@ -5,10 +5,10 @@ import {
   type UseMutationResult,
   useMutation,
 } from "@tanstack/react-query"
+import { useTranslations } from "next-intl"
 import { useRef } from "react"
 import { useTwoFactorVerificationDialogStore } from "@/components/dashboard/settings/two-factor-verification-dialog-store"
 import { handleApiError } from "@/components/dashboard/utils/helpers"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { FetchError } from "@/lib/fetcher"
 
 export function useApiMutation<
@@ -19,7 +19,7 @@ export function useApiMutation<
 >(
   options: UseMutationOptions<TData, TError, TVariables, TContext>
 ): UseMutationResult<TData, TError, TVariables, TContext> {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const { mutationFn, onError, ...mutationOptions } = options
   const pendingMutateOptionsRef = useRef<MutateOptions<
     TData,

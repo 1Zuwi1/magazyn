@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl"
 import {
   InputOTP,
   InputOTPGroup,
@@ -6,7 +7,6 @@ import {
   InputOTPStatus,
 } from "@/components/ui/input-otp"
 import { OTP_LENGTH } from "@/config/constants"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { sanitizeOtpValue } from "./utils"
 
 interface OtpInputProps {
@@ -17,7 +17,7 @@ interface OtpInputProps {
 }
 
 export function OtpInput({ id, onChange, value, disabled }: OtpInputProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const statusId = `${id}-status`
   const halfOtpLength = OTP_LENGTH / 2

@@ -2,6 +2,7 @@
 
 import { AlertDiamondIcon, DatabaseIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,7 +14,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { WarehouseSelector } from "./warehouse-selector"
 
 interface CreateBackupDialogProps {
@@ -29,7 +29,7 @@ export function CreateBackupDialog({
   isSubmitting = false,
   onConfirm,
 }: CreateBackupDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | null>(
     null
   )

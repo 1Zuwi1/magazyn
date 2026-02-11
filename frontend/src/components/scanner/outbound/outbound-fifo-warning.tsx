@@ -1,8 +1,7 @@
 import { AlertCircleIcon, Location04Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { formatDateTime } from "@/components/dashboard/utils/helpers"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { OutboundCheckResult } from "@/lib/schemas"
 import { Badge } from "../../ui/badge"
 import { Button } from "../../ui/button"
@@ -24,7 +23,7 @@ export function OutboundFifoWarning({
   onTakeFifoCompliant,
   onCancel,
 }: OutboundFifoWarningProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const { requestedAssortment, olderAssortments, warning } = checkResult

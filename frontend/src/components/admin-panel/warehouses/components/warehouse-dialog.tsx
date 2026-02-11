@@ -1,12 +1,11 @@
 "use client"
 
 import { useForm, useStore } from "@tanstack/react-form"
-
+import { useTranslations } from "next-intl"
 import { useEffect } from "react"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { FieldGroup } from "@/components/ui/field"
-import { useAppTranslations } from "@/i18n/use-translations"
 export interface WarehouseFormData {
   id: string
   name: string
@@ -27,7 +26,7 @@ export function WarehouseDialog({
   onSubmit,
   formId,
 }: WarehouseDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const isEdit = !!currentRow
 

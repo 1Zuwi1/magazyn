@@ -8,13 +8,12 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useDebouncedValue } from "@tanstack/react-pacer"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import useWarehouses from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { normalizeTranscript } from "@/lib/voice/commands"
 import { useVoiceCommandStore } from "@/lib/voice/voice-command-store"
 import { ErrorEmptyState } from "../ui/empty-state"
@@ -59,7 +58,7 @@ const isWarehouseMatch = ({
 }
 
 export const WarehouseContent = () => {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const pendingAction = useVoiceCommandStore((state) => state.pendingAction)

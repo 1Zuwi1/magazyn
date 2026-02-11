@@ -11,16 +11,15 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-
+import { useTranslations } from "next-intl"
 import { useMemo } from "react"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { Scanner } from "./scanner/scanner"
 import { DialogTrigger } from "./ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { VoiceAssistant } from "./voice-assistant/voice-assistant"
 
-const getDockNavItems = (t: ReturnType<typeof useAppTranslations>) =>
+const getDockNavItems = (t: ReturnType<typeof useTranslations>) =>
   [
     {
       title: t("generated.ui.dock.dashboard"),
@@ -71,7 +70,7 @@ const sanitizeVisibleText = (value: string): string => {
 }
 
 export function Dock() {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const dockNavItems = useMemo(() => getDockNavItems(t), [t])
 
   const pathname = usePathname()

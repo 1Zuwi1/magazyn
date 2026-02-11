@@ -1,9 +1,8 @@
 import { StopIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { useAppTranslations } from "@/i18n/use-translations"
 
 interface VoiceAssistantListeningViewProps {
   onStopListening: () => void
@@ -33,7 +32,7 @@ export function VoiceAssistantListeningView({
   detectedCommandLabel,
   isCommandDetected = false,
 }: VoiceAssistantListeningViewProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <div

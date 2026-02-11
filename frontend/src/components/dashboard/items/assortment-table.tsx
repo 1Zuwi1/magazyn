@@ -15,7 +15,7 @@ import {
 import { formatDate, formatDistanceToNow } from "date-fns"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import {
   type Dispatch,
   type SetStateAction,
@@ -58,7 +58,6 @@ import useAssortment from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import { useMultipleRacks } from "@/hooks/use-racks"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type { AssortmentsSchema, RackAssortmentsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
@@ -75,7 +74,7 @@ type AssortmentItemWithItemId = AssortmentList["content"][number]
 type AssortmentItem = SupportedAssortmentList["content"][number]
 
 const getExpiryFilterOptions = (
-  t: ReturnType<typeof useAppTranslations>
+  t: ReturnType<typeof useTranslations>
 ): {
   value: ExpiryFilters
   label: string
@@ -164,7 +163,7 @@ const buildRackWarehouseHref = ({
 }
 
 function ExpiryStatusBadge({ value }: { value: string }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)
@@ -368,7 +367,7 @@ function AssortmentTableContent({
   onSortingChange,
   manualServerControls = false,
 }: AssortmentTableContentProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const expiryFilterOptions = useMemo(() => getExpiryFilterOptions(t), [t])
 
   const assortmentItems = assortmentData?.content ?? []

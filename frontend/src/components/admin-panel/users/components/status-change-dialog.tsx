@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -22,7 +23,6 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import type { AdminUser } from "@/hooks/use-admin-users"
-import { useAppTranslations } from "@/i18n/use-translations"
 import {
   getStatusLabel,
   getStatusVariant,
@@ -55,7 +55,7 @@ export function StatusChangeDialog({
   user,
   onConfirm,
 }: StatusChangeDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [selectedStatus, setSelectedStatus] = useState<AccountStatus | "">("")
   const [reason, setReason] = useState("")

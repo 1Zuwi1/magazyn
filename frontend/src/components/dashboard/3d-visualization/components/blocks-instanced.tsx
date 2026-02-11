@@ -1,7 +1,6 @@
 import { Html, Instance, Instances, useCursor } from "@react-three/drei"
-
+import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
-import { useAppTranslations } from "@/i18n/use-translations"
 import {
   BLOCK_EMPTY_VISUAL,
   BLOCK_GAP_RATIO,
@@ -189,7 +188,7 @@ export function BlocksInstanced({
   hoverable = true,
   clickable = true,
 }: BlocksInstancedProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const { setFocusWindow } = useWarehouseStore()
   const [hoveredBlockKey, setHoveredBlockKey] = useState<string | null>(null)

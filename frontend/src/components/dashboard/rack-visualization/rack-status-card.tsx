@@ -5,7 +5,7 @@ import {
   SquareLock02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
 interface RackStatusCardProps {
@@ -16,7 +16,7 @@ interface RackStatusCardProps {
 }
 
 function getOccupancyColor(
-  t: ReturnType<typeof useAppTranslations>,
+  t: ReturnType<typeof useTranslations>,
   percentage: number
 ): {
   text: string
@@ -62,7 +62,7 @@ export function RackStatusCard({
   totalCapacity,
   occupancyPercentage,
 }: RackStatusCardProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const occupancyColors = getOccupancyColor(t, occupancyPercentage)
 

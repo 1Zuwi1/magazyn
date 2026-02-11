@@ -1,8 +1,8 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { useAppTranslations } from "@/i18n/use-translations"
 
 interface VoiceAssistantConfirmViewProps {
   transcript: string
@@ -19,7 +19,7 @@ export function VoiceAssistantConfirmView({
   onCancel,
   autoExecuteDelay = 5000,
 }: VoiceAssistantConfirmViewProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [timeLeft, setTimeLeft] = useState(autoExecuteDelay)
   const hasConfirmedRef = useRef(false)
@@ -87,7 +87,7 @@ export function VoiceAssistantConfirmView({
         </svg>
         <span
           aria-label={t("generated.voiceAssistant.secondsLeft", {
-            value0: secondsLeft,
+            value0: secondsLeft.toString(),
           })}
           aria-live="assertive"
           className="absolute font-bold text-foreground text-xl tabular-nums"

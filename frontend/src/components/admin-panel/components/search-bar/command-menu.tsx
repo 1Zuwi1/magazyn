@@ -3,7 +3,7 @@
 import { LaptopIcon, Moon02Icon, Sun03Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useRouter } from "next/navigation"
-
+import { useTranslations } from "next-intl"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import {
@@ -16,7 +16,6 @@ import {
   CommandSeparator,
 } from "@/components/ui/command"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useAppTranslations } from "@/i18n/use-translations"
 export interface NavItem {
   title: string
   url?: string
@@ -40,7 +39,7 @@ export function CommandMenu({
   open,
   setOpen,
 }: CommandMenuProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const { setTheme } = useTheme()
   const router = useRouter()

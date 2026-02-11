@@ -1,6 +1,6 @@
 import { Filter } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/popover"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { FilterState } from "./types"
 
@@ -29,7 +28,7 @@ export function WarehouseFilters({
   filters,
   onFilterChange,
 }: WarehouseFiltersProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <Popover>

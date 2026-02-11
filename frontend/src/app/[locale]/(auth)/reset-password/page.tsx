@@ -12,7 +12,7 @@ import { FieldWithState } from "@/components/helpers/field-state"
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldGroup } from "@/components/ui/field"
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 import { createApiSchema } from "@/lib/create-api-schema"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import { PasswordSchema } from "@/lib/schemas"
@@ -29,7 +29,7 @@ const ResetPasswordSchema = createApiSchema({
 })
 
 export default function ResetPassword() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const searchParams = useSearchParams()
   const token = searchParams.get("token")

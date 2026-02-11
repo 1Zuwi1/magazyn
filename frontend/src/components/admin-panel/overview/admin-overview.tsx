@@ -11,7 +11,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
-
+import { useTranslations } from "next-intl"
 import { type ReactNode, useCallback, useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -20,7 +20,6 @@ import useAdminUsers from "@/hooks/use-admin-users"
 import useAlerts from "@/hooks/use-alerts"
 import useAssortments from "@/hooks/use-assortment"
 import useWarehouses from "@/hooks/use-warehouses"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { THRESHOLD } from "../lib/constants"
@@ -30,7 +29,7 @@ const ADMIN_OVERVIEW_FETCH_SIZE = 1
 const CRITICAL_WAREHOUSES_FETCH_SIZE = 3
 
 export function AdminOverview() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const {
     data: usersData,

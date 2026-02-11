@@ -3,9 +3,8 @@ import {
   useInfiniteQuery,
   useQueries,
 } from "@tanstack/react-query"
-
+import { useTranslations } from "next-intl"
 import { useMemo } from "react"
-import { useAppTranslations } from "@/i18n/use-translations"
 import {
   apiFetch,
   type FetchError,
@@ -196,7 +195,7 @@ export function useInfiniteRacks(
   }: InfiniteRacksParams,
   options?: SafeInfiniteQueryOptions<RacksList, number>
 ) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const infiniteQuery = useInfiniteQuery({
     queryKey: ["infinite-racks", warehouseId, pageSize],

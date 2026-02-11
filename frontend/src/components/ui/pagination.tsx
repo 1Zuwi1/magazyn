@@ -4,14 +4,13 @@ import {
   MoreHorizontalCircle01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import type * as React from "react"
 import { Button } from "@/components/ui/button"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <nav
@@ -69,7 +68,7 @@ function PaginationPrevious({
   text?: string
   showIcon?: boolean
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <PaginationLink
@@ -99,7 +98,7 @@ function PaginationNext({
   text?: string
   showIcon?: boolean
 }) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const resolvedText = text ?? t("generated.ui.next")
 
   return (
@@ -125,7 +124,7 @@ function PaginationEllipsis({
   className,
   ...props
 }: React.ComponentProps<"span">) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <span

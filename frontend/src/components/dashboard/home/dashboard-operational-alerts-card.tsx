@@ -2,7 +2,7 @@
 
 import { AlertCircleIcon } from "@hugeicons/core-free-icons"
 import { formatDistanceToNow } from "date-fns"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useMemo } from "react"
 import { InsightCard } from "@/components/dashboard/stat-card"
 import { Badge } from "@/components/ui/badge"
@@ -12,7 +12,6 @@ import useAssortments from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import useWarehouses from "@/hooks/use-warehouses"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
-import { useAppTranslations } from "@/i18n/use-translations"
 import {
   EXPIRING_ITEMS_LIMIT,
   EXPIRY_WARNING_DAYS,
@@ -52,7 +51,7 @@ function OperationalAlertsSkeleton() {
 }
 
 export function DashboardOperationalAlertsCard() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const locale = useLocale()
   const dateFnsLocale = getDateFnsLocale(locale)

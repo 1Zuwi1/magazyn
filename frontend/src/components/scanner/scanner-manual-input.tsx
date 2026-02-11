@@ -2,16 +2,15 @@
 
 import { KeyboardIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 
-const getModeOptions = (t: ReturnType<typeof useAppTranslations>) =>
+const getModeOptions = (t: ReturnType<typeof useTranslations>) =>
   [
     { label: t("generated.scanner.receiving"), value: "take" },
     { label: t("generated.scanner.removing"), value: "remove" },
@@ -38,7 +37,7 @@ export function ScannerManualInput({
   error,
   mode,
 }: ScannerManualInputProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const modeOptions = useMemo(() => getModeOptions(t), [t])
 
   const [code, setCode] = useState<string>(initialCode)

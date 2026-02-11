@@ -7,7 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useForm, useStore } from "@tanstack/react-form"
-
+import { useTranslations } from "next-intl"
 import { useEffect, useMemo } from "react"
 import { toast } from "sonner"
 import z from "zod"
@@ -20,13 +20,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
-import { useAppTranslations } from "@/i18n/use-translations"
 import type { Rack } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { DEFAULT_RACK } from "../../lib/constants"
 import type { RackFormData } from "../csv/utils/types"
 
-const createRackDialogFormSchema = (t: ReturnType<typeof useAppTranslations>) =>
+const createRackDialogFormSchema = (t: ReturnType<typeof useTranslations>) =>
   z
     .object({
       marker: z
@@ -115,7 +114,7 @@ export function RackDialog({
   onOpenChange,
   onSubmit,
 }: RackDialogProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
   const rackDialogFormSchema = useMemo(() => createRackDialogFormSchema(t), [t])
 
   const isEdit = !!currentRow

@@ -14,6 +14,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { AnimatePresence, motion } from "framer-motion"
+import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
@@ -45,7 +46,6 @@ import {
   useGenerateInventoryStockReport,
   useGenerateTemperatureAlertReport,
 } from "@/hooks/use-reports"
-import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { WarehouseSelector } from "../backups/components/warehouse-selector"
 import { AdminPageHeader } from "../components/admin-page-header"
@@ -62,7 +62,7 @@ const REPORT_FORMAT_EXTENSION: Record<ReportFormat, string> = {
 }
 
 export default function ReportsMain() {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   const [reportType, setReportType] = useState<ReportType>("inventory")
   const [reportFormat, setReportFormat] = useState<ReportFormat>("xlsx")

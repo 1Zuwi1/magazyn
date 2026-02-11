@@ -1,4 +1,4 @@
-import { useAppTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 import { ScannerChooseMethod } from "../scanner-choose-method"
 
 interface OutboundChooseMethodProps {
@@ -12,7 +12,7 @@ export function OutboundChooseMethod({
   onSelect,
   onCancel,
 }: OutboundChooseMethodProps) {
-  const t = useAppTranslations()
+  const t = useTranslations()
 
   return (
     <ScannerChooseMethod
