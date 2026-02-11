@@ -22,6 +22,10 @@ export const getAdminNavLinks = (t: AppTranslate) =>
       url: "/admin/audit",
     },
     {
+      title: t("generated.shared.reports"),
+      url: "/admin/reports",
+    },
+    {
       title: t("generated.shared.backups"),
       url: "/admin/backups",
     },

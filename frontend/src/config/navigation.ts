@@ -92,6 +92,11 @@ export const getNavigationItems = (t: AppTranslate): NavigationItem[] =>
           icon: Analytics01Icon,
         },
         {
+          title: t("generated.shared.reports"),
+          href: "/admin/reports",
+          icon: Analytics01Icon,
+        },
+        {
           title: t("generated.shared.backups"),
           href: "/admin/backups",
           icon: DatabaseIcon,
