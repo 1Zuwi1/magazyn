@@ -1,0 +1,247 @@
+package com.github.dawid_stolarczyk.magazyn.Services.Report;
+
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Report.ExpiryReportRow;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Report.InventoryStockReportRow;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Report.TemperatureAlertAssortmentReportRow;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Report.TemperatureAlertRackReportRow;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.Assortment;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.RackReport;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AssortmentRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.RackReportRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+@RequiredArgsConstructor
+public class ReportDataService {
+
+    private final AssortmentRepository assortmentRepository;
+    private final RackReportRepository rackReportRepository;
+
+    @Transactional(readOnly = true)
+    public List<ExpiryReportRow> collectExpiryData(Long warehouseId, int daysAhead) {
+        Timestamp threshold = Timestamp.from(Instant.now().plusSeconds((long) daysAhead * 24 * 60 * 60));
+        List<Assortment> assortments = assortmentRepository.findAllExpiringBefore(threshold, warehouseId);
+
+        Instant now = Instant.now();
+        // Group by (item, rack) to aggregate quantity
+        Map<String, ExpiryGrouping> grouped = new LinkedHashMap<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        for (Assortment a : assortments) {
+            String dateStr = sdf.format(Timestamp.from(a.getExpiresAt().toInstant()));
+            String key = a.getItem().getId() + "-" + a.getRack().getId() + "-" + dateStr;
+
+            String expiresAtStr = sdf.format(Timestamp.from(a.getExpiresAt().toInstant().atZone(ZoneId.systemDefault()).toInstant()));
+            grouped.computeIfAbsent(key, k -> new ExpiryGrouping(
+                    a.getItem().getName(),
+                    a.getItem().getCode(),
+                    expiresAtStr,
+                    a.getRack().getMarker(),
+                    a.getRack().getWarehouse().getName(),
+                    a.getExpiresAt().toInstant().isBefore(now)
+            )).incrementQuantity();
+        }
+
+        List<ExpiryReportRow> rows = new ArrayList<>();
+        for (ExpiryGrouping g : grouped.values()) {
+            rows.add(ExpiryReportRow.builder()
+                    .itemName(g.itemName)
+                    .itemCode(g.itemCode)
+                    .expirationDate(g.expirationDate)
+                    .rackMarker(g.rackMarker)
+                    .warehouseName(g.warehouseName)
+                    .quantity(g.quantity)
+                    .alreadyExpired(g.alreadyExpired)
+                    .build());
+        }
+        return rows;
+    }
+
+    @Transactional(readOnly = true)
+    public List<TemperatureAlertRackReportRow> collectTemperatureAlertRacksData(Long warehouseId, Instant start, Instant end) {
+        List<RackReport> reports = rackReportRepository.findAlertTriggeredReports(warehouseId, start, end);
+        SimpleDateFormat sdfCreated = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+
+        List<TemperatureAlertRackReportRow> rows = new ArrayList<>();
+        for (RackReport r : reports.stream().sorted((r1, r2) -> r2.getCreatedAt().compareTo(r1.getCreatedAt())).toList()) {
+            String violationType;
+            if (r.getCurrentTemperature() > r.getRack().getMax_temp()) {
+                violationType = "Za wysoka temperatura";
+            } else if (r.getCurrentTemperature() < r.getRack().getMin_temp()) {
+                violationType = "Za niska temperatura";
+            } else {
+                violationType = "Nieznany typ naruszenia";
+            }
+
+            String createdAtStr = sdfCreated.format(Timestamp.from(r.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()));
+            rows.add(TemperatureAlertRackReportRow.builder()
+                    .rackId(r.getRack().getId())
+                    .rackMarker(r.getRack().getMarker())
+                    .warehouseName(r.getRack().getWarehouse().getName())
+                    .recordedTemperature(r.getCurrentTemperature())
+                    .allowedMin(r.getRack().getMin_temp())
+                    .allowedMax(r.getRack().getMax_temp())
+                    .violationType(violationType)
+                    .violationTimestamp(createdAtStr)
+                    .sensorId(r.getSensorId())
+                    .build());
+        }
+        return rows;
+    }
+
+    @Transactional(readOnly = true)
+    public List<TemperatureAlertAssortmentReportRow> collectTemperatureAlertAssortmentsData(Long warehouseId, Instant start, Instant end) {
+        List<RackReport> rackReports = assortmentRepository.findAlertTriggeredReports(warehouseId, start, end);
+        SimpleDateFormat sdfCreated = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+
+        List<TemperatureAlertAssortmentReportRow> rows = new ArrayList<>();
+        for (RackReport r : rackReports.stream().sorted((r1, r2) -> r2.getCreatedAt().compareTo(r1.getCreatedAt())).toList()) {
+            for (Assortment a : r.getRack().getAssortments()) {
+                // Only include assortments that were on the rack at the time of the alert
+                if (a.getCreatedAt().toInstant().isAfter(r.getCreatedAt())) {
+                    continue;
+                }
+
+                String violationType;
+
+                if (r.getCurrentTemperature() > a.getItem().getMax_temp()) {
+                    violationType = "Za wysoka temperatura";
+                } else if (r.getCurrentTemperature() < a.getItem().getMin_temp()) {
+                    violationType = "Za niska temperatura";
+                } else {
+                    continue;
+                }
+
+                String createdAtStr = sdfCreated.format(Timestamp.from(r.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()));
+                rows.add(TemperatureAlertAssortmentReportRow.builder()
+                        .rackMarker(r.getRack().getMarker())
+                        .warehouseName(r.getRack().getWarehouse().getName())
+                        .itemName(a.getItem().getName())
+                        .assortmentCode(a.getCode())
+                        .recordedTemperature(r.getCurrentTemperature())
+                        .allowedMin(a.getItem().getMin_temp())
+                        .allowedMax(a.getItem().getMax_temp())
+                        .violationType(violationType)
+                        .violationTimestamp(createdAtStr)
+                        .sensorId(r.getSensorId())
+                        .build());
+            }
+        }
+        return rows;
+    }
+
+    @Transactional(readOnly = true)
+    public List<InventoryStockReportRow> collectInventoryStockData(Long warehouseId) {
+        List<Assortment> assortments = assortmentRepository.findAllForInventoryReport(warehouseId);
+
+        // Group by (warehouse, rack, item) to aggregate
+        Map<String, InventoryGrouping> grouped = new LinkedHashMap<>();
+        for (Assortment a : assortments) {
+            String key = a.getRack().getWarehouse().getId() + "-" + a.getRack().getId() + "-" + a.getItem().getId();
+            InventoryGrouping group = grouped.computeIfAbsent(key, k -> new InventoryGrouping(
+                    a.getRack().getWarehouse().getName(),
+                    a.getRack().getWarehouse().getId(),
+                    a.getRack().getMarker(),
+                    a.getRack().getId(),
+                    a.getItem().getName(),
+                    a.getItem().getCode()
+            ));
+            group.incrementQuantity();
+            LocalDateTime createdAt = a.getCreatedAt().toLocalDateTime();
+            if (group.oldestCreatedAt == null || createdAt.isBefore(group.oldestCreatedAt)) {
+                group.oldestCreatedAt = createdAt;
+            }
+            if (a.getExpiresAt() != null) {
+                LocalDate expiresAt = a.getExpiresAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                if (group.nearestExpiresAt == null || expiresAt.isBefore(group.nearestExpiresAt)) {
+                    group.nearestExpiresAt = expiresAt;
+                }
+            }
+        }
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        List<InventoryStockReportRow> rows = new ArrayList<>();
+        for (InventoryGrouping g : grouped.values()) {
+            String oldestCreatedAt = sdf.format(Timestamp.from(g.oldestCreatedAt.atZone(ZoneId.systemDefault()).toInstant()));
+            String nearestExpiresAt = g.nearestExpiresAt != null
+                    ? sdf.format(Timestamp.from(g.nearestExpiresAt.atStartOfDay(ZoneId.systemDefault()).toInstant()))
+                    : "";
+            rows.add(InventoryStockReportRow.builder()
+                    .warehouseName(g.warehouseName)
+                    .warehouseId(g.warehouseId)
+                    .rackMarker(g.rackMarker)
+                    .rackId(g.rackId)
+                    .itemName(g.itemName)
+                    .itemCode(g.itemCode)
+                    .quantity(g.quantity)
+                    .oldestCreatedAt(oldestCreatedAt)
+                    .nearestExpiresAt(nearestExpiresAt)
+                    .build());
+        }
+        return rows;
+    }
+
+    private static class ExpiryGrouping {
+        final String itemName;
+        final String itemCode;
+        final String expirationDate;
+        final String rackMarker;
+        final String warehouseName;
+        final boolean alreadyExpired;
+        int quantity;
+
+        ExpiryGrouping(String itemName, String itemCode, String expirationDate,
+                       String rackMarker, String warehouseName, boolean alreadyExpired) {
+            this.itemName = itemName;
+            this.itemCode = itemCode;
+            this.expirationDate = expirationDate;
+            this.rackMarker = rackMarker;
+            this.warehouseName = warehouseName;
+            this.alreadyExpired = alreadyExpired;
+            this.quantity = 0;
+        }
+
+        void incrementQuantity() {
+            quantity++;
+        }
+    }
+
+    private static class InventoryGrouping {
+        final String warehouseName;
+        final Long warehouseId;
+        final String rackMarker;
+        final Long rackId;
+        final String itemName;
+        final String itemCode;
+        int quantity;
+        LocalDateTime oldestCreatedAt;
+        LocalDate nearestExpiresAt;
+
+        InventoryGrouping(String warehouseName, Long warehouseId, String rackMarker,
+                          Long rackId, String itemName, String itemCode) {
+            this.warehouseName = warehouseName;
+            this.warehouseId = warehouseId;
+            this.rackMarker = rackMarker;
+            this.rackId = rackId;
+            this.itemName = itemName;
+            this.itemCode = itemCode;
+            this.quantity = 0;
+        }
+
+        void incrementQuantity() {
+            quantity++;
+        }
+    }
+}

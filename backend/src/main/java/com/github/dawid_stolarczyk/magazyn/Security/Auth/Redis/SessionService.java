@@ -102,6 +102,7 @@ public class SessionService {
         CookiesUtils.deleteCookie(response, "SESSION");
         CookiesUtils.deleteCookie(response, "REMEMBER_ME");
         CookiesUtils.deleteCookie(response, "2FA_AUTH");
+        CookiesUtils.deleteCookie(response, "JSESSIONID");
     }
 
 

@@ -1,8 +1,10 @@
 package com.github.dawid_stolarczyk.magazyn.Scheduler;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.BackupSchedule;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.Warehouse;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.BackupScheduleCode;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.BackupScheduleRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.WarehouseRepository;
 import com.github.dawid_stolarczyk.magazyn.Services.Backup.BackupService;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -17,6 +19,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
@@ -26,55 +29,83 @@ public class BackupSchedulerManager {
 
     private final ThreadPoolTaskScheduler taskScheduler;
     private final BackupScheduleRepository backupScheduleRepository;
+    private final WarehouseRepository warehouseRepository;
     private final BackupService backupService;
-    private final ConcurrentHashMap<Long, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
 
     public BackupSchedulerManager(
             @Qualifier("backupTaskScheduler") ThreadPoolTaskScheduler taskScheduler,
             BackupScheduleRepository backupScheduleRepository,
+            WarehouseRepository warehouseRepository,
             @Lazy BackupService backupService) {
         this.taskScheduler = taskScheduler;
         this.backupScheduleRepository = backupScheduleRepository;
+        this.warehouseRepository = warehouseRepository;
         this.backupService = backupService;
     }
 
     @PostConstruct
     public void init() {
-        List<BackupSchedule> enabledSchedules = backupScheduleRepository.findByEnabledTrue();
-        for (BackupSchedule schedule : enabledSchedules) {
-            registerSchedule(schedule);
+        List<Warehouse> allWarehouses = warehouseRepository.findAll();
+        Optional<BackupSchedule> globalSchedule = backupScheduleRepository.findByGlobalTrue();
+
+        for (Warehouse warehouse : allWarehouses) {
+            if (globalSchedule.isPresent() && globalSchedule.get().isEnabled()) {
+                registerScheduleForWarehouse(warehouse.getId(), "global", globalSchedule.get());
+            }
+
+            Optional<BackupSchedule> warehouseSchedule = backupScheduleRepository.findByWarehouseId(warehouse.getId());
+            if (warehouseSchedule.isPresent() && warehouseSchedule.get().isEnabled()) {
+                registerScheduleForWarehouse(warehouse.getId(), "specific", warehouseSchedule.get());
+            }
         }
-        log.info("Initialized {} backup schedules", enabledSchedules.size());
+        log.info("Initialized backup schedules for {} warehouses", allWarehouses.size());
     }
 
     public void registerSchedule(BackupSchedule schedule) {
-        Long warehouseId = schedule.getWarehouse().getId();
+        if (schedule.isGlobal()) {
+            List<Warehouse> allWarehouses = warehouseRepository.findAll();
+            for (Warehouse warehouse : allWarehouses) {
+                registerScheduleForWarehouse(warehouse.getId(), "global", schedule);
+            }
+            log.info("Registered global backup schedule");
+        } else {
+            registerScheduleForWarehouse(schedule.getWarehouse().getId(), "specific", schedule);
+        }
+    }
 
-        // Cancel existing schedule if any
-        cancelSchedule(warehouseId);
+    private void registerScheduleForWarehouse(Long warehouseId, String scheduleType, BackupSchedule schedule) {
+        String taskKey = getTaskKey(warehouseId, scheduleType);
+
+        cancelTask(taskKey);
 
         if (!schedule.isEnabled()) {
             return;
         }
 
         try {
-            scheduleCronSchedule(schedule);
+            scheduleCronSchedule(warehouseId, scheduleType, schedule);
         } catch (IllegalArgumentException e) {
-            log.error("Invalid schedule configuration for warehouse {}: code={}, hour={}, error={}",
-                    warehouseId, schedule.getScheduleCode(), schedule.getBackupHour(), e.getMessage());
+            log.error("Invalid schedule configuration for warehouse {} ({}): code={}, hour={}, error={}",
+                    warehouseId, scheduleType, schedule.getScheduleCode(), schedule.getBackupHour(), e.getMessage());
         }
     }
 
-    private void scheduleCronSchedule(BackupSchedule schedule) {
+    private String getTaskKey(Long warehouseId, String scheduleType) {
+        return warehouseId + ":" + scheduleType;
+    }
+
+    private void scheduleCronSchedule(Long warehouseId, String scheduleType, BackupSchedule schedule) {
         String cronExpression = buildCronExpression(schedule);
         CronTrigger trigger = new CronTrigger(cronExpression);
         ScheduledFuture<?> future = taskScheduler.schedule(
-                () -> executeScheduledBackup(schedule),
+                () -> executeScheduledBackup(warehouseId, scheduleType, schedule),
                 trigger
         );
-        scheduledTasks.put(schedule.getWarehouse().getId(), future);
-        log.info("Registered cron backup schedule for warehouse {} - code: {}, hour: {}, cron: {}",
-                schedule.getWarehouse().getId(), schedule.getScheduleCode(), schedule.getBackupHour(), cronExpression);
+        String taskKey = getTaskKey(warehouseId, scheduleType);
+        scheduledTasks.put(taskKey, future);
+        log.info("Registered cron backup schedule for warehouse {} ({}) - code: {}, hour: {}, cron: {}, global: {}",
+                warehouseId, scheduleType, schedule.getScheduleCode(), schedule.getBackupHour(), cronExpression, schedule.isGlobal());
     }
 
     private String buildCronExpression(BackupSchedule schedule) {
@@ -150,31 +181,47 @@ public class BackupSchedulerManager {
     }
 
     public void cancelSchedule(Long warehouseId) {
-        ScheduledFuture<?> existing = scheduledTasks.remove(warehouseId);
+        cancelTask(getTaskKey(warehouseId, "specific"));
+        log.info("Cancelled specific backup schedule for warehouse {}", warehouseId);
+    }
+
+    public void cancelGlobalSchedule() {
+        List<Warehouse> allWarehouses = warehouseRepository.findAll();
+        for (Warehouse warehouse : allWarehouses) {
+            cancelTask(getTaskKey(warehouse.getId(), "global"));
+        }
+        log.info("Cancelled global backup schedule");
+    }
+
+    private void cancelTask(String taskKey) {
+        ScheduledFuture<?> existing = scheduledTasks.remove(taskKey);
         if (existing != null) {
             existing.cancel(false);
-            log.info("Cancelled backup schedule for warehouse {}", warehouseId);
         }
     }
 
-    private void executeScheduledBackup(BackupSchedule schedule) {
-        Long warehouseId = schedule.getWarehouse().getId();
-        log.info("Executing scheduled backup for warehouse {}", warehouseId);
+    private void executeScheduledBackup(Long warehouseId, String scheduleType, BackupSchedule schedule) {
+        log.info("Executing scheduled backup for warehouse {} ({})", warehouseId, scheduleType);
         try {
             backupService.initiateScheduledBackup(warehouseId, schedule.getResourceTypeSet());
         } catch (Exception e) {
-            log.error("Scheduled backup failed for warehouse {}", warehouseId, e);
+            log.error("Scheduled backup failed for warehouse {} ({})", warehouseId, scheduleType, e);
         } finally {
-            // Update lastRunAt and nextRunAt regardless of outcome
-            schedule.setLastRunAt(Instant.now());
-            schedule.setNextRunAt(calculateNextRunAt(schedule));
-            backupScheduleRepository.save(schedule);
+            BackupSchedule scheduleToUpdate = schedule;
+            if (schedule.isGlobal()) {
+                scheduleToUpdate = backupScheduleRepository.findByGlobalTrue().orElse(schedule);
+            } else {
+                scheduleToUpdate = backupScheduleRepository.findByWarehouseId(warehouseId).orElse(schedule);
+            }
+            scheduleToUpdate.setLastRunAt(Instant.now());
+            scheduleToUpdate.setNextRunAt(calculateNextRunAt(schedule));
+            backupScheduleRepository.save(scheduleToUpdate);
         }
     }
 
     @PreDestroy
     public void shutdown() {
-        scheduledTasks.forEach((warehouseId, future) -> future.cancel(false));
+        scheduledTasks.forEach((taskKey, future) -> future.cancel(false));
         scheduledTasks.clear();
         log.info("Shutdown all backup schedules");
     }

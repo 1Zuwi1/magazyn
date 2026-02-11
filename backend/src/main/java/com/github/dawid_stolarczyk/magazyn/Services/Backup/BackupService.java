@@ -9,7 +9,6 @@ import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Exceptions.BackupAlreadyInProgressException;
 import com.github.dawid_stolarczyk.magazyn.Exceptions.BackupError;
 import com.github.dawid_stolarczyk.magazyn.Exceptions.BackupException;
-import com.github.dawid_stolarczyk.magazyn.Exceptions.RestoreAlreadyInProgressException;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.*;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.*;
@@ -28,9 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -655,103 +652,21 @@ public class BackupService {
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public List<BackupRecordDto> backupAllWarehouses(User triggeredBy, HttpServletRequest httpRequest) {
-        rateLimiter.consumeOrThrow(httpRequest.getRemoteAddr(), RateLimitOperation.BACKUP_WRITE);
-
-        List<Warehouse> warehouses = warehouseRepository.findAll();
-        if (warehouses.isEmpty()) {
-            throw new BackupException(BackupError.NO_WAREHOUSES_FOUND);
-        }
-
-        Set<BackupResourceType> allResourceTypes = Set.of(
-                BackupResourceType.RACKS,
-                BackupResourceType.ITEMS,
-                BackupResourceType.ASSORTMENTS
-        );
-
-        List<BackupRecordDto> initiatedBackups = new ArrayList<>();
-
-        for (Warehouse warehouse : warehouses) {
-            try {
-                CreateBackupRequest request = new CreateBackupRequest();
-                request.setWarehouseId(warehouse.getId());
-                request.setResourceTypes(allResourceTypes);
-                BackupRecordDto dto = initiateBackup(request, triggeredBy, httpRequest);
-                initiatedBackups.add(dto);
-            } catch (BackupAlreadyInProgressException e) {
-                log.warn("Backup already in progress for warehouse {}, skipping", warehouse.getId());
-            } catch (IllegalStateException e) {
-                throw e;
-            }
-        }
-
-        log.info("Initiated backup for {} warehouses", initiatedBackups.size());
-        return initiatedBackups;
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public RestoreAllWarehousesResult restoreAllWarehouses(User currentUser, HttpServletRequest httpRequest) {
-        rateLimiter.consumeOrThrow(httpRequest.getRemoteAddr(), RateLimitOperation.BACKUP_WRITE);
-
-        List<Warehouse> warehouses = warehouseRepository.findAll();
-        if (warehouses.isEmpty()) {
-            throw new BackupException(BackupError.NO_WAREHOUSES_FOUND);
-        }
-
-        List<RestoreResultDto> successfulRestores = new ArrayList<>();
-        List<RestoreAllWarehousesResult.SkippedWarehouse> skippedWarehouses = new ArrayList<>();
-
-        for (Warehouse warehouse : warehouses) {
-            try {
-                Page<BackupRecord> completedBackups = backupRecordRepository.findByWarehouseId(
-                        warehouse.getId(), PageRequest.of(0, 1, Sort.by("completedAt").descending()));
-
-                if (completedBackups.isEmpty()) {
-                    log.warn("No completed backup found for warehouse {}, skipping restore", warehouse.getId());
-                    skippedWarehouses.add(RestoreAllWarehousesResult.SkippedWarehouse.builder()
-                            .warehouseId(warehouse.getId())
-                            .warehouseName(warehouse.getName())
-                            .reason("NO_COMPLETED_BACKUP")
-                            .build());
-                    continue;
-                }
-
-                BackupRecord latestBackup = completedBackups.getContent().get(0);
-                RestoreResultDto dto = restoreBackup(latestBackup.getId(), currentUser);
-                successfulRestores.add(dto);
-            } catch (RestoreAlreadyInProgressException e) {
-                log.warn("Restore already in progress for warehouse {}, skipping", warehouse.getId());
-                skippedWarehouses.add(RestoreAllWarehousesResult.SkippedWarehouse.builder()
-                        .warehouseId(warehouse.getId())
-                        .warehouseName(warehouse.getName())
-                        .reason("RESTORE_ALREADY_IN_PROGRESS")
-                        .build());
-            } catch (IllegalArgumentException | SecurityException e) {
-                log.warn("Cannot restore warehouse {}: {}", warehouse.getId(), e.getMessage());
-                skippedWarehouses.add(RestoreAllWarehousesResult.SkippedWarehouse.builder()
-                        .warehouseId(warehouse.getId())
-                        .warehouseName(warehouse.getName())
-                        .reason(e.getClass().getSimpleName() + ": " + e.getMessage())
-                        .build());
-            }
-        }
-
-        log.info("Initiated restore for {} warehouses, skipped {} warehouses",
-                successfulRestores.size(), skippedWarehouses.size());
-        return RestoreAllWarehousesResult.builder()
-                .successful(successfulRestores)
-                .skipped(skippedWarehouses)
-                .build();
-    }
 
     // --- Schedule operations ---
 
     @Transactional(readOnly = true)
     public List<BackupScheduleDto> getAllSchedules() {
         return backupScheduleRepository.findAll().stream()
-                .map(this::toScheduleDto)
+                .map(schedule -> schedule.isGlobal() ? toGlobalScheduleDto(schedule) : toScheduleDto(schedule))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public BackupScheduleDto getGlobalSchedule() {
+        return backupScheduleRepository.findByGlobalTrue()
+                .map(this::toGlobalScheduleDto)
+                .orElse(null);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -763,6 +678,7 @@ public class BackupService {
                 .orElseGet(() -> {
                     BackupSchedule s = new BackupSchedule();
                     s.setWarehouse(warehouse);
+                    s.setGlobal(false);
                     return s;
                 });
 
@@ -776,8 +692,39 @@ public class BackupService {
 
         backupSchedulerManager.registerSchedule(schedule);
 
-        // toScheduleDto is called within the same transaction, so lazy loading will work
         return toScheduleDto(schedule);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public BackupScheduleDto upsertGlobalSchedule(CreateBackupScheduleRequest request) {
+        BackupSchedule schedule = backupScheduleRepository.findByGlobalTrue()
+                .orElseGet(() -> {
+                    BackupSchedule s = new BackupSchedule();
+                    s.setWarehouse(null);
+                    s.setGlobal(true);
+                    return s;
+                });
+
+        schedule.setScheduleCode(request.getScheduleCode());
+        schedule.setBackupHour(request.getBackupHour());
+        schedule.setDayOfWeek(request.getDayOfWeek());
+        schedule.setDayOfMonth(request.getDayOfMonth());
+        schedule.setResourceTypeSet(request.getResourceTypes());
+        schedule.setEnabled(request.isEnabled());
+        schedule = backupScheduleRepository.save(schedule);
+
+        backupSchedulerManager.registerSchedule(schedule);
+
+        return toGlobalScheduleDto(schedule);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteGlobalSchedule() {
+        if (backupScheduleRepository.findByGlobalTrue().isEmpty()) {
+            throw new BackupException(BackupError.SCHEDULE_NOT_FOUND);
+        }
+        backupSchedulerManager.cancelGlobalSchedule();
+        backupScheduleRepository.deleteByGlobalTrue();
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -817,8 +764,23 @@ public class BackupService {
 
     private BackupScheduleDto toScheduleDto(BackupSchedule schedule) {
         return BackupScheduleDto.builder()
-                .warehouseId(schedule.getWarehouse().getId())
-                .warehouseName(schedule.getWarehouse().getName())
+                .warehouseId(schedule.getWarehouse() != null ? schedule.getWarehouse().getId() : null)
+                .warehouseName(schedule.getWarehouse() != null ? schedule.getWarehouse().getName() : null)
+                .scheduleCode(schedule.getScheduleCode())
+                .backupHour(schedule.getBackupHour())
+                .dayOfWeek(schedule.getDayOfWeek())
+                .dayOfMonth(schedule.getDayOfMonth())
+                .resourceTypes(schedule.getResourceTypeSet())
+                .enabled(schedule.isEnabled())
+                .lastRunAt(schedule.getLastRunAt())
+                .nextRunAt(schedule.getNextRunAt())
+                .build();
+    }
+
+    private BackupScheduleDto toGlobalScheduleDto(BackupSchedule schedule) {
+        return BackupScheduleDto.builder()
+                .warehouseId(null)
+                .warehouseName("GLOBAL")
                 .scheduleCode(schedule.getScheduleCode())
                 .backupHour(schedule.getBackupHour())
                 .dayOfWeek(schedule.getDayOfWeek())
