@@ -17,13 +17,13 @@ export function StatBadge({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-lg border px-3 py-1.5 backdrop-blur-sm",
+        "flex items-center gap-2.5 rounded-lg border px-3.5 py-2 shadow-xs backdrop-blur-sm transition-colors",
         className
       )}
     >
-      <HugeiconsIcon className="size-3.5" icon={icon} />
-      <span className="font-mono font-semibold">{count}</span>
-      <span className="text-xs">{label}</span>
+      <HugeiconsIcon className="size-3.5 shrink-0" icon={icon} />
+      <span className="font-mono font-semibold tabular-nums">{count}</span>
+      <span className="text-xs leading-tight">{label}</span>
     </div>
   )
 }

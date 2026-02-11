@@ -1,7 +1,7 @@
 import type { SortingState } from "@tanstack/react-table"
 import type { BackupListParams } from "@/hooks/use-backups"
 
-export const BACKUPS_PAGE_SIZE = 20
+export const BACKUPS_PAGE_SIZE = 10
 
 export const DEFAULT_BACKUPS_SORTING: SortingState = [
   {

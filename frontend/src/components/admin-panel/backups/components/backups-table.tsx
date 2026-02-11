@@ -25,7 +25,7 @@ import {
   StaticHeader,
 } from "@/components/dashboard/items/sortable-header"
 import { formatDateTime } from "@/components/dashboard/utils/helpers"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,6 +38,7 @@ import {
   NoItemsEmptyState,
 } from "@/components/ui/empty-state"
 import { Label } from "@/components/ui/label"
+import PaginationFull from "@/components/ui/pagination-component"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -250,21 +251,6 @@ function getRowClassName(row: Row<Backup>) {
   return ""
 }
 
-function getVisiblePages(currentPage: number, totalPages: number): number[] {
-  return Array.from({ length: Math.min(totalPages, 5) }, (_, index) => {
-    if (totalPages <= 5) {
-      return index + 1
-    }
-    if (currentPage <= 3) {
-      return index + 1
-    }
-    if (currentPage >= totalPages - 2) {
-      return totalPages - 4 + index
-    }
-    return currentPage - 2 + index
-  })
-}
-
 export function BackupsTable({
   onView,
   onRestore,
@@ -279,7 +265,7 @@ export function BackupsTable({
   const [warehouseIdFilter, setWarehouseIdFilter] = useState<number | null>(
     null
   )
-  console.log(sorting)
+
   const sortingQuery = useMemo(() => getBackupsSortParams(sorting), [sorting])
 
   const {
@@ -302,7 +288,6 @@ export function BackupsTable({
     [backupsData?.content, t]
   )
   const totalPages = Math.max(backupsData?.totalPages ?? 1, 1)
-  const totalItems = backupsData?.totalElements ?? 0
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -342,9 +327,7 @@ export function BackupsTable({
   })
 
   const safeTotalPages = Math.max(totalPages, 1)
-  const startItem =
-    totalItems > 0 ? (currentPage - 1) * BACKUPS_PAGE_SIZE + 1 : 0
-  const endItem = Math.min(currentPage * BACKUPS_PAGE_SIZE, totalItems)
+
   const rows = table.getRowModel().rows
   const backupItemLabel = {
     singular: t("generated.admin.backups.backupItemLabel"),
@@ -417,13 +400,20 @@ export function BackupsTable({
     return rows.map((row) => (
       <TableRow
         className={cn(
-          "transition-all duration-300 hover:bg-muted/50",
+          "group transition-all duration-300 hover:bg-muted/50",
           getRowClassName(row)
         )}
         key={row.id}
       >
-        {row.getVisibleCells().map((cell) => (
-          <TableCell className="px-4 py-3" key={cell.id}>
+        {row.getVisibleCells().map((cell, cellIndex) => (
+          <TableCell
+            className={cn(
+              "px-4 py-3",
+              cellIndex === 0 &&
+                "border-l-2 border-l-transparent transition-colors group-hover:border-l-primary/40"
+            )}
+            key={cell.id}
+          >
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
           </TableCell>
         ))}
@@ -432,11 +422,12 @@ export function BackupsTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-      <div className="border-b bg-muted/20 px-4 py-3">
+    <div className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
+      <div className="border-t-2 border-t-primary/60" />
+      <div className="border-b bg-muted/20 px-5 py-3.5">
         <div className="flex flex-wrap items-center gap-3 sm:max-w-md">
           <Label
-            className="font-medium text-sm"
+            className="flex items-center gap-1.5 font-medium text-muted-foreground text-sm"
             htmlFor="backups-warehouse-filter"
           >
             {t("generated.shared.warehouse")}
@@ -459,7 +450,7 @@ export function BackupsTable({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
-                className="border-b bg-muted/30 hover:bg-muted/30"
+                className="border-b bg-muted/40 hover:bg-muted/40"
                 key={headerGroup.id}
               >
                 {headerGroup.headers.map((header) => (
@@ -482,56 +473,12 @@ export function BackupsTable({
         </Table>
       </div>
 
-      {safeTotalPages > 1 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/20 px-4 py-3">
-          <p className="text-muted-foreground text-sm">
-            {totalItems > 0
-              ? t("generated.admin.backups.tableShowing", {
-                  value0: startItem,
-                  value1: endItem,
-                  value2: totalItems,
-                })
-              : t("generated.shared.results")}
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              disabled={currentPage <= 1}
-              onClick={() => handlePageChange(currentPage - 1)}
-              size="sm"
-              variant="outline"
-            >
-              {t("generated.admin.backups.previousPage")}
-            </Button>
-            <div className="flex items-center gap-1 px-2">
-              {getVisiblePages(currentPage, safeTotalPages).map(
-                (pageNumber) => (
-                  <button
-                    className={cn(
-                      "flex size-8 items-center justify-center rounded-md text-sm transition-colors",
-                      pageNumber === currentPage
-                        ? "bg-primary font-medium text-primary-foreground"
-                        : "hover:bg-muted"
-                    )}
-                    key={pageNumber}
-                    onClick={() => handlePageChange(pageNumber)}
-                    type="button"
-                  >
-                    {pageNumber}
-                  </button>
-                )
-              )}
-            </div>
-            <Button
-              disabled={currentPage >= safeTotalPages}
-              onClick={() => handlePageChange(currentPage + 1)}
-              size="sm"
-              variant="outline"
-            >
-              {t("generated.ui.next")}
-            </Button>
-          </div>
-        </div>
-      )}
+      <PaginationFull
+        currentPage={currentPage}
+        setPage={handlePageChange}
+        totalPages={safeTotalPages}
+        variant="compact"
+      />
     </div>
   )
 }

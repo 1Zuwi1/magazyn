@@ -14,7 +14,6 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react"
 import { remToPixels } from "@/components/dashboard/utils/helpers"
@@ -193,7 +192,9 @@ export function WarehouseSelector({
     }
   )
 
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(
+    null
+  )
   const excludedWarehouseIdSet = useMemo(
     () => new Set(excludedWarehouseIds),
     [excludedWarehouseIds]
@@ -212,9 +213,10 @@ export function WarehouseSelector({
 
   const rowVirtualizer = useVirtualizer({
     count: optionsCount,
-    getScrollElement: () => scrollRef.current,
+    getScrollElement: () => scrollElement,
     estimateSize: () => WAREHOUSE_ROW_HEIGHT_PX,
     overscan: 6,
+    enabled: open,
   })
 
   const selectedWarehouseName =
@@ -246,8 +248,6 @@ export function WarehouseSelector({
   }
 
   const handleScroll = useCallback(() => {
-    const scrollElement = scrollRef.current
-
     if (!(scrollElement && hasNextPage) || isFetchingNextPage) {
       return
     }
@@ -260,11 +260,9 @@ export function WarehouseSelector({
     if (distanceFromBottom < SCROLL_THRESHOLD_PX) {
       fetchNextPage()
     }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, scrollElement])
 
   useEffect(() => {
-    const scrollElement = scrollRef.current
-
     if (!scrollElement) {
       return
     }
@@ -274,7 +272,7 @@ export function WarehouseSelector({
     return () => {
       scrollElement.removeEventListener("scroll", handleScroll)
     }
-  }, [handleScroll])
+  }, [handleScroll, scrollElement])
 
   const handleSelectWarehouse = (warehouse: Warehouse | null) => {
     if (!warehouse) {
@@ -320,7 +318,7 @@ export function WarehouseSelector({
     return (
       <ScrollArea
         className="rounded-md border"
-        ref={scrollRef}
+        ref={setScrollElement}
         style={{
           height: Math.min(
             remToPixels(15),

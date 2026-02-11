@@ -41,20 +41,23 @@ function SchedulesEmptyState({ onAdd }: { onAdd: () => void }) {
   const t = useAppTranslations()
 
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/20 px-6 py-12 text-center">
-      <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
-        <HugeiconsIcon
-          className="size-6 text-muted-foreground"
-          icon={Calendar03Icon}
-        />
+    <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed bg-linear-to-br from-muted/30 via-background to-muted/20 px-6 py-14 text-center">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,var(--primary)/0.03,transparent_70%)]" />
+      <div className="relative">
+        <div className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted/80 ring-1 ring-border">
+          <HugeiconsIcon
+            className="size-6 text-muted-foreground"
+            icon={Calendar03Icon}
+          />
+        </div>
       </div>
-      <h3 className="mb-1 font-semibold text-sm">
+      <h3 className="relative mb-1.5 font-semibold text-sm">
         {t("generated.admin.backups.noSchedulesTitle")}
       </h3>
-      <p className="mb-4 max-w-sm text-muted-foreground text-sm">
+      <p className="relative mb-5 max-w-sm text-muted-foreground text-sm">
         {t("generated.admin.backups.noSchedulesDescription")}
       </p>
-      <Button onClick={onAdd} size="sm" variant="outline">
+      <Button className="relative" onClick={onAdd} size="sm" variant="outline">
         <HugeiconsIcon className="mr-1.5 size-3.5" icon={Add01Icon} />
         {t("generated.admin.backups.addScheduleTitle")}
       </Button>
@@ -90,12 +93,13 @@ export function SchedulesSection({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="h-5 w-1 rounded-full bg-primary/60" />
           <HugeiconsIcon
             className="size-4 text-muted-foreground"
             icon={Calendar03Icon}
           />
-          <h2 className="font-semibold text-sm">
+          <h2 className="font-semibold text-base">
             {t("generated.admin.backups.schedulesSectionTitle")}
           </h2>
         </div>
@@ -166,7 +170,7 @@ function ScheduleCard({
   return (
     <Card
       className={cn(
-        "relative p-4 transition-all duration-500 ease-in-out",
+        "relative overflow-hidden p-4 transition-all duration-500 ease-in-out",
         !schedule.enabled && "bg-muted/30 opacity-60",
         schedule.enabled && "opacity-100",
         justToggled &&
@@ -178,6 +182,14 @@ function ScheduleCard({
       )}
       key={schedule.id}
     >
+      <div
+        className={cn(
+          "absolute inset-x-0 top-0 h-0.5 transition-colors duration-500",
+          schedule.enabled
+            ? "bg-linear-to-r from-green-500/60 via-green-400/40 to-green-500/10"
+            : "bg-linear-to-r from-muted-foreground/20 via-muted-foreground/10 to-transparent"
+        )}
+      />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex items-center gap-2">

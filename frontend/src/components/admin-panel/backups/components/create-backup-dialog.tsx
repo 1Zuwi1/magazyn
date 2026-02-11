@@ -1,6 +1,6 @@
 "use client"
 
-import { DatabaseIcon } from "@hugeicons/core-free-icons"
+import { AlertDiamondIcon, DatabaseIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -54,7 +54,7 @@ export function CreateBackupDialog({
     <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="flex-row items-start gap-4">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
             <HugeiconsIcon
               className="size-5 text-primary"
               icon={DatabaseIcon}
@@ -90,7 +90,11 @@ export function CreateBackupDialog({
             />
           </div>
 
-          <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 p-3">
+          <div className="flex items-start gap-3 rounded-lg border border-orange-500/30 border-l-[3px] border-l-orange-500 bg-orange-500/5 p-3">
+            <HugeiconsIcon
+              className="mt-0.5 size-4 shrink-0 text-orange-500"
+              icon={AlertDiamondIcon}
+            />
             <p className="text-orange-600 text-sm dark:text-orange-400">
               {selectedWarehouseId == null
                 ? t("generated.admin.backups.createAllWarning")

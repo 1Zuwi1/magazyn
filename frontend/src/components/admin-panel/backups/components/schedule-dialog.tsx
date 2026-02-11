@@ -15,7 +15,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useAppTranslations } from "@/i18n/use-translations"
-import { cn } from "@/lib/utils"
 import type {
   BackupSchedule,
   ScheduleFrequency,
@@ -174,10 +173,6 @@ export function ScheduleDialog({
                       form.setFieldValue("warehouseName", warehouseName ?? "")
                     }}
                     placeholder={t("generated.shared.searchWarehouse")}
-                    triggerClassName={cn(
-                      warehouseState.warehouseId == null &&
-                        "border-destructive text-destructive"
-                    )}
                     value={warehouseState.warehouseId}
                   />
                 </div>

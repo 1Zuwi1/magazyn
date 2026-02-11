@@ -28,7 +28,7 @@ interface DetailRowProps {
 
 function DetailRow({ label, children }: DetailRowProps) {
   return (
-    <div className="flex items-center justify-between py-2">
+    <div className="flex items-center justify-between rounded-md px-2 py-2.5 odd:bg-muted/30">
       <span className="text-muted-foreground text-sm">{label}</span>
       <span className="font-medium text-sm">{children}</span>
     </div>
@@ -82,7 +82,7 @@ export function BackupDetailDialog({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="flex-row items-start gap-4">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
             <HugeiconsIcon
               className="size-5 text-primary"
               icon={DatabaseIcon}
@@ -99,14 +99,14 @@ export function BackupDetailDialog({
         <Separator />
 
         {isInProgress && backup.progress != null && (
-          <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+          <div className="space-y-2 rounded-lg border bg-linear-to-br from-muted/40 to-muted/20 p-3">
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium">
                 {backup.status === "IN_PROGRESS"
                   ? t("generated.admin.backups.creatingBackupProgress")
                   : t("generated.admin.backups.restoringBackupProgress")}
               </span>
-              <span className="font-mono text-muted-foreground">
+              <span className="font-mono text-muted-foreground tabular-nums">
                 {backup.progress}%
               </span>
             </div>
