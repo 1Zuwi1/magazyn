@@ -45,6 +45,7 @@ public class ApiKeyController {
             @Valid @RequestBody CreateApiKeyRequest request) {
         Long userId = AuthUtil.getCurrentAuthPrincipal().getUserId();
         ApiKeyCreatedResponse response = apiKeyService.createApiKey(request, userId);
+        apiKeyService.sendApiKeyCreationNotification(response.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(response));
     }
 

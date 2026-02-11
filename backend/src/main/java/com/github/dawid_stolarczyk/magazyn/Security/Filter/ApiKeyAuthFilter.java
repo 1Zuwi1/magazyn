@@ -4,6 +4,8 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.ApiKey;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ApiKeyRepository;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.Entity.ApiKeyPrincipal;
 import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +21,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Filter that authenticates requests via the X-API-KEY header.
@@ -32,8 +40,42 @@ import java.util.List;
 public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
     private static final String API_KEY_HEADER = "X-API-KEY";
+    private static final int UPDATE_THRESHOLD = 10;
+    private static final long BATCH_UPDATE_INTERVAL_SECONDS = 30;
 
     private final ApiKeyRepository apiKeyRepository;
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final Map<Long, AtomicInteger> usageCounters = new ConcurrentHashMap<>();
+    private final Map<Long, Instant> pendingUpdates = new ConcurrentHashMap<>();
+
+    @PostConstruct
+    public void init() {
+        scheduler.scheduleAtFixedRate(this::flushPendingUpdates, BATCH_UPDATE_INTERVAL_SECONDS, BATCH_UPDATE_INTERVAL_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @PreDestroy
+    public void cleanup() {
+        scheduler.shutdown();
+        flushPendingUpdates();
+    }
+
+    private void flushPendingUpdates() {
+        if (pendingUpdates.isEmpty()) {
+            return;
+        }
+
+        try {
+            pendingUpdates.forEach((apiKeyId, timestamp) -> {
+                apiKeyRepository.updateLastUsedAt(apiKeyId, timestamp);
+            });
+            log.debug("Flushed {} pending API key updates", pendingUpdates.size());
+        } catch (Exception e) {
+            log.error("Failed to flush pending API key updates", e);
+        } finally {
+            pendingUpdates.clear();
+            usageCounters.clear();
+        }
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -51,15 +93,24 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
         if (apiKey == null || !apiKey.isActive()) {
             log.warn("Invalid or inactive API key attempt from IP: {}", request.getRemoteAddr());
-            filterChain.doFilter(request, response);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or inactive API key");
             return;
         }
 
-        // Update last used timestamp
-        apiKey.setLastUsedAt(Instant.now());
-        apiKeyRepository.save(apiKey);
+        long apiKeyId = apiKey.getId();
+        Instant now = Instant.now();
 
-        // Build authorities from scopes
+        usageCounters.computeIfAbsent(apiKeyId, k -> new AtomicInteger(0)).incrementAndGet();
+
+        if (usageCounters.get(apiKeyId).get() >= UPDATE_THRESHOLD) {
+            pendingUpdates.put(apiKeyId, now);
+            usageCounters.remove(apiKeyId);
+        }
+
+        if (!pendingUpdates.containsKey(apiKeyId)) {
+            pendingUpdates.put(apiKeyId, now);
+        }
+
         List<SimpleGrantedAuthority> authorities = apiKey.getScopes().stream()
                 .map(scope -> new SimpleGrantedAuthority("SCOPE_" + scope.name()))
                 .toList();

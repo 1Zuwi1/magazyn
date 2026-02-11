@@ -49,7 +49,6 @@ public class ApiKeyService {
                     .orElseThrow(() -> new IllegalArgumentException(AuthError.RESOURCE_NOT_FOUND.name()));
         }
 
-        // Generate secure random key
         byte[] keyBytes = new byte[KEY_BYTE_LENGTH];
         SECURE_RANDOM.nextBytes(keyBytes);
         String rawKey = Base64.getUrlEncoder().withoutPadding().encodeToString(keyBytes);
@@ -71,9 +70,6 @@ public class ApiKeyService {
         log.info("API key created: id={}, name={}, warehouseId={}, scopes={}, createdBy={}",
                 apiKey.getId(), apiKey.getName(), apiKey.getWarehouseId(), apiKey.getScopes(), createdByUserId);
 
-        // Notify admins about new API key creation
-        notifyAdminsAboutNewApiKey(apiKey);
-
         return ApiKeyCreatedResponse.builder()
                 .id(apiKey.getId())
                 .rawKey(rawKey)
@@ -84,6 +80,12 @@ public class ApiKeyService {
                 .scopes(apiKey.getScopes())
                 .createdAt(apiKey.getCreatedAt())
                 .build();
+    }
+
+    public void sendApiKeyCreationNotification(Long apiKeyId) {
+        ApiKey apiKey = apiKeyRepository.findById(apiKeyId)
+                .orElseThrow(() -> new IllegalArgumentException(AuthError.RESOURCE_NOT_FOUND.name()));
+        notifyAdminsAboutNewApiKey(apiKey);
     }
 
     @Transactional
