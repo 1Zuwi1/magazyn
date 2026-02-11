@@ -5,8 +5,7 @@ import {
   ThermometerIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
-import { useTranslations } from "@/i18n/use-translations"
+import { useTranslations } from "next-intl"
 
 interface RackParametersCardProps {
   maxElementSize: { width: number; height: number; depth: number }

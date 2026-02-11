@@ -92,7 +92,9 @@ function mapApiRackToRack3D(
   return {
     id: String(rack.id),
     code: rack.marker ?? `R-${rack.id}`,
-    name: rack.marker ?? t("generated.shared.rack2", { value0: rack.id }),
+    name:
+      rack.marker ??
+      t("generated.shared.rack2", { value0: rack.id.toString() }),
     grid: { rows, cols },
     cell: { w: cellW, h: cellH, d: cellD },
     maxElementSize: {

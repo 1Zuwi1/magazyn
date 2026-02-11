@@ -39,7 +39,7 @@ export function OtpInput({ id, onChange, value, disabled }: OtpInputProps) {
           <InputOTPSlot
             aria-describedby={statusId}
             aria-label={t("inputOtp.digitAriaLabel", {
-              value0: idx + 1,
+              value0: (idx + 1).toString(),
             })}
             index={idx}
             key={idx}
@@ -52,7 +52,7 @@ export function OtpInput({ id, onChange, value, disabled }: OtpInputProps) {
           <InputOTPSlot
             aria-describedby={statusId}
             aria-label={t("inputOtp.digitAriaLabel", {
-              value0: idx + halfOtpLength + 1,
+              value0: (idx + halfOtpLength + 1).toString(),
             })}
             index={idx + halfOtpLength}
             key={idx}

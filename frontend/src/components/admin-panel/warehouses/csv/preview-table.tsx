@@ -113,7 +113,7 @@ export function PreviewTable({ columns, rows }: PreviewTableProps) {
       <div className="text-left text-muted-foreground text-sm">
         {hasMoreRows
           ? t("generated.admin.warehouses.showing", {
-              value0: previewRows.length,
+              value0: previewRows.length.toString(),
               value1: rows.length,
             })
           : rows.length > 0 &&

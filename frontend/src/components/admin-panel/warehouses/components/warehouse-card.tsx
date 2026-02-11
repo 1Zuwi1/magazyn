@@ -89,7 +89,7 @@ export function WarehouseCard({
               <h3 className="font-semibold text-lg">{warehouse.name}</h3>
               <p className="text-muted-foreground text-xs">
                 {t("generated.admin.warehouses.id", {
-                  value0: warehouse.id,
+                  value0: warehouse.id.toString(),
                 })}
               </p>
             </div>

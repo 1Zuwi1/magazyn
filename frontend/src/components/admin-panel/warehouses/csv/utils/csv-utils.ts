@@ -291,9 +291,9 @@ function appendColumnCountError(
   errors.push({
     row: rowNumber,
     message: t("generated.admin.warehouses.invalidNumberColumnsExpected", {
-      value0: valueCount,
-      value1: minColumns,
-      value2: maxColumns,
+      value0: valueCount.toString(),
+      value1: minColumns.toString(),
+      value2: maxColumns.toString(),
     }),
   })
 }

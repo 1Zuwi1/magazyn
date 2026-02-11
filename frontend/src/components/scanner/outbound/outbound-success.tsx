@@ -60,8 +60,8 @@ export function OutboundSuccess({ result, onReset }: OutboundSuccessProps) {
                 <p className="mt-1 text-muted-foreground text-xs">
                   {t("generated.scanner.outbound.rackXY", {
                     value0: op.rackMarker,
-                    value1: op.positionX,
-                    value2: op.positionY,
+                    value1: op.positionX.toString(),
+                    value2: op.positionY.toString(),
                   })}
                 </p>
                 <p className="text-muted-foreground text-xs">

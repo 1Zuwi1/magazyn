@@ -93,8 +93,8 @@ export default function WarehousesMain() {
     if (report.errors.length > 0) {
       toast.warning(
         t("generated.admin.shared.importPartiallyCompleted", {
-          value0: report.imported,
-          value1: report.processedLines,
+          value0: report.imported.toString(),
+          value1: report.processedLines.toString(),
         })
       )
       return

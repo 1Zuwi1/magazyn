@@ -77,7 +77,7 @@ export function FileUploader({
       if (acceptedFiles.length > DEFAULT_CONFIG.maxFileCount) {
         toast.error(
           t("generated.admin.warehouses.uploadMaximumFileS", {
-            value0: DEFAULT_CONFIG.maxFileCount,
+            value0: DEFAULT_CONFIG.maxFileCount.toString(),
           })
         )
         return
@@ -86,7 +86,7 @@ export function FileUploader({
       if (files.length + acceptedFiles.length > DEFAULT_CONFIG.maxFileCount) {
         toast.error(
           t("generated.admin.warehouses.uploadMaximumFileS", {
-            value0: DEFAULT_CONFIG.maxFileCount,
+            value0: DEFAULT_CONFIG.maxFileCount.toString(),
           })
         )
         return

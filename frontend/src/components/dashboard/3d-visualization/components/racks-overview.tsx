@@ -156,16 +156,16 @@ function RackInstance({
             <div className="font-bold">{rack.code}</div>
             <div>
               {t("generated.dashboard.visualization3d.occupied2", {
-                value0: Math.round(occupancy),
-                value1: rack.grid.cols,
-                value2: rack.grid.rows,
+                value0: Math.round(occupancy).toString(),
+                value1: rack.grid.cols.toString(),
+                value2: rack.grid.rows.toString(),
               })}
             </div>
             <div className="text-slate-400">
               {t("generated.dashboard.visualization3d.maxMm", {
-                value0: rack.maxElementSize.width,
-                value1: rack.maxElementSize.height,
-                value2: rack.maxElementSize.depth,
+                value0: rack.maxElementSize.width.toString(),
+                value1: rack.maxElementSize.height.toString(),
+                value2: rack.maxElementSize.depth.toString(),
               })}
             </div>
           </div>

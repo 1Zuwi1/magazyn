@@ -15,11 +15,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { AdminTeamOption } from "@/hooks/use-admin-users"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 const profilePhonePattern = /^[+\d\s()-]*$/
 
-const createEditUserFormSchema = (t: ReturnType<typeof useTranslations>) =>
+const createEditUserFormSchema = (t: AppTranslate) =>
   z.object({
     fullName: z
       .string()

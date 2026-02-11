@@ -325,7 +325,7 @@ export function LocationCard({
           />
           {maxColumn !== undefined ? (
             <p className="text-muted-foreground text-xs">
-              {t("generated.scanner.max", { value0: maxColumn })}
+              {t("generated.scanner.max", { value0: maxColumn.toString() })}
             </p>
           ) : null}
         </div>
@@ -348,7 +348,7 @@ export function LocationCard({
           />
           {maxRow !== undefined ? (
             <p className="text-muted-foreground text-xs">
-              {t("generated.scanner.max", { value0: maxRow })}
+              {t("generated.scanner.max", { value0: maxRow.toString() })}
             </p>
           ) : null}
         </div>

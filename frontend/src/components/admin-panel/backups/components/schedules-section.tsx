@@ -171,7 +171,7 @@ export function SchedulesSection({
 
       <ConfirmDialog
         description={t("generated.admin.backups.deleteScheduleDescription", {
-          value0: scheduleToDelete?.warehouseName,
+          value0: scheduleToDelete?.warehouseName ?? "",
         })}
         onConfirm={confirmDelete}
         onOpenChange={setDeleteDialogOpen}

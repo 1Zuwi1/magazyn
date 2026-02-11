@@ -49,11 +49,11 @@ import { getWebAuthnSupport } from "@/lib/webauthn"
 
 type SupportState = "checking" | "supported" | "unsupported"
 
-const SUPPORT_LABEL_KEYS: Record<SupportState, string> = {
+const SUPPORT_LABEL_KEYS = {
   checking: "passkeys.support.checking",
   supported: "generated.dashboard.settings.supported",
   unsupported: "passkeys.support.unsupported",
-}
+} as const
 
 const SUPPORT_VARIANTS = {
   checking: "secondary",
@@ -108,7 +108,7 @@ function PasskeyItem({ passkey, index, onRename, onDelete }: PasskeyItemProps) {
           </div>
           <p className="text-muted-foreground/70 text-xs">
             {t("generated.dashboard.settings.keyActive", {
-              value0: passkey.id,
+              value0: passkey.id.toString(),
             })}
           </p>
         </div>

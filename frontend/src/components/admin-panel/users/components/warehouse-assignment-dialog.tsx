@@ -267,7 +267,7 @@ export function WarehouseAssignmentDialog({
               htmlFor="show-assigned-warehouses-only"
             >
               {t("generated.admin.users.assignedOnly", {
-                value0: assignedWarehouseIds.length,
+                value0: assignedWarehouseIds.length.toString(),
               })}
             </Label>
             <Switch
@@ -314,13 +314,13 @@ export function WarehouseAssignmentDialog({
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-sm">
                   {t("generated.admin.users.selectedWarehouses", {
-                    value0: selectedWarehouseIds.length,
+                    value0: selectedWarehouseIds.length.toString(),
                   })}
                 </p>
                 <p className="text-muted-foreground text-xs">
                   {t("generated.admin.users.assignAssigned", {
-                    value0: selectedUnassignedWarehouseIds.length,
-                    value1: selectedAssignedWarehouseIds.length,
+                    value0: selectedUnassignedWarehouseIds.length.toString(),
+                    value1: selectedAssignedWarehouseIds.length.toString(),
                   })}
                 </p>
               </div>
@@ -353,7 +353,7 @@ export function WarehouseAssignmentDialog({
               variant="destructive"
             >
               {t("generated.admin.users.removeAssignment", {
-                value0: selectedAssignedWarehouseIds.length,
+                value0: selectedAssignedWarehouseIds.length.toString(),
               })}
             </Button>
           ) : null}
@@ -367,7 +367,7 @@ export function WarehouseAssignmentDialog({
                 onClick={handleAssign}
               >
                 {t("generated.admin.users.assign", {
-                  value0: selectedUnassignedWarehouseIds.length,
+                  value0: selectedUnassignedWarehouseIds.length.toString(),
                 })}
               </Button>
             ) : null}

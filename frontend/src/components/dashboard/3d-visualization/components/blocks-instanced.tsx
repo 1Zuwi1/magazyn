@@ -385,23 +385,23 @@ export function BlocksInstanced({
           <div className="pointer-events-none min-w-55 rounded border border-white/10 bg-slate-950/80 px-3 py-2 text-center text-slate-100 text-xs">
             <div className="font-bold">
               {t("generated.dashboard.visualization3d.zone", {
-                value0: hoveredBlock.startRow + 1,
-                value1: hoveredBlock.startRow + hoveredBlock.rows,
-                value2: hoveredBlock.startCol + 1,
-                value3: hoveredBlock.startCol + hoveredBlock.cols,
+                value0: (hoveredBlock.startRow + 1).toString(),
+                value1: (hoveredBlock.startRow + hoveredBlock.rows).toString(),
+                value2: (hoveredBlock.startCol + 1).toString(),
+                value3: (hoveredBlock.startCol + hoveredBlock.cols).toString(),
               })}
             </div>
             <div>
               {t("generated.dashboard.visualization3d.occupied3", {
-                value0: hoveredBlock.occupiedCount,
-                value1: hoveredBlock.slotCount,
-                value2:
-                  hoveredBlock.slotCount > 0
-                    ? Math.round(
-                        (hoveredBlock.occupiedCount / hoveredBlock.slotCount) *
-                          100
-                      )
-                    : 0,
+                value0: hoveredBlock.occupiedCount.toString(),
+                value1: hoveredBlock.slotCount.toString(),
+                value2: (hoveredBlock.slotCount > 0
+                  ? Math.round(
+                      (hoveredBlock.occupiedCount / hoveredBlock.slotCount) *
+                        100
+                    )
+                  : 0
+                ).toString(),
               })}
             </div>
             <div className="text-slate-400">

@@ -83,7 +83,7 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
               <h3 className="truncate font-semibold text-lg">{rack.marker}</h3>
               <p className="truncate text-muted-foreground text-xs">
                 {t("generated.admin.warehouses.id", {
-                  value0: rack.id,
+                  value0: rack.id.toString(),
                 })}
               </p>
             </div>
@@ -161,8 +161,8 @@ function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
             </div>
             <span className="font-medium font-mono">
               {t("generated.shared.cC", {
-                value0: rack.minTemp,
-                value1: rack.maxTemp,
+                value0: rack.minTemp.toString(),
+                value1: rack.maxTemp.toString(),
               })}
             </span>
           </div>

@@ -58,10 +58,10 @@ export const OVERVIEW_CAMERA_HEIGHT = 4
 export const FOCUS_CAMERA_HEIGHT = 3
 export const FOCUS_CAMERA_DISTANCE = 6
 
-export const STATUS_LABEL_KEYS: Record<BlockStatusKey, string> = {
+export const STATUS_LABEL_KEYS = {
   normal: "warehouseVisualization.statusLabels.normal",
   dangerous: "warehouseVisualization.statusLabels.dangerous",
   expired: "warehouseVisualization.statusLabels.expired",
   "expired-dangerous": "warehouseVisualization.statusLabels.expiredDangerous",
   empty: "warehouseVisualization.statusLabels.empty",
-}
+} as const

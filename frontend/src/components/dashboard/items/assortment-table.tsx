@@ -58,6 +58,7 @@ import useAssortment from "@/hooks/use-assortment"
 import { useMultipleItems } from "@/hooks/use-items"
 import { useMultipleRacks } from "@/hooks/use-racks"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import type { AppTranslate } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import type { AssortmentsSchema, RackAssortmentsSchema } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
@@ -74,7 +75,7 @@ type AssortmentItemWithItemId = AssortmentList["content"][number]
 type AssortmentItem = SupportedAssortmentList["content"][number]
 
 const getExpiryFilterOptions = (
-  t: ReturnType<typeof useTranslations>
+  t: AppTranslate
 ): {
   value: ExpiryFilters
   label: string
@@ -510,8 +511,8 @@ function AssortmentTableContent({
         cell: ({ row }) => (
           <span className="font-mono text-sm">
             {t("generated.dashboard.items.rowCol", {
-              value0: row.original.positionX + 1,
-              value1: row.original.positionY + 1,
+              value0: (row.original.positionX + 1).toString(),
+              value1: (row.original.positionY + 1).toString(),
             })}
           </span>
         ),

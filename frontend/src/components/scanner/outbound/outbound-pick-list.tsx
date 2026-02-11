@@ -152,8 +152,8 @@ export function OutboundPickList({
                       </p>
                       <Badge variant="outline">
                         {t("generated.scanner.outbound.xY", {
-                          value0: slot.positionX,
-                          value1: slot.positionY,
+                          value0: slot.positionX.toString(),
+                          value1: slot.positionY.toString(),
                         })}
                       </Badge>
                       {expired ? (
@@ -194,7 +194,7 @@ export function OutboundPickList({
             type="button"
           >
             {t("generated.scanner.outbound.confirmPick", {
-              value0: selectedSlots.length,
+              value0: selectedSlots.length.toString(),
             })}
           </Button>
         </div>

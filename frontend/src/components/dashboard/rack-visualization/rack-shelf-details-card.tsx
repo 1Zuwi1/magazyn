@@ -70,8 +70,8 @@ export function RackShelfDetailsCard({
             <p className="text-muted-foreground text-xs">
               {selectedPosition
                 ? t("generated.dashboard.shared.rowShelf", {
-                    value0: selectedPosition.row + 1,
-                    value1: selectedPosition.col + 1,
+                    value0: (selectedPosition.row + 1).toString(),
+                    value1: (selectedPosition.col + 1).toString(),
                   })
                 : t("generated.dashboard.rackVisualization.selectShelf")}
             </p>
@@ -125,8 +125,8 @@ export function RackShelfDetailsCard({
             <br />
             {selectedPosition
               ? t("generated.dashboard.shared.rowShelf", {
-                  value0: selectedPosition.row + 1,
-                  value1: selectedPosition.col + 1,
+                  value0: (selectedPosition.row + 1).toString(),
+                  value1: (selectedPosition.col + 1).toString(),
                 })
               : ""}
           </p>
@@ -157,8 +157,8 @@ export function RackShelfDetailsCard({
               value={
                 <span className="font-mono font-semibold">
                   {t("generated.dashboard.rackVisualization.xY", {
-                    value0: assortment.positionX,
-                    value1: assortment.positionY,
+                    value0: assortment.positionX.toString(),
+                    value1: assortment.positionY.toString(),
                   })}
                 </span>
               }

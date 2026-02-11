@@ -3,7 +3,7 @@
 import { Layers01Icon, PackageSearchIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useParams, useRouter } from "next/navigation"
-
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { DetailsPanel } from "@/components/dashboard/3d-visualization/details-panel"
 import { buildWarehouse3DFromApi } from "@/components/dashboard/3d-visualization/map-api-data"
@@ -25,7 +25,7 @@ import { DISABLE_PAGINATION_PAGE_SIZE } from "@/config/constants"
 import useAssortments from "@/hooks/use-assortment"
 import useRacks from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
-import { useTranslations } from "next-intl"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 const HISTORY_STATE_KEY = "__warehouseView"
@@ -172,7 +172,7 @@ const getHistoryUpdate = (
 }
 
 const renderVisualizationFallback = (
-  t: ReturnType<typeof useTranslations>,
+  t: AppTranslate,
   _error: Error,
   reset: () => void
 ) => (

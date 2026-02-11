@@ -11,6 +11,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { ItemPhoto } from "@/components/ui/item-photo"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { IconComponent } from "../types"
 import { useWarehouseStore } from "./store"
@@ -21,14 +22,16 @@ interface DetailsPanelProps {
   warehouse: Warehouse3D
 }
 
-const STATUS_TEXT_KEYS: Record<Item3D["status"], string> = {
+const STATUS_TEXT_KEYS = {
   normal: "warehouseVisualization.statusLabels.normal",
   expired: "warehouseVisualization.statusLabels.expired",
   "expired-dangerous": "warehouseVisualization.statusLabels.expiredDangerous",
   dangerous: "warehouseVisualization.statusLabels.dangerous",
-}
+} as const
 
-function getStatusText(status: Item3D["status"]): string {
+function getStatusText(
+  status: Item3D["status"]
+): (typeof STATUS_TEXT_KEYS)[keyof typeof STATUS_TEXT_KEYS] {
   return STATUS_TEXT_KEYS[status]
 }
 
@@ -66,7 +69,7 @@ function getStatusColor(status: Item3D["status"]): {
 }
 
 function getOccupancyColor(
-  t: ReturnType<typeof useTranslations>,
+  t: AppTranslate,
   percentage: number
 ): {
   text: string
@@ -374,9 +377,9 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                 </span>
                 <span className="font-mono font-semibold">
                   {t("generated.dashboard.visualization3d.maxMm", {
-                    value0: selectedRack.maxElementSize.width,
-                    value1: selectedRack.maxElementSize.height,
-                    value2: selectedRack.maxElementSize.depth,
+                    value0: selectedRack.maxElementSize.width.toString(),
+                    value1: selectedRack.maxElementSize.height.toString(),
+                    value2: selectedRack.maxElementSize.depth.toString(),
                   })}
                 </span>
               </div>
@@ -397,8 +400,8 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                   <div>
                     <h4 className="font-semibold text-sm">
                       {t("generated.dashboard.shared.rowShelf", {
-                        value0: selectedShelf.row + 1,
-                        value1: selectedShelf.col + 1,
+                        value0: (selectedShelf.row + 1).toString(),
+                        value1: (selectedShelf.col + 1).toString(),
                       })}
                     </h4>
                   </div>
@@ -461,8 +464,8 @@ export function DetailsPanel({ warehouse }: DetailsPanelProps) {
                     {t("generated.dashboard.shared.itemPosition")}
                     <br />
                     {t("generated.dashboard.shared.rowShelf", {
-                      value0: selectedShelf.row + 1,
-                      value1: selectedShelf.col + 1,
+                      value0: (selectedShelf.row + 1).toString(),
+                      value1: (selectedShelf.col + 1).toString(),
                     })}
                   </p>
                 </div>

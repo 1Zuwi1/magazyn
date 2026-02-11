@@ -135,9 +135,9 @@ export function RackGridView({
             </h3>
             <p className="text-muted-foreground text-xs">
               {t("generated.dashboard.rackVisualization.slots", {
-                value0: rows,
-                value1: cols,
-                value2: totalSlots,
+                value0: rows.toString(),
+                value1: cols.toString(),
+                value2: totalSlots.toString(),
               })}
             </p>
           </div>

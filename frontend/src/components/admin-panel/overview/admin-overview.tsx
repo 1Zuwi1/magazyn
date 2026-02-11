@@ -215,8 +215,8 @@ export function AdminOverview() {
                       </h3>
                       <p className="text-muted-foreground text-sm">
                         {t("generated.admin.overview.slotsOccupied", {
-                          value0: warehouse.occupiedSlots,
-                          value1: capacity,
+                          value0: warehouse.occupiedSlots.toString(),
+                          value1: capacity.toString(),
                         })}
                       </p>
                     </div>
@@ -291,7 +291,7 @@ export function AdminOverview() {
             isUsersStatsPending
               ? undefined
               : t("generated.admin.overview.active", {
-                  value0: stats.users.active,
+                  value0: stats.users.active.toString(),
                 })
           }
           href="/admin/users"
@@ -334,7 +334,7 @@ export function AdminOverview() {
             isAlertsStatsPending
               ? undefined
               : t("generated.admin.overview.total", {
-                  value0: stats.alerts.total,
+                  value0: stats.alerts.total.toString(),
                 })
           }
           href="/admin/alerts"
@@ -357,7 +357,7 @@ export function AdminOverview() {
             </h2>
             <p className="text-muted-foreground text-sm">
               {t("generated.admin.overview.warehousesAboveOccupancy", {
-                value0: THRESHOLD,
+                value0: THRESHOLD.toString(),
               })}
             </p>
           </div>

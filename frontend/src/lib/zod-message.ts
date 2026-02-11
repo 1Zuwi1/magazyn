@@ -1,9 +1,9 @@
+import type { AppTranslate } from "@/i18n/use-translations"
+
 type MessageValues = Record<
   string,
   boolean | Date | null | number | string | undefined
 >
-
-type Translate = (key: string, values?: MessageValues) => string
 
 const TRANSLATION_KEY_PREFIX = "generated."
 const ZOD_MESSAGE_PREFIX = "__zod_i18n__:"
@@ -52,7 +52,7 @@ const parseZodMessage = (
 
 export const translateZodMessage = (
   message: string,
-  translate: Translate
+  translate: AppTranslate
 ): string => {
   const parsedMessage = parseZodMessage(message)
 

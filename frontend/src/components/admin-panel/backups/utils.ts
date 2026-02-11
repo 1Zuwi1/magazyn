@@ -11,7 +11,7 @@ import type {
   ScheduleFrequency,
 } from "./types"
 
-const DAY_OF_WEEK_LABEL_KEYS: Record<number, string> = {
+const DAY_OF_WEEK_LABEL_KEYS = {
   1: "generated.admin.backups.weekdayMonday",
   2: "generated.admin.backups.weekdayTuesday",
   3: "generated.admin.backups.weekdayWednesday",
@@ -19,7 +19,7 @@ const DAY_OF_WEEK_LABEL_KEYS: Record<number, string> = {
   5: "generated.admin.backups.weekdayFriday",
   6: "generated.admin.backups.weekdaySaturday",
   7: "generated.admin.backups.weekdaySunday",
-}
+} as const
 
 export const DEFAULT_BACKUP_RESOURCE_TYPES: BackupResourceType[] = [
   "RACKS",
@@ -45,7 +45,7 @@ export function mapApiBackupToViewModel(
   return {
     id: backup.id,
     name: t("generated.admin.backups.backupName", {
-      value0: backup.id,
+      value0: backup.id.toString(),
     }),
     createdAt: backup.createdAt,
     completedAt: backup.completedAt ?? null,
@@ -81,7 +81,9 @@ const resolveWeekdayLabel = (
   dayOfWeek: number | null,
   t: AppTranslate
 ): string => {
-  const translationKey = dayOfWeek ? DAY_OF_WEEK_LABEL_KEYS[dayOfWeek] : null
+  const translationKey = dayOfWeek
+    ? DAY_OF_WEEK_LABEL_KEYS[dayOfWeek as keyof typeof DAY_OF_WEEK_LABEL_KEYS]
+    : null
   return translationKey
     ? t(translationKey)
     : t("generated.admin.backups.weekdayMonday")
@@ -102,17 +104,11 @@ export function getFrequencyLabel(
   }
 
   return t("generated.admin.backups.frequencyMonthly", {
-    value0: schedule.dayOfMonth ?? 1,
+    value0: (schedule.dayOfMonth ?? 1).toString(),
   })
 }
 
-const BACKUP_STATUS_CONFIG: Record<
-  BackupStatus,
-  {
-    labelKey: string
-    variant: "success" | "destructive" | "warning" | "secondary"
-  }
-> = {
+const BACKUP_STATUS_CONFIG = {
   COMPLETED: {
     labelKey: "generated.admin.backups.statusCompleted",
     variant: "success",
@@ -129,7 +125,7 @@ const BACKUP_STATUS_CONFIG: Record<
     labelKey: "generated.admin.backups.statusRestoring",
     variant: "secondary",
   },
-}
+} as const
 
 export const getBackupStatusConfig = (
   status: BackupStatus,

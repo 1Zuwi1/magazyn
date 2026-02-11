@@ -2,6 +2,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import type { AnyFieldApi } from "@tanstack/react-form"
 import { useTranslations } from "next-intl"
 import type { ZodError } from "zod"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { translateZodMessage } from "@/lib/zod-message"
 import type { IconComponent } from "../dashboard/types"
@@ -10,7 +11,7 @@ import { Input } from "../ui/input"
 
 const getFieldErrorMessage = (
   field: AnyFieldApi,
-  t: ReturnType<typeof useTranslations>
+  t: AppTranslate
 ): string | undefined => {
   const error = field.state.meta.errors[0] as ZodError | string | undefined
   const message = typeof error === "string" ? error : error?.message

@@ -109,12 +109,12 @@ export function DashboardRecentArrivalsCard() {
           itemName:
             itemDefinition?.name ??
             t("generated.dashboard.home.product", {
-              value0: assortment.itemId,
+              value0: assortment.itemId.toString(),
             }),
           rackLabel:
             rackLabelsById.get(assortment.rackId) ??
             t("generated.dashboard.home.bookcase", {
-              value0: assortment.rackId,
+              value0: assortment.rackId.toString(),
             }),
         }
       }),

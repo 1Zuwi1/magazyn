@@ -161,7 +161,7 @@ export function DashboardOperationalAlertsCard() {
           <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
             <span>
               {t("generated.dashboard.home.warehousesAbove", {
-                value0: OCCUPANCY_CRITICAL_THRESHOLD,
+                value0: OCCUPANCY_CRITICAL_THRESHOLD.toString(),
               })}
             </span>
             <Badge
@@ -177,7 +177,7 @@ export function DashboardOperationalAlertsCard() {
           <div className="flex items-center justify-between gap-4 rounded-lg bg-muted/50 p-2">
             <span>
               {t("generated.dashboard.home.productsExpiringUnderDays", {
-                value0: EXPIRY_WARNING_DAYS,
+                value0: EXPIRY_WARNING_DAYS.toString(),
               })}
             </span>
             <Badge

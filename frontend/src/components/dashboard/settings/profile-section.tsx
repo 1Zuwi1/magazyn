@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import type { AppTranslate } from "@/i18n/use-translations"
 import type { User } from "@/lib/schemas"
 import type { IconComponent } from "../types"
 import { getRoleLabels, getStatusConfig } from "./constants"
@@ -62,7 +63,7 @@ function ProfileDetailRow({ detail }: { detail: ProfileDetail }) {
 }
 
 function buildProfileDetails(
-  t: ReturnType<typeof useTranslations>,
+  t: AppTranslate,
   user: User,
   dateFnsLocale: DateFnsLocale,
   statusConfig: ReturnType<typeof getStatusConfig>,

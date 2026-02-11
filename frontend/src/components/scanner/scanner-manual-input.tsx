@@ -4,13 +4,14 @@ import { KeyboardIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 
-const getModeOptions = (t: ReturnType<typeof useTranslations>) =>
+const getModeOptions = (t: AppTranslate) =>
   [
     { label: t("generated.scanner.receiving"), value: "take" },
     { label: t("generated.scanner.removing"), value: "remove" },

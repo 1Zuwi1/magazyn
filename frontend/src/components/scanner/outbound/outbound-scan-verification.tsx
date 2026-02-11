@@ -188,8 +188,8 @@ export function OutboundScanVerification({
                           </span>
                           <Badge variant="outline">
                             {t("generated.scanner.outbound.xY", {
-                              value0: entry.positionX,
-                              value1: entry.positionY,
+                              value0: entry.positionX.toString(),
+                              value1: entry.positionY.toString(),
                             })}
                           </Badge>
                           <span className="ml-auto text-muted-foreground text-xs">
@@ -272,7 +272,7 @@ export function OutboundScanVerification({
                   type="button"
                 >
                   {t("generated.scanner.outbound.scanRemaining", {
-                    value0: remaining,
+                    value0: remaining.toString(),
                   })}
                 </Button>
               )}
@@ -286,7 +286,7 @@ export function OutboundScanVerification({
               >
                 {allScanned
                   ? t("generated.scanner.outbound.confirmPick2", {
-                      value0: selectedSlots.length,
+                      value0: selectedSlots.length.toString(),
                     })
                   : t("generated.scanner.outbound.scanAllItemsConfirm")}
               </Button>

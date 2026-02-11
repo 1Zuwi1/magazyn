@@ -13,13 +13,14 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useMemo } from "react"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import { Scanner } from "./scanner/scanner"
 import { DialogTrigger } from "./ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { VoiceAssistant } from "./voice-assistant/voice-assistant"
 
-const getDockNavItems = (t: ReturnType<typeof useTranslations>) =>
+const getDockNavItems = (t: AppTranslate) =>
   [
     {
       title: t("generated.ui.dock.dashboard"),

@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import type { AppTranslate } from "@/i18n/use-translations"
 import type {
   BackupSchedule,
   ScheduleFrequency,
@@ -38,10 +39,7 @@ interface ScheduleDialogProps {
   onSubmit: (data: ScheduleSubmitPayload) => void
 }
 
-const getFrequencyLabel = (
-  frequency: ScheduleFrequency,
-  t: ReturnType<typeof useTranslations>
-) => {
+const getFrequencyLabel = (frequency: ScheduleFrequency, t: AppTranslate) => {
   if (frequency === "DAILY") {
     return t("generated.admin.backups.frequencyDailySimple")
   }
@@ -51,26 +49,26 @@ const getFrequencyLabel = (
   return t("generated.admin.backups.frequencyMonthlySimple")
 }
 
-const getWeekdayTranslationKey = (dayOfWeek: number): string => {
+const getWeekdayTranslationKey = (dayOfWeek: number) => {
   if (dayOfWeek === 1) {
-    return "generated.admin.backups.weekdayMonday"
+    return "generated.admin.backups.weekdayMonday" as const
   }
   if (dayOfWeek === 2) {
-    return "generated.admin.backups.weekdayTuesday"
+    return "generated.admin.backups.weekdayTuesday" as const
   }
   if (dayOfWeek === 3) {
-    return "generated.admin.backups.weekdayWednesday"
+    return "generated.admin.backups.weekdayWednesday" as const
   }
   if (dayOfWeek === 4) {
-    return "generated.admin.backups.weekdayThursday"
+    return "generated.admin.backups.weekdayThursday" as const
   }
   if (dayOfWeek === 5) {
-    return "generated.admin.backups.weekdayFriday"
+    return "generated.admin.backups.weekdayFriday" as const
   }
   if (dayOfWeek === 6) {
-    return "generated.admin.backups.weekdaySaturday"
+    return "generated.admin.backups.weekdaySaturday" as const
   }
-  return "generated.admin.backups.weekdaySunday"
+  return "generated.admin.backups.weekdaySunday" as const
 }
 
 function SectionHeader({

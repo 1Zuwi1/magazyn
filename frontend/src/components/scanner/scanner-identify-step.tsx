@@ -8,6 +8,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useTranslations } from "next-intl"
 import { useCallback, useState } from "react"
+import type { AppTranslate } from "@/i18n/use-translations"
 import type {
   IdentificationCandidate,
   IdentificationResult,
@@ -19,10 +20,7 @@ import { ScrollArea } from "../ui/scroll-area"
 import { CancelButton } from "./cancel-button"
 import { ScannerBody } from "./scanner-body"
 
-const getConfidenceLevelLabel = (
-  t: ReturnType<typeof useTranslations>,
-  level: string
-): string => {
+const getConfidenceLevelLabel = (t: AppTranslate, level: string): string => {
   if (level === "HIGH_CONFIDENCE") {
     return t("generated.scanner.highConfidence")
   }
@@ -174,7 +172,7 @@ export function ScannerIdentifyStep({
             </Badge>
             <span className="text-muted-foreground text-xs">
               {t("generated.scanner.confidence", {
-                value0: Math.round(result.similarityScore * 100),
+                value0: Math.round(result.similarityScore * 100).toString(),
               })}
             </span>
           </div>

@@ -126,7 +126,7 @@ export function BackupsMain() {
     const result = await restoreAllWarehousesMutation.mutateAsync()
     toast.success(
       t("generated.admin.backups.restoreAllStartedToast", {
-        value0: result.successful.length,
+        value0: result.successful.length.toString(),
       })
     )
   }
@@ -139,7 +139,7 @@ export function BackupsMain() {
       const createdBackups = await backupAllWarehousesMutation.mutateAsync()
       toast.success(
         t("generated.admin.backups.backupAllStartedToast", {
-          value0: createdBackups.length,
+          value0: createdBackups.length.toString(),
         })
       )
       return
@@ -336,7 +336,7 @@ export function BackupsMain() {
 
       <ConfirmDialog
         description={t("generated.admin.backups.deleteBackupDescription", {
-          value0: backupToDelete?.name,
+          value0: backupToDelete?.name ?? "",
         })}
         onConfirm={() => {
           confirmDeleteBackup().catch(() => undefined)
@@ -348,7 +348,7 @@ export function BackupsMain() {
 
       <ConfirmDialog
         description={t("generated.admin.backups.restoreBackupDescription", {
-          value0: backupToRestore?.name,
+          value0: backupToRestore?.name ?? "",
         })}
         onConfirm={() => {
           confirmRestoreBackup().catch(() => undefined)

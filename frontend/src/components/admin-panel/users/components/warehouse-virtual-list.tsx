@@ -148,8 +148,8 @@ function WarehouseRow({
         </p>
         <p className="mt-0.5 text-muted-foreground text-xs">
           {t("generated.admin.users.racksOccupancy", {
-            value0: warehouse.racksCount,
-            value1: warehouse.occupancy,
+            value0: warehouse.racksCount.toString(),
+            value1: warehouse.occupancy.toString(),
           })}
         </p>
       </div>

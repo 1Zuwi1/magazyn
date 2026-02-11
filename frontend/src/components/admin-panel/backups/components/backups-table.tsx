@@ -49,6 +49,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import useBackups from "@/hooks/use-backups"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import {
   BACKUPS_PAGE_SIZE,
@@ -68,7 +69,7 @@ interface BackupsTableProps {
 }
 
 function createColumns(
-  t: ReturnType<typeof useTranslations>,
+  t: AppTranslate,
   locale: string,
   onView: (backup: Backup) => void,
   onRestore: (backup: Backup) => void,

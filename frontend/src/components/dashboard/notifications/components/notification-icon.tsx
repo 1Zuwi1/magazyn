@@ -276,7 +276,7 @@ export function NotificationInbox() {
               {unreadCount > 0 && (
                 <Badge className="h-5 px-1.5 text-[10px]" variant="secondary">
                   {t("generated.dashboard.notifications.new", {
-                    value0: unreadCount,
+                    value0: unreadCount.toString(),
                   })}
                 </Badge>
               )}

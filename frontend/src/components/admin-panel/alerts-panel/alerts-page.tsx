@@ -35,6 +35,7 @@ import PaginationFull from "@/components/ui/pagination-component"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import useAlerts, { usePatchAlert } from "@/hooks/use-alerts"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import type { AppTranslate } from "@/i18n/use-translations"
 import type { InferApiOutput } from "@/lib/fetcher"
 import {
   type AlertsSchema,
@@ -54,7 +55,7 @@ type AlertTypeValue = AlertType
 type AlertStatusValue = "OPEN" | "ACTIVE" | "RESOLVED" | "DISMISSED"
 
 const getAlertStatusOptions = (
-  t: ReturnType<typeof useTranslations>
+  t: AppTranslate
 ): {
   value: AlertStatusValue
   label: string
@@ -79,7 +80,7 @@ function getAlertIcon(alertType: string): IconSvgElement {
 }
 
 function getStatusConfig(
-  t: ReturnType<typeof useTranslations>,
+  t: AppTranslate,
   status: string
 ): {
   badgeVariant: "default" | "destructive" | "secondary"
@@ -271,7 +272,7 @@ function AlertListBody({
   )
 }
 
-const getStatuses = (t: ReturnType<typeof useTranslations>) => ({
+const getStatuses = (t: AppTranslate) => ({
   OPEN: {
     label: t("generated.admin.alerts.markOpen"),
     icon: Time01Icon,

@@ -233,7 +233,7 @@
       "processing": "Processing"
     },
     "shared": {
-      "errorOccured": "Wystąpił błąd.",
+      "errorOccurred": "Wystąpił błąd.",
       "tryAgain": "Spróbuj ponownie.",
       "johnKowalski": "John Kowalski",
       "confirmPassword": "Confirm password",

@@ -10,6 +10,7 @@ import {
   useState,
 } from "react"
 import { SCANNER_ITEM_MAX_QUANTITY } from "@/config/constants"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { apiFetch, FetchError } from "@/lib/fetcher"
 import {
   type OutboundCheckResult,
@@ -34,9 +35,7 @@ import { OutboundSelectItem } from "./outbound-select-item"
 import { OutboundSelectQuantity } from "./outbound-select-quantity"
 import { OutboundSuccess } from "./outbound-success"
 
-const getOutboundErrorMessages = (
-  t: ReturnType<typeof useTranslations>
-): Record<string, string> => ({
+const getOutboundErrorMessages = (t: AppTranslate): Record<string, string> => ({
   ASSORTMENT_NOT_FOUND: t(
     "generated.scanner.outbound.assortmentFoundScannedCodeCheck"
   ),

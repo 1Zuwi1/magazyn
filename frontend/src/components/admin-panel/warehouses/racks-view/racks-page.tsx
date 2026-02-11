@@ -158,8 +158,8 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
     if (report.errors.length > 0) {
       toast.warning(
         t("generated.admin.shared.importPartiallyCompleted", {
-          value0: report.imported,
-          value1: report.processedLines,
+          value0: report.imported.toString(),
+          value1: report.processedLines.toString(),
         })
       )
       return
@@ -310,7 +310,7 @@ export default function AdminRacksPage({ warehouse }: AdminRacksPageProps) {
             </span>
             <span className="font-mono font-semibold">
               {t("generated.admin.warehouses.kg2", {
-                value0: racksData?.summary.totalWeight ?? 0,
+                value0: (racksData?.summary.totalWeight ?? 0).toString(),
               })}
             </span>
           </div>

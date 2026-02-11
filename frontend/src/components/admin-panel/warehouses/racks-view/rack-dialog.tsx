@@ -20,12 +20,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
+import type { AppTranslate } from "@/i18n/use-translations"
 import type { Rack } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { DEFAULT_RACK } from "../../lib/constants"
 import type { RackFormData } from "../csv/utils/types"
 
-const createRackDialogFormSchema = (t: ReturnType<typeof useTranslations>) =>
+const createRackDialogFormSchema = (t: AppTranslate) =>
   z
     .object({
       marker: z

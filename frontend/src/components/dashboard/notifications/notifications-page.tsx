@@ -25,6 +25,7 @@ import useNotifications, {
   useMarkNotification,
 } from "@/hooks/use-notifications"
 import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { findAlertTitle } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { formatDateTime, toTitleCase } from "../utils/helpers"
@@ -42,7 +43,7 @@ function getNotificationIcon(alertType: string): IconSvgElement {
 }
 
 function getStatusConfig(
-  t: ReturnType<typeof useTranslations>,
+  t: AppTranslate,
   status: string
 ): {
   badgeVariant: "default" | "destructive" | "secondary"

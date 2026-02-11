@@ -9,12 +9,12 @@ export type ItemStatus =
   | "expired-dangerous"
   | "dangerous"
 
-const STATUS_TEXT_KEYS: Record<ItemStatus, string> = {
+const STATUS_TEXT_KEYS = {
   normal: "warehouseVisualization.statusLabels.normal",
   expired: "warehouseVisualization.statusLabels.expired",
   "expired-dangerous": "warehouseVisualization.statusLabels.expiredDangerous",
   dangerous: "warehouseVisualization.statusLabels.dangerous",
-}
+} as const
 
 export function getItemStatus(item: Item): ItemStatus {
   const daysUntilExpiry = getDaysUntilExpiry(

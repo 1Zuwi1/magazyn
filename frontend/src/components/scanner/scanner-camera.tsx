@@ -358,7 +358,7 @@ export function ScannerCamera({
           >
             <p className="h-full w-full text-center">
               {t("generated.scanner.scanningWarehouse", {
-                value0: warehouseName,
+                value0: warehouseName ?? "",
               })}
             </p>
             {modeLabel ? (

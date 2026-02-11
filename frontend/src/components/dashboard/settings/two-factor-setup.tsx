@@ -67,6 +67,7 @@ import useLinkedMethods, {
 } from "@/hooks/use-linked-methods"
 import useRemoveMethod from "@/hooks/use-remove-method"
 import useSetDefaultMethod from "@/hooks/use-set-default-method"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { apiFetch } from "@/lib/fetcher"
 import {
   BackupCodesGenerateSchema,
@@ -93,7 +94,7 @@ import { useCountdown } from "./use-countdown"
 import { formatCountdown } from "./utils"
 
 const getTwoFactorMethodLabels = (
-  t: ReturnType<typeof useTranslations>
+  t: AppTranslate
 ): Record<TwoFactorMethod, string> => {
   const labels = {} as Record<TwoFactorMethod, string>
   for (const method of getTwoFactorMethods(t)) {
@@ -103,7 +104,7 @@ const getTwoFactorMethodLabels = (
 }
 
 const getTwoFactorMethodHints = (
-  t: ReturnType<typeof useTranslations>
+  t: AppTranslate
 ): Record<TwoFactorMethod, string> => {
   const hints = {} as Record<TwoFactorMethod, string>
   for (const method of getTwoFactorMethods(t)) {
@@ -116,7 +117,7 @@ const isIdleSetupStage = (stage: TwoFactorSetupStage): boolean =>
   stage === "IDLE" || stage === "SUCCESS"
 
 const getLinkedMethodsState = (
-  t: ReturnType<typeof useTranslations>,
+  t: AppTranslate,
   linkedMethods: TwoFactorMethod[] | undefined,
   method: TwoFactorMethod
 ) => {
@@ -176,7 +177,7 @@ const getLinkedMethodsHint = ({
   hasAvailableMethods,
   isSelectedLinked,
 }: {
-  t: ReturnType<typeof useTranslations>
+  t: AppTranslate
   status: TwoFactorStatus
   linkedMethods: TwoFactorMethod[] | undefined
   hasAvailableMethods: boolean
@@ -213,7 +214,7 @@ const escapeHtml = (value: string): string =>
     .replaceAll("'", "&#39;")
 
 const getPrintableRecoveryCodesDocument = (
-  t: ReturnType<typeof useTranslations>,
+  t: AppTranslate,
   codes: string[],
   generatedAt: string,
   locale: string

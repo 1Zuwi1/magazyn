@@ -68,8 +68,8 @@ export function OutboundFifoWarning({
               </p>
               <Badge variant="outline">
                 {t("generated.scanner.outbound.xY", {
-                  value0: requestedAssortment.positionX,
-                  value1: requestedAssortment.positionY,
+                  value0: requestedAssortment.positionX.toString(),
+                  value1: requestedAssortment.positionY.toString(),
                 })}
               </Badge>
             </div>
@@ -108,8 +108,8 @@ export function OutboundFifoWarning({
                     </p>
                     <Badge variant="outline">
                       {t("generated.scanner.outbound.xY", {
-                        value0: slot.positionX,
-                        value1: slot.positionY,
+                        value0: slot.positionX.toString(),
+                        value1: slot.positionY.toString(),
                       })}
                     </Badge>
                   </div>

@@ -233,7 +233,7 @@
       "processing": "Przetwarzanie"
     },
     "shared": {
-      "errorOccured": "Wystąpił błąd.",
+      "errorOccurred": "Wystąpił błąd.",
       "tryAgain": "Spróbuj ponownie.",
       "johnKowalski": "Jan Kowalski",
       "confirmPassword": "Potwierdź hasło",

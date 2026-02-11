@@ -53,6 +53,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 interface AdminItemsTableProps {
@@ -70,7 +71,7 @@ interface AdminItemsTableProps {
 }
 
 function createColumns(
-  t: ReturnType<typeof useTranslations>,
+  t: AppTranslate,
   onDelete: (item: Item) => void,
   router: ReturnType<typeof useRouter>
 ): ColumnDef<Item>[] {
@@ -137,8 +138,8 @@ function createColumns(
         return (
           <div className="font-mono text-sm">
             {t("generated.shared.cC", {
-              value0: item.minTemp,
-              value1: item.maxTemp,
+              value0: item.minTemp.toString(),
+              value1: item.maxTemp.toString(),
             })}
           </div>
         )

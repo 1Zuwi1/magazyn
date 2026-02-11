@@ -71,13 +71,13 @@ export function useCsvImporter<T extends CsvImporterType>({
         const suffix =
           remaining > 0
             ? t("generated.admin.shared.more", {
-                value0: remaining,
+                value0: remaining.toString(),
               })
             : ""
 
         toast.error(
           t("generated.admin.shared.csvParsingErrors", {
-            value0: result.errors.length,
+            value0: result.errors.length.toString(),
           }),
           {
             description: displayedErrors + suffix,

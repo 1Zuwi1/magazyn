@@ -11,7 +11,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
-
+import { useTranslations } from "next-intl"
 import {
   type Dispatch,
   type SetStateAction,
@@ -48,7 +48,7 @@ import useAssortments from "@/hooks/use-assortment"
 import { useCurrentWarehouseId } from "@/hooks/use-current-warehouse-id"
 import useRacks from "@/hooks/use-racks"
 import useWarehouses from "@/hooks/use-warehouses"
-import { useTranslations } from "next-intl"
+import type { AppTranslate } from "@/i18n/use-translations"
 import type { Rack } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 
@@ -89,7 +89,7 @@ const getWarehouseDisplayMessage = ({
   hasRack,
   warehouseName,
 }: {
-  t: ReturnType<typeof useTranslations>
+  t: AppTranslate
   hasFetchError: boolean
   hasWarehouse: boolean
   hasRack: boolean
@@ -116,7 +116,7 @@ function buildHeaderStats({
   warehouseOccupiedSlots,
   warehouseRacksCount,
 }: {
-  t: ReturnType<typeof useTranslations>
+  t: AppTranslate
   currentRack: Rack | null
   rackOccupancyPercentage: number
   warehouseFreeSlots: number
@@ -696,8 +696,8 @@ export default function WarehouseClient() {
             <Badge className="gap-1.5 font-mono" variant="outline">
               <HugeiconsIcon className="size-3" icon={ThermometerIcon} />
               {t("generated.shared.cC", {
-                value0: currentRack.minTemp,
-                value1: currentRack.maxTemp,
+                value0: currentRack.minTemp.toString(),
+                value1: currentRack.maxTemp.toString(),
               })}
             </Badge>
           </div>

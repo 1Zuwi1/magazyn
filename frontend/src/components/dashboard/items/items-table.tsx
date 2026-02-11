@@ -37,6 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import useItems, { type Item } from "@/hooks/use-items"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { CodeCell } from "./components/code-cell"
 import { SortableHeader, StaticHeader } from "./sortable-header"
 
@@ -121,9 +122,7 @@ interface ItemsTableProps {
   initialSearch?: string
 }
 
-const createItemsColumns = (
-  t: ReturnType<typeof useTranslations>
-): ColumnDef<Item>[] => [
+const createItemsColumns = (t: AppTranslate): ColumnDef<Item>[] => [
   {
     id: "name",
     accessorKey: "name",
@@ -200,7 +199,7 @@ const createItemsColumns = (
     cell: ({ row }) => (
       <Badge variant="outline">
         {t("generated.dashboard.shared.pluralLabel", {
-          value0: row.original.expireAfterDays,
+          value0: row.original.expireAfterDays.toString(),
         })}
       </Badge>
     ),

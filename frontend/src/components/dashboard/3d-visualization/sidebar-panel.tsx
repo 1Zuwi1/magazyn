@@ -106,8 +106,8 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
         {filters.query && (
           <p className="mt-2 text-muted-foreground text-xs">
             {t("generated.dashboard.visualization3d.foundRacks", {
-              value0: filteredRacks.length,
-              value1: racks.length,
+              value0: filteredRacks.length.toString(),
+              value1: racks.length.toString(),
             })}
           </p>
         )}
@@ -182,14 +182,14 @@ export function SidebarPanel({ racks }: SidebarPanelProps) {
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <span className="text-muted-foreground">
                     {t("generated.dashboard.visualization3d.grid", {
-                      value0: rack.grid.rows,
-                      value1: rack.grid.cols,
+                      value0: rack.grid.rows.toString(),
+                      value1: rack.grid.cols.toString(),
                     })}
                   </span>
                   <span className="text-muted-foreground">
                     {t("generated.dashboard.visualization3d.slots", {
-                      value0: occupiedCount,
-                      value1: totalSlots,
+                      value0: occupiedCount.toString(),
+                      value1: totalSlots.toString(),
                     })}
                   </span>
                 </div>

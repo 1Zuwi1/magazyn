@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 import type { Item } from "../types"
 import { formatDimensions, getDaysUntilExpiry } from "../utils/helpers"
@@ -34,17 +35,14 @@ interface ItemDetailsDialogProps {
 
 type BadgeVariant = NonNullable<React.ComponentProps<typeof Badge>["variant"]>
 
-function formatExpiryHint(
-  t: ReturnType<typeof useTranslations>,
-  daysUntilExpiry: number
-): string {
+function formatExpiryHint(t: AppTranslate, daysUntilExpiry: number): string {
   if (daysUntilExpiry === 0) {
     return t("generated.dashboard.rackVisualization.expiresToday")
   }
 
   const absDays = Math.abs(daysUntilExpiry)
   const daysLabel = t("generated.dashboard.shared.pluralLabel", {
-    value0: absDays,
+    value0: absDays.toString(),
   })
   if (daysUntilExpiry < 0) {
     return t("generated.dashboard.rackVisualization.expiredAgo", {

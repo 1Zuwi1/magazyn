@@ -281,7 +281,7 @@ function PhotoGallery({ itemId }: { itemId: number }) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed p-8 text-center">
         <p className="text-muted-foreground text-sm">
-          {t("generated.shared.errorOccured")}
+          {t("generated.shared.errorOccurred")}
         </p>
         <Button onClick={() => refetch()} size="sm" variant="outline">
           <HugeiconsIcon className="mr-1.5 size-4" icon={RefreshIcon} />

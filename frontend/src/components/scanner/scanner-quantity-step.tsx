@@ -84,8 +84,8 @@ export function ScannerQuantityStep({
                   {t("generated.scanner.temperature")}{" "}
                   <span className="font-medium text-foreground">
                     {t("generated.shared.cC", {
-                      value0: scannedItem.minTemp,
-                      value1: scannedItem.maxTemp,
+                      value0: scannedItem.minTemp.toString(),
+                      value1: scannedItem.maxTemp.toString(),
                     })}
                   </span>
                 </p>

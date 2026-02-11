@@ -81,7 +81,10 @@ const ITEM_COLUMN_KEYS = [
 
 const translateColumns = (
   t: AppTranslate,
-  columns: ReadonlyArray<{ key: string; labelKey: string }>
+  columns:
+    | typeof WAREHOUSE_COLUMN_KEYS
+    | typeof RACK_COLUMN_KEYS
+    | typeof ITEM_COLUMN_KEYS
 ): ReadonlyArray<{ key: string; label: string }> =>
   columns.map((column) => ({
     key: column.key,

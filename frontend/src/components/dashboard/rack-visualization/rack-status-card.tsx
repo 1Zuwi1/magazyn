@@ -6,6 +6,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useTranslations } from "next-intl"
+import type { AppTranslate } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
 
 interface RackStatusCardProps {
@@ -16,7 +17,7 @@ interface RackStatusCardProps {
 }
 
 function getOccupancyColor(
-  t: ReturnType<typeof useTranslations>,
+  t: AppTranslate,
   percentage: number
 ): {
   text: string

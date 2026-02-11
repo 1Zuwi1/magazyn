@@ -55,7 +55,7 @@ const ADMIN_TABLE_LABEL_KEYS = {
   SHIPPING: "adminUsers.teams.SHIPPING",
   IT_SUPPORT: "adminUsers.teams.IT_SUPPORT",
   MANAGEMENT: "adminUsers.teams.MANAGEMENT",
-}
+} as const
 
 export function UsersTable({
   users,
