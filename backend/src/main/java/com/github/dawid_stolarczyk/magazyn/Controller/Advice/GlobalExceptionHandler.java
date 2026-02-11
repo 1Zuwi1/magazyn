@@ -6,6 +6,7 @@ import com.github.dawid_stolarczyk.magazyn.Exception.AuthenticationException;
 import com.github.dawid_stolarczyk.magazyn.Exception.RateLimitExceededException;
 import com.github.dawid_stolarczyk.magazyn.Exception.TwoFactorNotVerifiedException;
 import com.github.dawid_stolarczyk.magazyn.Exceptions.BackupException;
+import com.github.dawid_stolarczyk.magazyn.Exceptions.ReportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -85,6 +86,23 @@ public class GlobalExceptionHandler {
             case "BACKUP_ALREADY_IN_PROGRESS", "RESTORE_ALREADY_IN_PROGRESS",
                  "BACKUP_LOCK_ACQUISITION_FAILED", "RESTORE_LOCK_ACQUISITION_FAILED" -> HttpStatus.CONFLICT;
             case "BACKUP_TIMEOUT" -> HttpStatus.REQUEST_TIMEOUT;
+            default -> HttpStatus.INTERNAL_SERVER_ERROR;
+        };
+    }
+
+    @ExceptionHandler(ReportException.class)
+    public ResponseEntity<ResponseTemplate<String>> handleReportException(ReportException ex) {
+        log.warn("Report error: {} - {}", ex.getCode(), ex.getError().getDescription());
+        HttpStatus status = determineReportHttpStatus(ex.getCode());
+        return ResponseEntity
+                .status(status)
+                .body(ResponseTemplate.error(ex.getCode()));
+    }
+
+    private HttpStatus determineReportHttpStatus(String errorCode) {
+        return switch (errorCode) {
+            case "WAREHOUSE_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+            case "INVALID_DATE_RANGE" -> HttpStatus.BAD_REQUEST;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
     }

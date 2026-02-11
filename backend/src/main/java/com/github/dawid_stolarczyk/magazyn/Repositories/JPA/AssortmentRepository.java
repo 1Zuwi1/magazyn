@@ -1,6 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Repositories.JPA;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Assortment;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.RackReport;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -95,5 +97,39 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long>, J
     List<Assortment> findAllCloseToExpiry(@Param("threshold") Timestamp threshold);
 
     List<Assortment> findByUserId(Long userId);
+
+    /**
+     * Find assortments expiring before the given threshold, optionally filtered by warehouse.
+     * Includes already expired assortments (expiresAt <= NOW()) and close-to-expiry.
+     * JOIN FETCH item, rack, and warehouse for report generation.
+     */
+    @Query("SELECT a FROM Assortment a JOIN FETCH a.item JOIN FETCH a.rack r JOIN FETCH r.warehouse " +
+            "WHERE a.expiresAt IS NOT NULL AND a.expiresAt <= :threshold " +
+            "AND (:warehouseId IS NULL OR r.warehouse.id = :warehouseId) " +
+            "ORDER BY a.expiresAt ASC")
+    List<Assortment> findAllExpiringBefore(@Param("threshold") Timestamp threshold,
+                                           @Param("warehouseId") Long warehouseId);
+
+    /**
+     * Find all assortments for inventory report, optionally filtered by warehouse.
+     * JOIN FETCH item, rack, and warehouse for report generation.
+     */
+    @Query("SELECT a FROM Assortment a JOIN FETCH a.item JOIN FETCH a.rack r JOIN FETCH r.warehouse " +
+            "WHERE (:warehouseId IS NULL OR r.warehouse.id = :warehouseId) " +
+            "ORDER BY r.warehouse.name, r.marker, a.item.name")
+    List<Assortment> findAllForInventoryReport(@Param("warehouseId") Long warehouseId);
+
+    @Query(value = "SELECT r.* FROM rack_reports r " +
+            "JOIN racks rk ON rk.id = r.rack_id " +
+            "JOIN warehouses w ON w.id = rk.warehouse_id " +
+            "JOIN assortment a ON a.rack_id = rk.id " +
+            "WHERE r.alert_triggered = true " +
+            "AND (CAST(:warehouseId AS BIGINT) IS NULL OR w.id = :warehouseId) " +
+            "AND (CAST(:startTime AS TIMESTAMP WITH TIME ZONE) IS NULL OR r.created_at >= :startTime) " +
+            "AND (CAST(:endTime AS TIMESTAMP WITH TIME ZONE) IS NULL OR r.created_at <= :endTime) " +
+            "ORDER BY r.created_at DESC", nativeQuery = true)
+    List<RackReport> findAlertTriggeredReports(@Param("warehouseId") Long warehouseId,
+                                               @Param("startTime") Instant startTime,
+                                               @Param("endTime") Instant endTime);
 }
 

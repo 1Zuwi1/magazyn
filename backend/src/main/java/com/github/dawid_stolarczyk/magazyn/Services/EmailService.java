@@ -2,6 +2,7 @@ package com.github.dawid_stolarczyk.magazyn.Services;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.ByteArrayDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,5 +114,29 @@ public class EmailService {
         String htmlContent = templateEngine.process("mail/backup-notification", context);
         String subject = success ? "Backup zakończony pomyślnie" : "Backup nie powiódł się";
         sendSimpleEmail(to, subject, htmlContent);
+    }
+
+    @Async
+    public void sendReportEmail(String to, String reportTitle, byte[] fileBytes, String filename, String contentType) {
+        try {
+            Context context = new Context();
+            context.setVariable("reportTitle", reportTitle);
+            context.setVariable("filename", filename);
+            String htmlContent = templateEngine.process("mail/report-generated", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED, "UTF-8");
+
+            helper.setFrom("Powiadomienia %s <%s>".formatted(appName, mailFrom));
+            helper.setTo(to);
+            helper.setSubject("Raport: " + reportTitle);
+            helper.setText(htmlContent, true);
+            helper.addAttachment(filename, new ByteArrayDataSource(fileBytes, contentType));
+
+            mailSender.send(message);
+            log.info("Report email sent successfully to {} with attachment {}", to, filename);
+        } catch (MessagingException e) {
+            log.error("Error sending report email to {}: {}", to, e.getMessage(), e);
+        }
     }
 }

@@ -97,3 +97,9 @@ auth:
       refill: 2
       duration: PT5M
 
+    # === Reports ===
+    REPORT_GENERATE:
+      capacity: 10
+      refill: 5
+      duration: PT5M
+

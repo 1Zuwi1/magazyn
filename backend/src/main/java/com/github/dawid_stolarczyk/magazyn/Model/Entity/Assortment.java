@@ -18,7 +18,7 @@ public class Assortment {
     private Long id;
     @Column(unique = true, length = 32)
     private String code;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
     @ManyToOne
