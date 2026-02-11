@@ -11,14 +11,15 @@ import { useMemo, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import useBackups, {
-  useBackupAllWarehouses,
   useBackupSchedules,
   useCreateBackup,
   useDeleteBackup,
   useDeleteBackupSchedule,
+  useDeleteGlobalBackupSchedule,
   useRestoreAllWarehouses,
   useRestoreBackup,
   useUpsertBackupSchedule,
+  useUpsertGlobalBackupSchedule,
 } from "@/hooks/use-backups"
 import useWarehouses from "@/hooks/use-warehouses"
 import { AdminPageHeader } from "../components/admin-page-header"
@@ -40,18 +41,20 @@ export function BackupsMain() {
   const { data: backupsData } = useBackups()
   const { data: schedulesData, isLoading: isSchedulesLoading } =
     useBackupSchedules()
+
   const { data: warehousesSummaryData } = useWarehouses({
     page: 0,
     size: 1,
   })
 
   const createBackupMutation = useCreateBackup()
-  const backupAllWarehousesMutation = useBackupAllWarehouses()
   const restoreAllWarehousesMutation = useRestoreAllWarehouses()
   const deleteBackupMutation = useDeleteBackup()
   const restoreBackupMutation = useRestoreBackup()
   const upsertScheduleMutation = useUpsertBackupSchedule()
   const deleteScheduleMutation = useDeleteBackupSchedule()
+  const upsertGlobalScheduleMutation = useUpsertGlobalBackupSchedule()
+  const deleteGlobalScheduleMutation = useDeleteGlobalBackupSchedule()
 
   const [detailOpen, setDetailOpen] = useState(false)
   const [selectedBackup, setSelectedBackup] = useState<Backup | undefined>()
@@ -70,12 +73,24 @@ export function BackupsMain() {
   const [createBackupDialogOpen, setCreateBackupDialogOpen] = useState(false)
   const [restoreAllDialogOpen, setRestoreAllDialogOpen] = useState(false)
 
-  const schedules = useMemo(
-    () => (schedulesData ?? []).map(mapApiScheduleToViewModel),
-    [schedulesData]
-  )
+  const { schedules, hasGlobalSchedule } = useMemo(() => {
+    const warehouseSchedules = (schedulesData ?? []).map(
+      mapApiScheduleToViewModel
+    )
+
+    return {
+      schedules: warehouseSchedules,
+      hasGlobalSchedule: warehouseSchedules.some(
+        (schedule) => schedule.warehouseName === "GLOBAL"
+      ),
+    }
+  }, [schedulesData])
+
   const usedScheduleWarehouseIds = useMemo(
-    () => schedules.map((schedule) => schedule.warehouseId),
+    () =>
+      schedules
+        .map((schedule) => schedule.warehouseId)
+        .filter((id): id is number => id !== null),
     [schedules]
   )
 
@@ -136,12 +151,6 @@ export function BackupsMain() {
     warehouseName: string | null
   ) => {
     if (warehouseId == null) {
-      const createdBackups = await backupAllWarehousesMutation.mutateAsync()
-      toast.success(
-        t("generated.admin.backups.backupAllStartedToast", {
-          value0: createdBackups.length.toString(),
-        })
-      )
       return
     }
 
@@ -189,13 +198,11 @@ export function BackupsMain() {
   }
 
   const handleToggleSchedule = async (
-    warehouseId: number,
+    warehouseId: number | null,
     schedule: BackupSchedule
   ) => {
     const nextEnabled = !schedule.enabled
-
-    await upsertScheduleMutation.mutateAsync({
-      warehouseId,
+    const payload = {
       scheduleCode: schedule.frequency,
       backupHour: schedule.backupHour,
       dayOfWeek: schedule.dayOfWeek ?? undefined,
@@ -205,30 +212,49 @@ export function BackupsMain() {
           ? schedule.resourceTypes
           : DEFAULT_BACKUP_RESOURCE_TYPES,
       enabled: nextEnabled,
-    })
+    }
+
+    if (warehouseId == null || warehouseId === 0) {
+      await upsertGlobalScheduleMutation.mutateAsync(payload)
+    } else {
+      await upsertScheduleMutation.mutateAsync({ warehouseId, ...payload })
+    }
 
     toast.success(
       nextEnabled
         ? t("generated.admin.backups.scheduleEnabledToast", {
-            value0: schedule.warehouseName,
+            value0:
+              schedule.warehouseName === "GLOBAL"
+                ? t("generated.admin.backups.allWarehouses")
+                : schedule.warehouseName,
           })
         : t("generated.admin.backups.scheduleDisabledToast", {
-            value0: schedule.warehouseName,
+            value0:
+              schedule.warehouseName === "GLOBAL"
+                ? t("generated.admin.backups.allWarehouses")
+                : schedule.warehouseName,
           })
     )
   }
 
-  const handleDeleteSchedule = async (warehouseId: number) => {
+  const handleDeleteSchedule = async (warehouseId: number | null) => {
     const scheduleToDelete = schedules.find(
       (schedule) => schedule.warehouseId === warehouseId
     )
 
-    await deleteScheduleMutation.mutateAsync(warehouseId)
+    if (warehouseId == null || warehouseId === 0) {
+      await deleteGlobalScheduleMutation.mutateAsync()
+    } else {
+      await deleteScheduleMutation.mutateAsync(warehouseId)
+    }
 
     if (scheduleToDelete) {
       toast.success(
         t("generated.admin.backups.scheduleDeletedToast", {
-          value0: scheduleToDelete.warehouseName,
+          value0:
+            scheduleToDelete.warehouseName === "GLOBAL"
+              ? t("generated.admin.backups.allWarehouses")
+              : scheduleToDelete.warehouseName,
         })
       )
     }
@@ -239,8 +265,7 @@ export function BackupsMain() {
       (schedule) => schedule.warehouseId === data.warehouseId
     )
 
-    await upsertScheduleMutation.mutateAsync({
-      warehouseId: data.warehouseId,
+    const payload = {
       scheduleCode: data.frequency,
       backupHour: data.backupHour,
       dayOfWeek: data.dayOfWeek ?? undefined,
@@ -249,24 +274,41 @@ export function BackupsMain() {
         ? existingSchedule.resourceTypes
         : DEFAULT_BACKUP_RESOURCE_TYPES,
       enabled: data.enabled,
-    })
+    }
+
+    if (data.warehouseId == null || data.warehouseId === 0) {
+      await upsertGlobalScheduleMutation.mutateAsync(payload)
+    } else {
+      await upsertScheduleMutation.mutateAsync({
+        warehouseId: data.warehouseId,
+        ...payload,
+      })
+    }
 
     toast.success(
       existingSchedule
         ? t("generated.admin.backups.scheduleUpdatedToast", {
-            value0: data.warehouseName,
+            value0:
+              data.warehouseName === "GLOBAL"
+                ? t("generated.admin.backups.allWarehouses")
+                : data.warehouseName,
           })
         : t("generated.admin.backups.scheduleCreatedToast", {
-            value0: data.warehouseName,
+            value0:
+              data.warehouseName === "GLOBAL"
+                ? t("generated.admin.backups.allWarehouses")
+                : data.warehouseName,
           })
     )
   }
 
-  const isCreateBackupPending =
-    createBackupMutation.isPending || backupAllWarehousesMutation.isPending
+  const isCreateBackupPending = createBackupMutation.isPending
   const isRestoreAllPending = restoreAllWarehousesMutation.isPending
   const isScheduleMutationPending =
-    upsertScheduleMutation.isPending || deleteScheduleMutation.isPending
+    upsertScheduleMutation.isPending ||
+    deleteScheduleMutation.isPending ||
+    upsertGlobalScheduleMutation.isPending ||
+    deleteGlobalScheduleMutation.isPending
   const isAnyMutationPending =
     isCreateBackupPending || isRestoreAllPending || isScheduleMutationPending
 
@@ -369,6 +411,7 @@ export function BackupsMain() {
       />
 
       <ScheduleDialog
+        hasGlobalSchedule={hasGlobalSchedule}
         isSubmitting={isScheduleMutationPending}
         onOpenChange={setScheduleDialogOpen}
         onSubmit={(payload) => {

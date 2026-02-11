@@ -6,7 +6,7 @@ import {
   type InferApiOutput,
 } from "@/lib/fetcher"
 import {
-  BackupAllSchema,
+  type BackupAllSchema,
   BackupDetailsSchema,
   BackupRestoreAllSchema,
   BackupRestoreSchema,
@@ -110,19 +110,6 @@ export function useBackupSchedules(
   })
 }
 
-export function useGlobalBackupSchedule(
-  options?: SafeQueryOptions<GlobalBackupSchedule>
-): UseQueryResult<GlobalBackupSchedule, FetchError> {
-  return useApiQuery({
-    queryKey: BACKUP_GLOBAL_SCHEDULE_QUERY_KEY,
-    queryFn: () =>
-      apiFetch("/api/backups/schedules/global", BackupScheduleGlobalSchema, {
-        method: "GET",
-      }),
-    ...options,
-  })
-}
-
 export function useCreateBackup() {
   return useApiMutation({
     mutationFn: (params: BackupCreateInput) =>
@@ -152,19 +139,6 @@ export function useRestoreBackup() {
   return useApiMutation({
     mutationFn: (backupId: number) =>
       apiFetch(`/api/backups/${backupId}/restore`, BackupRestoreSchema, {
-        method: "POST",
-        body: null,
-      }),
-    onSuccess: (_, __, ___, context) => {
-      invalidateBackupsCache(context.client)
-    },
-  })
-}
-
-export function useBackupAllWarehouses() {
-  return useApiMutation({
-    mutationFn: () =>
-      apiFetch("/api/backups/backup-all", BackupAllSchema, {
         method: "POST",
         body: null,
       }),

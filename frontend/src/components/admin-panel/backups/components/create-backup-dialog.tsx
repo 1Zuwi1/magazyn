@@ -80,7 +80,6 @@ export function CreateBackupDialog({
             <WarehouseSelector
               allOptionLabel={t("generated.admin.backups.allWarehouses")}
               id="warehouse-select"
-              includeAllOption
               onValueChange={(warehouseId, warehouseName) => {
                 setSelectedWarehouseId(warehouseId)
                 setSelectedWarehouseName(warehouseName)
@@ -90,20 +89,20 @@ export function CreateBackupDialog({
             />
           </div>
 
-          <div className="flex items-start gap-3 rounded-lg border border-orange-500/30 border-l-[3px] border-l-orange-500 bg-orange-500/5 p-3">
-            <HugeiconsIcon
-              className="mt-0.5 size-4 shrink-0 text-orange-500"
-              icon={AlertDiamondIcon}
-            />
-            <p className="text-orange-600 text-sm dark:text-orange-400">
-              {selectedWarehouseId == null
-                ? t("generated.admin.backups.createAllWarning")
-                : t("generated.admin.backups.createWarehouseWarning", {
-                    value0:
-                      selectedWarehouseName ?? t("generated.shared.warehouse"),
-                  })}
-            </p>
-          </div>
+          {selectedWarehouseId && (
+            <div className="flex items-start gap-3 rounded-lg border border-orange-500/30 border-l-[3px] border-l-orange-500 bg-orange-500/5 p-3">
+              <HugeiconsIcon
+                className="mt-0.5 size-4 shrink-0 text-orange-500"
+                icon={AlertDiamondIcon}
+              />
+              <p className="text-orange-600 text-sm dark:text-orange-400">
+                {t("generated.admin.backups.createWarehouseWarning", {
+                  value0:
+                    selectedWarehouseName ?? t("generated.shared.warehouse"),
+                })}
+              </p>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="gap-1">
@@ -114,7 +113,10 @@ export function CreateBackupDialog({
           >
             {t("generated.shared.cancel")}
           </Button>
-          <Button disabled={isSubmitting} onClick={handleConfirm}>
+          <Button
+            disabled={isSubmitting || !selectedWarehouseId}
+            onClick={handleConfirm}
+          >
             {t("generated.admin.backups.createBackupAction")}
           </Button>
         </DialogFooter>
