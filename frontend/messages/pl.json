@@ -1004,6 +1004,123 @@
         "only": "Tylko",
         "all": "Wszystkie"
       },
+      "reports": {
+        "generateReports": "Generuj raporty do kontroli dat ważności, odchyleń temperatur i stanów magazynowych.",
+        "tabs": {
+          "fullInventory": "Pełna inwentaryzacja",
+          "expirySoon": "Zbliżające się daty ważności",
+          "temperatureRanges": "Zakresy temperatur"
+        },
+        "badges": {
+          "expiredBatches": "{value0, plural, one {przeterminowana partia} few {przeterminowane partie} many {przeterminowanych partii} other {przeterminowanych partii}}",
+          "soonExpiry": "{value0, plural, one {partia z krótką datą} few {partie z krótką datą} many {partii z krótką datą} other {partii z krótką datą}}",
+          "temperatureDeviation": "{value0, plural, one {odchylenie temperatury} few {odchylenia temperatury} many {odchyleń temperatury} other {odchyleń temperatury}}",
+          "inventoryPosition": "{value0, plural, one {pozycja w magazynie} few {pozycje w magazynie} many {pozycji w magazynie} other {pozycji w magazynie}}",
+          "criticalShort": "({value0} kryt.)"
+        },
+        "formats": {
+          "excel": "Excel (.xlsx)",
+          "pdf": "PDF",
+          "csv": "CSV (.csv)"
+        },
+        "shared": {
+          "exportAll": "Eksportuj wszystko",
+          "exportSelected": "Eksportuj zaznaczone ({value0})",
+          "reportGenerated": "Raport został wygenerowany",
+          "exportError": "Błąd eksportu",
+          "selectFileFormat": "Wybierz format pliku",
+          "failedLoadData": "Nie udało się pobrać danych raportu",
+          "noData": "Brak danych",
+          "noDataToDisplay": "Brak danych do wyświetlenia",
+          "generatedAt": "Data wygenerowania",
+          "unitPieces": "szt."
+        },
+        "inventory": {
+          "title": "Pełna inwentaryzacja magazynu",
+          "description": "Zestawienie wszystkich pozycji magazynowych z ilościami i najbliższymi datami przeterminowania.",
+          "searchAria": "Szukaj produktu, kodu, regału lub magazynu",
+          "searchPlaceholder": "Szukaj po nazwie, kodzie, regale, magazynie...",
+          "footerSummary": "{value0, plural, one {# pozycja} few {# pozycje} many {# pozycji} other {# pozycji}} • {value1} {value2}",
+          "sheetName": "Inwentaryzacja"
+        },
+        "expiry": {
+          "title": "Raport dat ważności",
+          "description": "Pozycje asortymentu z wygasającą datą ważności: przeterminowane i zbliżające się do końca terminu.",
+          "searchAria": "Szukaj produktu, regału lub magazynu",
+          "searchPlaceholder": "Szukaj po nazwie, regale, magazynie...",
+          "footerExpired": "{value0, plural, one {# pozycja} few {# pozycje} many {# pozycji} other {# pozycji}}",
+          "footerSoon": "Wkrótce",
+          "footerSoonRange": "{value0, plural, one {# pozycja} few {# pozycje} many {# pozycji} other {# pozycji}} w przedziale {value1} dni",
+          "sheetName": "Daty ważności"
+        },
+        "temperature": {
+          "title": "Raport przekroczeń temperatur",
+          "description": "Naruszenia zakresów temperatur dla regałów i asortymentu z datą, godziną i poziomem krytyczności.",
+          "wholeRack": "Cały regał",
+          "searchAria": "Szukaj lokalizacji lub asortymentu",
+          "searchPlaceholder": "Szukaj po magazynie, asortymencie...",
+          "footerViolations": "{value0, plural, one {# naruszenie} few {# naruszenia} many {# naruszeń} other {# naruszeń}}",
+          "footerSummary": "{value0, plural, one {# odchylenie} few {# odchylenia} many {# odchyleń} other {# odchyleń}} • maks. ±{value1}°C",
+          "sheetName": "Temperatura"
+        },
+        "columns": {
+          "product": "Produkt",
+          "sku": "Kod SKU",
+          "code": "Kod",
+          "nearestExpiry": "Najbliższe przeterminowanie",
+          "expiryDate": "Data ważności",
+          "daysToExpiry": "Dni do wygaśnięcia",
+          "type": "Typ",
+          "targetRange": "Zakres docelowy",
+          "temperatureRead": "Odczyt",
+          "deviation": "Odchylenie",
+          "level": "Poziom",
+          "dateTime": "Data i godzina"
+        },
+        "status": {
+          "expired": "Przeterminowane",
+          "critical": "Krytyczne",
+          "expiringSoon": "Wkrótce wygasa",
+          "normal": "W normie",
+          "warning": "Ostrzeżenie",
+          "minor": "Drobne"
+        },
+        "builder": {
+          "title": "Kreator raportu",
+          "description": "Wybierz typ raportu, format wyjściowy i zakres filtrów przed eksportem.",
+          "warehouseOptional": "ID magazynu (opcjonalnie)",
+          "warehousePlaceholder": "np. 1",
+          "deliveryMethod": "Sposób dostarczenia",
+          "deliveryDownload": "Pobierz plik",
+          "deliveryDownloadHint": "Wygeneruj i pobierz raport na to urządzenie.",
+          "deliveryEmail": "Wyślij na e-mail",
+          "deliveryEmailHint": "Wygeneruj raport i wyślij go na e-mail konta.",
+          "filters": "Filtry",
+          "fromDate": "Od daty",
+          "toDate": "Do daty",
+          "daysUntilExpiry": "Dni do wygaśnięcia",
+          "severityAll": "Wszystkie poziomy",
+          "severityWarningAndCritical": "Ostrzeżenia i krytyczne",
+          "severityCriticalOnly": "Tylko krytyczne",
+          "generateReport": "Generuj raport",
+          "emailSentSuccess": "Raport wysłany na e-mail",
+          "invalidWarehouseId": "ID magazynu musi być liczbą nieujemną.",
+          "invalidDaysUntilExpiry": "Liczba dni do wygaśnięcia musi być nieujemna.",
+          "selectionPreviewTitle": "Podgląd wyboru",
+          "selectionPreviewDescription": "Szybkie podsumowanie konfiguracji eksportu.",
+          "summaryReportType": "Typ raportu",
+          "summaryOutputFormat": "Format wyjściowy",
+          "summaryDeliveryMethod": "Sposób dostarczenia",
+          "summaryActiveFilters": "Aktywne filtry",
+          "summaryWarehouse": "Magazyn:",
+          "summaryAllWarehouses": "Wszystkie magazyny",
+          "summaryDateRange": "Zakres dat:",
+          "summaryAny": "Dowolna",
+          "summaryExpiryWindow": "Okno ważności:",
+          "summarySeverity": "Poziom:",
+          "daysCount": "{value0, plural, one {# dzień} few {# dni} many {# dni} other {# dni}}"
+        }
+      },
       "users": {
         "fullNameMustLeast3": "Imię i nazwisko musi mieć co najmniej 3 znaki",
         "fullNameMaximum100Characters": "Imię i nazwisko może mieć maksymalnie 100 znaków",

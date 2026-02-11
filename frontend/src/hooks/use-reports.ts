@@ -1,4 +1,3 @@
-import type { ReportFormat } from "@/components/admin-panel/reports/lib/types"
 import {
   apiFetch,
   type InferApiInput,
@@ -11,6 +10,8 @@ import {
   TemperatureAlertReportSchema,
 } from "@/lib/schemas"
 import { useApiMutation } from "./use-api-mutation"
+
+export type ReportFormat = "csv" | "pdf" | "xlsx"
 
 const REPORT_FORMAT_TO_API_FORMAT: Record<ReportFormat, ReportFileFormat> = {
   csv: "CSV",

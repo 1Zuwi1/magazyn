@@ -1004,6 +1004,123 @@
         "only": "Only",
         "all": "All"
       },
+      "reports": {
+        "generateReports": "Generate reports for expiry control, temperature deviations, and inventory stock levels.",
+        "tabs": {
+          "fullInventory": "Full inventory",
+          "expirySoon": "Upcoming expiry dates",
+          "temperatureRanges": "Temperature ranges"
+        },
+        "badges": {
+          "expiredBatches": "{value0, plural, one {expired batch} other {expired batches}}",
+          "soonExpiry": "{value0, plural, one {batch with short shelf life} other {batches with short shelf life}}",
+          "temperatureDeviation": "{value0, plural, one {temperature deviation} other {temperature deviations}}",
+          "inventoryPosition": "{value0, plural, one {inventory position} other {inventory positions}}",
+          "criticalShort": "({value0} crit.)"
+        },
+        "formats": {
+          "excel": "Excel (.xlsx)",
+          "pdf": "PDF",
+          "csv": "CSV (.csv)"
+        },
+        "shared": {
+          "exportAll": "Export all",
+          "exportSelected": "Export selected ({value0})",
+          "reportGenerated": "Report generated",
+          "exportError": "Export error",
+          "selectFileFormat": "Select file format",
+          "failedLoadData": "Failed to load report data",
+          "noData": "No data",
+          "noDataToDisplay": "No data to display",
+          "generatedAt": "Generated at",
+          "unitPieces": "pcs."
+        },
+        "inventory": {
+          "title": "Full warehouse inventory",
+          "description": "Overview of all warehouse positions with quantities and nearest expiry dates.",
+          "searchAria": "Search product, code, rack, or warehouse",
+          "searchPlaceholder": "Search by name, code, rack, warehouse...",
+          "footerSummary": "{value0, plural, one {# position} other {# positions}} • {value1} {value2}",
+          "sheetName": "Inventory"
+        },
+        "expiry": {
+          "title": "Expiry date report",
+          "description": "Assortment positions with expiring dates: expired and close to expiration.",
+          "searchAria": "Search product, rack, or warehouse",
+          "searchPlaceholder": "Search by name, rack, warehouse...",
+          "footerExpired": "{value0, plural, one {# position} other {# positions}}",
+          "footerSoon": "Soon",
+          "footerSoonRange": "{value0, plural, one {# position} other {# positions}} within {value1} days",
+          "sheetName": "Expiry"
+        },
+        "temperature": {
+          "title": "Temperature breach report",
+          "description": "Temperature range violations for racks and assortments with date, time, and severity.",
+          "wholeRack": "Whole rack",
+          "searchAria": "Search location or assortment",
+          "searchPlaceholder": "Search by warehouse, assortment...",
+          "footerViolations": "{value0, plural, one {# violation} other {# violations}}",
+          "footerSummary": "{value0, plural, one {# deviation} other {# deviations}} • max ±{value1}°C",
+          "sheetName": "Temperature"
+        },
+        "columns": {
+          "product": "Product",
+          "sku": "SKU",
+          "code": "Code",
+          "nearestExpiry": "Nearest expiry",
+          "expiryDate": "Expiry date",
+          "daysToExpiry": "Days to expiry",
+          "type": "Type",
+          "targetRange": "Target range",
+          "temperatureRead": "Reading",
+          "deviation": "Deviation",
+          "level": "Level",
+          "dateTime": "Date and time"
+        },
+        "status": {
+          "expired": "Expired",
+          "critical": "Critical",
+          "expiringSoon": "Expiring soon",
+          "normal": "Normal",
+          "warning": "Warning",
+          "minor": "Minor"
+        },
+        "builder": {
+          "title": "Report builder",
+          "description": "Choose report type, output format, and filter scope before export.",
+          "warehouseOptional": "Warehouse ID (optional)",
+          "warehousePlaceholder": "e.g. 1",
+          "deliveryMethod": "Delivery method",
+          "deliveryDownload": "Download file",
+          "deliveryDownloadHint": "Generate and download the report to this device.",
+          "deliveryEmail": "Send to email",
+          "deliveryEmailHint": "Generate the report and send it to your account email.",
+          "filters": "Filters",
+          "fromDate": "From date",
+          "toDate": "To date",
+          "daysUntilExpiry": "Days until expiry",
+          "severityAll": "All severity levels",
+          "severityWarningAndCritical": "Warning and critical",
+          "severityCriticalOnly": "Critical only",
+          "generateReport": "Generate report",
+          "emailSentSuccess": "Report sent to email",
+          "invalidWarehouseId": "Warehouse ID must be a non-negative number.",
+          "invalidDaysUntilExpiry": "Days until expiry must be a non-negative number.",
+          "selectionPreviewTitle": "Selection preview",
+          "selectionPreviewDescription": "Quick summary of the export configuration.",
+          "summaryReportType": "Report type",
+          "summaryOutputFormat": "Output format",
+          "summaryDeliveryMethod": "Delivery method",
+          "summaryActiveFilters": "Active filters",
+          "summaryWarehouse": "Warehouse:",
+          "summaryAllWarehouses": "All warehouses",
+          "summaryDateRange": "Date range:",
+          "summaryAny": "Any",
+          "summaryExpiryWindow": "Expiry window:",
+          "summarySeverity": "Severity:",
+          "daysCount": "{value0, plural, one {# day} other {# days}}"
+        }
+      },
       "users": {
         "fullNameMustLeast3": "The full name must be at least 3 characters long",
         "fullNameMaximum100Characters": "The full name can have a maximum of 100 characters",

@@ -10,7 +10,7 @@ import {
   WeightScale01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
-import { format, formatDistanceToNow } from "date-fns"
+import { formatDistanceToNow } from "date-fns"
 import Link from "next/link"
 import { useLocale } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
@@ -28,7 +28,7 @@ import { getDateFnsLocale } from "@/i18n/date-fns-locale"
 import { useAppTranslations } from "@/i18n/use-translations"
 import { findAlertTitle } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
-import { toTitleCase } from "../utils/helpers"
+import { formatDateTime, toTitleCase } from "../utils/helpers"
 
 type FeedFilter = "ALL" | "UNREAD"
 type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
@@ -74,17 +74,6 @@ function getStatusConfig(
     cardClassName: "bg-muted text-muted-foreground",
     label: toTitleCase(status),
   }
-}
-
-const formatDateTime = (
-  date: Date | null | undefined,
-  dateFnsLocale: DateFnsLocale
-): string => {
-  if (!date) {
-    return "—"
-  }
-
-  return format(date, "dd MMMM yyyy, HH:mm", { locale: dateFnsLocale })
 }
 
 const formatMetricValue = (value: number | null | undefined): string =>

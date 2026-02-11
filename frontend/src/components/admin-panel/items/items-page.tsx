@@ -4,10 +4,10 @@ import {
   Add01Icon,
   AlertDiamondIcon,
   Package,
+  Photo,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useDebouncedValue } from "@tanstack/react-pacer"
-
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/admin-panel/components/dialogs"
@@ -207,6 +207,10 @@ export default function ItemsMain() {
       <AdminPageHeader
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <Button>
+              <HugeiconsIcon className="mr-2 size-4" icon={Photo} />
+              Importuj zdjęcia
+            </Button>
             <CsvImporter
               isImporting={importItemsMutation.isPending}
               onImport={handleCsvImport}
