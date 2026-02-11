@@ -513,6 +513,7 @@ interface TwoFactorSetupProps {
   method: TwoFactorMethod
   onMethodChange: (method: TwoFactorMethod) => void
   userEmail?: string
+  backupCodesRefreshNeeded: boolean
 }
 
 function ConnectedMethods({
@@ -977,7 +978,14 @@ function CodeInputEntry({
     </div>
   )
 }
-function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
+function RecoveryCodesSection({
+  enabled,
+  refreshNeeded,
+}: {
+  enabled: boolean
+  refreshNeeded: boolean
+}) {
+  refreshNeeded = true
   const t = useAppTranslations()
 
   const locale = useLocale()
@@ -1066,6 +1074,37 @@ function RecoveryCodesSection({ enabled }: { enabled: boolean }) {
           ? t("generated.dashboard.settings.generatingNewCodesWillInvalidate")
           : t("generated.dashboard.settings.enable2faGenerateCodes")}
       </p>
+
+      {refreshNeeded && enabled ? (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-500/10">
+            <HugeiconsIcon
+              className="text-amber-600 dark:text-amber-500"
+              icon={Alert02Icon}
+              size={16}
+            />
+          </div>
+          <div className="space-y-1">
+            <p className="font-medium text-sm">
+              {t("generated.dashboard.settings.backupCodesRefreshNeededTitle")}
+            </p>
+            <p className="text-muted-foreground text-sm">
+              {t(
+                "generated.dashboard.settings.backupCodesRefreshNeededDescription"
+              )}
+            </p>
+            <Button
+              className="mt-1.5"
+              onClick={() => setIsGenerateDialogOpen(true)}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              {t("generated.dashboard.settings.generateNewCodes")}
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <AlertDialog
         onOpenChange={setIsGenerateDialogOpen}
@@ -1356,6 +1395,7 @@ export function TwoFactorSetup({
   method,
   onMethodChange,
   userEmail,
+  backupCodesRefreshNeeded,
 }: TwoFactorSetupProps) {
   const t = useAppTranslations()
 
@@ -1560,7 +1600,10 @@ export function TwoFactorSetup({
 
       <div className="h-px bg-border" />
 
-      <RecoveryCodesSection enabled={enabled} />
+      <RecoveryCodesSection
+        enabled={enabled}
+        refreshNeeded={backupCodesRefreshNeeded}
+      />
     </div>
   )
 }

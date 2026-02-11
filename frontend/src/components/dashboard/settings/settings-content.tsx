@@ -34,7 +34,10 @@ export function SettingsContent({ user }: SettingsContentProps) {
             <HugeiconsIcon icon={Settings01Icon} size={14} />
             <span>{t("generated.dashboard.settings.security")}</span>
           </div>
-          <SecuritySection userEmail={user.email} />
+          <SecuritySection
+            backupCodesRefreshNeeded={user.backup_codes_refresh_needed}
+            userEmail={user.email}
+          />
           <LogoutSection />
         </section>
       </div>

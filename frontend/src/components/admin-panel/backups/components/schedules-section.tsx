@@ -22,6 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { useAppTranslations } from "@/i18n/use-translations"
 import { cn } from "@/lib/utils"
@@ -31,6 +32,7 @@ import { getFrequencyLabel } from "../utils"
 
 interface SchedulesSectionProps {
   schedules: BackupSchedule[]
+  isLoading?: boolean
   onAdd: () => void
   onEdit: (schedule: BackupSchedule) => void
   onToggle: (warehouseId: number, schedule: BackupSchedule) => void
@@ -65,8 +67,33 @@ function SchedulesEmptyState({ onAdd }: { onAdd: () => void }) {
   )
 }
 
+function ScheduleCardSkeleton() {
+  return (
+    <Card className="relative overflow-hidden p-4">
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-muted" />
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-5 w-14 rounded-full" />
+          </div>
+          <div className="space-y-1">
+            <Skeleton className="h-3.5 w-36" />
+            <Skeleton className="h-3.5 w-44" />
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <Skeleton className="h-5 w-8 rounded-full" />
+          <Skeleton className="size-7 rounded-md" />
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 export function SchedulesSection({
   schedules,
+  isLoading,
   onAdd,
   onEdit,
   onToggle,
@@ -90,6 +117,36 @@ export function SchedulesSection({
     }
   }
 
+  const getContent = () => {
+    if (isLoading) {
+      return (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }, (_, i) => (
+            <ScheduleCardSkeleton key={`skeleton-${String(i)}`} />
+          ))}
+        </div>
+      )
+    }
+
+    if (schedules.length === 0) {
+      return <SchedulesEmptyState onAdd={onAdd} />
+    }
+
+    return (
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {schedules.map((schedule) => (
+          <ScheduleCard
+            key={schedule.warehouseId}
+            onDelete={handleDeleteClick}
+            onEdit={onEdit}
+            onToggle={onToggle}
+            schedule={schedule}
+          />
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -111,21 +168,7 @@ export function SchedulesSection({
         )}
       </div>
 
-      {schedules.length === 0 ? (
-        <SchedulesEmptyState onAdd={onAdd} />
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {schedules.map((schedule) => (
-            <ScheduleCard
-              key={schedule.warehouseId}
-              onDelete={handleDeleteClick}
-              onEdit={onEdit}
-              onToggle={onToggle}
-              schedule={schedule}
-            />
-          ))}
-        </div>
-      )}
+      {getContent()}
 
       <ConfirmDialog
         description={t("generated.admin.backups.deleteScheduleDescription", {

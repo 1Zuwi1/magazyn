@@ -4,9 +4,7 @@ import ProtectedPage from "@/components/security/protected-page"
 export default function SettingsPage() {
   return (
     <ProtectedPage>
-      {(session) => {
-        return <SettingsContent user={session} />
-      }}
+      {(session) => <SettingsContent user={session} />}
     </ProtectedPage>
   )
 }

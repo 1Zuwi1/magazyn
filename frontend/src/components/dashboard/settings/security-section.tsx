@@ -15,6 +15,7 @@ import type { TwoFactorStatus } from "./types"
 
 interface SecuritySectionProps {
   userEmail: string
+  backupCodesRefreshNeeded: boolean
 }
 
 function SecurityStatusIndicator({ status }: { status: TwoFactorStatus }) {
@@ -50,7 +51,10 @@ function SecurityStatusIndicator({ status }: { status: TwoFactorStatus }) {
   )
 }
 
-export function SecuritySection({ userEmail }: SecuritySectionProps) {
+export function SecuritySection({
+  userEmail,
+  backupCodesRefreshNeeded,
+}: SecuritySectionProps) {
   const t = useAppTranslations()
 
   const [twoFactorMethod, setTwoFactorMethod] =
@@ -83,6 +87,7 @@ export function SecuritySection({ userEmail }: SecuritySectionProps) {
         </CardHeader>
         <CardContent>
           <TwoFactorSetup
+            backupCodesRefreshNeeded={backupCodesRefreshNeeded}
             method={twoFactorMethod}
             onMethodChange={setTwoFactorMethod}
             status="ENABLED"

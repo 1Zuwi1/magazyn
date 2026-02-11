@@ -1,6 +1,10 @@
 "use client"
 
-import { Add01Icon, DatabaseIcon } from "@hugeicons/core-free-icons"
+import {
+  Add01Icon,
+  DatabaseIcon,
+  DatabaseRestoreIcon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
@@ -11,6 +15,7 @@ import {
   useCreateBackup,
   useDeleteBackup,
   useDeleteBackupSchedule,
+  useRestoreAllWarehouses,
   useRestoreBackup,
   useUpsertBackupSchedule,
 } from "@/hooks/use-backups"
@@ -33,7 +38,8 @@ import {
 
 export function BackupsMain() {
   const t = useAppTranslations()
-  const { data: schedulesData } = useBackupSchedules()
+  const { data: schedulesData, isLoading: isSchedulesLoading } =
+    useBackupSchedules()
   const { data: warehousesSummaryData } = useWarehouses({
     page: 0,
     size: 1,
@@ -41,6 +47,7 @@ export function BackupsMain() {
 
   const createBackupMutation = useCreateBackup()
   const backupAllWarehousesMutation = useBackupAllWarehouses()
+  const restoreAllWarehousesMutation = useRestoreAllWarehouses()
   const deleteBackupMutation = useDeleteBackup()
   const restoreBackupMutation = useRestoreBackup()
   const upsertScheduleMutation = useUpsertBackupSchedule()
@@ -61,6 +68,7 @@ export function BackupsMain() {
   >()
 
   const [createBackupDialogOpen, setCreateBackupDialogOpen] = useState(false)
+  const [restoreAllDialogOpen, setRestoreAllDialogOpen] = useState(false)
 
   const schedules = useMemo(
     () => (schedulesData ?? []).map(mapApiScheduleToViewModel),
@@ -112,6 +120,15 @@ export function BackupsMain() {
       })
     )
     setBackupToRestore(undefined)
+  }
+
+  const handleRestoreAllWarehouses = async () => {
+    const result = await restoreAllWarehousesMutation.mutateAsync()
+    toast.success(
+      t("generated.admin.backups.restoreAllStartedToast", {
+        value0: result.successful.length,
+      })
+    )
   }
 
   const handleCreateManualConfirm = async (
@@ -247,20 +264,36 @@ export function BackupsMain() {
 
   const isCreateBackupPending =
     createBackupMutation.isPending || backupAllWarehousesMutation.isPending
+  const isRestoreAllPending = restoreAllWarehousesMutation.isPending
   const isScheduleMutationPending =
     upsertScheduleMutation.isPending || deleteScheduleMutation.isPending
+  const isAnyMutationPending =
+    isCreateBackupPending || isRestoreAllPending || isScheduleMutationPending
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
         actions={
-          <Button
-            disabled={isCreateBackupPending || isScheduleMutationPending}
-            onClick={() => setCreateBackupDialogOpen(true)}
-          >
-            <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
-            {t("generated.admin.backups.createBackupTitle")}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              disabled={isAnyMutationPending}
+              onClick={() => setRestoreAllDialogOpen(true)}
+              variant="outline"
+            >
+              <HugeiconsIcon
+                className="mr-2 size-4"
+                icon={DatabaseRestoreIcon}
+              />
+              {t("generated.admin.backups.restoreAllTitle")}
+            </Button>
+            <Button
+              disabled={isAnyMutationPending}
+              onClick={() => setCreateBackupDialogOpen(true)}
+            >
+              <HugeiconsIcon className="mr-2 size-4" icon={Add01Icon} />
+              {t("generated.admin.backups.createBackupTitle")}
+            </Button>
+          </div>
         }
         description={t("generated.admin.backups.pageDescription")}
         icon={DatabaseIcon}
@@ -274,6 +307,7 @@ export function BackupsMain() {
       </AdminPageHeader>
 
       <SchedulesSection
+        isLoading={isSchedulesLoading}
         onAdd={handleAddSchedule}
         onDelete={(warehouseId) => {
           handleDeleteSchedule(warehouseId).catch(() => undefined)
@@ -323,6 +357,16 @@ export function BackupsMain() {
         onOpenChange={setRestoreDialogOpen}
         open={restoreDialogOpen}
         title={t("generated.admin.backups.restoreBackupTitle")}
+      />
+
+      <ConfirmDialog
+        description={t("generated.admin.backups.restoreAllDescription")}
+        onConfirm={() => {
+          handleRestoreAllWarehouses().catch(() => undefined)
+        }}
+        onOpenChange={setRestoreAllDialogOpen}
+        open={restoreAllDialogOpen}
+        title={t("generated.admin.backups.restoreAllTitle")}
       />
 
       <ScheduleDialog

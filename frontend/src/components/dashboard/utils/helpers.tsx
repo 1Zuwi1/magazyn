@@ -57,7 +57,10 @@ const translateErrorCode = (
   fallback?: string
 ): string => {
   try {
-    return t(`errorCodes.${errorCode}`)
+    if (t.has(`errorCodes.${errorCode}`)) {
+      return t(`errorCodes.${errorCode}`)
+    }
+    return fallback ?? errorCode
   } catch {
     return fallback ?? errorCode
   }

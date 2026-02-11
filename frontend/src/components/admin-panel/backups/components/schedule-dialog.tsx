@@ -1,5 +1,11 @@
 "use client"
 
+import {
+  Calendar03Icon,
+  Clock01Icon,
+  WarehouseIcon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { useForm } from "@tanstack/react-form"
 import { useCallback, useEffect } from "react"
 import { toast } from "sonner"
@@ -65,6 +71,26 @@ const getWeekdayTranslationKey = (dayOfWeek: number): string => {
     return "generated.admin.backups.weekdaySaturday"
   }
   return "generated.admin.backups.weekdaySunday"
+}
+
+function SectionHeader({
+  icon,
+  label,
+}: {
+  icon: typeof Calendar03Icon
+  label: string
+}) {
+  return (
+    <div className="flex items-center gap-2 pb-1">
+      <div className="flex size-6 items-center justify-center rounded-md bg-primary/10">
+        <HugeiconsIcon className="size-3.5 text-primary" icon={icon} />
+      </div>
+      <span className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
+        {label}
+      </span>
+      <div className="ml-1 h-px flex-1 bg-border" />
+    </div>
+  )
 }
 
 export function ScheduleDialog({
@@ -144,7 +170,7 @@ export function ScheduleDialog({
       }
     >
       <form
-        className="space-y-4 px-0.5"
+        className="space-y-5 px-0.5"
         id="schedule-form"
         onSubmit={(event) => {
           event.preventDefault()
@@ -154,18 +180,19 @@ export function ScheduleDialog({
           form.handleSubmit()
         }}
       >
-        <FieldGroup className="gap-4">
-          {!isEdit && (
+        {!isEdit && (
+          <div className="space-y-3">
+            <SectionHeader
+              icon={WarehouseIcon}
+              label={t("generated.shared.warehouse")}
+            />
             <form.Subscribe
               selector={(state) => ({
                 warehouseId: state.values.warehouseId,
               })}
             >
               {(warehouseState) => (
-                <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[140px_1fr]">
-                  <span className="font-medium text-sm">
-                    {t("generated.shared.warehouse")}
-                  </span>
+                <div className="rounded-lg border border-dashed bg-muted/20 p-3">
                   <WarehouseSelector
                     excludedWarehouseIds={usedWarehouseIds}
                     onValueChange={(warehouseId, warehouseName) => {
@@ -178,184 +205,208 @@ export function ScheduleDialog({
                 </div>
               )}
             </form.Subscribe>
-          )}
+          </div>
+        )}
 
-          <form.Field name="frequency">
-            {(field) => (
-              <FieldWithState
-                field={field}
-                label={t("generated.admin.backups.frequencyLabel")}
-                layout="grid"
-                renderInput={({ id, isInvalid }) => (
-                  <Select
-                    onValueChange={(value) => {
-                      if (value) {
-                        field.handleChange(value as ScheduleFrequency)
-                      }
-                    }}
-                    value={field.state.value}
-                  >
-                    <SelectTrigger
-                      className={isInvalid ? "border-destructive" : ""}
-                      id={id}
-                    >
-                      <SelectValue>
-                        {getFrequencyLabel(field.state.value, t)}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FREQUENCY_OPTIONS.map((frequency) => (
-                        <SelectItem key={frequency} value={frequency}>
-                          {getFrequencyLabel(frequency, t)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            )}
-          </form.Field>
+        <div className="space-y-3">
+          <SectionHeader
+            icon={Calendar03Icon}
+            label={t("generated.admin.backups.frequencyLabel")}
+          />
 
-          <form.Field
-            name="backupHour"
-            validators={{
-              onChange: ({ value }) => {
-                if (!Number.isInteger(value)) {
-                  return t("generated.admin.backups.hourMustBeInteger")
-                }
-                if (value < 0 || value > 23) {
-                  return t("generated.admin.backups.hourRangeError")
-                }
-                return undefined
-              },
-            }}
-          >
-            {(field) => (
-              <FieldWithState
-                field={field}
-                label={t("generated.admin.backups.hourLabel")}
-                layout="grid"
-                renderInput={({ id, isInvalid }) => (
-                  <Input
-                    className={isInvalid ? "border-destructive" : ""}
-                    id={id}
-                    max={23}
-                    min={0}
-                    onChange={(event) =>
-                      field.handleChange(Number(event.target.value))
-                    }
-                    type="number"
-                    value={field.state.value}
+          <div className="rounded-lg border border-dashed bg-muted/20 p-4">
+            <FieldGroup className="gap-4">
+              <form.Field name="frequency">
+                {(field) => (
+                  <FieldWithState
+                    field={field}
+                    label={t("generated.admin.backups.frequencyLabel")}
+                    layout="grid"
+                    renderInput={({ id, isInvalid }) => (
+                      <Select
+                        onValueChange={(value) => {
+                          if (value) {
+                            field.handleChange(value as ScheduleFrequency)
+                          }
+                        }}
+                        value={field.state.value}
+                      >
+                        <SelectTrigger
+                          className={isInvalid ? "border-destructive" : ""}
+                          id={id}
+                        >
+                          <SelectValue>
+                            {getFrequencyLabel(field.state.value, t)}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {FREQUENCY_OPTIONS.map((frequency) => (
+                            <SelectItem key={frequency} value={frequency}>
+                              {getFrequencyLabel(frequency, t)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   />
                 )}
-              />
-            )}
-          </form.Field>
+              </form.Field>
 
-          <form.Subscribe selector={(state) => state.values.frequency}>
-            {(frequency) =>
-              frequency === "WEEKLY" ? (
-                <form.Field name="dayOfWeek">
-                  {(field) => (
-                    <FieldWithState
-                      field={field}
-                      label={t("generated.admin.backups.dayOfWeekLabel")}
-                      layout="grid"
-                      renderInput={({ id, isInvalid }) => (
-                        <Select
-                          onValueChange={(value) => {
-                            if (value) {
-                              field.handleChange(Number(value))
-                            }
-                          }}
-                          value={String(field.state.value)}
-                        >
-                          <SelectTrigger
-                            className={isInvalid ? "border-destructive" : ""}
-                            id={id}
-                          >
-                            <SelectValue>
-                              {t(
-                                getWeekdayTranslationKey(
-                                  Number(field.state.value)
-                                )
-                              )}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">
-                              {t("generated.admin.backups.weekdayMonday")}
-                            </SelectItem>
-                            <SelectItem value="2">
-                              {t("generated.admin.backups.weekdayTuesday")}
-                            </SelectItem>
-                            <SelectItem value="3">
-                              {t("generated.admin.backups.weekdayWednesday")}
-                            </SelectItem>
-                            <SelectItem value="4">
-                              {t("generated.admin.backups.weekdayThursday")}
-                            </SelectItem>
-                            <SelectItem value="5">
-                              {t("generated.admin.backups.weekdayFriday")}
-                            </SelectItem>
-                            <SelectItem value="6">
-                              {t("generated.admin.backups.weekdaySaturday")}
-                            </SelectItem>
-                            <SelectItem value="7">
-                              {t("generated.admin.backups.weekdaySunday")}
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                  )}
-                </form.Field>
-              ) : null
-            }
-          </form.Subscribe>
-
-          <form.Subscribe selector={(state) => state.values.frequency}>
-            {(frequency) =>
-              frequency === "MONTHLY" ? (
-                <form.Field
-                  name="dayOfMonth"
-                  validators={{
-                    onChange: ({ value }) => {
-                      if (!Number.isInteger(value)) {
-                        return t("generated.admin.backups.dayMustBeInteger")
-                      }
-                      if (value < 1 || value > 31) {
-                        return t("generated.admin.backups.dayRangeError")
-                      }
-                      return undefined
-                    },
-                  }}
-                >
-                  {(field) => (
-                    <FieldWithState
-                      field={field}
-                      label={t("generated.admin.backups.dayOfMonthLabel")}
-                      layout="grid"
-                      renderInput={({ id, isInvalid }) => (
+              <form.Field
+                name="backupHour"
+                validators={{
+                  onChange: ({ value }) => {
+                    if (!Number.isInteger(value)) {
+                      return t("generated.admin.backups.hourMustBeInteger")
+                    }
+                    if (value < 0 || value > 23) {
+                      return t("generated.admin.backups.hourRangeError")
+                    }
+                    return undefined
+                  },
+                }}
+              >
+                {(field) => (
+                  <FieldWithState
+                    field={field}
+                    label={t("generated.admin.backups.hourLabel")}
+                    layout="grid"
+                    renderInput={({ id, isInvalid }) => (
+                      <div className="space-y-1.5">
                         <Input
                           className={isInvalid ? "border-destructive" : ""}
                           id={id}
-                          max={31}
-                          min={1}
+                          max={23}
+                          min={0}
                           onChange={(event) =>
                             field.handleChange(Number(event.target.value))
                           }
                           type="number"
                           value={field.state.value}
                         />
+                        <div className="flex items-center gap-1 text-muted-foreground/70 text-xs">
+                          <HugeiconsIcon
+                            className="size-3"
+                            icon={Clock01Icon}
+                          />
+                          <span>0–23 (UTC)</span>
+                        </div>
+                      </div>
+                    )}
+                  />
+                )}
+              </form.Field>
+
+              <form.Subscribe selector={(state) => state.values.frequency}>
+                {(frequency) =>
+                  frequency === "WEEKLY" ? (
+                    <form.Field name="dayOfWeek">
+                      {(field) => (
+                        <FieldWithState
+                          field={field}
+                          label={t("generated.admin.backups.dayOfWeekLabel")}
+                          layout="grid"
+                          renderInput={({ id, isInvalid }) => (
+                            <Select
+                              onValueChange={(value) => {
+                                if (value) {
+                                  field.handleChange(Number(value))
+                                }
+                              }}
+                              value={String(field.state.value)}
+                            >
+                              <SelectTrigger
+                                className={
+                                  isInvalid ? "border-destructive" : ""
+                                }
+                                id={id}
+                              >
+                                <SelectValue>
+                                  {t(
+                                    getWeekdayTranslationKey(
+                                      Number(field.state.value)
+                                    )
+                                  )}
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">
+                                  {t("generated.admin.backups.weekdayMonday")}
+                                </SelectItem>
+                                <SelectItem value="2">
+                                  {t("generated.admin.backups.weekdayTuesday")}
+                                </SelectItem>
+                                <SelectItem value="3">
+                                  {t(
+                                    "generated.admin.backups.weekdayWednesday"
+                                  )}
+                                </SelectItem>
+                                <SelectItem value="4">
+                                  {t("generated.admin.backups.weekdayThursday")}
+                                </SelectItem>
+                                <SelectItem value="5">
+                                  {t("generated.admin.backups.weekdayFriday")}
+                                </SelectItem>
+                                <SelectItem value="6">
+                                  {t("generated.admin.backups.weekdaySaturday")}
+                                </SelectItem>
+                                <SelectItem value="7">
+                                  {t("generated.admin.backups.weekdaySunday")}
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
                       )}
-                    />
-                  )}
-                </form.Field>
-              ) : null
-            }
-          </form.Subscribe>
-        </FieldGroup>
+                    </form.Field>
+                  ) : null
+                }
+              </form.Subscribe>
+
+              <form.Subscribe selector={(state) => state.values.frequency}>
+                {(frequency) =>
+                  frequency === "MONTHLY" ? (
+                    <form.Field
+                      name="dayOfMonth"
+                      validators={{
+                        onChange: ({ value }) => {
+                          if (!Number.isInteger(value)) {
+                            return t("generated.admin.backups.dayMustBeInteger")
+                          }
+                          if (value < 1 || value > 31) {
+                            return t("generated.admin.backups.dayRangeError")
+                          }
+                          return undefined
+                        },
+                      }}
+                    >
+                      {(field) => (
+                        <FieldWithState
+                          field={field}
+                          label={t("generated.admin.backups.dayOfMonthLabel")}
+                          layout="grid"
+                          renderInput={({ id, isInvalid }) => (
+                            <Input
+                              className={isInvalid ? "border-destructive" : ""}
+                              id={id}
+                              max={31}
+                              min={1}
+                              onChange={(event) =>
+                                field.handleChange(Number(event.target.value))
+                              }
+                              type="number"
+                              value={field.state.value}
+                            />
+                          )}
+                        />
+                      )}
+                    </form.Field>
+                  ) : null
+                }
+              </form.Subscribe>
+            </FieldGroup>
+          </div>
+        </div>
       </form>
     </FormDialog>
   )

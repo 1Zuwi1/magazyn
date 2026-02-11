@@ -84,7 +84,7 @@ describe("verifyOneTimeCode", () => {
   })
 
   it("rethrows non-unauthorized errors", async () => {
-    const error = new FetchError("Unexpected", 500)
+    const error = new FetchError("UNEXPECTED_ERROR", 500)
     apiFetchMock.mockRejectedValue(error)
 
     await expect(verifyOneTimeCode("123456", "AUTHENTICATOR")).rejects.toBe(

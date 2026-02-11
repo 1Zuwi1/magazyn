@@ -434,6 +434,8 @@
         "storeSafePlace": "Przechowuj je w bezpiecznym miejscu.",
         "generatingNewCodesWillInvalidate": "Wygenerowanie nowych kodów unieważni wszystkie poprzednie.",
         "enable2faGenerateCodes": "Włącz 2FA, aby wygenerować kody.",
+        "backupCodesRefreshNeededTitle": "Kody odzyskiwania wymagają odświeżenia",
+        "backupCodesRefreshNeededDescription": "Minimum połowa kodów odzyskiwania została wykorzystana. Wygeneruj nowe kody odzyskiwania, aby mieć pewność, że będą działać prawidłowo.",
         "generateNewRecoveryCodes": "Wygenerować nowe kody odzyskiwania?",
         "previousCodesWillStopWorking": "Poprzednie kody przestaną działać natychmiast po wygenerowaniu nowych.",
         "generateNewCodes": "Wygeneruj nowe kody",
@@ -1092,7 +1094,7 @@
         "frequencyLabel": "Częstotliwość",
         "hourMustBeInteger": "Godzina musi być liczbą całkowitą",
         "hourRangeError": "Godzina musi mieścić się w zakresie 0-23",
-        "hourLabel": "Godzina kopii (0-23)",
+        "hourLabel": "Godzina kopii",
         "dayOfWeekLabel": "Dzień tygodnia",
         "dayOfMonthLabel": "Dzień miesiąca",
         "dayMustBeInteger": "Dzień musi być liczbą całkowitą",
@@ -1142,7 +1144,10 @@
         "deleteBackupTitle": "Usuń kopię zapasową",
         "restoreBackupDescription": "Czy na pewno chcesz przywrócić dane z kopii \"{value0}\"? Obecne dane zostaną nadpisane.",
         "restoreBackupTitle": "Przywróć z kopii zapasowej",
-        "noWarehousesForSchedule": "Wszystkie magazyny mają już skonfigurowane harmonogramy kopii zapasowych."
+        "noWarehousesForSchedule": "Wszystkie magazyny mają już skonfigurowane harmonogramy kopii zapasowych.",
+        "restoreAllTitle": "Przywróć wszystkie magazyny",
+        "restoreAllDescription": "Czy na pewno chcesz przywrócić dane dla wszystkich magazynów z najnowszych kopii zapasowych? Obecne dane zostaną nadpisane.",
+        "restoreAllStartedToast": "Rozpoczęto przywracanie danych dla {value0} magazynów."
       }
     },
     "scanner": {

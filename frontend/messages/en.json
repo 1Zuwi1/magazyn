@@ -434,6 +434,8 @@
         "storeSafePlace": "Store them in a safe place.",
         "generatingNewCodesWillInvalidate": "Generating new codes will invalidate all previous ones.",
         "enable2faGenerateCodes": "Enable 2FA to generate codes.",
+        "backupCodesRefreshNeededTitle": "Backup codes refresh needed",
+        "backupCodesRefreshNeededDescription": "At least half of your backup codes has been used. For security reasons, please generate new recovery codes to replace the used ones.",
         "generateNewRecoveryCodes": "Generate new recovery codes?",
         "previousCodesWillStopWorking": "Previous codes will stop working immediately after new ones are generated.",
         "generateNewCodes": "Generate new codes",
@@ -1092,7 +1094,7 @@
         "frequencyLabel": "Frequency",
         "hourMustBeInteger": "Hour must be an integer",
         "hourRangeError": "Hour must be between 0 and 23",
-        "hourLabel": "Backup hour (0-23)",
+        "hourLabel": "Backup hour",
         "dayOfWeekLabel": "Day of week",
         "dayOfMonthLabel": "Day of month",
         "dayMustBeInteger": "Day must be an integer",
@@ -1142,7 +1144,10 @@
         "deleteBackupTitle": "Delete backup",
         "restoreBackupDescription": "Are you sure you want to restore data from backup \"{value0}\"? Current data will be overwritten.",
         "restoreBackupTitle": "Restore from backup",
-        "noWarehousesForSchedule": "All warehouses already have configured backup schedules."
+        "noWarehousesForSchedule": "All warehouses already have configured backup schedules.",
+        "restoreAllTitle": "Restore all warehouses",
+        "restoreAllDescription": "Are you sure you want to restore data for all warehouses from the latest backups? Current data will be overwritten.",
+        "restoreAllStartedToast": "Started restoring data for {value0} warehouses."
       }
     },
     "scanner": {
