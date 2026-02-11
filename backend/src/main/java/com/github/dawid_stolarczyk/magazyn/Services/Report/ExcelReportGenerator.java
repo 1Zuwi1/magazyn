@@ -170,7 +170,7 @@ public class ExcelReportGenerator {
                 excelRow.createCell(4).setCellValue(row.getItemName());
                 excelRow.createCell(5).setCellValue(row.getItemCode());
                 excelRow.createCell(6).setCellValue(row.getQuantity());
-                excelRow.createCell(7).setCellValue(row.getNearestExpiresAt() != null ? row.getNearestExpiresAt().toString() : "");
+                excelRow.createCell(7).setCellValue(row.getNearestExpiresAt() != null ? row.getNearestExpiresAt() : "");
             }
 
             return toBytes(workbook);

@@ -110,7 +110,7 @@ public class ReportDataService {
         for (RackReport r : rackReports.stream().sorted((r1, r2) -> r2.getCreatedAt().compareTo(r1.getCreatedAt())).toList()) {
             for (Assortment a : r.getRack().getAssortments()) {
                 // Only include assortments that were on the rack at the time of the alert
-                if (a.getCreatedAt().toInstant().isBefore(r.getCreatedAt())) {
+                if (a.getCreatedAt().toInstant().isAfter(r.getCreatedAt())) {
                     continue;
                 }
 

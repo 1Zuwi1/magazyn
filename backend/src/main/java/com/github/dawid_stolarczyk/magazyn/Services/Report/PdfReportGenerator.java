@@ -189,7 +189,7 @@ public class PdfReportGenerator {
 
             PdfPTable table = new PdfPTable(9);
             table.setWidthPercentage(100);
-            table.setWidths(new float[]{2f, 1f, 1.5f, 1f, 2.5f, 1.5f, 1f, 2f, 2f});
+            table.setWidths(new float[]{2f, 1f, 1.5f, 1f, 2.5f, 2.5f, 1f, 2f});
 
             addHeaderCell(table, "Magazyn");
             addHeaderCell(table, "ID mag.");
