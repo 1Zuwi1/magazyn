@@ -303,7 +303,7 @@
       "metrics": "Metryki",
       "time": "Czas",
       "created": "Utworzono",
-      "shares": "Akcje",
+      "actions": "Akcje",
       "alerts": "Alerty",
       "code": "Kod",
       "position": "Pozycja",
@@ -828,7 +828,8 @@
         "additional": "Dodatkowe",
         "unauthorized": "Nieautoryzowane",
         "yes": "Tak",
-        "label": "Nie"
+        "label": "Nie",
+        "csvFileFailedImport": "Nie udało się zaimportować pliku CSV"
       },
       "audit": {
         "dateRange": "Zakres dat",

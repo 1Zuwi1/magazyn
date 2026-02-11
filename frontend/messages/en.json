@@ -303,7 +303,7 @@
       "metrics": "Metrics",
       "time": "Time",
       "created": "Created",
-      "shares": "Shares",
+      "actions": "Actions",
       "alerts": "Alerts",
       "code": "Code",
       "position": "Position",
@@ -828,7 +828,8 @@
         "additional": "Additional",
         "unauthorized": "Unauthorized",
         "yes": "Yes",
-        "label": "No"
+        "label": "No",
+        "csvFileFailedImport": "Failed to import CSV file"
       },
       "audit": {
         "dateRange": "Date range",

@@ -126,7 +126,7 @@ export function useCsvImporter<T extends CsvImporterType>({
       resetFile()
     } catch (error) {
       console.error(error)
-      toast.error("Failed to import CSV file. Please try again.")
+      toast.error(t("generated.admin.shared.csvFileFailedImport"))
     }
   }
 

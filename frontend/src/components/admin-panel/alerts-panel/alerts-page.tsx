@@ -462,7 +462,7 @@ function AlertDetailsPanel({
           <DropdownMenuContent align="center" className="w-fit" side="top">
             <DropdownMenuGroup>
               <DropdownMenuLabel>
-                {t("generated.shared.shares")}
+                {t("generated.shared.actions")}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               {Object.entries(statuses).map(([status, config]) => (
