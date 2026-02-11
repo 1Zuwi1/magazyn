@@ -23,7 +23,7 @@ public class ApiKeyBatchUpdateService {
         }
 
         try {
-            updates.forEach(apiKeyRepository::updateLastUsedAt);
+            apiKeyRepository.bulkUpdateLastUsedAt(updates);
             log.debug("Updated last used timestamp for {} API keys", updates.size());
         } catch (Exception e) {
             log.error("Failed to batch update API key last used timestamps", e);

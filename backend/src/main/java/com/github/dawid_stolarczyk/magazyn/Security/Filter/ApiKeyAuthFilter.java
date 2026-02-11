@@ -43,21 +43,35 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
     private static final String API_KEY_HEADER = "X-API-KEY";
     private static final int UPDATE_THRESHOLD = 10;
     private static final long BATCH_UPDATE_INTERVAL_SECONDS = 30;
+    private static final long USAGE_COUNTER_TTL_MINUTES = 60;
 
     private final ApiKeyRepository apiKeyRepository;
     private final ApiKeyBatchUpdateService batchUpdateService;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final Map<Long, AtomicInteger> usageCounters = new ConcurrentHashMap<>();
+    private final Map<Long, Instant> usageCounterLastAccess = new ConcurrentHashMap<>();
     private final Map<Long, Instant> pendingUpdates = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
         scheduler.scheduleAtFixedRate(this::flushPendingUpdates, BATCH_UPDATE_INTERVAL_SECONDS, BATCH_UPDATE_INTERVAL_SECONDS, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(this::cleanupStaleUsageCounters, 1, 1, TimeUnit.HOURS);
     }
 
     @PreDestroy
     public void cleanup() {
         scheduler.shutdown();
+        try {
+            if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                scheduler.shutdownNow();
+                if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                    log.warn("Scheduled executor did not terminate gracefully");
+                }
+            }
+        } catch (InterruptedException e) {
+            scheduler.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
         flushPendingUpdates();
     }
 
@@ -69,8 +83,21 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
         Map<Long, Instant> updatesToFlush = new ConcurrentHashMap<>(pendingUpdates);
         pendingUpdates.clear();
         usageCounters.clear();
+        usageCounterLastAccess.clear();
 
         batchUpdateService.batchUpdateLastUsedAt(updatesToFlush);
+    }
+
+    private void cleanupStaleUsageCounters() {
+        Instant cutoff = Instant.now().minusMillis(TimeUnit.MINUTES.toMillis(USAGE_COUNTER_TTL_MINUTES));
+        usageCounterLastAccess.entrySet().removeIf(entry -> {
+            if (entry.getValue().isBefore(cutoff)) {
+                usageCounters.remove(entry.getKey());
+                return true;
+            }
+            return false;
+        });
+        log.debug("Cleaned up stale usage counters, current size: {}", usageCounters.size());
     }
 
     @Override
@@ -99,10 +126,12 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
         Instant now = Instant.now();
 
         usageCounters.computeIfAbsent(apiKeyId, k -> new AtomicInteger(0)).incrementAndGet();
+        usageCounterLastAccess.put(apiKeyId, now);
 
         if (usageCounters.get(apiKeyId).get() >= UPDATE_THRESHOLD) {
             pendingUpdates.put(apiKeyId, now);
             usageCounters.remove(apiKeyId);
+            usageCounterLastAccess.remove(apiKeyId);
         }
 
         List<SimpleGrantedAuthority> authorities = apiKey.getScopes().stream()

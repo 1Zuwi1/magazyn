@@ -250,7 +250,7 @@ public class BackupService {
             }
 
             if (resourceTypes.contains(BackupResourceType.ITEMS)) {
-                List<Item> items = itemRepository.findDistinctByWarehouseId(warehouseId);
+                List<Item> items = itemRepository.findDistinctByWarehouseIdWithImages(warehouseId);
                 log.info("Backup {} — found {} items for warehouse {}", recordId, items.size(), warehouseId);
 
                 List<ItemBackupData> itemData = items.stream()
