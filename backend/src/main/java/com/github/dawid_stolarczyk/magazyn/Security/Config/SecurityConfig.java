@@ -2,6 +2,7 @@ package com.github.dawid_stolarczyk.magazyn.Security.Config;
 
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.RestAccessDeniedHandler;
 import com.github.dawid_stolarczyk.magazyn.Security.Auth.RestAuthenticationEntryPoint;
+import com.github.dawid_stolarczyk.magazyn.Security.Filter.ApiKeyAuthFilter;
 import com.github.dawid_stolarczyk.magazyn.Security.Filter.SessionAuthFilter;
 import com.github.dawid_stolarczyk.magazyn.Security.Filter.VerificationLevelFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+    @Autowired
+    private ApiKeyAuthFilter apiKeyAuthFilter;
     @Autowired
     private SessionAuthFilter sessionAuthFilter;
     @Autowired
@@ -50,9 +53,12 @@ public class SecurityConfig {
                                 "/v3/api-docs/**")
                         .permitAll()
                         .requestMatchers("/webauthn/assertion/**").permitAll()
+                        .requestMatchers("/v1/telemetry/**").permitAll()
+                        .requestMatchers("/v1/external/**").permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
+                .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(sessionAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(verificationLevelFilter, SessionAuthFilter.class);
 

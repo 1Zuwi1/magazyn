@@ -44,6 +44,13 @@ public class SessionAuthFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        // Skip session auth if already authenticated by API key
+        if (SecurityContextHolder.getContext().getAuthentication() != null
+                && SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String sessionId = getCookie(request, "SESSION");
 
         if (sessionId != null) {
@@ -101,13 +108,6 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         String rememberMeToken = CookiesUtils.getCookie(request, "REMEMBER_ME");
         if (rememberMeToken != null) {
             sessionService.getRememberMeSession(rememberMeToken).ifPresentOrElse(rememberMeData -> {
-                if (!rememberMeData.getIpAddress().equals(getClientIp(request)) ||
-                        !rememberMeData.getUserAgent().equals(request.getHeader("User-Agent"))) {
-                    log.warn("Remember-me token mismatch, logging out");
-                    SecurityContextHolder.clearContext();
-                    sessionManager.logoutUser(response, request);
-                    return;
-                }
                 User user;
                 try {
                     user = userRepository.findById(rememberMeData.getUserId())

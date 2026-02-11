@@ -29,6 +29,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/items")
@@ -184,53 +186,6 @@ public class ItemController {
     }
 
     @Operation(
-            summary = "Upload item photo (ADMIN only)",
-            description = """
-                    Uploads an encrypted photo for a product to S3-compatible storage. Requires ADMIN role.
-                    Only image files (JPEG, PNG, WebP) are accepted.
-                    Previous photo (if exists) will be automatically deleted.
-                    """
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Photo uploaded successfully - returns S3 file path",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class, example = "items-photos/encrypted-photo.bin"))
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid file format or item not found",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "Access denied - requires ADMIN role",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
-            ),
-            @ApiResponse(
-                    responseCode = "500",
-                    description = "Failed to upload photo to storage",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
-            )
-    })
-    @PostMapping(value = "/{id}/photo", consumes = "multipart/form-data")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<String>> uploadPhoto(@PathVariable Long id, @RequestPart("file") MultipartFile file, HttpServletRequest request) {
-        try {
-            return ResponseEntity.ok(ResponseTemplate.success(itemService.uploadPhoto(id, file, request)));
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid photo upload request for item {}: {}", id, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getMessage()));
-        } catch (IllegalStateException e) {
-            log.error("Storage state error while uploading photo for item {}: {}", id, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error("PHOTO_UPLOAD_FAILED"));
-        } catch (Exception e) {
-            log.error("Unexpected error uploading photo for item {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error("PHOTO_UPLOAD_FAILED"));
-        }
-    }
-
-    @Operation(
             summary = "Download item photo",
             description = """
                     Downloads and decrypts the product photo from S3-compatible storage.
@@ -269,6 +224,174 @@ public class ItemController {
     }
 
     @Operation(
+            summary = "Batch upload item photos (ADMIN only)",
+            description = """
+                    Uploads multiple photos and matches them to items by filename.
+                    Photos are encrypted and uploaded to S3.
+                    Items are matched by their photo_url field set during CSV import.
+                    Only items with matching photo_url are updated.
+                    
+                    **Process:**
+                    1. Each photo filename is matched against item.photo_url
+                    2. If match found, photo is encrypted and uploaded to S3
+                    3. item.photo_url is updated to encrypted file name
+                    4. item.imageUploaded is set to true
+                    5. Image embedding is generated if model is available
+                    
+                    **Response format:** List of strings with results:
+                    - "UPLOADED: filename.jpg -> item_id=123"
+                    - "NOT_FOUND: filename.jpg"
+                    - "FAILED: filename.jpg - error message"
+                    
+                    **Authentication:** Requires ADMIN role
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Batch upload completed successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid file format or processing error",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Access denied - requires ADMIN role",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error during upload",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.class))
+            )
+    })
+    @PostMapping(value = "/photos/batch-upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<List<String>>> uploadPhotosBatch(
+            @RequestPart("files") List<MultipartFile> files) {
+        try {
+            List<String> results = itemService.uploadPhotosBatch(files);
+            return ResponseEntity.ok(ResponseTemplate.success(results));
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid photo batch upload: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ResponseTemplate.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during photo batch upload", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseTemplate.error("BATCH_UPLOAD_FAILED"));
+        }
+    }
+
+    @Operation(summary = "Upload multiple photos for item (ADMIN only)",
+            description = """
+                    Uploads multiple photos to the item's image gallery. Max 10 images per item.
+                    Processing happens asynchronously - response is returned immediately.
+                    Check the item's photos endpoint for uploaded images.
+                    """)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "202", description = "Photos upload started - processing in background"),
+            @ApiResponse(responseCode = "400", description = "Error codes: MAX_IMAGES_EXCEEDED, FILE_IS_EMPTY, INVALID_FILE_TYPE"),
+            @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND")
+    })
+    @PostMapping(value = "/{id}/photos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<List<ItemImageDto>>> uploadMultiplePhotos(
+            @PathVariable Long id,
+            @RequestPart("files") List<MultipartFile> files,
+            HttpServletRequest request) {
+        try {
+            List<ItemImageDto> result = itemService.uploadMultiplePhotos(id, files, request);
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body(ResponseTemplate.success(result));
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid photos upload for item {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error uploading photos for item {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error("PHOTO_UPLOAD_FAILED"));
+        }
+    }
+
+    @Operation(summary = "Get all photos for an item",
+            description = "Returns metadata for all photos in the item's gallery, ordered by display order.")
+    @ApiResponse(responseCode = "200", description = "List of item images")
+    @GetMapping("/{id}/photos")
+    public ResponseEntity<ResponseTemplate<List<ItemImageDto>>> getItemPhotos(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+        try {
+            return ResponseEntity.ok(ResponseTemplate.success(itemService.getItemPhotos(id, request)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Download a specific photo by image ID",
+            description = "Downloads and decrypts a specific photo from the item's gallery.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Photo downloaded successfully"),
+            @ApiResponse(responseCode = "404", description = "Error codes: IMAGE_NOT_FOUND")
+    })
+    @GetMapping(value = "/{id}/photos/{imageId}", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> downloadPhotoByImageId(
+            @PathVariable Long id,
+            @PathVariable Long imageId,
+            HttpServletRequest request) {
+        try {
+            byte[] data = itemService.downloadPhotoByImageId(id, imageId, request);
+            return ResponseEntity.ok(data);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            log.error("Error downloading photo {} for item {}", imageId, id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @Operation(summary = "Delete a specific photo (ADMIN only)",
+            description = "Deletes a photo from the item's gallery. If the deleted image was primary, the next image is auto-promoted.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Photo deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND, IMAGE_NOT_FOUND")
+    })
+    @DeleteMapping("/{id}/photos/{imageId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<Void>> deletePhoto(
+            @PathVariable Long id,
+            @PathVariable Long imageId,
+            HttpServletRequest request) {
+        try {
+            itemService.deletePhoto(id, imageId, request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Set a photo as primary (ADMIN only)",
+            description = "Sets the specified photo as the primary image for the item.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Primary photo updated"),
+            @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND, IMAGE_NOT_FOUND")
+    })
+    @PutMapping("/{id}/photos/{imageId}/primary")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<Void>> setPrimaryPhoto(
+            @PathVariable Long id,
+            @PathVariable Long imageId,
+            HttpServletRequest request) {
+        try {
+            itemService.setPrimaryPhoto(id, imageId, request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+        }
+    }
+
+    @Operation(
             summary = "Import items (products) from CSV (ADMIN only)",
             description = """
                     Import produktów z pliku CSV ze **stałą kolejnością kolumn** (bez nagłówka).
@@ -283,37 +406,51 @@ public class ItemController {
                     **Kolejność kolumn (STAŁA):**
                     1. **Nazwa** (String) - Nazwa produktu
                        - WYMAGANE
-                    2. **TempMin** (Float) - Minimalna temperatura przechowywania w °C
-                       - WYMAGANE
-                    3. **TempMax** (Float) - Maksymalna temperatura przechowywania w °C
-                       - WYMAGANE
-                    4. **Waga** (Float) - Waga produktu w kilogramach
-                       - WYMAGANE
-                    5. **SzerokoscMm** (Float) - Szerokość produktu w milimetrach
-                       - WYMAGANE
-                    6. **WysokoscMm** (Float) - Wysokość produktu w milimetrach
-                       - WYMAGANE
-                    7. **GlebokoscMm** (Float) - Głębokość produktu w milimetrach
-                       - WYMAGANE
-                    8. **TerminWaznosciDni** (Integer) - Termin ważności w dniach
+                    2. **Id** (String) - Identyfikator (GS1-128 barcode lub QR code)
+                       - OPCJONALNE (generowane automatycznie jeśli puste)
+                    3. **Zdjecie** (String) - Nazwa pliku zdjęcia (do dopasowania przy batch upload)
                        - OPCJONALNE
-                    9. **CzyNiebezpieczny** (Boolean) - TRUE/FALSE - czy produkt jest niebezpieczny
-                       - OPCJONALNE (domyślnie FALSE)
+                       - Nazwa musi być unikalna w całej bazie danych
+                       - Przy uploadzie batch, nazwa pliku musi pasować do tej wartości
+                       - Jeśli podano, `imageUploaded` jest ustawiane na false
+                    4. **TempMin** (Float) - Minimalna temperatura przechowywania w °C
+                       - WYMAGANE
+                    5. **TempMax** (Float) - Maksymalna temperatura przechowywania w °C
+                       - WYMAGANE
+                    6. **Waga** (Float) - Waga produktu w kilogramach
+                       - WYMAGANE
+                    7. **SzerokoscMm** (Float) - Szerokość produktu w milimetrach
+                       - WYMAGANE
+                    8. **WysokoscMm** (Float) - Wysokość produktu w milimetrach
+                       - WYMAGANE
+                    9. **GlebokoscMm** (Float) - Głębokość produktu w milimetrach
+                       - WYMAGANE
                     10. **Komentarz** (String) - Dodatkowy opis produktu
                         - OPCJONALNE
+                    11. **TerminWaznosciDni** (Integer) - Termin ważności w dniach
+                        - OPCJONALNE
+                    12. **CzyNiebezpieczny** (Boolean) - TRUE/FALSE - czy produkt jest niebezpieczny
+                        - OPCJONALNE (domyślnie FALSE)
                     
                     **Przykład pliku CSV:**
                     ```
-                    #Nazwa;TempMin;TempMax;Waga;SzerokoscMm;WysokoscMm;GlebokoscMm;TerminWaznosciDni;CzyNiebezpieczny;Komentarz
-                    Mleko 3,2%;2;6;1.0;20;7;7;14;FALSE;Przechowywać w lodówce
-                    Lody waniliowe;-18;-12;0.5;15;10;8;180;FALSE;Produkt mrożony
-                    Aceton techniczny;10;25;2.5;30;20;15;365;TRUE;Substancja łatwopalna
+                    #Nazwa;Id;Zdjecie;TempMin;TempMax;Waga;SzerokoscMm;WysokoscMm;GlebokoscMm;Komentarz;TerminWaznosciDni;CzyNiebezpieczny
+                    Mleko 3,2%;;mleko.jpg;2;6;1.0;20;7;7;Przechowywać w lodówce;14;FALSE
+                    Lody waniliowe;;lody.png;-18;-12;0.5;15;10;8;Produkt mrożony;180;FALSE
+                    Aceton techniczny;;aceton.jpg;10;25;2.5;30;20;15;Substancja łatwopalna;365;TRUE
                     ```
+                    
+                    **Workflow uploadu zdjęć:**
+                    1. Import CSV z nazwami zdjęć w kolumnie "Zdjecie"
+                    2. Użyj endpointu POST /items/photos/batch-upload z plikami zdjęć
+                    3. Zdjęcia są dopasowywane do produktów po nazwie pliku
+                    4. Po dopasowaniu, zdjęcia są szyfrowane i uploadowane na S3
+                    5. `imageUploaded` jest ustawiane na true
                     
                     **Uwagi:**
                     - GS1-128 barcode code produktu jest generowany automatycznie (16-cyfrowy kod produktu z prefiksem 01)
-                    - Zdjęcia należy uploadować osobno przez endpoint POST /items/{id}/photo
-                    - Wartości NULL lub puste dla kolumn opcjonalnych są ignorowane
+                    - Nazwy zdjęć muszą być unikalne - powtórzenia powodują błąd importu
+                    - Zdjęcia nie są wymagane przy imporcie - można je dodać później
                     
                     **Walidacja pliku:**
                     - Tylko pliki CSV (rozszerzenia: .csv, .txt)

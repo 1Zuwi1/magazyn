@@ -20,7 +20,7 @@ public class WebAuthnConfig {
     private String appName;
     @Value("${app.url}")
     private String appUrl;
-    @Value("${webauthn.allow-untrusted-attestation:false}")
+    @Value("${webauthn.allow-untrusted-attestation:true}")
     private boolean allowUntrustedAttestation;
 
     public WebAuthnConfig(CredentialRepository credentialRepository) {

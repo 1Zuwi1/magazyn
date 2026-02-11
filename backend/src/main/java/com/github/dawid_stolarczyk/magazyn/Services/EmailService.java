@@ -117,6 +117,17 @@ public class EmailService {
     }
 
     @Async
+    public void sendApiKeyCreatedEmail(String to, String keyName, String warehouseName, String createdAt) {
+        Context context = new Context();
+        context.setVariable("keyName", keyName);
+        context.setVariable("warehouseName", warehouseName);
+        context.setVariable("createdAt", createdAt);
+        String htmlContent = templateEngine.process("mail/api-key-created", context);
+        String subject = "Nowy klucz API utworzony: " + keyName;
+        sendSimpleEmail(to, subject, htmlContent);
+    }
+
+    @Async
     public void sendReportEmail(String to, String reportTitle, byte[] fileBytes, String filename, String contentType) {
         try {
             Context context = new Context();

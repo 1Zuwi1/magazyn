@@ -38,7 +38,7 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long>, J
 
     /**
      * Znajdź assortmenty dla danego produktu w kolejności FIFO (najstarsze najpierw).
-     * Wyklucza wygasłe assortmenty (expires_at <= NOW()).
+     * Wyklucza wygasłe assortmenty.
      * Assortmenty bez daty wygaśnięcia (expires_at IS NULL) są uwzględniane.
      */
     @Query("SELECT a FROM Assortment a WHERE a.item.id = :itemId " +
@@ -48,8 +48,8 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long>, J
 
     /**
      * Znajdź assortmenty starsze od podanego (te same item, wcześniejszy created_at).
-     * Wyklucza wygasłe assortmenty (expires_at <= NOW()).
-     * Assortmenty bez daty wygaśnięcia (expires_at IS NULL) są uwzględniane.
+     * Wyklucza wygasłe assortmenty.
+     * Assortmenty bez daty wygaśnięcia są uwzględniane.
      */
     @Query("SELECT a FROM Assortment a WHERE a.item.id = :itemId " +
             "AND a.createdAt < :createdAt " +
@@ -68,7 +68,7 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long>, J
     Page<Assortment> findByRack_WarehouseId(Long warehouseId, Pageable pageable);
 
     /**
-     * Znajdź wygasłe assortmenty dla danego produktu (expires_at <= NOW()).
+     * Znajdź wygasłe assortmenty dla danego produktu.
      * Używane do raportowania i alertowania o wygasłych produktach.
      */
     @Query("SELECT a FROM Assortment a WHERE a.item.id = :itemId " +
@@ -84,13 +84,13 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long>, J
     long countAvailableByItemId(@Param("itemId") Long itemId);
 
     /**
-     * Znajdź wszystkie wygasłe assortmenty (expires_at <= NOW()).
+     * Znajdź wszystkie wygasłe assortmenty.
      */
     @Query("SELECT a FROM Assortment a WHERE a.expiresAt IS NOT NULL AND a.expiresAt <= CURRENT_TIMESTAMP")
     List<Assortment> findAllExpired();
 
     /**
-     * Znajdź assortmenty bliskie wygaśnięcia (expires_at > NOW() AND expires_at <= threshold).
+     * Znajdź assortmenty bliskie wygaśnięcia.
      */
     @Query("SELECT a FROM Assortment a WHERE a.expiresAt IS NOT NULL " +
             "AND a.expiresAt > CURRENT_TIMESTAMP AND a.expiresAt <= :threshold")
@@ -100,7 +100,7 @@ public interface AssortmentRepository extends JpaRepository<Assortment, Long>, J
 
     /**
      * Find assortments expiring before the given threshold, optionally filtered by warehouse.
-     * Includes already expired assortments (expiresAt <= NOW()) and close-to-expiry.
+     * Includes already expired assortments and close-to-expiry.
      * JOIN FETCH item, rack, and warehouse for report generation.
      */
     @Query("SELECT a FROM Assortment a JOIN FETCH a.item JOIN FETCH a.rack r JOIN FETCH r.warehouse " +

@@ -19,9 +19,7 @@ import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperati
 import com.github.dawid_stolarczyk.magazyn.Utils.LinksUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -54,6 +52,7 @@ public class BackupService {
     private final WarehouseRepository warehouseRepository;
     private final RackRepository rackRepository;
     private final ItemRepository itemRepository;
+    private final ItemImageRepository itemImageRepository;
     private final AssortmentRepository assortmentRepository;
     private final InboundOperationRepository inboundOperationRepository;
     private final BackupStorageService backupStorageService;
@@ -61,6 +60,7 @@ public class BackupService {
     @org.springframework.beans.factory.annotation.Qualifier("backupObjectMapper")
     private final ObjectMapper objectMapper;
     private final Bucket4jRateLimiter rateLimiter;
+    @org.springframework.beans.factory.annotation.Qualifier("asyncTaskExecutor")
     private final AsyncTaskExecutor asyncTaskExecutor;
     private final AlertRepository alertRepository;
     private final UserRepository userRepository;
@@ -70,8 +70,8 @@ public class BackupService {
     @Qualifier("backupStreamingExecutor")
     private final ExecutorService streamingExecutor;
 
-    @Setter(onMethod_ = {@Autowired, @Lazy})
-    private BackupSchedulerManager backupSchedulerManager;
+    @Lazy
+    private final BackupSchedulerManager backupSchedulerManager;
 
     private final ConcurrentHashMap<Long, AtomicBoolean> warehouseLocks = new ConcurrentHashMap<>();
 
@@ -100,7 +100,12 @@ public class BackupService {
     private record ItemBackupData(Long originalId, String name, String code, String photoUrl, String qrCode,
                                   float minTemp, float maxTemp, float weight,
                                   float sizeX, float sizeY, float sizeZ,
-                                  String comment, Long expireAfterDays, boolean isDangerous) {
+                                  String comment, Long expireAfterDays, boolean isDangerous,
+                                  List<ItemImageBackupData> images) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record ItemImageBackupData(Long originalId, String photoUrl, boolean isPrimary, int displayOrder) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -249,10 +254,18 @@ public class BackupService {
                 log.info("Backup {} — found {} items for warehouse {}", recordId, items.size(), warehouseId);
 
                 List<ItemBackupData> itemData = items.stream()
-                        .map(i -> new ItemBackupData(i.getId(), i.getName(), i.getCode(), i.getPhoto_url(), i.getQrCode(),
-                                i.getMin_temp(), i.getMax_temp(), i.getWeight(),
-                                i.getSize_x(), i.getSize_y(), i.getSize_z(),
-                                i.getComment(), i.getExpireAfterDays(), i.isDangerous()))
+                        .map(i -> {
+                            List<ItemImageBackupData> imageData = i.getImages() != null
+                                    ? i.getImages().stream()
+                                    .map(img -> new ItemImageBackupData(img.getId(), img.getPhotoUrl(),
+                                            img.isPrimary(), img.getDisplayOrder()))
+                                    .toList()
+                                    : List.of();
+                            return new ItemBackupData(i.getId(), i.getName(), i.getCode(), i.getPhoto_url(), i.getQrCode(),
+                                    i.getMin_temp(), i.getMax_temp(), i.getWeight(),
+                                    i.getSize_x(), i.getSize_y(), i.getSize_z(),
+                                    i.getComment(), i.getExpireAfterDays(), i.isDangerous(), imageData);
+                        })
                         .toList();
 
                 long bytesWritten = writer.writeAndUpload(basePath, "items.enc", itemData);
@@ -516,6 +529,21 @@ public class BackupService {
                         itemsRestored++;
                     }
                     itemIdMapping.put(id.originalId(), item.getId());
+
+                    // Restore item images if present and item has no images yet
+                    if (id.images() != null && !id.images().isEmpty()
+                            && itemImageRepository.countByItemId(item.getId()) == 0) {
+                        for (ItemImageBackupData imgData : id.images()) {
+                            ItemImage itemImage = ItemImage.builder()
+                                    .item(item)
+                                    .photoUrl(imgData.photoUrl())
+                                    .isPrimary(imgData.isPrimary())
+                                    .displayOrder(imgData.displayOrder())
+                                    .build();
+                            itemImageRepository.save(itemImage);
+                        }
+                        log.info("Restored {} images for item {}", id.images().size(), item.getId());
+                    }
                 }
             }
 
@@ -890,7 +918,7 @@ public class BackupService {
             log.info("Distributed {} backup notifications to admin users", notifications.size());
         }
 
-        String backupLink = LinksUtils.getWebAppUrl("/backups", null);
+        String backupLink = LinksUtils.getWebAppUrl("/admin/backups", null);
         String triggeredByName = null;
         if (backupRecord != null && backupRecord.getTriggeredBy() != null) {
             try {
@@ -921,7 +949,9 @@ public class BackupService {
                     );
                     log.info("Sent backup notification email to {}", admin.getEmail());
                 } else {
-                    emailService.sendBatchNotificationEmail(admin.getEmail(), List.of(alert.getMessage()), backupLink);
+                    emailService.sendBatchNotificationEmail(admin.getEmail(),
+                            List.of(alert.getMessage()),
+                            LinksUtils.getWebAppUrl("/dashboard/notifications", null));
                     log.info("Sent notification email to {}", admin.getEmail());
                 }
             }

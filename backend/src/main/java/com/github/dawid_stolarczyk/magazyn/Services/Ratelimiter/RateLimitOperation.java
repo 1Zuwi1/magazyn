@@ -18,5 +18,6 @@ public enum RateLimitOperation {
     INVENTORY_WRITE,
     BACKUP_READ,
     BACKUP_WRITE,
-    REPORT_GENERATE
+    REPORT_GENERATE,
+    TELEMETRY_WRITE
 }

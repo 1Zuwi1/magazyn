@@ -26,7 +26,6 @@ public class BackupStorageService {
     @Value("${app.s3.backups-prefix:backups/}")
     private String backupsPrefix;
 
-    private static final int MULTIPART_THRESHOLD = 5 * 1024 * 1024; // 5MB
     private static final int PART_SIZE = 2 * 1024 * 1024; // 2MB per part
     private static final int INITIAL_CHECK_SIZE = 64 * 1024; // 64KB for initial size check
 
