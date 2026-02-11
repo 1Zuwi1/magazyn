@@ -42,10 +42,12 @@ public class ReportDataService {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             String dateStr = sdf.format(Timestamp.from(a.getExpiresAt().toInstant()));
             String key = a.getItem().getId() + "-" + a.getRack().getId() + "-" + dateStr;
+
+            String expiresAtStr = sdf.format(Timestamp.from(a.getExpiresAt().toInstant().atZone(ZoneId.systemDefault()).toInstant()));
             grouped.computeIfAbsent(key, k -> new ExpiryGrouping(
                     a.getItem().getName(),
                     a.getItem().getCode(),
-                    a.getExpiresAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+                    expiresAtStr,
                     a.getRack().getMarker(),
                     a.getRack().getWarehouse().getName(),
                     a.getExpiresAt().toInstant().isBefore(now)
@@ -72,7 +74,7 @@ public class ReportDataService {
         List<RackReport> reports = rackReportRepository.findAlertTriggeredReports(warehouseId, start, end);
 
         List<TemperatureAlertRackReportRow> rows = new ArrayList<>();
-        for (RackReport r : reports) {
+        for (RackReport r : reports.stream().sorted((r1, r2) -> r2.getCreatedAt().compareTo(r1.getCreatedAt())).toList()) {
             String violationType;
             if (r.getCurrentTemperature() > r.getRack().getMax_temp()) {
                 violationType = "Za wysoka temperatura";
@@ -82,6 +84,8 @@ public class ReportDataService {
                 violationType = "Nieznany typ naruszenia";
             }
 
+            SimpleDateFormat sdfCreated = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            String createdAtStr = sdfCreated.format(Timestamp.from(r.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()));
             rows.add(TemperatureAlertRackReportRow.builder()
                     .rackId(r.getRack().getId())
                     .rackMarker(r.getRack().getMarker())
@@ -90,7 +94,7 @@ public class ReportDataService {
                     .allowedMin(r.getRack().getMin_temp())
                     .allowedMax(r.getRack().getMax_temp())
                     .violationType(violationType)
-                    .violationTimestamp(r.getCreatedAt())
+                    .violationTimestamp(createdAtStr)
                     .sensorId(r.getSensorId())
                     .build());
         }
@@ -102,8 +106,13 @@ public class ReportDataService {
         List<RackReport> rackReports = assortmentRepository.findAlertTriggeredReports(warehouseId, start, end);
 
         List<TemperatureAlertAssortmentReportRow> rows = new ArrayList<>();
-        for (RackReport r : rackReports) {
+        for (RackReport r : rackReports.stream().sorted((r1, r2) -> r2.getCreatedAt().compareTo(r1.getCreatedAt())).toList()) {
             for (Assortment a : r.getRack().getAssortments()) {
+                // Only include assortments that were on the rack at the time of the alert
+                if (a.getCreatedAt().toInstant().isAfter(r.getCreatedAt())) {
+                    continue;
+                }
+
                 String violationType;
 
                 if (r.getCurrentTemperature() > a.getItem().getMax_temp()) {
@@ -114,15 +123,18 @@ public class ReportDataService {
                     violationType = "Nieznany typ naruszenia";
                 }
 
+                SimpleDateFormat sdfCreated = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                String createdAtStr = sdfCreated.format(Timestamp.from(r.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()));
                 rows.add(TemperatureAlertAssortmentReportRow.builder()
                         .rackMarker(r.getRack().getMarker())
                         .warehouseName(r.getRack().getWarehouse().getName())
                         .itemName( a.getItem().getName())
+                        .assortmentCode(a.getCode())
                         .recordedTemperature(r.getCurrentTemperature())
                         .allowedMin(r.getRack().getMin_temp())
                         .allowedMax(r.getRack().getMax_temp())
                         .violationType(violationType)
-                        .violationTimestamp(r.getCreatedAt())
+                        .violationTimestamp(createdAtStr)
                         .sensorId(r.getSensorId())
                         .build());
             }
@@ -161,6 +173,9 @@ public class ReportDataService {
 
         List<InventoryStockReportRow> rows = new ArrayList<>();
         for (InventoryGrouping g : grouped.values()) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            String oldestCreatedAt = sdf.format(Timestamp.from(g.oldestCreatedAt.atZone(ZoneId.systemDefault()).toInstant()));
+            String nearestExpiresAt = sdf.format(Timestamp.valueOf(g.nearestExpiresAt.atStartOfDay()));
             rows.add(InventoryStockReportRow.builder()
                     .warehouseName(g.warehouseName)
                     .warehouseId(g.warehouseId)
@@ -169,8 +184,8 @@ public class ReportDataService {
                     .itemName(g.itemName)
                     .itemCode(g.itemCode)
                     .quantity(g.quantity)
-                    .oldestCreatedAt(g.oldestCreatedAt)
-                    .nearestExpiresAt(g.nearestExpiresAt)
+                    .oldestCreatedAt(oldestCreatedAt)
+                    .nearestExpiresAt(nearestExpiresAt)
                     .build());
         }
         return rows;
@@ -179,13 +194,13 @@ public class ReportDataService {
     private static class ExpiryGrouping {
         final String itemName;
         final String itemCode;
-        final LocalDate expirationDate;
+        final String expirationDate;
         final String rackMarker;
         final String warehouseName;
         final boolean alreadyExpired;
         int quantity;
 
-        ExpiryGrouping(String itemName, String itemCode, LocalDate expirationDate,
+        ExpiryGrouping(String itemName, String itemCode, String expirationDate,
                        String rackMarker, String warehouseName, boolean alreadyExpired) {
             this.itemName = itemName;
             this.itemCode = itemCode;

@@ -24,6 +24,9 @@ public class TemperatureAlertAssortmentReportRow {
     @Schema(description = "Assortment name", example = "Mleko 1L")
     private String itemName;
 
+    @Schema(description = "Assortment code", example = "11123456010000000000000021000000")
+    private String assortmentCode;
+
     @Schema(description = "Recorded temperature in °C", example = "25.5")
     private float recordedTemperature;
 
@@ -36,8 +39,8 @@ public class TemperatureAlertAssortmentReportRow {
     @Schema(description = "Type of violation", example = "TEMPERATURE_TOO_HIGH")
     private String violationType;
 
-    @Schema(description = "Timestamp of the violation")
-    private Instant violationTimestamp;
+    @Schema(description = "Date of the violation")
+    private String violationTimestamp;
 
     @Schema(description = "Sensor identifier", example = "SENSOR-RACK-001")
     private String sensorId;

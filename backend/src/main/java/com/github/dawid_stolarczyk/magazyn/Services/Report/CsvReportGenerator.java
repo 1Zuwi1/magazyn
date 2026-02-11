@@ -2,16 +2,24 @@ package com.github.dawid_stolarczyk.magazyn.Services.Report;
 
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Report.ExpiryReportRow;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Report.InventoryStockReportRow;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Report.TemperatureAlertAssortmentReportRow;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.Report.TemperatureAlertRackReportRow;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 @Service
 public class CsvReportGenerator {
 
     private static final String UTF8_BOM = "\uFEFF";
+    private static final DateTimeFormatter VIOLATION_TIME_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     public byte[] generateExpiryReport(List<ExpiryReportRow> rows) {
         StringBuilder sb = new StringBuilder(UTF8_BOM);
@@ -28,20 +36,61 @@ public class CsvReportGenerator {
         return sb.toString().getBytes(StandardCharsets.UTF_8);
     }
 
-    public byte[] generateTemperatureAlertReport(List<TemperatureAlertRackReportRow> rows) {
+    public byte[] generateTemperatureAlertReport(List<TemperatureAlertRackReportRow> rackRows, List<TemperatureAlertAssortmentReportRow> assortmentRows) {
         StringBuilder sb = new StringBuilder(UTF8_BOM);
-        sb.append("ID regału,Regał,Magazyn,Temperatura [°C],Min [°C],Max [°C],Typ naruszenia,Data,Sensor\n");
-        for (TemperatureAlertRackReportRow row : rows) {
-            sb.append(row.getRackId()).append(',');
-            sb.append(escapeCsv(row.getRackMarker())).append(',');
-            sb.append(escapeCsv(row.getWarehouseName())).append(',');
-            sb.append(row.getRecordedTemperature()).append(',');
-            sb.append(row.getAllowedMin()).append(',');
-            sb.append(row.getAllowedMax()).append(',');
-            sb.append(escapeCsv(row.getViolationType())).append(',');
-            sb.append(row.getViolationTimestamp()).append(',');
-            sb.append(escapeCsv(row.getSensorId() != null ? row.getSensorId() : "")).append('\n');
+
+        TreeMap<String, List<TemperatureAlertRackReportRow>> groupedRackRows = rackRows.stream()
+                .filter(r -> r.getViolationTimestamp() != null)
+                .collect(Collectors.groupingBy(
+                        r -> r.getViolationTimestamp().substring(0, 16),
+                        TreeMap::new,
+                        Collectors.toList()
+                ));
+
+        sb.append("=== REGAŁY ===\n");
+        for (Map.Entry<String, List<TemperatureAlertRackReportRow>> entry : groupedRackRows.entrySet()) {
+            sb.append("\nData: ").append(entry.getKey().toString()).append('\n');
+            sb.append("ID regału,Regał,Magazyn,Temperatura [°C],Min [°C],Max [°C],Typ naruszenia,Data,Sensor\n");
+            for (TemperatureAlertRackReportRow row : entry.getValue()) {
+                sb.append(row.getRackId()).append(',');
+                sb.append(escapeCsv(row.getRackMarker())).append(',');
+                sb.append(escapeCsv(row.getWarehouseName())).append(',');
+                sb.append(row.getRecordedTemperature()).append(',');
+                sb.append(row.getAllowedMin()).append(',');
+                sb.append(row.getAllowedMax()).append(',');
+                sb.append(escapeCsv(row.getViolationType())).append(',');
+                sb.append(row.getViolationTimestamp()).append(',');
+                sb.append(escapeCsv(row.getSensorId() != null ? row.getSensorId() : "")).append('\n');
+            }
         }
+
+        if (assortmentRows != null && !assortmentRows.isEmpty()) {
+            TreeMap<String, List<TemperatureAlertAssortmentReportRow>> groupedAssortmentRows = assortmentRows.stream()
+                    .filter(r -> r.getViolationTimestamp() != null)
+                    .collect(Collectors.groupingBy(
+                            r -> r.getViolationTimestamp().substring(0, 16),
+                            TreeMap::new,
+                            Collectors.toList()
+                    ));
+
+            sb.append("\n=== ASORTYMENT ===\n");
+            for (Map.Entry<String, List<TemperatureAlertAssortmentReportRow>> entry : groupedAssortmentRows.entrySet()) {
+                sb.append("\nData: ").append(entry.getKey().toString()).append('\n');
+                sb.append("Regał,Magazyn,Produkt,Temperatura [°C],Min [°C],Max [°C],Typ naruszenia,Data,Sensor\n");
+                for (TemperatureAlertAssortmentReportRow row : entry.getValue()) {
+                    sb.append(escapeCsv(row.getRackMarker() != null ? row.getRackMarker() : "")).append(',');
+                    sb.append(escapeCsv(row.getWarehouseName() != null ? row.getWarehouseName() : "")).append(',');
+                    sb.append(escapeCsv(row.getItemName() != null ? row.getItemName() : "")).append(',');
+                    sb.append(row.getRecordedTemperature()).append(',');
+                    sb.append(row.getAllowedMin()).append(',');
+                    sb.append(row.getAllowedMax()).append(',');
+                    sb.append(escapeCsv(row.getViolationType())).append(',');
+                    sb.append(row.getViolationTimestamp()).append(',');
+                    sb.append(escapeCsv(row.getSensorId() != null ? row.getSensorId() : "")).append('\n');
+                }
+            }
+        }
+
         return sb.toString().getBytes(StandardCharsets.UTF_8);
     }
 

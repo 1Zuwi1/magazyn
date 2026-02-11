@@ -52,9 +52,9 @@ public class ReportExportService {
         List<TemperatureAlertRackReportRow> dataRacks = reportDataService.collectTemperatureAlertRacksData(warehouseId, startDate, endDate);
         List<TemperatureAlertAssortmentReportRow> dataAssortments = reportDataService.collectTemperatureAlertAssortmentsData(warehouseId, startDate, endDate);
         return switch (format) {
-            case PDF -> pdfReportGenerator.generateTemperatureAlertReport(dataRacks);
-            case EXCEL -> excelReportGenerator.generateTemperatureAlertReport(dataRacks);
-            case CSV -> csvReportGenerator.generateTemperatureAlertReport(dataRacks);
+            case PDF -> pdfReportGenerator.generateTemperatureAlertReport(dataRacks, dataAssortments);
+            case EXCEL -> excelReportGenerator.generateTemperatureAlertReport(dataRacks, dataAssortments);
+            case CSV -> csvReportGenerator.generateTemperatureAlertReport(dataRacks, dataAssortments);
         };
     }
 

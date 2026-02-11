@@ -36,8 +36,8 @@ public class TemperatureAlertRackReportRow {
     @Schema(description = "Type of violation", example = "TEMPERATURE_TOO_HIGH")
     private String violationType;
 
-    @Schema(description = "Timestamp of the violation")
-    private Instant violationTimestamp;
+    @Schema(description = "Date of the violation")
+    private String violationTimestamp;
 
     @Schema(description = "Sensor identifier", example = "SENSOR-RACK-001")
     private String sensorId;

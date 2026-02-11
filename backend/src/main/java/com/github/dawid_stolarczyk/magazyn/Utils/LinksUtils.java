@@ -9,7 +9,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Component
 public class LinksUtils {
-    @Value("${app.webapp.url}")
+    @Value("${app.url}")
     private String webAppUrl;
 
     private static String webAppUrlStatic;

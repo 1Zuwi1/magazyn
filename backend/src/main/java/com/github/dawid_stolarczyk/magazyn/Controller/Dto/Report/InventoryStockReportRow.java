@@ -38,8 +38,8 @@ public class InventoryStockReportRow {
     private int quantity;
 
     @Schema(description = "Oldest assortment creation date")
-    private LocalDateTime oldestCreatedAt;
+    private String oldestCreatedAt;
 
     @Schema(description = "Nearest expiration date")
-    private LocalDate nearestExpiresAt;
+    private String  nearestExpiresAt;
 }

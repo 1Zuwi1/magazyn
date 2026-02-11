@@ -22,7 +22,7 @@ public class ExpiryReportRow {
     private String itemCode;
 
     @Schema(description = "Expiration date")
-    private LocalDate expirationDate;
+    private String expirationDate;
 
     @Schema(description = "Rack marker", example = "A-01")
     private String rackMarker;
