@@ -90,7 +90,12 @@ public class TelemetryController {
                 .orElseThrow(() -> new IllegalArgumentException("RACK_NOT_FOUND"));
 
         if (principal.getWarehouseId() != null) {
-            Long rackWarehouseId = rack.getWarehouse() != null ? rack.getWarehouse().getId() : null;
+            if (rack.getWarehouse() == null) {
+                log.warn("API key '{}' (warehouse={}) attempted telemetry for orphaned rack {} (no warehouse assigned)",
+                        principal.getApiKeyName(), principal.getWarehouseId(), rack.getId());
+                throw new IllegalArgumentException("WAREHOUSE_ACCESS_DENIED");
+            }
+            Long rackWarehouseId = rack.getWarehouse().getId();
             if (!principal.getWarehouseId().equals(rackWarehouseId)) {
                 log.warn("API key '{}' (warehouse={}) attempted telemetry for rack {} (warehouse={})",
                         principal.getApiKeyName(), principal.getWarehouseId(),

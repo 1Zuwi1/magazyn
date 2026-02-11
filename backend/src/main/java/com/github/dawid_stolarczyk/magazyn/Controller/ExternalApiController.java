@@ -333,7 +333,9 @@ public class ExternalApiController {
             @PathVariable Long id, HttpServletRequest request) {
         ApiKeyPrincipal principal = requireScope(ApiKeyScope.STRUCTURE_READ);
         rateLimiter.consumeOrThrow("apikey:" + principal.getApiKeyId(), RateLimitOperation.INVENTORY_READ);
-        return ResponseEntity.ok(ResponseTemplate.success(rackService.getRackById(id, request)));
+        RackDto rackDto = rackService.getRackById(id, request);
+        enforceWarehouseBinding(principal, rackDto.getWarehouseId());
+        return ResponseEntity.ok(ResponseTemplate.success(rackDto));
     }
 
     @Operation(summary = "Get assortments in a rack [STRUCTURE_READ + INVENTORY_READ]",
@@ -463,10 +465,13 @@ public class ExternalApiController {
 
     /**
      * Validates that a warehouse-bound API key can access the specified warehouse.
+     * Also blocks access to orphaned resources (no warehouse assigned) when the key is warehouse-bound.
      */
     private void enforceWarehouseBinding(ApiKeyPrincipal principal, Long warehouseId) {
-        if (principal.getWarehouseId() != null && !principal.getWarehouseId().equals(warehouseId)) {
-            throw new IllegalArgumentException("WAREHOUSE_ACCESS_DENIED");
+        if (principal.getWarehouseId() != null) {
+            if (warehouseId == null || !principal.getWarehouseId().equals(warehouseId)) {
+                throw new IllegalArgumentException("WAREHOUSE_ACCESS_DENIED");
+            }
         }
     }
 
