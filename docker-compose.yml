@@ -1,5 +1,5 @@
 volumes:
-  postgres_data: {}
+  mysql_data_public: {}
 
 networks:
   proxy:
@@ -12,7 +12,6 @@ networks:
     external: true
     name: magazyn-baza
   dbnet_2:
-    driver: bridge
 
 services:
   web:
@@ -20,7 +19,7 @@ services:
     restart: unless-stopped
     env_file:
       - ./env/.env.web
-    ports:
+    expose:
       - "3001"
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -37,7 +36,7 @@ services:
       - VIRTUAL_HOST=magazyn.ordermaster.pl
       - VIRTUAL_PORT=8080
       - VIRTUAL_PATH=/api
-    ports:
+    expose:
       - "8080"
     networks: [proxy, app_back, app_front, magazyn-baza]
 
@@ -67,6 +66,7 @@ services:
       - postgres
     networks: [dbnet_2, magazyn-baza]
 
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -81,5 +81,18 @@ services:
       interval: 2s
       timeout: 1s
       retries: 20
-      start_period: 2s 
+      start_period: 2s
     networks: [app_back]
+
+  rembg:
+    image: danielgatis/rembg:latest
+    container_name: magazyn-rembg
+    command: s
+    ports:
+      - "7000:7000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7000/api"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
