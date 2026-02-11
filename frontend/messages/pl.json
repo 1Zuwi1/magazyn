@@ -748,6 +748,12 @@
       "embeddingGenerationFailed": "Generowanie embeddingów nieudane",
       "assortmentExpired": "Asortyment przeterminowany",
       "assortmentCloseExpiration": "Asortyment bliski terminu",
+      "backupCompleted": "Kopia zapasowa ukończona",
+      "backupFailed": "Kopia zapasowa nieudana",
+      "restoreCompleted": "Przywracanie ukończone",
+      "restoreFailed": "Przywracanie nieudane",
+      "adminMessages": "Wiadomość od administratora",
+      "unauthorizedOutbound": "Nieautoryzowane wydanie",
       "csv": {
         "usernameMustLeast3Characters": "Nazwa użytkownika musi mieć co najmniej 3 znaki",
         "username20CharactersLong": "Nazwa użytkownika może mieć maksymalnie 20 znaków",

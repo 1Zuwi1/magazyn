@@ -16,12 +16,13 @@ import type { Item as DashboardItem } from "@/components/dashboard/types"
 import { Button } from "@/components/ui/button"
 import useItems, {
   type Item as ApiItem,
+  useBatchUploadItemPhotos,
   useCreateItem,
   useDeleteItem,
   useImportItems,
   useUpdateItem,
 } from "@/hooks/use-items"
-import { useAppTranslations } from "@/i18n/use-translations"
+import { type AppTranslate, useAppTranslations } from "@/i18n/use-translations"
 import { AdminPageHeader } from "../components/admin-page-header"
 import { ImportItemPhotosDialog } from "./import-item-photos-dialog"
 import { ItemDialog, type ItemFormData, PhotoPromptDialog } from "./item-dialog"
@@ -64,6 +65,40 @@ const buildItemMutationData = (data: ItemFormData) => {
   }
 }
 
+const BATCH_IMPORT_ERROR_LIMIT = 3
+const BATCH_IMPORT_FALLBACK_CODE_MAP = {
+  NOT_FOUND: "RESOURCE_NOT_FOUND",
+} as const
+
+const formatBatchPhotoImportError = (
+  value: string,
+  t: AppTranslate
+): string => {
+  const [firstPart, ...restParts] = value.split(":")
+  const rawCode = firstPart?.trim()
+  const details = restParts.join(":").trim()
+
+  if (!rawCode) {
+    return value
+  }
+
+  const fallbackCode =
+    BATCH_IMPORT_FALLBACK_CODE_MAP[
+      rawCode as keyof typeof BATCH_IMPORT_FALLBACK_CODE_MAP
+    ]
+  let translationKey: string | undefined
+  if (t.has(`errorCodes.${rawCode}`)) {
+    translationKey = rawCode
+  } else if (fallbackCode && t.has(`errorCodes.${fallbackCode}`)) {
+    translationKey = fallbackCode
+  }
+  const translatedCode = translationKey
+    ? t(`errorCodes.${translationKey}`)
+    : rawCode
+
+  return details.length > 0 ? `${translatedCode}: ${details}` : translatedCode
+}
+
 export default function ItemsMain() {
   const t = useAppTranslations()
 
@@ -88,6 +123,7 @@ export default function ItemsMain() {
   const updateItemMutation = useUpdateItem()
   const deleteItemMutation = useDeleteItem()
   const importItemsMutation = useImportItems()
+  const batchUploadItemPhotosMutation = useBatchUploadItemPhotos()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<DashboardItem | undefined>(
     undefined
@@ -202,9 +238,41 @@ export default function ItemsMain() {
     )
   }
 
-  const handlePhotosImport = (_files: File[]): Promise<void> => {
-    // TODO: connect batch photo import mutation when API endpoint is available.
-    return Promise.resolve()
+  const handlePhotosImport = async (files: File[]): Promise<void> => {
+    const output = await batchUploadItemPhotosMutation.mutateAsync({ files })
+    const importErrors = output
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0)
+
+    if (importErrors.length > 0) {
+      const importedCount = Math.max(files.length - importErrors.length, 0)
+      toast.warning(
+        t("generated.admin.shared.importPartiallyCompleted", {
+          value0: importedCount,
+          value1: files.length,
+        })
+      )
+
+      const visibleErrors = importErrors
+        .slice(0, BATCH_IMPORT_ERROR_LIMIT)
+        .map((value) => formatBatchPhotoImportError(value, t))
+      const hiddenErrorsCount = importErrors.length - visibleErrors.length
+      const warningMessage =
+        hiddenErrorsCount > 0
+          ? `${visibleErrors.join("\n")}\n${t("generated.admin.shared.more", {
+              value0: hiddenErrorsCount,
+            })}`
+          : visibleErrors.join("\n")
+
+      toast.warning(warningMessage)
+      return
+    }
+
+    toast.success(
+      t("generated.admin.items.imported", {
+        value0: files.length,
+      })
+    )
   }
 
   const dangerousCount = dangerousItemsData?.totalElements ?? 0
@@ -308,6 +376,7 @@ export default function ItemsMain() {
       />
 
       <ImportItemPhotosDialog
+        isImporting={batchUploadItemPhotosMutation.isPending}
         onImport={handlePhotosImport}
         onOpenChange={setImportPhotosDialogOpen}
         open={importPhotosDialogOpen}

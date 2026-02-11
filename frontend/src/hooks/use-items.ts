@@ -11,6 +11,7 @@ import {
   type InferApiOutput,
 } from "@/lib/fetcher"
 import {
+  BatchUploadPhotoSchema,
   CreateItemSchema,
   DeleteItemSchema,
   ItemDetailsSchema,
@@ -246,6 +247,26 @@ export function useUploadItemPhoto() {
         body: { photo },
         formData: (formData, data) => {
           formData.append("file", data.photo)
+        },
+      }),
+    onSuccess: (_, __, ___, context) => {
+      context.client.invalidateQueries({
+        queryKey: ITEMS_QUERY_KEY,
+      })
+    },
+  })
+}
+
+export function useBatchUploadItemPhotos() {
+  return useApiMutation({
+    mutationFn: ({ files }: { files: File[] }) =>
+      apiFetch("/api/items/photo/import", BatchUploadPhotoSchema, {
+        method: "POST",
+        body: { files },
+        formData: (formData, data) => {
+          for (const file of data.files) {
+            formData.append("files", file)
+          }
         },
       }),
     onSuccess: (_, __, ___, context) => {

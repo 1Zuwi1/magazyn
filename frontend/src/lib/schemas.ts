@@ -817,6 +817,13 @@ export const UploadItemPhotoSchema = createApiSchema({
   },
 })
 
+export const BatchUploadPhotoSchema = createApiSchema({
+  POST: {
+    input: z.object({ files: z.array(z.instanceof(File)) }),
+    output: z.array(z.string()),
+  },
+})
+
 const RackSchema = z.object({
   id: z.number().int().nonnegative(),
   marker: z.string(),
@@ -1223,7 +1230,6 @@ export const BackupStatusSchema = z.enum([
 export type BackupStatus = z.infer<typeof BackupStatusSchema>
 
 export const BackupScheduleCodeSchema = z.enum(["DAILY", "WEEKLY", "MONTHLY"])
-export type BackupScheduleCode = z.infer<typeof BackupScheduleCodeSchema>
 
 const BackupResourceTypesArraySchema = z
   .array(BackupResourceTypeSchema)
@@ -1267,7 +1273,7 @@ const BackupCreateInputSchema = z.object({
 })
 
 const BackupScheduleSchema = z.object({
-  warehouseId: z.number().int().nonnegative(),
+  warehouseId: z.number().int().nonnegative().nullish(),
   warehouseName: z.string(),
   scheduleCode: BackupScheduleCodeSchema,
   backupHour: z.number().int().min(0).max(23),
@@ -1445,6 +1451,12 @@ export const AlertTypeSchema = z.enum([
   "EMBEDDING_GENERATION_FAILED",
   "ASSORTMENT_EXPIRED",
   "ASSORTMENT_CLOSE_TO_EXPIRY",
+  "BACKUP_COMPLETED",
+  "BACKUP_FAILED",
+  "RESTORE_COMPLETED",
+  "RESTORE_FAILED",
+  "ADMIN_MESSAGE",
+  "UNAUTHORIZED_OUTBOUND",
 ])
 
 export type AlertType = z.infer<typeof AlertTypeSchema>
@@ -1492,6 +1504,30 @@ const ALERT_TYPE_OPTION_KEYS: ReadonlyArray<{
   {
     value: "ASSORTMENT_CLOSE_TO_EXPIRY",
     labelKey: "generated.validation.assortmentCloseExpiration",
+  },
+  {
+    value: "BACKUP_COMPLETED",
+    labelKey: "generated.validation.backupCompleted",
+  },
+  {
+    value: "BACKUP_FAILED",
+    labelKey: "generated.validation.backupFailed",
+  },
+  {
+    value: "RESTORE_COMPLETED",
+    labelKey: "generated.validation.restoreCompleted",
+  },
+  {
+    value: "RESTORE_FAILED",
+    labelKey: "generated.validation.restoreFailed",
+  },
+  {
+    value: "ADMIN_MESSAGE",
+    labelKey: "generated.validation.adminMessage",
+  },
+  {
+    value: "UNAUTHORIZED_OUTBOUND",
+    labelKey: "generated.validation.unauthorizedOutbound",
   },
 ] as const
 

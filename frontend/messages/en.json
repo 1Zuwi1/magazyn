@@ -748,6 +748,12 @@
       "embeddingGenerationFailed": "Embedding generation failed",
       "assortmentExpired": "Assortment expired",
       "assortmentCloseExpiration": "Assortment close to expiration",
+      "backupCompleted": "Backup completed",
+      "backupFailed": "Backup failed",
+      "restoreCompleted": "Restore completed",
+      "restoreFailed": "Restore failed",
+      "adminMessages": "Admin messages",
+      "unauthorizedOutbound": "Unauthorized outbound",
       "csv": {
         "usernameMustLeast3Characters": "The username must be at least 3 characters long",
         "username20CharactersLong": "The username can be up to 20 characters long",

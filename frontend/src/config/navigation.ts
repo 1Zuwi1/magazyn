@@ -3,6 +3,7 @@ import {
   Analytics01Icon,
   Attachment01Icon,
   Bell,
+  Book04Icon,
   DatabaseIcon,
   Package,
   Settings,
@@ -94,7 +95,7 @@ export const getNavigationItems = (t: AppTranslate): NavigationItem[] =>
         {
           title: t("generated.shared.reports"),
           href: "/admin/reports",
-          icon: Analytics01Icon,
+          icon: Book04Icon,
         },
         {
           title: t("generated.shared.backups"),
