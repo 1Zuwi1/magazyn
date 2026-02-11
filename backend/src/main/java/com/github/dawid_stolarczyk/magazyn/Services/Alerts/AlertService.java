@@ -17,10 +17,15 @@ import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperati
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import java.util.Arrays;
 import java.util.List;
@@ -38,6 +43,9 @@ public class AlertService {
     private final AlertRepository alertRepository;
     private final UserRepository userRepository;
     private final Bucket4jRateLimiter rateLimiter;
+
+    @Value("${app.alert.retention-hours:1}")
+    private int alertRetentionHours;
 
     /**
      * Get all alerts with pagination (global view)
@@ -187,5 +195,19 @@ public class AlertService {
         private long resolvedAlerts;
         private long dismissedAlerts;
         private long unresolvedAlerts;
+    }
+
+    @Transactional
+    @Scheduled(fixedRate = 3600000, initialDelay = 60000)
+    public void cleanupOldAlerts() {
+        Instant cutoffDate = Instant.now().minus(alertRetentionHours, ChronoUnit.HOURS);
+        log.info("Starting cleanup of resolved/dismissed alerts older than {} hours (before {})",
+                alertRetentionHours, cutoffDate);
+
+        int deletedCount = alertRepository.deleteOldResolvedAlerts(cutoffDate);
+
+        if (deletedCount > 0) {
+            log.info("Deleted {} old resolved/dismissed alerts", deletedCount);
+        }
     }
 }

@@ -80,3 +80,6 @@ app.backup.streaming-pool-size=8
 app.backup.retention-days=30
 # Minimum number of backups to keep per warehouse (regardless of age)
 app.backup.min-keep-count=3
+# Alert retention policy (in hours) - old resolved/dismissed alerts will be automatically deleted
+app.alert.retention-hours=1
+
