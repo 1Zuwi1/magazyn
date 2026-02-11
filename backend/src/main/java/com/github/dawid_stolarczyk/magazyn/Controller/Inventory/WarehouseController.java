@@ -4,6 +4,7 @@ import com.github.dawid_stolarczyk.magazyn.Common.ConfigurationConstants;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.*;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.ExpiryFilters;
 import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.WarehouseImportService;
+import com.github.dawid_stolarczyk.magazyn.Services.ImportExport.WarehouseExportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Inventory.WarehouseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 public class WarehouseController {
     private final WarehouseService warehouseService;
     private final WarehouseImportService warehouseImportService;
+    private final WarehouseExportService warehouseExportService;
     private final com.github.dawid_stolarczyk.magazyn.Services.Inventory.RackService rackService;
     private final com.github.dawid_stolarczyk.magazyn.Services.Inventory.AssortmentService assortmentService;
 
@@ -205,5 +207,82 @@ public class WarehouseController {
     public ResponseEntity<ResponseTemplate<WarehouseImportReport>> importWarehouses(
             @RequestPart("file") MultipartFile file) {
         return ResponseEntity.ok(ResponseTemplate.success(warehouseImportService.importFromCsv(file)));
+    }
+
+    @Operation(summary = "Export all warehouses to CSV",
+            description = "Export all warehouses to CSV format compatible with import")
+    @ApiResponse(responseCode = "200", description = "CSV file",
+            content = @Content(mediaType = "text/csv"))
+    @GetMapping(value = "/export", produces = "text/csv")
+    public ResponseEntity<String> exportAllWarehouses() {
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=warehouses.csv")
+                .body(warehouseExportService.exportAllWarehouses());
+    }
+
+    @Operation(summary = "Export warehouse by ID to CSV",
+            description = "Export specific warehouse to CSV format compatible with import")
+    @ApiResponse(responseCode = "200", description = "CSV file",
+            content = @Content(mediaType = "text/csv"))
+    @GetMapping(value = "/{warehouseId}/export", produces = "text/csv")
+    public ResponseEntity<String> exportWarehouseById(@PathVariable Long warehouseId) {
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=warehouse_" + warehouseId + ".csv")
+                .body(warehouseExportService.exportWarehouseById(warehouseId));
+    }
+
+    @Operation(summary = "Export all items to CSV",
+            description = "Export all items to CSV format compatible with import")
+    @ApiResponse(responseCode = "200", description = "CSV file",
+            content = @Content(mediaType = "text/csv"))
+    @GetMapping(value = "/items/export", produces = "text/csv")
+    public ResponseEntity<String> exportAllItems() {
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=items.csv")
+                .body(warehouseExportService.exportAllItems());
+    }
+
+    @Operation(summary = "Export items by warehouse ID to CSV",
+            description = "Export items stored in specific warehouse to CSV format compatible with import")
+    @ApiResponse(responseCode = "200", description = "CSV file",
+            content = @Content(mediaType = "text/csv"))
+    @GetMapping(value = "/{warehouseId}/items/export", produces = "text/csv")
+    public ResponseEntity<String> exportItemsByWarehouseId(@PathVariable Long warehouseId) {
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=warehouse_" + warehouseId + "_items.csv")
+                .body(warehouseExportService.exportItemsByWarehouseId(warehouseId));
+    }
+
+    @Operation(summary = "Export racks by warehouse ID to CSV",
+            description = "Export racks from specific warehouse to CSV format compatible with import")
+    @ApiResponse(responseCode = "200", description = "CSV file",
+            content = @Content(mediaType = "text/csv"))
+    @GetMapping(value = "/{warehouseId}/racks/export", produces = "text/csv")
+    public ResponseEntity<String> exportRacksByWarehouseId(@PathVariable Long warehouseId) {
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=warehouse_" + warehouseId + "_racks.csv")
+                .body(warehouseExportService.exportRacksByWarehouseId(warehouseId));
+    }
+
+    @Operation(summary = "Export assortments by warehouse ID to CSV",
+            description = "Export assortments from specific warehouse to CSV format compatible with import")
+    @ApiResponse(responseCode = "200", description = "CSV file",
+            content = @Content(mediaType = "text/csv"))
+    @GetMapping(value = "/{warehouseId}/assortments/export", produces = "text/csv")
+    public ResponseEntity<String> exportAssortmentsByWarehouseId(@PathVariable Long warehouseId) {
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=warehouse_" + warehouseId + "_assortments.csv")
+                .body(warehouseExportService.exportAssortmentsByWarehouseId(warehouseId));
+    }
+
+    @Operation(summary = "Export all data by warehouse ID to CSV",
+            description = "Export items, racks and assortments from specific warehouse to CSV format compatible with import (combined export)")
+    @ApiResponse(responseCode = "200", description = "CSV file with sections for items, racks and assortments",
+            content = @Content(mediaType = "text/csv"))
+    @GetMapping(value = "/{warehouseId}/export-all", produces = "text/csv")
+    public ResponseEntity<String> exportAllByWarehouseId(@PathVariable Long warehouseId) {
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=warehouse_" + warehouseId + "_all.csv")
+                .body(warehouseExportService.exportAllByWarehouseId(warehouseId));
     }
 }

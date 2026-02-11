@@ -186,53 +186,6 @@ public class ItemController {
     }
 
     @Operation(
-            summary = "Upload item photo (ADMIN only)",
-            description = """
-                    Uploads an encrypted photo for a product to S3-compatible storage. Requires ADMIN role.
-                    Only image files (JPEG, PNG, WebP) are accepted.
-                    Previous photo (if exists) will be automatically deleted.
-                    """
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Photo uploaded successfully - returns S3 file path",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class, example = "items-photos/encrypted-photo.bin"))
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid file format or item not found",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "Access denied - requires ADMIN role",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
-            ),
-            @ApiResponse(
-                    responseCode = "500",
-                    description = "Failed to upload photo to storage",
-                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))
-            )
-    })
-    @PostMapping(value = "/{id}/photo", consumes = "multipart/form-data")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<String>> uploadPhoto(@PathVariable Long id, @RequestPart("file") MultipartFile file, HttpServletRequest request) {
-        try {
-            return ResponseEntity.ok(ResponseTemplate.success(itemService.uploadPhoto(id, file, request)));
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid photo upload request for item {}: {}", id, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getMessage()));
-        } catch (IllegalStateException e) {
-            log.error("Storage state error while uploading photo for item {}: {}", id, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error("PHOTO_UPLOAD_FAILED"));
-        } catch (Exception e) {
-            log.error("Unexpected error uploading photo for item {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error("PHOTO_UPLOAD_FAILED"));
-        }
-    }
-
-    @Operation(
             summary = "Download item photo",
             description = """
                     Downloads and decrypts the product photo from S3-compatible storage.
@@ -333,27 +286,27 @@ public class ItemController {
         }
     }
 
-    @Operation(summary = "Upload additional photo for item (ADMIN only)",
-            description = "Uploads an additional photo to the item's image gallery. Max 10 images per item.")
+    @Operation(summary = "Upload multiple photos for item (ADMIN only)",
+            description = "Uploads multiple photos to the item's image gallery. Max 10 images per item.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Photo uploaded successfully"),
+            @ApiResponse(responseCode = "201", description = "Photos uploaded successfully"),
             @ApiResponse(responseCode = "400", description = "Error codes: MAX_IMAGES_EXCEEDED, FILE_IS_EMPTY, INVALID_FILE_TYPE"),
             @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND")
     })
     @PostMapping(value = "/{id}/photos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseTemplate<ItemImageDto>> uploadAdditionalPhoto(
+    public ResponseEntity<ResponseTemplate<List<ItemImageDto>>> uploadMultiplePhotos(
             @PathVariable Long id,
-            @RequestPart("file") MultipartFile file,
+            @RequestPart("files") List<MultipartFile> files,
             HttpServletRequest request) {
         try {
-            ItemImageDto result = itemService.uploadAdditionalPhoto(id, file, request);
+            List<ItemImageDto> result = itemService.uploadMultiplePhotos(id, files, request);
             return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(result));
         } catch (IllegalArgumentException e) {
-            log.warn("Invalid additional photo upload for item {}: {}", id, e.getMessage());
+            log.warn("Invalid photos upload for item {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getMessage()));
         } catch (Exception e) {
-            log.error("Unexpected error uploading additional photo for item {}", id, e);
+            log.error("Unexpected error uploading photos for item {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error("PHOTO_UPLOAD_FAILED"));
         }
     }

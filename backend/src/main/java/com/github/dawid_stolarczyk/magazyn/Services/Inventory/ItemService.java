@@ -225,110 +225,67 @@ public class ItemService {
     }
 
     /**
-     * Uploads a photo as the primary image for an item.
-     * Creates or replaces the primary ItemImage record.
+     * Uploads multiple photos for an item.
      */
     @Transactional
-    public String uploadPhoto(Long id, MultipartFile file, HttpServletRequest request) throws Exception {
+    public List<ItemImageDto> uploadMultiplePhotos(Long id, List<MultipartFile> files, HttpServletRequest request) throws Exception {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
 
-        validateImageFile(file);
+        if (files == null || files.isEmpty()) {
+            throw new IllegalArgumentException(InventoryError.FILE_IS_EMPTY.name());
+        }
 
-        byte[] imageBytes = processImage(file);
-        String fileName = encryptAndUpload(imageBytes, id);
+        int currentCount = itemImageRepository.countByItemId(id);
+        int slotsAvailable = maxImagesPerItem - currentCount;
 
-        // Find existing primary image
-        Optional<ItemImage> existingPrimary = itemImageRepository.findByItemIdAndIsPrimaryTrue(id);
-        String previousPhoto = existingPrimary.map(ItemImage::getPhotoUrl).orElse(item.getPhoto_url());
+        if (files.size() > slotsAvailable) {
+            throw new IllegalArgumentException(InventoryError.MAX_IMAGES_EXCEEDED.name());
+        }
 
-        float[] embedding = generateEmbedding(imageBytes);
+        List<ItemImageDto> results = new ArrayList<>();
 
-        try {
-            if (existingPrimary.isPresent()) {
-                // Update existing primary image
-                ItemImage primaryImage = existingPrimary.get();
-                primaryImage.setPhotoUrl(fileName);
-                primaryImage.setImageEmbedding(embedding);
-                itemImageRepository.save(primaryImage);
-            } else {
-                // Create new primary image
+        for (MultipartFile file : files) {
+            validateImageFile(file);
+
+            byte[] imageBytes = processImage(file);
+            String fileName = encryptAndUpload(imageBytes, id);
+
+            float[] embedding = generateEmbedding(imageBytes);
+            boolean shouldBePrimary = currentCount == 0;
+            int displayOrder = itemImageRepository.getNextDisplayOrder(id);
+
+            try {
+                if (shouldBePrimary) {
+                    itemImageRepository.clearPrimaryForItem(id);
+                }
+
                 ItemImage newImage = ItemImage.builder()
                         .item(item)
                         .photoUrl(fileName)
                         .imageEmbedding(embedding)
-                        .isPrimary(true)
-                        .displayOrder(0)
+                        .isPrimary(shouldBePrimary)
+                        .displayOrder(displayOrder)
                         .build();
-                itemImageRepository.save(newImage);
+                newImage = itemImageRepository.save(newImage);
+
+                // If this is the first image, update denormalized fields
+                if (shouldBePrimary) {
+                    item.setPhoto_url(fileName);
+                    item.setImageUploaded(true);
+                    itemRepository.save(item);
+                }
+
+                results.add(mapToImageDto(newImage));
+                currentCount++;
+            } catch (Exception ex) {
+                cleanupFailedUpload(fileName);
+                throw ex;
             }
-
-            // Update denormalized fields on Item
-            item.setPhoto_url(fileName);
-            item.setImageUploaded(true);
-            itemRepository.save(item);
-        } catch (Exception ex) {
-            cleanupFailedUpload(fileName);
-            throw ex;
         }
 
-        if (previousPhoto != null && !previousPhoto.isBlank() && !previousPhoto.equals(fileName)) {
-            storageService.delete(previousPhoto);
-        }
-
-        return fileName;
-    }
-
-    /**
-     * Uploads an additional (non-primary) photo for an item.
-     */
-    @Transactional
-    public ItemImageDto uploadAdditionalPhoto(Long id, MultipartFile file, HttpServletRequest request) throws Exception {
-        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
-        Item item = itemRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
-
-        int currentCount = itemImageRepository.countByItemId(id);
-        if (currentCount >= maxImagesPerItem) {
-            throw new IllegalArgumentException(InventoryError.MAX_IMAGES_EXCEEDED.name());
-        }
-
-        validateImageFile(file);
-
-        byte[] imageBytes = processImage(file);
-        String fileName = encryptAndUpload(imageBytes, id);
-
-        float[] embedding = generateEmbedding(imageBytes);
-        boolean shouldBePrimary = currentCount == 0;
-        int displayOrder = itemImageRepository.getNextDisplayOrder(id);
-
-        try {
-            if (shouldBePrimary) {
-                itemImageRepository.clearPrimaryForItem(id);
-            }
-
-            ItemImage newImage = ItemImage.builder()
-                    .item(item)
-                    .photoUrl(fileName)
-                    .imageEmbedding(embedding)
-                    .isPrimary(shouldBePrimary)
-                    .displayOrder(displayOrder)
-                    .build();
-            newImage = itemImageRepository.save(newImage);
-
-            // If this is the first image, update denormalized fields
-            if (shouldBePrimary) {
-                item.setPhoto_url(fileName);
-                item.setImageUploaded(true);
-                itemRepository.save(item);
-            }
-
-            return mapToImageDto(newImage);
-        } catch (Exception ex) {
-            cleanupFailedUpload(fileName);
-            throw ex;
-        }
+        return results;
     }
 
     /**
