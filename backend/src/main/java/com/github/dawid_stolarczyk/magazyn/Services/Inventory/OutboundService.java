@@ -36,7 +36,7 @@ public class OutboundService {
 
     /**
      * Plan: zwraca FIFO-ordered pick list dla podanego produktu.
-     * Wyklucza wygasłe assortmenty (expires_at <= NOW()).
+     * Wyklucza wygasłe assortmenty.
      * Zwraca ostrzeżenie jeśli wszystkie assortmenty wygasły.
      */
     public OutboundPlanResponse plan(OutboundPlanRequest request, HttpServletRequest httpRequest) {
@@ -116,7 +116,7 @@ public class OutboundService {
     /**
      * Execute: wydaje assortmenty z magazynu, tworzy rekordy audytu.
      * Cała operacja jest transakcyjna — albo wszystko, albo nic.
-     * Blokuje wydanie wygasłych assortmentów (expires_at <= NOW()).
+     * Blokuje wydanie wygasłych assortmentów.
      */
     @Transactional(rollbackFor = Exception.class)
     public OutboundExecuteResponse execute(OutboundExecuteRequest request, HttpServletRequest httpRequest) {

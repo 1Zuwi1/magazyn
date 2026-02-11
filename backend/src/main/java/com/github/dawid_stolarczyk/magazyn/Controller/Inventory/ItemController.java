@@ -395,14 +395,14 @@ public class ItemController {
             summary = "Import items (products) from CSV (ADMIN only)",
             description = """
                     Import produktów z pliku CSV ze **stałą kolejnością kolumn** (bez nagłówka).
-
+                    
                     **Format CSV:**
                     - Separator: **średnik (;)**
                     - Kodowanie: **UTF-8**
                     - **Bez nagłówka** (pierwsza linia to już dane)
                     - Linie zaczynające się od '#' są ignorowane (komentarze)
                     - Przecinki w wartościach są bezpieczne (np. "Mleko 3,2%")
-
+                    
                     **Kolejność kolumn (STAŁA):**
                     1. **Nazwa** (String) - Nazwa produktu
                        - WYMAGANE
@@ -431,7 +431,7 @@ public class ItemController {
                         - OPCJONALNE
                     12. **CzyNiebezpieczny** (Boolean) - TRUE/FALSE - czy produkt jest niebezpieczny
                         - OPCJONALNE (domyślnie FALSE)
-
+                    
                     **Przykład pliku CSV:**
                     ```
                     #Nazwa;Id;Zdjecie;TempMin;TempMax;Waga;SzerokoscMm;WysokoscMm;GlebokoscMm;Komentarz;TerminWaznosciDni;CzyNiebezpieczny
@@ -439,25 +439,25 @@ public class ItemController {
                     Lody waniliowe;;lody.png;-18;-12;0.5;15;10;8;Produkt mrożony;180;FALSE
                     Aceton techniczny;;aceton.jpg;10;25;2.5;30;20;15;Substancja łatwopalna;365;TRUE
                     ```
-
+                    
                     **Workflow uploadu zdjęć:**
                     1. Import CSV z nazwami zdjęć w kolumnie "Zdjecie"
                     2. Użyj endpointu POST /items/photos/batch-upload z plikami zdjęć
                     3. Zdjęcia są dopasowywane do produktów po nazwie pliku
                     4. Po dopasowaniu, zdjęcia są szyfrowane i uploadowane na S3
                     5. `imageUploaded` jest ustawiane na true
-
+                    
                     **Uwagi:**
                     - GS1-128 barcode code produktu jest generowany automatycznie (16-cyfrowy kod produktu z prefiksem 01)
                     - Nazwy zdjęć muszą być unikalne - powtórzenia powodują błąd importu
                     - Zdjęcia nie są wymagane przy imporcie - można je dodać później
-
+                    
                     **Walidacja pliku:**
                     - Tylko pliki CSV (rozszerzenia: .csv, .txt)
                     - Content-Type: text/csv, text/plain, application/csv
                     - Maksymalny rozmiar: 5MB
                     - Plik nie może być pusty
-
+                    
                     **Odpowiedź:**
                     - `processedLines` - liczba przetworzonych linii
                     - `imported` - liczba zaimportowanych produktów

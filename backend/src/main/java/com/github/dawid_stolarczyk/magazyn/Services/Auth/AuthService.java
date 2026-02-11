@@ -51,11 +51,21 @@ public class AuthService {
     private final GeolocationService geolocationService;
 
 
+    /**
+     * Logs out the current user by clearing session cookies and invalidating the session.
+     */
     public void logoutUser(HttpServletResponse response, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.AUTH_LOGOUT);
         sessionManager.logoutUser(response, request);
     }
 
+    /**
+     * Authenticates a user with email and password.
+     * Creates session cookies and redirects to 2FA if required.
+     *
+     * @param loginRequest containing email, password, and rememberMe flag
+     * @throws AuthenticationException for invalid credentials, locked accounts, or unverified email
+     */
     public void loginUser(LoginRequest loginRequest, HttpServletResponse response, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.AUTH_LOGIN);
 
@@ -70,12 +80,10 @@ public class AuthService {
         }
 
         if (user.getEmailStatus().equals(EmailStatus.UNVERIFIED)) {
-            // Automatically resend verification email with strict rate limiting
             resendVerificationEmail(user, request);
             throw new AuthenticationException(AuthError.EMAIL_UNVERIFIED.name());
         }
 
-        // Aktualizacja lastLogin przy każdym udanym uwierzytelnieniu
         user.setLastLogin(Timestamp.from(Instant.now()));
         userRepository.save(user);
 
@@ -83,6 +91,13 @@ public class AuthService {
 
     }
 
+    /**
+     * Registers a new user account.
+     * Creates user, generates email verification token, and sends verification email.
+     *
+     * @param registerRequest containing email, password, full name, and phone number
+     * @throws AuthenticationException if email or phone is already taken, or password is weak
+     */
     @Transactional
     public void registerUser(RegisterRequest registerRequest, HttpServletRequest request) throws AuthenticationException {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.AUTH_REGISTER);
@@ -106,7 +121,6 @@ public class AuthService {
         newUser.setStatus(AccountStatus.PENDING_VERIFICATION);
         newUser.setEmailStatus(EmailStatus.UNVERIFIED);
 
-        // Get and set location from IP address
         String clientIp = getClientIp(request);
         String location = geolocationService.getLocationFromIp(clientIp);
         newUser.setLocation(location);
@@ -124,6 +138,13 @@ public class AuthService {
         emailService.sendVerificationEmail(newUser.getEmail(), url);
     }
 
+    /**
+     * Verifies user email address using a verification token.
+     * Token is valid for 15 minutes after generation.
+     *
+     * @param token verification token from email link
+     * @throws AuthenticationException for invalid or expired tokens
+     */
     @Transactional
     public void verifyEmailCheck(String token, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.AUTH_FREE);
@@ -139,6 +160,13 @@ public class AuthService {
         userRepository.save(user);
     }
 
+    /**
+     * Initiates password reset flow for a given email.
+     * Generates a reset token valid for 15 minutes and sends reset link via email.
+     *
+     * @param email email address of the user requesting password reset
+     * @throws AuthenticationException if email is not found
+     */
     @Transactional(rollbackFor = Exception.class)
     public void forgotPassword(String email, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.FORGOT_PASSWORD);
@@ -150,7 +178,6 @@ public class AuthService {
 
         passwordResetTokenRepository.flush();
 
-        // Generate new reset token
         String resetToken = UUID.randomUUID().toString();
         PasswordResetToken passwordResetToken = new PasswordResetToken();
         passwordResetToken.setResetToken(Hasher.hashSHA256(resetToken));
@@ -163,6 +190,14 @@ public class AuthService {
         emailService.sendPasswordResetEmail(user.getEmail(), url);
     }
 
+    /**
+     * Resets user password using a valid reset token.
+     * Token can only be used once and expires after 15 minutes.
+     *
+     * @param token       password reset token from email link
+     * @param newPassword new password to set (must meet strength requirements)
+     * @throws AuthenticationException for invalid/expired tokens or weak passwords
+     */
     @Transactional(rollbackFor = Exception.class)
     public void resetPassword(String token, String newPassword, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.AUTH_FREE);
@@ -182,12 +217,10 @@ public class AuthService {
             throw new AuthenticationException(AuthError.RESET_TOKEN_INVALID.name());
         }
 
-        // Update password
         User user = passwordResetToken.getUser();
         user.setRawPassword(newPassword);
         userRepository.save(user);
 
-        // Mark token as used and delete it
         passwordResetToken.setUsed(true);
         passwordResetTokenRepository.deleteById(passwordResetToken.getId());
     }
@@ -196,7 +229,6 @@ public class AuthService {
     private void resendVerificationEmail(User user, HttpServletRequest request) {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.EMAIL_VERIFICATION_RESEND);
 
-        // Delete existing verification token if present
         EmailVerification existingVerification = user.getEmailVerifications();
         if (existingVerification != null) {
             user.removeEmailVerifications();
@@ -205,7 +237,6 @@ public class AuthService {
             emailVerificationRepository.flush();
         }
 
-        // Generate new verification token
         EmailVerification emailVerification = new EmailVerification();
         String emailVerificationToken = UUID.randomUUID().toString();
         emailVerification.setVerificationToken(Hasher.hashSHA256(emailVerificationToken));

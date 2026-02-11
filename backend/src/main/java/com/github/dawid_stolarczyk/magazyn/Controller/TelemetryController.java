@@ -12,6 +12,8 @@ import com.github.dawid_stolarczyk.magazyn.Services.Alerts.RackReportService;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -59,10 +61,14 @@ public class TelemetryController {
                     if thresholds are exceeded.
                     """)
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Telemetry data accepted and processed"),
-            @ApiResponse(responseCode = "401", description = "Missing or invalid API key"),
-            @ApiResponse(responseCode = "403", description = "Error codes: INSUFFICIENT_SCOPE, WAREHOUSE_ACCESS_DENIED"),
-            @ApiResponse(responseCode = "400", description = "Error codes: RACK_NOT_FOUND, VALIDATION_ERROR")
+            @ApiResponse(responseCode = "201", description = "Telemetry data accepted and processed",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccessData.class))),
+            @ApiResponse(responseCode = "401", description = "Missing or invalid API key",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "403", description = "Error codes: INSUFFICIENT_SCOPE, WAREHOUSE_ACCESS_DENIED",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class))),
+            @ApiResponse(responseCode = "400", description = "Error codes: RACK_NOT_FOUND, VALIDATION_ERROR",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
     @PostMapping
     public ResponseEntity<ResponseTemplate<RackReportResponse>> submitTelemetry(

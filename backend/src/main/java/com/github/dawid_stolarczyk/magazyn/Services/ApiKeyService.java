@@ -12,19 +12,23 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ApiKeyRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.WarehouseRepository;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
+import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperation;
 import com.github.dawid_stolarczyk.magazyn.Utils.Hasher;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+
+import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientIp;
 
 @Service
 @RequiredArgsConstructor
@@ -39,9 +43,20 @@ public class ApiKeyService {
     private final WarehouseRepository warehouseRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final Bucket4jRateLimiter rateLimiter;
 
+    /**
+     * Creates a new API key with the specified scopes and optional warehouse binding.
+     *
+     * @param request         API key configuration (name, scopes, optional warehouse)
+     * @param createdByUserId ID of the user creating the key
+     * @param httpRequest     HTTP request for rate limiting
+     * @return response with generated API key (raw key only returned once)
+     * @throws IllegalArgumentException if key name already exists or warehouse not found
+     */
     @Transactional(rollbackFor = Exception.class)
-    public ApiKeyCreatedResponse createApiKey(CreateApiKeyRequest request, Long createdByUserId) {
+    public ApiKeyCreatedResponse createApiKey(CreateApiKeyRequest request, Long createdByUserId, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.USER_ACTION_STRICT);
         if (apiKeyRepository.existsByName(request.getName())) {
             throw new IllegalArgumentException("API_KEY_NAME_ALREADY_EXISTS");
         }
@@ -85,14 +100,27 @@ public class ApiKeyService {
                 .build();
     }
 
+    /**
+     * Sends email notifications to all admins about a new API key creation.
+     *
+     * @param apiKeyId ID of the newly created API key
+     */
     public void sendApiKeyCreationNotification(Long apiKeyId) {
         ApiKey apiKey = apiKeyRepository.findById(apiKeyId)
                 .orElseThrow(() -> new IllegalArgumentException(AuthError.RESOURCE_NOT_FOUND.name()));
         notifyAdminsAboutNewApiKey(apiKey);
     }
 
+    /**
+     * Revokes (deactivates) an API key.
+     *
+     * @param apiKeyId    ID of the API key to revoke
+     * @param httpRequest HTTP request for rate limiting
+     * @throws IllegalArgumentException if key not found
+     */
     @Transactional
-    public void revokeApiKey(Long apiKeyId) {
+    public void revokeApiKey(Long apiKeyId, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.USER_ACTION_STRICT);
         ApiKey apiKey = apiKeyRepository.findById(apiKeyId)
                 .orElseThrow(() -> new IllegalArgumentException(AuthError.RESOURCE_NOT_FOUND.name()));
 
@@ -101,15 +129,31 @@ public class ApiKeyService {
         log.info("API key revoked: id={}, name={}", apiKey.getId(), apiKey.getName());
     }
 
+    /**
+     * Lists all API keys (active and revoked).
+     *
+     * @param httpRequest HTTP request for rate limiting
+     * @return list of API key DTOs (without raw keys)
+     */
     @Transactional(readOnly = true)
-    public List<ApiKeyResponse> listApiKeys() {
+    public List<ApiKeyResponse> listApiKeys(HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
         return apiKeyRepository.findAll().stream()
                 .map(this::toResponse)
                 .toList();
     }
 
+    /**
+     * Retrieves details of a specific API key.
+     *
+     * @param apiKeyId    ID of the API key
+     * @param httpRequest HTTP request for rate limiting
+     * @return API key DTO (without raw key)
+     * @throws IllegalArgumentException if key not found
+     */
     @Transactional(readOnly = true)
-    public ApiKeyResponse getApiKey(Long apiKeyId) {
+    public ApiKeyResponse getApiKey(Long apiKeyId, HttpServletRequest httpRequest) {
+        rateLimiter.consumeOrThrow(getClientIp(httpRequest), RateLimitOperation.INVENTORY_READ);
         ApiKey apiKey = apiKeyRepository.findById(apiKeyId)
                 .orElseThrow(() -> new IllegalArgumentException(AuthError.RESOURCE_NOT_FOUND.name()));
         return toResponse(apiKey);

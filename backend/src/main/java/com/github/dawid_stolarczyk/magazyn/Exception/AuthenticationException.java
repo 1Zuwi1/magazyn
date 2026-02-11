@@ -11,7 +11,7 @@ public class AuthenticationException extends RuntimeException {
     }
 
     public AuthenticationException(String code) {
-        super();
+        super(code);
         this.code = code;
     }
 

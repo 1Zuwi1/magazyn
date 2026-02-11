@@ -19,9 +19,7 @@ import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.RateLimitOperati
 import com.github.dawid_stolarczyk.magazyn.Utils.LinksUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -72,8 +70,8 @@ public class BackupService {
     @Qualifier("backupStreamingExecutor")
     private final ExecutorService streamingExecutor;
 
-    @Setter(onMethod_ = {@Autowired, @Lazy})
-    private BackupSchedulerManager backupSchedulerManager;
+    @Lazy
+    private final BackupSchedulerManager backupSchedulerManager;
 
     private final ConcurrentHashMap<Long, AtomicBoolean> warehouseLocks = new ConcurrentHashMap<>();
 
@@ -920,7 +918,7 @@ public class BackupService {
             log.info("Distributed {} backup notifications to admin users", notifications.size());
         }
 
-        String backupLink = LinksUtils.getWebAppUrl("/backups", null);
+        String backupLink = LinksUtils.getWebAppUrl("/admin/backups", null);
         String triggeredByName = null;
         if (backupRecord != null && backupRecord.getTriggeredBy() != null) {
             try {
@@ -951,7 +949,9 @@ public class BackupService {
                     );
                     log.info("Sent backup notification email to {}", admin.getEmail());
                 } else {
-                    emailService.sendBatchNotificationEmail(admin.getEmail(), List.of(alert.getMessage()), backupLink);
+                    emailService.sendBatchNotificationEmail(admin.getEmail(),
+                            List.of(alert.getMessage()),
+                            LinksUtils.getWebAppUrl("/dashboard/notifications", null));
                     log.info("Sent notification email to {}", admin.getEmail());
                 }
             }

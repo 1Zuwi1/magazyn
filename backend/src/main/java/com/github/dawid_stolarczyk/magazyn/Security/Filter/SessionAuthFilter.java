@@ -108,13 +108,6 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         String rememberMeToken = CookiesUtils.getCookie(request, "REMEMBER_ME");
         if (rememberMeToken != null) {
             sessionService.getRememberMeSession(rememberMeToken).ifPresentOrElse(rememberMeData -> {
-                if (!rememberMeData.getIpAddress().equals(getClientIp(request)) ||
-                        !rememberMeData.getUserAgent().equals(request.getHeader("User-Agent"))) {
-                    log.warn("Remember-me token mismatch, logging out");
-                    SecurityContextHolder.clearContext();
-                    sessionManager.logoutUser(response, request);
-                    return;
-                }
                 User user;
                 try {
                     user = userRepository.findById(rememberMeData.getUserId())

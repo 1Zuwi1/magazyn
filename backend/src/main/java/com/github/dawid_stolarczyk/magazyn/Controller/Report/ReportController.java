@@ -43,10 +43,12 @@ public class ReportController {
 
 
     @Operation(summary = "Generate expiry report [ADMIN]",
-            description = "Generates a report of products expiring within the specified number of days")
+            description = "Generates a report of products expiring within specified number of days")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Report generated successfully",
                     content = @Content(mediaType = "application/octet-stream")),
+            @ApiResponse(responseCode = "200", description = "Report sent successfully via email",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
             @ApiResponse(responseCode = "400", description = "Error codes: WAREHOUSE_NOT_FOUND, REPORT_GENERATION_FAILED",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
@@ -73,6 +75,8 @@ public class ReportController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Report generated successfully",
                     content = @Content(mediaType = "application/octet-stream")),
+            @ApiResponse(responseCode = "200", description = "Report sent successfully via email",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
             @ApiResponse(responseCode = "400", description = "Error codes: WAREHOUSE_NOT_FOUND, INVALID_DATE_RANGE, REPORT_GENERATION_FAILED",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })
@@ -99,6 +103,8 @@ public class ReportController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Report generated successfully",
                     content = @Content(mediaType = "application/octet-stream")),
+            @ApiResponse(responseCode = "200", description = "Report sent successfully via email",
+                    content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
             @ApiResponse(responseCode = "400", description = "Error codes: WAREHOUSE_NOT_FOUND, REPORT_GENERATION_FAILED",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiError.class)))
     })

@@ -135,8 +135,8 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "Update user profile (phone, location, team, full name) (ADMIN only)",
-            description = "Updates user profile. Team must be one of: OPERATIONS, LOGISTICS, WAREHOUSE, INVENTORY, QUALITY_CONTROL, RECEIVING, SHIPPING, IT_SUPPORT, MANAGEMENT")
+    @Operation(summary = "Update user profile (phone, location, team, full name, role) (ADMIN only)",
+            description = "Updates user profile. Team must be one of: OPERATIONS, LOGISTICS, WAREHOUSE, INVENTORY, QUALITY_CONTROL, RECEIVING, SHIPPING, IT_SUPPORT, MANAGEMENT. Role must be USER or ADMIN.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success - profile updated",
                     content = @Content(schema = @Schema(implementation = ResponseTemplate.ApiSuccess.class))),
