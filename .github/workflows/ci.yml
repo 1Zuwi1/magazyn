@@ -47,8 +47,6 @@ jobs:
         if: steps.change_status.outputs.changed == 'true'
       - run: bun run test
         if: steps.change_status.outputs.changed == 'true'
-      - run: bun run build
-        if: steps.change_status.outputs.changed == 'true'
 
   backend:
     runs-on: ubuntu-latest

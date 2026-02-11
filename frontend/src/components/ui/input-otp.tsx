@@ -3,6 +3,7 @@
 import { MinusSignIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { OTPInput, OTPInputContext } from "input-otp"
+import { useTranslations } from "next-intl"
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
@@ -77,6 +78,8 @@ function InputOTPSlot({
 }
 
 function InputOTPStatus({ className, id }: { className?: string; id: string }) {
+  const t = useTranslations()
+
   const inputOTPContext = React.useContext(OTPInputContext)
   const slots = inputOTPContext?.slots ?? []
   const totalSlots = slots.length
@@ -86,12 +89,22 @@ function InputOTPStatus({ className, id }: { className?: string; id: string }) {
   )
   const activeIndex = slots.findIndex((slot) => slot.isActive)
   const activePosition = activeIndex >= 0 ? activeIndex + 1 : null
-  const statusMessage =
-    totalSlots > 0
-      ? `Wpisano ${filledCount} z ${totalSlots} cyfr.${
-          activePosition ? ` Aktywna pozycja ${activePosition}.` : ""
-        }`
-      : "Wpisz kod weryfikacyjny."
+  let statusMessage = t("inputOtp.status.prompt")
+
+  if (totalSlots > 0) {
+    if (activePosition) {
+      statusMessage = t("inputOtp.status.filledWithActivePosition", {
+        value0: filledCount.toString(),
+        value1: totalSlots.toString(),
+        value2: activePosition.toString(),
+      })
+    } else {
+      statusMessage = t("inputOtp.status.filled", {
+        value0: filledCount.toString(),
+        value1: totalSlots.toString(),
+      })
+    }
+  }
 
   return (
     <span aria-live="polite" className={cn("sr-only", className)} id={id}>

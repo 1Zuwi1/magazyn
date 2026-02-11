@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -10,19 +11,12 @@ import type { TwoFactorMethod } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
 import { RESEND_COOLDOWN_SECONDS } from "./constants"
 import { OtpInput } from "./otp-input"
-import type { PasswordChallenge, PasswordVerificationStage } from "./types"
+import type { PasswordVerificationStage } from "./types"
 import { useCountdown } from "./use-countdown"
-import {
-  createPasswordChallenge,
-  formatCountdown,
-  sendVerificationCode,
-} from "./utils"
-
+import { formatCountdown } from "./utils"
 export interface PasswordVerificationCopy {
   title?: string
-  description?:
-    | string
-    | ((context: { method: TwoFactorMethod; destination?: string }) => string)
+  description?: string | ((context: { method: TwoFactorMethod }) => string)
   verifiedTitle?: string
   verifiedDescription?: string
 }
@@ -30,7 +24,7 @@ export interface PasswordVerificationCopy {
 interface PasswordVerificationSectionProps {
   method: TwoFactorMethod
   onVerify: (code: string) => void | Promise<void>
-  onRequestCode?: (method: TwoFactorMethod) => Promise<void>
+  onRequestCode: (method: TwoFactorMethod) => Promise<void>
   onInputChange: (code: string) => void
   code: string
   copy?: PasswordVerificationCopy
@@ -47,14 +41,12 @@ interface PasswordVerificationFlowHandlers {
   onStageChange: (stage: PasswordVerificationStage) => void
   onErrorChange: (error: string) => void
   onResendCooldownChange: (cooldown: number) => void
-  onChallengeChange: (challenge: PasswordChallenge | null) => void
-  onRequestCode?: (method: TwoFactorMethod) => Promise<void>
+  onRequestCode: (method: TwoFactorMethod) => Promise<void>
 }
 
 interface PasswordVerificationState {
   stage: PasswordVerificationStage
   error: string
-  challenge: PasswordChallenge | null
 }
 
 function usePasswordVerificationFlow({
@@ -62,29 +54,23 @@ function usePasswordVerificationFlow({
   onStageChange,
   onErrorChange,
   onResendCooldownChange,
-  onChallengeChange,
   onRequestCode,
 }: PasswordVerificationFlowHandlers) {
+  const t = useTranslations()
+
   const requestCode = async (startTimer = true): Promise<void> => {
     onStageChange("SENDING")
     onErrorChange("")
 
     try {
-      if (onRequestCode) {
-        onChallengeChange(null)
-        await onRequestCode(method)
-      } else {
-        const newChallenge = await createPasswordChallenge(method)
-        onChallengeChange(newChallenge)
-        await sendVerificationCode(newChallenge.sessionId)
-      }
+      await onRequestCode(method)
       onStageChange("AWAITING")
       if (startTimer) {
         onResendCooldownChange(RESEND_COOLDOWN_SECONDS)
       }
     } catch {
       onStageChange("ERROR")
-      const message = "Nie udało się wysłać kodu. Spróbuj ponownie."
+      const message = t("generated.dashboard.settings.failedSendCodeAgain")
       onErrorChange(message)
       toast.error(message)
     }
@@ -93,17 +79,15 @@ function usePasswordVerificationFlow({
   return { requestCode }
 }
 
-function PasswordVerificationAlerts({
-  challenge,
-}: {
-  challenge: PasswordChallenge | null
-}) {
+function PasswordVerificationAlerts() {
+  const t = useTranslations()
+
   return (
     <Alert>
       <Spinner className="text-muted-foreground" />
-      <AlertTitle>Wysyłamy kod</AlertTitle>
+      <AlertTitle>{t("generated.dashboard.settings.sendCode")}</AlertTitle>
       <AlertDescription>
-        Kod trafia na {challenge?.destination ?? "wybraną metodę"}.
+        {t("generated.dashboard.settings.codeGoesSelectedMethod")}
       </AlertDescription>
     </Alert>
   )
@@ -128,9 +112,13 @@ function CodeInputEntry({
   onResend: () => void
   onVerify: () => void
 }) {
+  const t = useTranslations()
+
   return (
     <div className="space-y-3">
-      <Label htmlFor="password-2fa-code">Kod 2FA</Label>
+      <Label htmlFor="password-2fa-code">
+        {t("generated.dashboard.settings.value2faCode")}
+      </Label>
       <OtpInput
         disabled={isBusy}
         id="password-2fa-code"
@@ -144,7 +132,7 @@ function CodeInputEntry({
           onClick={onVerify}
           type="button"
         >
-          Zweryfikuj kod
+          {t("generated.shared.verifyCode")}
         </Button>
         {method !== "AUTHENTICATOR" ? (
           <>
@@ -157,8 +145,10 @@ function CodeInputEntry({
               variant="outline"
             >
               {resendCooldown > 0
-                ? `Wyślij ponownie (${formatCountdown(resendCooldown)})`
-                : "Wyślij ponownie"}
+                ? t("generated.dashboard.settings.resend", {
+                    value0: formatCountdown(resendCooldown),
+                  })
+                : t("generated.shared.resend")}
             </Button>
             <span
               aria-atomic="true"
@@ -167,8 +157,10 @@ function CodeInputEntry({
               id="resend-status"
             >
               {resendCooldown > 0
-                ? "Wyślij ponownie będzie dostępne po zakończeniu odliczania."
-                : "Możesz teraz wysłać ponownie."}
+                ? t(
+                    "generated.dashboard.settings.resendWillAvailableAfterCountdown"
+                  )
+                : t("generated.dashboard.settings.nowResend")}
             </span>
           </>
         ) : null}
@@ -191,22 +183,20 @@ export function PasswordVerificationSection({
   verificationError,
   autoVerify = false,
 }: PasswordVerificationSectionProps) {
+  const t = useTranslations()
+
   const [state, setState] = useState<PasswordVerificationState>({
     stage: "IDLE",
     error: "",
-    challenge: null,
   })
   const [resendCooldown, startTimer] = useCountdown(0)
-  const { stage, error, challenge } = state
+  const { stage, error } = state
   const complete = isVerified
   const isBusy = stage === "SENDING" || isVerifying
   const isSending = stage === "SENDING"
   const canResendCode = resendCooldown === 0 && !isBusy
   const canShowCodeInput =
-    method === "AUTHENTICATOR" ||
-    stage === "AWAITING" ||
-    stage === "VERIFYING" ||
-    stage === "ERROR"
+    method === "AUTHENTICATOR" || stage === "AWAITING" || stage === "ERROR"
   const lastAutoSubmitCodeRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -217,7 +207,6 @@ export function PasswordVerificationSection({
     setState({
       stage: "IDLE",
       error: "",
-      challenge: null,
     })
     lastAutoSubmitCodeRef.current = null
     startTimer()
@@ -230,8 +219,6 @@ export function PasswordVerificationSection({
     onErrorChange: (nextError) =>
       setState((current) => ({ ...current, error: nextError })),
     onResendCooldownChange: startTimer,
-    onChallengeChange: (nextChallenge) =>
-      setState((current) => ({ ...current, challenge: nextChallenge })),
     onRequestCode,
   })
 
@@ -258,7 +245,9 @@ export function PasswordVerificationSection({
     }
 
     if (code.length !== OTP_LENGTH) {
-      const message = "Wpisz pełny kod weryfikacyjny."
+      const message = t(
+        "generated.dashboard.settings.enterFullVerificationCode"
+      )
       setState((current) => ({ ...current, error: message }))
       toast.error(message)
       return
@@ -295,22 +284,22 @@ export function PasswordVerificationSection({
     onVerify(code)
   }, [autoVerify, code, complete, isVerifying, onVerify])
 
-  const title = copy?.title ?? "Potwierdź 2FA przed zmianą"
-  const verifiedTitle = copy?.verifiedTitle ?? "Zweryfikowano"
+  const title =
+    copy?.title ?? t("generated.dashboard.settings.confirm2faBeforeChanging")
+  const verifiedTitle =
+    copy?.verifiedTitle ?? t("generated.dashboard.settings.verified3")
   const verifiedDescription =
-    copy?.verifiedDescription ?? "Możesz bezpiecznie zmienić hasło."
+    copy?.verifiedDescription ??
+    t("generated.dashboard.settings.safelyChangePassword")
   const description = (() => {
     if (copy?.description) {
       return typeof copy.description === "function"
-        ? copy.description({
-            method,
-            destination: challenge?.destination,
-          })
+        ? copy.description({ method })
         : copy.description
     }
     return method === "AUTHENTICATOR"
-      ? "Wpisz kod z aplikacji uwierzytelniającej."
-      : `Wyślemy kod na ${challenge?.destination ?? "wybraną metodę"}.`
+      ? t("generated.dashboard.settings.enterCodeAuthenticatorApp")
+      : t("generated.dashboard.settings.willSendCodeSelectedMethod")
   })()
   const resolvedError = verificationError ?? error
 
@@ -322,7 +311,9 @@ export function PasswordVerificationSection({
           <p className="text-muted-foreground text-sm">{description}</p>
         </div>
         <Badge variant={complete ? "success" : "warning"}>
-          {complete ? "Zweryfikowano" : "Wymagane"}
+          {complete
+            ? t("generated.dashboard.settings.verified3")
+            : t("generated.dashboard.settings.required")}
         </Badge>
       </div>
 
@@ -335,13 +326,13 @@ export function PasswordVerificationSection({
         <div className="space-y-3">
           {resolvedError ? (
             <Alert variant="destructive">
-              <AlertTitle>Nie udało się zweryfikować</AlertTitle>
+              <AlertTitle>
+                {t("generated.dashboard.settings.verified")}
+              </AlertTitle>
               <AlertDescription>{resolvedError}</AlertDescription>
             </Alert>
           ) : null}
-          {isSending ? (
-            <PasswordVerificationAlerts challenge={challenge} />
-          ) : null}
+          {isSending ? <PasswordVerificationAlerts /> : null}
           {canShowCodeInput ? (
             <CodeInputEntry
               canResend={canResendCode}

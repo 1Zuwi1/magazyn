@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import type { AppTranslate } from "@/i18n/use-translations"
 import {
   getWebAuthnErrorMessage,
   getWebAuthnSupport,
@@ -6,6 +7,32 @@ import {
   parseAuthenticationOptions,
   serializeCredential,
 } from "./webauthn"
+
+const t: AppTranslate = ((key: string): string => key) as AppTranslate
+t.has = (_key: string): boolean => true
+
+const setupWebAuthnGlobals = () => {
+  if (typeof window === "undefined") {
+    global.window = {} as any
+  }
+  if (typeof navigator === "undefined") {
+    global.navigator = {} as any
+  }
+  if (!("PublicKeyCredential" in window)) {
+    Object.defineProperty(window, "PublicKeyCredential", {
+      value: class PublicKeyCredential {},
+      configurable: true,
+    })
+  }
+  if (!("credentials" in navigator)) {
+    Object.defineProperty(navigator, "credentials", {
+      value: {},
+      configurable: true,
+    })
+  }
+}
+
+setupWebAuthnGlobals()
 
 const encodeBase64Url = (value: string): string => {
   if (typeof btoa !== "function") {
@@ -94,13 +121,13 @@ describe("getWebAuthnErrorMessage", () => {
   it("maps DOMException names to user-friendly messages", () => {
     const error = new DOMException("", "NotAllowedError")
 
-    expect(getWebAuthnErrorMessage(error, "fallback")).toBe(
-      "Operacja została anulowana lub przekroczono limit czasu."
+    expect(getWebAuthnErrorMessage(error, "fallback", t)).toBe(
+      "generated.security.webauthn.operationCanceledTimedOut"
     )
   })
 
   it("returns fallback for non-DOMException", () => {
-    expect(getWebAuthnErrorMessage(new Error("boom"), "fallback")).toBe(
+    expect(getWebAuthnErrorMessage(new Error("boom"), "fallback", t)).toBe(
       "fallback"
     )
   })

@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import type * as React from "react"
 import {
   Sidebar,
@@ -9,7 +10,7 @@ import {
   SidebarMenuItem,
   sidebarMenuButtonVariants,
 } from "@/components/ui/sidebar"
-import { navigationItems } from "@/config/navigation"
+import { getNavigationItems } from "@/config/navigation"
 import Logo from "./logo"
 import SidebarButton from "./sidebar-button"
 
@@ -36,6 +37,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 }
 
 function NavMain() {
+  const t = useTranslations()
+  const navigationItems = getNavigationItems(t)
+
   return (
     <SidebarMenu className="px-2">
       {navigationItems.map((item) => (

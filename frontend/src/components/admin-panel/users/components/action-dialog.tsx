@@ -1,9 +1,10 @@
 "use client"
 
-import { useForm } from "@tanstack/react-form"
-import { useCallback, useEffect } from "react"
+import { useForm, useStore } from "@tanstack/react-form"
+import { useTranslations } from "next-intl"
+import { useCallback, useEffect, useMemo } from "react"
+import z from "zod"
 import { FormDialog } from "@/components/admin-panel/components/dialogs"
-import type { Role, Status, User } from "@/components/dashboard/types"
 import { FieldWithState } from "@/components/helpers/field-state"
 import { FieldGroup } from "@/components/ui/field"
 import {
@@ -13,24 +14,57 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { UserFormSchema } from "@/lib/schemas/csv-schemas"
-import { DEFAULT_USER } from "../../lib/constants"
+import type { AdminTeamOption } from "@/hooks/use-admin-users"
+import type { AppTranslate } from "@/i18n/use-translations"
+import { cn } from "@/lib/utils"
 
-const roles: { label: string; value: Role }[] = [
-  { label: "Użytkownik", value: "USER" },
-  { label: "Administrator", value: "ADMIN" },
-]
+const profilePhonePattern = /^[+\d\s()-]*$/
 
-const statuses: { label: string; value: Status }[] = [
-  { label: "Aktywny", value: "ACTIVE" },
-  { label: "Nieaktywny", value: "INACTIVE" },
-]
+const createEditUserFormSchema = (t: AppTranslate) =>
+  z.object({
+    fullName: z
+      .string()
+      .trim()
+      .min(3, t("generated.admin.users.fullNameMustLeast3"))
+      .max(100, t("generated.admin.users.fullNameMaximum100Characters")),
+    email: z.email("Podaj poprawny adres email"),
+    phone: z
+      .string()
+      .trim()
+      .max(20, t("generated.admin.users.phoneNumberMaximum20Characters"))
+      .regex(
+        profilePhonePattern,
+        t("generated.admin.users.phoneNumberOnlyContainNumbers")
+      ),
+    location: z
+      .string()
+      .trim()
+      .max(100, t("generated.admin.users.locationMaximum100Characters")),
+    team: z.string(),
+  })
+
+export type EditUserFormValues = z.infer<
+  ReturnType<typeof createEditUserFormSchema>
+>
+
+export interface EditableAdminUser {
+  id: number
+  fullName: string
+  email: string
+  phone: string
+  location: string
+  team: string
+}
 
 interface ActionDialogProps {
-  currentRow?: User
+  currentRow?: EditableAdminUser
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit?: (user: User) => void
+  onSubmit?: (data: {
+    id: number
+    values: EditUserFormValues
+  }) => Promise<void> | void
+  teams: AdminTeamOption[]
 }
 
 export function ActionDialog({
@@ -38,36 +72,39 @@ export function ActionDialog({
   open,
   onOpenChange,
   onSubmit,
+  teams,
 }: ActionDialogProps) {
-  const isEdit = !!currentRow
+  const t = useTranslations()
+  const editUserFormSchema = useMemo(() => createEditUserFormSchema(t), [t])
 
-  const formId = isEdit ? "edit-form" : "add-form"
+  const formId = "edit-user-form"
+  const teamTranslations = useTranslations("adminUsers.teams")
 
   const getFormValues = useCallback(
     () => ({
-      username: currentRow?.username ?? DEFAULT_USER.username,
-      email: currentRow?.email ?? DEFAULT_USER.email,
-      role: currentRow?.role ?? DEFAULT_USER.role,
-      status: currentRow?.status ?? DEFAULT_USER.status,
-      team: currentRow?.team ?? DEFAULT_USER.team,
+      fullName: currentRow?.fullName ?? "",
+      email: currentRow?.email ?? "",
+      phone: currentRow?.phone ?? "",
+      location: currentRow?.location ?? "",
+      team: currentRow?.team ?? "",
     }),
     [currentRow]
   )
 
   const form = useForm({
     defaultValues: getFormValues(),
-    onSubmit: ({ value }) => {
-      if (onSubmit) {
-        const user: User = {
-          id: currentRow?.id ?? crypto.randomUUID(),
-          ...value,
-        }
-        onSubmit(user)
+    onSubmit: async ({ value }) => {
+      if (!(onSubmit && currentRow)) {
+        return
       }
+      await onSubmit({
+        id: currentRow.id,
+        values: value,
+      })
       onOpenChange(false)
     },
     validators: {
-      onSubmit: UserFormSchema,
+      onSubmit: editUserFormSchema,
     },
   })
 
@@ -77,18 +114,30 @@ export function ActionDialog({
     }
   }, [open, getFormValues, form])
 
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
+  const getTeamLabel = useCallback(
+    (teamValue: string): string => {
+      const selectedTeam = teams.find(
+        (teamOption) => teamOption.value === teamValue
+      )
+      if (!selectedTeam) {
+        return t("generated.admin.users.chooseTeam")
+      }
+
+      return teamTranslations(selectedTeam.value)
+    },
+    [teamTranslations, teams, t]
+  )
+
   return (
     <FormDialog
-      description={
-        isEdit
-          ? "Zmień informacje o użytkowniku"
-          : "Wprowadź informacje o nowym użytkowniku."
-      }
+      description={t("generated.admin.users.changeUserProfileInformation")}
       formId={formId}
+      isLoading={isSubmitting}
       onFormReset={() => form.reset(getFormValues())}
       onOpenChange={onOpenChange}
       open={open}
-      title={isEdit ? "Edytuj użytkownika" : "Dodaj użytkownika"}
+      title={t("generated.admin.users.editUser")}
     >
       <form
         className="space-y-4 px-0.5"
@@ -99,14 +148,14 @@ export function ActionDialog({
         }}
       >
         <FieldGroup className="gap-4">
-          <form.Field name="username">
+          <form.Field name="fullName">
             {(field) => (
               <FieldWithState
                 autoComplete="off"
                 field={field}
-                label="Nazwa użytkownika"
+                label={t("generated.admin.users.fullName")}
                 layout="grid"
-                placeholder="jan_kowalski"
+                placeholder={t("generated.shared.johnKowalski")}
               />
             )}
           </form.Field>
@@ -114,80 +163,76 @@ export function ActionDialog({
           <form.Field name="email">
             {(field) => (
               <FieldWithState
+                autoComplete="off"
                 field={field}
-                label="Email"
+                label={t("generated.shared.eMail")}
                 layout="grid"
-                placeholder="jan.kowalski@example.com"
+                placeholder={t("generated.admin.users.johnKowalskiExampleCom")}
                 type="email"
               />
             )}
           </form.Field>
 
-          <form.Field name="role">
+          <form.Field name="phone">
             {(field) => (
               <FieldWithState
+                autoComplete="off"
                 field={field}
-                label="Rola"
+                label={t("generated.shared.phone")}
                 layout="grid"
-                renderInput={({ id, isInvalid }) => (
-                  <Select
-                    onValueChange={(value) => {
-                      if (value) {
-                        field.handleChange(value as Role)
-                      }
-                    }}
-                    value={field.state.value}
-                  >
-                    <SelectTrigger
-                      className={isInvalid ? "border-destructive" : ""}
-                      id={id}
-                    >
-                      <SelectValue>
-                        {roles.find((r) => r.value === field.state.value)
-                          ?.label ?? "Wybierz rolę"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map((role) => (
-                        <SelectItem key={role.value} value={role.value}>
-                          {role.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                placeholder="+48 555 019 203"
+                type="tel"
               />
             )}
           </form.Field>
 
-          <form.Field name="status">
+          <form.Field name="location">
+            {(field) => (
+              <FieldWithState
+                autoComplete="off"
+                field={field}
+                label={t("generated.shared.location")}
+                layout="grid"
+                placeholder={t("generated.admin.users.gdanskPoland")}
+              />
+            )}
+          </form.Field>
+
+          <form.Field name="team">
             {(field) => (
               <FieldWithState
                 field={field}
-                label="Status"
+                label={t("generated.shared.team")}
                 layout="grid"
                 renderInput={({ id, isInvalid }) => (
                   <Select
-                    onValueChange={(value) => {
-                      if (value) {
-                        field.handleChange(value as Status)
-                      }
-                    }}
-                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value ?? "")}
+                    value={field.state.value || ""}
                   >
                     <SelectTrigger
-                      className={isInvalid ? "border-destructive" : ""}
+                      className={cn("w-fit", {
+                        "border-destructive": isInvalid,
+                      })}
                       id={id}
                     >
-                      <SelectValue>
-                        {statuses.find((s) => s.value === field.state.value)
-                          ?.label ?? "Wybierz status"}
-                      </SelectValue>
+                      <SelectValue
+                        placeholder={t("generated.admin.users.chooseTeam")}
+                        render={
+                          <span>
+                            {field.state.value
+                              ? getTeamLabel(field.state.value)
+                              : t("generated.admin.users.chooseTeam")}
+                          </span>
+                        }
+                      />
                     </SelectTrigger>
-                    <SelectContent>
-                      {statuses.map((status) => (
-                        <SelectItem key={status.value} value={status.value}>
-                          {status.label}
+                    <SelectContent className="w-fit">
+                      {teams.map((teamOption) => (
+                        <SelectItem
+                          key={teamOption.value}
+                          value={teamOption.value}
+                        >
+                          {teamTranslations(teamOption.value)}
                         </SelectItem>
                       ))}
                     </SelectContent>

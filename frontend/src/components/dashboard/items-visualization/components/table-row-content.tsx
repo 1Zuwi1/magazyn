@@ -7,8 +7,7 @@ import {
   ViewIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { addDays } from "date-fns"
-import Image from "next/image"
+import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -18,99 +17,56 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { TableCell } from "@/components/ui/table"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import type { RackAssortment } from "@/lib/schemas"
 import { cn } from "@/lib/utils"
-import type { Item } from "../../types"
-import { formatDate, formatDimensions } from "../../utils/helpers"
-import { getItemStatus, getStatusText } from "../../utils/item-status"
+import { formatDateTime } from "../../utils/helpers"
 
 interface TableRowContentProps {
-  item: Item
-  onView: (id: string) => void
-  onEdit: (id: string) => void
-  onDelete: (id: string) => void
+  assortment: RackAssortment
+  onView: (id: number) => void
+  onEdit: (id: number) => void
+  onDelete: (id: number) => void
+}
+
+function isExpired(expiresAt: string) {
+  return new Date(expiresAt) < new Date()
 }
 
 export function TableRowContent({
-  item,
+  assortment,
   onView,
   onEdit,
   onDelete,
 }: TableRowContentProps) {
-  const status = getItemStatus(item)
-  // const statusColors = getStatusColors(status)
-  const statusText = getStatusText(status)
-  const isExpired = status === "expired" || status === "expired-dangerous"
-  const statusBadgeVariant = status === "expired" ? "warning" : "destructive"
+  const t = useTranslations()
+
+  const locale = useLocale()
+  const expired = isExpired(assortment.expiresAt)
 
   return (
     <>
-      <TableCell>
-        <div className="flex items-center justify-center">
-          {item.imageUrl ? (
-            <div className="relative h-10 w-10 overflow-hidden rounded">
-              <Image
-                alt={item.name}
-                className="object-cover"
-                fill
-                sizes="40px"
-                src={item.imageUrl}
-              />
-            </div>
-          ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded bg-muted">
-              <span className="text-muted-foreground text-xs">-</span>
-            </div>
-          )}
-        </div>
-      </TableCell>
-      <TableCell>
-        <div>
-          <div className="font-medium">{item.name}</div>
-          {item.comment && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <p className="line-clamp-1 text-muted-foreground text-xs">
-                    {item.comment}
-                  </p>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs">{item.comment}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
-      </TableCell>
-      <TableCell className="font-mono text-sm">{item.qrCode}</TableCell>
-      <TableCell>{item.weight.toFixed(2)} kg</TableCell>
-      <TableCell className="text-sm">{formatDimensions(item)}</TableCell>
+      <TableCell className="font-mono text-sm">{assortment.code}</TableCell>
+      <TableCell>{assortment.item.id}</TableCell>
       <TableCell className="text-sm">
-        {item.minTemp}°C – {item.maxTemp}°C
+        ({assortment.positionX}, {assortment.positionY})
+      </TableCell>
+      <TableCell>{assortment.userId}</TableCell>
+      <TableCell className="text-sm">
+        {formatDateTime(assortment.createdAt, locale)}
       </TableCell>
       <TableCell>
-        <span className={isExpired ? "font-medium text-destructive" : ""}>
-          {formatDate(
-            item.expiryDate ?? addDays(new Date(), item.daysToExpiry)
-          )}
+        <span className={expired ? "font-medium text-destructive" : ""}>
+          {formatDateTime(assortment.expiresAt, locale)}
         </span>
-      </TableCell>
-      <TableCell>
-        <div className="flex flex-wrap gap-1">
-          {status !== "normal" && (
-            <Badge variant={statusBadgeVariant}>{statusText}</Badge>
-          )}
-        </div>
+        {expired && (
+          <Badge className="ml-2" variant="destructive">
+            {t("generated.shared.expired")}
+          </Badge>
+        )}
       </TableCell>
       <TableCell className="text-right">
         <DropdownMenu>
-          <DropdownMenuTrigger aria-label="Otwórz menu">
+          <DropdownMenuTrigger aria-label={t("generated.shared.openMenu")}>
             <HugeiconsIcon
               className={cn(
                 buttonVariants({
@@ -124,24 +80,24 @@ export function TableRowContent({
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => onView(item.id)}
+              onClick={() => onView(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={ViewIcon} />
-              <span>Podgląd</span>
+              <span>{t("generated.dashboard.itemsVisualization.preview")}</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => onEdit(item.id)}
+              onClick={() => onEdit(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={PencilEdit01Icon} />
-              <span>Edytuj</span>
+              <span>{t("generated.shared.edit")}</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer text-destructive focus:text-destructive"
-              onClick={() => onDelete(item.id)}
+              onClick={() => onDelete(assortment.id)}
             >
               <HugeiconsIcon className="mr-2 h-4 w-4" icon={Delete02Icon} />
-              <span>Usuń</span>
+              <span>{t("generated.shared.remove")}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

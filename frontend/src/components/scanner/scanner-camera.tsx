@@ -2,6 +2,7 @@
 
 import {
   AlertCircleIcon,
+  Camera01Icon,
   Cancel01Icon,
   Loading03Icon,
 } from "@hugeicons/core-free-icons"
@@ -9,22 +10,62 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser"
 import {
   BarcodeFormat,
+  ChecksumException,
   DecodeHintType,
+  FormatException,
   NotFoundException,
   type Result,
 } from "@zxing/library"
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "../ui/button"
-import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 import { TAB_TRIGGERS } from "./scanner"
 
-const CODE_FORMATS = [BarcodeFormat.QR_CODE, BarcodeFormat.CODE_128] as const
+const CODE_FORMATS = [
+  BarcodeFormat.QR_CODE,
+  BarcodeFormat.CODE_128,
+  BarcodeFormat.EAN_13,
+  BarcodeFormat.EAN_8,
+  BarcodeFormat.UPC_A,
+  BarcodeFormat.UPC_E,
+  BarcodeFormat.CODE_39,
+  BarcodeFormat.ITF,
+] as const
 
-const DECODE_HINTS = new Map<DecodeHintType, unknown>([
-  [DecodeHintType.POSSIBLE_FORMATS, CODE_FORMATS],
-  [DecodeHintType.ASSUME_GS1, true],
-])
+const DEFAULT_MEDIA_CONSTRAINTS = {
+  video: {
+    facingMode: { ideal: "environment" },
+    width: { ideal: 1920 },
+    height: { ideal: 1080 },
+    frameRate: { ideal: 24, max: 30 },
+  },
+  audio: false,
+} satisfies MediaStreamConstraints
+
+const TAKE_DECODE_HINTS: Map<DecodeHintType, unknown> = new Map()
+TAKE_DECODE_HINTS.set(DecodeHintType.POSSIBLE_FORMATS, CODE_FORMATS)
+TAKE_DECODE_HINTS.set(DecodeHintType.ASSUME_GS1, false)
+TAKE_DECODE_HINTS.set(DecodeHintType.TRY_HARDER, true)
+
+const REMOVE_DECODE_HINTS: Map<DecodeHintType, unknown> = new Map()
+REMOVE_DECODE_HINTS.set(DecodeHintType.POSSIBLE_FORMATS, CODE_FORMATS)
+REMOVE_DECODE_HINTS.set(DecodeHintType.ASSUME_GS1, true)
+REMOVE_DECODE_HINTS.set(DecodeHintType.TRY_HARDER, true)
+
+const getDecodeHints = (
+  mode: (typeof TAB_TRIGGERS)[number]["action"]
+): Map<DecodeHintType, unknown> => {
+  return mode === "remove" ? REMOVE_DECODE_HINTS : TAKE_DECODE_HINTS
+}
+
+const isRecoverableDecodeError = (error: unknown): boolean => {
+  return (
+    error instanceof NotFoundException ||
+    error instanceof ChecksumException ||
+    error instanceof FormatException
+  )
+}
 
 interface ScannerCameraProps {
   scanDelayMs: number
@@ -34,9 +75,9 @@ interface ScannerCameraProps {
   isMobile: boolean
   isOpen: boolean
   mode: (typeof TAB_TRIGGERS)[number]["action"]
-  onModeChange: (value: (typeof TAB_TRIGGERS)[number]["action"]) => void
   onScan: (text: string) => void
   onRequestClose: () => void
+  onTakePhoto: (file: File) => void
   isLoading?: boolean
 }
 
@@ -48,11 +89,13 @@ export function ScannerCamera({
   isMobile,
   isOpen,
   mode,
-  onModeChange,
   onRequestClose,
+  onTakePhoto,
   onScan,
   isLoading,
 }: ScannerCameraProps) {
+  const t = useTranslations()
+
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const controlsRef = useRef<IScannerControls | null>(null)
   const readerRef = useRef<BrowserMultiFormatReader | null>(null)
@@ -60,6 +103,7 @@ export function ScannerCamera({
     null
   )
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const startSessionRef = useRef<number>(0)
   const setVideoRef = useCallback((node: HTMLVideoElement | null) => {
     videoRef.current = node
     setVideoElement(node)
@@ -67,12 +111,40 @@ export function ScannerCamera({
 
   const lastAtRef = useRef<number>(0)
 
-  const getTranslation = useCallback(
-    (mode: (typeof TAB_TRIGGERS)[number]["action"]) => {
-      return TAB_TRIGGERS.findIndex((t) => t.action === mode) * 100
-    },
-    []
-  )
+  const capturePhoto = useCallback(() => {
+    const video = videoRef.current
+    if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
+      return
+    }
+
+    const canvas = document.createElement("canvas")
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext("2d")
+    if (!ctx) {
+      setErrorMsg(t("generated.scanner.failedPreparePhotoPreview"))
+      return
+    }
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          setErrorMsg(t("generated.scanner.failedTakePhotoAgain"))
+          return
+        }
+
+        const file = new File([blob], "photo.jpg", { type: "image/jpeg" })
+        onTakePhoto(file)
+      },
+      "image/jpeg",
+      0.85
+    )
+  }, [onTakePhoto, t])
+
+  const modeLabel = TAB_TRIGGERS.find(
+    (trigger) => trigger.action === mode
+  )?.text
 
   const stopAfterScan = useCallback(() => {
     controlsRef.current?.stop()
@@ -117,16 +189,19 @@ export function ScannerCamera({
         return
       }
 
-      if (err && !(err instanceof NotFoundException)) {
+      if (err && !isRecoverableDecodeError(err)) {
         const msg =
-          err instanceof Error ? err.message : "Unexpected scanner error."
+          err instanceof Error
+            ? err.message
+            : t("generated.scanner.unexpectedScannerErrorOccurred")
         setErrorMsg(msg)
       }
     },
-    [handleDecodedText]
+    [handleDecodedText, t]
   )
 
   const stop = useCallback(() => {
+    startSessionRef.current += 1
     controlsRef.current?.stop()
     controlsRef.current = null
     readerRef.current = null
@@ -141,30 +216,24 @@ export function ScannerCamera({
 
   const start = useCallback(
     async (currentVideo: HTMLVideoElement) => {
+      const startSession = startSessionRef.current + 1
+      startSessionRef.current = startSession
       setErrorMsg(null)
       try {
         // iOS Safari friendliness
         currentVideo.setAttribute("playsinline", "true")
         currentVideo.setAttribute("webkit-playsinline", "true")
-        currentVideo.autoplay = true
-        currentVideo.muted = true
+        currentVideo.setAttribute("autoplay", "true")
+        currentVideo.setAttribute("muted", "true")
 
-        const reader = new BrowserMultiFormatReader(DECODE_HINTS, {
-          delayBetweenScanAttempts: 300,
+        const reader = new BrowserMultiFormatReader(getDecodeHints(mode), {
+          delayBetweenScanAttempts: 120,
+          delayBetweenScanSuccess: 250,
         })
         readerRef.current = reader
 
         const mediaConstraints: MediaStreamConstraints =
-          constraints ??
-          ({
-            video: {
-              facingMode: { ideal: "environment" },
-              width: { ideal: 1920 },
-              height: { ideal: 1080 },
-              frameRate: { ideal: 30, max: 60 },
-            },
-            audio: false,
-          } satisfies MediaStreamConstraints)
+          constraints ?? DEFAULT_MEDIA_CONSTRAINTS
 
         const controls = await reader.decodeFromConstraints(
           mediaConstraints,
@@ -172,15 +241,26 @@ export function ScannerCamera({
           handleScanResult
         )
 
+        if (startSessionRef.current !== startSession) {
+          controls.stop()
+          return
+        }
+
         controlsRef.current = controls
       } catch (e) {
+        if (startSessionRef.current !== startSession) {
+          return
+        }
+
         const msg =
-          e instanceof Error ? e.message : "Could not start the camera scanner."
+          e instanceof Error
+            ? e.message
+            : t("generated.scanner.failedStartCameraScanner")
         setErrorMsg(msg)
         stop()
       }
     },
-    [constraints, handleScanResult, stop]
+    [constraints, handleScanResult, stop, mode, t]
   )
 
   useEffect(() => {
@@ -209,7 +289,7 @@ export function ScannerCamera({
         variant="ghost"
       >
         <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
-        <span className="sr-only">Close</span>
+        <span className="sr-only">{t("generated.shared.close")}</span>
       </Button>
 
       {errorMsg ? (
@@ -234,15 +314,14 @@ export function ScannerCamera({
             {/* Text content */}
             <div className="max-w-sm space-y-2">
               <h2 className="font-semibold text-foreground text-xl">
-                Problem z kamerą
+                {t("generated.scanner.cameraIssue")}
               </h2>
               <p className="text-muted-foreground text-sm">
-                Upewnij się że Twoja kamera jest podłączona i dostępna oraz że
-                udzieliłeś/aś pozwolenia na jej użycie.
+                {t("generated.scanner.makeSureCameraConnectedAvailable")}
               </p>
               <details className="mt-3">
                 <summary className="cursor-pointer text-muted-foreground text-xs hover:text-foreground">
-                  Szczegóły techniczne
+                  {t("generated.scanner.technicalDetails")}
                 </summary>
                 <p className="mt-2 rounded-lg bg-muted/50 p-2 font-mono text-muted-foreground text-xs">
                   {errorMsg}
@@ -251,7 +330,7 @@ export function ScannerCamera({
             </div>
 
             {/* Action button */}
-            <div className="pt-2">
+            <div className="flex flex-col gap-2 pt-2">
               <Button
                 onClick={() => {
                   setErrorMsg(null)
@@ -262,7 +341,7 @@ export function ScannerCamera({
                 type="button"
                 variant="outline"
               >
-                Spróbuj ponownie
+                {t("generated.shared.again")}
               </Button>
             </div>
           </div>
@@ -278,44 +357,16 @@ export function ScannerCamera({
             )}
           >
             <p className="h-full w-full text-center">
-              Skanujesz w magazynie: {warehouseName}
+              {t("generated.scanner.scanningWarehouse", {
+                value0: warehouseName ?? "",
+              })}
             </p>
-            <Tabs
-              className="h-full w-full"
-              onValueChange={onModeChange}
-              value={mode}
-            >
-              <TabsList
-                className={
-                  "relative isolate flex w-full gap-2 rounded-full bg-black/50 p-1 py-4 *:rounded-full *:px-4 *:py-3"
-                }
-              >
-                {TAB_TRIGGERS.map(({ text, action }) => (
-                  <TabsTrigger
-                    className={cn(
-                      "z-10 w-0 flex-1 bg-transparent! text-white!",
-                      {
-                        "text-black!": mode === action,
-                      }
-                    )}
-                    key={action}
-                    value={action}
-                  >
-                    {text}
-                  </TabsTrigger>
-                ))}
-                <div
-                  className={cn(
-                    "pointer-events-none absolute left-0 h-[80%] bg-white p-4 transition-transform"
-                  )}
-                  role="presentation"
-                  style={{
-                    width: `${100 / TAB_TRIGGERS.length}%`,
-                    transform: `translateX(${getTranslation(mode)}%)`,
-                  }}
-                />
-              </TabsList>
-            </Tabs>
+            {modeLabel ? (
+              <p className="rounded-full bg-black/50 px-4 py-3 text-center text-sm text-white backdrop-blur-sm">
+                {t("generated.scanner.mode")}{" "}
+                <span className="font-medium">{modeLabel}</span>.
+              </p>
+            ) : null}
           </div>
           <div className="pointer-events-none absolute inset-0 z-9 flex items-center justify-center">
             <div
@@ -350,6 +401,26 @@ export function ScannerCamera({
             playsInline
             ref={setVideoRef}
           />
+
+          {!isLoading && (
+            <div
+              className={cn(
+                "absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2",
+                { "bottom-12": isMobile }
+              )}
+            >
+              <Button
+                className="rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70"
+                onClick={capturePhoto}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                <HugeiconsIcon className="size-4" icon={Camera01Icon} />
+                {t("generated.scanner.identifyProduct")}
+              </Button>
+            </div>
+          )}
         </>
       )}
     </>

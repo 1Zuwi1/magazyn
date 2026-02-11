@@ -1,0 +1,207 @@
+import type { AppTranslate } from "@/i18n/use-translations"
+import type { Warehouse } from "@/lib/schemas"
+import {
+  type matchVoiceCommand,
+  normalizeTranscript,
+} from "@/lib/voice/commands"
+import type { PendingAction } from "@/lib/voice/voice-command-store"
+import type { VoiceAssistantViews } from "../voice-assistant"
+
+export const findWarehouseByName = (
+  inputName: string,
+  warehouses: Pick<Warehouse, "id" | "name">[]
+) => {
+  const normalizedInput = normalizeTranscript(inputName, { toLowerCase: true })
+  return (
+    warehouses.find((warehouse) => {
+      const normalizedName = normalizeTranscript(warehouse.name, {
+        toLowerCase: true,
+      })
+      const normalizedId = normalizeTranscript(String(warehouse.id), {
+        toLowerCase: true,
+      })
+      return (
+        normalizedName === normalizedInput || normalizedId === normalizedInput
+      )
+    }) ?? null
+  )
+}
+
+export const getCommandLabel = (
+  match: NonNullable<ReturnType<typeof matchVoiceCommand>>,
+  warehouses: Pick<Warehouse, "id" | "name">[],
+  t: AppTranslate
+): string => {
+  if (match.command.id === "warehouses:id") {
+    const warehouseName = match.params.warehouseName
+    if (warehouseName) {
+      const warehouse = findWarehouseByName(warehouseName, warehouses)
+      const label = warehouse?.name ?? warehouseName
+      return t("generated.voiceAssistant.openWarehouse", {
+        value0: label,
+      })
+    }
+  }
+
+  if (
+    match.command.id === "search-product" ||
+    match.command.id === "search-assortment"
+  ) {
+    return `Wyszukaj "${match.params.itemName}"`
+  }
+
+  if (match.command.id === "inventory-check") {
+    const { warehouseName, itemName } = match.params
+    if (warehouseName) {
+      return t("generated.voiceAssistant.checkStockStatus", {
+        value0: warehouseName,
+      })
+    }
+    if (itemName) {
+      return t("generated.voiceAssistant.checkStatus", {
+        value0: itemName,
+      })
+    }
+  }
+
+  const translateUnsafe = t as unknown as (
+    key: string,
+    values?: Record<string, unknown>
+  ) => string
+  return translateUnsafe(match.command.description)
+}
+
+export const isCommandMatchValid = (
+  match: NonNullable<ReturnType<typeof matchVoiceCommand>>,
+  warehouses: Pick<Warehouse, "id" | "name">[] = []
+): boolean => {
+  if (match.command.id !== "warehouses:id") {
+    return true
+  }
+
+  const warehouseName = match.params.warehouseName
+  if (!warehouseName) {
+    return false
+  }
+
+  if (warehouses.length === 0) {
+    return true
+  }
+
+  return Boolean(findWarehouseByName(warehouseName, warehouses))
+}
+
+export interface VoiceAssistantActions {
+  navigateAndClose: (href: string) => void
+  openScanner: () => void
+  openAddItemDialog: () => void
+  setPendingAction: (action: PendingAction) => void
+  closeDialog: () => void
+  setErrorMessage: (msg: string) => void
+  setView: (view: VoiceAssistantViews) => void
+}
+
+export const handleConfirmCommandAction = (
+  matchedCommand: ReturnType<typeof matchVoiceCommand>,
+  warehouses: Pick<Warehouse, "id" | "name">[],
+  actions: VoiceAssistantActions,
+  t: AppTranslate
+) => {
+  if (!matchedCommand) {
+    actions.setErrorMessage("Brak komendy do wykonania.")
+    actions.setView("error")
+    return
+  }
+
+  switch (matchedCommand.command.id) {
+    case "dashboard":
+      actions.navigateAndClose("/dashboard")
+      return
+    case "warehouses:id":
+      {
+        const warehouseName = matchedCommand.params.warehouseName
+        if (!warehouseName) {
+          actions.setErrorMessage("Brak nazwy magazynu w komendzie.")
+          actions.setView("error")
+          return
+        }
+        const warehouse = findWarehouseByName(warehouseName, warehouses)
+        if (!warehouse) {
+          actions.setErrorMessage("Nie znaleziono magazynu o takiej nazwie.")
+          actions.setView("error")
+          return
+        }
+        const encodedName = encodeURIComponent(warehouse.name)
+        actions.navigateAndClose(
+          `/dashboard/warehouse/id/${warehouse.id}/${encodedName}`
+        )
+      }
+      return
+    case "warehouses":
+      actions.navigateAndClose("/dashboard/warehouse")
+      return
+    case "items":
+      actions.navigateAndClose("/dashboard/items")
+      return
+    case "settings":
+      actions.navigateAndClose("/settings")
+      return
+    case "open-scanner":
+      actions.openScanner()
+      actions.closeDialog()
+      return
+    case "add-item":
+      actions.openAddItemDialog()
+      actions.navigateAndClose("/admin/assortment")
+      return
+    case "search-product":
+      {
+        const { itemName } = matchedCommand.params
+        if (!itemName) {
+          actions.setErrorMessage("Brak nazwy produktu do wyszukania.")
+          actions.setView("error")
+          return
+        }
+        actions.navigateAndClose(
+          `/dashboard/items?search=${encodeURIComponent(itemName)}&tab=definitions`
+        )
+      }
+      return
+    case "search-assortment":
+      {
+        const { itemName } = matchedCommand.params
+        if (!itemName) {
+          actions.setErrorMessage("Brak nazwy asortymentu do wyszukania.")
+          actions.setView("error")
+          return
+        }
+        actions.navigateAndClose(
+          `/dashboard/items?search=${encodeURIComponent(itemName)}&tab=assortment`
+        )
+      }
+      return
+    case "notifications":
+      actions.navigateAndClose("/dashboard/notifications")
+      return
+    case "alerts":
+      actions.navigateAndClose("/admin/alerts")
+      return
+    case "admin-panel":
+      actions.navigateAndClose("/admin")
+      return
+    case "inventory-check":
+      {
+        const { warehouseName, itemName } = matchedCommand.params
+        actions.setPendingAction({
+          type: "inventory-check",
+          payload: { warehouseName, itemName },
+        })
+        actions.navigateAndClose("/dashboard/warehouse")
+      }
+      return
+    default:
+      actions.setErrorMessage(t("generated.voiceAssistant.unsupportedCommand"))
+      actions.setView("error")
+      return
+  }
+}

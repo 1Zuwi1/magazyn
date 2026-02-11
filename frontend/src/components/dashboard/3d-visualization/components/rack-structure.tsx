@@ -153,6 +153,7 @@ export function RackStructure({
           gridHeight: resolvedMetrics.gridHeight,
           cellHeight: rack.cell.h,
           shelfThickness: resolvedMetrics.shelfThickness,
+          rackHeight: resolvedMetrics.height,
         })
       : []
 

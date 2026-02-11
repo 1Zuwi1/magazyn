@@ -2,10 +2,8 @@
 
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import type { ComponentProps } from "react"
 import { cn } from "@/lib/utils"
-
-type IconComponent = ComponentProps<typeof HugeiconsIcon>["icon"]
+import type { IconComponent } from "./types"
 
 interface StatCardProps {
   label: string

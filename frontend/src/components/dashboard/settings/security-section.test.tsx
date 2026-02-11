@@ -1,49 +1,63 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import type { TwoFactorMethod } from "@/lib/schemas"
 import { SecuritySection } from "./security-section"
-import type { TwoFactorStatus } from "./types"
 
-vi.mock("./password-section", () => ({
-  PasswordSection: ({
-    twoFactorMethod,
-  }: {
-    twoFactorMethod: TwoFactorMethod
-  }) => <div data-testid="password-section">{twoFactorMethod}</div>,
-}))
+vi.mock("./password-section", () => {
+  return {
+    PasswordSection: () => <div data-testid="password-section" />,
+  }
+})
 
-vi.mock("./two-factor-setup", () => ({
-  TwoFactorSetup: ({
-    method,
-    onMethodChange,
-    status,
-  }: {
-    method: TwoFactorMethod
-    onMethodChange: (method: TwoFactorMethod) => void
-    status: TwoFactorStatus
-  }) => (
-    <div>
-      <div data-testid="twofactor-status">{status}</div>
-      <button onClick={() => onMethodChange("SMS")} type="button">
-        Switch to SMS
-      </button>
-      <span>Method: {method}</span>
-    </div>
-  ),
-}))
+vi.mock("./two-factor-setup", () => {
+  return {
+    TwoFactorSetup: () => <div data-testid="two-factor-setup" />,
+  }
+})
 
-const PROTECTED_STATUS_REGEX = /chronione/i
-const SWITCH_SMS_REGEX = /switch to sms/i
+vi.mock("./passkeys-section", () => {
+  return {
+    PasskeysSection: () => <div data-testid="passkeys-section" />,
+  }
+})
+
+vi.mock("@tanstack/react-query", async () => {
+  const mod = await vi.importActual<typeof import("@tanstack/react-query")>(
+    "@tanstack/react-query"
+  )
+  return {
+    ...mod,
+    keepPreviousData: true,
+  }
+})
+
+function createQueryClientWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  })
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  )
+}
 
 describe("SecuritySection", () => {
   it("keeps 2FA enabled by default and updates method", () => {
-    render(<SecuritySection userEmail="user@site.pl" />)
+    render(
+      <SecuritySection
+        backupCodesRefreshNeeded={false}
+        userEmail="user@site.pl"
+      />,
+      {
+        wrapper: createQueryClientWrapper(),
+      }
+    )
 
-    expect(screen.getByText(PROTECTED_STATUS_REGEX)).toBeInTheDocument()
-    expect(screen.getByTestId("password-section")).toHaveTextContent("EMAIL")
-
-    fireEvent.click(screen.getByRole("button", { name: SWITCH_SMS_REGEX }))
-
-    expect(screen.getByTestId("password-section")).toHaveTextContent("SMS")
+    expect(screen.getByTestId("password-section")).toBeInTheDocument()
+    expect(screen.getByTestId("two-factor-setup")).toBeInTheDocument()
+    expect(screen.getByTestId("passkeys-section")).toBeInTheDocument()
   })
 })

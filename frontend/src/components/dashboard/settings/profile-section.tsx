@@ -5,6 +5,8 @@ import {
   UserGroupIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { format } from "date-fns"
+import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -14,11 +16,39 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { MOCK_PROFILE_FORM, ROLE_LABELS, STATUS_CONFIG } from "./constants"
-import type { ProfileDetail, SettingsUser } from "./types"
+import { getDateFnsLocale } from "@/i18n/date-fns-locale"
+import type { AppTranslate } from "@/i18n/use-translations"
+import type { User } from "@/lib/schemas"
+import type { IconComponent } from "../types"
+import { getRoleLabels, getStatusConfig } from "./constants"
+import type { ProfileDetail } from "./types"
 
 interface ProfileSectionProps {
-  user: SettingsUser
+  user: User
+}
+type DateFnsLocale = ReturnType<typeof getDateFnsLocale>
+const INITIALS_REGEX = /\s+/
+
+const getInitialsFromName = ({
+  displayName,
+  email,
+}: {
+  displayName: string
+  email: string
+}): string => {
+  const normalizedName = displayName.trim()
+  if (!normalizedName) {
+    return email.charAt(0).toUpperCase() || "U"
+  }
+
+  const initials = normalizedName
+    .split(INITIALS_REGEX)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("")
+    .slice(0, 2)
+
+  return initials || email.charAt(0).toUpperCase() || "U"
 }
 
 function ProfileDetailRow({ detail }: { detail: ProfileDetail }) {
@@ -32,29 +62,46 @@ function ProfileDetailRow({ detail }: { detail: ProfileDetail }) {
   )
 }
 
-function buildProfileDetails(user: SettingsUser): ProfileDetail[] {
+function buildProfileDetails(
+  t: AppTranslate,
+  user: User,
+  dateFnsLocale: DateFnsLocale,
+  statusConfig: ReturnType<typeof getStatusConfig>,
+  roleLabels: ReturnType<typeof getRoleLabels>
+): ProfileDetail[] {
   return [
     {
-      label: "Status konta",
-      value: STATUS_CONFIG[user.status].label,
+      label: t("generated.dashboard.settings.accountStatus"),
+      value: statusConfig[user.account_status].label,
     },
     {
-      label: "Rola",
-      value: ROLE_LABELS[user.role],
+      label: t("generated.shared.role"),
+      value: roleLabels[user.role],
     },
     {
-      label: "Ostatnie logowanie",
-      value: "Dziś, 08:42",
-    },
-    {
-      label: "Strefa czasowa",
-      value: "Europe/Warsaw",
+      label: t("generated.dashboard.settings.lastLogin"),
+      value: format(new Date(user.last_login ?? Date.now()), "EEEE, H:mm", {
+        locale: dateFnsLocale,
+      }),
     },
   ]
 }
 
+export const InitialAvatar = ({ name }: { name: string }) => {
+  const initials = getInitialsFromName({
+    displayName: name,
+    email: "",
+  })
+
+  return (
+    <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary/20 to-primary/5 font-semibold text-lg text-primary ring-1 ring-primary/10">
+      {initials}
+    </div>
+  )
+}
+
 interface InfoFieldProps {
-  icon: typeof Mail01Icon
+  icon: IconComponent
   label: string
   value: string
 }
@@ -78,22 +125,37 @@ function InfoField({ icon, label, value }: InfoFieldProps) {
 }
 
 export function ProfileSection({ user }: ProfileSectionProps) {
-  const statusBadge = STATUS_CONFIG[user.status]
-  const profileDetails = buildProfileDetails(user)
-  const displayName = user.fullName ?? "Brak uzupełnionego imienia"
+  const t = useTranslations()
+
+  const locale = useLocale()
+  const dateFnsLocale = getDateFnsLocale(locale)
+  const statusConfig = getStatusConfig(t)
+  const roleLabels = getRoleLabels(t)
+  const statusBadge = statusConfig[user.account_status]
+  const profileDetails = buildProfileDetails(
+    t,
+    user,
+    dateFnsLocale,
+    statusConfig,
+    roleLabels
+  )
+  const displayName =
+    user.full_name?.trim() || t("generated.dashboard.settings.username")
 
   return (
     <Card>
       <CardHeader>
         <div>
-          <CardTitle>Profil użytkownika</CardTitle>
+          <CardTitle>{t("generated.dashboard.settings.userProfile")}</CardTitle>
           <p className="text-muted-foreground text-sm">
-            Dane konta i informacje kontaktowe przypisane przez administratora.
+            {t(
+              "generated.dashboard.settings.accountDetailsContactInformationAssigned"
+            )}
           </p>
         </div>
         <CardAction>
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline">{ROLE_LABELS[user.role]}</Badge>
+            <Badge variant="outline">{roleLabels[user.role]}</Badge>
             <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
           </div>
         </CardAction>
@@ -101,15 +163,7 @@ export function ProfileSection({ user }: ProfileSectionProps) {
 
       <CardContent className="space-y-6">
         <div className="flex items-center gap-4">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary/20 to-primary/5 font-semibold text-lg text-primary ring-1 ring-primary/10">
-            {displayName
-              .split(" ")
-              .map((n) => n[0])
-              .slice(0, 2)
-              .join("")
-              .toUpperCase()}
-            {/* TODO: Add fallback image when displayName is not available */}
-          </div>
+          <InitialAvatar name={displayName} />
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold text-lg">{displayName}</p>
             <p className="truncate text-muted-foreground text-sm">
@@ -123,23 +177,23 @@ export function ProfileSection({ user }: ProfileSectionProps) {
         <div className="grid gap-3 sm:grid-cols-2">
           <InfoField
             icon={Mail01Icon}
-            label="Adres e-mail"
+            label={t("generated.dashboard.settings.emailAddress")}
             value={user.email}
           />
           <InfoField
             icon={SmartPhone01Icon}
-            label="Telefon"
-            value={MOCK_PROFILE_FORM.phone}
+            label={t("generated.shared.phone")}
+            value={user.phone ?? "—"}
           />
           <InfoField
             icon={Location04Icon}
-            label="Lokalizacja"
-            value={MOCK_PROFILE_FORM.location}
+            label={t("generated.shared.location")}
+            value={user.location ?? "—"}
           />
           <InfoField
             icon={UserGroupIcon}
-            label="Zespół"
-            value={MOCK_PROFILE_FORM.team}
+            label={t("generated.shared.team")}
+            value={user.team ?? "—"}
           />
         </div>
 
@@ -147,7 +201,7 @@ export function ProfileSection({ user }: ProfileSectionProps) {
 
         <div>
           <p className="mb-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">
-            Informacje systemowe
+            {t("generated.dashboard.settings.systemInformation")}
           </p>
           <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
             {profileDetails.map((detail) => (
@@ -158,8 +212,9 @@ export function ProfileSection({ user }: ProfileSectionProps) {
 
         <div className="rounded-lg border border-muted-foreground/30 border-dashed bg-muted/20 px-4 py-3">
           <p className="text-muted-foreground text-xs">
-            Dane profilu są zarządzane przez administratora systemu. Jeśli
-            potrzebujesz wprowadzić zmiany, skontaktuj się z działem IT.
+            {t(
+              "generated.dashboard.settings.profileDataManagedSystemAdministrator"
+            )}
           </p>
         </div>
       </CardContent>

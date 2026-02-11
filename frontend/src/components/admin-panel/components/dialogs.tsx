@@ -2,6 +2,7 @@
 
 import { Alert01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { useTranslations } from "next-intl"
 import type React from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -30,6 +31,8 @@ export function ConfirmDialog({
   title,
   description,
 }: ConfirmDialogProps) {
+  const t = useTranslations()
+
   const handleConfirm = () => {
     onConfirm()
     onOpenChange(false)
@@ -53,10 +56,10 @@ export function ConfirmDialog({
         </DialogHeader>
         <DialogFooter className="mt-4 gap-1">
           <Button onClick={() => onOpenChange(false)} variant="outline">
-            Anuluj
+            {t("generated.shared.cancel")}
           </Button>
           <Button onClick={handleConfirm} variant="destructive">
-            Potwierdź
+            {t("generated.admin.shared.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -72,6 +75,7 @@ interface FormDialogProps {
   children: React.ReactNode
   onFormReset?: () => void
   formId?: string
+  isLoading?: boolean
 }
 
 export function FormDialog({
@@ -82,7 +86,10 @@ export function FormDialog({
   children,
   onFormReset,
   formId,
+  isLoading,
 }: FormDialogProps) {
+  const t = useTranslations()
+
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       onFormReset?.()
@@ -104,8 +111,8 @@ export function FormDialog({
         <Separator />
         <div className="py-1">{children}</div>
         <DialogFooter>
-          <Button form={formId} type="submit">
-            Zapisz
+          <Button form={formId} isLoading={isLoading} type="submit">
+            {t("generated.admin.shared.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,7 +1,17 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, waitFor } from "@testing-library/react"
 import { toast } from "sonner"
 import { describe, expect, it, vi } from "vitest"
+import { ChangePasswordSchema } from "@/lib/schemas"
 import { PasswordSection } from "./password-section"
+
+vi.mock("@/i18n/use-translations", () => ({
+  useTranslations: () => (key: string) => key,
+}))
+
+const { apiFetchMock, openVerificationDialogMock } = vi.hoisted(() => ({
+  apiFetchMock: vi.fn(),
+  openVerificationDialogMock: vi.fn(),
+}))
 
 vi.mock("sonner", () => ({
   toast: {
@@ -11,56 +21,65 @@ vi.mock("sonner", () => ({
 }))
 
 vi.mock("@/lib/fetcher", () => ({
-  apiFetch: vi.fn(() => Promise.resolve({ success: true })),
+  apiFetch: apiFetchMock,
 }))
 
-vi.mock("./utils", () => ({
-  wait: () => Promise.resolve(),
-}))
-
-vi.mock("./password-verification-section", () => ({
-  PasswordVerificationSection: ({
-    onVerify,
-  }: {
-    onVerify: (code: string) => void
-  }) => (
-    <button onClick={() => onVerify("654321")} type="button">
-      Zatwierdź weryfikację
-    </button>
-  ),
-}))
-
-const OLD_PASSWORD_REGEX = /obecne hasło/i
-const NEW_PASSWORD_REGEX = /nowe hasło/i
-const CONFIRM_PASSWORD_REGEX = /potwierdź hasło/i
-const CHANGE_PASSWORD_BUTTON_REGEX = /zmień hasło/i
-const TWO_FACTOR_ALERT_REGEX = /potwierdź 2fa przed zmianą/i
-const CONFIRM_REGEX = /zatwierdź/i
+vi.mock(
+  "@/components/dashboard/settings/two-factor-verification-dialog-store",
+  () => ({
+    useTwoFactorVerificationDialog: () => ({
+      open: openVerificationDialogMock,
+    }),
+  })
+)
 
 describe("PasswordSection", () => {
-  it("blocks submission until 2FA verification completes", async () => {
-    render(<PasswordSection twoFactorMethod="EMAIL" />)
+  const getElement = (selector: string): Element => {
+    const element = document.querySelector(selector)
+    if (!element) {
+      throw new Error(`Element not found for selector: ${selector}`)
+    }
+    return element
+  }
 
-    fireEvent.change(screen.getByLabelText(OLD_PASSWORD_REGEX), {
+  it("calls password change API after successful 2FA verification", async () => {
+    apiFetchMock.mockResolvedValue(null)
+    openVerificationDialogMock.mockImplementation(
+      (options?: { onVerified?: () => void }) => {
+        setTimeout(() => {
+          options?.onVerified?.()
+        }, 0)
+      }
+    )
+
+    render(<PasswordSection />)
+
+    fireEvent.change(getElement("#current-password"), {
       target: { value: "OldPassword1!" },
     })
-    fireEvent.change(screen.getByLabelText(NEW_PASSWORD_REGEX), {
+    fireEvent.change(getElement("#new-password"), {
       target: { value: "Password123!" },
     })
-    fireEvent.change(screen.getByLabelText(CONFIRM_PASSWORD_REGEX), {
+    fireEvent.change(getElement("#confirm-password"), {
       target: { value: "Password123!" },
     })
 
-    fireEvent.click(
-      screen.getByRole("button", { name: CHANGE_PASSWORD_BUTTON_REGEX })
-    )
-    expect(await screen.findByText(TWO_FACTOR_ALERT_REGEX)).toBeInTheDocument()
-    expect(toast.success).not.toHaveBeenCalled()
-
-    fireEvent.click(screen.getByRole("button", { name: CONFIRM_REGEX }))
+    fireEvent.click(getElement('button[type="submit"]'))
 
     await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith("Hasło zostało zmienione.")
+      expect(openVerificationDialogMock).toHaveBeenCalledTimes(1)
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        "/api/users/password",
+        ChangePasswordSchema,
+        {
+          method: "PATCH",
+          body: {
+            oldPassword: "OldPassword1!",
+            newPassword: "Password123!",
+          },
+        }
+      )
+      expect(toast.success).toHaveBeenCalledWith(expect.any(String))
     })
   })
 })
