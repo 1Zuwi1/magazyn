@@ -3,9 +3,12 @@ package com.github.dawid_stolarczyk.magazyn.Services.Inventory;
 import com.github.dawid_stolarczyk.magazyn.Common.Enums.InventoryError;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemCreateRequest;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemDto;
+import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemImageDto;
 import com.github.dawid_stolarczyk.magazyn.Controller.Dto.ItemUpdateRequest;
 import com.github.dawid_stolarczyk.magazyn.Crypto.FileCryptoService;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.ItemImage;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemImageRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.Specification.ItemSpecifications;
 import com.github.dawid_stolarczyk.magazyn.Services.Ai.BackgroundRemovalService;
@@ -17,6 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +45,7 @@ import static com.github.dawid_stolarczyk.magazyn.Utils.InternetUtils.getClientI
 @RequiredArgsConstructor
 public class ItemService {
     private final ItemRepository itemRepository;
+    private final ItemImageRepository itemImageRepository;
     private final FileCryptoService fileCryptoService;
     private final StorageService storageService;
     private final BarcodeService barcodeService;
@@ -50,6 +55,9 @@ public class ItemService {
     private final BackgroundRemovalService backgroundRemovalService;
     @Qualifier("asyncTaskExecutor")
     private final AsyncTaskExecutor asyncTaskExecutor;
+
+    @Value("${app.item-images.max-per-item:10}")
+    private int maxImagesPerItem;
 
     public Page<ItemDto> getAllItemsPaged(
             HttpServletRequest request,
@@ -86,17 +94,6 @@ public class ItemService {
         return mapToDto(item);
     }
 
-    /**
-     * Intelligently finds an item by trying multiple code format variations.
-     * Handles:
-     * 1. Direct match (exact code or QR code)
-     * 2. 14-digit code without "01" prefix → tries with "01" prefix
-     * 3. 16-digit code with "01" prefix → tries without "01" prefix
-     * 4. QR codes
-     *
-     * @param code The code/identifier to search for
-     * @return Found item or throws ITEM_NOT_FOUND
-     */
     public boolean existsByPhotoUrl(String photoUrl) {
         if (photoUrl == null || photoUrl.isBlank()) {
             return false;
@@ -107,14 +104,12 @@ public class ItemService {
     private Item findItemBySmartCode(String code) {
         log.debug("Searching for item with smart code: {}", code);
 
-        // Strategy 1: Try direct match first (fastest)
         Optional<Item> item = itemRepository.findByCodeOrQrCode(code);
         if (item.isPresent()) {
             log.debug("Item found by direct match: {}", code);
             return item.get();
         }
 
-        // Strategy 2: Handle 14-digit codes without "01" prefix
         if (code.matches("\\d{14}")) {
             String codeWithPrefix = "01" + code;
             item = itemRepository.findByCodeOrQrCode(codeWithPrefix);
@@ -124,7 +119,6 @@ public class ItemService {
             }
         }
 
-        // Strategy 3: Handle 16-digit codes - try removing "01" prefix
         if (code.matches("\\d{16}")) {
             String codeWithoutPrefix = code.substring(2);
             item = itemRepository.findByCodeOrQrCode(codeWithoutPrefix);
@@ -134,7 +128,6 @@ public class ItemService {
             }
         }
 
-        // Strategy 4: If 14-digit with 01 prefix was tried, try the 14-digit part
         if (code.matches("01\\d{14}")) {
             String codePart = code.substring(2);
             item = itemRepository.findByCodeOrQrCode(codePart);
@@ -144,7 +137,6 @@ public class ItemService {
             }
         }
 
-        // If all strategies fail, throw not found error
         log.warn("Item not found after trying all code variations: {}", code);
         throw new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name());
     }
@@ -160,9 +152,6 @@ public class ItemService {
         return mapToDto(itemRepository.save(item));
     }
 
-    /**
-     * Internal method for bulk import - no rate limiting
-     */
     @Transactional
     public void createItemInternal(ItemDto dto) {
         Item item = new Item();
@@ -176,7 +165,6 @@ public class ItemService {
 
         item.setQrCode(determineQrCode(dto.getQrCode(), item.getCode()));
 
-        // Set photo_url if provided in import, imageUploaded is false by default
         if (dto.getPhotoUrl() != null && !dto.getPhotoUrl().isBlank()) {
             item.setPhoto_url(dto.getPhotoUrl());
             item.setImageUploaded(false);
@@ -185,20 +173,11 @@ public class ItemService {
         mapToDto(itemRepository.save(item));
     }
 
-    /**
-     * Generates the QR code for an item based on user input or defaults to QR-{barcode}.
-     * Logic:
-     * 1. If user provides QR code and it's unique → use it
-     * 2. If user provides QR code but it exists → generate new one from barcode
-     * 3. If user provides barcode format (14 or 16 digits) → generate QR-{barcode}
-     * 4. If no QR code provided → generate QR-{barcode} for compatibility
-     */
     private String determineQrCode(String providedQrCode, String itemBarcode) {
         if (providedQrCode == null || providedQrCode.isBlank()) {
             return generateDefaultQrCode(itemBarcode);
         }
 
-        // Case 1: User provides QR code format (QR-XXXXX)
         if (providedQrCode.startsWith("QR-")) {
             if (barcodeService.validateQrCode(providedQrCode)) {
                 if (!itemRepository.existsByQrCode(providedQrCode)) {
@@ -213,14 +192,12 @@ public class ItemService {
             return generateDefaultQrCode(itemBarcode);
         }
 
-        // Case 2: User provides barcode format (14 or 16 digits)
         if (providedQrCode.matches("\\d{14}") || providedQrCode.matches("\\d{16}")) {
             String newQrCode = barcodeService.generateQrCodeFromBarcode(providedQrCode);
             log.info("User provided barcode format, generating QR code: {}", newQrCode);
             return newQrCode;
         }
 
-        // Case 3: Invalid QR code format - generate default
         log.warn("Invalid QR code format provided: {}, using default QR code", providedQrCode);
         return generateDefaultQrCode(itemBarcode);
     }
@@ -247,94 +224,51 @@ public class ItemService {
         itemRepository.deleteById(id);
     }
 
+    /**
+     * Uploads a photo as the primary image for an item.
+     * Creates or replaces the primary ItemImage record.
+     */
     @Transactional
     public String uploadPhoto(Long id, MultipartFile file, HttpServletRequest request) throws Exception {
         rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
 
-        // Walidacja: tylko obrazy są akceptowane
         validateImageFile(file);
 
-        // Read original file bytes
-        byte[] originalBytes = file.getBytes();
+        byte[] imageBytes = processImage(file);
+        String fileName = encryptAndUpload(imageBytes, id);
 
-        // Apply background removal; fall back to original on failure
-        byte[] imageBytes = originalBytes;
-        byte[] processed = backgroundRemovalService.removeBackground(originalBytes);
-        if (processed != null) {
-            imageBytes = processed;
-            log.debug("Background removed from image for item {}", id);
-        } else {
-            log.debug("Using original image for item {} (background removal skipped or failed)", id);
-        }
+        // Find existing primary image
+        Optional<ItemImage> existingPrimary = itemImageRepository.findByItemIdAndIsPrimaryTrue(id);
+        String previousPhoto = existingPrimary.map(ItemImage::getPhotoUrl).orElse(item.getPhoto_url());
 
-        String previousPhoto = item.getPhoto_url();
-        String fileName = UUID.randomUUID() + ".enc";
-
-        // Create final reference for use in lambda
-        final byte[] finalImageBytes = imageBytes;
-
-        try (PipedInputStream pipedIn = new PipedInputStream(1024 * 64);
-             PipedOutputStream pipedOut = new PipedOutputStream(pipedIn)) {
-
-            // Start encryption in background thread using CompletableFuture
-            CompletableFuture<Void> encryptionFuture = CompletableFuture.runAsync(
-                    () -> encryptToStream(finalImageBytes, pipedOut),
-                    asyncTaskExecutor
-            );
-
-            try {
-                // Upload encrypted stream to storage
-                storageService.uploadStream(fileName, pipedIn, "image/png");
-
-                // Wait for encryption to complete (max 30 seconds)
-                encryptionFuture.get(30, TimeUnit.SECONDS);
-            } catch (InterruptedException ex) {
-                // Cancel encryption and restore interrupt status
-                encryptionFuture.cancel(true);
-                Thread.currentThread().interrupt();
-                cleanupFailedUpload(fileName);
-                throw ex;
-            } catch (ExecutionException ex) {
-                // Encryption failed - unwrap and rethrow the actual exception
-                cleanupFailedUpload(fileName);
-                Throwable cause = ex.getCause();
-                if (cause instanceof Exception) {
-                    throw (Exception) cause;
-                }
-                throw ex;
-            } catch (TimeoutException ex) {
-                log.warn("Encryption thread did not finish within timeout for item {}", id);
-                encryptionFuture.cancel(true);
-                cleanupFailedUpload(fileName);
-                throw new IllegalStateException("Encryption timed out", ex);
-            } catch (Exception ex) {
-                // Upload failed - cancel encryption and cleanup
-                encryptionFuture.cancel(true);
-                cleanupFailedUpload(fileName);
-                throw ex;
-            }
-        }
+        float[] embedding = generateEmbedding(imageBytes);
 
         try {
+            if (existingPrimary.isPresent()) {
+                // Update existing primary image
+                ItemImage primaryImage = existingPrimary.get();
+                primaryImage.setPhotoUrl(fileName);
+                primaryImage.setImageEmbedding(embedding);
+                itemImageRepository.save(primaryImage);
+            } else {
+                // Create new primary image
+                ItemImage newImage = ItemImage.builder()
+                        .item(item)
+                        .photoUrl(fileName)
+                        .imageEmbedding(embedding)
+                        .isPrimary(true)
+                        .displayOrder(0)
+                        .build();
+                itemImageRepository.save(newImage);
+            }
+
+            // Update denormalized fields on Item
             item.setPhoto_url(fileName);
             item.setImageUploaded(true);
-            // Image embedding is optional - if model isn't available, photo upload still works
-            if (imageEmbeddingService.isModelLoaded()) {
-                try {
-                    // Use the same processed image bytes - skip redundant background removal
-                    item.setImageEmbedding(imageEmbeddingService.getEmbeddingFromProcessedImage(imageBytes));
-                } catch (ImageEmbeddingService.ImageEmbeddingException e) {
-                    log.warn("Failed to generate image embedding, visual search will not work for this item: {}",
-                            e.getMessage());
-                }
-            } else {
-                log.debug("Image embedding model not available, skipping embedding generation");
-            }
             itemRepository.save(item);
         } catch (Exception ex) {
-            // Compensating transaction: if DB save fails, delete the uploaded file
             cleanupFailedUpload(fileName);
             throw ex;
         }
@@ -344,6 +278,155 @@ public class ItemService {
         }
 
         return fileName;
+    }
+
+    /**
+     * Uploads an additional (non-primary) photo for an item.
+     */
+    @Transactional
+    public ItemImageDto uploadAdditionalPhoto(Long id, MultipartFile file, HttpServletRequest request) throws Exception {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
+        Item item = itemRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
+
+        int currentCount = itemImageRepository.countByItemId(id);
+        if (currentCount >= maxImagesPerItem) {
+            throw new IllegalArgumentException(InventoryError.MAX_IMAGES_EXCEEDED.name());
+        }
+
+        validateImageFile(file);
+
+        byte[] imageBytes = processImage(file);
+        String fileName = encryptAndUpload(imageBytes, id);
+
+        float[] embedding = generateEmbedding(imageBytes);
+        boolean shouldBePrimary = currentCount == 0;
+        int displayOrder = itemImageRepository.getNextDisplayOrder(id);
+
+        try {
+            if (shouldBePrimary) {
+                itemImageRepository.clearPrimaryForItem(id);
+            }
+
+            ItemImage newImage = ItemImage.builder()
+                    .item(item)
+                    .photoUrl(fileName)
+                    .imageEmbedding(embedding)
+                    .isPrimary(shouldBePrimary)
+                    .displayOrder(displayOrder)
+                    .build();
+            newImage = itemImageRepository.save(newImage);
+
+            // If this is the first image, update denormalized fields
+            if (shouldBePrimary) {
+                item.setPhoto_url(fileName);
+                item.setImageUploaded(true);
+                itemRepository.save(item);
+            }
+
+            return mapToImageDto(newImage);
+        } catch (Exception ex) {
+            cleanupFailedUpload(fileName);
+            throw ex;
+        }
+    }
+
+    /**
+     * Deletes a specific photo from an item's gallery.
+     * If the deleted image was primary, auto-promotes the next image.
+     */
+    @Transactional
+    public void deletePhoto(Long itemId, Long imageId, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
+
+        ItemImage image = itemImageRepository.findById(imageId)
+                .filter(img -> img.getItem().getId().equals(itemId))
+                .orElseThrow(() -> new IllegalArgumentException(InventoryError.IMAGE_NOT_FOUND.name()));
+
+        String photoUrl = image.getPhotoUrl();
+        boolean wasPrimary = image.isPrimary();
+
+        itemImageRepository.delete(image);
+        itemImageRepository.flush();
+
+        // Cleanup storage
+        if (photoUrl != null && !photoUrl.isBlank()) {
+            try {
+                storageService.delete(photoUrl);
+            } catch (Exception e) {
+                log.warn("Failed to delete photo from storage: {}", photoUrl);
+            }
+        }
+
+        if (wasPrimary) {
+            // Auto-promote next image by displayOrder
+            List<ItemImage> remaining = itemImageRepository.findByItemIdOrderByDisplayOrderAsc(itemId);
+            if (!remaining.isEmpty()) {
+                ItemImage newPrimary = remaining.get(0);
+                newPrimary.setPrimary(true);
+                itemImageRepository.save(newPrimary);
+                item.setPhoto_url(newPrimary.getPhotoUrl());
+                itemRepository.save(item);
+            } else {
+                // No images left
+                item.setPhoto_url(null);
+                item.setImageUploaded(false);
+                itemRepository.save(item);
+            }
+        }
+    }
+
+    /**
+     * Sets a specific image as the primary image for an item.
+     */
+    @Transactional
+    public void setPrimaryPhoto(Long itemId, Long imageId, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_WRITE);
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name()));
+
+        ItemImage image = itemImageRepository.findById(imageId)
+                .filter(img -> img.getItem().getId().equals(itemId))
+                .orElseThrow(() -> new IllegalArgumentException(InventoryError.IMAGE_NOT_FOUND.name()));
+
+        itemImageRepository.clearPrimaryForItem(itemId);
+        image.setPrimary(true);
+        itemImageRepository.save(image);
+
+        // Update denormalized photo_url on item
+        item.setPhoto_url(image.getPhotoUrl());
+        itemRepository.save(item);
+    }
+
+    /**
+     * Returns all photos for an item.
+     */
+    public List<ItemImageDto> getItemPhotos(Long itemId, HttpServletRequest request) {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
+        if (!itemRepository.existsById(itemId)) {
+            throw new IllegalArgumentException(InventoryError.ITEM_NOT_FOUND.name());
+        }
+        return itemImageRepository.findByItemIdOrderByDisplayOrderAsc(itemId).stream()
+                .map(this::mapToImageDto)
+                .toList();
+    }
+
+    /**
+     * Downloads a specific photo by image ID.
+     */
+    public byte[] downloadPhotoByImageId(Long itemId, Long imageId, HttpServletRequest request) throws Exception {
+        rateLimiter.consumeOrThrow(getClientIp(request), RateLimitOperation.INVENTORY_READ);
+        ItemImage image = itemImageRepository.findById(imageId)
+                .filter(img -> img.getItem().getId().equals(itemId))
+                .orElseThrow(() -> new IllegalArgumentException(InventoryError.IMAGE_NOT_FOUND.name()));
+
+        try (InputStream is = storageService.download(image.getPhotoUrl());
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            fileCryptoService.decrypt(is, baos);
+            return baos.toByteArray();
+        }
     }
 
     public byte[] downloadPhoto(Long id, HttpServletRequest request) throws Exception {
@@ -362,10 +445,6 @@ public class ItemService {
         }
     }
 
-    /**
-     * Batch upload photos - matches photos to items by filename
-     * Only updates items that have matching photo_url from CSV import
-     */
     @Transactional
     public List<String> uploadPhotosBatch(List<MultipartFile> files) throws Exception {
         List<String> results = new ArrayList<>();
@@ -379,7 +458,6 @@ public class ItemService {
 
             validateImageFile(file);
 
-            // Find item with matching photo_url
             Optional<Item> itemOpt = itemRepository.findByPhoto_url(originalFilename);
             if (itemOpt.isEmpty()) {
                 results.add("NOT_FOUND: " + originalFilename);
@@ -388,14 +466,7 @@ public class ItemService {
 
             Item item = itemOpt.get();
 
-            byte[] originalBytes = file.getBytes();
-            byte[] imageBytes = originalBytes;
-            byte[] processed = backgroundRemovalService.removeBackground(originalBytes);
-            if (processed != null) {
-                imageBytes = processed;
-            }
-
-            String previousPhoto = item.getPhoto_url();
+            byte[] imageBytes = processImage(file);
             String fileName = UUID.randomUUID() + ".enc";
 
             final byte[] finalImageBytes = imageBytes;
@@ -420,16 +491,20 @@ public class ItemService {
             }
 
             try {
+                float[] embedding = generateEmbedding(imageBytes);
+
+                // Create primary ItemImage for this item
+                ItemImage newImage = ItemImage.builder()
+                        .item(item)
+                        .photoUrl(fileName)
+                        .imageEmbedding(embedding)
+                        .isPrimary(true)
+                        .displayOrder(0)
+                        .build();
+                itemImageRepository.save(newImage);
+
                 item.setPhoto_url(fileName);
                 item.setImageUploaded(true);
-
-                if (imageEmbeddingService.isModelLoaded()) {
-                    try {
-                        item.setImageEmbedding(imageEmbeddingService.getEmbeddingFromProcessedImage(imageBytes));
-                    } catch (ImageEmbeddingService.ImageEmbeddingException e) {
-                        log.warn("Failed to generate image embedding for {}: {}", originalFilename, e.getMessage());
-                    }
-                }
                 itemRepository.save(item);
                 results.add("UPLOADED: " + originalFilename + " -> item_id=" + item.getId());
             } catch (Exception ex) {
@@ -439,6 +514,71 @@ public class ItemService {
         }
 
         return results;
+    }
+
+    // === Helper methods ===
+
+    private byte[] processImage(MultipartFile file) throws IOException {
+        byte[] originalBytes = file.getBytes();
+        byte[] processed = backgroundRemovalService.removeBackground(originalBytes);
+        if (processed != null) {
+            return processed;
+        }
+        return originalBytes;
+    }
+
+    private String encryptAndUpload(byte[] imageBytes, Long itemId) throws Exception {
+        String fileName = UUID.randomUUID() + ".enc";
+
+        try (PipedInputStream pipedIn = new PipedInputStream(1024 * 64);
+             PipedOutputStream pipedOut = new PipedOutputStream(pipedIn)) {
+
+            CompletableFuture<Void> encryptionFuture = CompletableFuture.runAsync(
+                    () -> encryptToStream(imageBytes, pipedOut),
+                    asyncTaskExecutor
+            );
+
+            try {
+                storageService.uploadStream(fileName, pipedIn, "image/png");
+                encryptionFuture.get(30, TimeUnit.SECONDS);
+            } catch (InterruptedException ex) {
+                encryptionFuture.cancel(true);
+                Thread.currentThread().interrupt();
+                cleanupFailedUpload(fileName);
+                throw ex;
+            } catch (ExecutionException ex) {
+                cleanupFailedUpload(fileName);
+                Throwable cause = ex.getCause();
+                if (cause instanceof Exception) {
+                    throw (Exception) cause;
+                }
+                throw ex;
+            } catch (TimeoutException ex) {
+                log.warn("Encryption thread did not finish within timeout for item {}", itemId);
+                encryptionFuture.cancel(true);
+                cleanupFailedUpload(fileName);
+                throw new IllegalStateException("Encryption timed out", ex);
+            } catch (Exception ex) {
+                encryptionFuture.cancel(true);
+                cleanupFailedUpload(fileName);
+                throw ex;
+            }
+        }
+
+        return fileName;
+    }
+
+    private float[] generateEmbedding(byte[] imageBytes) {
+        if (imageEmbeddingService.isModelLoaded()) {
+            try {
+                return imageEmbeddingService.getEmbeddingFromProcessedImage(imageBytes);
+            } catch (ImageEmbeddingService.ImageEmbeddingException e) {
+                log.warn("Failed to generate image embedding: {}", e.getMessage());
+            }
+        } else {
+            log.debug("Image embedding model not available, skipping embedding generation");
+        }
+        return null;
     }
 
     private void updateItemFromDto(Item item, ItemDto dto) {
@@ -493,21 +633,10 @@ public class ItemService {
         }
     }
 
-    /**
-     * Encrypts the given image bytes to the provided output stream.
-     * This method runs in a separate thread via CompletableFuture.
-     * It properly handles interruptions and ensures CipherOutputStream is finalized.
-     *
-     * @param imageBytes The image bytes to encrypt
-     * @param pipedOut   The output stream to write encrypted data to
-     * @throws RuntimeException if encryption fails or thread is interrupted
-     */
     private void encryptToStream(byte[] imageBytes, PipedOutputStream pipedOut) {
         try (InputStream rawIn = new ByteArrayInputStream(imageBytes)) {
-            // FileCryptoService.encrypt handles CipherOutputStream internally and ensures proper flush/close
             fileCryptoService.encrypt(rawIn, pipedOut);
         } catch (Exception ex) {
-            // Check if thread was interrupted during encryption
             if (Thread.currentThread().isInterrupted()) {
                 log.debug("Encryption interrupted for item photo upload");
                 throw new RuntimeException("Encryption interrupted", ex);
@@ -515,7 +644,6 @@ public class ItemService {
             log.error("Failed to encrypt image", ex);
             throw new RuntimeException("Encryption failed", ex);
         } finally {
-            // Ensure PipedOutputStream is closed to signal EOF to the reader
             try {
                 pipedOut.close();
             } catch (IOException e) {
@@ -524,12 +652,6 @@ public class ItemService {
         }
     }
 
-    /**
-     * Cleans up a failed upload by deleting the file from storage.
-     * Suppresses any exceptions during cleanup to avoid masking the original error.
-     *
-     * @param fileName The name of the file to delete
-     */
     private void cleanupFailedUpload(String fileName) {
         try {
             storageService.delete(fileName);
@@ -538,21 +660,16 @@ public class ItemService {
         }
     }
 
-    /**
-     * Walidacja pliku - sprawdza czy to rzeczywiście obraz
-     */
     private void validateImageFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException(InventoryError.FILE_IS_EMPTY.name());
         }
 
-        // Sprawdź Content-Type
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             throw new IllegalArgumentException(InventoryError.INVALID_FILE_TYPE.name());
         }
 
-        // Lista dozwolonych typów MIME
         List<String> allowedTypes = List.of(
                 "image/jpeg",
                 "image/jpg",
@@ -566,7 +683,6 @@ public class ItemService {
             throw new IllegalArgumentException(InventoryError.UNSUPPORTED_IMAGE_TYPE.name());
         }
 
-        // Sprawdź rozszerzenie pliku
         String originalFilename = file.getOriginalFilename();
         if (originalFilename != null) {
             String extension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
@@ -577,7 +693,6 @@ public class ItemService {
             }
         }
 
-        // Sprawdź maksymalny rozmiar (np. 10MB)
         long maxSize = 10 * 1024 * 1024; // 10MB
         if (file.getSize() > maxSize) {
             throw new IllegalArgumentException(InventoryError.FILE_TOO_LARGE.name());
@@ -585,6 +700,15 @@ public class ItemService {
     }
 
     private ItemDto mapToDto(Item item) {
+        List<ItemImageDto> imageDtos = null;
+        int imageCount = 0;
+        if (item.getImages() != null) {
+            imageCount = item.getImages().size();
+            imageDtos = item.getImages().stream()
+                    .map(this::mapToImageDto)
+                    .toList();
+        }
+
         return ItemDto.builder()
                 .id(item.getId())
                 .code(item.getCode())
@@ -601,6 +725,20 @@ public class ItemService {
                 .isDangerous(item.isDangerous())
                 .name(item.getName())
                 .imageUploaded(item.isImageUploaded())
+                .imageCount(imageCount)
+                .images(imageDtos)
+                .build();
+    }
+
+    private ItemImageDto mapToImageDto(ItemImage image) {
+        return ItemImageDto.builder()
+                .id(image.getId())
+                .itemId(image.getItem().getId())
+                .photoUrl(image.getPhotoUrl())
+                .isPrimary(image.isPrimary())
+                .displayOrder(image.getDisplayOrder())
+                .hasEmbedding(image.getImageEmbedding() != null)
+                .createdAt(image.getCreatedAt())
                 .build();
     }
 }

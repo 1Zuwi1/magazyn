@@ -1,11 +1,10 @@
 package com.github.dawid_stolarczyk.magazyn.Model.Entity;
 
 
-import com.github.dawid_stolarczyk.magazyn.Common.Converter.PgVectorType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,14 +35,10 @@ public class Item {
     private boolean isDangerous;
     private boolean imageUploaded = false;
 
-    /**
-     * 1000-dimensional vector embedding from ResNet model for image similarity search.
-     * Stored as PostgreSQL vector type using pgvector extension.
-     * ResNet models output 1000-dimensional vectors corresponding to ImageNet classes.
-     */
-    @Column(name = "image_embedding", columnDefinition = "vector(1000)")
-    @Type(PgVectorType.class)
-    private float[] imageEmbedding;
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("displayOrder ASC")
+    @BatchSize(size = 20)
+    private List<ItemImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Assortment> assortments = new ArrayList<>();

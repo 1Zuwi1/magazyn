@@ -54,6 +54,7 @@ public class BackupService {
     private final WarehouseRepository warehouseRepository;
     private final RackRepository rackRepository;
     private final ItemRepository itemRepository;
+    private final ItemImageRepository itemImageRepository;
     private final AssortmentRepository assortmentRepository;
     private final InboundOperationRepository inboundOperationRepository;
     private final BackupStorageService backupStorageService;
@@ -100,7 +101,12 @@ public class BackupService {
     private record ItemBackupData(Long originalId, String name, String code, String photoUrl, String qrCode,
                                   float minTemp, float maxTemp, float weight,
                                   float sizeX, float sizeY, float sizeZ,
-                                  String comment, Long expireAfterDays, boolean isDangerous) {
+                                  String comment, Long expireAfterDays, boolean isDangerous,
+                                  List<ItemImageBackupData> images) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record ItemImageBackupData(Long originalId, String photoUrl, boolean isPrimary, int displayOrder) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -249,10 +255,18 @@ public class BackupService {
                 log.info("Backup {} — found {} items for warehouse {}", recordId, items.size(), warehouseId);
 
                 List<ItemBackupData> itemData = items.stream()
-                        .map(i -> new ItemBackupData(i.getId(), i.getName(), i.getCode(), i.getPhoto_url(), i.getQrCode(),
-                                i.getMin_temp(), i.getMax_temp(), i.getWeight(),
-                                i.getSize_x(), i.getSize_y(), i.getSize_z(),
-                                i.getComment(), i.getExpireAfterDays(), i.isDangerous()))
+                        .map(i -> {
+                            List<ItemImageBackupData> imageData = i.getImages() != null
+                                    ? i.getImages().stream()
+                                    .map(img -> new ItemImageBackupData(img.getId(), img.getPhotoUrl(),
+                                            img.isPrimary(), img.getDisplayOrder()))
+                                    .toList()
+                                    : List.of();
+                            return new ItemBackupData(i.getId(), i.getName(), i.getCode(), i.getPhoto_url(), i.getQrCode(),
+                                    i.getMin_temp(), i.getMax_temp(), i.getWeight(),
+                                    i.getSize_x(), i.getSize_y(), i.getSize_z(),
+                                    i.getComment(), i.getExpireAfterDays(), i.isDangerous(), imageData);
+                        })
                         .toList();
 
                 long bytesWritten = writer.writeAndUpload(basePath, "items.enc", itemData);
@@ -516,6 +530,21 @@ public class BackupService {
                         itemsRestored++;
                     }
                     itemIdMapping.put(id.originalId(), item.getId());
+
+                    // Restore item images if present and item has no images yet
+                    if (id.images() != null && !id.images().isEmpty()
+                            && itemImageRepository.countByItemId(item.getId()) == 0) {
+                        for (ItemImageBackupData imgData : id.images()) {
+                            ItemImage itemImage = ItemImage.builder()
+                                    .item(item)
+                                    .photoUrl(imgData.photoUrl())
+                                    .isPrimary(imgData.isPrimary())
+                                    .displayOrder(imgData.displayOrder())
+                                    .build();
+                            itemImageRepository.save(itemImage);
+                        }
+                        log.info("Restored {} images for item {}", id.images().size(), item.getId());
+                    }
                 }
             }
 

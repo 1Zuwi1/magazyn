@@ -45,6 +45,10 @@ public enum InventoryError {
     // Rack update errors
     RACK_HAS_DANGEROUS_ITEMS,
 
+    // Image management errors
+    IMAGE_NOT_FOUND,
+    MAX_IMAGES_EXCEEDED,
+
     // Bulk operation errors
     NO_WAREHOUSES_FOUND,
     RESTORE_ALREADY_IN_PROGRESS

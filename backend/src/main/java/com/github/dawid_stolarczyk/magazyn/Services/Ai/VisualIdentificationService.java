@@ -9,6 +9,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.ConfidenceLevel;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AuditLogRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemImageRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.Projection.ItemSimilarityProjection;
 import com.github.dawid_stolarczyk.magazyn.Services.Ratelimiter.Bucket4jRateLimiter;
@@ -49,6 +50,7 @@ public class VisualIdentificationService {
 
     private final ImageEmbeddingService imageEmbeddingService;
     private final ItemRepository itemRepository;
+    private final ItemImageRepository itemImageRepository;
     private final AuditLogRepository auditLogRepository;
     private final Bucket4jRateLimiter rateLimiter;
 
@@ -66,6 +68,9 @@ public class VisualIdentificationService {
 
     @Value("${app.visual-identification.embedding-cache-ttl-minutes:15}")
     private int embeddingCacheTtlMinutes;
+
+    @Value("${app.visual-identification.inner-query-limit:50}")
+    private int innerQueryLimit;
 
     private Cache<String, IdentificationSession> sessionCache;
 
@@ -157,9 +162,9 @@ public class VisualIdentificationService {
             String identificationId = UUID.randomUUID().toString();
             sessionCache.put(identificationId, new IdentificationSession(embeddingStr));
 
-            // Fetch Top-N candidates from database
-            List<ItemSimilarityProjection> results = itemRepository.findMostSimilarByEmbedding(
-                    embeddingStr, lowConfidenceCandidateCount);
+            // Fetch Top-N candidates from database (best match per item across all images)
+            List<ItemSimilarityProjection> results = itemImageRepository.findBestMatchPerItem(
+                    embeddingStr, innerQueryLimit, lowConfidenceCandidateCount);
 
             if (results == null || results.isEmpty()) {
                 return handleNoItemsFound(identificationId, currentUser,
@@ -271,9 +276,9 @@ public class VisualIdentificationService {
         // Log the mismatch event (includes full exclusion list)
         logMismatch(currentUser, rejectedItemId, allExcluded, identificationId, ipAddress, userAgent);
 
-        // Query excluding ALL previously rejected items
-        List<ItemSimilarityProjection> results = itemRepository.findMostSimilarExcluding(
-                session.embeddingStr, allExcluded, mismatchAlternativeCount);
+        // Query excluding ALL previously rejected items (best match per item across all images)
+        List<ItemSimilarityProjection> results = itemImageRepository.findBestMatchPerItemExcluding(
+                session.embeddingStr, allExcluded, innerQueryLimit, mismatchAlternativeCount);
 
         if (results == null || results.isEmpty()) {
             return ItemIdentificationResponse.builder()

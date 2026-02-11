@@ -1,7 +1,7 @@
 package com.github.dawid_stolarczyk.magazyn.Services.Ai;
 
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.Alert;
-import com.github.dawid_stolarczyk.magazyn.Model.Entity.Item;
+import com.github.dawid_stolarczyk.magazyn.Model.Entity.ItemImage;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.User;
 import com.github.dawid_stolarczyk.magazyn.Model.Entity.UserNotification;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AccountStatus;
@@ -9,7 +9,7 @@ import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertStatus;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.AlertType;
 import com.github.dawid_stolarczyk.magazyn.Model.Enums.UserRole;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.AlertRepository;
-import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemRepository;
+import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.ItemImageRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserNotificationRepository;
 import com.github.dawid_stolarczyk.magazyn.Repositories.JPA.UserRepository;
 import com.github.dawid_stolarczyk.magazyn.Services.Storage.StorageService;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ItemEmbeddingGenerationService {
 
-    private final ItemRepository itemRepository;
+    private final ItemImageRepository itemImageRepository;
     private final ImageEmbeddingService imageEmbeddingService;
     private final StorageService storageService;
     private final AlertRepository alertRepository;
@@ -84,13 +84,12 @@ public class ItemEmbeddingGenerationService {
     private EmbeddingGenerationReport generateEmbeddingsInternal(boolean forceRegenerate) {
         log.info("Starting batch embedding generation (forceRegenerate={})", forceRegenerate);
 
-        List<Item> itemsToProcess = itemRepository.findAll().stream()
-                .filter(item -> item.getPhoto_url() != null && !item.getPhoto_url().isBlank())
-                .filter(item -> forceRegenerate || item.getImageEmbedding() == null)
-                .toList();
+        List<ItemImage> imagesToProcess = forceRegenerate
+                ? itemImageRepository.findAllWithPhotos()
+                : itemImageRepository.findWithoutEmbedding();
 
-        if (itemsToProcess.isEmpty()) {
-            log.info("No items found that need embedding generation");
+        if (imagesToProcess.isEmpty()) {
+            log.info("No item images found that need embedding generation");
             return EmbeddingGenerationReport.builder()
                     .totalItems(0)
                     .processed(0)
@@ -100,53 +99,48 @@ public class ItemEmbeddingGenerationService {
                     .build();
         }
 
-        log.info("Found {} items to process", itemsToProcess.size());
+        log.info("Found {} item images to process", imagesToProcess.size());
 
         AtomicInteger processed = new AtomicInteger(0);
         AtomicInteger successful = new AtomicInteger(0);
         AtomicInteger failed = new AtomicInteger(0);
 
-        for (Item item : itemsToProcess) {
+        for (ItemImage image : imagesToProcess) {
             InputStream photoStream = null;
             try {
-                // Download photo from S3
-                photoStream = storageService.download(item.getPhoto_url());
+                photoStream = storageService.download(image.getPhotoUrl());
 
-                // Generate embedding
                 float[] embedding = imageEmbeddingService.getEmbedding(photoStream);
 
-                // Save embedding to database
-                item.setImageEmbedding(embedding);
-                itemRepository.save(item);
+                image.setImageEmbedding(embedding);
+                itemImageRepository.save(image);
 
                 successful.incrementAndGet();
-                log.debug("Generated embedding for item {} ({})", item.getId(), item.getName());
+                log.debug("Generated embedding for item image {} (item {})", image.getId(), image.getItem().getId());
 
             } catch (Exception e) {
                 failed.incrementAndGet();
-                log.error("Failed to generate embedding for item {} ({}): {}",
-                        item.getId(), item.getName(), e.getMessage());
+                log.error("Failed to generate embedding for item image {} (item {}): {}",
+                        image.getId(), image.getItem().getId(), e.getMessage());
             } finally {
-                // Close the input stream to release HTTP connection
                 if (photoStream != null) {
                     try {
                         photoStream.close();
                     } catch (Exception e) {
-                        log.warn("Failed to close photo stream for item {}", item.getId());
+                        log.warn("Failed to close photo stream for item image {}", image.getId());
                     }
                 }
 
                 processed.incrementAndGet();
 
-                // Log progress every 10 items
                 if (processed.get() % 10 == 0) {
-                    log.info("Progress: {}/{} items processed", processed.get(), itemsToProcess.size());
+                    log.info("Progress: {}/{} item images processed", processed.get(), imagesToProcess.size());
                 }
             }
         }
 
         EmbeddingGenerationReport report = EmbeddingGenerationReport.builder()
-                .totalItems(itemsToProcess.size())
+                .totalItems(imagesToProcess.size())
                 .processed(processed.get())
                 .successful(successful.get())
                 .failed(failed.get())

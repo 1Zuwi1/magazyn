@@ -333,6 +333,107 @@ public class ItemController {
         }
     }
 
+    @Operation(summary = "Upload additional photo for item (ADMIN only)",
+            description = "Uploads an additional photo to the item's image gallery. Max 10 images per item.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Photo uploaded successfully"),
+            @ApiResponse(responseCode = "400", description = "Error codes: MAX_IMAGES_EXCEEDED, FILE_IS_EMPTY, INVALID_FILE_TYPE"),
+            @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND")
+    })
+    @PostMapping(value = "/{id}/photos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<ItemImageDto>> uploadAdditionalPhoto(
+            @PathVariable Long id,
+            @RequestPart("file") MultipartFile file,
+            HttpServletRequest request) {
+        try {
+            ItemImageDto result = itemService.uploadAdditionalPhoto(id, file, request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(ResponseTemplate.success(result));
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid additional photo upload for item {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ResponseTemplate.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error uploading additional photo for item {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseTemplate.error("PHOTO_UPLOAD_FAILED"));
+        }
+    }
+
+    @Operation(summary = "Get all photos for an item",
+            description = "Returns metadata for all photos in the item's gallery, ordered by display order.")
+    @ApiResponse(responseCode = "200", description = "List of item images")
+    @GetMapping("/{id}/photos")
+    public ResponseEntity<ResponseTemplate<List<ItemImageDto>>> getItemPhotos(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+        try {
+            return ResponseEntity.ok(ResponseTemplate.success(itemService.getItemPhotos(id, request)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Download a specific photo by image ID",
+            description = "Downloads and decrypts a specific photo from the item's gallery.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Photo downloaded successfully"),
+            @ApiResponse(responseCode = "404", description = "Error codes: IMAGE_NOT_FOUND")
+    })
+    @GetMapping(value = "/{id}/photos/{imageId}", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> downloadPhotoByImageId(
+            @PathVariable Long id,
+            @PathVariable Long imageId,
+            HttpServletRequest request) {
+        try {
+            byte[] data = itemService.downloadPhotoByImageId(id, imageId, request);
+            return ResponseEntity.ok(data);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            log.error("Error downloading photo {} for item {}", imageId, id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @Operation(summary = "Delete a specific photo (ADMIN only)",
+            description = "Deletes a photo from the item's gallery. If the deleted image was primary, the next image is auto-promoted.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Photo deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND, IMAGE_NOT_FOUND")
+    })
+    @DeleteMapping("/{id}/photos/{imageId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<Void>> deletePhoto(
+            @PathVariable Long id,
+            @PathVariable Long imageId,
+            HttpServletRequest request) {
+        try {
+            itemService.deletePhoto(id, imageId, request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Set a photo as primary (ADMIN only)",
+            description = "Sets the specified photo as the primary image for the item.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Primary photo updated"),
+            @ApiResponse(responseCode = "404", description = "Error codes: ITEM_NOT_FOUND, IMAGE_NOT_FOUND")
+    })
+    @PutMapping("/{id}/photos/{imageId}/primary")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseTemplate<Void>> setPrimaryPhoto(
+            @PathVariable Long id,
+            @PathVariable Long imageId,
+            HttpServletRequest request) {
+        try {
+            itemService.setPrimaryPhoto(id, imageId, request);
+            return ResponseEntity.ok(ResponseTemplate.success());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseTemplate.error(e.getMessage()));
+        }
+    }
+
     @Operation(
             summary = "Import items (products) from CSV (ADMIN only)",
             description = """

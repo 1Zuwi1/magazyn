@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -56,4 +58,10 @@ public class ItemDto {
 
     @Schema(description = "Whether the item's image has been uploaded to S3", example = "false")
     private boolean imageUploaded;
+
+    @Schema(description = "Number of images associated with this item", example = "3")
+    private int imageCount;
+
+    @Schema(description = "List of item images")
+    private List<ItemImageDto> images;
 }
