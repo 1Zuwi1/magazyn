@@ -5,10 +5,14 @@ import type {
   TemperatureReportRow,
 } from "./types"
 
-export const REPORT_FORMATS: { value: ReportFormat; label: string }[] = [
-  { value: "xlsx", label: "Excel (.xlsx)" },
-  { value: "pdf", label: "PDF" },
-  { value: "csv", label: "CSV (.csv)" },
+export const REPORT_FORMATS: {
+  value: ReportFormat
+  label: string
+  icon: string
+}[] = [
+  { value: "xlsx", label: "Excel (.xlsx)", icon: "xlsx" },
+  { value: "pdf", label: "PDF", icon: "pdf" },
+  { value: "csv", label: "CSV (.csv)", icon: "csv" },
 ]
 
 export const WAREHOUSES = [

@@ -2,8 +2,11 @@
 
 import {
   Calendar03Icon,
+  Csv01Icon,
   FileDownloadIcon,
+  Pdf01Icon,
   Time02Icon,
+  Xls01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useMemo, useState } from "react"
@@ -18,6 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { SearchEmptyState } from "@/components/ui/empty-state"
 import { SearchInput } from "@/components/ui/filter-bar"
 import {
@@ -64,15 +68,24 @@ const getRowHighlight = (daysLeft: number) => {
 
 interface ExpiryRowProps {
   row: ExpiryReportRow
+  isSelected: boolean
+  onToggle: (id: string, checked: boolean) => void
 }
 
-function ExpiryRow({ row }: ExpiryRowProps) {
+function ExpiryRow({ row, isSelected, onToggle }: ExpiryRowProps) {
   const status = getExpiryStatus(row.daysLeft)
 
   return (
     <TableRow
       className={cn("transition-colors", getRowHighlight(row.daysLeft))}
+      data-state={isSelected ? "selected" : undefined}
     >
+      <TableCell className="w-[50px] px-4">
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={(checked) => onToggle(row.id, !!checked)}
+        />
+      </TableCell>
       <TableCell className="font-medium">{row.item}</TableCell>
       <TableCell className="font-mono text-xs">{row.rack}</TableCell>
       <TableCell className="text-sm">{row.warehouse}</TableCell>
@@ -99,6 +112,7 @@ export function ExpiryReportCard({ soonExpiry }: ExpiryReportCardProps) {
   const [search, setSearch] = useState("")
   const [sortField, setSortField] = useState<SortField>("daysLeft")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -139,6 +153,28 @@ export function ExpiryReportCard({ soonExpiry }: ExpiryReportCardProps) {
     return result
   }, [search, sortField, sortDirection])
 
+  const isAllSelected =
+    filtered.length > 0 && filtered.every((row) => selectedIds.has(row.id))
+
+  const toggleAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = new Set(filtered.map((row) => row.id))
+      setSelectedIds(allIds)
+    } else {
+      setSelectedIds(new Set())
+    }
+  }
+
+  const toggleOne = (id: string, checked: boolean) => {
+    const next = new Set(selectedIds)
+    if (checked) {
+      next.add(id)
+    } else {
+      next.delete(id)
+    }
+    setSelectedIds(next)
+  }
+
   const stats = useMemo(() => {
     const expiredCount = EXPIRY_REPORT.filter((r) => r.daysLeft <= 0).length
     return { expiredCount }
@@ -156,7 +192,10 @@ export function ExpiryReportCard({ soonExpiry }: ExpiryReportCardProps) {
       await exportReport({
         filename: `terminy_waznosci_${new Date().toISOString().split("T")[0]}`,
         format: exportFormat,
-        data: filtered,
+        data:
+          selectedIds.size > 0
+            ? filtered.filter((row) => selectedIds.has(row.id))
+            : filtered,
         columns: [
           { header: "Produkt", key: "item" },
           { header: "Regał", key: "rack" },
@@ -207,20 +246,59 @@ export function ExpiryReportCard({ soonExpiry }: ExpiryReportCardProps) {
               onValueChange={(value) => setFormat(value as ReportFormat)}
               value={format}
             >
-              <SelectTrigger className="min-w-[170px]">
-                <SelectValue placeholder="Wybierz format pliku" />
+              <SelectTrigger className="min-w-[185px]">
+                <div className="flex items-center gap-2">
+                  <HugeiconsIcon
+                    className={cn(
+                      "size-4",
+                      format === "xlsx" && "text-emerald-500",
+                      format === "pdf" && "text-destructive",
+                      format === "csv" && "text-blue-500"
+                    )}
+                    icon={
+                      {
+                        xlsx: Xls01Icon,
+                        pdf: Pdf01Icon,
+                        csv: Csv01Icon,
+                      }[format]
+                    }
+                  />
+                  <SelectValue placeholder="Wybierz format pliku" />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 {REPORT_FORMATS.map((f) => (
                   <SelectItem key={f.value} value={f.value}>
-                    {f.label}
+                    <div className="flex items-center gap-2">
+                      <HugeiconsIcon
+                        className={cn(
+                          "size-4",
+                          f.value === "xlsx" && "text-emerald-500",
+                          f.value === "pdf" && "text-destructive",
+                          f.value === "csv" && "text-blue-500"
+                        )}
+                        icon={
+                          {
+                            xlsx: Xls01Icon,
+                            pdf: Pdf01Icon,
+                            csv: Csv01Icon,
+                          }[f.value]
+                        }
+                      />
+                      {f.label}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={handleExport}>
+            <Button
+              onClick={handleExport}
+              variant={selectedIds.size > 0 ? "default" : "outline"}
+            >
               <HugeiconsIcon className="mr-2 size-4" icon={FileDownloadIcon} />
-              Pobierz raport
+              {selectedIds.size > 0
+                ? `Eksportuj zaznaczone (${selectedIds.size})`
+                : "Eksportuj wszystko"}
             </Button>
           </div>
         </div>
@@ -243,6 +321,12 @@ export function ExpiryReportCard({ soonExpiry }: ExpiryReportCardProps) {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px] px-4">
+                    <Checkbox
+                      checked={isAllSelected}
+                      onCheckedChange={(checked) => toggleAll(!!checked)}
+                    />
+                  </TableHead>
                   <SortableTableHead
                     active={sortField === "item"}
                     direction={sortDirection}
@@ -272,7 +356,12 @@ export function ExpiryReportCard({ soonExpiry }: ExpiryReportCardProps) {
               </TableHeader>
               <TableBody>
                 {filtered.map((row) => (
-                  <ExpiryRow key={row.id} row={row} />
+                  <ExpiryRow
+                    isSelected={selectedIds.has(row.id)}
+                    key={row.id}
+                    onToggle={toggleOne}
+                    row={row}
+                  />
                 ))}
               </TableBody>
             </Table>

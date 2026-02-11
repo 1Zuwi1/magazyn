@@ -1,9 +1,12 @@
 "use client"
 
 import {
+  Csv01Icon,
   FileDownloadIcon,
   PackageIcon,
+  Pdf01Icon,
   Time02Icon,
+  Xls01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useMemo, useState } from "react"
@@ -18,6 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { SearchEmptyState } from "@/components/ui/empty-state"
 import { SearchInput } from "@/components/ui/filter-bar"
 import {
@@ -70,13 +74,22 @@ const getRowHighlight = (nearestExpiry: string | null) => {
 
 interface InventoryRowProps {
   row: InventoryReportRow
+  isSelected: boolean
+  onToggle: (id: string, checked: boolean) => void
 }
 
-function InventoryRow({ row }: InventoryRowProps) {
+function InventoryRow({ row, isSelected, onToggle }: InventoryRowProps) {
   return (
     <TableRow
       className={cn("transition-colors", getRowHighlight(row.nearestExpiry))}
+      data-state={isSelected ? "selected" : undefined}
     >
+      <TableCell className="w-[50px] px-4">
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={(checked) => onToggle(row.id, !!checked)}
+        />
+      </TableCell>
       <TableCell className="font-medium">{row.item}</TableCell>
       <TableCell className="font-mono text-xs">{row.sku}</TableCell>
       <TableCell className="font-mono text-xs">{row.rack}</TableCell>
@@ -100,6 +113,7 @@ export function InventoryReportCard() {
   const [search, setSearch] = useState("")
   const [sortField, setSortField] = useState<SortField>("warehouse")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -149,6 +163,28 @@ export function InventoryReportCard() {
     []
   )
 
+  const isAllSelected =
+    filtered.length > 0 && filtered.every((row) => selectedIds.has(row.id))
+
+  const toggleAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = new Set(filtered.map((row) => row.id))
+      setSelectedIds(allIds)
+    } else {
+      setSelectedIds(new Set())
+    }
+  }
+
+  const toggleOne = (id: string, checked: boolean) => {
+    const next = new Set(selectedIds)
+    if (checked) {
+      next.add(id)
+    } else {
+      next.delete(id)
+    }
+    setSelectedIds(next)
+  }
+
   const handleExport = async () => {
     try {
       let exportFormat: ExportFormat = "csv"
@@ -161,7 +197,10 @@ export function InventoryReportCard() {
       await exportReport({
         filename: `inwentaryzacja_${new Date().toISOString().split("T")[0]}`,
         format: exportFormat,
-        data: filtered,
+        data:
+          selectedIds.size > 0
+            ? filtered.filter((row) => selectedIds.has(row.id))
+            : filtered,
         columns: [
           { header: "Produkt", key: "item" },
           { header: "Kod SKU", key: "sku" },
@@ -206,20 +245,59 @@ export function InventoryReportCard() {
               onValueChange={(value) => setFormat(value as ReportFormat)}
               value={format}
             >
-              <SelectTrigger className="min-w-[170px]">
-                <SelectValue placeholder="Wybierz format pliku" />
+              <SelectTrigger className="min-w-[185px]">
+                <div className="flex items-center gap-2">
+                  <HugeiconsIcon
+                    className={cn(
+                      "size-4",
+                      format === "xlsx" && "text-emerald-500",
+                      format === "pdf" && "text-destructive",
+                      format === "csv" && "text-blue-500"
+                    )}
+                    icon={
+                      {
+                        xlsx: Xls01Icon,
+                        pdf: Pdf01Icon,
+                        csv: Csv01Icon,
+                      }[format]
+                    }
+                  />
+                  <SelectValue placeholder="Wybierz format pliku" />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 {REPORT_FORMATS.map((f) => (
                   <SelectItem key={f.value} value={f.value}>
-                    {f.label}
+                    <div className="flex items-center gap-2">
+                      <HugeiconsIcon
+                        className={cn(
+                          "size-4",
+                          f.value === "xlsx" && "text-emerald-500",
+                          f.value === "pdf" && "text-destructive",
+                          f.value === "csv" && "text-blue-500"
+                        )}
+                        icon={
+                          {
+                            xlsx: Xls01Icon,
+                            pdf: Pdf01Icon,
+                            csv: Csv01Icon,
+                          }[f.value]
+                        }
+                      />
+                      {f.label}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={handleExport}>
+            <Button
+              onClick={handleExport}
+              variant={selectedIds.size > 0 ? "default" : "outline"}
+            >
               <HugeiconsIcon className="mr-2 size-4" icon={FileDownloadIcon} />
-              Pobierz raport
+              {selectedIds.size > 0
+                ? `Eksportuj zaznaczone (${selectedIds.size})`
+                : "Eksportuj wszystko"}
             </Button>
           </div>
         </div>
@@ -242,6 +320,12 @@ export function InventoryReportCard() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[50px] px-4">
+                    <Checkbox
+                      checked={isAllSelected}
+                      onCheckedChange={(checked) => toggleAll(!!checked)}
+                    />
+                  </TableHead>
                   <SortableTableHead
                     active={sortField === "item"}
                     direction={sortDirection}
@@ -276,7 +360,12 @@ export function InventoryReportCard() {
               </TableHeader>
               <TableBody>
                 {filtered.map((row) => (
-                  <InventoryRow key={row.id} row={row} />
+                  <InventoryRow
+                    isSelected={selectedIds.has(row.id)}
+                    key={row.id}
+                    onToggle={toggleOne}
+                    row={row}
+                  />
                 ))}
               </TableBody>
             </Table>
