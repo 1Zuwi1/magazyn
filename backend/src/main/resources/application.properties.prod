@@ -46,7 +46,7 @@ app.s3.secret-key=${S3_SECRET_KEY}
 
 app.s3.items-prefix=items-photos/
 
-webauthn.allow-untrusted-attestation:false
+webauthn.allow-untrusted-attestation:true
 # Visual Identification
 app.visual-identification.high-confidence-threshold=0.9
 app.visual-identification.verification-threshold=0.7
